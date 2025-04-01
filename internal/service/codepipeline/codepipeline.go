@@ -611,7 +611,7 @@ func resourcePipeline() *schema.Resource {
 				names.AttrTags:    tftags.TagsSchema(),
 				names.AttrTagsAll: tftags.TagsSchemaComputed(),
 				"trigger":         triggerSchema(),
-				"trigger_all":     sdkv2.DataSourcePropertyFromResourceProperty(triggerSchema()),
+				"trigger_all":     sdkv2.ComputedOnlyFromSchema(triggerSchema()),
 				"variable": {
 					Type:     schema.TypeList,
 					Optional: true,
