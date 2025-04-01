@@ -23,6 +23,7 @@ var (
 	ResourceSchema                        = resourceSchema
 	ResourceSecurityConfiguration         = resourceSecurityConfiguration
 	ResourceTrigger                       = resourceTrigger
+	ResourceUserDefinedFunction           = resourceUserDefinedFunction
 
 	FindCatalogTableOptimizer    = findCatalogTableOptimizer
 	FindClassifierByName         = findClassifierByName
