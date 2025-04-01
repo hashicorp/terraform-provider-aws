@@ -6,12 +6,14 @@ package glue
 import (
 	"context"
 	"log"
+	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/glue"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -25,12 +27,13 @@ import (
 
 // @SDKResource("aws_glue_schema", name="Schema")
 // @Tags(identifierAttribute="arn")
-func ResourceSchema() *schema.Resource {
+func resourceSchema() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSchemaCreate,
 		ReadWithoutTimeout:   resourceSchemaRead,
 		UpdateWithoutTimeout: resourceSchemaUpdate,
 		DeleteWithoutTimeout: resourceSchemaDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -142,7 +145,7 @@ func resourceSchemaRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
-	output, err := FindSchemaByID(ctx, conn, d.Id())
+	output, err := findSchemaByID(ctx, conn, d.Id())
 	if err != nil {
 		if errs.IsA[*awstypes.EntityNotFoundException](err) {
 			log.Printf("[WARN] Glue Schema (%s) not found, removing from state", d.Id())
@@ -261,4 +264,77 @@ func resourceSchemaDelete(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 
 	return diags
+}
+
+func findSchemaByID(ctx context.Context, conn *glue.Client, id string) (*glue.GetSchemaOutput, error) {
+	input := &glue.GetSchemaInput{
+		SchemaId: createSchemaID(id),
+	}
+
+	output, err := conn.GetSchema(ctx, input)
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+// statusSchema fetches the Schema and its Status
+func statusSchema(ctx context.Context, conn *glue.Client, id string) retry.StateRefreshFunc {
+	const (
+		schemaStatusUnknown = "Unknown"
+	)
+	return func() (any, string, error) {
+		output, err := findSchemaByID(ctx, conn, id)
+
+		if err != nil {
+			return nil, schemaStatusUnknown, err
+		}
+
+		if output == nil {
+			return output, schemaStatusUnknown, nil
+		}
+
+		return output, string(output.SchemaStatus), nil
+	}
+}
+
+func waitSchemaAvailable(ctx context.Context, conn *glue.Client, registryID string) (*glue.GetSchemaOutput, error) { //nolint:unparam
+	const (
+		timeout = 2 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.SchemaStatusPending),
+		Target:  enum.Slice(awstypes.SchemaStatusAvailable),
+		Refresh: statusSchema(ctx, conn, registryID),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*glue.GetSchemaOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitSchemaDeleted(ctx context.Context, conn *glue.Client, registryID string) (*glue.GetSchemaOutput, error) {
+	const (
+		timeout = 2 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.SchemaStatusDeleting),
+		Target:  []string{},
+		Refresh: statusSchema(ctx, conn, registryID),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*glue.GetSchemaOutput); ok {
+		return output, err
+	}
+
+	return nil, err
 }

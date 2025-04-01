@@ -156,7 +156,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Resource Policy",
 		},
 		{
-			Factory:  ResourceSchema,
+			Factory:  resourceSchema,
 			TypeName: "aws_glue_schema",
 			Name:     "Schema",
 			Tags: &types.ServicePackageResourceTags{

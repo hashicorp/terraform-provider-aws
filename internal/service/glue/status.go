@@ -12,26 +12,9 @@ import (
 )
 
 const (
-	schemaStatusUnknown        = "Unknown"
 	schemaVersionStatusUnknown = "Unknown"
 	triggerStatusUnknown       = "Unknown"
 )
-
-// statusSchema fetches the Schema and its Status
-func statusSchema(ctx context.Context, conn *glue.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
-		output, err := FindSchemaByID(ctx, conn, id)
-		if err != nil {
-			return nil, schemaStatusUnknown, err
-		}
-
-		if output == nil {
-			return output, schemaStatusUnknown, nil
-		}
-
-		return output, string(output.SchemaStatus), nil
-	}
-}
 
 // statusSchemaVersion fetches the Schema Version and its Status
 func statusSchemaVersion(ctx context.Context, conn *glue.Client, id string) retry.StateRefreshFunc {

@@ -16,46 +16,8 @@ import (
 const (
 	// Maximum amount of time to wait for an Operation to return Deleted
 	iamPropagationTimeout         = 2 * time.Minute
-	schemaAvailableTimeout        = 2 * time.Minute
-	schemaDeleteTimeout           = 2 * time.Minute
 	schemaVersionAvailableTimeout = 2 * time.Minute
 )
-
-// waitSchemaAvailable waits for a Schema to return Available
-func waitSchemaAvailable(ctx context.Context, conn *glue.Client, registryID string) (*glue.GetSchemaOutput, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.SchemaStatusPending),
-		Target:  enum.Slice(awstypes.SchemaStatusAvailable),
-		Refresh: statusSchema(ctx, conn, registryID),
-		Timeout: schemaAvailableTimeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*glue.GetSchemaOutput); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-// waitSchemaDeleted waits for a Schema to return Deleted
-func waitSchemaDeleted(ctx context.Context, conn *glue.Client, registryID string) (*glue.GetSchemaOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.SchemaStatusDeleting),
-		Target:  []string{},
-		Refresh: statusSchema(ctx, conn, registryID),
-		Timeout: schemaDeleteTimeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*glue.GetSchemaOutput); ok {
-		return output, err
-	}
-
-	return nil, err
-}
 
 // waitSchemaVersionAvailable waits for a Schema to return Available
 func waitSchemaVersionAvailable(ctx context.Context, conn *glue.Client, registryID string) (*glue.GetSchemaVersionOutput, error) {

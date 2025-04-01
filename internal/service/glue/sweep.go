@@ -29,11 +29,7 @@ func RegisterSweepers() {
 	awsv2.Register("aws_glue_job", sweepJobs)
 	awsv2.Register("aws_glue_ml_transform", sweepMLTransforms)
 	awsv2.Register("aws_glue_registry", sweepRegistries)
-
-	resource.AddTestSweepers("aws_glue_schema", &resource.Sweeper{
-		Name: "aws_glue_schema",
-		F:    sweepSchema,
-	})
+	awsv2.Register("aws_glue_schema", sweepSchemas)
 
 	resource.AddTestSweepers("aws_glue_security_configuration", &resource.Sweeper{
 		Name: "aws_glue_security_configuration",
@@ -275,40 +271,29 @@ func sweepRegistries(ctx context.Context, client *conns.AWSClient) ([]sweep.Swee
 	return sweepResources, nil
 }
 
-func sweepSchema(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
+func sweepSchemas(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.GlueClient(ctx)
-
+	var input glue.ListSchemasInput
 	sweepResources := make([]sweep.Sweepable, 0)
-	var sweeperErrs *multierror.Error
 
-	listOutput, err := conn.ListSchemas(ctx, &glue.ListSchemasInput{})
-	if err != nil {
-		// Some endpoints that do not support Glue Schemas return InternalFailure
-		if awsv2.SkipSweepError(err) || tfawserr.ErrCodeEquals(err, "InternalFailure") {
-			log.Printf("[WARN] Skipping Glue Schema sweep for %s: %s", region, err)
-			return nil
+	pages := glue.NewListSchemasPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
 		}
-		return fmt.Errorf("Error retrieving Glue Schema: %s", err)
-	}
-	for _, schema := range listOutput.Schemas {
-		arn := aws.ToString(schema.SchemaArn)
-		r := ResourceSchema()
-		d := r.Data(nil)
-		d.SetId(arn)
 
-		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-	}
+		for _, schema := range page.Schemas {
+			r := resourceSchema()
+			d := r.Data(nil)
+			d.SetId(aws.ToString(schema.SchemaArn))
 
-	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping API Gateway VPC Links: %w", err))
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
 	}
 
-	return sweeperErrs.ErrorOrNil()
+	return sweepResources, nil
 }
 
 func sweepSecurityConfigurations(region string) error {

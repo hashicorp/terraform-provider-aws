@@ -51,20 +51,6 @@ func FindRegistryByName(ctx context.Context, conn *glue.Client, name string) (*g
 	return output, nil
 }
 
-// FindSchemaByID returns the Schema corresponding to the specified ID.
-func FindSchemaByID(ctx context.Context, conn *glue.Client, id string) (*glue.GetSchemaOutput, error) {
-	input := &glue.GetSchemaInput{
-		SchemaId: createSchemaID(id),
-	}
-
-	output, err := conn.GetSchema(ctx, input)
-	if err != nil {
-		return nil, err
-	}
-
-	return output, nil
-}
-
 // FindSchemaVersionByID returns the Schema corresponding to the specified ID.
 func FindSchemaVersionByID(ctx context.Context, conn *glue.Client, id string) (*glue.GetSchemaVersionOutput, error) {
 	input := &glue.GetSchemaVersionInput{
