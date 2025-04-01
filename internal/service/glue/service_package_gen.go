@@ -125,7 +125,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceMLTransform,
+			Factory:  resourceMLTransform,
 			TypeName: "aws_glue_ml_transform",
 			Name:     "ML Transform",
 			Tags: &types.ServicePackageResourceTags{

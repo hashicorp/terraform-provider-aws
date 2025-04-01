@@ -15,31 +15,12 @@ import (
 
 const (
 	// Maximum amount of time to wait for an Operation to return Deleted
-	mlTransformDeleteTimeout      = 2 * time.Minute
 	iamPropagationTimeout         = 2 * time.Minute
 	registryDeleteTimeout         = 2 * time.Minute
 	schemaAvailableTimeout        = 2 * time.Minute
 	schemaDeleteTimeout           = 2 * time.Minute
 	schemaVersionAvailableTimeout = 2 * time.Minute
 )
-
-// waitMLTransformDeleted waits for an MLTransform to return Deleted
-func waitMLTransformDeleted(ctx context.Context, conn *glue.Client, transformId string) (*glue.GetMLTransformOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.TransformStatusTypeNotReady, awstypes.TransformStatusTypeReady, awstypes.TransformStatusTypeDeleting),
-		Target:  []string{},
-		Refresh: statusMLTransform(ctx, conn, transformId),
-		Timeout: mlTransformDeleteTimeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*glue.GetMLTransformOutput); ok {
-		return output, err
-	}
-
-	return nil, err
-}
 
 // waitRegistryDeleted waits for a Registry to return Deleted
 func waitRegistryDeleted(ctx context.Context, conn *glue.Client, registryID string) (*glue.GetRegistryOutput, error) {

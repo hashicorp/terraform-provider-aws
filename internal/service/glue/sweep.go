@@ -26,13 +26,8 @@ func RegisterSweepers() {
 	awsv2.Register("aws_glue_connection", sweepConnections)
 	awsv2.Register("aws_glue_crawler", sweepCrawlers)
 	awsv2.Register("aws_glue_dev_endpoint", sweepDevEndpoints)
-
 	awsv2.Register("aws_glue_job", sweepJobs)
-
-	resource.AddTestSweepers("aws_glue_ml_transform", &resource.Sweeper{
-		Name: "aws_glue_ml_transform",
-		F:    sweepMLTransforms,
-	})
+	awsv2.Register("aws_glue_ml_transform", sweepMLTransforms)
 
 	resource.AddTestSweepers("aws_glue_registry", &resource.Sweeper{
 		Name: "aws_glue_registry",
@@ -234,49 +229,29 @@ func sweepJobs(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable,
 	return sweepResources, nil
 }
 
-func sweepMLTransforms(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
+func sweepMLTransforms(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.GlueClient(ctx)
-
+	var input glue.GetMLTransformsInput
 	sweepResources := make([]sweep.Sweepable, 0)
-	var sweeperErrs *multierror.Error
 
-	input := &glue.GetMLTransformsInput{}
-
-	pages := glue.NewGetMLTransformsPaginator(conn, input)
-
+	pages := glue.NewGetMLTransformsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Glue ML Transforms sweep for %s: %s", region, err)
-			return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-		}
 		if err != nil {
-			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Glue ML Transforms: %w", err))
+			return nil, err
 		}
 
-		for _, transforms := range page.Transforms {
-			id := aws.ToString(transforms.TransformId)
-
-			log.Printf("[INFO] Deleting Glue ML Transform: %s", id)
-			r := ResourceMLTransform()
+		for _, v := range page.Transforms {
+			r := resourceMLTransform()
 			d := r.Data(nil)
-			d.SetId(id)
+			d.SetId(aws.ToString(v.TransformId))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 	}
 
-	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Glue ML Transforms: %w", err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
+	return sweepResources, nil
 }
 
 func sweepRegistry(region string) error {

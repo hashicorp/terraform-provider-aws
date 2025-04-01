@@ -13,33 +13,11 @@ import (
 )
 
 const (
-	mlTransformStatusUnknown   = "Unknown"
 	registryStatusUnknown      = "Unknown"
 	schemaStatusUnknown        = "Unknown"
 	schemaVersionStatusUnknown = "Unknown"
 	triggerStatusUnknown       = "Unknown"
 )
-
-// statusMLTransform fetches the MLTransform and its Status
-func statusMLTransform(ctx context.Context, conn *glue.Client, transformId string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
-		input := &glue.GetMLTransformInput{
-			TransformId: aws.String(transformId),
-		}
-
-		output, err := conn.GetMLTransform(ctx, input)
-
-		if err != nil {
-			return nil, mlTransformStatusUnknown, err
-		}
-
-		if output == nil {
-			return output, mlTransformStatusUnknown, nil
-		}
-
-		return output, string(output.Status), nil
-	}
-}
 
 // statusRegistry fetches the Registry and its Status
 func statusRegistry(ctx context.Context, conn *glue.Client, id string) retry.StateRefreshFunc {

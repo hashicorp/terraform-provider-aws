@@ -15,6 +15,7 @@ var (
 	ResourceDataQualityRuleset            = resourceDataQualityRuleset
 	ResourceDevEndpoint                   = resourceDevEndpoint
 	ResourceJob                           = resourceJob
+	ResourceMLTransform                   = resourceMLTransform
 
 	FindCatalogTableOptimizer    = findCatalogTableOptimizer
 	FindClassifierByName         = findClassifierByName
