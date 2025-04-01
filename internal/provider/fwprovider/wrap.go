@@ -455,3 +455,17 @@ func (w *wrappedResource) MoveState(ctx context.Context) []resource.StateMover {
 
 	return nil
 }
+
+func (w *wrappedResource) IdentitySchema(ctx context.Context, req resource.IdentitySchemaRequest, resp *resource.IdentitySchemaResponse) {
+	if v, ok := w.inner.(resource.ResourceWithIdentity); ok {
+		ctx, diags := w.opts.bootstrapContext(ctx, nil, w.meta)
+		if diags.HasError() {
+			tflog.Warn(ctx, "wrapping IdentitySchema", map[string]any{
+				"resource":               w.opts.typeName,
+				"bootstrapContext error": fwdiag.DiagnosticsString(diags),
+			})
+		}
+
+		v.IdentitySchema(ctx, req, resp)
+	}
+}
