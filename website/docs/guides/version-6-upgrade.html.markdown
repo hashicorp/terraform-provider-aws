@@ -17,6 +17,7 @@ Upgrade topics:
 - [Provider Version Configuration](#provider-version-configuration)
 - [Provider Arguments](#provider-arguments)
 - [Dropping Support For Amazon SimpleDB](#dropping-support-for-amazon-simpledb)
+- [Dropping Support For Amazon Worklink](#dropping-support-for-amazon-worklink)
 - [AWS OpsWorks Stacks End of Life](#aws-opsworks-stacks-end-of-life)
 - [resource/aws_redshift_cluster](#resourceaws_redshift_cluster)
 - [resource/aws_redshift_service_account](#resourceaws_redshift_service_account)
@@ -69,10 +70,18 @@ Version 6.0.0 removes these `provider` arguments:
 
 * `endpoints.opsworks` - Removed following AWS OpsWorks Stacks End of Life
 * `endpoints.simpledb` and `endpoints.sdb` - Removed following dropping support for Amazon SimpleDB
+* `endpoints.worklink` - Removed following dropping support for Amazon Worklink
 
 ## Dropping Support For Amazon SimpleDB
 
 As the [AWS SDK for Go v2](https://docs.aws.amazon.com/sdk-for-go/v2/developer-guide/welcome.html) does not support Amazon SimpleDB, the `aws_simpledb_domain` resource has been removed.
+
+## Dropping Support For Amazon Worklink
+
+As the [AWS SDK for Go v2](https://docs.aws.amazon.com/sdk-for-go/v2/developer-guide/welcome.html) has [dropped support](https://github.com/aws/aws-sdk-go-v2/pull/2814) for Amazon Worklink, the following resources have been removed:
+
+* `aws_worklink_fleet`
+* `aws_worklink_website_certificate_authority_association`
 
 ## AWS OpsWorks Stacks End of Life
 
