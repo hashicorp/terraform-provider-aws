@@ -52,7 +52,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Data Catalog Encryption Settings",
 		},
 		{
-			Factory:  DataSourceScript,
+			Factory:  dataSourceScript,
 			TypeName: "aws_glue_script",
 			Name:     "Script",
 		},
