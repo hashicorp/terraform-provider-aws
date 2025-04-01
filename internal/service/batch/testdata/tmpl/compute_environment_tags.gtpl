@@ -1,5 +1,5 @@
 resource "aws_batch_compute_environment" "test" {
-  compute_environment_name = var.rName
+  name = var.rName
   service_role             = aws_iam_role.batch_service.arn
   type                     = "UNMANAGED"
 {{- template "tags" . }}
