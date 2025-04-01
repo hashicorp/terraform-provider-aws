@@ -327,7 +327,7 @@ func TestAccEC2Instance_atLeastOneOtherEBSVolume(t *testing.T) {
 				Config: testAccInstanceConfig_atLeastOneOtherEBSVolume(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "user_data", "3dc39dda39be1205215e776bad998da361a5955d"),
+					resource.TestCheckResourceAttr(resourceName, "user_data", "foo:-with-character's"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "0"),
 				),
 			},
@@ -5085,6 +5085,67 @@ func TestAccEC2Instance_CreditSpecificationUnlimitedCPUCredits_t2Tot3Taint(t *te
 	})
 }
 
+func TestAccEC2Instance_UserData_migrate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.Instance
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	hash := sha1.Sum([]byte("hello world"))
+	expectedUserData := hex.EncodeToString(hash[:])
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
+		CheckDestroy: testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.93.0",
+					},
+				},
+				Config: testAccInstanceConfig_userData(rName, "hello world"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("user_data"), knownvalue.StringExact(expectedUserData)),
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccInstanceConfig_userData(rName, "hello world"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("user_data"), knownvalue.StringExact("hello world")),
+				},
+			},
+			{
+				// test for migration path from user_data to user_data_base64
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccInstanceConfig_userDataBase64(rName, "hello world"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("user_data"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("user_data_base64"), knownvalue.StringExact("aGVsbG8gd29ybGQ=")),
+				},
+			},
+		},
+	})
+}
+
 func TestAccEC2Instance_UserData_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Instance
@@ -6915,7 +6976,7 @@ resource "aws_instance" "test" {
   associate_public_ip_address = true
   tenancy                     = "dedicated"
   # pre-encoded base64 data
-  user_data = "3dc39dda39be1205215e776bad998da361a5955d"
+  user_data_base64 = "3dc39dda39be1205215e776bad998da361a5955d"
 
   tags = {
     Name = %[1]q
@@ -6991,7 +7052,7 @@ resource "aws_instance" "test" {
   placement_group             = aws_placement_group.test.name
 
   # pre-encoded base64 data
-  user_data = "3dc39dda39be1205215e776bad998da361a5955d"
+  user_data_base64 = "3dc39dda39be1205215e776bad998da361a5955d"
 
   tags = {
     Name = %[1]q
@@ -7021,7 +7082,7 @@ resource "aws_instance" "test" {
   placement_partition_number  = 3
 
   # pre-encoded base64 data
-  user_data = "3dc39dda39be1205215e776bad998da361a5955d"
+  user_data_base64 = "3dc39dda39be1205215e776bad998da361a5955d"
 
   tags = {
     Name = %[1]q
