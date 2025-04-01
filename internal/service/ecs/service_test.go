@@ -5377,7 +5377,7 @@ resource "aws_ecs_service" "test" {
   }
 
   lifecycle {
-    ignore_changes = [service_connect_configuration.0.service.0.timeout]
+    ignore_changes = [service_connect_configuration[0].service[0].timeout]
   }
 }
 
