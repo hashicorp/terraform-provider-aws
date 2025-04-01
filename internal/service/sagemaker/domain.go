@@ -6,11 +6,9 @@ package sagemaker
 import (
 	"context"
 	"log"
-	"strings"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -1498,12 +1496,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Domain: %s", err)
 	}
 
-	domainArn := aws.ToString(output.DomainArn)
-	domainID, err := decodeDomainID(domainArn)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Domain (%s): %s", d.Id(), err)
-	}
-
+	domainID := aws.ToString(output.DomainId)
 	d.SetId(domainID)
 
 	if err := waitDomainInService(ctx, conn, d.Id()); err != nil {
@@ -3086,16 +3079,6 @@ func flattenDomainCustomImages(config []awstypes.CustomImage) []map[string]any {
 	}
 
 	return images
-}
-
-func decodeDomainID(id string) (string, error) {
-	domainArn, err := arn.Parse(id)
-	if err != nil {
-		return "", err
-	}
-
-	domainName := strings.TrimPrefix(domainArn.Resource, "domain/")
-	return domainName, nil
 }
 
 func expanDefaultSpaceSettings(l []any) *awstypes.DefaultSpaceSettings {

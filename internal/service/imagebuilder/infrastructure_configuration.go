@@ -193,7 +193,7 @@ func resourceInfrastructureConfigurationCreate(ctx context.Context, d *schema.Re
 	}
 
 	if v, ok := d.GetOk(names.AttrResourceTags); ok && len(v.(map[string]any)) > 0 {
-		input.ResourceTags = Tags(tftags.New(ctx, v.(map[string]any)))
+		input.ResourceTags = svcTags(tftags.New(ctx, v.(map[string]any)))
 	}
 
 	if v, ok := d.GetOk(names.AttrSecurityGroupIDs); ok && v.(*schema.Set).Len() > 0 {
@@ -268,7 +268,7 @@ func resourceInfrastructureConfigurationRead(ctx context.Context, d *schema.Reso
 		d.Set("logging", nil)
 	}
 	d.Set(names.AttrName, infrastructureConfiguration.Name)
-	d.Set(names.AttrResourceTags, KeyValueTags(ctx, infrastructureConfiguration.ResourceTags).Map())
+	d.Set(names.AttrResourceTags, keyValueTags(ctx, infrastructureConfiguration.ResourceTags).Map())
 	d.Set(names.AttrSecurityGroupIDs, infrastructureConfiguration.SecurityGroupIds)
 	d.Set(names.AttrSNSTopicARN, infrastructureConfiguration.SnsTopicArn)
 	d.Set(names.AttrSubnetID, infrastructureConfiguration.SubnetId)
@@ -326,7 +326,7 @@ func resourceInfrastructureConfigurationUpdate(ctx context.Context, d *schema.Re
 		}
 
 		if v, ok := d.GetOk(names.AttrResourceTags); ok && len(v.(map[string]any)) > 0 {
-			input.ResourceTags = Tags(tftags.New(ctx, v.(map[string]any)))
+			input.ResourceTags = svcTags(tftags.New(ctx, v.(map[string]any)))
 		}
 
 		if v, ok := d.GetOk(names.AttrSecurityGroupIDs); ok && v.(*schema.Set).Len() > 0 {

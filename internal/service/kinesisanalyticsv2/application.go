@@ -846,7 +846,6 @@ func resourceApplication() *schema.Resource {
 				"runtime_environment": {
 					Type:             schema.TypeString,
 					Required:         true,
-					ForceNew:         true,
 					ValidateDiagFunc: enum.Validate[awstypes.RuntimeEnvironment](),
 				},
 				"service_execution_role": {
@@ -954,7 +953,7 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).KinesisAnalyticsV2Client(ctx)
 	applicationName := d.Get(names.AttrName).(string)
 
-	if d.HasChanges("application_configuration", "cloudwatch_logging_options", "service_execution_role") {
+	if d.HasChanges("application_configuration", "cloudwatch_logging_options", "runtime_environment", "service_execution_role") {
 		currentApplicationVersionID := int64(d.Get("version_id").(int))
 		updateApplication := false
 
@@ -1382,6 +1381,12 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 		if d.HasChange("service_execution_role") {
 			input.ServiceExecutionRoleUpdate = aws.String(d.Get("service_execution_role").(string))
+
+			updateApplication = true
+		}
+
+		if d.HasChange("runtime_environment") {
+			input.RuntimeEnvironmentUpdate = awstypes.RuntimeEnvironment(d.Get("runtime_environment").(string))
 
 			updateApplication = true
 		}
