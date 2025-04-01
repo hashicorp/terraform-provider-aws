@@ -34,6 +34,7 @@ func ResourceJob() *schema.Resource {
 		ReadWithoutTimeout:   resourceJobRead,
 		UpdateWithoutTimeout: resourceJobUpdate,
 		DeleteWithoutTimeout: resourceJobDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -242,7 +243,7 @@ func resourceJobCreate(ctx context.Context, d *schema.ResourceData, meta any) di
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	input := &glue.CreateJobInput{
+	input := glue.CreateJobInput{
 		Command: expandJobCommand(d.Get("command").([]any)),
 		Name:    aws.String(name),
 		Role:    aws.String(d.Get(names.AttrRoleARN).(string)),
@@ -269,10 +270,6 @@ func resourceJobCreate(ctx context.Context, d *schema.ResourceData, meta any) di
 
 	if v, ok := d.GetOk("execution_property"); ok {
 		input.ExecutionProperty = expandExecutionProperty(v.([]any))
-	}
-
-	if v, ok := d.GetOk("source_control_details"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-		input.SourceControlDetails = expandSourceControlDetails(v.([]any))
 	}
 
 	if v, ok := d.GetOk("glue_version"); ok {
@@ -311,6 +308,10 @@ func resourceJobCreate(ctx context.Context, d *schema.ResourceData, meta any) di
 		input.SecurityConfiguration = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("source_control_details"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.SourceControlDetails = expandSourceControlDetails(v.([]any))
+	}
+
 	if v, ok := d.GetOk(names.AttrTimeout); ok {
 		input.Timeout = aws.Int32(int32(v.(int)))
 	}
@@ -319,7 +320,7 @@ func resourceJobCreate(ctx context.Context, d *schema.ResourceData, meta any) di
 		input.WorkerType = awstypes.WorkerType(v.(string))
 	}
 
-	output, err := conn.CreateJob(ctx, input)
+	output, err := conn.CreateJob(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Glue Job (%s): %s", name, err)
@@ -366,9 +367,6 @@ func resourceJobRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 	if err := d.Set("execution_property", flattenExecutionProperty(job.ExecutionProperty)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting execution_property: %s", err)
 	}
-	if err := d.Set("source_control_details", flattenSourceControlDetails(job.SourceControlDetails)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting source_control_details: %s", err)
-	}
 	d.Set("glue_version", job.GlueVersion)
 	d.Set("job_run_queuing_enabled", job.JobRunQueuingEnabled)
 	d.Set("maintenance_window", job.MaintenanceWindow)
@@ -382,6 +380,9 @@ func resourceJobRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 	d.Set("number_of_workers", job.NumberOfWorkers)
 	d.Set(names.AttrRoleARN, job.Role)
 	d.Set("security_configuration", job.SecurityConfiguration)
+	if err := d.Set("source_control_details", flattenSourceControlDetails(job.SourceControlDetails)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting source_control_details: %s", err)
+	}
 	d.Set(names.AttrTimeout, job.Timeout)
 	d.Set("worker_type", job.WorkerType)
 
@@ -456,6 +457,10 @@ func resourceJobUpdate(ctx context.Context, d *schema.ResourceData, meta any) di
 			jobUpdate.SecurityConfiguration = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("source_control_details"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			jobUpdate.SourceControlDetails = expandSourceControlDetails(v.([]any))
+		}
+
 		if v, ok := d.GetOk(names.AttrTimeout); ok {
 			jobUpdate.Timeout = aws.Int32(int32(v.(int)))
 		}
@@ -464,16 +469,12 @@ func resourceJobUpdate(ctx context.Context, d *schema.ResourceData, meta any) di
 			jobUpdate.WorkerType = awstypes.WorkerType(v.(string))
 		}
 
-		if v, ok := d.GetOk("source_control_details"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-			jobUpdate.SourceControlDetails = expandSourceControlDetails(v.([]any))
-		}
-
-		input := &glue.UpdateJobInput{
+		input := glue.UpdateJobInput{
 			JobName:   aws.String(d.Id()),
 			JobUpdate: jobUpdate,
 		}
 
-		_, err := conn.UpdateJob(ctx, input)
+		_, err := conn.UpdateJob(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Glue Job (%s): %s", d.Id(), err)
@@ -488,9 +489,10 @@ func resourceJobDelete(ctx context.Context, d *schema.ResourceData, meta any) di
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Glue Job: %s", d.Id())
-	_, err := conn.DeleteJob(ctx, &glue.DeleteJobInput{
+	input := glue.DeleteJobInput{
 		JobName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteJob(ctx, &input)
 
 	if errs.IsA[*awstypes.EntityNotFoundException](err) {
 		return diags
