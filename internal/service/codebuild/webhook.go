@@ -182,7 +182,8 @@ func resourceWebhookRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	d.Set("build_type", webhook.BuildType)
-	d.Set("manual_creation", webhook.ManualCreation)
+	// Support in-place update of create-only attribute.
+	d.Set("manual_creation", d.Get("manual_creation"))
 	d.Set("branch_filter", webhook.BranchFilter)
 	if err := d.Set("filter_group", flattenWebhookFilterGroups(webhook.FilterGroups)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting filter_group: %s", err)
