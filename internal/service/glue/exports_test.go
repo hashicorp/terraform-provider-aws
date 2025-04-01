@@ -6,10 +6,12 @@ package glue
 // Exports for use in tests only.
 var (
 	ResourceCatalogDatabase       = resourceCatalogDatabase
+	ResourceCatalogTable          = resourceCatalogTable
 	ResourceCatalogTableOptimizer = newResourceCatalogTableOptimizer
 	ResourceJob                   = resourceJob
 
 	FindCatalogTableOptimizer = findCatalogTableOptimizer
 	FindDatabaseByName        = findDatabaseByName
 	FindJobByName             = findJobByName
+	FindTableByName           = findTableByName
 )
