@@ -36,17 +36,17 @@ resource "aws_elb" "web-elb" {
 }
 
 resource "aws_autoscaling_group" "web-asg" {
-  availability_zones   = local.availability_zones
-  name                 = "terraform-example-asg"
-  max_size             = var.asg_max
-  min_size             = var.asg_min
-  desired_capacity     = var.asg_desired
-  force_delete         = true
+  availability_zones = local.availability_zones
+  name               = "terraform-example-asg"
+  max_size           = var.asg_max
+  min_size           = var.asg_min
+  desired_capacity   = var.asg_desired
+  force_delete       = true
   launch_template {
     id      = aws_launch_template.web-lt.id
     version = aws_launch_template.web-lt.latest_version
   }
-  load_balancers       = [aws_elb.web-elb.name]
+  load_balancers = [aws_elb.web-elb.name]
 
   #vpc_zone_identifier = ["${split(",", var.availability_zones)}"]
   tag {
@@ -63,8 +63,8 @@ resource "aws_launch_template" "web-lt" {
 
   # Security group
   vpc_security_group_ids = [aws_security_group.default.id]
-  user_data       = base64encode(file("userdata.sh"))
-  key_name        = var.key_name
+  user_data              = base64encode(file("userdata.sh"))
+  key_name               = var.key_name
 }
 
 # Our default security group to access
