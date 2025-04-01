@@ -10,9 +10,13 @@ linters:
     - misspell
     - mnd
     - staticcheck
+  exclusions:
+    rules:
+      - path: '(.+)_test\.go'
+        linters:
+          - goconst
   settings:
     goconst:
-      ignore-tests: true
       min-occurrences: 6
     gocritic:
       enabled-tags:

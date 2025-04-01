@@ -198,6 +198,7 @@ linters:
         - XSS
         - YAML
   exclusions:
+    generated: strict
     rules:
       - linters:
           - paralleltest

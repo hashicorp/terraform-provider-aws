@@ -22,7 +22,7 @@ linters:
         - (*github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema.ResourceData).Set
         - (*github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema.ResourceDiff).SetNewComputed
         - (*github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema.ResourceDiff).ForceNew
-        - io:Close
+        - io.Close
     errorlint:
       errorf: false
 issues:
