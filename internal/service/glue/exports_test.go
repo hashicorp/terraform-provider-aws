@@ -19,6 +19,7 @@ var (
 	ResourcePartition                     = resourcePartition
 	ResourcePartitionIndex                = resourcePartitionIndex
 	ResourceRegistry                      = resourceRegistry
+	ResourceResourcePolicy                = resourceResourcePolicy
 
 	FindCatalogTableOptimizer    = findCatalogTableOptimizer
 	FindClassifierByName         = findClassifierByName
