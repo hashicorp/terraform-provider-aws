@@ -21,10 +21,7 @@ import (
 )
 
 func RegisterSweepers() {
-	resource.AddTestSweepers("aws_glue_catalog_database", &resource.Sweeper{
-		Name: "aws_glue_catalog_database",
-		F:    sweepCatalogDatabases,
-	})
+	awsv2.Register("aws_glue_catalog_database", sweepCatalogDatabases)
 
 	resource.AddTestSweepers("aws_glue_classifier", &resource.Sweeper{
 		Name: "aws_glue_classifier",
@@ -79,52 +76,31 @@ func RegisterSweepers() {
 	})
 }
 
-func sweepCatalogDatabases(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
+func sweepCatalogDatabases(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.GlueClient(ctx)
-
+	var input glue.GetDatabasesInput
 	sweepResources := make([]sweep.Sweepable, 0)
-	var sweeperErrs *multierror.Error
 
-	input := &glue.GetDatabasesInput{}
-
-	pages := glue.NewGetDatabasesPaginator(conn, input)
-
+	pages := glue.NewGetDatabasesPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
 		if err != nil {
-			if awsv2.SkipSweepError(err) {
-				log.Printf("[WARN] Skipping Glue Catalog Database sweep for %s: %s", region, err)
-				return nil
-			}
-			return fmt.Errorf("Error retrieving Glue Catalog Databases: %s", err)
+			return nil, err
 		}
 
-		for _, database := range page.DatabaseList {
-			name := aws.ToString(database.Name)
-
-			log.Printf("[INFO] Deleting Glue Catalog Database: %s", name)
-
-			r := ResourceCatalogDatabase()
+		for _, v := range page.DatabaseList {
+			r := resourceCatalogDatabase()
 			d := r.Data(nil)
 			d.SetId("unused")
-			d.Set(names.AttrName, name)
-			d.Set(names.AttrCatalogID, database.CatalogId)
+			d.Set(names.AttrCatalogID, v.CatalogId)
+			d.Set(names.AttrName, v.Name)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 	}
 
-	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Glue Catalog Databases: %w", err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
+	return sweepResources, nil
 }
 
 func sweepClassifiers(region string) error {

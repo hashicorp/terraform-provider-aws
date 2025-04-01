@@ -39,31 +39,6 @@ func FindDevEndpointByName(ctx context.Context, conn *glue.Client, name string) 
 	return output.DevEndpoint, nil
 }
 
-func FindDatabaseByName(ctx context.Context, conn *glue.Client, catalogID, name string) (*glue.GetDatabaseOutput, error) {
-	input := &glue.GetDatabaseInput{
-		CatalogId: aws.String(catalogID),
-		Name:      aws.String(name),
-	}
-
-	output, err := conn.GetDatabase(ctx, input)
-	if errs.IsA[*awstypes.EntityNotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output, nil
-}
-
 func FindDataQualityRulesetByName(ctx context.Context, conn *glue.Client, name string) (*glue.GetDataQualityRulesetOutput, error) {
 	input := &glue.GetDataQualityRulesetInput{
 		Name: aws.String(name),
