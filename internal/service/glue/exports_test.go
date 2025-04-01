@@ -21,6 +21,7 @@ var (
 	ResourceRegistry                      = resourceRegistry
 	ResourceResourcePolicy                = resourceResourcePolicy
 	ResourceSchema                        = resourceSchema
+	ResourceSecurityConfiguration         = resourceSecurityConfiguration
 
 	FindCatalogTableOptimizer    = findCatalogTableOptimizer
 	FindClassifierByName         = findClassifierByName

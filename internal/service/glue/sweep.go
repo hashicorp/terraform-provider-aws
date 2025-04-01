@@ -30,11 +30,7 @@ func RegisterSweepers() {
 	awsv2.Register("aws_glue_ml_transform", sweepMLTransforms)
 	awsv2.Register("aws_glue_registry", sweepRegistries)
 	awsv2.Register("aws_glue_schema", sweepSchemas)
-
-	resource.AddTestSweepers("aws_glue_security_configuration", &resource.Sweeper{
-		Name: "aws_glue_security_configuration",
-		F:    sweepSecurityConfigurations,
-	})
+	awsv2.Register("aws_glue_security_configuration", sweepSecurityConfigurations)
 
 	resource.AddTestSweepers("aws_glue_trigger", &resource.Sweeper{
 		Name: "aws_glue_trigger",
@@ -296,46 +292,29 @@ func sweepSchemas(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepab
 	return sweepResources, nil
 }
 
-func sweepSecurityConfigurations(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
+func sweepSecurityConfigurations(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.GlueClient(ctx)
+	var input glue.GetSecurityConfigurationsInput
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	input := &glue.GetSecurityConfigurationsInput{}
-
-	for {
-		output, err := conn.GetSecurityConfigurations(ctx, input)
-
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Glue Security Configuration sweep for %s: %s", region, err)
-			return nil
-		}
+	pages := glue.NewGetSecurityConfigurationsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
 		if err != nil {
-			return fmt.Errorf("Error retrieving Glue Security Configurations: %s", err)
+			return nil, err
 		}
 
-		for _, securityConfiguration := range output.SecurityConfigurations {
-			name := aws.ToString(securityConfiguration.Name)
+		for _, v := range page.SecurityConfigurations {
+			r := resourceSecurityConfiguration()
+			d := r.Data(nil)
+			d.SetId(aws.ToString(v.Name))
 
-			log.Printf("[INFO] Deleting Glue Security Configuration: %s", name)
-			err := DeleteSecurityConfiguration(ctx, conn, name)
-			if err != nil {
-				log.Printf("[ERROR] Failed to delete Glue Security Configuration %s: %s", name, err)
-			}
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		if aws.ToString(output.NextToken) == "" {
-			break
-		}
-
-		input.NextToken = output.NextToken
 	}
 
-	return nil
+	return sweepResources, nil
 }
 
 func sweepTriggers(region string) error {
