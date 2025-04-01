@@ -117,7 +117,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceJob,
+			Factory:  resourceJob,
 			TypeName: "aws_glue_job",
 			Name:     "Job",
 			Tags: &types.ServicePackageResourceTags{

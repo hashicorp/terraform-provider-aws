@@ -4,6 +4,7 @@
 package glue
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -13,6 +14,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -44,10 +46,7 @@ func RegisterSweepers() {
 		F:    sweepDevEndpoints,
 	})
 
-	resource.AddTestSweepers("aws_glue_job", &resource.Sweeper{
-		Name: "aws_glue_job",
-		F:    sweepJobs,
-	})
+	awsv2.Register("aws_glue_job", sweepJobs)
 
 	resource.AddTestSweepers("aws_glue_ml_transform", &resource.Sweeper{
 		Name: "aws_glue_ml_transform",
@@ -326,32 +325,21 @@ func sweepDevEndpoints(region string) error {
 	return nil
 }
 
-func sweepJobs(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	input := &glue.GetJobsInput{}
+func sweepJobs(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.GlueClient(ctx)
+	var input glue.GetJobsInput
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	pages := glue.NewGetJobsPaginator(conn, input)
-
+	pages := glue.NewGetJobsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Glue Job sweep for %s: %s", region, err)
-			return nil
-		}
-
 		if err != nil {
-			return fmt.Errorf("error listing Glue Jobs (%s): %w", region, err)
+			return nil, err
 		}
 
 		for _, v := range page.Jobs {
-			r := ResourceJob()
+			r := resourceJob()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.Name))
 
@@ -359,13 +347,7 @@ func sweepJobs(region string) error {
 		}
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping Glue Jobs (%s): %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }
 
 func sweepMLTransforms(region string) error {

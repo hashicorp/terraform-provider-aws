@@ -6,6 +6,8 @@ package glue
 // Exports for use in tests only.
 var (
 	ResourceCatalogTableOptimizer = newResourceCatalogTableOptimizer
+	ResourceJob                   = resourceJob
 
 	FindCatalogTableOptimizer = findCatalogTableOptimizer
+	FindJobByName             = findJobByName
 )

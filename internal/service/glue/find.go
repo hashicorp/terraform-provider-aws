@@ -39,31 +39,6 @@ func FindDevEndpointByName(ctx context.Context, conn *glue.Client, name string) 
 	return output.DevEndpoint, nil
 }
 
-func FindJobByName(ctx context.Context, conn *glue.Client, name string) (*awstypes.Job, error) {
-	input := &glue.GetJobInput{
-		JobName: aws.String(name),
-	}
-
-	output, err := conn.GetJob(ctx, input)
-
-	if errs.IsA[*awstypes.EntityNotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.Job == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.Job, nil
-}
-
 func FindDatabaseByName(ctx context.Context, conn *glue.Client, catalogID, name string) (*glue.GetDatabaseOutput, error) {
 	input := &glue.GetDatabaseInput{
 		CatalogId: aws.String(catalogID),
