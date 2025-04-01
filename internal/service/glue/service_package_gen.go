@@ -47,7 +47,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Connection",
 		},
 		{
-			Factory:  DataSourceDataCatalogEncryptionSettings,
+			Factory:  dataSourceDataCatalogEncryptionSettings,
 			TypeName: "aws_glue_data_catalog_encryption_settings",
 			Name:     "Data Catalog Encryption Settings",
 		},
