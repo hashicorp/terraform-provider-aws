@@ -150,6 +150,20 @@ func TestAccS3Bucket_Basic_Identity(t *testing.T) {
 					}),
 				},
 			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateKind:         resource.ImportCommandWithId,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateKind:         resource.ImportBlockWithId,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
+			},
 		},
 	})
 }
