@@ -42,7 +42,10 @@ resource "aws_autoscaling_group" "web-asg" {
   min_size             = var.asg_min
   desired_capacity     = var.asg_desired
   force_delete         = true
-  launch_configuration = aws_launch_configuration.web-lc.name
+  launch_template {
+    id      = aws_launch_template.web-lt.id
+    version = aws_launch_template.web-lt.latest_version
+  }
   load_balancers       = [aws_elb.web-elb.name]
 
   #vpc_zone_identifier = ["${split(",", var.availability_zones)}"]
@@ -53,14 +56,14 @@ resource "aws_autoscaling_group" "web-asg" {
   }
 }
 
-resource "aws_launch_configuration" "web-lc" {
-  name          = "terraform-example-lc"
+resource "aws_launch_template" "web-lt" {
+  name          = "terraform-example-lt"
   image_id      = var.aws_amis[var.aws_region]
   instance_type = var.instance_type
 
   # Security group
-  security_groups = [aws_security_group.default.id]
-  user_data       = file("userdata.sh")
+  vpc_security_group_ids = [aws_security_group.default.id]
+  user_data       = base64encode(file("userdata.sh"))
   key_name        = var.key_name
 }
 
