@@ -216,14 +216,14 @@ func resourceAMI() *schema.Resource {
 				ForceNew:     true, // this attribute can only be set at registration time
 				ValidateFunc: validation.StringInSlice([]string{"v2.0"}, false),
 			},
-			"last_launched_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"kernel_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
+			},
+			"last_launched_time": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			// Not a public attribute; used to let the aws_ami_copy and aws_ami_from_instance
 			// resources record that they implicitly created new EBS snapshots that we should
