@@ -3943,7 +3943,6 @@ func testAccClusterConfig_instanceFleets(rName string) string {
 		testAccClusterConfig_baseVPC(rName, false),
 		testAccClusterConfig_baseIAMServiceRole(rName),
 		testAccClusterConfig_baseIAMInstanceProfile(rName),
-		testAccClusterConfig_baseBootstrapActionBucket(rName),
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -4031,7 +4030,6 @@ func testAccClusterConfig_instanceFleetMultipleSubnets(rName string) string {
 		testAccClusterConfig_baseVPC(rName, false),
 		testAccClusterConfig_baseIAMServiceRole(rName),
 		testAccClusterConfig_baseIAMInstanceProfile(rName),
-		testAccClusterConfig_baseBootstrapActionBucket(rName),
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
