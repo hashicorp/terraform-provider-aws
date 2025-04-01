@@ -30,12 +30,13 @@ import (
 
 // @SDKResource("aws_glue_connection", name="Connection")
 // @Tags(identifierAttribute="arn")
-func ResourceConnection() *schema.Resource {
+func resourceConnection() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConnectionCreate,
 		ReadWithoutTimeout:   resourceConnectionRead,
 		UpdateWithoutTimeout: resourceConnectionUpdate,
 		DeleteWithoutTimeout: resourceConnectionDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -151,7 +152,7 @@ func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta an
 		return sdkdiag.AppendErrorf(diags, "reading Glue Connection (%s): %s", d.Id(), err)
 	}
 
-	connection, err := FindConnectionByName(ctx, conn, connectionName, catalogID)
+	connection, err := findConnectionByTwoPartKey(ctx, conn, connectionName, catalogID)
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Glue Connection (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -224,7 +225,7 @@ func resourceConnectionDelete(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	log.Printf("[DEBUG] Deleting Glue Connection: %s", d.Id())
-	err = DeleteConnection(ctx, conn, catalogID, connectionName)
+	err = deleteConnection(ctx, conn, catalogID, connectionName)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Glue Connection (%s): %s", d.Id(), err)
 	}
@@ -240,7 +241,7 @@ func DecodeConnectionID(id string) (string, string, error) {
 	return idParts[0], idParts[1], nil
 }
 
-func DeleteConnection(ctx context.Context, conn *glue.Client, catalogID, connectionName string) error {
+func deleteConnection(ctx context.Context, conn *glue.Client, catalogID, connectionName string) error {
 	input := &glue.DeleteConnectionInput{
 		CatalogId:      aws.String(catalogID),
 		ConnectionName: aws.String(connectionName),

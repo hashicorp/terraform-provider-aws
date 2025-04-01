@@ -180,8 +180,7 @@ func FindPartitionByValues(ctx context.Context, conn *glue.Client, id string) (*
 	return output.Partition, nil
 }
 
-// FindConnectionByName returns the Connection corresponding to the specified Name and CatalogId.
-func FindConnectionByName(ctx context.Context, conn *glue.Client, name, catalogID string) (*awstypes.Connection, error) {
+func findConnectionByTwoPartKey(ctx context.Context, conn *glue.Client, name, catalogID string) (*awstypes.Connection, error) {
 	input := &glue.GetConnectionInput{
 		CatalogId: aws.String(catalogID),
 		Name:      aws.String(name),

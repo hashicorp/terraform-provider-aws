@@ -23,11 +23,7 @@ import (
 func RegisterSweepers() {
 	awsv2.Register("aws_glue_catalog_database", sweepCatalogDatabases)
 	awsv2.Register("aws_glue_classifier", sweepClassifiers)
-
-	resource.AddTestSweepers("aws_glue_connection", &resource.Sweeper{
-		Name: "aws_glue_connection",
-		F:    sweepConnections,
-	})
+	awsv2.Register("aws_glue_connection", sweepConnections)
 
 	resource.AddTestSweepers("aws_glue_crawler", &resource.Sweeper{
 		Name: "aws_glue_crawler",
@@ -138,52 +134,31 @@ func sweepClassifiers(ctx context.Context, client *conns.AWSClient) ([]sweep.Swe
 	return sweepResources, nil
 }
 
-func sweepConnections(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
+func sweepConnections(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.GlueClient(ctx)
 	catalogID := client.AccountID(ctx)
-
+	var input glue.GetConnectionsInput
+	input.CatalogId = aws.String(catalogID)
 	sweepResources := make([]sweep.Sweepable, 0)
-	var sweeperErrs *multierror.Error
 
-	input := &glue.GetConnectionsInput{
-		CatalogId: aws.String(catalogID),
-	}
-
-	pages := glue.NewGetConnectionsPaginator(conn, input)
-
+	pages := glue.NewGetConnectionsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
 		if err != nil {
-			if awsv2.SkipSweepError(err) {
-				log.Printf("[WARN] Skipping Glue Connection sweep for %s: %s", region, err)
-				return nil
-			}
-			return fmt.Errorf("Error retrieving Glue Connections: %s", err)
+			return nil, err
 		}
 
-		for _, connection := range page.ConnectionList {
-			id := fmt.Sprintf("%s:%s", catalogID, aws.ToString(connection.Name))
-
-			log.Printf("[INFO] Deleting Glue Connection: %s", id)
-			r := ResourceConnection()
+		for _, v := range page.ConnectionList {
+			r := resourceConnection()
 			d := r.Data(nil)
-			d.SetId(id)
+			d.SetId(fmt.Sprintf("%s:%s", catalogID, aws.ToString(v.Name)))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 	}
 
-	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping API Gateway VPC Links: %w", err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
+	return sweepResources, nil
 }
 
 func sweepCrawlers(region string) error {

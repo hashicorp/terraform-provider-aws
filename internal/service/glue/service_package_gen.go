@@ -80,7 +80,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Classifier",
 		},
 		{
-			Factory:  ResourceConnection,
+			Factory:  resourceConnection,
 			TypeName: "aws_glue_connection",
 			Name:     "Connection",
 			Tags: &types.ServicePackageResourceTags{

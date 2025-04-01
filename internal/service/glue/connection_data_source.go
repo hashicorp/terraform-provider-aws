@@ -101,7 +101,7 @@ func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "decoding Glue Connection %s: %s", id, err)
 	}
 
-	connection, err := FindConnectionByName(ctx, conn, connectionName, catalogID)
+	connection, err := findConnectionByTwoPartKey(ctx, conn, connectionName, catalogID)
 	if err != nil {
 		if tfresource.NotFound(err) {
 			return sdkdiag.AppendErrorf(diags, "Glue Connection (%s) not found", id)
