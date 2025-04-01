@@ -822,15 +822,30 @@ func resourceInstance() *schema.Resource {
 					}
 					return false
 				},
-				//StateFunc: func(v any) string {
-				//	switch v := v.(type) {
-				//	case string:
-				//		return userDataHashSum(v)
-				//	default:
-				//		return ""
-				//	}
-				//},
-				ValidateFunc: validation.StringLenBetween(0, 16384),
+				ValidateDiagFunc: validation.AllDiag(
+					validation.ToDiagFunc(validation.StringLenBetween(0, 16384)),
+					func(i any, path cty.Path) diag.Diagnostics {
+						var diags diag.Diagnostics
+						v, ok := i.(string)
+						if !ok {
+							return sdkdiag.AppendErrorf(diags, "expected type to be string")
+						}
+
+						if _, err := itypes.Base64Decode(v); err == nil {
+							// value is a base46 encoded string
+							return diag.Diagnostics{
+								diag.Diagnostic{
+									Severity:      diag.Warning,
+									Summary:       "Value is base64 encoded",
+									Detail:        "The value is base64 encoded. If you want to use base64 encoding, please use the user_data_base64 argument. user_data attribute is set as cleartext in state",
+									AttributePath: path,
+								},
+							}
+						}
+
+						return diags
+					},
+				),
 			},
 			"user_data_base64": {
 				Type:          schema.TypeString,
@@ -1452,7 +1467,6 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta any)
 			// we'll only set one or the other here to avoid a perma-diff.
 			// Since user_data_base64 was added later, we'll prefer to set
 			// user_data.
-
 			b64, ok := d.Get("user_data_base64").(string)
 			if ok && b64 != "" {
 				d.Set("user_data_base64", attr.UserData.Value)
