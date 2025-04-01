@@ -8,9 +8,11 @@ var (
 	ResourceCatalogDatabase       = resourceCatalogDatabase
 	ResourceCatalogTable          = resourceCatalogTable
 	ResourceCatalogTableOptimizer = newResourceCatalogTableOptimizer
+	ResourceClassifier            = resourceClassifier
 	ResourceJob                   = resourceJob
 
 	FindCatalogTableOptimizer = findCatalogTableOptimizer
+	FindClassifierByName      = findClassifierByName
 	FindDatabaseByName        = findDatabaseByName
 	FindJobByName             = findJobByName
 	FindTableByName           = findTableByName

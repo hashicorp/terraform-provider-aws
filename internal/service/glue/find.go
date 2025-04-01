@@ -255,30 +255,6 @@ func FindPartitionIndexByName(ctx context.Context, conn *glue.Client, id string)
 	return result, nil
 }
 
-func FindClassifierByName(ctx context.Context, conn *glue.Client, name string) (*awstypes.Classifier, error) {
-	input := &glue.GetClassifierInput{
-		Name: aws.String(name),
-	}
-
-	output, err := conn.GetClassifier(ctx, input)
-	if errs.IsA[*awstypes.EntityNotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.Classifier == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.Classifier, nil
-}
-
 func FindCrawlerByName(ctx context.Context, conn *glue.Client, name string) (*awstypes.Crawler, error) {
 	input := &glue.GetCrawlerInput{
 		Name: aws.String(name),

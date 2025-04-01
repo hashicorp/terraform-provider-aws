@@ -22,11 +22,7 @@ import (
 
 func RegisterSweepers() {
 	awsv2.Register("aws_glue_catalog_database", sweepCatalogDatabases)
-
-	resource.AddTestSweepers("aws_glue_classifier", &resource.Sweeper{
-		Name: "aws_glue_classifier",
-		F:    sweepClassifiers,
-	})
+	awsv2.Register("aws_glue_classifier", sweepClassifiers)
 
 	resource.AddTestSweepers("aws_glue_connection", &resource.Sweeper{
 		Name: "aws_glue_connection",
@@ -103,50 +99,35 @@ func sweepCatalogDatabases(ctx context.Context, client *conns.AWSClient) ([]swee
 	return sweepResources, nil
 }
 
-func sweepClassifiers(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
+func sweepClassifiers(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.GlueClient(ctx)
-
+	var input glue.GetClassifiersInput
 	sweepResources := make([]sweep.Sweepable, 0)
-	var sweeperErrs *multierror.Error
 
-	input := &glue.GetClassifiersInput{}
-
-	pages := glue.NewGetClassifiersPaginator(conn, input)
-
+	pages := glue.NewGetClassifiersPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
 		if err != nil {
-			if awsv2.SkipSweepError(err) {
-				log.Printf("[WARN] Skipping Glue Classifier sweep for %s: %s", region, err)
-				return nil
-			}
-			return fmt.Errorf("Error retrieving Glue Classifiers: %s", err)
+			return nil, err
 		}
 
-		for _, classifier := range page.Classifiers {
+		for _, v := range page.Classifiers {
 			var name string
-			if classifier.CsvClassifier != nil {
-				name = aws.ToString(classifier.CsvClassifier.Name)
-			} else if classifier.GrokClassifier != nil {
-				name = aws.ToString(classifier.GrokClassifier.Name)
-			} else if classifier.JsonClassifier != nil {
-				name = aws.ToString(classifier.JsonClassifier.Name)
-			} else if classifier.XMLClassifier != nil {
-				name = aws.ToString(classifier.XMLClassifier.Name)
+			if v.CsvClassifier != nil {
+				name = aws.ToString(v.CsvClassifier.Name)
+			} else if v.GrokClassifier != nil {
+				name = aws.ToString(v.GrokClassifier.Name)
+			} else if v.JsonClassifier != nil {
+				name = aws.ToString(v.JsonClassifier.Name)
+			} else if v.XMLClassifier != nil {
+				name = aws.ToString(v.XMLClassifier.Name)
 			}
 			if name == "" {
-				log.Printf("[WARN] Unable to determine Glue Classifier name: %#v", classifier)
 				continue
 			}
 
-			log.Printf("[INFO] Deleting Glue Classifier: %s", name)
-			r := ResourceClassifier()
+			r := resourceClassifier()
 			d := r.Data(nil)
 			d.SetId(name)
 
@@ -154,11 +135,7 @@ func sweepClassifiers(region string) error {
 		}
 	}
 
-	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Glue Classifiers: %w", err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
+	return sweepResources, nil
 }
 
 func sweepConnections(region string) error {
