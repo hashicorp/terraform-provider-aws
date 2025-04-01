@@ -67,15 +67,15 @@ func resourceBucket() *schema.Resource {
 		Identity: &schema.ResourceIdentity{
 			Version: 1,
 			Schema: map[string]*schema.Schema{
-				"account_id": {
+				names.AttrAccountID: {
 					Type:              schema.TypeString,
 					OptionalForImport: true,
 				},
-				"region": {
+				names.AttrRegion: {
 					Type:              schema.TypeString,
 					OptionalForImport: true,
 				},
-				"bucket": {
+				names.AttrBucket: {
 					Type:              schema.TypeString,
 					RequiredForImport: true,
 				},
@@ -783,19 +783,19 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta any)
 	d.SetId(bucket)
 	identity, err := d.Identity()
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
-	err = identity.Set("account_id", meta.(*conns.AWSClient).AccountID(ctx))
+	err = identity.Set(names.AttrAccountID, meta.(*conns.AWSClient).AccountID(ctx))
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
-	err = identity.Set("region", region)
+	err = identity.Set(names.AttrRegion, region)
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
-	err = identity.Set("bucket", bucket)
+	err = identity.Set(names.AttrBucket, bucket)
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {

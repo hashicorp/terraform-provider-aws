@@ -144,9 +144,9 @@ func TestAccS3Bucket_Basic_Identity(t *testing.T) {
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-						"account_id": tfknownvalue.AccountID(),
-						"region":     knownvalue.StringExact(region),
-						"bucket":     knownvalue.StringExact(rName),
+						names.AttrAccountID: tfknownvalue.AccountID(),
+						names.AttrRegion:    knownvalue.StringExact(region),
+						names.AttrBucket:    knownvalue.StringExact(rName),
 					}),
 				},
 			},
