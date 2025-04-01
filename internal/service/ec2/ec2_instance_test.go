@@ -307,7 +307,7 @@ func TestAccEC2Instance_atLeastOneOtherEBSVolume(t *testing.T) {
 				Config: testAccInstanceConfig_atLeastOneOtherEBSVolume(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "user_data", "3dc39dda39be1205215e776bad998da361a5955d"),
+					resource.TestCheckResourceAttr(resourceName, "user_data", "foo:-with-character's"),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", "0"), // This is an instance store AMI
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
@@ -5290,7 +5290,6 @@ func TestAccEC2Instance_UserData_ReplaceOnChange_On(t *testing.T) {
 				Config: testAccInstanceConfig_userDataSpecifiedReplaceFlag(rName, "TestData2", acctest.CtTrue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &instance2),
-					// testAccCheckInstanceRecreated(&instance1, &instance2),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -5334,7 +5333,6 @@ func TestAccEC2Instance_UserData_ReplaceOnChange_On_Base64(t *testing.T) {
 				Config: testAccInstanceConfig_userData64SpecifiedReplaceFlag(rName, "3dc39dda39be1205215e776bad998da361a5955e", acctest.CtTrue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &instance2),
-					// testAccCheckInstanceRecreated(&instance1, &instance2),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
