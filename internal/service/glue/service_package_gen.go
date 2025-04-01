@@ -182,7 +182,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "User Defined Function",
 		},
 		{
-			Factory:  ResourceWorkflow,
+			Factory:  resourceWorkflow,
 			TypeName: "aws_glue_workflow",
 			Name:     "Workflow",
 			Tags: &types.ServicePackageResourceTags{

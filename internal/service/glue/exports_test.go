@@ -24,6 +24,7 @@ var (
 	ResourceSecurityConfiguration         = resourceSecurityConfiguration
 	ResourceTrigger                       = resourceTrigger
 	ResourceUserDefinedFunction           = resourceUserDefinedFunction
+	ResourceWorkflow                      = resourceWorkflow
 
 	FindCatalogTableOptimizer    = findCatalogTableOptimizer
 	FindClassifierByName         = findClassifierByName
