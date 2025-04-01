@@ -136,37 +136,3 @@ func waitTriggerDeleted(ctx context.Context, conn *glue.Client, triggerName stri
 
 	return nil, err
 }
-
-func waitPartitionIndexCreated(ctx context.Context, conn *glue.Client, id string, timeout time.Duration) (*awstypes.PartitionIndexDescriptor, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.PartitionIndexStatusCreating),
-		Target:  enum.Slice(awstypes.PartitionIndexStatusActive),
-		Refresh: statusPartitionIndex(ctx, conn, id),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.PartitionIndexDescriptor); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitPartitionIndexDeleted(ctx context.Context, conn *glue.Client, id string, timeout time.Duration) (*awstypes.PartitionIndexDescriptor, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.PartitionIndexStatusDeleting),
-		Target:  []string{},
-		Refresh: statusPartitionIndex(ctx, conn, id),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.PartitionIndexDescriptor); ok {
-		return output, err
-	}
-
-	return nil, err
-}

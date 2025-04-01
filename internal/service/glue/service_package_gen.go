@@ -133,12 +133,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourcePartition,
+			Factory:  resourcePartition,
 			TypeName: "aws_glue_partition",
 			Name:     "Partition",
 		},
 		{
-			Factory:  ResourcePartitionIndex,
+			Factory:  resourcePartitionIndex,
 			TypeName: "aws_glue_partition_index",
 			Name:     "Partition Index",
 		},

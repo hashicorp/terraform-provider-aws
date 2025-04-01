@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/glue"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 const (
@@ -85,21 +84,5 @@ func statusTrigger(ctx context.Context, conn *glue.Client, triggerName string) r
 		}
 
 		return output, string(output.Trigger.State), nil
-	}
-}
-
-func statusPartitionIndex(ctx context.Context, conn *glue.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
-		output, err := FindPartitionIndexByName(ctx, conn, id)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, string(output.IndexStatus), nil
 	}
 }

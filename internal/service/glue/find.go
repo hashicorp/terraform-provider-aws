@@ -11,7 +11,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 // FindTriggerByName returns the Trigger corresponding to the specified name.
@@ -103,103 +102,4 @@ func FindSchemaVersionByID(ctx context.Context, conn *glue.Client, id string) (*
 	}
 
 	return output, nil
-}
-
-// FindPartitionByValues returns the Partition corresponding to the specified Partition Values.
-func FindPartitionByValues(ctx context.Context, conn *glue.Client, id string) (*awstypes.Partition, error) {
-	catalogID, dbName, tableName, values, err := readPartitionID(id)
-	if err != nil {
-		return nil, err
-	}
-
-	input := &glue.GetPartitionInput{
-		CatalogId:       aws.String(catalogID),
-		DatabaseName:    aws.String(dbName),
-		TableName:       aws.String(tableName),
-		PartitionValues: values,
-	}
-
-	output, err := conn.GetPartition(ctx, input)
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.Partition == nil {
-		return nil, nil
-	}
-
-	return output.Partition, nil
-}
-
-// FindPartitionIndexByName returns the Partition Index corresponding to the specified Partition Index Name.
-func FindPartitionIndexByName(ctx context.Context, conn *glue.Client, id string) (*awstypes.PartitionIndexDescriptor, error) {
-	catalogID, dbName, tableName, partIndex, err := readPartitionIndexID(id)
-	if err != nil {
-		return nil, err
-	}
-
-	input := &glue.GetPartitionIndexesInput{
-		CatalogId:    aws.String(catalogID),
-		DatabaseName: aws.String(dbName),
-		TableName:    aws.String(tableName),
-	}
-
-	var result *awstypes.PartitionIndexDescriptor
-
-	output, err := conn.GetPartitionIndexes(ctx, input)
-
-	if errs.IsA[*awstypes.EntityNotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	for _, partInd := range output.PartitionIndexDescriptorList {
-		if aws.ToString(partInd.IndexName) == partIndex {
-			result = &partInd
-			break
-		}
-	}
-
-	if result == nil {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	return result, nil
-}
-
-func findCrawlerByName(ctx context.Context, conn *glue.Client, name string) (*awstypes.Crawler, error) {
-	input := &glue.GetCrawlerInput{
-		Name: aws.String(name),
-	}
-
-	output, err := conn.GetCrawler(ctx, input)
-	if errs.IsA[*awstypes.EntityNotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.Crawler == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.Crawler, nil
 }

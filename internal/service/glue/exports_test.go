@@ -16,6 +16,8 @@ var (
 	ResourceDevEndpoint                   = resourceDevEndpoint
 	ResourceJob                           = resourceJob
 	ResourceMLTransform                   = resourceMLTransform
+	ResourcePartition                     = resourcePartition
+	ResourcePartitionIndex                = resourcePartitionIndex
 
 	FindCatalogTableOptimizer    = findCatalogTableOptimizer
 	FindClassifierByName         = findClassifierByName
@@ -25,5 +27,7 @@ var (
 	FindDataQualityRulesetByName = findDataQualityRulesetByName
 	FindDevEndpointByName        = findDevEndpointByName
 	FindJobByName                = findJobByName
+	FindPartitionByValues        = findPartitionByValues
+	FindPartitionIndexByName     = findPartitionIndexByName
 	FindTableByName              = findTableByName
 )
