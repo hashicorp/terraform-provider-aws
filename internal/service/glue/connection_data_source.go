@@ -20,9 +20,10 @@ import (
 )
 
 // @SDKDataSource("aws_glue_connection", name="Connection")
-func DataSourceConnection() *schema.Resource {
+func dataSourceConnection() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceConnectionRead,
+
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,
