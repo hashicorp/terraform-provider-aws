@@ -808,7 +808,6 @@ func resourceInstance() *schema.Resource {
 			"user_data": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				Computed:      true,
 				ConflictsWith: []string{"user_data_base64"},
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					// Sometimes the EC2 API responds with the equivalent, empty SHA1 sum
@@ -836,7 +835,6 @@ func resourceInstance() *schema.Resource {
 			"user_data_base64": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				Computed:      true,
 				ConflictsWith: []string{"user_data"},
 				ValidateFunc:  verify.ValidBase64String,
 			},
@@ -1454,8 +1452,9 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta any)
 			// we'll only set one or the other here to avoid a perma-diff.
 			// Since user_data_base64 was added later, we'll prefer to set
 			// user_data.
-			_, b64 := d.GetOk("user_data_base64")
-			if b64 {
+
+			b64, ok := d.Get("user_data_base64").(string)
+			if ok && b64 != "" {
 				d.Set("user_data_base64", attr.UserData.Value)
 			} else {
 				data, err := itypes.Base64Decode(aws.ToString(attr.UserData.Value))
