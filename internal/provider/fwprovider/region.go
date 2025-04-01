@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -134,6 +135,58 @@ func (r regionDataSourceInterceptor) read(ctx context.Context, opts interceptorO
 			return diags
 		}
 	}
+
+	return diags
+}
+
+// regionEphemeralResourceInterceptor implements per-resource Region override functionality for ephemeral resources.
+type regionEphemeralResourceInterceptor struct {
+	validateRegionInPartition bool
+}
+
+func newRegionEphemeralResourceInterceptor(validateRegionInPartition bool) ephemeralResourceInterceptor {
+	return &regionEphemeralResourceInterceptor{
+		validateRegionInPartition: validateRegionInPartition,
+	}
+}
+
+func (r regionEphemeralResourceInterceptor) open(ctx context.Context, opts interceptorOptions[ephemeral.OpenRequest, ephemeral.OpenResponse]) diag.Diagnostics {
+	c := opts.c
+	var diags diag.Diagnostics
+
+	switch response, when := opts.response, opts.when; when {
+	case Before:
+		// As data sources have no ModifyPlan functionality we validate the per-resource Region override value here.
+		if r.validateRegionInPartition {
+			if inContext, ok := conns.FromContext(ctx); ok {
+				if v := inContext.OverrideRegion(); v != "" {
+					if err := validateRegionInPartition(ctx, c, v); err != nil {
+						diags.AddAttributeError(path.Root(names.AttrRegion), "Invalid Region Value", err.Error())
+
+						return diags
+					}
+				}
+			}
+		}
+	case After:
+		// Set region in state after R.
+		diags.Append(response.Result.SetAttribute(ctx, path.Root(names.AttrRegion), c.Region(ctx))...)
+		if diags.HasError() {
+			return diags
+		}
+	}
+
+	return diags
+}
+
+func (r regionEphemeralResourceInterceptor) renew(ctx context.Context, opts interceptorOptions[ephemeral.RenewRequest, ephemeral.RenewResponse]) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	return diags
+}
+
+func (r regionEphemeralResourceInterceptor) close(ctx context.Context, opts interceptorOptions[ephemeral.CloseRequest, ephemeral.CloseResponse]) diag.Diagnostics {
+	var diags diag.Diagnostics
 
 	return diags
 }

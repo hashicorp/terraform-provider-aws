@@ -481,7 +481,6 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 
 				var interceptors ephemeralResourceInterceptors
 
-				// TODO REGION Inject a top-level "region" attribute.
 				if isRegionOverrideEnabled {
 					v := v.Region
 
@@ -496,7 +495,7 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 						}
 					}
 
-					// TODO REGION Add a ConfigValidator for Region.
+					interceptors = append(interceptors, newRegionEphemeralResourceInterceptor(v.IsValidateOverrideInPartition))
 				}
 
 				opts := wrappedEphemeralResourceOptions{
@@ -570,7 +569,7 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 					modifyPlanFuncs = append(modifyPlanFuncs, forceNewIfRegionValueChanges)
 				}
 
-				// TODO REGION: Ensure that WithNoUpdate.Update isn't invoked on region change.
+				// TODO REGION: Ensure that WithNoUpdate. Update isn't invoked on region change. Remove WithNoUpdate.
 			}
 
 			if v.Tags != nil {
