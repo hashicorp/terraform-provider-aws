@@ -254,7 +254,7 @@ func FindPartitionIndexByName(ctx context.Context, conn *glue.Client, id string)
 	return result, nil
 }
 
-func FindCrawlerByName(ctx context.Context, conn *glue.Client, name string) (*awstypes.Crawler, error) {
+func findCrawlerByName(ctx context.Context, conn *glue.Client, name string) (*awstypes.Crawler, error) {
 	input := &glue.GetCrawlerInput{
 		Name: aws.String(name),
 	}

@@ -10,11 +10,13 @@ var (
 	ResourceCatalogTableOptimizer = newResourceCatalogTableOptimizer
 	ResourceClassifier            = resourceClassifier
 	ResourceConnection            = resourceConnection
+	ResourceCrawler               = resourceCrawler
 	ResourceJob                   = resourceJob
 
 	FindCatalogTableOptimizer  = findCatalogTableOptimizer
 	FindClassifierByName       = findClassifierByName
 	FindConnectionByTwoPartKey = findConnectionByTwoPartKey
+	FindCrawlerByName          = findCrawlerByName
 	FindDatabaseByName         = findDatabaseByName
 	FindJobByName              = findJobByName
 	FindTableByName            = findTableByName

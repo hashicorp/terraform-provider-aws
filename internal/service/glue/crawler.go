@@ -36,7 +36,7 @@ func targets() []string {
 
 // @SDKResource("aws_glue_crawler", name="Crawler")
 // @Tags(identifierAttribute="arn")
-func ResourceCrawler() *schema.Resource {
+func resourceCrawler() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCrawlerCreate,
 		ReadWithoutTimeout:   resourceCrawlerRead,
@@ -484,7 +484,7 @@ func resourceCrawlerRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
-	crawler, err := FindCrawlerByName(ctx, conn, d.Id())
+	crawler, err := findCrawlerByName(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Glue Crawler (%s) not found, removing from state", d.Id())
 		d.SetId("")

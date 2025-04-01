@@ -24,11 +24,7 @@ func RegisterSweepers() {
 	awsv2.Register("aws_glue_catalog_database", sweepCatalogDatabases)
 	awsv2.Register("aws_glue_classifier", sweepClassifiers)
 	awsv2.Register("aws_glue_connection", sweepConnections)
-
-	resource.AddTestSweepers("aws_glue_crawler", &resource.Sweeper{
-		Name: "aws_glue_crawler",
-		F:    sweepCrawlers,
-	})
+	awsv2.Register("aws_glue_crawler", sweepCrawlers)
 
 	resource.AddTestSweepers("aws_glue_dev_endpoint", &resource.Sweeper{
 		Name: "aws_glue_dev_endpoint",
@@ -161,48 +157,29 @@ func sweepConnections(ctx context.Context, client *conns.AWSClient) ([]sweep.Swe
 	return sweepResources, nil
 }
 
-func sweepCrawlers(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
+func sweepCrawlers(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.GlueClient(ctx)
-
+	var input glue.GetCrawlersInput
 	sweepResources := make([]sweep.Sweepable, 0)
-	var sweeperErrs *multierror.Error
 
-	input := &glue.GetCrawlersInput{}
-
-	pages := glue.NewGetCrawlersPaginator(conn, input)
-
+	pages := glue.NewGetCrawlersPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
 		if err != nil {
-			if awsv2.SkipSweepError(err) {
-				log.Printf("[WARN] Skipping Glue Crawler sweep for %s: %s", region, err)
-				return nil
-			}
-			return fmt.Errorf("Error retrieving Glue Crawlers: %s", err)
+			return nil, err
 		}
 
-		for _, crawler := range page.Crawlers {
-			name := aws.ToString(crawler.Name)
-
-			r := ResourceCrawler()
+		for _, v := range page.Crawlers {
+			r := resourceCrawler()
 			d := r.Data(nil)
-			d.SetId(name)
+			d.SetId(aws.ToString(v.Name))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 	}
 
-	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping API Gateway VPC Links: %w", err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
+	return sweepResources, nil
 }
 
 func sweepDevEndpoints(region string) error {

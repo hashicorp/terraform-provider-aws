@@ -88,7 +88,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceCrawler,
+			Factory:  resourceCrawler,
 			TypeName: "aws_glue_crawler",
 			Name:     "Crawler",
 			Tags: &types.ServicePackageResourceTags{
