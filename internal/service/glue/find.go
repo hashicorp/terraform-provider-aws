@@ -27,28 +27,6 @@ func FindTriggerByName(ctx context.Context, conn *glue.Client, name string) (*gl
 	return output, nil
 }
 
-// FindRegistryByID returns the Registry corresponding to the specified ID.
-func FindRegistryByID(ctx context.Context, conn *glue.Client, id string) (*glue.GetRegistryOutput, error) {
-	input := &glue.GetRegistryInput{
-		RegistryId: createRegistryID(id),
-	}
-
-	output, err := conn.GetRegistry(ctx, input)
-
-	if errs.IsA[*awstypes.EntityNotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	return output, nil
-}
-
 // FindRegistryByName returns the Registry corresponding to the specified name.
 func FindRegistryByName(ctx context.Context, conn *glue.Client, name string) (*glue.GetRegistryOutput, error) {
 	input := &glue.GetRegistryInput{

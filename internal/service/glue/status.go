@@ -12,27 +12,10 @@ import (
 )
 
 const (
-	registryStatusUnknown      = "Unknown"
 	schemaStatusUnknown        = "Unknown"
 	schemaVersionStatusUnknown = "Unknown"
 	triggerStatusUnknown       = "Unknown"
 )
-
-// statusRegistry fetches the Registry and its Status
-func statusRegistry(ctx context.Context, conn *glue.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
-		output, err := FindRegistryByID(ctx, conn, id)
-		if err != nil {
-			return nil, registryStatusUnknown, err
-		}
-
-		if output == nil {
-			return output, registryStatusUnknown, nil
-		}
-
-		return output, string(output.Status), nil
-	}
-}
 
 // statusSchema fetches the Schema and its Status
 func statusSchema(ctx context.Context, conn *glue.Client, id string) retry.StateRefreshFunc {

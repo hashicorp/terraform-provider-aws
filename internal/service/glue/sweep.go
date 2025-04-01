@@ -28,11 +28,7 @@ func RegisterSweepers() {
 	awsv2.Register("aws_glue_dev_endpoint", sweepDevEndpoints)
 	awsv2.Register("aws_glue_job", sweepJobs)
 	awsv2.Register("aws_glue_ml_transform", sweepMLTransforms)
-
-	resource.AddTestSweepers("aws_glue_registry", &resource.Sweeper{
-		Name: "aws_glue_registry",
-		F:    sweepRegistry,
-	})
+	awsv2.Register("aws_glue_registry", sweepRegistries)
 
 	resource.AddTestSweepers("aws_glue_schema", &resource.Sweeper{
 		Name: "aws_glue_schema",
@@ -254,40 +250,29 @@ func sweepMLTransforms(ctx context.Context, client *conns.AWSClient) ([]sweep.Sw
 	return sweepResources, nil
 }
 
-func sweepRegistry(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
+func sweepRegistries(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.GlueClient(ctx)
-
+	var input glue.ListRegistriesInput
 	sweepResources := make([]sweep.Sweepable, 0)
-	var sweeperErrs *multierror.Error
 
-	listOutput, err := conn.ListRegistries(ctx, &glue.ListRegistriesInput{})
-	if err != nil {
-		// Some endpoints that do not support Glue Registrys return InternalFailure
-		if awsv2.SkipSweepError(err) || tfawserr.ErrCodeEquals(err, "InternalFailure") {
-			log.Printf("[WARN] Skipping Glue Registry sweep for %s: %s", region, err)
-			return nil
+	pages := glue.NewListRegistriesPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
 		}
-		return fmt.Errorf("Error retrieving Glue Registry: %s", err)
-	}
-	for _, registry := range listOutput.Registries {
-		arn := aws.ToString(registry.RegistryArn)
-		r := ResourceRegistry()
-		d := r.Data(nil)
-		d.SetId(arn)
 
-		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-	}
+		for _, v := range page.Registries {
+			r := resourceRegistry()
+			d := r.Data(nil)
+			d.SetId(aws.ToString(v.RegistryArn))
 
-	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Glue Registry: %w", err))
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
 	}
 
-	return sweeperErrs.ErrorOrNil()
+	return sweepResources, nil
 }
 
 func sweepSchema(region string) error {

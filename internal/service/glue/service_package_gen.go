@@ -143,7 +143,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Partition Index",
 		},
 		{
-			Factory:  ResourceRegistry,
+			Factory:  resourceRegistry,
 			TypeName: "aws_glue_registry",
 			Name:     "Registry",
 			Tags: &types.ServicePackageResourceTags{

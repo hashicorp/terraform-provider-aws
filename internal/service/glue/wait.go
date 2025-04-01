@@ -16,29 +16,10 @@ import (
 const (
 	// Maximum amount of time to wait for an Operation to return Deleted
 	iamPropagationTimeout         = 2 * time.Minute
-	registryDeleteTimeout         = 2 * time.Minute
 	schemaAvailableTimeout        = 2 * time.Minute
 	schemaDeleteTimeout           = 2 * time.Minute
 	schemaVersionAvailableTimeout = 2 * time.Minute
 )
-
-// waitRegistryDeleted waits for a Registry to return Deleted
-func waitRegistryDeleted(ctx context.Context, conn *glue.Client, registryID string) (*glue.GetRegistryOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.RegistryStatusDeleting),
-		Target:  []string{},
-		Refresh: statusRegistry(ctx, conn, registryID),
-		Timeout: registryDeleteTimeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*glue.GetRegistryOutput); ok {
-		return output, err
-	}
-
-	return nil, err
-}
 
 // waitSchemaAvailable waits for a Schema to return Available
 func waitSchemaAvailable(ctx context.Context, conn *glue.Client, registryID string) (*glue.GetSchemaOutput, error) { //nolint:unparam

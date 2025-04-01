@@ -18,6 +18,7 @@ var (
 	ResourceMLTransform                   = resourceMLTransform
 	ResourcePartition                     = resourcePartition
 	ResourcePartitionIndex                = resourcePartitionIndex
+	ResourceRegistry                      = resourceRegistry
 
 	FindCatalogTableOptimizer    = findCatalogTableOptimizer
 	FindClassifierByName         = findClassifierByName
@@ -29,5 +30,6 @@ var (
 	FindJobByName                = findJobByName
 	FindPartitionByValues        = findPartitionByValues
 	FindPartitionIndexByName     = findPartitionIndexByName
+	FindRegistryByID             = findRegistryByID
 	FindTableByName              = findTableByName
 )
