@@ -110,22 +110,6 @@ func statusTrigger(ctx context.Context, conn *glue.Client, triggerName string) r
 	}
 }
 
-func statusDevEndpoint(ctx context.Context, conn *glue.Client, name string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
-		output, err := FindDevEndpointByName(ctx, conn, name)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, aws.ToString(output.Status), nil
-	}
-}
-
 func statusPartitionIndex(ctx context.Context, conn *glue.Client, id string) retry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := FindPartitionIndexByName(ctx, conn, id)

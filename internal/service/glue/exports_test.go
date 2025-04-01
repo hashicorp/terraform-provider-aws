@@ -13,6 +13,7 @@ var (
 	ResourceCrawler                       = resourceCrawler
 	ResourceDataCatalogEncryptionSettings = resourceDataCatalogEncryptionSettings
 	ResourceDataQualityRuleset            = resourceDataQualityRuleset
+	ResourceDevEndpoint                   = resourceDevEndpoint
 	ResourceJob                           = resourceJob
 
 	FindCatalogTableOptimizer    = findCatalogTableOptimizer
@@ -21,6 +22,7 @@ var (
 	FindCrawlerByName            = findCrawlerByName
 	FindDatabaseByName           = findDatabaseByName
 	FindDataQualityRulesetByName = findDataQualityRulesetByName
+	FindDevEndpointByName        = findDevEndpointByName
 	FindJobByName                = findJobByName
 	FindTableByName              = findTableByName
 )

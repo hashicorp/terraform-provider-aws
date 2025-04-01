@@ -5,15 +5,12 @@ package glue
 
 import (
 	"context"
-	"errors"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/glue"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 const (
@@ -153,48 +150,6 @@ func waitTriggerDeleted(ctx context.Context, conn *glue.Client, triggerName stri
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*glue.GetTriggerOutput); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitDevEndpointCreated(ctx context.Context, conn *glue.Client, name string) (*awstypes.DevEndpoint, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{devEndpointStatusProvisioning},
-		Target:  []string{devEndpointStatusReady},
-		Refresh: statusDevEndpoint(ctx, conn, name),
-		Timeout: 15 * time.Minute,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.DevEndpoint); ok {
-		if status := aws.ToString(output.Status); status == devEndpointStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
-		}
-
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitDevEndpointDeleted(ctx context.Context, conn *glue.Client, name string) (*awstypes.DevEndpoint, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{devEndpointStatusTerminating},
-		Target:  []string{},
-		Refresh: statusDevEndpoint(ctx, conn, name),
-		Timeout: 15 * time.Minute,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.DevEndpoint); ok {
-		if status := aws.ToString(output.Status); status == devEndpointStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
-		}
-
 		return output, err
 	}
 

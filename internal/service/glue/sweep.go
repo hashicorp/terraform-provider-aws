@@ -25,11 +25,7 @@ func RegisterSweepers() {
 	awsv2.Register("aws_glue_classifier", sweepClassifiers)
 	awsv2.Register("aws_glue_connection", sweepConnections)
 	awsv2.Register("aws_glue_crawler", sweepCrawlers)
-
-	resource.AddTestSweepers("aws_glue_dev_endpoint", &resource.Sweeper{
-		Name: "aws_glue_dev_endpoint",
-		F:    sweepDevEndpoints,
-	})
+	awsv2.Register("aws_glue_dev_endpoint", sweepDevEndpoints)
 
 	awsv2.Register("aws_glue_job", sweepJobs)
 
@@ -182,28 +178,17 @@ func sweepCrawlers(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepa
 	return sweepResources, nil
 }
 
-func sweepDevEndpoints(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	input := &glue.GetDevEndpointsInput{}
+func sweepDevEndpoints(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.GlueClient(ctx)
+	var input glue.GetDevEndpointsInput
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	pages := glue.NewGetDevEndpointsPaginator(conn, input)
-
+	pages := glue.NewGetDevEndpointsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Glue Dev Endpoint sweep for %s: %s", region, err)
-			return nil
-		}
-
 		if err != nil {
-			return fmt.Errorf("error listing Glue Dev Endpoints (%s): %w", region, err)
+			return nil, err
 		}
 
 		for _, v := range page.DevEndpoints {
@@ -213,7 +198,7 @@ func sweepDevEndpoints(region string) error {
 				continue
 			}
 
-			r := ResourceDevEndpoint()
+			r := resourceDevEndpoint()
 			d := r.Data(nil)
 			d.SetId(name)
 
@@ -221,13 +206,7 @@ func sweepDevEndpoints(region string) error {
 		}
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping Glue Dev Endpoints (%s): %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }
 
 func sweepJobs(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {

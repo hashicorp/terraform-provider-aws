@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/glue"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -256,6 +257,31 @@ func deleteConnection(ctx context.Context, conn *glue.Client, catalogID, connect
 	}
 
 	return nil
+}
+
+func findConnectionByTwoPartKey(ctx context.Context, conn *glue.Client, name, catalogID string) (*awstypes.Connection, error) {
+	input := &glue.GetConnectionInput{
+		CatalogId: aws.String(catalogID),
+		Name:      aws.String(name),
+	}
+
+	output, err := conn.GetConnection(ctx, input)
+	if errs.IsA[*awstypes.EntityNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Connection == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Connection, nil
 }
 
 func expandConnectionInput(d *schema.ResourceData) *awstypes.ConnectionInput {

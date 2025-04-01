@@ -14,55 +14,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindDevEndpointByName(ctx context.Context, conn *glue.Client, name string) (*awstypes.DevEndpoint, error) {
-	input := &glue.GetDevEndpointInput{
-		EndpointName: aws.String(name),
-	}
-
-	output, err := conn.GetDevEndpoint(ctx, input)
-
-	if errs.IsA[*awstypes.EntityNotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.DevEndpoint == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.DevEndpoint, nil
-}
-
-func findDataQualityRulesetByName(ctx context.Context, conn *glue.Client, name string) (*glue.GetDataQualityRulesetOutput, error) {
-	input := &glue.GetDataQualityRulesetInput{
-		Name: aws.String(name),
-	}
-
-	output, err := conn.GetDataQualityRuleset(ctx, input)
-	if errs.IsA[*awstypes.EntityNotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output, nil
-}
-
 // FindTriggerByName returns the Trigger corresponding to the specified name.
 func FindTriggerByName(ctx context.Context, conn *glue.Client, name string) (*glue.GetTriggerOutput, error) {
 	input := &glue.GetTriggerInput{
@@ -178,31 +129,6 @@ func FindPartitionByValues(ctx context.Context, conn *glue.Client, id string) (*
 	}
 
 	return output.Partition, nil
-}
-
-func findConnectionByTwoPartKey(ctx context.Context, conn *glue.Client, name, catalogID string) (*awstypes.Connection, error) {
-	input := &glue.GetConnectionInput{
-		CatalogId: aws.String(catalogID),
-		Name:      aws.String(name),
-	}
-
-	output, err := conn.GetConnection(ctx, input)
-	if errs.IsA[*awstypes.EntityNotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.Connection == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.Connection, nil
 }
 
 // FindPartitionIndexByName returns the Partition Index corresponding to the specified Partition Index Name.
