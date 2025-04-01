@@ -5,13 +5,14 @@ package glue
 
 // Exports for use in tests only.
 var (
-	ResourceCatalogDatabase       = resourceCatalogDatabase
-	ResourceCatalogTable          = resourceCatalogTable
-	ResourceCatalogTableOptimizer = newResourceCatalogTableOptimizer
-	ResourceClassifier            = resourceClassifier
-	ResourceConnection            = resourceConnection
-	ResourceCrawler               = resourceCrawler
-	ResourceJob                   = resourceJob
+	ResourceCatalogDatabase               = resourceCatalogDatabase
+	ResourceCatalogTable                  = resourceCatalogTable
+	ResourceCatalogTableOptimizer         = newResourceCatalogTableOptimizer
+	ResourceClassifier                    = resourceClassifier
+	ResourceConnection                    = resourceConnection
+	ResourceCrawler                       = resourceCrawler
+	ResourceDataCatalogEncryptionSettings = resourceDataCatalogEncryptionSettings
+	ResourceJob                           = resourceJob
 
 	FindCatalogTableOptimizer  = findCatalogTableOptimizer
 	FindClassifierByName       = findClassifierByName
