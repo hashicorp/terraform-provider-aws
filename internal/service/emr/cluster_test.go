@@ -1497,9 +1497,19 @@ func TestAccEMRCluster_ebs(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "master_instance_group.0.ebs_config.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "master_instance_group.0.ebs_config.0.volumes_per_instance", "2"),
 					resource.TestCheckResourceAttr(resourceName, "core_instance_group.0.ebs_config.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "core_instance_group.0.ebs_config.0.volumes_per_instance", "2"),
+
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "master_instance_group.0.ebs_config.*", map[string]string{
+						names.AttrSize:         "32",
+						names.AttrType:         "gp2",
+						"volumes_per_instance": "2",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "master_instance_group.0.ebs_config.*", map[string]string{
+						names.AttrSize:         "50",
+						names.AttrType:         "gp3",
+						names.AttrThroughput:   "500",
+						"volumes_per_instance": "2",
+					}),
 				),
 			},
 			{
@@ -1510,6 +1520,10 @@ func TestAccEMRCluster_ebs(t *testing.T) {
 					"cluster_state", // Ignore RUNNING versus WAITING changes
 					"configurations",
 					"keep_job_flow_alive_when_no_steps",
+
+					// https://github.com/hashicorp/terraform-plugin-testing/issues/269
+					"master_instance_group.0.ebs_config",
+					"core_instance_group.0.ebs_config",
 				},
 			},
 		},

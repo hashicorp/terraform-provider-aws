@@ -1799,7 +1799,7 @@ func flattenEBSConfig(apiObjects []awstypes.EbsBlockDevice) *schema.Set {
 			tfMap[names.AttrSize] = int(aws.ToInt32(apiObject.VolumeSpecification.SizeInGB))
 		}
 		if apiObject.VolumeSpecification.Throughput != nil {
-			tfMap[names.AttrThroughput] = aws.ToInt32(apiObject.VolumeSpecification.Throughput)
+			tfMap[names.AttrThroughput] = int(aws.ToInt32(apiObject.VolumeSpecification.Throughput))
 		}
 		if apiObject.VolumeSpecification.VolumeType != nil {
 			tfMap[names.AttrType] = aws.ToString(apiObject.VolumeSpecification.VolumeType)
