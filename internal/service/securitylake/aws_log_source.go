@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/securitylake"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/securitylake/types"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -91,17 +92,17 @@ func (r *awsLogSourceResource) Create(ctx context.Context, request resource.Crea
 
 	in := fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
 
-	thing1, thing2 := setupSerializationObjects[awsLogSourceResourceModel, awstypes.AwsLogSourceConfiguration](in)
+	inLog, outLog := setupSerializationObjects[awsLogSourceResourceModel, awstypes.AwsLogSourceConfiguration](in)
 
 	input := &securitylake.CreateAwsLogSourceInput{}
-	response.Diagnostics.Append(fwflex.Expand(ctx, thing1, &thing2)...)
+	response.Diagnostics.Append(fwflex.Expand(ctx, inLog, &outLog)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	input.Sources = thing2.Data
+	input.Sources = outLog.Data
 
-	log.Printf("[DEBUG] input: %v", input)
+	log.Printf("[WARN] input: %v", input)
 
 	_, err := retryDataLakeConflictWithMutex(ctx, func() (*securitylake.CreateAwsLogSourceOutput, error) {
 		return conn.CreateAwsLogSource(ctx, input)
@@ -115,6 +116,8 @@ func (r *awsLogSourceResource) Create(ctx context.Context, request resource.Crea
 
 	// Set values for unknowns.
 	data.ID = fwflex.StringValueToFramework(ctx, input.Sources[0].SourceName)
+
+	log.Printf("[WARN] data.ID: %v", data.ID)
 
 	logSource, err := findAWSLogSourceBySourceName(ctx, conn, awstypes.AwsLogSourceName(data.ID.ValueString()))
 
@@ -140,6 +143,7 @@ func (r *awsLogSourceResource) Read(ctx context.Context, request resource.ReadRe
 	conn := r.Meta().SecurityLakeClient(ctx)
 
 	logSource, err := findAWSLogSourceBySourceName(ctx, conn, awstypes.AwsLogSourceName(data.ID.ValueString()))
+	log.Printf("[WARN] DID I GET HEERE logSource: %v", logSource)
 
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -161,6 +165,9 @@ func (r *awsLogSourceResource) Read(ctx context.Context, request resource.ReadRe
 		return
 	}
 
+	// data = sourceData
+	// data = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &sourceData)
+	sourceData.ID = types.StringValue(string(logSource.SourceName))
 	data = sourceData
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
@@ -258,6 +265,11 @@ func findAWSLogSourceBySourceName(ctx context.Context, conn *securitylake.Client
 	}
 
 	return output, nil
+}
+
+func (r *awsLogSourceResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	log.Printf("[WARN] DID I GET HERE importstate: %v", req)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 type awsLogSourceResourceModel struct {
