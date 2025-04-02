@@ -20,9 +20,11 @@ Upgrade topics:
 - [Dropping Support For Amazon Worklink](#dropping-support-for-amazon-worklink)
 - [AWS OpsWorks Stacks End of Life](#aws-opsworks-stacks-end-of-life)
 - [data-source/aws_batch_compute_environment](#data-sourceaws_batch_compute_environment)
+- [data-source/aws_globalaccelerator_accelerator](#data-sourceaws_globalaccelerator_accelerator)
 - [resource/aws_batch_compute_environment](#resourceaws_batch_compute_environment)
 - [resource/aws_cloudfront_response_headers_policy](#resourceaws_cloudfront_response_headers_policy)
 - [resource/aws_instance](#resourceaws_instance)
+- [resource/aws_networkmanager_core_network](#resourceaws_networkmanager_core_network)
 - [resource/aws_redshift_cluster](#resourceaws_redshift_cluster)
 - [resource/aws_redshift_service_account](#resourceaws_redshift_service_account)
 - [resource/aws_sagemaker_notebook_instance](#resourceaws_sagemaker_notebook_instance)
@@ -115,6 +117,10 @@ As the AWS OpsWorks Stacks service has reached [End Of Life](https://docs.aws.am
 
 * `compute_environment_name` has been renamed to `name`.
 
+## data-source/aws_globalaccelerator_accelerator
+
+* `id` is now computed only.
+
 ## resource/aws_batch_compute_environment
 
 * `compute_environment_name` has been renamed to `name`.
@@ -127,6 +133,10 @@ As the AWS OpsWorks Stacks service has reached [End Of Life](https://docs.aws.am
 ## resource/aws_instance
 
 * The `user_data` attribute no longer applies hashing and is now stored in clear text. **Do not include passwords or sensitive information** in `user_data`, as it will be visible in plaintext. Follow [AWS Best Practices](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-metadata.html) to secure your instance metadata. If you need to provide base64-encoded user data, use the `user_data_base64` attribute instead.
+
+## resource/aws_networkmanager_core_network
+
+* The `base_policy_region` argument has been removed. Use `base_policy_regions` instead.
 
 ## resource/aws_redshift_cluster
 
@@ -145,7 +155,3 @@ The `aws_redshift_service_account` resource has been removed. AWS [recommends](h
 ## resource/aws_spot_instance_request
 
 * Remove `block_duration_minutes` from your configuration—it no longer exists.
-
-## datasource/aws_globalaccelerator_accelerator
-
-* `id` is now computed only.
