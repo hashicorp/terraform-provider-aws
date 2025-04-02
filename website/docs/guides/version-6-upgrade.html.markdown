@@ -24,6 +24,7 @@ Upgrade topics:
 - [resource/aws_cloudfront_response_headers_policy](#resourceaws_cloudfront_response_headers_policy)
 - [resource/aws_redshift_cluster](#resourceaws_redshift_cluster)
 - [resource/aws_redshift_service_account](#resourceaws_redshift_service_account)
+- [resource/aws_sagemaker_notebook_instance](#resourceaws_sagemaker_notebook_instance)
 - [resource/aws_spot_instance_request](#resourceaws_spot_instance_request)
 
 <!-- /TOC -->
@@ -125,13 +126,17 @@ As the AWS OpsWorks Stacks service has reached [End Of Life](https://docs.aws.am
 ## resource/aws_redshift_cluster
 
 * The `publicly_accessible` attribute now defaults to `false`.
-* Remove `snapshot_copy` from configuration as it no longer exists. Use the `aws_redshift_snapshot_copy` resource instead.
-* Remove `logging` from configuration as it no longer exists. Use the `aws_redshift_logging` resource instead.
+* Remove `snapshot_copy` from your configuration—it no longer exists. Use the `aws_redshift_snapshot_copy` resource instead.
+* Remove `logging` from your configuration—it no longer exists. Use the `aws_redshift_logging` resource instead.
 
 ## resource/aws_redshift_service_account
 
 The `aws_redshift_service_account` resource has been removed. AWS [recommends](https://docs.aws.amazon.com/redshift/latest/mgmt/db-auditing.html#db-auditing-bucket-permissions) that a [service principal name](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_principal.html#principal-services) should be used instead of an AWS account ID in any relevant IAM policy.
 
+## resource/aws_sagemaker_notebook_instance
+
+* Remove `accelerator_types` from your configuration—it no longer exists. Use `instance_type` instead to use [Inferentia](https://docs.aws.amazon.com/sagemaker/latest/dg/neo-supported-cloud.html).
+
 ## resource/aws_spot_instance_request
 
-* Remove `block_duration_minutes` from configuration as it no longer exists.
+* Remove `block_duration_minutes` from your configuration—it no longer exists.
