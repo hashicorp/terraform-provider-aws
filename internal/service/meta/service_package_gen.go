@@ -87,7 +87,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 			Region: &itypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsValidateOverrideInPartition: false,
 			},
 		},
 	}
