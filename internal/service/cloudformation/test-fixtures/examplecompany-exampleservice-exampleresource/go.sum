@@ -1,11 +1,9 @@
 github.com/aws-cloudformation/cloudformation-cli-go-plugin v1.2.0 h1:NHNKs4hOKBz9kufu2Ylce+P20x6mSxS2ryrYoW6AlX8=
 github.com/aws-cloudformation/cloudformation-cli-go-plugin v1.2.0/go.mod h1:u3nqs3hHrn8D51m7+N+6ya7Sksyd6OG3xK3RpXdRb1g=
-github.com/aws/aws-lambda-go v1.47.0 h1:0H8s0vumYx/YKs4sE7YM0ktwL2eWse+kfopsRI1sXVI=
-github.com/aws/aws-lambda-go v1.47.0/go.mod h1:dpMpZgvWx5vuQJfBt0zqBha60q7Dd7RfgJv23DymV8A=
+github.com/aws/aws-lambda-go v1.37.0 h1:WXkQ/xhIcXZZ2P5ZBEw+bbAKeCEcb5NtiYpSwVVzIXg=
+github.com/aws/aws-lambda-go v1.37.0/go.mod h1:jwFe2KmMsHmffA1X2R09hH6lFzJQxzI8qK17ewzbQMM=
 github.com/aws/aws-sdk-go v1.44.197 h1:pkg/NZsov9v/CawQWy+qWVzJMIZRQypCtYjUBXFomF8=
 github.com/aws/aws-sdk-go v1.44.197/go.mod h1:aVsgQcEevwlmQ7qHE9I3h+dtQgpqhFB+i8Phjh7fkwI=
-github.com/aws/aws-sdk-go v1.55.6 h1:cSg4pvZ3m8dgYcgqB97MrcdjUmZ1BeMYKUxMMB89IPk=
-github.com/aws/aws-sdk-go v1.55.6/go.mod h1:eRwEWoyTWFMVYVQzKMNHWP5/RV4xIUGMQfXQHfHkpNU=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
