@@ -16,6 +16,7 @@ func TestAccServiceQuotas_serial(t *testing.T) {
 		"Template": {
 			acctest.CtBasic:      testAccTemplate_basic,
 			acctest.CtDisappears: testAccTemplate_disappears,
+			"region":             testAccTemplate_region,
 			"value":              testAccTemplate_value,
 		},
 		"TemplateAssociation": {

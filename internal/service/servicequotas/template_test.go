@@ -5,20 +5,19 @@ package servicequotas_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/servicequotas"
-	"github.com/aws/aws-sdk-go-v2/service/servicequotas/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/servicequotas/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfservicequotas "github.com/hashicorp/terraform-provider-aws/internal/service/servicequotas"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -38,7 +37,7 @@ const (
 
 func testAccTemplate_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var template types.ServiceQuotaIncreaseRequestInTemplate
+	var template awstypes.ServiceQuotaIncreaseRequestInTemplate
 	resourceName := "aws_servicequotas_template.test"
 	regionDataSourceName := "data.aws_region.current"
 
@@ -57,6 +56,7 @@ func testAccTemplate_basic(t *testing.T) {
 				Config: testAccTemplateConfig_basic(lambdaStorageQuotaCode, lambdaServiceCode, lambdaStorageValue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTemplateExists(ctx, resourceName, &template),
+					resource.TestCheckResourceAttrPair(resourceName, "aws_region", regionDataSourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRegion, regionDataSourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "quota_code", lambdaStorageQuotaCode),
 					resource.TestCheckResourceAttr(resourceName, "service_code", lambdaServiceCode),
@@ -74,7 +74,7 @@ func testAccTemplate_basic(t *testing.T) {
 
 func testAccTemplate_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var template types.ServiceQuotaIncreaseRequestInTemplate
+	var template awstypes.ServiceQuotaIncreaseRequestInTemplate
 	resourceName := "aws_servicequotas_template.test"
 
 	resource.Test(t, resource.TestCase{
@@ -102,7 +102,7 @@ func testAccTemplate_disappears(t *testing.T) {
 
 func testAccTemplate_value(t *testing.T) {
 	ctx := acctest.Context(t)
-	var template types.ServiceQuotaIncreaseRequestInTemplate
+	var template awstypes.ServiceQuotaIncreaseRequestInTemplate
 	resourceName := "aws_servicequotas_template.test"
 	regionDataSourceName := "data.aws_region.current"
 
@@ -121,6 +121,7 @@ func testAccTemplate_value(t *testing.T) {
 				Config: testAccTemplateConfig_basic(lambdaENIQuotaCode, lambdaServiceCode, lambdaENIValue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTemplateExists(ctx, resourceName, &template),
+					resource.TestCheckResourceAttrPair(resourceName, "aws_region", regionDataSourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRegion, regionDataSourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "quota_code", lambdaENIQuotaCode),
 					resource.TestCheckResourceAttr(resourceName, "service_code", lambdaServiceCode),
@@ -136,11 +137,49 @@ func testAccTemplate_value(t *testing.T) {
 				Config: testAccTemplateConfig_basic(lambdaENIQuotaCode, lambdaServiceCode, lambdaENIValueUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTemplateExists(ctx, resourceName, &template),
+					resource.TestCheckResourceAttrPair(resourceName, "aws_region", regionDataSourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRegion, regionDataSourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "quota_code", lambdaENIQuotaCode),
 					resource.TestCheckResourceAttr(resourceName, "service_code", lambdaServiceCode),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, lambdaENIValueUpdated),
 				),
+			},
+		},
+	})
+}
+
+func testAccTemplate_region(t *testing.T) {
+	ctx := acctest.Context(t)
+	var template awstypes.ServiceQuotaIncreaseRequestInTemplate
+	resourceName := "aws_servicequotas_template.test"
+	regionDataSourceName := "data.aws_region.current"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+			acctest.PreCheckPartitionHasService(t, names.ServiceQuotasEndpointID)
+			testAccPreCheckTemplate(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTemplateDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTemplateConfig_region(lambdaStorageQuotaCode, lambdaServiceCode, lambdaStorageValue),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTemplateExists(ctx, resourceName, &template),
+					resource.TestCheckResourceAttrPair(resourceName, "aws_region", regionDataSourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRegion, regionDataSourceName, names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, "quota_code", lambdaStorageQuotaCode),
+					resource.TestCheckResourceAttr(resourceName, "service_code", lambdaServiceCode),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, lambdaStorageValue),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -155,39 +194,39 @@ func testAccCheckTemplateDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfservicequotas.FindTemplateByID(ctx, conn, rs.Primary.ID)
-			if errs.IsA[*types.NoSuchResourceException](err) {
-				return nil
-			}
-			if err != nil {
-				return create.Error(names.ServiceQuotas, create.ErrActionCheckingDestroyed, tfservicequotas.ResNameTemplate, rs.Primary.ID, err)
+			_, err := tfservicequotas.FindTemplateByThreePartKey(ctx, conn, rs.Primary.Attributes["aws_region"], rs.Primary.Attributes["quota_code"], rs.Primary.Attributes["service_code"])
+
+			if tfresource.NotFound(err) {
+				continue
 			}
 
-			return create.Error(names.ServiceQuotas, create.ErrActionCheckingDestroyed, tfservicequotas.ResNameTemplate, rs.Primary.ID, errors.New("not destroyed"))
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Service Quotas Template still exists: %s", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckTemplateExists(ctx context.Context, name string, template *types.ServiceQuotaIncreaseRequestInTemplate) resource.TestCheckFunc {
+func testAccCheckTemplateExists(ctx context.Context, n string, v *awstypes.ServiceQuotaIncreaseRequestInTemplate) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.ServiceQuotas, create.ErrActionCheckingExistence, tfservicequotas.ResNameTemplate, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.ServiceQuotas, create.ErrActionCheckingExistence, tfservicequotas.ResNameTemplate, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceQuotasClient(ctx)
-		resp, err := tfservicequotas.FindTemplateByID(ctx, conn, rs.Primary.ID)
+
+		output, err := tfservicequotas.FindTemplateByThreePartKey(ctx, conn, rs.Primary.Attributes["aws_region"], rs.Primary.Attributes["quota_code"], rs.Primary.Attributes["service_code"])
+
 		if err != nil {
-			return create.Error(names.ServiceQuotas, create.ErrActionCheckingExistence, tfservicequotas.ResNameTemplate, rs.Primary.ID, err)
+			return err
 		}
 
-		*template = *resp
+		*v = *output
 
 		return nil
 	}
@@ -200,7 +239,7 @@ func testAccPreCheckTemplate(ctx context.Context, t *testing.T) {
 	_, err := conn.ListServiceQuotaIncreaseRequestsInTemplate(ctx, input)
 
 	// Request must come from organization owner account
-	if errs.IsAErrorMessageContains[*types.AccessDeniedException](err, "The request was called by a member account.") {
+	if errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "The request was called by a member account.") {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 	if acctest.PreCheckSkipError(err) {
@@ -212,6 +251,19 @@ func testAccPreCheckTemplate(ctx context.Context, t *testing.T) {
 }
 
 func testAccTemplateConfig_basic(quotaCode, serviceCode, value string) string {
+	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
+resource "aws_servicequotas_template" "test" {
+  aws_region   = data.aws_region.current.name
+  quota_code   = %[1]q
+  service_code = %[2]q
+  value        = %[3]s
+}
+`, quotaCode, serviceCode, value)
+}
+
+func testAccTemplateConfig_region(quotaCode, serviceCode, value string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 

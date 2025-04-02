@@ -23,6 +23,8 @@ Upgrade topics:
 - [resource/aws_redshift_service_account](#resourceaws_redshift_service_account)
 - [resource/aws_config_aggregate_authorization](#resourceawsconfig_aggregate_authorization)
 - [resource/aws_s3_bucket](#resourceaws_s3_bucket)
+- [resource/aws_servicequotas_template](#resourceaws_servicequotas_template)
+- [data-source/aws_region](#data-sourceaws_region)
 - [data-source/aws_s3_bucket](#data-sourceaws_s3_bucket)
 
 <!-- /TOC -->
@@ -120,6 +122,14 @@ The `region` attribute has been deprecated. All configurations using `region` sh
 ## resource/aws_s3_bucket
 
 The `bucket_region` attribute has been added. We encourage use of the `bucket_region` attribute instead of the `region` attribute (which is now used for [Enhanced Multi-Region Support]()).
+
+## resource/aws_servicequotas_template
+
+The `region` attribute has been deprecated. All configurations using `region` should be updated to use the `aws_region` attribute instead.
+
+## data-source/aws_region
+
+The `name` attribute has been deprecated. All configurations using `name` should be updated to use the `region` attribute instead.
 
 ## data-source/aws_s3_bucket
 

@@ -5,6 +5,8 @@ package servicequotas
 
 // Exports for use in tests only.
 var (
-	ResourceTemplate            = newResourceTemplate
+	ResourceTemplate            = newTemplateResource
 	ResourceTemplateAssociation = newResourceTemplateAssociation
+
+	FindTemplateByThreePartKey = findTemplateByThreePartKey
 )
