@@ -135,7 +135,7 @@ The `aws_redshift_service_account` resource has been removed. AWS [recommends](h
 
 ## resource/aws_sagemaker_notebook_instance
 
-* Remove `accelerator_types` from your configuration—it no longer exists. Use `instance_type` instead to use [Inferentia](https://docs.aws.amazon.com/sagemaker/latest/dg/neo-supported-cloud.html).
+* Remove `accelerator_types` from your configuration—it no longer exists. Instead, use `instance_type` to use [Inferentia](https://docs.aws.amazon.com/sagemaker/latest/dg/neo-supported-cloud.html).
 
 ## resource/aws_spot_instance_request
 
