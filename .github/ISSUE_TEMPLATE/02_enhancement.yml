@@ -13,7 +13,7 @@ body:
         Before submitting an enhancement request, we ask that you first [search existing issues and pull requests](https://github.com/hashicorp/terraform-provider-aws/issues?q=label%3Aenhancement) to see if someone else has made a similar request or has already worked on adding the feature. This helps to keep all relevant discussions in one place.
 
         > [!NOTE]
-        > If the absense of the requested feature is causing unexpected behavior in the provider, the [Report a Bug](https://github.com/hashicorp/terraform-provider-aws/issues/new?template=00_bug_report.yml) form should be used. For entirely new resources, data sources, or services, please use the [Request a New Resource, Data Source, or AWS Service](https://github.com/hashicorp/terraform-provider-aws/issues/new?template=03_new_resource.yml) form.
+        > If the absense of the requested feature is causing unexpected behavior in the provider, the [Report a Bug](https://github.com/hashicorp/terraform-provider-aws/issues/new?template=00_bug_report.yml) form should be used. For entirely new resources, data sources, or services, please use the [Request Net New Functionality](https://github.com/hashicorp/terraform-provider-aws/issues/new?template=03_new_functionality.yml) form.
 
   - type: textarea
     id: description
@@ -56,7 +56,7 @@ body:
     attributes:
       label: References
       description: |
-        Where possible, please supply links to the AWS API or CLI documentation indicating that the request is possible and/or other GitHub issues or pull requests that give additional context.
+        Where possible, please supply links to the [AWS Go SDK v2](https://pkg.go.dev/github.com/aws/aws-sdk-go-v2/service) documentation demonstrating that the SDK supports the requested feature. Other links, such as those to the AWS API or CLI documentation, or other GitHub issues or pull requests that give additional context are also helpful.
 
         [Information about referencing Github Issues](https://help.github.com/articles/basic-writing-and-formatting-syntax/#referencing-issues-and-pull-requests)
     validations:
