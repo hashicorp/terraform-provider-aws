@@ -49,6 +49,7 @@ const (
 
 // @SDKResource("aws_s3_bucket", name="Bucket")
 // @Tags(identifierAttribute="bucket", resourceType="Bucket")
+// @IdentityAttribute("bucket")
 // @Testing(importIgnore="force_destroy")
 func resourceBucket() *schema.Resource {
 	return &schema.Resource{
@@ -781,22 +782,6 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 
 	d.SetId(bucket)
-	identity, err := d.Identity()
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-	err = identity.Set(names.AttrAccountID, meta.(*conns.AWSClient).AccountID(ctx))
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-	err = identity.Set(names.AttrRegion, region)
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-	err = identity.Set(names.AttrBucket, bucket)
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
 
 	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
 		return findBucket(ctx, conn, d.Id())
