@@ -26,8 +26,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			TypeName: "aws_sesv2_account_suppression_attributes",
 			Name:     "Account Suppression Attributes",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:          false,
-				IsOverrideEnabled: false,
+				IsGlobal:                      false,
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			},
 		},
 	}

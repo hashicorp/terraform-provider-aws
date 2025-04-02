@@ -26,8 +26,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			TypeName: "aws_lakeformation_data_cells_filter",
 			Name:     "Data Cells Filter",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:          false,
-				IsOverrideEnabled: false,
+				IsGlobal:                      false,
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			},
 		},
 		{
@@ -35,8 +36,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			TypeName: "aws_lakeformation_opt_in",
 			Name:     "Opt In",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:          false,
-				IsOverrideEnabled: false,
+				IsGlobal:                      false,
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			},
 		},
 		{
@@ -44,8 +46,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			TypeName: "aws_lakeformation_resource_lf_tag",
 			Name:     "Resource LF Tag",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:          false,
-				IsOverrideEnabled: false,
+				IsGlobal:                      false,
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			},
 		},
 	}

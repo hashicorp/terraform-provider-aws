@@ -22,8 +22,9 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 			TypeName: "aws_cloudfront_origin_access_control",
 			Name:     "Origin Access Control",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:          true,
-				IsOverrideEnabled: false,
+				IsGlobal:                      true,
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			},
 		},
 	}
@@ -36,8 +37,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			TypeName: "aws_cloudfront_continuous_deployment_policy",
 			Name:     "Continuous Deployment Policy",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:          true,
-				IsOverrideEnabled: false,
+				IsGlobal:                      true,
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			},
 		},
 		{
@@ -45,8 +47,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			TypeName: "aws_cloudfront_key_value_store",
 			Name:     "Key Value Store",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:          true,
-				IsOverrideEnabled: false,
+				IsGlobal:                      true,
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			},
 		},
 		{
@@ -57,8 +60,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 				IdentifierAttribute: names.AttrARN,
 			},
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:          true,
-				IsOverrideEnabled: false,
+				IsGlobal:                      true,
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			},
 		},
 	}

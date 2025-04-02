@@ -22,8 +22,9 @@ func (p *servicePackage) EphemeralResources(ctx context.Context) []*itypes.Servi
 			TypeName: "aws_secretsmanager_random_password",
 			Name:     "Random Password",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:          false,
-				IsOverrideEnabled: false,
+				IsGlobal:                      false,
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			},
 		},
 		{
@@ -31,8 +32,9 @@ func (p *servicePackage) EphemeralResources(ctx context.Context) []*itypes.Servi
 			TypeName: "aws_secretsmanager_secret_version",
 			Name:     "Secret Version",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:          false,
-				IsOverrideEnabled: false,
+				IsGlobal:                      false,
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			},
 		},
 	}
@@ -45,8 +47,9 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 			TypeName: "aws_secretsmanager_secret_versions",
 			Name:     "Secret Versions",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:          false,
-				IsOverrideEnabled: false,
+				IsGlobal:                      false,
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			},
 		},
 	}

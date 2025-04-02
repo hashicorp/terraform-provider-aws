@@ -26,8 +26,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			TypeName: "aws_macie2_organization_configuration",
 			Name:     "Organization Configuration",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:          false,
-				IsOverrideEnabled: false,
+				IsGlobal:                      false,
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			},
 		},
 	}

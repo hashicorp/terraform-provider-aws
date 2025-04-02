@@ -26,8 +26,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			TypeName: "aws_directory_service_trust",
 			Name:     "Trust",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:          false,
-				IsOverrideEnabled: false,
+				IsGlobal:                      false,
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			},
 		},
 	}

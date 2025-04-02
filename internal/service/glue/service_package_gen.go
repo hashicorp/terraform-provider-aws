@@ -22,8 +22,9 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 			TypeName: "aws_glue_registry",
 			Name:     "Registry",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:          false,
-				IsOverrideEnabled: false,
+				IsGlobal:                      false,
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			},
 		},
 	}
@@ -36,8 +37,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			TypeName: "aws_glue_catalog_table_optimizer",
 			Name:     "Catalog Table Optimizer",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:          false,
-				IsOverrideEnabled: false,
+				IsGlobal:                      false,
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			},
 		},
 	}

@@ -22,8 +22,9 @@ func (p *servicePackage) EphemeralResources(ctx context.Context) []*itypes.Servi
 			TypeName: "aws_cognito_identity_openid_token_for_developer_identity",
 			Name:     "Open ID Connect Token For Developer Identity",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:          false,
-				IsOverrideEnabled: false,
+				IsGlobal:                      false,
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			},
 		},
 	}

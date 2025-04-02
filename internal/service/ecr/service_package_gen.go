@@ -22,8 +22,9 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 			TypeName: "aws_ecr_lifecycle_policy_document",
 			Name:     "Lifecycle Policy Document",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:          false,
-				IsOverrideEnabled: false,
+				IsGlobal:                      false,
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			},
 		},
 		{
@@ -31,8 +32,9 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 			TypeName: "aws_ecr_repositories",
 			Name:     "Repositories",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:          false,
-				IsOverrideEnabled: false,
+				IsGlobal:                      false,
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			},
 		},
 	}
@@ -45,8 +47,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			TypeName: "aws_ecr_account_setting",
 			Name:     "Account Setting",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:          false,
-				IsOverrideEnabled: false,
+				IsGlobal:                      false,
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			},
 		},
 	}

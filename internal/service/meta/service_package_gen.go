@@ -18,8 +18,9 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 			TypeName: "aws_arn",
 			Name:     "ARN",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:          false,
-				IsOverrideEnabled: false,
+				IsGlobal:                      false,
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			},
 		},
 		{
@@ -27,8 +28,9 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 			TypeName: "aws_default_tags",
 			Name:     "Default Tags",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:          false,
-				IsOverrideEnabled: false,
+				IsGlobal:                      false,
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			},
 		},
 		{
@@ -36,8 +38,9 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 			TypeName: "aws_ip_ranges",
 			Name:     "IP Ranges",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:          false,
-				IsOverrideEnabled: false,
+				IsGlobal:                      false,
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			},
 		},
 		{
@@ -45,8 +48,9 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 			TypeName: "aws_partition",
 			Name:     "Partition",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:          false,
-				IsOverrideEnabled: false,
+				IsGlobal:                      false,
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			},
 		},
 		{
@@ -54,8 +58,9 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 			TypeName: "aws_region",
 			Name:     "Region",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:          false,
-				IsOverrideEnabled: false,
+				IsGlobal:                      false,
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			},
 		},
 		{
@@ -63,8 +68,9 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 			TypeName: "aws_regions",
 			Name:     "Regions",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:          false,
-				IsOverrideEnabled: false,
+				IsGlobal:                      false,
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			},
 		},
 		{
@@ -72,8 +78,9 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 			TypeName: "aws_service",
 			Name:     "Service",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:          false,
-				IsOverrideEnabled: false,
+				IsGlobal:                      false,
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			},
 		},
 		{
@@ -81,8 +88,9 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 			TypeName: "aws_service_principal",
 			Name:     "Service Principal",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:          false,
-				IsOverrideEnabled: false,
+				IsGlobal:                      false,
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			},
 		},
 	}

@@ -29,8 +29,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 				IdentifierAttribute: names.AttrARN,
 			},
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:          false,
-				IsOverrideEnabled: false,
+				IsGlobal:                      false,
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			},
 		},
 		{
@@ -41,8 +42,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 				IdentifierAttribute: names.AttrARN,
 			},
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:          false,
-				IsOverrideEnabled: false,
+				IsGlobal:                      false,
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			},
 		},
 		{
@@ -53,8 +55,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 				IdentifierAttribute: names.AttrARN,
 			},
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:          false,
-				IsOverrideEnabled: false,
+				IsGlobal:                      false,
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			},
 		},
 		{
@@ -62,8 +65,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			TypeName: "aws_cloudwatch_log_delivery_destination_policy",
 			Name:     "Delivery Destination Policy",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:          false,
-				IsOverrideEnabled: false,
+				IsGlobal:                      false,
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			},
 		},
 		{
@@ -74,8 +78,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 				IdentifierAttribute: names.AttrARN,
 			},
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:          false,
-				IsOverrideEnabled: false,
+				IsGlobal:                      false,
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			},
 		},
 		{
@@ -83,8 +88,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			TypeName: "aws_cloudwatch_log_index_policy",
 			Name:     "Index Policy",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:          false,
-				IsOverrideEnabled: false,
+				IsGlobal:                      false,
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			},
 		},
 	}

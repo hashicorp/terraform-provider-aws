@@ -26,8 +26,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			TypeName: "aws_iam_group_policies_exclusive",
 			Name:     "Group Policies Exclusive",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:          true,
-				IsOverrideEnabled: false,
+				IsGlobal:                      true,
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			},
 		},
 		{
@@ -35,8 +36,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			TypeName: "aws_iam_group_policy_attachments_exclusive",
 			Name:     "Group Policy Attachments Exclusive",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:          true,
-				IsOverrideEnabled: false,
+				IsGlobal:                      true,
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			},
 		},
 		{
@@ -44,8 +46,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			TypeName: "aws_iam_organizations_features",
 			Name:     "Organizations Features",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:          true,
-				IsOverrideEnabled: false,
+				IsGlobal:                      true,
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			},
 		},
 		{
@@ -53,8 +56,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			TypeName: "aws_iam_role_policies_exclusive",
 			Name:     "Role Policies Exclusive",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:          true,
-				IsOverrideEnabled: false,
+				IsGlobal:                      true,
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			},
 		},
 		{
@@ -62,8 +66,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			TypeName: "aws_iam_role_policy_attachments_exclusive",
 			Name:     "Role Policy Attachments Exclusive",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:          true,
-				IsOverrideEnabled: false,
+				IsGlobal:                      true,
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			},
 		},
 		{
@@ -71,8 +76,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			TypeName: "aws_iam_user_policies_exclusive",
 			Name:     "User Policies Exclusive",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:          true,
-				IsOverrideEnabled: false,
+				IsGlobal:                      true,
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			},
 		},
 		{
@@ -80,8 +86,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			TypeName: "aws_iam_user_policy_attachments_exclusive",
 			Name:     "User Policy Attachments Exclusive",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:          true,
-				IsOverrideEnabled: false,
+				IsGlobal:                      true,
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			},
 		},
 	}

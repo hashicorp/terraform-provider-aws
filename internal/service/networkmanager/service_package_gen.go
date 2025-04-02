@@ -29,8 +29,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 				IdentifierAttribute: names.AttrARN,
 			},
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:          true,
-				IsOverrideEnabled: false,
+				IsGlobal:                      true,
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			},
 		},
 	}

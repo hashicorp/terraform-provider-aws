@@ -23,8 +23,9 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 			TypeName: "aws_globalaccelerator_accelerator",
 			Name:     "Accelerator",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:          true,
-				IsOverrideEnabled: false,
+				IsGlobal:                      true,
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			},
 		},
 	}
@@ -40,8 +41,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 				IdentifierAttribute: names.AttrID,
 			},
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:          true,
-				IsOverrideEnabled: false,
+				IsGlobal:                      true,
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			},
 		},
 	}
