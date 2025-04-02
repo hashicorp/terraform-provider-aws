@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
-	erschema "github.com/hashicorp/terraform-plugin-framework/ephemeral/schema"
 	"github.com/hashicorp/terraform-plugin-framework/function"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
@@ -473,23 +472,13 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 					isRegionOverrideEnabled = true
 				}
 
+				var schemaFuncs []ephemeralResourceSchemaFunc
 				var interceptors ephemeralResourceInterceptors
 
 				if isRegionOverrideEnabled {
 					v := v.Region
 
-					schemaResponse := ephemeral.SchemaResponse{}
-					inner.Schema(ctx, ephemeral.SchemaRequest{}, &schemaResponse)
-
-					// TODO REGION: This need to be moved into wrapper.Schema.
-					if _, ok := schemaResponse.Schema.Attributes[names.AttrRegion]; !ok {
-						// Inject a top-level "region" attribute.
-						schemaResponse.Schema.Attributes[names.AttrRegion] = erschema.StringAttribute{
-							Optional:    true,
-							Description: `The AWS Region to use for API operations. Overrides the Region set in the provider configuration.`,
-						}
-					}
-
+					schemaFuncs = append(schemaFuncs, ephemeralResourceInjectRegionAttribute)
 					interceptors = append(interceptors, newRegionEphemeralResourceInterceptor(v.IsValidateOverrideInPartition))
 				}
 
@@ -519,6 +508,7 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 						return ctx, diags
 					},
 					interceptors: interceptors,
+					schemaFuncs:  schemaFuncs,
 					typeName:     v.TypeName,
 				}
 				p.ephemeralResources = append(p.ephemeralResources, func() ephemeral.EphemeralResource {

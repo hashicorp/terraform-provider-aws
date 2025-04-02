@@ -11,6 +11,7 @@ import (
 	dsschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
+	erschema "github.com/hashicorp/terraform-plugin-framework/ephemeral/schema"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	rschema "github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -24,6 +25,18 @@ func dataSourceInjectRegionAttribute(ctx context.Context, c *conns.AWSClient, re
 	if _, ok := response.Schema.Attributes[names.AttrRegion]; !ok {
 		// Inject a top-level "region" attribute.
 		response.Schema.Attributes[names.AttrRegion] = dsschema.StringAttribute{
+			Optional:    true,
+			Computed:    true,
+			Description: `The AWS Region to use for API operations. Overrides the Region set in the provider configuration.`,
+		}
+	}
+}
+
+// ephemeralResourceInjectRegionAttribute injects a top-level "region" attribute into an ephemeral resource's schema.
+func ephemeralResourceInjectRegionAttribute(ctx context.Context, c *conns.AWSClient, request ephemeral.SchemaRequest, response *ephemeral.SchemaResponse) {
+	if _, ok := response.Schema.Attributes[names.AttrRegion]; !ok {
+		// Inject a top-level "region" attribute.
+		response.Schema.Attributes[names.AttrRegion] = erschema.StringAttribute{
 			Optional:    true,
 			Computed:    true,
 			Description: `The AWS Region to use for API operations. Overrides the Region set in the provider configuration.`,

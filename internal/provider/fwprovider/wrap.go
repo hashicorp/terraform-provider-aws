@@ -128,11 +128,16 @@ func (w *wrappedDataSource) ValidateConfig(ctx context.Context, request datasour
 	}
 }
 
+// ephemeralResourceSchemaFunc modifies an ephemeral resource's schema.
+type ephemeralResourceSchemaFunc func(context.Context, *conns.AWSClient, ephemeral.SchemaRequest, *ephemeral.SchemaResponse)
+
 type wrappedEphemeralResourceOptions struct {
 	// bootstrapContext is run on all wrapped methods before any interceptors.
 	bootstrapContext contextFunc
 	interceptors     ephemeralResourceInterceptors
-	typeName         string
+	// schemaFuncs are run after bootstrapContext and after the Schema method on the inner resource.
+	schemaFuncs []ephemeralResourceSchemaFunc
+	typeName    string
 }
 
 // wrappedEphemeralResource represents an interceptor dispatcher for a Plugin Framework ephemeral resource.
@@ -162,6 +167,13 @@ func (w *wrappedEphemeralResource) Schema(ctx context.Context, request ephemeral
 	}
 
 	w.inner.Schema(ctx, request, response)
+
+	for _, f := range w.opts.schemaFuncs {
+		f(ctx, w.meta, request, response)
+		if response.Diagnostics.HasError() {
+			return
+		}
+	}
 }
 
 func (w *wrappedEphemeralResource) Open(ctx context.Context, request ephemeral.OpenRequest, response *ephemeral.OpenResponse) {
