@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	rschema "github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -419,6 +418,7 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 				schemaResponse := datasource.SchemaResponse{}
 				inner.Schema(ctx, datasource.SchemaRequest{}, &schemaResponse)
 
+				// TODO REGION: This need to be moved into wrapper.Schema.
 				if _, ok := schemaResponse.Schema.Attributes[names.AttrRegion]; !ok {
 					// Inject a top-level "region" attribute.
 					schemaResponse.Schema.Attributes[names.AttrRegion] = dsschema.StringAttribute{
@@ -487,6 +487,7 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 					schemaResponse := ephemeral.SchemaResponse{}
 					inner.Schema(ctx, ephemeral.SchemaRequest{}, &schemaResponse)
 
+					// TODO REGION: This need to be moved into wrapper.Schema.
 					if _, ok := schemaResponse.Schema.Attributes[names.AttrRegion]; !ok {
 						// Inject a top-level "region" attribute.
 						schemaResponse.Schema.Attributes[names.AttrRegion] = erschema.StringAttribute{
@@ -542,6 +543,7 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 				isRegionOverrideEnabled = true
 			}
 
+			var schemaFuncs []resourceSchemaFunc
 			var validateConfigFuncs []validateConfigFunc
 			var modifyPlanFuncs []modifyPlanFunc
 			var interceptors resourceInterceptors
@@ -549,18 +551,7 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 			if isRegionOverrideEnabled {
 				v := v.Region
 
-				schemaResponse := resource.SchemaResponse{}
-				inner.Schema(ctx, resource.SchemaRequest{}, &schemaResponse)
-
-				if _, ok := schemaResponse.Schema.Attributes[names.AttrRegion]; !ok {
-					// Inject a top-level "region" attribute.
-					schemaResponse.Schema.Attributes[names.AttrRegion] = rschema.StringAttribute{
-						Optional:    true,
-						Computed:    true,
-						Description: `The AWS Region to use for API operations. Overrides the Region set in the provider configuration.`,
-					}
-				}
-
+				schemaFuncs = append(schemaFuncs, resourceInjectRegionAttribute)
 				if v.IsValidateOverrideInPartition {
 					validateConfigFuncs = append(validateConfigFuncs, validateRegionValueInConfiguredPartition)
 				}
@@ -599,9 +590,11 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 
 					return ctx, diags
 				},
-				interceptors:    interceptors,
-				modifyPlanFuncs: modifyPlanFuncs,
-				typeName:        typeName,
+				interceptors:        interceptors,
+				modifyPlanFuncs:     modifyPlanFuncs,
+				schemaFuncs:         schemaFuncs,
+				typeName:            typeName,
+				validateConfigFuncs: validateConfigFuncs,
 			}
 			p.resources = append(p.resources, func() resource.Resource {
 				return newWrappedResource(inner, opts)

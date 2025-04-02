@@ -12,10 +12,23 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	rschema "github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+// resourceInjectRegionAttribute injects a top-level "region" attribute.
+func resourceInjectRegionAttribute(ctx context.Context, c *conns.AWSClient, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	if _, ok := response.Schema.Attributes[names.AttrRegion]; !ok {
+		// Inject a top-level "region" attribute.
+		response.Schema.Attributes[names.AttrRegion] = rschema.StringAttribute{
+			Optional:    true,
+			Computed:    true,
+			Description: `The AWS Region to use for API operations. Overrides the Region set in the provider configuration.`,
+		}
+	}
+}
 
 // validateRegionValueInConfiguredPartition is a config validator that validates that the value of
 // the top-level `region` attribute is in the configured AWS partition.

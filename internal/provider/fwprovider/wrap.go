@@ -242,6 +242,9 @@ func (w *wrappedEphemeralResource) ValidateConfig(ctx context.Context, request e
 	}
 }
 
+// resourceSchemaFunc modifies a resource's schema.
+type resourceSchemaFunc func(context.Context, *conns.AWSClient, resource.SchemaRequest, *resource.SchemaResponse)
+
 // modifyPlanFunc modifies a Terraform plan.
 type modifyPlanFunc func(context.Context, *conns.AWSClient, resource.ModifyPlanRequest, *resource.ModifyPlanResponse)
 
@@ -254,7 +257,9 @@ type wrappedResourceOptions struct {
 	interceptors     resourceInterceptors
 	// modifyPlanFuncs are run after bootstrapContext and before any ModifyPlan method on the inner resource.
 	modifyPlanFuncs []modifyPlanFunc
-	typeName        string
+	// schemaFuncs are run after bootstrapContext and after the Schemna method on the inner resource.
+	schemaFuncs []resourceSchemaFunc
+	typeName    string
 	// validateConfigFuncs are run after bootstrapContext and before any ValidateConfig method on the inner resource.
 	validateConfigFuncs []validateConfigFunc
 }
@@ -286,6 +291,13 @@ func (w *wrappedResource) Schema(ctx context.Context, request resource.SchemaReq
 	}
 
 	w.inner.Schema(ctx, request, response)
+
+	for _, f := range w.opts.schemaFuncs {
+		f(ctx, w.meta, request, response)
+		if response.Diagnostics.HasError() {
+			return
+		}
+	}
 }
 
 func (w *wrappedResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
