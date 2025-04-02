@@ -17,6 +17,7 @@ import (
 type schemaResourceData interface {
 	sdkv2.ResourceDiffer
 	Set(string, any) error
+	Identity() (*schema.IdentityData, error)
 }
 
 type interceptorOptions struct {

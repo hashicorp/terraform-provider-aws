@@ -492,6 +492,17 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 				})
 			}
 
+			if len(v.Identity.Attributes) > 0 {
+				schema := r.Identity
+				if schema == nil {
+					errs = append(errs, fmt.Errorf("Identity not supported: %s", typeName))
+				}
+
+				// TODO: validate Identity schema?
+
+				interceptors = append(interceptors, newIdentityInterceptor(v.Identity.Attributes))
+			}
+
 			opts := wrappedResourceOptions{
 				// bootstrapContext is run on all wrapped methods before any interceptors.
 				bootstrapContext: func(ctx context.Context, getAttribute getAttributeFunc, meta any) (context.Context, diag.Diagnostics) {

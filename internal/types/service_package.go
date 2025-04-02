@@ -5,6 +5,7 @@ package types
 
 import (
 	"context"
+	"slices"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
@@ -72,4 +73,17 @@ type ServicePackageSDKResource struct {
 	Name     string
 	Tags     *ServicePackageResourceTags
 	Region   *ServicePackageResourceRegion
+	Identity Identity
+}
+
+type Identity struct {
+	Attributes []string
+}
+
+func ParameterizedIdentity(attributes ...string) Identity {
+	baseAttributes := []string{"account_id", "region"}
+	baseAttributes = slices.Grow(baseAttributes, len(attributes))
+	return Identity{
+		Attributes: append(baseAttributes, attributes...),
+	}
 }
