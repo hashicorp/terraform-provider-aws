@@ -35,7 +35,7 @@ body:
     attributes:
       label: References
       description: |
-        Where possible, please supply links to vendor documentation and/or other GitHub issues or pull requests that give additional context.
+        Where possible, please supply links to AWS documentation and/or other GitHub issues or pull requests that give additional context.
 
         [Information about referencing Github Issues](https://help.github.com/articles/basic-writing-and-formatting-syntax/#referencing-issues-and-pull-requests)
     validations:
