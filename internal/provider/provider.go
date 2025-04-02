@@ -355,6 +355,7 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 					regionSchema := &schema.Schema{
 						Type:        schema.TypeString,
 						Optional:    true,
+						Computed:    true,
 						Description: `The AWS Region to use for API operations. Overrides the Region set in the provider configuration.`,
 					}
 

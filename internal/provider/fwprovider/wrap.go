@@ -22,11 +22,16 @@ type getAttributeFunc func(context.Context, path.Path, any) diag.Diagnostics
 // contextFunc augments Context.
 type contextFunc func(context.Context, getAttributeFunc, *conns.AWSClient) (context.Context, diag.Diagnostics)
 
+// dataSourceSchemaFunc modifies a data source's schema.
+type dataSourceSchemaFunc func(context.Context, *conns.AWSClient, datasource.SchemaRequest, *datasource.SchemaResponse)
+
 type wrappedDataSourceOptions struct {
 	// bootstrapContext is run on all wrapped methods before any interceptors.
 	bootstrapContext contextFunc
 	interceptors     dataSourceInterceptors
-	typeName         string
+	// schemaFuncs are run after bootstrapContext and after the Schema method on the inner resource.
+	schemaFuncs []dataSourceSchemaFunc
+	typeName    string
 }
 
 // wrappedDataSource represents an interceptor dispatcher for a Plugin Framework data source.
@@ -56,6 +61,13 @@ func (w *wrappedDataSource) Schema(ctx context.Context, request datasource.Schem
 	}
 
 	w.inner.Schema(ctx, request, response)
+
+	for _, f := range w.opts.schemaFuncs {
+		f(ctx, w.meta, request, response)
+		if response.Diagnostics.HasError() {
+			return
+		}
+	}
 }
 
 func (w *wrappedDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
@@ -257,7 +269,7 @@ type wrappedResourceOptions struct {
 	interceptors     resourceInterceptors
 	// modifyPlanFuncs are run after bootstrapContext and before any ModifyPlan method on the inner resource.
 	modifyPlanFuncs []modifyPlanFunc
-	// schemaFuncs are run after bootstrapContext and after the Schemna method on the inner resource.
+	// schemaFuncs are run after bootstrapContext and after the Schema method on the inner resource.
 	schemaFuncs []resourceSchemaFunc
 	typeName    string
 	// validateConfigFuncs are run after bootstrapContext and before any ValidateConfig method on the inner resource.

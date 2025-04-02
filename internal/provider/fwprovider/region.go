@@ -8,6 +8,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	dsschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -18,7 +19,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// resourceInjectRegionAttribute injects a top-level "region" attribute.
+// dataSourceInjectRegionAttribute injects a top-level "region" attribute into a data source's schema.
+func dataSourceInjectRegionAttribute(ctx context.Context, c *conns.AWSClient, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
+	if _, ok := response.Schema.Attributes[names.AttrRegion]; !ok {
+		// Inject a top-level "region" attribute.
+		response.Schema.Attributes[names.AttrRegion] = dsschema.StringAttribute{
+			Optional:    true,
+			Computed:    true,
+			Description: `The AWS Region to use for API operations. Overrides the Region set in the provider configuration.`,
+		}
+	}
+}
+
+// resourceInjectRegionAttribute injects a top-level "region" attribute into a resource's schema.
 func resourceInjectRegionAttribute(ctx context.Context, c *conns.AWSClient, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	if _, ok := response.Schema.Attributes[names.AttrRegion]; !ok {
 		// Inject a top-level "region" attribute.

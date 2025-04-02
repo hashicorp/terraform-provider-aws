@@ -12,7 +12,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	dsschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
 	erschema "github.com/hashicorp/terraform-plugin-framework/ephemeral/schema"
@@ -410,23 +409,13 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 				isRegionOverrideEnabled = true
 			}
 
+			var schemaFuncs []dataSourceSchemaFunc
 			var interceptors dataSourceInterceptors
 
 			if isRegionOverrideEnabled {
 				v := v.Region
 
-				schemaResponse := datasource.SchemaResponse{}
-				inner.Schema(ctx, datasource.SchemaRequest{}, &schemaResponse)
-
-				// TODO REGION: This need to be moved into wrapper.Schema.
-				if _, ok := schemaResponse.Schema.Attributes[names.AttrRegion]; !ok {
-					// Inject a top-level "region" attribute.
-					schemaResponse.Schema.Attributes[names.AttrRegion] = dsschema.StringAttribute{
-						Optional:    true,
-						Description: `The AWS Region to use for API operations. Overrides the Region set in the provider configuration.`,
-					}
-				}
-
+				schemaFuncs = append(schemaFuncs, dataSourceInjectRegionAttribute)
 				interceptors = append(interceptors, newRegionDataSourceInterceptor(v.IsValidateOverrideInPartition))
 			}
 
@@ -461,6 +450,7 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 					return ctx, diags
 				},
 				interceptors: interceptors,
+				schemaFuncs:  schemaFuncs,
 				typeName:     typeName,
 			}
 			p.dataSources = append(p.dataSources, func() datasource.DataSource {
