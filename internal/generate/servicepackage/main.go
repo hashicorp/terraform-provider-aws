@@ -13,7 +13,9 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"maps"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 	"text/template"
@@ -126,6 +128,7 @@ type ResourceDatum struct {
 	TagsResourceType                  string
 	ValidateRegionOverrideInPartition bool
 	IdentityAttributes                []identityAttribute
+	ARNIdentity                       bool
 }
 
 type identityAttribute struct {
@@ -218,6 +221,20 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		ValidateRegionOverrideInPartition: true,
 	}
 
+	annotations := make(map[string]bool)
+	for _, line := range funcDecl.Doc.List {
+		line := line.Text
+
+		if m := annotation.FindStringSubmatch(line); len(m) > 0 {
+			annotationName := m[1]
+			annotations[annotationName] = true
+		}
+	}
+	keys := slices.Collect(maps.Keys(annotations))
+	if slices.Contains(keys, "IdentityAttribute") && slices.Contains(keys, "ArnIdentity") {
+		v.errs = append(v.errs, fmt.Errorf(`only one of "IdentityAttribute" and "ArnIdentity" can be specified: %s`, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+	}
+
 	// Look first for per-resource annotations such as tagging and Region.
 	for _, line := range funcDecl.Doc.List {
 		line := line.Text
@@ -284,6 +301,9 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				}
 
 				d.IdentityAttributes = append(d.IdentityAttributes, identityAttribute)
+
+			case "ArnIdentity":
+				d.ARNIdentity = true
 			}
 		}
 	}
@@ -424,7 +444,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					v.sdkResources[typeName] = d
 				}
 
-			case "IdentityAttribute", "Region", "Tags":
+			case "IdentityAttribute", "ArnIdentity", "Region", "Tags":
 				// Handled above.
 			case "Testing":
 				// Ignored.

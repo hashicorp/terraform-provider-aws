@@ -108,3 +108,14 @@ func StringIdentityAttribute(name string, required bool) IdentityAttribute {
 		Required: required,
 	}
 }
+
+func ARNIdentity() Identity {
+	return Identity{
+		Attributes: []IdentityAttribute{
+			{
+				Name:     "arn",
+				Required: true,
+			},
+		},
+	}
+}
