@@ -15,6 +15,7 @@ import (
 )
 
 // @FrameworkDataSource("aws_partition", name="Partition")
+// @Region(overrideEnabled=false)
 func newPartitionDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &partitionDataSource{}
 
