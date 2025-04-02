@@ -141,7 +141,7 @@ type ServiceDatum struct {
 	SDKResources            map[string]ResourceDatum
 }
 
-//go:embed file.gtpl
+//go:embed service_package_gen.go.gtpl
 var tmpl string
 
 //go:embed endpoint_resolver.go.gtpl
