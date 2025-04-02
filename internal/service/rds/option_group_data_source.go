@@ -6,21 +6,16 @@ package rds
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/rds"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/rds/types"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
-
 
 // Function annotations are used for datasource registration to the Provider. DO NOT EDIT.
 // @FrameworkDataSource("aws_rds_option_group", name="Option Group")
@@ -36,77 +31,120 @@ type dataSourceOptionGroup struct {
 	framework.DataSourceWithConfigure
 }
 
-
 func (d *dataSourceOptionGroup) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttributeComputedOnly(),
-			"description": schema.StringAttribute{
+			"allow_vpc_and_non_vpc_instance_membership": schema.BoolAttribute{
 				Computed: true,
 			},
-			"id": framework.IDAttribute(),
-			"name": schema.StringAttribute{
+			"copy_timestamp": schema.StringAttribute{
+				Computed: true,
+			},
+			"engine_name": schema.StringAttribute{
+				Computed: true,
+			},
+			"major_engine_version": schema.StringAttribute{
+				Computed: true,
+			},
+			"option_group_arn": schema.StringAttribute{
+				Computed: true,
+			},
+			"option_group_description": schema.StringAttribute{
+				Computed: true,
+			},
+			"option_group_name": schema.StringAttribute{
+				Computed: true,
 				Required: true,
 			},
-			"type": schema.StringAttribute{
+			"options": schema.ListNestedAttribute{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[optionModel](ctx),
+				Computed:   true,
+			},
+			"source_account_id": schema.StringAttribute{
 				Computed: true,
 			},
-		},
-		Blocks: map[string]schema.Block{
-			"complex_argument": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[complexArgumentModel](ctx),
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"nested_required": schema.StringAttribute{
-							Computed: true,
-						},
-						"nested_computed": schema.StringAttribute{
-							Computed: true,
-						},
-					},
-				},
+			"source_option_group": schema.StringAttribute{
+				Computed: true,
+			},
+			names.AttrVPCID: schema.StringAttribute{
+				Computed: true,
 			},
 		},
 	}
 }
+
 func (d *dataSourceOptionGroup) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().RDSClient(ctx)
-	
+
 	var data dataSourceOptionGroupModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	
-	out, err := findOptionGroupByName(ctx, conn, data.Name.ValueString())
+
+	out, err := findOptionGroupByName(ctx, conn, data.OptionGroupName.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.RDS, create.ErrActionReading, DSNameOptionGroup, data.Name.String(), err),
+			create.ProblemStandardMessage(names.RDS, create.ErrActionReading, DSNameOptionGroup, data.OptionGroupName.String(), err),
 			err.Error(),
 		)
 		return
 	}
 
-	
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &data, flex.WithFieldNamePrefix("OptionGroup"))...)
+	resp.Diagnostics.Append(flex.Flatten(ctx, out, &data, flex.WithFieldNamePrefix("OptionGroupName"))...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	
-
-	
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-
 type dataSourceOptionGroupModel struct {
-	ARN             types.String                                          `tfsdk:"arn"`
-	ComplexArgument fwtypes.ListNestedObjectValueOf[complexArgumentModel] `tfsdk:"complex_argument"`
-	Description     types.String                                          `tfsdk:"description"`
-	ID              types.String                                          `tfsdk:"id"`
-	Name            types.String                                          `tfsdk:"name"`
-	Type            types.String                                          `tfsdk:"type"`
+	OptionGroupName                      types.String                                 `tfsdk:"option_group_name"`
+	OptionGroupDescription               types.String                                 `tfsdk:"option_group_description"`
+	EngineName                           types.String                                 `tfsdk:"engine_name"`
+	MajorEngineVersion                   types.String                                 `tfsdk:"major_engine_version"`
+	VpcID                                types.String                                 `tfsdk:"vpc_id"`
+	AllowsVpcAndNonVpcInstanceMembership types.Bool                                   `tfsdk:"allows_vpc_and_non_vpc_instance_membership"`
+	OptionGroupArn                       types.String                                 `tfsdk:"option_group_arn"`
+	SourceOptionGroup                    types.String                                 `tfsdk:"source_option_group"`
+	SourceAccountId                      types.String                                 `tfsdk:"source_account_id"`
+	CopyTimestamp                        types.String                                 `tfsdk:"copy_timestamp"`
+	Options                              fwtypes.ListNestedObjectValueOf[optionModel] `tfsdk:"options"`
+}
+
+type optionModel struct {
+	OptionName                  types.String                                                     `tfsdk:"option_name"`
+	OptionDescription           types.String                                                     `tfsdk:"option_description"`
+	Persistent                  types.Bool                                                       `tfsdk:"persistent"`
+	Permanent                   types.Bool                                                       `tfsdk:"permanent"`
+	Port                        types.Int32                                                      `tfsdk:"port"`
+	OptionVersion               types.String                                                     `tfsdk:"option_version"`
+	OptionSettings              fwtypes.ListNestedObjectValueOf[optionSettingModel]              `tfsdk:"option_settings"`
+	DBSecurityGroupMemberships  fwtypes.ListNestedObjectValueOf[dbSecurityGroupMembershipModel]  `tfsdk:"db_security_group_memberships"`
+	VpcSecurityGroupMemberships fwtypes.ListNestedObjectValueOf[vpcSecurityGroupMembershipModel] `tfsdk:"vpc_security_group_memberships"`
+}
+
+type optionSettingModel struct {
+	Name          types.String `tfsdk:"name"`
+	Value         types.String `tfsdk:"value"`
+	DefaultValue  types.String `tfsdk:"default_value"`
+	Description   types.String `tfsdk:"description"`
+	ApplyType     types.String `tfsdk:"apply_type"`
+	DataType      types.String `tfsdk:"data_type"`
+	AllowedValues types.String `tfsdk:"allowed_values"`
+	IsModifiable  types.Bool   `tfsdk:"is_modifiable"`
+	IsCollection  types.Bool   `tfsdk:"is_collection"`
+}
+
+type dbSecurityGroupMembershipModel struct {
+	DBSecurityGroupName types.String `tfsdk:"db_security_group_name"`
+	Status              types.String `tfsdk:"status"`
+}
+
+type vpcSecurityGroupMembershipModel struct {
+	VpcSecurityGroupId types.String `tfsdk:"vpc_security_group_id"`
+	Status             types.String `tfsdk:"status,omitempty"`
 }
 
 type complexArgumentModel struct {
