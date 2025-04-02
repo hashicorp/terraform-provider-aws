@@ -27,6 +27,7 @@ BUG FIXES:
 * resource/aws_msk_cluster: Fix `Provider produced inconsistent final plan` errors when `configuration_info.revision` is [unknown](https://developer.hashicorp.com/terraform/language/expressions/references#values-not-yet-known) ([#42037](https://github.com/hashicorp/terraform-provider-aws/issues/42037))
 * resource/aws_quicksight_data_set: Fix perpetual diff when `refresh_properties` is not configured ([#42076](https://github.com/hashicorp/terraform-provider-aws/issues/42076))
 * resource/aws_s3_bucket_lifecycle_configuration: Removes incorrect warning for empty `rule.filter` ([#42036](https://github.com/hashicorp/terraform-provider-aws/issues/42036))
+* resource/aws_sns_topic_subscription: Fix to handle eventually consistent subscription read operations ([#42093](https://github.com/hashicorp/terraform-provider-aws/issues/42093))
 * resource/aws_sqs_queue: Fix `waiting for SQS Queue... attributes create: timeout while waiting` errors when `sqs_managed_sse_enabled = false` or omitted and `kms_master_key_id` is not set but `kms_data_key_reuse_period_seconds` is set to a non-default value. ([#42062](https://github.com/hashicorp/terraform-provider-aws/issues/42062))
 * resource/aws_workspaces_workspace: Properly update `workspace_properties.running_mode_auto_stop_timeout_in_minutes` when modified ([#40953](https://github.com/hashicorp/terraform-provider-aws/issues/40953))
 
