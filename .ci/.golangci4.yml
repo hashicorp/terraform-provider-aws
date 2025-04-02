@@ -2,6 +2,7 @@ version: "2"
 linters:
   default: none
   enable:
+    # !! only add n-s linters here
     - nakedret
     - nilerr
     - nilnesserr
@@ -41,6 +42,8 @@ linters:
     revive:
       confidence: 0.8
       severity: warning
+      error-code: 0
+      warning-code: 0
       rules:
         - name: atomic
         - name: blank-imports

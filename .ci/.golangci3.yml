@@ -9,7 +9,6 @@ linters:
     - makezero
     - misspell
     - mnd
-    - staticcheck
   exclusions:
     rules:
       - path: '(.+)_test\.go'
