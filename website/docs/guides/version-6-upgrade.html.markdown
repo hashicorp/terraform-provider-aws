@@ -19,8 +19,12 @@ Upgrade topics:
 - [Dropping Support For Amazon SimpleDB](#dropping-support-for-amazon-simpledb)
 - [Dropping Support For Amazon Worklink](#dropping-support-for-amazon-worklink)
 - [AWS OpsWorks Stacks End of Life](#aws-opsworks-stacks-end-of-life)
+- [data-source/aws_batch_compute_environment](#data-sourceaws_batch_compute_environment)
+- [resource/aws_batch_compute_environment](#resourceaws_batch_compute_environment)
+- [resource/aws_cloudfront_response_headers_policy](#resourceaws_cloudfront_response_headers_policy)
 - [resource/aws_redshift_cluster](#resourceaws_redshift_cluster)
 - [resource/aws_redshift_service_account](#resourceaws_redshift_service_account)
+- [resource/aws_spot_instance_request](#resourceaws_spot_instance_request)
 
 <!-- /TOC -->
 
@@ -105,6 +109,19 @@ As the AWS OpsWorks Stacks service has reached [End Of Life](https://docs.aws.am
 * `aws_opsworks_static_web_layer`
 * `aws_opsworks_user_profile`
 
+## data-source/aws_batch_compute_environment
+
+* `compute_environment_name` has been renamed to `name`.
+
+## resource/aws_batch_compute_environment
+
+* `compute_environment_name` has been renamed to `name`.
+* `compute_environment_name_prefix` has been renamed to `name_prefix`.
+
+## resource/aws_cloudfront_response_headers_policy
+
+* The `etag` argument is now computed only.
+
 ## resource/aws_redshift_cluster
 
 * The `publicly_accessible` attribute now defaults to `false`.
@@ -118,12 +135,3 @@ The `aws_redshift_service_account` resource has been removed. AWS [recommends](h
 ## resource/aws_spot_instance_request
 
 * Remove `block_duration_minutes` from configuration as it no longer exists.
-
-## resource/aws_batch_compute_environment
-
-* `compute_environment_name` has been renamed to `name`.
-* `compute_environment_name_prefix` has been renamed to `name_prefix`.
-
-## resource/aws_batch_comptete_environment_data_source
-
-* `compute_environment_name` has been renamed to `name`.
