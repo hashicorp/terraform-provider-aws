@@ -18,9 +18,8 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 			TypeName: "aws_arn",
 			Name:     "ARN",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsGlobal:          false,
+				IsOverrideEnabled: false,
 			},
 		},
 		{

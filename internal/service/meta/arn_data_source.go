@@ -16,6 +16,7 @@ import (
 )
 
 // @FrameworkDataSource("aws_arn", name="ARN")
+// @Region(overrideEnabled=false)
 func newARNDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &arnDataSource{}
 
