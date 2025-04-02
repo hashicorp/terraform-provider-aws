@@ -26,6 +26,8 @@ linters:
         - (io.ReadCloser).Close
         - (io.WriteCloser).Close
         - (*os.File).Close
+        - os.Remove
+        - os.Setenv
         - os.Unsetenv
     errorlint:
       errorf: false
