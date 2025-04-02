@@ -250,10 +250,12 @@ type validateConfigFunc func(context.Context, *conns.AWSClient, resource.Validat
 
 type wrappedResourceOptions struct {
 	// bootstrapContext is run on all wrapped methods before any interceptors.
-	bootstrapContext    contextFunc
-	interceptors        resourceInterceptors
-	modifyPlanFuncs     []modifyPlanFunc
-	typeName            string
+	bootstrapContext contextFunc
+	interceptors     resourceInterceptors
+	// modifyPlanFuncs are run after bootstrapContext and before any ModifyPlan method on the inner resource.
+	modifyPlanFuncs []modifyPlanFunc
+	typeName        string
+	// validateConfigFuncs are run after bootstrapContext and before any ValidateConfig method on the inner resource.
 	validateConfigFuncs []validateConfigFunc
 }
 
@@ -413,20 +415,20 @@ func (w *wrappedResource) ConfigValidators(ctx context.Context) []resource.Confi
 }
 
 func (w *wrappedResource) ValidateConfig(ctx context.Context, request resource.ValidateConfigRequest, response *resource.ValidateConfigResponse) {
-	if v, ok := w.inner.(resource.ResourceWithValidateConfig); ok {
-		ctx, diags := w.opts.bootstrapContext(ctx, request.Config.GetAttribute, w.meta)
-		response.Diagnostics.Append(diags...)
+	ctx, diags := w.opts.bootstrapContext(ctx, request.Config.GetAttribute, w.meta)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	for _, f := range w.opts.validateConfigFuncs {
+		f(ctx, w.meta, request, response)
 		if response.Diagnostics.HasError() {
 			return
 		}
+	}
 
-		for _, f := range w.opts.validateConfigFuncs {
-			f(ctx, w.meta, request, response)
-			if response.Diagnostics.HasError() {
-				return
-			}
-		}
-
+	if v, ok := w.inner.(resource.ResourceWithValidateConfig); ok {
 		v.ValidateConfig(ctx, request, response)
 	}
 }
