@@ -168,10 +168,18 @@ func (r regionDataSourceInterceptor) read(ctx context.Context, opts interceptorO
 			}
 		}
 	case After:
-		// Set region in state after R.
-		diags.Append(response.State.SetAttribute(ctx, path.Root(names.AttrRegion), c.Region(ctx))...)
+		// Set region in state after R, but only if the data source didn't explictly set it (e.g. aws_region).
+		var target types.String
+		diags.Append(response.State.GetAttribute(ctx, path.Root(names.AttrRegion), &target)...)
 		if diags.HasError() {
 			return diags
+		}
+
+		if target.IsNull() {
+			diags.Append(response.State.SetAttribute(ctx, path.Root(names.AttrRegion), c.Region(ctx))...)
+			if diags.HasError() {
+				return diags
+			}
 		}
 	}
 
