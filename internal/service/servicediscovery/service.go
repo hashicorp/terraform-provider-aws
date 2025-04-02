@@ -126,7 +126,7 @@ func resourceService() *schema.Resource {
 							Type:       schema.TypeInt,
 							Optional:   true,
 							ForceNew:   true,
-							Deprecated: `"failure_threshold" is deprecated and no longer supported by AWS. The attribute will be removed in a future major version.`,
+							Deprecated: "failure_threshold is deprecated and no longer supported by AWS. The attribute will be removed in a future major version.",
 						},
 					},
 				},
