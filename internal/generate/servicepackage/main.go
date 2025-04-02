@@ -125,6 +125,11 @@ type ResourceDatum struct {
 	TagsIdentifierAttribute           string
 	TagsResourceType                  string
 	ValidateRegionOverrideInPartition bool
+	IdentityAttributes                []identityAttribute
+}
+
+type identityAttribute struct {
+	Name string
 }
 
 type ServiceDatum struct {
@@ -207,12 +212,12 @@ func (v *visitor) processFile(file *ast.File) {
 func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 	v.functionName = funcDecl.Name.Name
 
-	// Look first for per-resource annotations such as tagging and Region.
 	d := ResourceDatum{
 		RegionOverrideEnabled:             true,
 		ValidateRegionOverrideInPartition: true,
 	}
 
+	// Look first for per-resource annotations such as tagging and Region.
 	for _, line := range funcDecl.Doc.List {
 		line := line.Text
 
@@ -240,6 +245,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						d.ValidateRegionOverrideInPartition = validate
 					}
 				}
+
 			case "Tags":
 				d.TransparentTagging = true
 
@@ -254,6 +260,20 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				if attr, ok := args.Keyword["resourceType"]; ok {
 					d.TagsResourceType = attr
 				}
+
+			case "IdentityAttribute":
+				args := common.ParseArgs(m[3])
+
+				if len(args.Positional) == 0 {
+					v.errs = append(v.errs, fmt.Errorf("no Identity attribute name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					continue
+				}
+
+				identityAttribute := identityAttribute{
+					Name: namesgen.ConstOrQuote(args.Positional[0]),
+				}
+
+				d.IdentityAttributes = append(d.IdentityAttributes, identityAttribute)
 			}
 		}
 	}
@@ -393,7 +413,8 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				} else {
 					v.sdkResources[typeName] = d
 				}
-			case "Region", "Tags":
+
+			case "IdentityAttribute", "Region", "Tags":
 				// Handled above.
 			case "Testing":
 				// Ignored.

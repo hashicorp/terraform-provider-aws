@@ -150,10 +150,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Region: &itypes.ServicePackageResourceRegion {
 				IsGlobal:          {{ or $.IsGlobal $value.IsGlobal }},
 				IsOverrideEnabled: {{ $value.RegionOverrideEnabled }},
-	{{- if $value.RegionOverrideEnabled }}
+				{{- if $value.RegionOverrideEnabled }}
 				IsValidateOverrideInPartition: {{ $value.ValidateRegionOverrideInPartition }},
-	{{- end }}
+				{{- end }}
 			},
+			{{- if gt (len $value.IdentityAttributes) 0 }}
+			Identity: itypes.ParameterizedIdentity({{ range $value.IdentityAttributes}}{{ .Name }}{{ end }}),
+			{{- end }}
 		},
 {{- end }}
 	}
