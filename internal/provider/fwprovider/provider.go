@@ -24,7 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tffunction "github.com/hashicorp/terraform-provider-aws/internal/function"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
@@ -441,17 +441,21 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 					var overrideRegion string
 
 					if v.Region != nil && v.Region.IsOverrideEnabled && getAttribute != nil {
-						diags.Append(getAttribute(ctx, path.Root(names.AttrRegion), &overrideRegion)...)
+						var target types.String
+
+						diags.Append(getAttribute(ctx, path.Root(names.AttrRegion), &target)...)
 						if diags.HasError() {
 							return ctx, diags
 						}
+
+						overrideRegion = target.ValueString()
 					}
 
 					ctx = conns.NewDataSourceContext(ctx, servicePackageName, v.Name, overrideRegion)
 					if c != nil {
 						ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx))
 						ctx = c.RegisterLogger(ctx)
-						ctx = flex.RegisterLogger(ctx)
+						ctx = fwflex.RegisterLogger(ctx)
 					}
 
 					return ctx, diags
@@ -506,16 +510,20 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 						var overrideRegion string
 
 						if v.Region != nil && v.Region.IsOverrideEnabled && getAttribute != nil {
-							diags.Append(getAttribute(ctx, path.Root(names.AttrRegion), &overrideRegion)...)
+							var target types.String
+
+							diags.Append(getAttribute(ctx, path.Root(names.AttrRegion), &target)...)
 							if diags.HasError() {
 								return ctx, diags
 							}
+
+							overrideRegion = target.ValueString()
 						}
 
 						ctx = conns.NewEphemeralResourceContext(ctx, servicePackageName, v.Name, overrideRegion)
 						if c != nil {
 							ctx = c.RegisterLogger(ctx)
-							ctx = flex.RegisterLogger(ctx)
+							ctx = fwflex.RegisterLogger(ctx)
 							ctx = logging.MaskSensitiveValuesByKey(ctx, logging.HTTPKeyRequestBody, logging.HTTPKeyResponseBody)
 						}
 						return ctx, diags
@@ -575,17 +583,21 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 					var overrideRegion string
 
 					if v.Region != nil && v.Region.IsOverrideEnabled && getAttribute != nil {
-						diags.Append(getAttribute(ctx, path.Root(names.AttrRegion), &overrideRegion)...)
+						var target types.String
+
+						diags.Append(getAttribute(ctx, path.Root(names.AttrRegion), &target)...)
 						if diags.HasError() {
 							return ctx, diags
 						}
+
+						overrideRegion = target.ValueString()
 					}
 
 					ctx = conns.NewResourceContext(ctx, servicePackageName, v.Name, overrideRegion)
 					if c != nil {
 						ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx))
 						ctx = c.RegisterLogger(ctx)
-						ctx = flex.RegisterLogger(ctx)
+						ctx = fwflex.RegisterLogger(ctx)
 					}
 
 					return ctx, diags
