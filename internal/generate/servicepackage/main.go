@@ -129,7 +129,8 @@ type ResourceDatum struct {
 }
 
 type identityAttribute struct {
-	Name string
+	Name     string
+	Optional bool
 }
 
 type ServiceDatum struct {
@@ -271,6 +272,15 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 				identityAttribute := identityAttribute{
 					Name: namesgen.ConstOrQuote(args.Positional[0]),
+				}
+
+				if attr, ok := args.Keyword["optional"]; ok {
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid optional value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					} else {
+						identityAttribute.Optional = b
+					}
 				}
 
 				d.IdentityAttributes = append(d.IdentityAttributes, identityAttribute)

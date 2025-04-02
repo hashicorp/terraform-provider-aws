@@ -77,13 +77,34 @@ type ServicePackageSDKResource struct {
 }
 
 type Identity struct {
-	Attributes []string
+	Attributes []IdentityAttribute
 }
 
-func ParameterizedIdentity(attributes ...string) Identity {
-	baseAttributes := []string{"account_id", "region"}
+func ParameterizedIdentity(attributes ...IdentityAttribute) Identity {
+	baseAttributes := []IdentityAttribute{
+		{
+			Name:     "account_id",
+			Required: false,
+		},
+		{
+			Name:     "region",
+			Required: false,
+		},
+	}
 	baseAttributes = slices.Grow(baseAttributes, len(attributes))
 	return Identity{
 		Attributes: append(baseAttributes, attributes...),
+	}
+}
+
+type IdentityAttribute struct {
+	Name     string
+	Required bool
+}
+
+func StringIdentityAttribute(name string, required bool) IdentityAttribute {
+	return IdentityAttribute{
+		Name:     name,
+		Required: required,
 	}
 }

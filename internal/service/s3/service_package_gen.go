@@ -150,7 +150,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
 			},
-			Identity: itypes.ParameterizedIdentity(names.AttrBucket),
+			Identity: itypes.ParameterizedIdentity(
+				itypes.StringIdentityAttribute(names.AttrBucket, true),
+			),
 		},
 		{
 			Factory:  resourceBucketAccelerateConfiguration,

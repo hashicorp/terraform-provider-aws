@@ -8,6 +8,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -62,12 +64,14 @@ func (r identityInterceptor) getAttribute(d schemaResourceData, name string) str
 	return d.Get(name).(string)
 }
 
-func newIdentityInterceptor(attributes []string) interceptorItem {
+func newIdentityInterceptor(attributes []types.IdentityAttribute) interceptorItem {
 	return interceptorItem{
 		when: After,
 		why:  Create, // TODO: probably need to do this after Read and Update as well
 		interceptor: identityInterceptor{
-			attributes: attributes,
+			attributes: tfslices.ApplyToAll(attributes, func(v types.IdentityAttribute) string {
+				return v.Name
+			}),
 		},
 	}
 }
