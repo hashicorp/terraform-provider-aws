@@ -817,7 +817,9 @@ func resourceInstance() *schema.Resource {
 						return true
 					}
 
-					if userDataHashSum(old) == userDataHashSum(new) {
+					oldHashExists := old == userDataHashSum(new)
+					base64Encoded := userDataHashSum(old) == userDataHashSum(new)
+					if oldHashExists || base64Encoded {
 						return true
 					}
 					return false
@@ -850,6 +852,7 @@ func resourceInstance() *schema.Resource {
 			"user_data_base64": {
 				Type:          schema.TypeString,
 				Optional:      true,
+				Computed:      true,
 				ConflictsWith: []string{"user_data"},
 				ValidateFunc:  verify.ValidBase64String,
 			},
