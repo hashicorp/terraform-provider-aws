@@ -33,6 +33,7 @@ import (
 
 // @SDKResource("aws_batch_job_definition", name="Job Definition")
 // @Tags(identifierAttribute="arn")
+// @ArnIdentity
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/batch/types;types.JobDefinition", importIgnore="deregister_on_new_revision")
 func resourceJobDefinition() *schema.Resource {
 	return &schema.Resource{
@@ -40,16 +41,6 @@ func resourceJobDefinition() *schema.Resource {
 		ReadWithoutTimeout:   resourceJobDefinitionRead,
 		UpdateWithoutTimeout: resourceJobDefinitionUpdate,
 		DeleteWithoutTimeout: resourceJobDefinitionDelete,
-
-		Identity: &schema.ResourceIdentity{
-			Version: 1,
-			Schema: map[string]*schema.Schema{
-				names.AttrARN: {
-					Type:              schema.TypeString,
-					RequiredForImport: true,
-				},
-			},
-		},
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,

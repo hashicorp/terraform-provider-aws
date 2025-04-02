@@ -161,7 +161,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			{{ end }}),
 			{{- end }}
 			{{- if $value.ARNIdentity }}
-			Identity: types.ARNIdentity(),
+			Identity: itypes.ARNIdentity(),
 			{{- end }}
 		},
 {{- end }}
