@@ -2128,6 +2128,10 @@ func FlattenDataSetRefreshProperties(apiObject *awstypes.DataSetRefreshPropertie
 		tfMap["refresh_configuration"] = flattenRefreshConfiguration(apiObject.RefreshConfiguration)
 	}
 
+	if len(tfMap) == 0 {
+		return nil
+	}
+
 	return []any{tfMap}
 }
 
