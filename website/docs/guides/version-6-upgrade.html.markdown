@@ -110,10 +110,6 @@ As the AWS OpsWorks Stacks service has reached [End Of Life](https://docs.aws.am
 * `aws_opsworks_static_web_layer`
 * `aws_opsworks_user_profile`
 
-## resource/aws_instance
-
-* The `user_data` attribute removes hashing and now displays in cleartext. Consider [AWS Best Practices](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-metadata.html) when using this attribute. Additionally, for base64 encoded user data, use the `user_data_base64` attribute.
-
 ## data-source/aws_batch_compute_environment
 
 * `compute_environment_name` has been renamed to `name`.
@@ -126,6 +122,10 @@ As the AWS OpsWorks Stacks service has reached [End Of Life](https://docs.aws.am
 ## resource/aws_cloudfront_response_headers_policy
 
 * The `etag` argument is now computed only.
+
+## resource/aws_instance
+
+* The `user_data` attribute removes hashing and now displays in cleartext. Consider [AWS Best Practices](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-metadata.html) when using this attribute. Additionally, for base64 encoded user data, use the `user_data_base64` attribute.
 
 ## resource/aws_redshift_cluster
 
@@ -140,15 +140,6 @@ The `aws_redshift_service_account` resource has been removed. AWS [recommends](h
 ## resource/aws_spot_instance_request
 
 * Remove `block_duration_minutes` from configuration as it no longer exists.
-
-## resource/aws_batch_compute_environment
-
-* `compute_environment_name` has been renamed to `name`.
-* `compute_environment_name_prefix` has been renamed to `name_prefix`.
-
-## resource/aws_batch_comptete_environment_data_source
-
-* `compute_environment_name` has been renamed to `name`.
 
 ## datasource/aws_globalaccelerator_accelerator
 
