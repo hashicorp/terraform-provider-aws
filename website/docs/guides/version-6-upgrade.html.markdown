@@ -118,3 +118,12 @@ The `aws_redshift_service_account` resource has been removed. AWS [recommends](h
 ## resource/aws_spot_instance_request
 
 * Remove `block_duration_minutes` from configuration as it no longer exists.
+
+## resource/aws_batch_compute_environment
+
+* `compute_environment_name` has been renamed to `name`.
+* `compute_environment_name_prefix` has been renamed to `name_prefix`.
+
+## resource/aws_batch_comptete_environment_data_source
+
+* `compute_environment_name` has been renamed to `name`.
