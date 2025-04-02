@@ -293,8 +293,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				if _, ok := v.ephemeralResources[typeName]; ok {
 					v.errs = append(v.errs, fmt.Errorf("duplicate Ephemeral Resource (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				} else {
-					// TODO REGION Temporarily disabled for FW resources.
-					d.RegionOverrideEnabled = false
 					v.ephemeralResources[typeName] = d
 				}
 			case "FrameworkDataSource":
@@ -318,8 +316,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				if _, ok := v.frameworkDataSources[typeName]; ok {
 					v.errs = append(v.errs, fmt.Errorf("duplicate Framework Data Source (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				} else {
-					// TODO REGION Temporarily disabled for FW resources.
-					d.RegionOverrideEnabled = false
 					v.frameworkDataSources[typeName] = d
 				}
 			case "FrameworkResource":
@@ -343,8 +339,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				if _, ok := v.frameworkResources[typeName]; ok {
 					v.errs = append(v.errs, fmt.Errorf("duplicate Framework Resource (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				} else {
-					// TODO REGION Temporarily disabled for FW resources.
-					d.RegionOverrideEnabled = false
 					v.frameworkResources[typeName] = d
 				}
 			case "SDKDataSource":
