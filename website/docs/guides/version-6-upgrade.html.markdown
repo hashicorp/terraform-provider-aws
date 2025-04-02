@@ -125,7 +125,7 @@ As the AWS OpsWorks Stacks service has reached [End Of Life](https://docs.aws.am
 
 ## resource/aws_instance
 
-* The `user_data` attribute removes hashing and now displays in cleartext. Consider [AWS Best Practices](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-metadata.html) when using this attribute. Additionally, for base64 encoded user data, use the `user_data_base64` attribute.
+* The `user_data` attribute no longer applies hashing and is now stored in clear text. **Do not include passwords or sensitive information** in `user_data`, as it will be visible in plaintext. Follow [AWS Best Practices](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-metadata.html) to secure your instance metadata. If you need to provide base64-encoded user data, use the `user_data_base64` attribute instead.
 
 ## resource/aws_redshift_cluster
 
