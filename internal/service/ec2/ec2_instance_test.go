@@ -1163,7 +1163,7 @@ func TestAccEC2Instance_placementGroup(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{"user_data_replace_on_change", "user_data"},
 			},
 		},
 	})
@@ -1193,7 +1193,7 @@ func TestAccEC2Instance_placementPartitionNumber(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{"user_data_replace_on_change", "user_data"},
 			},
 		},
 	})
@@ -2496,11 +2496,6 @@ func TestAccEC2Instance_changeInstanceTypeAndUserData(t *testing.T) {
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	hash := sha1.Sum([]byte("hello world"))
-	expectedUserData := hex.EncodeToString(hash[:])
-	hash2 := sha1.Sum([]byte("new world"))
-	expectedUserDataUpdated := hex.EncodeToString(hash2[:])
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
@@ -2527,7 +2522,7 @@ func TestAccEC2Instance_changeInstanceTypeAndUserData(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrInstanceType), knownvalue.StringExact("t2.medium")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("public_dns"), knownvalue.StringExact("")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("public_ip"), knownvalue.StringExact("")),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("user_data"), knownvalue.StringExact(expectedUserData)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("user_data"), knownvalue.StringExact("hello world")),
 				},
 			},
 			{
@@ -2552,7 +2547,7 @@ func TestAccEC2Instance_changeInstanceTypeAndUserData(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrInstanceType), knownvalue.StringExact("t2.large")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("public_dns"), knownvalue.StringExact("")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("public_ip"), knownvalue.StringExact("")),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("user_data"), knownvalue.StringExact(expectedUserDataUpdated)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("user_data"), knownvalue.StringExact("new world")),
 				},
 			},
 			{
