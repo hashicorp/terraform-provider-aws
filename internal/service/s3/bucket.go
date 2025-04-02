@@ -65,24 +65,6 @@ func resourceBucket() *schema.Resource {
 			Delete: schema.DefaultTimeout(60 * time.Minute),
 		},
 
-		Identity: &schema.ResourceIdentity{
-			Version: 1,
-			Schema: map[string]*schema.Schema{
-				names.AttrAccountID: {
-					Type:              schema.TypeString,
-					OptionalForImport: true,
-				},
-				names.AttrRegion: {
-					Type:              schema.TypeString,
-					OptionalForImport: true,
-				},
-				names.AttrBucket: {
-					Type:              schema.TypeString,
-					RequiredForImport: true,
-				},
-			},
-		},
-
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},

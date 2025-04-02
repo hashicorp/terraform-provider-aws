@@ -493,12 +493,9 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 			}
 
 			if len(v.Identity.Attributes) > 0 {
-				schema := r.Identity
-				if schema == nil {
-					errs = append(errs, fmt.Errorf("Identity not supported: %s", typeName))
+				if r.Identity == nil { // Temporary to avoid breaking existing implementations
+					r.Identity = newResourceIdentity(v.Identity)
 				}
-
-				// TODO: validate Identity schema?
 
 				interceptors = append(interceptors, newIdentityInterceptor(v.Identity.Attributes))
 			}

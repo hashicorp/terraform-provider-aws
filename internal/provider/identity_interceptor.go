@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -74,4 +75,30 @@ func newIdentityInterceptor(attributes []types.IdentityAttribute) interceptorIte
 			}),
 		},
 	}
+}
+
+func newResourceIdentity(v types.Identity) *schema.ResourceIdentity {
+	return &schema.ResourceIdentity{
+		Schema: newIdentitySchema(v.Attributes),
+	}
+}
+
+func newIdentitySchema(attributes []types.IdentityAttribute) map[string]*schema.Schema {
+	identitySchema := make(map[string]*schema.Schema, len(attributes))
+	for _, attr := range attributes {
+		identitySchema[attr.Name] = newIdentityAttribute(attr)
+	}
+	return identitySchema
+}
+
+func newIdentityAttribute(attribute types.IdentityAttribute) *schema.Schema {
+	attr := &schema.Schema{
+		Type: schema.TypeString,
+	}
+	if attribute.Required {
+		attr.RequiredForImport = true
+	} else {
+		attr.OptionalForImport = true
+	}
+	return attr
 }
