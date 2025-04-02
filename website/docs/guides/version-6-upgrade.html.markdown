@@ -19,6 +19,7 @@ Upgrade topics:
 - [Dropping Support For Amazon SimpleDB](#dropping-support-for-amazon-simpledb)
 - [Dropping Support For Amazon Worklink](#dropping-support-for-amazon-worklink)
 - [AWS OpsWorks Stacks End of Life](#aws-opsworks-stacks-end-of-life)
+- [resource/aws_instance](#resourceaws_instance)
 - [resource/aws_redshift_cluster](#resourceaws_redshift_cluster)
 - [resource/aws_redshift_service_account](#resourceaws_redshift_service_account)
 
@@ -104,6 +105,10 @@ As the AWS OpsWorks Stacks service has reached [End Of Life](https://docs.aws.am
 * `aws_opsworks_stack`
 * `aws_opsworks_static_web_layer`
 * `aws_opsworks_user_profile`
+
+## resource/aws_instance
+
+* The `user_data` attribute removes hashing and now displays in cleartext. Consider [AWS Best Practices](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-metadata.html) when using this attribute. Additionally, for base64 encoded user data, use the `user_data_base64` attribute.
 
 ## resource/aws_redshift_cluster
 
