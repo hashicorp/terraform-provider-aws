@@ -22,6 +22,7 @@ Upgrade topics:
 - [data-source/aws_batch_compute_environment](#data-sourceaws_batch_compute_environment)
 - [resource/aws_batch_compute_environment](#resourceaws_batch_compute_environment)
 - [resource/aws_cloudfront_response_headers_policy](#resourceaws_cloudfront_response_headers_policy)
+- [resource/aws_instance](#resourceaws_instance)
 - [resource/aws_redshift_cluster](#resourceaws_redshift_cluster)
 - [resource/aws_redshift_service_account](#resourceaws_redshift_service_account)
 - [resource/aws_spot_instance_request](#resourceaws_spot_instance_request)
@@ -122,6 +123,10 @@ As the AWS OpsWorks Stacks service has reached [End Of Life](https://docs.aws.am
 
 * The `etag` argument is now computed only.
 
+## resource/aws_instance
+
+* The `user_data` attribute no longer applies hashing and is now stored in clear text. **Do not include passwords or sensitive information** in `user_data`, as it will be visible in plaintext. Follow [AWS Best Practices](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-metadata.html) to secure your instance metadata. If you need to provide base64-encoded user data, use the `user_data_base64` attribute instead.
+
 ## resource/aws_redshift_cluster
 
 * The `publicly_accessible` attribute now defaults to `false`.
@@ -135,15 +140,6 @@ The `aws_redshift_service_account` resource has been removed. AWS [recommends](h
 ## resource/aws_spot_instance_request
 
 * Remove `block_duration_minutes` from configuration as it no longer exists.
-
-## resource/aws_batch_compute_environment
-
-* `compute_environment_name` has been renamed to `name`.
-* `compute_environment_name_prefix` has been renamed to `name_prefix`.
-
-## resource/aws_batch_comptete_environment_data_source
-
-* `compute_environment_name` has been renamed to `name`.
 
 ## datasource/aws_globalaccelerator_accelerator
 
