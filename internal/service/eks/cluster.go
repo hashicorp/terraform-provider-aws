@@ -53,7 +53,6 @@ func resourceCluster() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			verify.SetTagsDiff,
 			validateAutoModeCustomizeDiff,
 			customdiff.ForceNewIfChange("encryption_config", func(_ context.Context, old, new, meta any) bool {
 				// You cannot disable envelope encryption after enabling it. This action is irreversible.
@@ -75,7 +74,8 @@ func resourceCluster() *schema.Resource {
 				oldRoleARN := aws.ToString(oldComputeConfig.NodeRoleArn)
 				newRoleARN := aws.ToString(newComputeConfig.NodeRoleArn)
 
-				if oldRoleARN != newRoleARN {
+				// only force new if an existing role has changed, not if a new role is added
+				if oldRoleARN != "" && oldRoleARN != newRoleARN {
 					if err := rd.ForceNew("compute_config.0.node_role_arn"); err != nil {
 						return err
 					}
@@ -501,7 +501,7 @@ func resourceCluster() *schema.Resource {
 	}
 }
 
-func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
@@ -509,40 +509,40 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	name := d.Get(names.AttrName).(string)
 	input := &eks.CreateClusterInput{
 		BootstrapSelfManagedAddons: aws.Bool(d.Get("bootstrap_self_managed_addons").(bool)),
-		EncryptionConfig:           expandEncryptionConfig(d.Get("encryption_config").([]interface{})),
+		EncryptionConfig:           expandEncryptionConfig(d.Get("encryption_config").([]any)),
 		Logging:                    expandLogging(d.Get("enabled_cluster_log_types").(*schema.Set)),
 		Name:                       aws.String(name),
-		ResourcesVpcConfig:         expandVpcConfigRequest(d.Get(names.AttrVPCConfig).([]interface{})),
+		ResourcesVpcConfig:         expandVpcConfigRequest(d.Get(names.AttrVPCConfig).([]any)),
 		RoleArn:                    aws.String(d.Get(names.AttrRoleARN).(string)),
 		Tags:                       getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("compute_config"); ok {
-		input.ComputeConfig = expandComputeConfigRequest(v.([]interface{}))
+		input.ComputeConfig = expandComputeConfigRequest(v.([]any))
 	}
 
 	if v, ok := d.GetOk("access_config"); ok {
-		input.AccessConfig = expandCreateAccessConfigRequest(v.([]interface{}))
+		input.AccessConfig = expandCreateAccessConfigRequest(v.([]any))
 	}
 
 	if v, ok := d.GetOk("kubernetes_network_config"); ok {
-		input.KubernetesNetworkConfig = expandKubernetesNetworkConfigRequest(v.([]interface{}))
+		input.KubernetesNetworkConfig = expandKubernetesNetworkConfigRequest(v.([]any))
 	}
 
 	if v, ok := d.GetOk("outpost_config"); ok {
-		input.OutpostConfig = expandOutpostConfigRequest(v.([]interface{}))
+		input.OutpostConfig = expandOutpostConfigRequest(v.([]any))
 	}
 
 	if v, ok := d.GetOk("remote_network_config"); ok {
-		input.RemoteNetworkConfig = expandRemoteNetworkConfigRequest(v.([]interface{}))
+		input.RemoteNetworkConfig = expandRemoteNetworkConfigRequest(v.([]any))
 	}
 
 	if v, ok := d.GetOk("storage_config"); ok {
-		input.StorageConfig = expandStorageConfigRequest(v.([]interface{}))
+		input.StorageConfig = expandStorageConfigRequest(v.([]any))
 	}
 
 	if v, ok := d.GetOk("upgrade_policy"); ok {
-		input.UpgradePolicy = expandUpgradePolicy(v.([]interface{}))
+		input.UpgradePolicy = expandUpgradePolicy(v.([]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrVersion); ok {
@@ -550,11 +550,11 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if v, ok := d.GetOk("zonal_shift_config"); ok {
-		input.ZonalShiftConfig = expandZonalShiftConfig(v.([]interface{}))
+		input.ZonalShiftConfig = expandZonalShiftConfig(v.([]any))
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.CreateCluster(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -599,7 +599,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceClusterRead(ctx, d, meta)...)
 }
 
-func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
@@ -619,7 +619,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	// See https://github.com/aws/containers-roadmap/issues/185#issuecomment-1863025784.
 	var bootstrapClusterCreatorAdminPermissions *bool
 	if v, ok := d.GetOk("access_config"); ok {
-		if apiObject := expandCreateAccessConfigRequest(v.([]interface{})); apiObject != nil {
+		if apiObject := expandCreateAccessConfigRequest(v.([]any)); apiObject != nil {
 			bootstrapClusterCreatorAdminPermissions = apiObject.BootstrapClusterCreatorAdminPermissions
 		}
 	}
@@ -681,7 +681,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
@@ -709,7 +709,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	if d.HasChange("access_config") {
 		if v, ok := d.GetOk("access_config"); ok {
 			input := &eks.UpdateClusterConfigInput{
-				AccessConfig: expandUpdateAccessConfigRequest(v.([]interface{})),
+				AccessConfig: expandUpdateAccessConfigRequest(v.([]any)),
 				Name:         aws.String(d.Id()),
 			}
 
@@ -730,9 +730,9 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if d.HasChanges("compute_config", "kubernetes_network_config", "storage_config") {
-		computeConfig := expandComputeConfigRequest(d.Get("compute_config").([]interface{}))
-		kubernetesNetworkConfig := expandKubernetesNetworkConfigRequest(d.Get("kubernetes_network_config").([]interface{}))
-		storageConfig := expandStorageConfigRequest(d.Get("storage_config").([]interface{}))
+		computeConfig := expandComputeConfigRequest(d.Get("compute_config").([]any))
+		kubernetesNetworkConfig := expandKubernetesNetworkConfigRequest(d.Get("kubernetes_network_config").([]any))
+		storageConfig := expandStorageConfigRequest(d.Get("storage_config").([]any))
 
 		input := &eks.UpdateClusterConfigInput{
 			Name:                    aws.String(d.Id()),
@@ -757,10 +757,10 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	if d.HasChange("encryption_config") {
 		o, n := d.GetChange("encryption_config")
 
-		if len(o.([]interface{})) == 0 && len(n.([]interface{})) == 1 {
+		if len(o.([]any)) == 0 && len(n.([]any)) == 1 {
 			input := &eks.AssociateEncryptionConfigInput{
 				ClusterName:      aws.String(d.Id()),
-				EncryptionConfig: expandEncryptionConfig(d.Get("encryption_config").([]interface{})),
+				EncryptionConfig: expandEncryptionConfig(d.Get("encryption_config").([]any)),
 			}
 
 			output, err := conn.AssociateEncryptionConfig(ctx, input)
@@ -799,7 +799,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	if d.HasChange("upgrade_policy") {
 		input := &eks.UpdateClusterConfigInput{
 			Name:          aws.String(d.Id()),
-			UpgradePolicy: expandUpgradePolicy(d.Get("upgrade_policy").([]interface{})),
+			UpgradePolicy: expandUpgradePolicy(d.Get("upgrade_policy").([]any)),
 		}
 
 		output, err := conn.UpdateClusterConfig(ctx, input)
@@ -854,7 +854,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	if d.HasChange("zonal_shift_config") {
 		input := &eks.UpdateClusterConfigInput{
 			Name:             aws.String(d.Id()),
-			ZonalShiftConfig: expandZonalShiftConfig(d.Get("zonal_shift_config").([]interface{})),
+			ZonalShiftConfig: expandZonalShiftConfig(d.Get("zonal_shift_config").([]any)),
 		}
 
 		output, err := conn.UpdateClusterConfig(ctx, input)
@@ -873,7 +873,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceClusterRead(ctx, d, meta)...)
 }
 
-func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
@@ -1004,7 +1004,7 @@ func findClusterUpdateByTwoPartKey(ctx context.Context, conn *eks.Client, name, 
 }
 
 func statusCluster(ctx context.Context, conn *eks.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findClusterByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
@@ -1020,7 +1020,7 @@ func statusCluster(ctx context.Context, conn *eks.Client, name string) retry.Sta
 }
 
 func statusClusterUpdate(ctx context.Context, conn *eks.Client, name, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findClusterUpdateByTwoPartKey(ctx, conn, name, id)
 
 		if tfresource.NotFound(err) {
@@ -1094,12 +1094,12 @@ func waitClusterUpdateSuccessful(ctx context.Context, conn *eks.Client, name, id
 	return nil, err
 }
 
-func expandCreateAccessConfigRequest(tfList []interface{}) *types.CreateAccessConfigRequest {
+func expandCreateAccessConfigRequest(tfList []any) *types.CreateAccessConfigRequest {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -1117,12 +1117,12 @@ func expandCreateAccessConfigRequest(tfList []interface{}) *types.CreateAccessCo
 	return apiObject
 }
 
-func expandUpdateAccessConfigRequest(tfList []interface{}) *types.UpdateAccessConfigRequest {
+func expandUpdateAccessConfigRequest(tfList []any) *types.UpdateAccessConfigRequest {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -1136,12 +1136,12 @@ func expandUpdateAccessConfigRequest(tfList []interface{}) *types.UpdateAccessCo
 	return apiObject
 }
 
-func expandComputeConfigRequest(tfList []interface{}) *types.ComputeConfigRequest {
+func expandComputeConfigRequest(tfList []any) *types.ComputeConfigRequest {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -1163,7 +1163,7 @@ func expandComputeConfigRequest(tfList []interface{}) *types.ComputeConfigReques
 	return apiObject
 }
 
-func expandEncryptionConfig(tfList []interface{}) []types.EncryptionConfig {
+func expandEncryptionConfig(tfList []any) []types.EncryptionConfig {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1171,13 +1171,13 @@ func expandEncryptionConfig(tfList []interface{}) []types.EncryptionConfig {
 	var apiObjects []types.EncryptionConfig
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
 
 		apiObject := types.EncryptionConfig{
-			Provider: expandProvider(tfMap["provider"].([]interface{})),
+			Provider: expandProvider(tfMap["provider"].([]any)),
 		}
 
 		if v, ok := tfMap[names.AttrResources].(*schema.Set); ok && v.Len() > 0 {
@@ -1190,12 +1190,12 @@ func expandEncryptionConfig(tfList []interface{}) []types.EncryptionConfig {
 	return apiObjects
 }
 
-func expandProvider(tfList []interface{}) *types.Provider {
+func expandProvider(tfList []any) *types.Provider {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -1209,31 +1209,31 @@ func expandProvider(tfList []interface{}) *types.Provider {
 	return apiObject
 }
 
-func expandStorageConfigRequest(tfList []interface{}) *types.StorageConfigRequest {
+func expandStorageConfigRequest(tfList []any) *types.StorageConfigRequest {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &types.StorageConfigRequest{}
 
-	if v, ok := tfMap["block_storage"].([]interface{}); ok {
+	if v, ok := tfMap["block_storage"].([]any); ok {
 		apiObject.BlockStorage = expandBlockStorage(v)
 	}
 
 	return apiObject
 }
 
-func expandBlockStorage(tfList []interface{}) *types.BlockStorage {
+func expandBlockStorage(tfList []any) *types.BlockStorage {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -1247,12 +1247,12 @@ func expandBlockStorage(tfList []interface{}) *types.BlockStorage {
 	return apiObject
 }
 
-func expandOutpostConfigRequest(tfList []interface{}) *types.OutpostConfigRequest {
+func expandOutpostConfigRequest(tfList []any) *types.OutpostConfigRequest {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -1263,7 +1263,7 @@ func expandOutpostConfigRequest(tfList []interface{}) *types.OutpostConfigReques
 		outpostConfigRequest.ControlPlaneInstanceType = aws.String(v)
 	}
 
-	if v, ok := tfMap["control_plane_placement"].([]interface{}); ok {
+	if v, ok := tfMap["control_plane_placement"].([]any); ok {
 		outpostConfigRequest.ControlPlanePlacement = expandControlPlanePlacementRequest(v)
 	}
 
@@ -1274,12 +1274,12 @@ func expandOutpostConfigRequest(tfList []interface{}) *types.OutpostConfigReques
 	return outpostConfigRequest
 }
 
-func expandControlPlanePlacementRequest(tfList []interface{}) *types.ControlPlanePlacementRequest {
+func expandControlPlanePlacementRequest(tfList []any) *types.ControlPlanePlacementRequest {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -1293,12 +1293,12 @@ func expandControlPlanePlacementRequest(tfList []interface{}) *types.ControlPlan
 	return apiObject
 }
 
-func expandVpcConfigRequest(tfList []interface{}) *types.VpcConfigRequest { // nosemgrep:ci.caps5-in-func-name
+func expandVpcConfigRequest(tfList []any) *types.VpcConfigRequest { // nosemgrep:ci.caps5-in-func-name
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -1317,19 +1317,19 @@ func expandVpcConfigRequest(tfList []interface{}) *types.VpcConfigRequest { // n
 	return apiObject
 }
 
-func expandKubernetesNetworkConfigRequest(tfList []interface{}) *types.KubernetesNetworkConfigRequest {
+func expandKubernetesNetworkConfigRequest(tfList []any) *types.KubernetesNetworkConfigRequest {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &types.KubernetesNetworkConfigRequest{}
 
-	if v, ok := tfMap["elastic_load_balancing"].([]interface{}); ok {
+	if v, ok := tfMap["elastic_load_balancing"].([]any); ok {
 		apiObject.ElasticLoadBalancing = expandKubernetesNetworkConfigElasticLoadBalancing(v)
 	}
 
@@ -1344,12 +1344,12 @@ func expandKubernetesNetworkConfigRequest(tfList []interface{}) *types.Kubernete
 	return apiObject
 }
 
-func expandKubernetesNetworkConfigElasticLoadBalancing(tfList []interface{}) *types.ElasticLoadBalancing {
+func expandKubernetesNetworkConfigElasticLoadBalancing(tfList []any) *types.ElasticLoadBalancing {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -1363,28 +1363,28 @@ func expandKubernetesNetworkConfigElasticLoadBalancing(tfList []interface{}) *ty
 	return apiObject
 }
 
-func expandRemoteNetworkConfigRequest(tfList []interface{}) *types.RemoteNetworkConfigRequest {
+func expandRemoteNetworkConfigRequest(tfList []any) *types.RemoteNetworkConfigRequest {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &types.RemoteNetworkConfigRequest{
-		RemoteNodeNetworks: expandRemoteNodeNetworks(tfMap["remote_node_networks"].([]interface{})),
+		RemoteNodeNetworks: expandRemoteNodeNetworks(tfMap["remote_node_networks"].([]any)),
 	}
 
-	if v, ok := tfMap["remote_pod_networks"].([]interface{}); ok {
+	if v, ok := tfMap["remote_pod_networks"].([]any); ok {
 		apiObject.RemotePodNetworks = expandRemotePodNetworks(v)
 	}
 
 	return apiObject
 }
 
-func expandRemoteNodeNetworks(tfList []interface{}) []types.RemoteNodeNetwork {
+func expandRemoteNodeNetworks(tfList []any) []types.RemoteNodeNetwork {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1392,7 +1392,7 @@ func expandRemoteNodeNetworks(tfList []interface{}) []types.RemoteNodeNetwork {
 	var apiObjects []types.RemoteNodeNetwork
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -1407,7 +1407,7 @@ func expandRemoteNodeNetworks(tfList []interface{}) []types.RemoteNodeNetwork {
 	return apiObjects
 }
 
-func expandRemotePodNetworks(tfList []interface{}) []types.RemotePodNetwork {
+func expandRemotePodNetworks(tfList []any) []types.RemotePodNetwork {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1415,7 +1415,7 @@ func expandRemotePodNetworks(tfList []interface{}) []types.RemotePodNetwork {
 	var apiObjects []types.RemotePodNetwork
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -1448,12 +1448,12 @@ func expandLogging(vEnabledLogTypes *schema.Set) *types.Logging {
 	}
 }
 
-func expandUpgradePolicy(tfList []interface{}) *types.UpgradePolicyRequest {
+func expandUpgradePolicy(tfList []any) *types.UpgradePolicyRequest {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -1467,12 +1467,12 @@ func expandUpgradePolicy(tfList []interface{}) *types.UpgradePolicyRequest {
 	return upgradePolicyRequest
 }
 
-func expandZonalShiftConfig(tfList []interface{}) *types.ZonalShiftConfigRequest {
+func expandZonalShiftConfig(tfList []any) *types.ZonalShiftConfigRequest {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -1486,62 +1486,62 @@ func expandZonalShiftConfig(tfList []interface{}) *types.ZonalShiftConfigRequest
 	return ZonalShiftConfigRequest
 }
 
-func flattenCertificate(certificate *types.Certificate) []map[string]interface{} {
+func flattenCertificate(certificate *types.Certificate) []map[string]any {
 	if certificate == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"data": aws.ToString(certificate.Data),
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenComputeConfigResponse(apiObject *types.ComputeConfigResponse) []map[string]interface{} {
+func flattenComputeConfigResponse(apiObject *types.ComputeConfigResponse) []map[string]any {
 	if apiObject == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		names.AttrEnabled: aws.ToBool(apiObject.Enabled),
 		"node_pools":      flex.FlattenStringValueList(apiObject.NodePools),
 		"node_role_arn":   aws.ToString(apiObject.NodeRoleArn),
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenIdentity(identity *types.Identity) []map[string]interface{} {
+func flattenIdentity(identity *types.Identity) []map[string]any {
 	if identity == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"oidc": flattenOIDC(identity.Oidc),
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenOIDC(oidc *types.OIDC) []map[string]interface{} {
+func flattenOIDC(oidc *types.OIDC) []map[string]any {
 	if oidc == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		names.AttrIssuer: aws.ToString(oidc.Issuer),
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenAccessConfigResponse(apiObject *types.AccessConfigResponse, bootstrapClusterCreatorAdminPermissions *bool) []interface{} {
+func flattenAccessConfigResponse(apiObject *types.AccessConfigResponse, bootstrapClusterCreatorAdminPermissions *bool) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"authentication_mode": apiObject.AuthenticationMode,
 	}
 
@@ -1552,18 +1552,18 @@ func flattenAccessConfigResponse(apiObject *types.AccessConfigResponse, bootstra
 		tfMap["bootstrap_cluster_creator_admin_permissions"] = true
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenEncryptionConfigs(apiObjects []types.EncryptionConfig) []interface{} {
+func flattenEncryptionConfigs(apiObjects []types.EncryptionConfig) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			"provider":          flattenProvider(apiObject.Provider),
 			names.AttrResources: apiObject.Resources,
 		}
@@ -1574,24 +1574,24 @@ func flattenEncryptionConfigs(apiObjects []types.EncryptionConfig) []interface{}
 	return tfList
 }
 
-func flattenProvider(apiObject *types.Provider) []interface{} {
+func flattenProvider(apiObject *types.Provider) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"key_arn": aws.ToString(apiObject.KeyArn),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenVPCConfigResponse(vpcConfig *types.VpcConfigResponse) []map[string]interface{} { // nosemgrep:ci.caps5-in-func-name
+func flattenVPCConfigResponse(vpcConfig *types.VpcConfigResponse) []map[string]any { // nosemgrep:ci.caps5-in-func-name
 	if vpcConfig == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"cluster_security_group_id": aws.ToString(vpcConfig.ClusterSecurityGroupId),
 		"endpoint_private_access":   vpcConfig.EndpointPrivateAccess,
 		"endpoint_public_access":    vpcConfig.EndpointPublicAccess,
@@ -1601,7 +1601,7 @@ func flattenVPCConfigResponse(vpcConfig *types.VpcConfigResponse) []map[string]i
 		names.AttrVPCID:             aws.ToString(vpcConfig.VpcId),
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
 func flattenLogging(logging *types.Logging) []string {
@@ -1621,69 +1621,69 @@ func flattenLogging(logging *types.Logging) []string {
 	return enum.Slice(enabledLogTypes...)
 }
 
-func flattenKubernetesNetworkConfigResponse(apiObject *types.KubernetesNetworkConfigResponse) []interface{} {
+func flattenKubernetesNetworkConfigResponse(apiObject *types.KubernetesNetworkConfigResponse) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"elastic_load_balancing": flattenKubernetesNetworkConfigElasticLoadBalancing(apiObject.ElasticLoadBalancing),
 		"service_ipv4_cidr":      aws.ToString(apiObject.ServiceIpv4Cidr),
 		"service_ipv6_cidr":      aws.ToString(apiObject.ServiceIpv6Cidr),
 		"ip_family":              apiObject.IpFamily,
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenKubernetesNetworkConfigElasticLoadBalancing(apiObjects *types.ElasticLoadBalancing) []interface{} {
+func flattenKubernetesNetworkConfigElasticLoadBalancing(apiObjects *types.ElasticLoadBalancing) []any {
 	if apiObjects == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		names.AttrEnabled: aws.ToBool(apiObjects.Enabled),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenOutpostConfigResponse(apiObject *types.OutpostConfigResponse) []interface{} {
+func flattenOutpostConfigResponse(apiObject *types.OutpostConfigResponse) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"control_plane_instance_type": aws.ToString(apiObject.ControlPlaneInstanceType),
 		"control_plane_placement":     flattenControlPlanePlacementResponse(apiObject.ControlPlanePlacement),
 		"outpost_arns":                apiObject.OutpostArns,
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenRemoteNetworkConfigResponse(apiObject *types.RemoteNetworkConfigResponse) []interface{} {
+func flattenRemoteNetworkConfigResponse(apiObject *types.RemoteNetworkConfigResponse) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"remote_node_networks": flattenRemoteNodeNetwork(apiObject.RemoteNodeNetworks),
 		"remote_pod_networks":  flattenRemotePodNetwork(apiObject.RemotePodNetworks),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenRemoteNodeNetwork(apiObjects []types.RemoteNodeNetwork) []interface{} {
+func flattenRemoteNodeNetwork(apiObjects []types.RemoteNodeNetwork) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			"cidrs": flex.FlattenStringValueList(apiObject.Cidrs),
 		}
 
@@ -1693,15 +1693,15 @@ func flattenRemoteNodeNetwork(apiObjects []types.RemoteNodeNetwork) []interface{
 	return tfList
 }
 
-func flattenRemotePodNetwork(apiObjects []types.RemotePodNetwork) []interface{} {
+func flattenRemotePodNetwork(apiObjects []types.RemotePodNetwork) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			"cidrs": flex.FlattenStringValueList(apiObject.Cidrs),
 		}
 
@@ -1711,73 +1711,73 @@ func flattenRemotePodNetwork(apiObjects []types.RemotePodNetwork) []interface{} 
 	return tfList
 }
 
-func flattenControlPlanePlacementResponse(apiObject *types.ControlPlanePlacementResponse) []interface{} {
+func flattenControlPlanePlacementResponse(apiObject *types.ControlPlanePlacementResponse) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		names.AttrGroupName: aws.ToString(apiObject.GroupName),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenStorageConfigResponse(apiObject *types.StorageConfigResponse) []interface{} {
+func flattenStorageConfigResponse(apiObject *types.StorageConfigResponse) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"block_storage": flattenBlockStorage(apiObject.BlockStorage),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenBlockStorage(apiObject *types.BlockStorage) []interface{} {
+func flattenBlockStorage(apiObject *types.BlockStorage) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		names.AttrEnabled: aws.ToBool(apiObject.Enabled),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenUpgradePolicy(apiObject *types.UpgradePolicyResponse) []interface{} {
+func flattenUpgradePolicy(apiObject *types.UpgradePolicyResponse) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"support_type": apiObject.SupportType,
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenZonalShiftConfig(apiObject *types.ZonalShiftConfigResponse) []interface{} {
+func flattenZonalShiftConfig(apiObject *types.ZonalShiftConfigResponse) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		names.AttrEnabled: apiObject.Enabled,
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
 // InvalidParameterException: For EKS Auto Mode, please ensure that all required configs,
 // including computeConfig, kubernetesNetworkConfig, and blockStorage are all either fully enabled or fully disabled.
 func validateAutoModeCustomizeDiff(_ context.Context, d *schema.ResourceDiff, _ any) error {
 	if d.HasChanges("compute_config", "kubernetes_network_config", "storage_config") {
-		computeConfig := expandComputeConfigRequest(d.Get("compute_config").([]interface{}))
-		kubernetesNetworkConfig := expandKubernetesNetworkConfigRequest(d.Get("kubernetes_network_config").([]interface{}))
-		storageConfig := expandStorageConfigRequest(d.Get("storage_config").([]interface{}))
+		computeConfig := expandComputeConfigRequest(d.Get("compute_config").([]any))
+		kubernetesNetworkConfig := expandKubernetesNetworkConfigRequest(d.Get("kubernetes_network_config").([]any))
+		storageConfig := expandStorageConfigRequest(d.Get("storage_config").([]any))
 
 		computeConfigEnabled := computeConfig != nil && computeConfig.Enabled != nil && aws.ToBool(computeConfig.Enabled)
 		kubernetesNetworkConfigEnabled := kubernetesNetworkConfig != nil && kubernetesNetworkConfig.ElasticLoadBalancing != nil && kubernetesNetworkConfig.ElasticLoadBalancing.Enabled != nil && aws.ToBool(kubernetesNetworkConfig.ElasticLoadBalancing.Enabled)

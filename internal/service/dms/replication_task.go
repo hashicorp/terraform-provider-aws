@@ -131,12 +131,10 @@ func resourceReplicationTask() *schema.Resource {
 				ValidateFunc: verify.ValidARN,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceReplicationTaskCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReplicationTaskCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
@@ -193,7 +191,7 @@ func resourceReplicationTaskCreate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceReplicationTaskRead(ctx, d, meta)...)
 }
 
-func resourceReplicationTaskRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReplicationTaskRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
@@ -223,7 +221,7 @@ func resourceReplicationTaskRead(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func resourceReplicationTaskUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReplicationTaskUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
@@ -322,7 +320,7 @@ func resourceReplicationTaskUpdate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceReplicationTaskRead(ctx, d, meta)...)
 }
 
-func resourceReplicationTaskDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReplicationTaskDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
@@ -399,7 +397,7 @@ func findReplicationTasks(ctx context.Context, conn *dms.Client, input *dms.Desc
 }
 
 func statusReplicationTask(ctx context.Context, conn *dms.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findReplicationTaskByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

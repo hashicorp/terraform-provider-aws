@@ -105,12 +105,10 @@ func resourceLocationObjectStorage() *schema.Resource {
 				Computed: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceLocationObjectStorageCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLocationObjectStorageCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
@@ -153,7 +151,7 @@ func resourceLocationObjectStorageCreate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceLocationObjectStorageRead(ctx, d, meta)...)
 }
 
-func resourceLocationObjectStorageRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLocationObjectStorageRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
@@ -189,7 +187,7 @@ func resourceLocationObjectStorageRead(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func resourceLocationObjectStorageUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLocationObjectStorageUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
@@ -248,7 +246,7 @@ func resourceLocationObjectStorageUpdate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceLocationObjectStorageRead(ctx, d, meta)...)
 }
 
-func resourceLocationObjectStorageDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLocationObjectStorageDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 

@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -38,8 +37,6 @@ func resourceConnectAttachment() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
@@ -130,7 +127,7 @@ func resourceConnectAttachment() *schema.Resource {
 	}
 }
 
-func resourceConnectAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConnectAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
@@ -138,8 +135,8 @@ func resourceConnectAttachmentCreate(ctx context.Context, d *schema.ResourceData
 	edgeLocation := d.Get("edge_location").(string)
 	transportAttachmentID := d.Get("transport_attachment_id").(string)
 	options := &awstypes.ConnectAttachmentOptions{}
-	if v, ok := d.GetOk("options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		options = expandConnectAttachmentOptions(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		options = expandConnectAttachmentOptions(v.([]any)[0].(map[string]any))
 	}
 
 	input := &networkmanager.CreateConnectAttachmentInput{
@@ -151,7 +148,7 @@ func resourceConnectAttachmentCreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, d.Timeout(schema.TimeoutCreate),
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.CreateConnectAttachment(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -192,7 +189,7 @@ func resourceConnectAttachmentCreate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceConnectAttachmentRead(ctx, d, meta)...)
 }
 
-func resourceConnectAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConnectAttachmentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
@@ -217,7 +214,7 @@ func resourceConnectAttachmentRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("core_network_id", attachment.CoreNetworkId)
 	d.Set("edge_location", attachment.EdgeLocation)
 	if connectAttachment.Options != nil {
-		if err := d.Set("options", []interface{}{flattenConnectAttachmentOptions(connectAttachment.Options)}); err != nil {
+		if err := d.Set("options", []any{flattenConnectAttachmentOptions(connectAttachment.Options)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting options: %s", err)
 		}
 	} else {
@@ -234,12 +231,12 @@ func resourceConnectAttachmentRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func resourceConnectAttachmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConnectAttachmentUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	// Tags only.
 	return resourceConnectAttachmentRead(ctx, d, meta)
 }
 
-func resourceConnectAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConnectAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
@@ -305,7 +302,7 @@ func findConnectAttachmentByID(ctx context.Context, conn *networkmanager.Client,
 }
 
 func statusConnectAttachment(ctx context.Context, conn *networkmanager.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findConnectAttachmentByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
@@ -379,7 +376,7 @@ func waitConnectAttachmentAvailable(ctx context.Context, conn *networkmanager.Cl
 	return nil, err
 }
 
-func expandConnectAttachmentOptions(tfMap map[string]interface{}) *awstypes.ConnectAttachmentOptions {
+func expandConnectAttachmentOptions(tfMap map[string]any) *awstypes.ConnectAttachmentOptions {
 	if tfMap == nil {
 		return nil
 	}
@@ -393,12 +390,12 @@ func expandConnectAttachmentOptions(tfMap map[string]interface{}) *awstypes.Conn
 	return apiObject
 }
 
-func flattenConnectAttachmentOptions(apiObject *awstypes.ConnectAttachmentOptions) map[string]interface{} { // nosemgrep:ci.caps5-in-func-name
+func flattenConnectAttachmentOptions(apiObject *awstypes.ConnectAttachmentOptions) map[string]any { // nosemgrep:ci.caps5-in-func-name
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		names.AttrProtocol: apiObject.Protocol,
 	}
 

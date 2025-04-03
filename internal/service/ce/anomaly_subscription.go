@@ -103,12 +103,10 @@ func resourceAnomalySubscription() *schema.Resource {
 				Elem:     expressionElem(anomalySubscriptionRootElementSchemaLevel),
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceAnomalySubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAnomalySubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CEClient(ctx)
 
@@ -116,7 +114,7 @@ func resourceAnomalySubscriptionCreate(ctx context.Context, d *schema.ResourceDa
 	input := &costexplorer.CreateAnomalySubscriptionInput{
 		AnomalySubscription: &awstypes.AnomalySubscription{
 			Frequency:        awstypes.AnomalySubscriptionFrequency(d.Get("frequency").(string)),
-			MonitorArnList:   flex.ExpandStringValueList(d.Get("monitor_arn_list").([]interface{})),
+			MonitorArnList:   flex.ExpandStringValueList(d.Get("monitor_arn_list").([]any)),
 			Subscribers:      expandSubscribers(d.Get("subscriber").(*schema.Set).List()),
 			SubscriptionName: aws.String(name),
 		},
@@ -128,7 +126,7 @@ func resourceAnomalySubscriptionCreate(ctx context.Context, d *schema.ResourceDa
 	}
 
 	if v, ok := d.GetOk("threshold_expression"); ok {
-		input.AnomalySubscription.ThresholdExpression = expandExpression(v.([]interface{})[0].(map[string]interface{}))
+		input.AnomalySubscription.ThresholdExpression = expandExpression(v.([]any)[0].(map[string]any))
 	}
 
 	output, err := conn.CreateAnomalySubscription(ctx, input)
@@ -142,7 +140,7 @@ func resourceAnomalySubscriptionCreate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceAnomalySubscriptionRead(ctx, d, meta)...)
 }
 
-func resourceAnomalySubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAnomalySubscriptionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CEClient(ctx)
 
@@ -164,14 +162,14 @@ func resourceAnomalySubscriptionRead(ctx context.Context, d *schema.ResourceData
 	d.Set("monitor_arn_list", subscription.MonitorArnList)
 	d.Set(names.AttrName, subscription.SubscriptionName)
 	d.Set("subscriber", flattenSubscribers(subscription.Subscribers))
-	if err := d.Set("threshold_expression", []interface{}{flattenExpression(subscription.ThresholdExpression)}); err != nil {
+	if err := d.Set("threshold_expression", []any{flattenExpression(subscription.ThresholdExpression)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting threshold_expression: %s", err)
 	}
 
 	return diags
 }
 
-func resourceAnomalySubscriptionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAnomalySubscriptionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).CEClient(ctx)
@@ -186,7 +184,7 @@ func resourceAnomalySubscriptionUpdate(ctx context.Context, d *schema.ResourceDa
 		}
 
 		if d.HasChange("monitor_arn_list") {
-			input.MonitorArnList = flex.ExpandStringValueList(d.Get("monitor_arn_list").([]interface{}))
+			input.MonitorArnList = flex.ExpandStringValueList(d.Get("monitor_arn_list").([]any))
 		}
 
 		if d.HasChange("subscriber") {
@@ -194,7 +192,7 @@ func resourceAnomalySubscriptionUpdate(ctx context.Context, d *schema.ResourceDa
 		}
 
 		if d.HasChange("threshold_expression") {
-			input.ThresholdExpression = expandExpression(d.Get("threshold_expression").([]interface{})[0].(map[string]interface{}))
+			input.ThresholdExpression = expandExpression(d.Get("threshold_expression").([]any)[0].(map[string]any))
 		}
 
 		_, err := conn.UpdateAnomalySubscription(ctx, input)
@@ -207,7 +205,7 @@ func resourceAnomalySubscriptionUpdate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceAnomalySubscriptionRead(ctx, d, meta)...)
 }
 
-func resourceAnomalySubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAnomalySubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CEClient(ctx)
 
@@ -254,7 +252,7 @@ func findAnomalySubscriptionByARN(ctx context.Context, conn *costexplorer.Client
 	return &output.AnomalySubscriptions[0], nil
 }
 
-func expandSubscribers(tfList []interface{}) []awstypes.Subscriber {
+func expandSubscribers(tfList []any) []awstypes.Subscriber {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -262,7 +260,7 @@ func expandSubscribers(tfList []interface{}) []awstypes.Subscriber {
 	var apiObjects []awstypes.Subscriber
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -276,15 +274,15 @@ func expandSubscribers(tfList []interface{}) []awstypes.Subscriber {
 	return apiObjects
 }
 
-func flattenSubscribers(apiObjects []awstypes.Subscriber) []interface{} {
+func flattenSubscribers(apiObjects []awstypes.Subscriber) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfList = append(tfList, map[string]interface{}{
+		tfList = append(tfList, map[string]any{
 			names.AttrAddress: aws.ToString(apiObject.Address),
 			names.AttrType:    apiObject.Type,
 		})

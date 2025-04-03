@@ -199,6 +199,7 @@ The following arguments are required:
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `arn` - The continuous deployment policy ARN.
 * `etag` - Current version of the continuous distribution policy.
 * `id` - Identifier of the continuous deployment policy.
 * `lastModifiedTime` - Date and time the continuous deployment policy was last modified.
@@ -235,4 +236,4 @@ Using `terraform import`, import CloudFront Continuous Deployment Policy using t
 % terraform import aws_cloudfront_continuous_deployment_policy.example abcd-1234 
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-10ca91c1c5f42a4e7c34b2e87eb874a6c1a113aec1a477105e5b977db0a0d32d -->
+<!-- cache-key: cdktf-0.20.8 input-779fb348c8272463946aabcacbf99725daf03a1c519cfe27bf37763949d54c36 -->

@@ -1,14 +1,14 @@
 ---
-subcategory: "SageMaker"
+subcategory: "SageMaker AI"
 layout: "aws"
 page_title: "AWS: aws_sagemaker_model_package_group"
 description: |-
-  Provides a SageMaker Model Package Group resource.
+  Provides a SageMaker AI Model Package Group resource.
 ---
 
 # Resource: aws_sagemaker_model_package_group
 
-Provides a SageMaker Model Package Group resource.
+Provides a SageMaker AI Model Package Group resource.
 
 ## Example Usage
 
@@ -38,7 +38,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker Model Package Groups using the `name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker AI Model Package Groups using the `name`. For example:
 
 ```terraform
 import {
@@ -47,7 +47,7 @@ import {
 }
 ```
 
-Using `terraform import`, import SageMaker Model Package Groups using the `name`. For example:
+Using `terraform import`, import SageMaker AI Model Package Groups using the `name`. For example:
 
 ```console
 % terraform import aws_sagemaker_model_package_group.test_model_package_group my-code-repo

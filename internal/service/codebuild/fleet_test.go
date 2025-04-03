@@ -21,7 +21,7 @@ import (
 )
 
 func TestAccCodeBuildFleet_basic(t *testing.T) {
-	ctx := context.Background()
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_fleet.test"
 
@@ -115,7 +115,7 @@ func TestAccCodeBuildFleet_tags(t *testing.T) {
 }
 
 func TestAccCodeBuildFleet_baseCapacity(t *testing.T) {
-	ctx := context.Background()
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_fleet.test"
 
@@ -144,7 +144,7 @@ func TestAccCodeBuildFleet_baseCapacity(t *testing.T) {
 }
 
 func TestAccCodeBuildFleet_computeConfiguration(t *testing.T) {
-	ctx := context.Background()
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_fleet.test"
 
@@ -182,7 +182,7 @@ func TestAccCodeBuildFleet_computeConfiguration(t *testing.T) {
 }
 
 func TestAccCodeBuildFleet_computeType(t *testing.T) {
-	ctx := context.Background()
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_fleet.test"
 
@@ -211,7 +211,7 @@ func TestAccCodeBuildFleet_computeType(t *testing.T) {
 }
 
 func TestAccCodeBuildFleet_environmentType(t *testing.T) {
-	ctx := context.Background()
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_fleet.test"
 
@@ -240,7 +240,7 @@ func TestAccCodeBuildFleet_environmentType(t *testing.T) {
 }
 
 func TestAccCodeBuildFleet_imageId(t *testing.T) {
-	ctx := context.Background()
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_fleet.test"
 
@@ -267,7 +267,7 @@ func TestAccCodeBuildFleet_imageId(t *testing.T) {
 }
 
 func TestAccCodeBuildFleet_scalingConfiguration(t *testing.T) {
-	ctx := context.Background()
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_fleet.test"
 
@@ -318,7 +318,7 @@ func TestAccCodeBuildFleet_scalingConfiguration(t *testing.T) {
 }
 
 func TestAccCodeBuildFleet_vpcConfig(t *testing.T) {
-	ctx := context.Background()
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_fleet.test"
 

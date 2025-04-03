@@ -23,6 +23,8 @@ phase because a modification has not yet taken place. You can use the
 ~> **Note:** All arguments including the username and password will be stored in the raw state as plain-text.
 [Read more about sensitive data in state](https://www.terraform.io/docs/state/sensitive-data.html).
 
+-> **Note:** Write-Only argument `master_password_wo` is available to use in place of `master_password`. Write-Only arguments are supported in HashiCorp Terraform 1.11.0 and later. [Learn more](https://developer.hashicorp.com/terraform/language/v1.11.x/resources/ephemeral#write-only-arguments).
+
 ## Example Usage
 
 ```python
@@ -151,4 +153,4 @@ Using `terraform import`, import DocumentDB Clusters using the `cluster_identifi
 % terraform import aws_docdb_cluster.docdb_cluster docdb-prod-cluster
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-8ded75eb7f5c5d624329fbbc405ac39ab56b55d3328a3a17a5892d6205529322 -->
+<!-- cache-key: cdktf-0.20.8 input-94dc28f4c731c3fea3b96e91a9c30b57b0b547714f0aa8f8d174f9d492b570e2 -->

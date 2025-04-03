@@ -43,7 +43,7 @@ import (
 type opsworksLayerTypeAttribute struct {
 	AttrName     awstypes.LayerAttributesKeys
 	Type         schema.ValueType
-	Default      interface{}
+	Default      any
 	ForceNew     bool
 	Required     bool
 	ValidateFunc schema.SchemaValidateFunc
@@ -193,7 +193,7 @@ func (lt *opsworksLayerType) resourceSchema() *schema.Resource {
 		"custom_json": {
 			Type:         schema.TypeString,
 			ValidateFunc: validation.StringIsJSON,
-			StateFunc: func(v interface{}) string {
+			StateFunc: func(v any) string {
 				json, _ := structure.NormalizeJsonString(v)
 				return json
 			},
@@ -271,8 +271,8 @@ func (lt *opsworksLayerType) resourceSchema() *schema.Resource {
 					},
 				},
 			},
-			Set: func(v interface{}) int {
-				m := v.(map[string]interface{})
+			Set: func(v any) int {
+				m := v.(map[string]any)
 				return create.StringHashcode(m["mount_point"].(string))
 			},
 		},
@@ -447,16 +447,17 @@ func (lt *opsworksLayerType) resourceSchema() *schema.Resource {
 	}
 
 	return &schema.Resource{
-		CreateWithoutTimeout: func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+		DeprecationMessage: "This resource is deprecated and will be removed in the next major version of the AWS Provider. Consider the AWS Systems Manager service instead.",
+		CreateWithoutTimeout: func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 			return lt.Create(ctx, d, meta)
 		},
-		ReadWithoutTimeout: func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+		ReadWithoutTimeout: func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 			return lt.Read(ctx, d, meta)
 		},
-		UpdateWithoutTimeout: func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+		UpdateWithoutTimeout: func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 			return lt.Update(ctx, d, meta)
 		},
-		DeleteWithoutTimeout: func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+		DeleteWithoutTimeout: func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 			return lt.Delete(ctx, d, meta)
 		},
 
@@ -467,12 +468,10 @@ func (lt *opsworksLayerType) resourceSchema() *schema.Resource {
 		SchemaFunc: func() map[string]*schema.Schema {
 			return resourceSchema
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func (lt *opsworksLayerType) Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func (lt *opsworksLayerType) Create(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpsWorksClient(ctx)
 
@@ -501,16 +500,16 @@ func (lt *opsworksLayerType) Create(ctx context.Context, d *schema.ResourceData,
 		UseEbsOptimizedInstances: aws.Bool(d.Get("use_ebs_optimized_instances").(bool)),
 	}
 
-	if v, ok := d.GetOk("cloudwatch_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.CloudWatchLogsConfiguration = expandCloudWatchLogsConfiguration(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("cloudwatch_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.CloudWatchLogsConfiguration = expandCloudWatchLogsConfiguration(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("custom_configure_recipes"); ok && len(v.([]interface{})) > 0 {
-		input.CustomRecipes.Configure = flex.ExpandStringValueList(v.([]interface{}))
+	if v, ok := d.GetOk("custom_configure_recipes"); ok && len(v.([]any)) > 0 {
+		input.CustomRecipes.Configure = flex.ExpandStringValueList(v.([]any))
 	}
 
-	if v, ok := d.GetOk("custom_deploy_recipes"); ok && len(v.([]interface{})) > 0 {
-		input.CustomRecipes.Deploy = flex.ExpandStringValueList(v.([]interface{}))
+	if v, ok := d.GetOk("custom_deploy_recipes"); ok && len(v.([]any)) > 0 {
+		input.CustomRecipes.Deploy = flex.ExpandStringValueList(v.([]any))
 	}
 
 	if v, ok := d.GetOk("custom_instance_profile_arn"); ok {
@@ -525,16 +524,16 @@ func (lt *opsworksLayerType) Create(ctx context.Context, d *schema.ResourceData,
 		input.CustomSecurityGroupIds = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("custom_setup_recipes"); ok && len(v.([]interface{})) > 0 {
-		input.CustomRecipes.Setup = flex.ExpandStringValueList(v.([]interface{}))
+	if v, ok := d.GetOk("custom_setup_recipes"); ok && len(v.([]any)) > 0 {
+		input.CustomRecipes.Setup = flex.ExpandStringValueList(v.([]any))
 	}
 
-	if v, ok := d.GetOk("custom_shutdown_recipes"); ok && len(v.([]interface{})) > 0 {
-		input.CustomRecipes.Shutdown = flex.ExpandStringValueList(v.([]interface{}))
+	if v, ok := d.GetOk("custom_shutdown_recipes"); ok && len(v.([]any)) > 0 {
+		input.CustomRecipes.Shutdown = flex.ExpandStringValueList(v.([]any))
 	}
 
-	if v, ok := d.GetOk("custom_undeploy_recipes"); ok && len(v.([]interface{})) > 0 {
-		input.CustomRecipes.Undeploy = flex.ExpandStringValueList(v.([]interface{}))
+	if v, ok := d.GetOk("custom_undeploy_recipes"); ok && len(v.([]any)) > 0 {
+		input.CustomRecipes.Undeploy = flex.ExpandStringValueList(v.([]any))
 	}
 
 	if v, ok := d.GetOk("ebs_volume"); ok && v.(*schema.Set).Len() > 0 {
@@ -588,8 +587,8 @@ func (lt *opsworksLayerType) Create(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 
-	if v, ok := d.GetOk("load_based_auto_scaling"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input := expandSetLoadBasedAutoScalingInput(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("load_based_auto_scaling"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input := expandSetLoadBasedAutoScalingInput(v.([]any)[0].(map[string]any))
 		input.LayerId = aws.String(d.Id())
 
 		_, err := conn.SetLoadBasedAutoScaling(ctx, input)
@@ -599,7 +598,7 @@ func (lt *opsworksLayerType) Create(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 
-	if tags := KeyValueTags(ctx, getTagsIn(ctx)); len(tags) > 0 {
+	if tags := keyValueTags(ctx, getTagsIn(ctx)); len(tags) > 0 {
 		layer, err := findLayerByID(ctx, conn, d.Id())
 
 		if err != nil {
@@ -615,7 +614,7 @@ func (lt *opsworksLayerType) Create(ctx context.Context, d *schema.ResourceData,
 	return append(diags, lt.Read(ctx, d, meta)...)
 }
 
-func (lt *opsworksLayerType) Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func (lt *opsworksLayerType) Read(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpsWorksClient(ctx)
 
@@ -637,7 +636,7 @@ func (lt *opsworksLayerType) Read(ctx context.Context, d *schema.ResourceData, m
 	d.Set("auto_assign_public_ips", layer.AutoAssignPublicIps)
 	d.Set("auto_healing", layer.EnableAutoHealing)
 	if layer.CloudWatchLogsConfiguration != nil {
-		if err := d.Set("cloudwatch_configuration", []interface{}{flattenCloudWatchLogsConfiguration(layer.CloudWatchLogsConfiguration)}); err != nil {
+		if err := d.Set("cloudwatch_configuration", []any{flattenCloudWatchLogsConfiguration(layer.CloudWatchLogsConfiguration)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting cloudwatch_configuration: %s", err)
 		}
 	} else {
@@ -703,7 +702,7 @@ func (lt *opsworksLayerType) Read(ctx context.Context, d *schema.ResourceData, m
 	loadBasedAutoScalingConfiguration, err := findLoadBasedAutoScalingConfigurationByLayerID(ctx, conn, d.Id())
 
 	if err == nil {
-		if err := d.Set("load_based_auto_scaling", []interface{}{flattenLoadBasedAutoScalingConfiguration(loadBasedAutoScalingConfiguration)}); err != nil {
+		if err := d.Set("load_based_auto_scaling", []any{flattenLoadBasedAutoScalingConfiguration(loadBasedAutoScalingConfiguration)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting load_based_auto_scaling: %s", err)
 		}
 	} else if tfresource.NotFound(err) {
@@ -715,7 +714,7 @@ func (lt *opsworksLayerType) Read(ctx context.Context, d *schema.ResourceData, m
 	return nil
 }
 
-func (lt *opsworksLayerType) Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func (lt *opsworksLayerType) Update(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpsWorksClient(ctx)
 
@@ -747,8 +746,8 @@ func (lt *opsworksLayerType) Update(ctx context.Context, d *schema.ResourceData,
 		}
 
 		if d.HasChanges("cloudwatch_configuration") {
-			if v, ok := d.GetOk("cloudwatch_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.CloudWatchLogsConfiguration = expandCloudWatchLogsConfiguration(v.([]interface{})[0].(map[string]interface{}))
+			if v, ok := d.GetOk("cloudwatch_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.CloudWatchLogsConfiguration = expandCloudWatchLogsConfiguration(v.([]any)[0].(map[string]any))
 			}
 		}
 
@@ -756,23 +755,23 @@ func (lt *opsworksLayerType) Update(ctx context.Context, d *schema.ResourceData,
 			apiObject := &awstypes.Recipes{}
 
 			if d.HasChanges("custom_configure_recipes") {
-				apiObject.Configure = flex.ExpandStringValueList(d.Get("custom_configure_recipes").([]interface{}))
+				apiObject.Configure = flex.ExpandStringValueList(d.Get("custom_configure_recipes").([]any))
 			}
 
 			if d.HasChanges("custom_deploy_recipes") {
-				apiObject.Deploy = flex.ExpandStringValueList(d.Get("custom_deploy_recipes").([]interface{}))
+				apiObject.Deploy = flex.ExpandStringValueList(d.Get("custom_deploy_recipes").([]any))
 			}
 
 			if d.HasChanges("custom_setup_recipes") {
-				apiObject.Setup = flex.ExpandStringValueList(d.Get("custom_setup_recipes").([]interface{}))
+				apiObject.Setup = flex.ExpandStringValueList(d.Get("custom_setup_recipes").([]any))
 			}
 
 			if d.HasChanges("custom_shutdown_recipes") {
-				apiObject.Shutdown = flex.ExpandStringValueList(d.Get("custom_shutdown_recipes").([]interface{}))
+				apiObject.Shutdown = flex.ExpandStringValueList(d.Get("custom_shutdown_recipes").([]any))
 			}
 
 			if d.HasChanges("custom_undeploy_recipes") {
-				apiObject.Undeploy = flex.ExpandStringValueList(d.Get("custom_undeploy_recipes").([]interface{}))
+				apiObject.Undeploy = flex.ExpandStringValueList(d.Get("custom_undeploy_recipes").([]any))
 			}
 
 			input.CustomRecipes = apiObject
@@ -860,7 +859,7 @@ func (lt *opsworksLayerType) Update(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if d.HasChange("load_based_auto_scaling") {
-		input := expandSetLoadBasedAutoScalingInput(d.Get("load_based_auto_scaling").([]interface{})[0].(map[string]interface{}))
+		input := expandSetLoadBasedAutoScalingInput(d.Get("load_based_auto_scaling").([]any)[0].(map[string]any))
 		input.LayerId = aws.String(d.Id())
 
 		_, err := conn.SetLoadBasedAutoScaling(ctx, input)
@@ -873,7 +872,7 @@ func (lt *opsworksLayerType) Update(ctx context.Context, d *schema.ResourceData,
 	return append(diags, lt.Read(ctx, d, meta)...)
 }
 
-func (lt *opsworksLayerType) Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func (lt *opsworksLayerType) Delete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpsWorksClient(ctx)
 
@@ -1029,7 +1028,7 @@ func (m opsworksLayerTypeAttributeMap) resourceDataToAPIAttributes(d *schema.Res
 	return apiAttributes, nil
 }
 
-func expandCloudWatchLogsConfiguration(tfMap map[string]interface{}) *awstypes.CloudWatchLogsConfiguration {
+func expandCloudWatchLogsConfiguration(tfMap map[string]any) *awstypes.CloudWatchLogsConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -1040,14 +1039,14 @@ func expandCloudWatchLogsConfiguration(tfMap map[string]interface{}) *awstypes.C
 		apiObject.Enabled = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["log_streams"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["log_streams"].([]any); ok && len(v) > 0 {
 		apiObject.LogStreams = expandCloudWatchLogsLogStreams(v)
 	}
 
 	return apiObject
 }
 
-func expandCloudWatchLogsLogStream(tfMap map[string]interface{}) awstypes.CloudWatchLogsLogStream {
+func expandCloudWatchLogsLogStream(tfMap map[string]any) awstypes.CloudWatchLogsLogStream {
 	apiObject := awstypes.CloudWatchLogsLogStream{}
 
 	if v, ok := tfMap["batch_count"].(int); ok && v != 0 {
@@ -1097,7 +1096,7 @@ func expandCloudWatchLogsLogStream(tfMap map[string]interface{}) awstypes.CloudW
 	return apiObject
 }
 
-func expandCloudWatchLogsLogStreams(tfList []interface{}) []awstypes.CloudWatchLogsLogStream {
+func expandCloudWatchLogsLogStreams(tfList []any) []awstypes.CloudWatchLogsLogStream {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1105,7 +1104,7 @@ func expandCloudWatchLogsLogStreams(tfList []interface{}) []awstypes.CloudWatchL
 	var apiObjects []awstypes.CloudWatchLogsLogStream
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -1117,12 +1116,12 @@ func expandCloudWatchLogsLogStreams(tfList []interface{}) []awstypes.CloudWatchL
 	return apiObjects
 }
 
-func flattenCloudWatchLogsConfiguration(apiObject *awstypes.CloudWatchLogsConfiguration) map[string]interface{} {
+func flattenCloudWatchLogsConfiguration(apiObject *awstypes.CloudWatchLogsConfiguration) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Enabled; v != nil {
 		tfMap[names.AttrEnabled] = aws.ToBool(v)
@@ -1135,8 +1134,8 @@ func flattenCloudWatchLogsConfiguration(apiObject *awstypes.CloudWatchLogsConfig
 	return tfMap
 }
 
-func flattenCloudWatchLogsLogStream(apiObject awstypes.CloudWatchLogsLogStream) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenCloudWatchLogsLogStream(apiObject awstypes.CloudWatchLogsLogStream) map[string]any {
+	tfMap := map[string]any{}
 
 	if v := apiObject.BatchCount; v != nil {
 		tfMap["batch_count"] = aws.ToInt32(v)
@@ -1179,12 +1178,12 @@ func flattenCloudWatchLogsLogStream(apiObject awstypes.CloudWatchLogsLogStream) 
 	return tfMap
 }
 
-func flattenCloudWatchLogsLogStreams(apiObjects []awstypes.CloudWatchLogsLogStream) []interface{} {
+func flattenCloudWatchLogsLogStreams(apiObjects []awstypes.CloudWatchLogsLogStream) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenCloudWatchLogsLogStream(apiObject))
@@ -1193,7 +1192,7 @@ func flattenCloudWatchLogsLogStreams(apiObjects []awstypes.CloudWatchLogsLogStre
 	return tfList
 }
 
-func expandVolumeConfiguration(tfMap map[string]interface{}) awstypes.VolumeConfiguration {
+func expandVolumeConfiguration(tfMap map[string]any) awstypes.VolumeConfiguration {
 	apiObject := awstypes.VolumeConfiguration{}
 
 	if v, ok := tfMap[names.AttrEncrypted].(bool); ok {
@@ -1229,7 +1228,7 @@ func expandVolumeConfiguration(tfMap map[string]interface{}) awstypes.VolumeConf
 	return apiObject
 }
 
-func expandVolumeConfigurations(tfList []interface{}) []awstypes.VolumeConfiguration {
+func expandVolumeConfigurations(tfList []any) []awstypes.VolumeConfiguration {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1237,7 +1236,7 @@ func expandVolumeConfigurations(tfList []interface{}) []awstypes.VolumeConfigura
 	var apiObjects []awstypes.VolumeConfiguration
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -1249,8 +1248,8 @@ func expandVolumeConfigurations(tfList []interface{}) []awstypes.VolumeConfigura
 	return apiObjects
 }
 
-func flattenVolumeConfiguration(apiObject awstypes.VolumeConfiguration) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenVolumeConfiguration(apiObject awstypes.VolumeConfiguration) map[string]any {
+	tfMap := map[string]any{}
 
 	if v := apiObject.Encrypted; v != nil {
 		tfMap[names.AttrEncrypted] = aws.ToBool(v)
@@ -1283,12 +1282,12 @@ func flattenVolumeConfiguration(apiObject awstypes.VolumeConfiguration) map[stri
 	return tfMap
 }
 
-func flattenVolumeConfigurations(apiObjects []awstypes.VolumeConfiguration) []interface{} {
+func flattenVolumeConfigurations(apiObjects []awstypes.VolumeConfiguration) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenVolumeConfiguration(apiObject))
@@ -1297,36 +1296,36 @@ func flattenVolumeConfigurations(apiObjects []awstypes.VolumeConfiguration) []in
 	return tfList
 }
 
-func expandSetLoadBasedAutoScalingInput(tfMap map[string]interface{}) *opsworks.SetLoadBasedAutoScalingInput {
+func expandSetLoadBasedAutoScalingInput(tfMap map[string]any) *opsworks.SetLoadBasedAutoScalingInput {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &opsworks.SetLoadBasedAutoScalingInput{}
 
-	if v, ok := tfMap["downscaling"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.DownScaling = expandAutoScalingThresholds(v[0].(map[string]interface{}))
+	if v, ok := tfMap["downscaling"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.DownScaling = expandAutoScalingThresholds(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["enable"].(bool); ok {
 		apiObject.Enable = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["upscaling"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.UpScaling = expandAutoScalingThresholds(v[0].(map[string]interface{}))
+	if v, ok := tfMap["upscaling"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.UpScaling = expandAutoScalingThresholds(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandAutoScalingThresholds(tfMap map[string]interface{}) *awstypes.AutoScalingThresholds {
+func expandAutoScalingThresholds(tfMap map[string]any) *awstypes.AutoScalingThresholds {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.AutoScalingThresholds{}
 
-	if v, ok := tfMap["alarms"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["alarms"].([]any); ok && len(v) > 0 {
 		apiObject.Alarms = flex.ExpandStringValueList(v)
 	}
 
@@ -1357,15 +1356,15 @@ func expandAutoScalingThresholds(tfMap map[string]interface{}) *awstypes.AutoSca
 	return apiObject
 }
 
-func flattenLoadBasedAutoScalingConfiguration(apiObject *awstypes.LoadBasedAutoScalingConfiguration) map[string]interface{} {
+func flattenLoadBasedAutoScalingConfiguration(apiObject *awstypes.LoadBasedAutoScalingConfiguration) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.DownScaling; v != nil {
-		tfMap["downscaling"] = []interface{}{flattenAutoScalingThresholds(v)}
+		tfMap["downscaling"] = []any{flattenAutoScalingThresholds(v)}
 	}
 
 	if v := apiObject.Enable; v != nil {
@@ -1373,18 +1372,18 @@ func flattenLoadBasedAutoScalingConfiguration(apiObject *awstypes.LoadBasedAutoS
 	}
 
 	if v := apiObject.UpScaling; v != nil {
-		tfMap["upscaling"] = []interface{}{flattenAutoScalingThresholds(v)}
+		tfMap["upscaling"] = []any{flattenAutoScalingThresholds(v)}
 	}
 
 	return tfMap
 }
 
-func flattenAutoScalingThresholds(apiObject *awstypes.AutoScalingThresholds) map[string]interface{} {
+func flattenAutoScalingThresholds(apiObject *awstypes.AutoScalingThresholds) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Alarms; v != nil {
 		tfMap["alarms"] = v

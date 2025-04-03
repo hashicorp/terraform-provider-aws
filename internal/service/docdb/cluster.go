@@ -43,7 +43,7 @@ func resourceCluster() *schema.Resource {
 		DeleteWithoutTimeout: resourceClusterDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 				// Neither skip_final_snapshot nor final_snapshot_identifier can be fetched
 				// from any API call, so we need to default skip_final_snapshot to true so
 				// that final_snapshot_identifier is not required
@@ -56,10 +56,6 @@ func resourceCluster() *schema.Resource {
 			Create: schema.DefaultTimeout(120 * time.Minute),
 			Update: schema.DefaultTimeout(120 * time.Minute),
 			Delete: schema.DefaultTimeout(120 * time.Minute),
-		},
-
-		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("master_password"), cty.GetAttrPath("master_password_wo")),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -159,7 +155,7 @@ func resourceCluster() *schema.Resource {
 			names.AttrFinalSnapshotIdentifier: {
 				Type:     schema.TypeString,
 				Optional: true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, es []error) {
+				ValidateFunc: func(v any, k string) (ws []string, es []error) {
 					value := v.(string)
 					if !regexache.MustCompile(`^[0-9A-Za-z-]+$`).MatchString(value) {
 						es = append(es, fmt.Errorf(
@@ -201,6 +197,7 @@ func resourceCluster() *schema.Resource {
 				Optional:      true,
 				WriteOnly:     true,
 				ConflictsWith: []string{"master_password"},
+				RequiredWith:  []string{"master_password_wo_version"},
 			},
 			"master_password_wo_version": {
 				Type:         schema.TypeInt,
@@ -230,7 +227,7 @@ func resourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
-				StateFunc: func(val interface{}) string {
+				StateFunc: func(val any) string {
 					if val == nil {
 						return ""
 					}
@@ -324,12 +321,10 @@ func resourceCluster() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DocDBClient(ctx)
 
@@ -383,8 +378,8 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.DBSubnetGroupName = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && len(v.([]interface{})) > 0 {
-			input.EnableCloudwatchLogsExports = flex.ExpandStringValueList(v.([]interface{}))
+		if v, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && len(v.([]any)) > 0 {
+			input.EnableCloudwatchLogsExports = flex.ExpandStringValueList(v.([]any))
 		}
 
 		if v, ok := d.GetOk(names.AttrEngineVersion); ok {
@@ -427,15 +422,15 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.VpcSecurityGroupIds = flex.ExpandStringValueSet(v)
 		}
 
-		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (any, error) {
 			return conn.RestoreDBClusterFromSnapshot(ctx, input)
 		}, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions")
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating DocumentDB Cluster (restore from snapshot) (%s): %s", identifier, err)
 		}
-	} else if v, ok := d.GetOk("restore_to_point_in_time"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		tfMap := v.([]interface{})[0].(map[string]interface{})
+	} else if v, ok := d.GetOk("restore_to_point_in_time"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		tfMap := v.([]any)[0].(map[string]any)
 		input := &docdb.RestoreDBClusterToPointInTimeInput{
 			DBClusterIdentifier:       aws.String(identifier),
 			SourceDBClusterIdentifier: aws.String(tfMap["source_cluster_identifier"].(string)),
@@ -460,8 +455,8 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.DBSubnetGroupName = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && len(v.([]interface{})) > 0 {
-			input.EnableCloudwatchLogsExports = flex.ExpandStringValueList(v.([]interface{}))
+		if v, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && len(v.([]any)) > 0 {
+			input.EnableCloudwatchLogsExports = flex.ExpandStringValueList(v.([]any))
 		}
 
 		if v, ok := tfMap["restore_type"].(string); ok {
@@ -484,7 +479,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.VpcSecurityGroupIds = flex.ExpandStringValueSet(v)
 		}
 
-		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (any, error) {
 			return conn.RestoreDBClusterToPointInTime(ctx, input)
 		}, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions")
 		if err != nil {
@@ -529,8 +524,8 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.DBSubnetGroupName = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && len(v.([]interface{})) > 0 {
-			input.EnableCloudwatchLogsExports = flex.ExpandStringValueList(v.([]interface{}))
+		if v, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && len(v.([]any)) > 0 {
+			input.EnableCloudwatchLogsExports = flex.ExpandStringValueList(v.([]any))
 		}
 
 		if v, ok := d.GetOk(names.AttrEngineVersion); ok {
@@ -577,7 +572,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.VpcSecurityGroupIds = flex.ExpandStringValueSet(v)
 		}
 
-		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (any, error) {
 			return conn.CreateDBCluster(ctx, input)
 		}, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions")
 
@@ -609,7 +604,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceClusterRead(ctx, d, meta)...)
 }
 
-func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DocDBClient(ctx)
 
@@ -671,7 +666,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DocDBClient(ctx)
 
@@ -742,7 +737,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		_, err := tfresource.RetryWhen(ctx, 5*time.Minute,
-			func() (interface{}, error) {
+			func() (any, error) {
 				return conn.ModifyDBCluster(ctx, input)
 			},
 			func(err error) (bool, error) {
@@ -791,7 +786,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceClusterRead(ctx, d, meta)...)
 }
 
-func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DocDBClient(ctx)
 
@@ -817,7 +812,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 
 	log.Printf("[DEBUG] Deleting DocumentDB Cluster: %s", d.Id())
 	_, err := tfresource.RetryWhen(ctx, d.Timeout(schema.TimeoutDelete),
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.DeleteDBCluster(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -850,8 +845,8 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 
 func expandCloudwatchLogsExportConfiguration(d *schema.ResourceData) *awstypes.CloudwatchLogsExportConfiguration { // nosemgrep:ci.caps0-in-func-name
 	oraw, nraw := d.GetChange("enabled_cloudwatch_logs_exports")
-	o := oraw.([]interface{})
-	n := nraw.([]interface{})
+	o := oraw.([]any)
+	n := nraw.([]any)
 
 	create, disable := diffCloudWatchLogsExportConfiguration(o, n)
 
@@ -861,9 +856,9 @@ func expandCloudwatchLogsExportConfiguration(d *schema.ResourceData) *awstypes.C
 	}
 }
 
-func diffCloudWatchLogsExportConfiguration(old, new []interface{}) ([]interface{}, []interface{}) {
-	add := make([]interface{}, 0)
-	disable := make([]interface{}, 0)
+func diffCloudWatchLogsExportConfiguration(old, new []any) ([]any, []any) {
+	add := make([]any, 0)
+	disable := make([]any, 0)
 
 	for _, n := range new {
 		if idx := tfslices.IndexOf(old, n.(string)); idx == -1 {
@@ -897,7 +892,7 @@ func removeClusterFromGlobalCluster(ctx context.Context, conn *docdb.Client, clu
 		return fmt.Errorf("removing DocumentDB Cluster (%s) from DocumentDB Global Cluster (%s): %w", clusterARN, globalClusterID, err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, timeout, func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, timeout, func() (any, error) {
 		return findGlobalClusterByClusterARN(ctx, conn, clusterARN)
 	})
 
@@ -975,7 +970,7 @@ func findDBClusters(ctx context.Context, conn *docdb.Client, input *docdb.Descri
 }
 
 func statusDBCluster(ctx context.Context, conn *docdb.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findDBClusterByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

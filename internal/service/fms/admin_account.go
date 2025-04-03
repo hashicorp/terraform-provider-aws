@@ -52,7 +52,7 @@ func resourceAdminAccount() *schema.Resource {
 	}
 }
 
-func resourceAdminAccountCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAdminAccountCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FMSClient(ctx)
 
@@ -77,7 +77,7 @@ func resourceAdminAccountCreate(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceAdminAccountRead(ctx, d, meta)...)
 }
 
-func resourceAdminAccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAdminAccountRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FMSClient(ctx)
 
@@ -98,7 +98,7 @@ func resourceAdminAccountRead(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func resourceAdminAccountDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAdminAccountDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FMSClient(ctx)
 
@@ -152,7 +152,7 @@ func findAdminAccount(ctx context.Context, conn *fms.Client) (*fms.GetAdminAccou
 func statusAssociateAdminAccount(ctx context.Context, conn *fms.Client, accountID string) retry.StateRefreshFunc {
 	// This is all wrapped in a StateRefreshFunc since AssociateAdminAccount returns
 	// success even though it failed if called too quickly after creating an Organization.
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		input := &fms.AssociateAdminAccountInput{
 			AdminAccount: aws.String(accountID),
 		}
@@ -188,7 +188,7 @@ func statusAssociateAdminAccount(ctx context.Context, conn *fms.Client, accountI
 }
 
 func statusAdminAccount(ctx context.Context, conn *fms.Client) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findAdminAccount(ctx, conn)
 
 		if tfresource.NotFound(err) {

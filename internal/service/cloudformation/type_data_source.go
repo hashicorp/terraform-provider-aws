@@ -113,7 +113,7 @@ func dataSourceType() *schema.Resource {
 	}
 }
 
-func dataSourceTypeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceTypeRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
 
@@ -150,7 +150,7 @@ func dataSourceTypeRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set(names.AttrExecutionRoleARN, output.ExecutionRoleArn)
 	d.Set("is_default_version", output.IsDefaultVersion)
 	if output.LoggingConfig != nil {
-		if err := d.Set("logging_config", []interface{}{flattenLoggingConfig(output.LoggingConfig)}); err != nil {
+		if err := d.Set("logging_config", []any{flattenLoggingConfig(output.LoggingConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting logging_config: %s", err)
 		}
 	} else {

@@ -63,7 +63,7 @@ func resourceBasePathMapping() *schema.Resource {
 	}
 }
 
-func resourceBasePathMappingCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBasePathMappingCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -87,7 +87,7 @@ func resourceBasePathMappingCreate(ctx context.Context, d *schema.ResourceData, 
 	const (
 		timeout = 30 * time.Second
 	)
-	_, err := tfresource.RetryWhenIsA[*types.BadRequestException](ctx, timeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsA[*types.BadRequestException](ctx, timeout, func() (any, error) {
 		return conn.CreateBasePathMapping(ctx, &input)
 	})
 
@@ -100,7 +100,7 @@ func resourceBasePathMappingCreate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceBasePathMappingRead(ctx, d, meta)...)
 }
 
-func resourceBasePathMappingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBasePathMappingRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -134,7 +134,7 @@ func resourceBasePathMappingRead(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func resourceBasePathMappingUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBasePathMappingUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -192,7 +192,7 @@ func resourceBasePathMappingUpdate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceBasePathMappingRead(ctx, d, meta)...)
 }
 
-func resourceBasePathMappingDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBasePathMappingDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 

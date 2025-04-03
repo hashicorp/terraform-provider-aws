@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/datasync"
@@ -131,7 +130,7 @@ type sweepableLocation struct {
 	conn *datasync.Client
 }
 
-func (sweepable *sweepableLocation) Delete(ctx context.Context, timeout time.Duration, optFns ...tfresource.OptionsFunc) error {
+func (sweepable *sweepableLocation) Delete(ctx context.Context, optFns ...tfresource.OptionsFunc) error {
 	log.Printf("[DEBUG] Deleting DataSync Location: %s", sweepable.arn)
 	input := datasync.DeleteLocationInput{
 		LocationArn: aws.String(sweepable.arn),

@@ -1,16 +1,16 @@
 ---
-subcategory: "SageMaker"
+subcategory: "SageMaker AI"
 layout: "aws"
 page_title: "AWS: aws_sagemaker_project"
 description: |-
-  Provides a SageMaker Project resource.
+  Provides a SageMaker AI Project resource.
 ---
 
 # Resource: aws_sagemaker_project
 
-Provides a SageMaker Project resource.
+Provides a SageMaker AI Project resource.
 
- -> Note: If you are trying to use SageMaker projects with SageMaker studio you will need to add a tag with the key `sagemaker:studio-visibility` with value `true`. For more on requirements to use projects and permission needed see [AWS Docs](https://docs.aws.amazon.com/sagemaker/latest/dg/sagemaker-projects-templates-custom.html).
+ -> Note: If you are trying to use SageMaker AI projects with SageMaker AI studio you will need to add a tag with the key `sagemaker:studio-visibility` with value `true`. For more on requirements to use projects and permission needed see [AWS Docs](https://docs.aws.amazon.com/sagemaker/latest/dg/sagemaker-projects-templates-custom.html).
 
 ## Example Usage
 
@@ -56,7 +56,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker Projects using the `project_name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker AI Projects using the `project_name`. For example:
 
 ```terraform
 import {
@@ -65,7 +65,7 @@ import {
 }
 ```
 
-Using `terraform import`, import SageMaker Projects using the `project_name`. For example:
+Using `terraform import`, import SageMaker AI Projects using the `project_name`. For example:
 
 ```console
 % terraform import aws_sagemaker_project.example example

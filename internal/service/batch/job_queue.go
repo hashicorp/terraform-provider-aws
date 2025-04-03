@@ -155,7 +155,7 @@ func (r *jobQueueResource) Create(ctx context.Context, request resource.CreateRe
 	name := data.JobQueueName.ValueString()
 	input := &batch.CreateJobQueueInput{
 		JobQueueName: aws.String(name),
-		Priority:     fwflex.Int32FromFramework(ctx, data.Priority),
+		Priority:     fwflex.Int32FromFrameworkInt64(ctx, data.Priority),
 		State:        awstypes.JQState(data.State.ValueString()),
 		Tags:         getTagsIn(ctx),
 	}
@@ -244,7 +244,7 @@ func (r *jobQueueResource) Read(ctx context.Context, request resource.ReadReques
 	if response.Diagnostics.HasError() {
 		return
 	}
-	data.Priority = fwflex.Int32ToFrameworkLegacy(ctx, jobQueue.Priority)
+	data.Priority = fwflex.Int32ToFrameworkInt64Legacy(ctx, jobQueue.Priority)
 	data.SchedulingPolicyARN = fwflex.StringToFrameworkARN(ctx, jobQueue.SchedulingPolicyArn)
 	data.State = fwflex.StringValueToFramework(ctx, jobQueue.State)
 
@@ -292,7 +292,7 @@ func (r *jobQueueResource) Update(ctx context.Context, request resource.UpdateRe
 		update = true
 	}
 	if !new.Priority.Equal(old.Priority) {
-		input.Priority = fwflex.Int32FromFramework(ctx, new.Priority)
+		input.Priority = fwflex.Int32FromFrameworkInt64(ctx, new.Priority)
 		update = true
 	}
 	if !new.State.Equal(old.State) {
@@ -455,7 +455,7 @@ func findJobQueues(ctx context.Context, conn *batch.Client, input *batch.Describ
 }
 
 func statusJobQueue(ctx context.Context, conn *batch.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findJobQueueByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

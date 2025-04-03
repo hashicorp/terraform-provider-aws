@@ -56,7 +56,7 @@ func resourceBaiduChannel() *schema.Resource {
 	}
 }
 
-func resourceBaiduChannelUpsert(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBaiduChannelUpsert(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointClient(ctx)
 
@@ -83,7 +83,7 @@ func resourceBaiduChannelUpsert(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceBaiduChannelRead(ctx, d, meta)...)
 }
 
-func resourceBaiduChannelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBaiduChannelRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointClient(ctx)
 
@@ -108,7 +108,7 @@ func resourceBaiduChannelRead(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func resourceBaiduChannelDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBaiduChannelDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointClient(ctx)
 

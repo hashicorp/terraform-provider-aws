@@ -70,7 +70,7 @@ func resourceReceiptFilter() *schema.Resource {
 	}
 }
 
-func resourceReceiptFilterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReceiptFilterCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
@@ -96,7 +96,7 @@ func resourceReceiptFilterCreate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceReceiptFilterRead(ctx, d, meta)...)
 }
 
-func resourceReceiptFilterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReceiptFilterRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
@@ -127,7 +127,7 @@ func resourceReceiptFilterRead(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func resourceReceiptFilterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReceiptFilterDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 

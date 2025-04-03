@@ -487,92 +487,92 @@ func hexColorSchema(handling attrHandling) *schema.Schema {
 	return stringMatchSchema(handling, `^#[0-9A-F]{6}$`, "")
 }
 
-func expandVisual(tfMap map[string]interface{}) *awstypes.Visual {
+func expandVisual(tfMap map[string]any) *awstypes.Visual {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.Visual{}
 
-	if v, ok := tfMap["bar_chart_visual"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["bar_chart_visual"].([]any); ok && len(v) > 0 {
 		apiObject.BarChartVisual = expandBarChartVisual(v)
 	}
-	if v, ok := tfMap["box_plot_visual"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["box_plot_visual"].([]any); ok && len(v) > 0 {
 		apiObject.BoxPlotVisual = expandBoxPlotVisual(v)
 	}
-	if v, ok := tfMap["combo_chart_visual"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["combo_chart_visual"].([]any); ok && len(v) > 0 {
 		apiObject.ComboChartVisual = expandComboChartVisual(v)
 	}
-	if v, ok := tfMap["custom_content_visual"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["custom_content_visual"].([]any); ok && len(v) > 0 {
 		apiObject.CustomContentVisual = expandCustomContentVisual(v)
 	}
-	if v, ok := tfMap["empty_visual"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["empty_visual"].([]any); ok && len(v) > 0 {
 		apiObject.EmptyVisual = expandEmptyVisual(v)
 	}
-	if v, ok := tfMap["filled_map_visual"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["filled_map_visual"].([]any); ok && len(v) > 0 {
 		apiObject.FilledMapVisual = expandFilledMapVisual(v)
 	}
-	if v, ok := tfMap["funnel_chart_visual"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["funnel_chart_visual"].([]any); ok && len(v) > 0 {
 		apiObject.FunnelChartVisual = expandFunnelChartVisual(v)
 	}
-	if v, ok := tfMap["gauge_chart_visual"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["gauge_chart_visual"].([]any); ok && len(v) > 0 {
 		apiObject.GaugeChartVisual = expandGaugeChartVisual(v)
 	}
-	if v, ok := tfMap["geospatial_map_visual"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["geospatial_map_visual"].([]any); ok && len(v) > 0 {
 		apiObject.GeospatialMapVisual = expandGeospatialMapVisual(v)
 	}
-	if v, ok := tfMap["heat_map_visual"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["heat_map_visual"].([]any); ok && len(v) > 0 {
 		apiObject.HeatMapVisual = expandHeatMapVisual(v)
 	}
-	if v, ok := tfMap["histogram_visual"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["histogram_visual"].([]any); ok && len(v) > 0 {
 		apiObject.HistogramVisual = expandHistogramVisual(v)
 	}
-	if v, ok := tfMap["insight_visual"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["insight_visual"].([]any); ok && len(v) > 0 {
 		apiObject.InsightVisual = expandInsightVisual(v)
 	}
-	if v, ok := tfMap["kpi_visual"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["kpi_visual"].([]any); ok && len(v) > 0 {
 		apiObject.KPIVisual = expandKPIVisual(v)
 	}
-	if v, ok := tfMap["line_chart_visual"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["line_chart_visual"].([]any); ok && len(v) > 0 {
 		apiObject.LineChartVisual = expandLineChartVisual(v)
 	}
-	if v, ok := tfMap["pie_chart_visual"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["pie_chart_visual"].([]any); ok && len(v) > 0 {
 		apiObject.PieChartVisual = expandPieChartVisual(v)
 	}
-	if v, ok := tfMap["pivot_table_visual"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["pivot_table_visual"].([]any); ok && len(v) > 0 {
 		apiObject.PivotTableVisual = expandPivotTableVisual(v)
 	}
-	if v, ok := tfMap["radar_chart_visual"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["radar_chart_visual"].([]any); ok && len(v) > 0 {
 		apiObject.RadarChartVisual = expandRadarChartVisual(v)
 	}
-	if v, ok := tfMap["sankey_diagram_visual"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["sankey_diagram_visual"].([]any); ok && len(v) > 0 {
 		apiObject.SankeyDiagramVisual = expandSankeyDiagramVisual(v)
 	}
-	if v, ok := tfMap["scatter_plot_visual"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["scatter_plot_visual"].([]any); ok && len(v) > 0 {
 		apiObject.ScatterPlotVisual = expandScatterPlotVisual(v)
 	}
-	if v, ok := tfMap["table_visual"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["table_visual"].([]any); ok && len(v) > 0 {
 		apiObject.TableVisual = expandTableVisual(v)
 	}
-	if v, ok := tfMap["tree_map_visual"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["tree_map_visual"].([]any); ok && len(v) > 0 {
 		apiObject.TreeMapVisual = expandTreeMapVisual(v)
 	}
-	if v, ok := tfMap["waterfall_visual"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["waterfall_visual"].([]any); ok && len(v) > 0 {
 		apiObject.WaterfallVisual = expandWaterfallVisual(v)
 	}
-	if v, ok := tfMap["word_cloud_visual"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["word_cloud_visual"].([]any); ok && len(v) > 0 {
 		apiObject.WordCloudVisual = expandWordCloudVisual(v)
 	}
 
 	return apiObject
 }
 
-func expandDataLabelOptions(tfList []interface{}) *awstypes.DataLabelOptions {
+func expandDataLabelOptions(tfList []any) *awstypes.DataLabelOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -600,17 +600,17 @@ func expandDataLabelOptions(tfList []interface{}) *awstypes.DataLabelOptions {
 	if v, ok := tfMap["visibility"].(string); ok && v != "" {
 		apiObject.Visibility = awstypes.Visibility(v)
 	}
-	if v, ok := tfMap["data_label_types"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["data_label_types"].([]any); ok && len(v) > 0 {
 		apiObject.DataLabelTypes = expandDataLabelTypes(v)
 	}
-	if v, ok := tfMap["label_font_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["label_font_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.LabelFontConfiguration = expandFontConfiguration(v)
 	}
 
 	return apiObject
 }
 
-func expandDataLabelTypes(tfList []interface{}) []awstypes.DataLabelType {
+func expandDataLabelTypes(tfList []any) []awstypes.DataLabelType {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -618,7 +618,7 @@ func expandDataLabelTypes(tfList []interface{}) []awstypes.DataLabelType {
 	var apiObjects []awstypes.DataLabelType
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -634,38 +634,38 @@ func expandDataLabelTypes(tfList []interface{}) []awstypes.DataLabelType {
 	return apiObjects
 }
 
-func expandDataLabelType(tfMap map[string]interface{}) *awstypes.DataLabelType {
+func expandDataLabelType(tfMap map[string]any) *awstypes.DataLabelType {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.DataLabelType{}
 
-	if v, ok := tfMap["data_path_label_type"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["data_path_label_type"].([]any); ok && len(v) > 0 {
 		apiObject.DataPathLabelType = expandDataPathLabelType(v)
 	}
-	if v, ok := tfMap["field_label_type"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["field_label_type"].([]any); ok && len(v) > 0 {
 		apiObject.FieldLabelType = expandFieldLabelType(v)
 	}
-	if v, ok := tfMap["maximum_label_type"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["maximum_label_type"].([]any); ok && len(v) > 0 {
 		apiObject.MaximumLabelType = expandMaximumLabelType(v)
 	}
-	if v, ok := tfMap["minimum_label_type"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["minimum_label_type"].([]any); ok && len(v) > 0 {
 		apiObject.MinimumLabelType = expandMinimumLabelType(v)
 	}
-	if v, ok := tfMap["range_ends_label_type"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["range_ends_label_type"].([]any); ok && len(v) > 0 {
 		apiObject.RangeEndsLabelType = expandRangeEndsLabelType(v)
 	}
 
 	return apiObject
 }
 
-func expandDataPathLabelType(tfList []interface{}) *awstypes.DataPathLabelType {
+func expandDataPathLabelType(tfList []any) *awstypes.DataPathLabelType {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -685,12 +685,12 @@ func expandDataPathLabelType(tfList []interface{}) *awstypes.DataPathLabelType {
 	return apiObject
 }
 
-func expandFieldLabelType(tfList []interface{}) *awstypes.FieldLabelType {
+func expandFieldLabelType(tfList []any) *awstypes.FieldLabelType {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -707,12 +707,12 @@ func expandFieldLabelType(tfList []interface{}) *awstypes.FieldLabelType {
 	return apiObject
 }
 
-func expandMaximumLabelType(tfList []interface{}) *awstypes.MaximumLabelType {
+func expandMaximumLabelType(tfList []any) *awstypes.MaximumLabelType {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -726,12 +726,12 @@ func expandMaximumLabelType(tfList []interface{}) *awstypes.MaximumLabelType {
 	return apiObject
 }
 
-func expandMinimumLabelType(tfList []interface{}) *awstypes.MinimumLabelType {
+func expandMinimumLabelType(tfList []any) *awstypes.MinimumLabelType {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -745,12 +745,12 @@ func expandMinimumLabelType(tfList []interface{}) *awstypes.MinimumLabelType {
 	return apiObject
 }
 
-func expandRangeEndsLabelType(tfList []interface{}) *awstypes.RangeEndsLabelType {
+func expandRangeEndsLabelType(tfList []any) *awstypes.RangeEndsLabelType {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -764,12 +764,12 @@ func expandRangeEndsLabelType(tfList []interface{}) *awstypes.RangeEndsLabelType
 	return apiObject
 }
 
-func expandLegendOptions(tfList []interface{}) *awstypes.LegendOptions {
+func expandLegendOptions(tfList []any) *awstypes.LegendOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -788,19 +788,19 @@ func expandLegendOptions(tfList []interface{}) *awstypes.LegendOptions {
 	if v, ok := tfMap["width"].(string); ok && v != "" {
 		apiObject.Width = aws.String(v)
 	}
-	if v, ok := tfMap["title"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["title"].([]any); ok && len(v) > 0 {
 		apiObject.Title = expandLabelOptions(v)
 	}
 
 	return apiObject
 }
 
-func expandTooltipOptions(tfList []interface{}) *awstypes.TooltipOptions {
+func expandTooltipOptions(tfList []any) *awstypes.TooltipOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -813,19 +813,19 @@ func expandTooltipOptions(tfList []interface{}) *awstypes.TooltipOptions {
 	if v, ok := tfMap["tooltip_visibility"].(string); ok && v != "" {
 		apiObject.TooltipVisibility = awstypes.Visibility(v)
 	}
-	if v, ok := tfMap["field_base_tooltip"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["field_base_tooltip"].([]any); ok && len(v) > 0 {
 		apiObject.FieldBasedTooltip = expandFieldBasedTooltip(v)
 	}
 
 	return apiObject
 }
 
-func expandFieldBasedTooltip(tfList []interface{}) *awstypes.FieldBasedTooltip {
+func expandFieldBasedTooltip(tfList []any) *awstypes.FieldBasedTooltip {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -838,14 +838,14 @@ func expandFieldBasedTooltip(tfList []interface{}) *awstypes.FieldBasedTooltip {
 	if v, ok := tfMap["tooltip_title_type"].(string); ok && v != "" {
 		apiObject.TooltipTitleType = awstypes.TooltipTitleType(v)
 	}
-	if v, ok := tfMap["tooltip_fields"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["tooltip_fields"].([]any); ok && len(v) > 0 {
 		apiObject.TooltipFields = expandTooltipItems(v)
 	}
 
 	return apiObject
 }
 
-func expandTooltipItems(tfList []interface{}) []awstypes.TooltipItem {
+func expandTooltipItems(tfList []any) []awstypes.TooltipItem {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -853,7 +853,7 @@ func expandTooltipItems(tfList []interface{}) []awstypes.TooltipItem {
 	var apiObjects []awstypes.TooltipItem
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -869,29 +869,29 @@ func expandTooltipItems(tfList []interface{}) []awstypes.TooltipItem {
 	return apiObjects
 }
 
-func expandTooltipItem(tfMap map[string]interface{}) *awstypes.TooltipItem {
+func expandTooltipItem(tfMap map[string]any) *awstypes.TooltipItem {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.TooltipItem{}
 
-	if v, ok := tfMap["column_tooltip_item"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["column_tooltip_item"].([]any); ok && len(v) > 0 {
 		apiObject.ColumnTooltipItem = expandColumnTooltipItem(v)
 	}
-	if v, ok := tfMap["field_tooltip_item"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["field_tooltip_item"].([]any); ok && len(v) > 0 {
 		apiObject.FieldTooltipItem = expandFieldTooltipItem(v)
 	}
 
 	return apiObject
 }
 
-func expandColumnTooltipItem(tfList []interface{}) *awstypes.ColumnTooltipItem {
+func expandColumnTooltipItem(tfList []any) *awstypes.ColumnTooltipItem {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -904,22 +904,22 @@ func expandColumnTooltipItem(tfList []interface{}) *awstypes.ColumnTooltipItem {
 	if v, ok := tfMap["visibility"].(string); ok && v != "" {
 		apiObject.Visibility = awstypes.Visibility(v)
 	}
-	if v, ok := tfMap["column"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["column"].([]any); ok && len(v) > 0 {
 		apiObject.Column = expandColumnIdentifier(v)
 	}
-	if v, ok := tfMap["aggregation"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["aggregation"].([]any); ok && len(v) > 0 {
 		apiObject.Aggregation = expandAggregationFunction(v)
 	}
 
 	return apiObject
 }
 
-func expandFieldTooltipItem(tfList []interface{}) *awstypes.FieldTooltipItem {
+func expandFieldTooltipItem(tfList []any) *awstypes.FieldTooltipItem {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -939,12 +939,12 @@ func expandFieldTooltipItem(tfList []interface{}) *awstypes.FieldTooltipItem {
 	return apiObject
 }
 
-func expandVisualPalette(tfList []interface{}) *awstypes.VisualPalette {
+func expandVisualPalette(tfList []any) *awstypes.VisualPalette {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -954,14 +954,14 @@ func expandVisualPalette(tfList []interface{}) *awstypes.VisualPalette {
 	if v, ok := tfMap["chart_color"].(string); ok && v != "" {
 		apiObject.ChartColor = aws.String(v)
 	}
-	if v, ok := tfMap["color_map"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["color_map"].([]any); ok && len(v) > 0 {
 		apiObject.ColorMap = expandDataPathColors(v)
 	}
 
 	return apiObject
 }
 
-func expandDataPathColors(tfList []interface{}) []awstypes.DataPathColor {
+func expandDataPathColors(tfList []any) []awstypes.DataPathColor {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -969,7 +969,7 @@ func expandDataPathColors(tfList []interface{}) []awstypes.DataPathColor {
 	var apiObjects []awstypes.DataPathColor
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -985,7 +985,7 @@ func expandDataPathColors(tfList []interface{}) []awstypes.DataPathColor {
 	return apiObjects
 }
 
-func expandDataPathColor(tfMap map[string]interface{}) *awstypes.DataPathColor {
+func expandDataPathColor(tfMap map[string]any) *awstypes.DataPathColor {
 	if tfMap == nil {
 		return nil
 	}
@@ -998,14 +998,14 @@ func expandDataPathColor(tfMap map[string]interface{}) *awstypes.DataPathColor {
 	if v, ok := tfMap["time_granularity"].(string); ok && v != "" {
 		apiObject.TimeGranularity = awstypes.TimeGranularity(v)
 	}
-	if v, ok := tfMap["element"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["element"].([]any); ok && len(v) > 0 {
 		apiObject.Element = expandDataPathValue(v)
 	}
 
 	return apiObject
 }
 
-func expandDataPathValues(tfList []interface{}) []awstypes.DataPathValue {
+func expandDataPathValues(tfList []any) []awstypes.DataPathValue {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1013,7 +1013,7 @@ func expandDataPathValues(tfList []interface{}) []awstypes.DataPathValue {
 	var apiObjects []awstypes.DataPathValue
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -1029,7 +1029,7 @@ func expandDataPathValues(tfList []interface{}) []awstypes.DataPathValue {
 	return apiObjects
 }
 
-func expandDataPathValueInternal(tfMap map[string]interface{}) *awstypes.DataPathValue {
+func expandDataPathValueInternal(tfMap map[string]any) *awstypes.DataPathValue {
 	if tfMap == nil {
 		return nil
 	}
@@ -1046,12 +1046,12 @@ func expandDataPathValueInternal(tfMap map[string]interface{}) *awstypes.DataPat
 	return apiObject
 }
 
-func expandDataPathValue(tfList []interface{}) *awstypes.DataPathValue {
+func expandDataPathValue(tfList []any) *awstypes.DataPathValue {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -1059,7 +1059,7 @@ func expandDataPathValue(tfList []interface{}) *awstypes.DataPathValue {
 	return expandDataPathValueInternal(tfMap)
 }
 
-func expandColumnHierarchies(tfList []interface{}) []awstypes.ColumnHierarchy {
+func expandColumnHierarchies(tfList []any) []awstypes.ColumnHierarchy {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1067,7 +1067,7 @@ func expandColumnHierarchies(tfList []interface{}) []awstypes.ColumnHierarchy {
 	var apiObjects []awstypes.ColumnHierarchy
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -1083,32 +1083,32 @@ func expandColumnHierarchies(tfList []interface{}) []awstypes.ColumnHierarchy {
 	return apiObjects
 }
 
-func expandColumnHierarchy(tfMap map[string]interface{}) *awstypes.ColumnHierarchy {
+func expandColumnHierarchy(tfMap map[string]any) *awstypes.ColumnHierarchy {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.ColumnHierarchy{}
 
-	if v, ok := tfMap["date_time_hierarchy"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["date_time_hierarchy"].([]any); ok && len(v) > 0 {
 		apiObject.DateTimeHierarchy = expandDateTimeHierarchy(v)
 	}
-	if v, ok := tfMap["explicit_hierarchy"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["explicit_hierarchy"].([]any); ok && len(v) > 0 {
 		apiObject.ExplicitHierarchy = expandExplicitHierarchy(v)
 	}
-	if v, ok := tfMap["predefined_hierarchy"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["predefined_hierarchy"].([]any); ok && len(v) > 0 {
 		apiObject.PredefinedHierarchy = expandPredefinedHierarchy(v)
 	}
 
 	return apiObject
 }
 
-func expandDateTimeHierarchy(tfList []interface{}) *awstypes.DateTimeHierarchy {
+func expandDateTimeHierarchy(tfList []any) *awstypes.DateTimeHierarchy {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -1118,19 +1118,19 @@ func expandDateTimeHierarchy(tfList []interface{}) *awstypes.DateTimeHierarchy {
 	if v, ok := tfMap["hierarchy_id"].(string); ok && v != "" {
 		apiObject.HierarchyId = aws.String(v)
 	}
-	if v, ok := tfMap["drill_down_filters"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["drill_down_filters"].([]any); ok && len(v) > 0 {
 		apiObject.DrillDownFilters = expandDrillDownFilters(v)
 	}
 
 	return apiObject
 }
 
-func expandExplicitHierarchy(tfList []interface{}) *awstypes.ExplicitHierarchy {
+func expandExplicitHierarchy(tfList []any) *awstypes.ExplicitHierarchy {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -1140,21 +1140,21 @@ func expandExplicitHierarchy(tfList []interface{}) *awstypes.ExplicitHierarchy {
 	if v, ok := tfMap["hierarchy_id"].(string); ok && v != "" {
 		apiObject.HierarchyId = aws.String(v)
 	}
-	if v, ok := tfMap["columns"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["columns"].([]any); ok && len(v) > 0 {
 		apiObject.Columns = expandColumnIdentifiers(v)
 	}
-	if v, ok := tfMap["drill_down_filters"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["drill_down_filters"].([]any); ok && len(v) > 0 {
 		apiObject.DrillDownFilters = expandDrillDownFilters(v)
 	}
 
 	return apiObject
 }
-func expandPredefinedHierarchy(tfList []interface{}) *awstypes.PredefinedHierarchy {
+func expandPredefinedHierarchy(tfList []any) *awstypes.PredefinedHierarchy {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -1164,22 +1164,22 @@ func expandPredefinedHierarchy(tfList []interface{}) *awstypes.PredefinedHierarc
 	if v, ok := tfMap["hierarchy_id"].(string); ok && v != "" {
 		apiObject.HierarchyId = aws.String(v)
 	}
-	if v, ok := tfMap["columns"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["columns"].([]any); ok && len(v) > 0 {
 		apiObject.Columns = expandColumnIdentifiers(v)
 	}
-	if v, ok := tfMap["drill_down_filters"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["drill_down_filters"].([]any); ok && len(v) > 0 {
 		apiObject.DrillDownFilters = expandDrillDownFilters(v)
 	}
 
 	return apiObject
 }
 
-func expandVisualSubtitleLabelOptions(tfList []interface{}) *awstypes.VisualSubtitleLabelOptions {
+func expandVisualSubtitleLabelOptions(tfList []any) *awstypes.VisualSubtitleLabelOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -1189,19 +1189,19 @@ func expandVisualSubtitleLabelOptions(tfList []interface{}) *awstypes.VisualSubt
 	if v, ok := tfMap["visibility"].(string); ok && v != "" {
 		apiObject.Visibility = awstypes.Visibility(v)
 	}
-	if v, ok := tfMap["format_text"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["format_text"].([]any); ok && len(v) > 0 {
 		apiObject.FormatText = expandLongFormatText(v)
 	}
 
 	return apiObject
 }
 
-func expandLongFormatText(tfList []interface{}) *awstypes.LongFormatText {
+func expandLongFormatText(tfList []any) *awstypes.LongFormatText {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -1218,12 +1218,12 @@ func expandLongFormatText(tfList []interface{}) *awstypes.LongFormatText {
 	return apiObject
 }
 
-func expandVisualTitleLabelOptions(tfList []interface{}) *awstypes.VisualTitleLabelOptions {
+func expandVisualTitleLabelOptions(tfList []any) *awstypes.VisualTitleLabelOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -1233,19 +1233,19 @@ func expandVisualTitleLabelOptions(tfList []interface{}) *awstypes.VisualTitleLa
 	if v, ok := tfMap["visibility"].(string); ok && v != "" {
 		apiObject.Visibility = awstypes.Visibility(v)
 	}
-	if v, ok := tfMap["format_text"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["format_text"].([]any); ok && len(v) > 0 {
 		apiObject.FormatText = expandShortFormatText(v)
 	}
 
 	return apiObject
 }
 
-func expandShortFormatText(tfList []interface{}) *awstypes.ShortFormatText {
+func expandShortFormatText(tfList []any) *awstypes.ShortFormatText {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -1262,12 +1262,12 @@ func expandShortFormatText(tfList []interface{}) *awstypes.ShortFormatText {
 	return apiObject
 }
 
-func expandComparisonConfiguration(tfList []interface{}) *awstypes.ComparisonConfiguration {
+func expandComparisonConfiguration(tfList []any) *awstypes.ComparisonConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -1277,19 +1277,19 @@ func expandComparisonConfiguration(tfList []interface{}) *awstypes.ComparisonCon
 	if v, ok := tfMap["comparison_method"].(string); ok && v != "" {
 		apiObject.ComparisonMethod = awstypes.ComparisonMethod(v)
 	}
-	if v, ok := tfMap["comparison_format"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["comparison_format"].([]any); ok && len(v) > 0 {
 		apiObject.ComparisonFormat = expandComparisonFormatConfiguration(v)
 	}
 
 	return apiObject
 }
 
-func expandColorScale(tfList []interface{}) *awstypes.ColorScale {
+func expandColorScale(tfList []any) *awstypes.ColorScale {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -1299,22 +1299,22 @@ func expandColorScale(tfList []interface{}) *awstypes.ColorScale {
 	if v, ok := tfMap["color_fill_type"].(string); ok && v != "" {
 		apiObject.ColorFillType = awstypes.ColorFillType(v)
 	}
-	if v, ok := tfMap["colors"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["colors"].([]any); ok && len(v) > 0 {
 		apiObject.Colors = expandDataColors(v)
 	}
-	if v, ok := tfMap["null_value_color"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["null_value_color"].([]any); ok && len(v) > 0 {
 		apiObject.NullValueColor = expandDataColor(v)
 	}
 
 	return apiObject
 }
 
-func expandDataColor(tfList []interface{}) *awstypes.DataColor {
+func expandDataColor(tfList []any) *awstypes.DataColor {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -1322,7 +1322,7 @@ func expandDataColor(tfList []interface{}) *awstypes.DataColor {
 	return expandDataColorInternal(tfMap)
 }
 
-func expandDataColorInternal(tfMap map[string]interface{}) *awstypes.DataColor {
+func expandDataColorInternal(tfMap map[string]any) *awstypes.DataColor {
 	apiObject := &awstypes.DataColor{}
 
 	if v, ok := tfMap["color"].(string); ok && v != "" {
@@ -1335,7 +1335,7 @@ func expandDataColorInternal(tfMap map[string]interface{}) *awstypes.DataColor {
 	return apiObject
 }
 
-func expandDataColors(tfList []interface{}) []awstypes.DataColor {
+func expandDataColors(tfList []any) []awstypes.DataColor {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1343,7 +1343,7 @@ func expandDataColors(tfList []interface{}) []awstypes.DataColor {
 	var apiObjects []awstypes.DataColor
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -1359,15 +1359,15 @@ func expandDataColors(tfList []interface{}) []awstypes.DataColor {
 	return apiObjects
 }
 
-func flattenVisuals(apiObjects []awstypes.Visual) []interface{} {
+func flattenVisuals(apiObjects []awstypes.Visual) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{}
+		tfMap := map[string]any{}
 
 		if apiObject.BarChartVisual != nil {
 			tfMap["bar_chart_visual"] = flattenBarChartVisual(apiObject.BarChartVisual)
@@ -1445,12 +1445,12 @@ func flattenVisuals(apiObjects []awstypes.Visual) []interface{} {
 	return tfList
 }
 
-func flattenDataLabelOptions(apiObject *awstypes.DataLabelOptions) []interface{} {
+func flattenDataLabelOptions(apiObject *awstypes.DataLabelOptions) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	tfMap["category_label_visibility"] = apiObject.CategoryLabelVisibility
 	if apiObject.DataLabelTypes != nil {
@@ -1468,18 +1468,18 @@ func flattenDataLabelOptions(apiObject *awstypes.DataLabelOptions) []interface{}
 	tfMap["position"] = apiObject.Position
 	tfMap["visibility"] = apiObject.Visibility
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenDataLabelType(apiObjects []awstypes.DataLabelType) []interface{} {
+func flattenDataLabelType(apiObjects []awstypes.DataLabelType) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{}
+		tfMap := map[string]any{}
 
 		if apiObject.DataPathLabelType != nil {
 			tfMap["data_path_label_type"] = flattenDataPathLabelType(apiObject.DataPathLabelType)
@@ -1503,12 +1503,12 @@ func flattenDataLabelType(apiObjects []awstypes.DataLabelType) []interface{} {
 	return tfList
 }
 
-func flattenDataPathLabelType(apiObject *awstypes.DataPathLabelType) []interface{} {
+func flattenDataPathLabelType(apiObject *awstypes.DataPathLabelType) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.FieldId != nil {
 		tfMap["field_id"] = aws.ToString(apiObject.FieldId)
@@ -1518,66 +1518,66 @@ func flattenDataPathLabelType(apiObject *awstypes.DataPathLabelType) []interface
 	}
 	tfMap["visibility"] = apiObject.Visibility
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenFieldLabelType(apiObject *awstypes.FieldLabelType) []interface{} {
+func flattenFieldLabelType(apiObject *awstypes.FieldLabelType) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.FieldId != nil {
 		tfMap["field_id"] = aws.ToString(apiObject.FieldId)
 	}
 	tfMap["visibility"] = apiObject.Visibility
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenMaximumLabelType(apiObject *awstypes.MaximumLabelType) []interface{} {
+func flattenMaximumLabelType(apiObject *awstypes.MaximumLabelType) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	tfMap["visibility"] = apiObject.Visibility
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenMinimumLabelType(apiObject *awstypes.MinimumLabelType) []interface{} {
+func flattenMinimumLabelType(apiObject *awstypes.MinimumLabelType) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	tfMap["visibility"] = apiObject.Visibility
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenRangeEndsLabelType(apiObject *awstypes.RangeEndsLabelType) []interface{} {
+func flattenRangeEndsLabelType(apiObject *awstypes.RangeEndsLabelType) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	tfMap["visibility"] = apiObject.Visibility
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenLegendOptions(apiObject *awstypes.LegendOptions) []interface{} {
+func flattenLegendOptions(apiObject *awstypes.LegendOptions) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.Height != nil {
 		tfMap["height"] = aws.ToString(apiObject.Height)
@@ -1591,15 +1591,15 @@ func flattenLegendOptions(apiObject *awstypes.LegendOptions) []interface{} {
 		tfMap["width"] = aws.ToString(apiObject.Width)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenTooltipOptions(apiObject *awstypes.TooltipOptions) []interface{} {
+func flattenTooltipOptions(apiObject *awstypes.TooltipOptions) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.FieldBasedTooltip != nil {
 		tfMap["field_base_tooltip"] = flattenFieldBasedTooltip(apiObject.FieldBasedTooltip)
@@ -1607,15 +1607,15 @@ func flattenTooltipOptions(apiObject *awstypes.TooltipOptions) []interface{} {
 	tfMap["selected_tooltip_type"] = apiObject.SelectedTooltipType
 	tfMap["tooltip_visibility"] = apiObject.TooltipVisibility
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenFieldBasedTooltip(apiObject *awstypes.FieldBasedTooltip) []interface{} {
+func flattenFieldBasedTooltip(apiObject *awstypes.FieldBasedTooltip) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	tfMap["aggregation_visibility"] = apiObject.AggregationVisibility
 	if apiObject.TooltipFields != nil {
@@ -1623,18 +1623,18 @@ func flattenFieldBasedTooltip(apiObject *awstypes.FieldBasedTooltip) []interface
 	}
 	tfMap["tooltip_title_type"] = apiObject.TooltipTitleType
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenTooltipItem(apiObjects []awstypes.TooltipItem) []interface{} {
+func flattenTooltipItem(apiObjects []awstypes.TooltipItem) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{}
+		tfMap := map[string]any{}
 
 		if apiObject.ColumnTooltipItem != nil {
 			tfMap["column_tooltip_item"] = flattenColumnTooltipItem(apiObject.ColumnTooltipItem)
@@ -1649,12 +1649,12 @@ func flattenTooltipItem(apiObjects []awstypes.TooltipItem) []interface{} {
 	return tfList
 }
 
-func flattenColumnTooltipItem(apiObject *awstypes.ColumnTooltipItem) []interface{} {
+func flattenColumnTooltipItem(apiObject *awstypes.ColumnTooltipItem) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.Column != nil {
 		tfMap["column"] = flattenColumnIdentifier(apiObject.Column)
@@ -1667,15 +1667,15 @@ func flattenColumnTooltipItem(apiObject *awstypes.ColumnTooltipItem) []interface
 	}
 	tfMap["visibility"] = apiObject.Visibility
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenFieldTooltipItem(apiObject *awstypes.FieldTooltipItem) []interface{} {
+func flattenFieldTooltipItem(apiObject *awstypes.FieldTooltipItem) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 	if apiObject.FieldId != nil {
 		tfMap["field_id"] = aws.ToString(apiObject.FieldId)
 	}
@@ -1684,15 +1684,15 @@ func flattenFieldTooltipItem(apiObject *awstypes.FieldTooltipItem) []interface{}
 	}
 	tfMap["visibility"] = apiObject.Visibility
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenVisualPalette(apiObject *awstypes.VisualPalette) []interface{} {
+func flattenVisualPalette(apiObject *awstypes.VisualPalette) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 	if apiObject.ChartColor != nil {
 		tfMap["chart_color"] = aws.ToString(apiObject.ChartColor)
 	}
@@ -1700,18 +1700,18 @@ func flattenVisualPalette(apiObject *awstypes.VisualPalette) []interface{} {
 		tfMap["color_map"] = flattenDataPathColor(apiObject.ColorMap)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenDataPathColor(apiObjects []awstypes.DataPathColor) []interface{} {
+func flattenDataPathColor(apiObjects []awstypes.DataPathColor) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{}
+		tfMap := map[string]any{}
 
 		if apiObject.Color != nil {
 			tfMap["color"] = aws.ToString(apiObject.Color)
@@ -1727,12 +1727,12 @@ func flattenDataPathColor(apiObjects []awstypes.DataPathColor) []interface{} {
 	return tfList
 }
 
-func flattenDataPathValue(apiObject *awstypes.DataPathValue) []interface{} {
+func flattenDataPathValue(apiObject *awstypes.DataPathValue) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.FieldId != nil {
 		tfMap["field_id"] = aws.ToString(apiObject.FieldId)
@@ -1741,18 +1741,18 @@ func flattenDataPathValue(apiObject *awstypes.DataPathValue) []interface{} {
 		tfMap["field_value"] = aws.ToString(apiObject.FieldValue)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenDataPathValues(apiObjects []awstypes.DataPathValue) []interface{} {
+func flattenDataPathValues(apiObjects []awstypes.DataPathValue) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{}
+		tfMap := map[string]any{}
 
 		if apiObject.FieldId != nil {
 			tfMap["field_id"] = aws.ToString(apiObject.FieldId)
@@ -1767,15 +1767,15 @@ func flattenDataPathValues(apiObjects []awstypes.DataPathValue) []interface{} {
 	return tfList
 }
 
-func flattenColumnHierarchy(apiObjects []awstypes.ColumnHierarchy) []interface{} {
+func flattenColumnHierarchy(apiObjects []awstypes.ColumnHierarchy) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{}
+		tfMap := map[string]any{}
 
 		if apiObject.DateTimeHierarchy != nil {
 			tfMap["date_time_hierarchy"] = flattenDateTimeHierarchy(apiObject.DateTimeHierarchy)
@@ -1793,12 +1793,12 @@ func flattenColumnHierarchy(apiObjects []awstypes.ColumnHierarchy) []interface{}
 	return tfList
 }
 
-func flattenDateTimeHierarchy(apiObject *awstypes.DateTimeHierarchy) []interface{} {
+func flattenDateTimeHierarchy(apiObject *awstypes.DateTimeHierarchy) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.HierarchyId != nil {
 		tfMap["hierarchy_id"] = aws.ToString(apiObject.HierarchyId)
@@ -1807,18 +1807,18 @@ func flattenDateTimeHierarchy(apiObject *awstypes.DateTimeHierarchy) []interface
 		tfMap["drill_down_filters"] = flattenDrillDownFilter(apiObject.DrillDownFilters)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenDrillDownFilter(apiObjects []awstypes.DrillDownFilter) []interface{} {
+func flattenDrillDownFilter(apiObjects []awstypes.DrillDownFilter) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{}
+		tfMap := map[string]any{}
 
 		if apiObject.CategoryFilter != nil {
 			tfMap["category_filter"] = flattenCategoryDrillDownFilter(apiObject.CategoryFilter)
@@ -1836,12 +1836,12 @@ func flattenDrillDownFilter(apiObjects []awstypes.DrillDownFilter) []interface{}
 	return tfList
 }
 
-func flattenCategoryDrillDownFilter(apiObject *awstypes.CategoryDrillDownFilter) []interface{} {
+func flattenCategoryDrillDownFilter(apiObject *awstypes.CategoryDrillDownFilter) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.CategoryValues != nil {
 		tfMap["category_values"] = apiObject.CategoryValues
@@ -1850,30 +1850,30 @@ func flattenCategoryDrillDownFilter(apiObject *awstypes.CategoryDrillDownFilter)
 		tfMap["column"] = flattenColumnIdentifier(apiObject.Column)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenNumericEqualityDrillDownFilter(apiObject *awstypes.NumericEqualityDrillDownFilter) []interface{} {
+func flattenNumericEqualityDrillDownFilter(apiObject *awstypes.NumericEqualityDrillDownFilter) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.Column != nil {
 		tfMap["column"] = flattenColumnIdentifier(apiObject.Column)
 	}
 	tfMap[names.AttrValue] = apiObject.Value
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenTimeRangeDrillDownFilter(apiObject *awstypes.TimeRangeDrillDownFilter) []interface{} {
+func flattenTimeRangeDrillDownFilter(apiObject *awstypes.TimeRangeDrillDownFilter) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.Column != nil {
 		tfMap["column"] = flattenColumnIdentifier(apiObject.Column)
@@ -1886,15 +1886,15 @@ func flattenTimeRangeDrillDownFilter(apiObject *awstypes.TimeRangeDrillDownFilte
 	}
 	tfMap["time_granularity"] = apiObject.TimeGranularity
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenExplicitHierarchy(apiObject *awstypes.ExplicitHierarchy) []interface{} {
+func flattenExplicitHierarchy(apiObject *awstypes.ExplicitHierarchy) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.Columns != nil {
 		tfMap["columns"] = flattenColumnIdentifiers(apiObject.Columns)
@@ -1906,15 +1906,15 @@ func flattenExplicitHierarchy(apiObject *awstypes.ExplicitHierarchy) []interface
 		tfMap["drill_down_filters"] = flattenDrillDownFilter(apiObject.DrillDownFilters)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenPredefinedHierarchy(apiObject *awstypes.PredefinedHierarchy) []interface{} {
+func flattenPredefinedHierarchy(apiObject *awstypes.PredefinedHierarchy) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.Columns != nil {
 		tfMap["columns"] = flattenColumnIdentifiers(apiObject.Columns)
@@ -1926,30 +1926,30 @@ func flattenPredefinedHierarchy(apiObject *awstypes.PredefinedHierarchy) []inter
 		tfMap["drill_down_filters"] = flattenDrillDownFilter(apiObject.DrillDownFilters)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenVisualSubtitleLabelOptions(apiObject *awstypes.VisualSubtitleLabelOptions) []interface{} {
+func flattenVisualSubtitleLabelOptions(apiObject *awstypes.VisualSubtitleLabelOptions) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.FormatText != nil {
 		tfMap["format_text"] = flattenLongFormatText(apiObject.FormatText)
 	}
 	tfMap["visibility"] = apiObject.Visibility
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenLongFormatText(apiObject *awstypes.LongFormatText) []interface{} {
+func flattenLongFormatText(apiObject *awstypes.LongFormatText) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.PlainText != nil {
 		tfMap["plain_text"] = aws.ToString(apiObject.PlainText)
@@ -1958,30 +1958,30 @@ func flattenLongFormatText(apiObject *awstypes.LongFormatText) []interface{} {
 		tfMap["rich_text"] = aws.ToString(apiObject.RichText)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenVisualTitleLabelOptions(apiObject *awstypes.VisualTitleLabelOptions) []interface{} {
+func flattenVisualTitleLabelOptions(apiObject *awstypes.VisualTitleLabelOptions) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.FormatText != nil {
 		tfMap["format_text"] = flattenShortFormatText(apiObject.FormatText)
 	}
 	tfMap["visibility"] = apiObject.Visibility
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenShortFormatText(apiObject *awstypes.ShortFormatText) []interface{} {
+func flattenShortFormatText(apiObject *awstypes.ShortFormatText) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.PlainText != nil {
 		tfMap["plain_text"] = aws.ToString(apiObject.PlainText)
@@ -1990,15 +1990,15 @@ func flattenShortFormatText(apiObject *awstypes.ShortFormatText) []interface{} {
 		tfMap["rich_text"] = aws.ToString(apiObject.RichText)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenColorScale(apiObject *awstypes.ColorScale) []interface{} {
+func flattenColorScale(apiObject *awstypes.ColorScale) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	tfMap["color_fill_type"] = apiObject.ColorFillType
 	if apiObject.Colors != nil {
@@ -2008,15 +2008,15 @@ func flattenColorScale(apiObject *awstypes.ColorScale) []interface{} {
 		tfMap["null_value_color"] = flattenDataColor(apiObject.NullValueColor)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenDataColor(apiObject *awstypes.DataColor) []interface{} {
+func flattenDataColor(apiObject *awstypes.DataColor) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.Color != nil {
 		tfMap["color"] = aws.ToString(apiObject.Color)
@@ -2025,18 +2025,18 @@ func flattenDataColor(apiObject *awstypes.DataColor) []interface{} {
 		tfMap["data_value"] = aws.ToFloat64(apiObject.DataValue)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenDataColors(apiObject []awstypes.DataColor) []interface{} {
+func flattenDataColors(apiObject []awstypes.DataColor) []any {
 	if len(apiObject) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObject {
-		tfMap := map[string]interface{}{}
+		tfMap := map[string]any{}
 
 		if apiObject.Color != nil {
 			tfMap["color"] = aws.ToString(apiObject.Color)

@@ -75,7 +75,7 @@ func resourceRule() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validateEventPatternValue(),
 				AtLeastOneOf: []string{names.AttrScheduleExpression, "event_pattern"},
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := ruleEventPatternJSONDecoder(v.(string))
 					return json
 				},
@@ -88,7 +88,7 @@ func resourceRule() *schema.Resource {
 			"is_enabled": {
 				Type:       schema.TypeBool,
 				Optional:   true,
-				Deprecated: `Use "state" instead`,
+				Deprecated: "is_enabled is deprecated. Use state instead.",
 				DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
 					rawPlan := d.GetRawPlan()
 					rawIsEnabled := rawPlan.GetAttr("is_enabled")
@@ -142,12 +142,10 @@ func resourceRule() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
@@ -174,7 +172,7 @@ func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	const (
 		timeout = 2 * time.Minute
 	)
-	_, err = tfresource.RetryWhenNotFound(ctx, timeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, timeout, func() (any, error) {
 		return findRuleByTwoPartKey(ctx, conn, eventBusName, ruleName)
 	})
 
@@ -187,7 +185,7 @@ func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		err := createTags(ctx, conn, arn, tags)
 
 		// If default tags only, continue. Otherwise, error.
-		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]any)) == 0) && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
 			return append(diags, resourceRuleRead(ctx, d, meta)...)
 		}
 
@@ -199,7 +197,7 @@ func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	return append(diags, resourceRuleRead(ctx, d, meta)...)
 }
 
-func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
@@ -247,7 +245,7 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	return diags
 }
 
-func resourceRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRuleUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
@@ -277,7 +275,7 @@ func resourceRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	return append(diags, resourceRuleRead(ctx, d, meta)...)
 }
 
-func resourceRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRuleDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
@@ -302,7 +300,7 @@ func resourceRuleDelete(ctx context.Context, d *schema.ResourceData, meta interf
 		timeout = 5 * time.Minute
 	)
 	log.Printf("[DEBUG] Deleting EventBridge Rule: %s", d.Id())
-	_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, timeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, timeout, func() (any, error) {
 		return conn.DeleteRule(ctx, input)
 	}, errCodeValidationException, "Rule can't be deleted since it has targets")
 
@@ -318,7 +316,7 @@ func resourceRuleDelete(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func retryPutRule(ctx context.Context, conn *eventbridge.Client, input *eventbridge.PutRuleInput) (string, error) {
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (any, error) {
 		return conn.PutRule(ctx, input)
 	}, errCodeValidationException, "cannot be assumed by principal")
 
@@ -400,8 +398,8 @@ func ruleParseResourceID(id string) (string, string, error) {
 }
 
 // ruleEventPatternJSONDecoder decodes unicode translation of <,>,&
-func ruleEventPatternJSONDecoder(jsonString interface{}) (string, error) {
-	var j interface{}
+func ruleEventPatternJSONDecoder(jsonString any) (string, error) {
+	var j any
 
 	if jsonString == nil || jsonString.(string) == "" {
 		return "", nil
@@ -472,7 +470,7 @@ func expandPutRuleInput(d *schema.ResourceData, name string) *eventbridge.PutRul
 }
 
 func validateEventPatternValue() schema.SchemaValidateFunc {
-	return func(v interface{}, k string) (ws []string, errors []error) {
+	return func(v any, k string) (ws []string, errors []error) {
 		json, err := ruleEventPatternJSONDecoder(v.(string))
 		if err != nil {
 			errors = append(errors, fmt.Errorf("%q contains an invalid JSON: %w", k, err))

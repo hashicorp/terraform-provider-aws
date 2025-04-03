@@ -1,14 +1,14 @@
 ---
-subcategory: "SageMaker"
+subcategory: "SageMaker AI"
 layout: "aws"
 page_title: "AWS: aws_sagemaker_servicecatalog_portfolio_status"
 description: |-
-  Manages status of Service Catalog in SageMaker. Service Catalog is used to create SageMaker projects.
+  Manages status of Service Catalog in SageMaker. Service Catalog is used to create SageMaker AI projects.
 ---
 
 # Resource: aws_sagemaker_servicecatalog_portfolio_status
 
-Manages status of Service Catalog in SageMaker. Service Catalog is used to create SageMaker projects.
+Manages status of Service Catalog in SageMaker. Service Catalog is used to create SageMaker AI projects.
 
 ## Example Usage
 

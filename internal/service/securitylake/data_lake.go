@@ -268,7 +268,7 @@ func (r *dataLakeResource) Read(ctx context.Context, request resource.ReadReques
 	// if the data lake's AWS Region isn't the configured one.
 	if region := configuration.Region.ValueString(); region != r.Meta().Region(ctx) {
 		if tags, err := listTags(ctx, conn, data.ID.ValueString(), func(o *securitylake.Options) { o.Region = region }); err == nil {
-			setTagsOut(ctx, Tags(tags))
+			setTagsOut(ctx, svcTags(tags))
 		}
 	}
 
@@ -406,7 +406,7 @@ func findDataLakes(ctx context.Context, conn *securitylake.Client, input *securi
 }
 
 func statusDataLakeCreate(ctx context.Context, conn *securitylake.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findDataLakeByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
@@ -422,7 +422,7 @@ func statusDataLakeCreate(ctx context.Context, conn *securitylake.Client, arn st
 }
 
 func statusDataLakeUpdate(ctx context.Context, conn *securitylake.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findDataLakeByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {

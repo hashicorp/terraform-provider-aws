@@ -77,12 +77,10 @@ func resourceActivity() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceActivityCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceActivityCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SFNClient(ctx)
 
@@ -92,8 +90,8 @@ func resourceActivityCreate(ctx context.Context, d *schema.ResourceData, meta in
 		Tags: getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk(names.AttrEncryptionConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.EncryptionConfiguration = expandEncryptionConfiguration(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk(names.AttrEncryptionConfiguration); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.EncryptionConfiguration = expandEncryptionConfiguration(v.([]any)[0].(map[string]any))
 	}
 
 	output, err := conn.CreateActivity(ctx, input)
@@ -107,7 +105,7 @@ func resourceActivityCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceActivityRead(ctx, d, meta)...)
 }
 
-func resourceActivityRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceActivityRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SFNClient(ctx)
 
@@ -125,7 +123,7 @@ func resourceActivityRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.Set(names.AttrCreationDate, output.CreationDate.Format(time.RFC3339))
 	if output.EncryptionConfiguration != nil {
-		if err := d.Set(names.AttrEncryptionConfiguration, []interface{}{flattenEncryptionConfiguration(output.EncryptionConfiguration)}); err != nil {
+		if err := d.Set(names.AttrEncryptionConfiguration, []any{flattenEncryptionConfiguration(output.EncryptionConfiguration)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting encryption_configuration: %s", err)
 		}
 	} else {
@@ -136,12 +134,12 @@ func resourceActivityRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func resourceActivityUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceActivityUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	// Tags only.
 	return resourceActivityRead(ctx, d, meta)
 }
 
-func resourceActivityDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceActivityDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SFNClient(ctx)
 
