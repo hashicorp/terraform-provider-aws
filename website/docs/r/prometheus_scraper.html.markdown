@@ -8,8 +8,8 @@ description: |-
 
 # Resource: aws_prometheus_scraper
 
--> **Note:** You cannot update a scraper. If you change any attribute, Terraform
-will delete the current and create a new one.
+-> **Note:** If you change a Scraper's source (EKS cluster), Terraform
+will delete the current Scraper and create a new one.
 
 Provides an Amazon Managed Service for Prometheus fully managed collector
 (scraper).
@@ -99,9 +99,6 @@ EOT
 You can use the data source `aws_prometheus_scraper_configuration` to use a
 service managed scrape configuration.
 
--> **Note:** If the configuration is updated, this will trigger a replacement
-of your scraper.
-
 ```terraform
 data "aws_prometheus_default_scraper_configuration" "example" {}
 
@@ -168,7 +165,7 @@ to setup the appropriate Kubernetes permissions.
 
 ### Cross-Account Configuration
 
-This setup allows the scraper, running in a source acccount, to remote write its collected metrics to a workspace in a target account. Note that:
+This setup allows the scraper, running in a source account, to remote write its collected metrics to a workspace in a target account. Note that:
 
 - The target Role and target Workspace must be in the same account
 - The source Scraper and target Workspace must be in the same Region
