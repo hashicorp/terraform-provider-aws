@@ -127,10 +127,10 @@ func dataSourceServiceQuotaRead(ctx context.Context, d *schema.ResourceData, met
 
 	// A Service Quota will always have a default value, but will only have a current value if it has been set.
 	if quotaName != "" {
-		defaultQuota, err = findDefaultServiceQuotaByTwoPartKey(ctx, conn, serviceCode, quotaName)
+		defaultQuota, err = findDefaultServiceQuotaByServiceCodeAndQuotaName(ctx, conn, serviceCode, quotaName)
 		quotaCode = aws.ToString(defaultQuota.QuotaCode)
 	} else {
-		defaultQuota, err = findServiceQuotaDefaultByID(ctx, conn, serviceCode, quotaCode)
+		defaultQuota, err = findDefaultServiceQuotaByServiceCodeAndQuotaCode(ctx, conn, serviceCode, quotaCode)
 	}
 
 	if err != nil {
@@ -147,19 +147,17 @@ func dataSourceServiceQuotaRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("quota_name", defaultQuota.QuotaName)
 	d.Set("service_code", defaultQuota.ServiceCode)
 	d.Set(names.AttrServiceName, defaultQuota.ServiceName)
-	d.Set(names.AttrValue, defaultQuota.Value)
-	if err := d.Set("usage_metric", flattenUsageMetric(defaultQuota.UsageMetric)); err != nil {
+	if err := d.Set("usage_metric", flattenMetricInfo(defaultQuota.UsageMetric)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting usage_metric: %s", err)
 	}
+	d.Set(names.AttrValue, defaultQuota.Value)
 
-	serviceQuota, err := findServiceQuotaByID(ctx, conn, serviceCode, quotaCode)
+	serviceQuota, err := findServiceQuotaByServiceCodeAndQuotaCode(ctx, conn, serviceCode, quotaCode)
 
 	switch {
 	case tfresource.NotFound(err):
 	case err != nil:
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading Service Quotas Service Quota (%s/%s): %s", serviceCode, quotaCode, err)
-		}
+		return sdkdiag.AppendErrorf(diags, "reading Service Quotas Service Quota (%s/%s): %s", serviceCode, quotaCode, err)
 	default:
 		d.Set(names.AttrARN, serviceQuota.QuotaArn)
 		d.Set(names.AttrValue, serviceQuota.Value)
@@ -168,7 +166,7 @@ func dataSourceServiceQuotaRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func findDefaultServiceQuotaByTwoPartKey(ctx context.Context, conn *servicequotas.Client, serviceCode, quotaName string) (*awstypes.ServiceQuota, error) {
+func findDefaultServiceQuotaByServiceCodeAndQuotaName(ctx context.Context, conn *servicequotas.Client, serviceCode, quotaName string) (*awstypes.ServiceQuota, error) {
 	input := servicequotas.ListAWSDefaultServiceQuotasInput{
 		ServiceCode: aws.String(serviceCode),
 	}
