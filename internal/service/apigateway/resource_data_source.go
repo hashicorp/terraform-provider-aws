@@ -26,7 +26,7 @@ func dataSourceResource() *schema.Resource {
 		ReadWithoutTimeout: dataSourceResourceRead,
 
 		Schema: map[string]*schema.Schema{
-			"parent_id": {
+			names.AttrParentID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -63,7 +63,7 @@ func dataSourceResourceRead(ctx context.Context, d *schema.ResourceData, meta an
 	}
 
 	d.SetId(aws.ToString(match.Id))
-	d.Set("parent_id", match.ParentId)
+	d.Set(names.AttrParentID, match.ParentId)
 	d.Set("path_part", match.PathPart)
 
 	return diags
