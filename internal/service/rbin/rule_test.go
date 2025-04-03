@@ -78,6 +78,22 @@ func TestAccRBinRule_basic(t *testing.T) {
 					}),
 				),
 			},
+			{
+				Config: testAccRuleConfig_basic3(description, resourceType),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRuleExists(ctx, resourceName, &rule),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
+					resource.TestCheckResourceAttr(resourceName, names.AttrResourceType, resourceType),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "retention_period.*", map[string]string{
+						"retention_period_value": "10",
+						"retention_period_unit":  "DAYS",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "exclude_resource_tags.*", map[string]string{
+						"resource_tag_key":   "some_tag5",
+						"resource_tag_value": "some_value5",
+					}),
+				),
+			},
 		},
 	})
 }
@@ -275,6 +291,24 @@ resource "aws_rbin_rule" "test" {
   resource_tags {
     resource_tag_key   = "some_tag4"
     resource_tag_value = "some_value4"
+  }
+
+  retention_period {
+    retention_period_value = 10
+    retention_period_unit  = "DAYS"
+  }
+}
+`, description, resourceType)
+}
+func testAccRuleConfig_basic3(description, resourceType string) string {
+	return fmt.Sprintf(`
+resource "aws_rbin_rule" "test" {
+  description   = %[1]q
+  resource_type = %[2]q
+
+  exclude_resource_tags {
+    resource_tag_key   = "some_tag5"
+    resource_tag_value = "some_value5"
   }
 
   retention_period {
