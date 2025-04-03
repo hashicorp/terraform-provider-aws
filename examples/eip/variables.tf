@@ -6,7 +6,7 @@ variable "aws_region" {
   default     = "us-east-1"
 }
 
-# ubuntu-trusty-14.04 (x64)
+# ubuntu-jammy-22.04 (amd64)
 variable "aws_amis" {
   default = {
     "us-east-1" = "ami-005fc0f236362e99f"
