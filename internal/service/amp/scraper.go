@@ -32,7 +32,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -329,7 +328,7 @@ func (r *scraperResource) Update(ctx context.Context, req resource.UpdateRequest
 	}
 
 	destination := awstypes.DestinationMemberAmpConfiguration{}
-	resp.Diagnostics.Append(flex.Expand(ctx, ampDestinationData, &destination.Value)...)
+	resp.Diagnostics.Append(fwflex.Expand(ctx, ampDestinationData, &destination.Value)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -338,7 +337,7 @@ func (r *scraperResource) Update(ctx context.Context, req resource.UpdateRequest
 		Value: []byte(plan.ScrapeConfiguration.ValueString()),
 	}
 
-	input := &amp.UpdateScraperInput{
+	input := amp.UpdateScraperInput{
 		ClientToken:         aws.String(sdkid.UniqueId()),
 		ScraperId:           state.ID.ValueStringPointer(),
 		Alias:               plan.Alias.ValueStringPointer(),
@@ -354,7 +353,7 @@ func (r *scraperResource) Update(ctx context.Context, req resource.UpdateRequest
 		}
 
 		roleConfiguration := awstypes.RoleConfiguration{}
-		resp.Diagnostics.Append(flex.Expand(ctx, roleConfigurationData, &roleConfiguration)...)
+		resp.Diagnostics.Append(fwflex.Expand(ctx, roleConfigurationData, &roleConfiguration)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -365,7 +364,7 @@ func (r *scraperResource) Update(ctx context.Context, req resource.UpdateRequest
 	}
 
 	conn := r.Meta().AMPClient(ctx)
-	_, err := conn.UpdateScraper(ctx, input)
+	_, err := conn.UpdateScraper(ctx, &input)
 	if err != nil {
 		resp.Diagnostics.AddError("updating Prometheus Scraper", err.Error())
 		return
