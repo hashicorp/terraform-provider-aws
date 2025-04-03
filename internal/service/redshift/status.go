@@ -107,3 +107,18 @@ func statusClusterSnapshot(ctx context.Context, conn *redshift.Client, id string
 		return output, aws.ToString(output.Status), nil
 	}
 }
+
+func statusIntegration(ctx context.Context, conn *redshift.Client, arn string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
+		out, err := findIntegrationByARN(ctx, conn, arn)
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return out, string(out.Status), nil
+	}
+}
