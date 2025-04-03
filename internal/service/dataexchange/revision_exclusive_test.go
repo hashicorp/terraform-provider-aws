@@ -380,6 +380,52 @@ func TestAccDataExchangeRevisionExclusive_s3DataAccessFromS3Bucket_multiple(t *t
 
 // Full Bucket, customer managed keys
 // TODO: basic
+
+func TestAccDataExchangeRevisionExclusive_S3DataAccessFromS3Bucket_cmk(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var revision dataexchange.GetRevisionOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_dataexchange_revision_exclusive.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.DataExchangeEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.DataExchangeServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRevisionExclusiveDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRevisionExclusiveConfig_s3DataAccessFromS3Bucket_cmk(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRevisionExclusiveExists(ctx, resourceName, &revision),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dataexchange", "data-sets/{data_set_id}/revisions/{id}"),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrComment),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedAt),
+					resource.TestCheckResourceAttrPair(resourceName, "data_set_id", "aws_dataexchange_data_set.test", names.AttrID),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+					acctest.CheckResourceAttrRFC3339(resourceName, "updated_at"),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("asset"), knownvalue.SetExact([]knownvalue.Check{
+						checkAssetS3DataAccessWithCMK(rName),
+					})),
+
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
+				},
+			},
+			// {
+			// 	ResourceName:      resourceName,
+			// 	ImportState:       true,
+			// 	ImportStateVerify: true,
+			// },
+		},
+	})
+}
+
 // TODO: can't share keys
 
 // Partial Bucket
@@ -478,15 +524,32 @@ func checkAssetS3DataAccess(bucket string) knownvalue.Check {
 	checks := assetDefaults()
 	maps.Copy(checks, map[string]knownvalue.Check{
 		"create_s3_data_access_from_s3_bucket": knownvalue.ListExact([]knownvalue.Check{
+			knownvalue.ObjectExact(
+				s3DataAccessAssetDefaults(bucket),
+			),
+		}),
+		names.AttrName: knownvalue.StringRegexp(regexache.MustCompile(`^s3-data-access-[a-f0-9]{32}$`)), // `s3-data-access-<asset id>`
+	})
+	return knownvalue.ObjectExact(
+		checks,
+	)
+}
+
+func checkAssetS3DataAccessWithCMK(bucket string) knownvalue.Check {
+	dataAccessChecks := s3DataAccessAssetDefaults(bucket)
+	maps.Copy(dataAccessChecks, map[string]knownvalue.Check{
+		"kms_keys_to_grant": knownvalue.ListExact([]knownvalue.Check{
 			knownvalue.ObjectExact(map[string]knownvalue.Check{
-				"access_point_alias": knownvalue.StringRegexp(regexache.MustCompile(`[-a-z0-9]+-s3alias`)),
-				"access_point_arn":   tfknownvalue.RegionalARNRegexpIgnoreAccount("s3", regexache.MustCompile(`accesspoint/`+verify.UUIDRegexPattern)),
-				"asset_source": knownvalue.ListExact([]knownvalue.Check{
-					knownvalue.ObjectExact(map[string]knownvalue.Check{
-						names.AttrBucket: knownvalue.StringExact(bucket),
-					}),
-				}),
+				"kms_key_arn": knownvalue.NotNull(),
 			}),
+		}),
+	})
+	checks := assetDefaults()
+	maps.Copy(checks, map[string]knownvalue.Check{
+		"create_s3_data_access_from_s3_bucket": knownvalue.ListExact([]knownvalue.Check{
+			knownvalue.ObjectExact(
+				dataAccessChecks,
+			),
 		}),
 		names.AttrName: knownvalue.StringRegexp(regexache.MustCompile(`^s3-data-access-[a-f0-9]{32}$`)), // `s3-data-access-<asset id>`
 	})
@@ -505,6 +568,19 @@ func assetDefaults() map[string]knownvalue.Check {
 		"import_assets_from_s3":                knownvalue.ListExact([]knownvalue.Check{}),
 		"import_assets_from_signed_url":        knownvalue.ListExact([]knownvalue.Check{}),
 		"updated_at":                           knownvalue.NotNull(),
+	}
+}
+
+func s3DataAccessAssetDefaults(bucket string) map[string]knownvalue.Check {
+	return map[string]knownvalue.Check{
+		"access_point_alias": knownvalue.StringRegexp(regexache.MustCompile(`[-a-z0-9]+-s3alias`)),
+		"access_point_arn":   tfknownvalue.RegionalARNRegexpIgnoreAccount("s3", regexache.MustCompile(`accesspoint/`+verify.UUIDRegexPattern)),
+		"asset_source": knownvalue.ListExact([]knownvalue.Check{
+			knownvalue.ObjectExact(map[string]knownvalue.Check{
+				names.AttrBucket:    knownvalue.StringExact(bucket),
+				"kms_keys_to_grant": knownvalue.Null(),
+			}),
+		}),
 	}
 }
 
@@ -850,6 +926,113 @@ data "aws_iam_policy_document" "test" {
       ]
     }
   }
+}
+`, rName)
+}
+
+func testAccRevisionExclusiveConfig_s3DataAccessFromS3Bucket_cmk(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dataexchange_revision_exclusive" "test" {
+  data_set_id = aws_dataexchange_data_set.test.id
+
+  asset {
+    create_s3_data_access_from_s3_bucket {
+      asset_source {
+        bucket            = aws_s3_object.test.bucket
+		kms_key_to_grant {
+		kms_key_arn=aws_kms_key.test.arn
+		}
+      }
+    }
+  }
+
+  depends_on = [
+    aws_s3_object.test,
+    aws_s3_bucket_policy.test,
+  ]
+}
+
+resource "aws_dataexchange_data_set" "test" {
+  asset_type  = "S3_DATA_ACCESS"
+  description = %[1]q
+  name        = %[1]q
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_s3_object" "test" {
+  bucket  = aws_s3_bucket.test.bucket
+  key     = "test"
+  content = "test"
+
+  depends_on = [
+  aws_s3_bucket_server_side_encryption_configuration.test
+  ]
+}
+
+resource "aws_s3_bucket_policy" "test" {
+  bucket = aws_s3_bucket.test.bucket
+  policy = data.aws_iam_policy_document.test.json
+}
+
+data "aws_iam_policy_document" "test" {
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "s3:GetObject",
+      "s3:ListBucket",
+    ]
+
+    resources = [
+      aws_s3_bucket.test.arn,
+      "${aws_s3_bucket.test.arn}/*",
+    ]
+
+    principals {
+      type        = "AWS"
+      identifiers = ["*"]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "s3:DataAccessPointAccount"
+      values = [
+        "337040091392",
+        "504002150500",
+        "366362662752",
+        "330489627928",
+        "291973504423",
+        "461002523379",
+        "036905324694",
+        "540564263739",
+        "675969394711",
+        "108584782536",
+        "844053218156",
+      ]
+    }
+  }
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "test" {
+  bucket = aws_s3_bucket.test.bucket
+
+  rule {
+    apply_server_side_encryption_by_default {
+      kms_master_key_id = aws_kms_key.test.arn
+      sse_algorithm     = "aws:kms"
+    }
+
+	bucket_key_enabled = true
+  }
+}
+
+resource "aws_kms_key" "test" {
+  description             = "KMS Key for Bucket %[1]s"
+  deletion_window_in_days = 7
 }
 `, rName)
 }

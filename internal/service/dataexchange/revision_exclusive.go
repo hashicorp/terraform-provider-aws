@@ -165,6 +165,19 @@ func (r *resourceRevisionExclusive) Schema(ctx context.Context, req resource.Sch
 													},
 												},
 											},
+											Blocks: map[string]schema.Block{
+												"kms_key_to_grant": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[kmsKeyToGrantModel](ctx),
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															"kms_key_arn": schema.StringAttribute{
+																CustomType: fwtypes.ARNType,
+																Required:   true,
+															},
+														},
+													},
+												},
+											},
 										},
 									},
 								},
@@ -264,9 +277,15 @@ func (r *resourceRevisionExclusive) Create(ctx context.Context, req resource.Cre
 		return
 	}
 
+	// NOTE: This is currently sequential, because there is no direct linkage between the Job and the Asset that it creates.
+	// If unique names were enforced for each asset, they could be done in parallel, but alas.
+	// Assets can be renamed *after* the Job that creates them is complete.
+	// The `ImportAssetsFromSignedURL` Job technically requires a `Name` parameter, but I've defaulted to the name of the file.
+	// This should probably be changed to explicitly require the `name`
 	assets := make([]assetModel, len(plan.Assets.Elements()))
 	existingAssetIDs := make([]string, 0, len(plan.Assets.Elements()))
 	for i, asset := range nestedObjectCollectionAllMust(ctx, plan.Assets) {
+		// TODO: There's a lot of duplication here which can be factored out
 		switch {
 		case !asset.ImportAssetsFromS3.IsNull():
 			importAssetsFromS3, d := asset.ImportAssetsFromS3.ToPtr(ctx)
@@ -627,25 +646,44 @@ func (r *resourceRevisionExclusive) Create(ctx context.Context, req resource.Cre
 				)
 				return
 			}
-			resp.Diagnostics.Append(flex.Flatten(ctx, newAsset, asset)...)
-			if resp.Diagnostics.HasError() {
-				return
-			}
+			var assetVal assetModel
+			// resp.Diagnostics.Append(flex.Flatten(ctx, newAsset, &assetVal)...)
+			// if resp.Diagnostics.HasError() {
+			// 	return
+			// }
 
-			details := newAsset.AssetDetails.S3DataAccessAsset
+			// details := newAsset.AssetDetails.S3DataAccessAsset
 
-			dataAccess, d := asset.CreateS3DataAccessFromS3Bucket.ToPtr(ctx)
-			resp.Diagnostics.Append(d...)
-			if d.HasError() {
-				return
-			}
+			// dataAccess, d := asset.CreateS3DataAccessFromS3Bucket.ToPtr(ctx)
+			// resp.Diagnostics.Append(d...)
+			// if d.HasError() {
+			// 	return
+			// }
 
-			dataAccess.AccessPointAlias = types.StringPointerValue(details.S3AccessPointAlias)
-			dataAccess.AccessPointARN = types.StringPointerValue(details.S3AccessPointArn)
+			// dataAccess.AccessPointAlias = types.StringPointerValue(details.S3AccessPointAlias)
+			// dataAccess.AccessPointARN = types.StringPointerValue(details.S3AccessPointArn)
 
-			asset.CreateS3DataAccessFromS3Bucket = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, dataAccess)
+			// assetSource, d := dataAccess.AssetSource.ToPtr(ctx)
+			// resp.Diagnostics.Append(d...)
+			// if d.HasError() {
+			// 	return
+			// }
 
-			assets[i] = *asset // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-assignment
+			// resp.Diagnostics.Append(flex.Flatten(ctx, details.KmsKeysToGrant, &assetSource.KmsKeysToGrant)...)
+			// if resp.Diagnostics.HasError() {
+			// 	return
+			// }
+			// // assetSource.KmsKeysToGrant, d = fwtypes.NewListNestedObjectValueOfValueSlice(ctx, []kmsKeyToGrantModel{})
+			// // resp.Diagnostics.Append(d...)
+			// // if d.HasError() {
+			// // 	return
+			// // }
+
+			// dataAccess.AssetSource = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, assetSource)
+
+			// asset.CreateS3DataAccessFromS3Bucket = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, dataAccess)
+
+			assets[i] = assetVal
 			existingAssetIDs = append(existingAssetIDs, aws.ToString(newAsset.Id))
 		}
 	}
@@ -767,6 +805,16 @@ type assetModel struct {
 	UpdatedAt                      timetypes.RFC3339                                                    `tfsdk:"updated_at"`
 }
 
+func flattenS3DataAccessAssetModel(ctx context.Context, asset *awstypes.AssetEntry) (result assetModel, diags diag.Diagnostics) {
+	diags = flex.Flatten(ctx, asset, &result)
+
+	details := asset.AssetDetails.S3DataAccessAsset
+
+}
+
+func flattenS3DataAccessAssetDetails(ctx context.Context, asset *awstypes.S3DataAccessAsset) (result createS3DataAccessFromS3BucketModel, diags diag.Diagnostics) {
+}
+
 type importAssetsFromS3Model struct {
 	AssetSources fwtypes.ListNestedObjectValueOf[assetSourceModel] `tfsdk:"asset_source"`
 }
@@ -787,7 +835,12 @@ type createS3DataAccessFromS3BucketModel struct {
 }
 
 type s3DataAccessAssetSourceModel struct {
-	Bucket types.String `tfsdk:"bucket"`
+	Bucket         types.String                                        `tfsdk:"bucket"`
+	KmsKeysToGrant fwtypes.ListNestedObjectValueOf[kmsKeyToGrantModel] `tfsdk:"kms_key_to_grant"`
+}
+
+type kmsKeyToGrantModel struct {
+	KmsKeyArn fwtypes.ARN `tfsdk:"kms_key_arn"`
 }
 
 func waitJobCompleted(ctx context.Context, conn *dataexchange.Client, jobID string, timeout time.Duration) (*dataexchange.GetJobOutput, error) { //nolint:unparam
