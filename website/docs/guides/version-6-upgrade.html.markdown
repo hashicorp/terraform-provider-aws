@@ -26,6 +26,7 @@ Upgrade topics:
 - [resource/aws_servicequotas_template](#resourceaws_servicequotas_template)
 - [data-source/aws_region](#data-sourceaws_region)
 - [data-source/aws_s3_bucket](#data-sourceaws_s3_bucket)
+- [data-source/aws_servicequotas_templates](#data-sourceaws_servicequotas_templates)
 
 <!-- /TOC -->
 
@@ -134,3 +135,7 @@ The `name` attribute has been deprecated. All configurations using `name` should
 ## data-source/aws_s3_bucket
 
 The `bucket_region` attribute has been added. We encourage use of the `bucket_region` attribute instead of the `region` attribute (which is now used for [Enhanced Multi-Region Support]()).
+
+## data-source/aws_servicequotas_templates
+
+The `region` attribute has been deprecated. All configurations using `region` should be updated to use the `aws_region` attribute instead.

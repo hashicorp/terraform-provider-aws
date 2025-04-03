@@ -5,6 +5,7 @@ page_title: "AWS: aws_servicequotas_template"
 description: |-
   Terraform resource for managing an AWS Service Quotas Template.
 ---
+
 # Resource: aws_servicequotas_template
 
 Terraform resource for managing an AWS Service Quotas Template.
@@ -26,7 +27,7 @@ resource "aws_servicequotas_template" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
 * `aws_region` - (Optional) AWS Region to which the template applies.
 * `region` - (Optional, **Deprecated**) AWS Region to which the template applies. Use `aws_region` instead.

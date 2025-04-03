@@ -276,7 +276,7 @@ func (r *templateResource) Delete(ctx context.Context, request resource.DeleteRe
 	}
 }
 
-func (d *templateResource) ConfigValidators(context.Context) []resource.ConfigValidator {
+func (r *templateResource) ConfigValidators(context.Context) []resource.ConfigValidator {
 	return []resource.ConfigValidator{
 		resourcevalidator.ExactlyOneOf(
 			path.MatchRoot("aws_region"),

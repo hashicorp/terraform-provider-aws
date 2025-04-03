@@ -26,6 +26,7 @@ func TestAccServiceQuotas_serial(t *testing.T) {
 		},
 		"TemplatesDataSource": {
 			acctest.CtBasic: testAccTemplatesDataSource_basic,
+			"region":        testAccTemplatesDataSource_region,
 		},
 	}
 
