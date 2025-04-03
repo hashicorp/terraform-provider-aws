@@ -165,8 +165,6 @@ func (r *awsLogSourceResource) Read(ctx context.Context, request resource.ReadRe
 		return
 	}
 
-	// data = sourceData
-	// data = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &sourceData)
 	sourceData.ID = types.StringValue(string(logSource.SourceName))
 	data = sourceData
 
