@@ -5,6 +5,7 @@ package glue
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -31,7 +32,7 @@ import (
 
 // @SDKResource("aws_glue_dev_endpoint", name="Dev Endpoint")
 // @Tags(identifierAttribute="arn")
-func ResourceDevEndpoint() *schema.Resource {
+func resourceDevEndpoint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDevEndpointCreate,
 		ReadWithoutTimeout:   resourceDevEndpointRead,
@@ -275,7 +276,7 @@ func resourceDevEndpointRead(ctx context.Context, d *schema.ResourceData, meta a
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
-	endpoint, err := FindDevEndpointByName(ctx, conn, d.Id())
+	endpoint, err := findDevEndpointByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Glue Dev Endpoint (%s) not found, removing from state", d.Id())
@@ -512,4 +513,87 @@ func resourceDevEndpointDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	return diags
+}
+
+func findDevEndpointByName(ctx context.Context, conn *glue.Client, name string) (*awstypes.DevEndpoint, error) {
+	input := &glue.GetDevEndpointInput{
+		EndpointName: aws.String(name),
+	}
+
+	output, err := conn.GetDevEndpoint(ctx, input)
+
+	if errs.IsA[*awstypes.EntityNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.DevEndpoint == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.DevEndpoint, nil
+}
+
+func statusDevEndpoint(ctx context.Context, conn *glue.Client, name string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findDevEndpointByName(ctx, conn, name)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.ToString(output.Status), nil
+	}
+}
+
+func waitDevEndpointCreated(ctx context.Context, conn *glue.Client, name string) (*awstypes.DevEndpoint, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{devEndpointStatusProvisioning},
+		Target:  []string{devEndpointStatusReady},
+		Refresh: statusDevEndpoint(ctx, conn, name),
+		Timeout: 15 * time.Minute,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.DevEndpoint); ok {
+		if status := aws.ToString(output.Status); status == devEndpointStatusFailed {
+			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitDevEndpointDeleted(ctx context.Context, conn *glue.Client, name string) (*awstypes.DevEndpoint, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{devEndpointStatusTerminating},
+		Target:  []string{},
+		Refresh: statusDevEndpoint(ctx, conn, name),
+		Timeout: 15 * time.Minute,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.DevEndpoint); ok {
+		if status := aws.ToString(output.Status); status == devEndpointStatusFailed {
+			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
 }
