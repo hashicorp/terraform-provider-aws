@@ -159,4 +159,4 @@ Remove `accelerator_types` from your configuration—it no longer exists. Instea
 
 ## resource/aws_spot_instance_request
 
-Remove `block_duration_minutes` from configuration as it no longer exists.
+Remove `block_duration_minutes` from your configuration—it no longer exists.
