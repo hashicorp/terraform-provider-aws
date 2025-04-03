@@ -92,7 +92,7 @@ func dataSourceFirewallPolicy() *schema.Resource {
 									},
 								},
 							},
-							"stateless_custom_action": sdkv2.DataSourcePropertyFromResourceProperty(customActionSchema()),
+							"stateless_custom_action": sdkv2.ComputedOnlyFromSchema(customActionSchema()),
 							"stateless_default_actions": {
 								Type:     schema.TypeSet,
 								Computed: true,
