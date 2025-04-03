@@ -278,16 +278,10 @@ func resourceRuleUpdate(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	if d.HasChanges(names.AttrResourceTags) {
 		in.ResourceTags = expandResourceTags(d.Get(names.AttrResourceTags).(*schema.Set).List())
-		if in.ResourceTags == nil {
-			in.ResourceTags = []types.ResourceTag{}
-		}
 		update = true
 	}
 	if d.HasChanges("exclude_resource_tags") {
 		in.ExcludeResourceTags = expandResourceTags(d.Get("exclude_resource_tags").(*schema.Set).List())
-		if in.ExcludeResourceTags == nil {
-			in.ExcludeResourceTags = []types.ResourceTag{}
-		}
 		update = true
 	}
 
@@ -491,7 +485,7 @@ func expandResourceTag(tfMap map[string]any) *types.ResourceTag {
 
 func expandResourceTags(tfList []any) []types.ResourceTag {
 	if len(tfList) == 0 {
-		return nil
+		return []types.ResourceTag{}
 	}
 
 	var s []types.ResourceTag
