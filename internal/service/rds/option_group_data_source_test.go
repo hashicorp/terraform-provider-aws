@@ -22,8 +22,7 @@ func TestAccRDSOptionGroupDataSource_basic(t *testing.T) {
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	desc := "terraform test"
-	engineName := "sqlserver-ee"
-	majorEngineVersion := "11.00"
+	engineName := "oracle-ee"
 
 	dataSourceName := "data.aws_db_option_group.test"
 
@@ -37,13 +36,13 @@ func TestAccRDSOptionGroupDataSource_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckOptionGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOptionGroupDataSourceConfig_basic(rName, desc, engineName, majorEngineVersion),
+				Config: testAccOptionGroupDataSourceConfig_basic(rName, desc, engineName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "option_group_name", rName),
 					resource.TestCheckResourceAttr(dataSourceName, "option_group_description", desc),
 					resource.TestCheckResourceAttr(dataSourceName, "engine_name", engineName),
-					resource.TestCheckResourceAttr(dataSourceName, "major_engineVersion", majorEngineVersion),
-					resource.TestCheckResourceAttr(dataSourceName, "options.#", "3"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "major_engine_version"),
+					resource.TestCheckResourceAttr(dataSourceName, "options.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "options.0.option_name", "Timezone"),
 					resource.TestCheckResourceAttr(dataSourceName, "options.0.option_settings.0.name", "TIME_ZONE"),
 					resource.TestCheckResourceAttr(dataSourceName, "options.0.option_settings.0.value", "UTC"),
@@ -53,13 +52,17 @@ func TestAccRDSOptionGroupDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccOptionGroupDataSourceConfig_basic(rName, desc, engineName, majorEngineVersion string) string {
+func testAccOptionGroupDataSourceConfig_basic(rName, desc, engineName string) string {
 	return fmt.Sprintf(`
+data "aws_rds_engine_version" "default" {
+  engine = %[3]q
+}
+
 resource "aws_db_option_group" "test" {
-  name = %[1]q
-	option_group_description = %[2]q
-  engine_name              = %[3]q
-  major_engine_version     = %[4]q
+  name                     = %[1]q
+  option_group_description = %[2]q
+  engine_name              = data.aws_rds_engine_version.default.engine
+  major_engine_version     = regex("^\\d+", data.aws_rds_engine_version.default.version)
 
   option {
     option_name = "Timezone"
@@ -69,23 +72,10 @@ resource "aws_db_option_group" "test" {
       value = "UTC"
     }
   }
-
-  option {
-    option_name = "SQLSERVER_BACKUP_RESTORE"
-
-    option_settings {
-      name  = "IAM_ROLE_ARN"
-      value = aws_iam_role.example.arn
-    }
-  }
-
-  option {
-    option_name = "TDE"
-  }
 }
 
 data "aws_db_option_group" "test" {
   option_group_name             = aws_db_option_group.test.name
 }
-`, rName, desc, engineName, majorEngineVersion)
+`, rName, desc, engineName)
 }

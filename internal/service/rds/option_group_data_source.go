@@ -6,6 +6,7 @@ package rds
 import (
 	"context"
 
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -18,7 +19,7 @@ import (
 )
 
 // Function annotations are used for datasource registration to the Provider. DO NOT EDIT.
-// @FrameworkDataSource("aws_rds_option_group", name="Option Group")
+// @FrameworkDataSource("aws_db_option_group", name="Option Group")
 func newDataSourceOptionGroup(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceOptionGroup{}, nil
 }
@@ -38,7 +39,8 @@ func (d *dataSourceOptionGroup) Schema(ctx context.Context, req datasource.Schem
 				Computed: true,
 			},
 			"copy_timestamp": schema.StringAttribute{
-				Computed: true,
+				Computed:   true,
+				CustomType: timetypes.RFC3339Type{},
 			},
 			"engine_name": schema.StringAttribute{
 				Computed: true,
@@ -53,12 +55,12 @@ func (d *dataSourceOptionGroup) Schema(ctx context.Context, req datasource.Schem
 				Computed: true,
 			},
 			"option_group_name": schema.StringAttribute{
-				Computed: true,
 				Required: true,
 			},
-			"options": schema.ListNestedAttribute{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[optionModel](ctx),
-				Computed:   true,
+			"options": schema.ListAttribute{
+				CustomType:  fwtypes.NewListNestedObjectTypeOf[optionModel](ctx),
+				Computed:    true,
+				ElementType: fwtypes.NewObjectTypeOf[optionModel](ctx),
 			},
 			"source_account_id": schema.StringAttribute{
 				Computed: true,
@@ -100,17 +102,17 @@ func (d *dataSourceOptionGroup) Read(ctx context.Context, req datasource.ReadReq
 }
 
 type dataSourceOptionGroupModel struct {
-	OptionGroupName                      types.String                                 `tfsdk:"option_group_name"`
-	OptionGroupDescription               types.String                                 `tfsdk:"option_group_description"`
-	EngineName                           types.String                                 `tfsdk:"engine_name"`
-	MajorEngineVersion                   types.String                                 `tfsdk:"major_engine_version"`
-	VpcID                                types.String                                 `tfsdk:"vpc_id"`
-	AllowsVpcAndNonVpcInstanceMembership types.Bool                                   `tfsdk:"allows_vpc_and_non_vpc_instance_membership"`
-	OptionGroupArn                       types.String                                 `tfsdk:"option_group_arn"`
-	SourceOptionGroup                    types.String                                 `tfsdk:"source_option_group"`
-	SourceAccountId                      types.String                                 `tfsdk:"source_account_id"`
-	CopyTimestamp                        types.String                                 `tfsdk:"copy_timestamp"`
-	Options                              fwtypes.ListNestedObjectValueOf[optionModel] `tfsdk:"options"`
+	OptionGroupName                     types.String                                 `tfsdk:"option_group_name"`
+	OptionGroupDescription              types.String                                 `tfsdk:"option_group_description"`
+	EngineName                          types.String                                 `tfsdk:"engine_name"`
+	MajorEngineVersion                  types.String                                 `tfsdk:"major_engine_version"`
+	VpcID                               types.String                                 `tfsdk:"vpc_id"`
+	AllowVpcAndNonVpcInstanceMembership types.Bool                                   `tfsdk:"allow_vpc_and_non_vpc_instance_membership"`
+	OptionGroupArn                      types.String                                 `tfsdk:"option_group_arn"`
+	SourceOptionGroup                   types.String                                 `tfsdk:"source_option_group"`
+	SourceAccountId                     types.String                                 `tfsdk:"source_account_id"`
+	CopyTimestamp                       timetypes.RFC3339                            `tfsdk:"copy_timestamp"`
+	Options                             fwtypes.ListNestedObjectValueOf[optionModel] `tfsdk:"options"`
 }
 
 type optionModel struct {
@@ -144,10 +146,5 @@ type dbSecurityGroupMembershipModel struct {
 
 type vpcSecurityGroupMembershipModel struct {
 	VpcSecurityGroupId types.String `tfsdk:"vpc_security_group_id"`
-	Status             types.String `tfsdk:"status,omitempty"`
-}
-
-type complexArgumentModel struct {
-	NestedRequired types.String `tfsdk:"nested_required"`
-	NestedOptional types.String `tfsdk:"nested_optional"`
+	Status             types.String `tfsdk:"status"`
 }
