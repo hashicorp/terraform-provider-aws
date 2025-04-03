@@ -378,3 +378,32 @@ func findServiceQuotaByID(ctx context.Context, conn *servicequotas.Client, servi
 
 	return output.Quota, nil
 }
+
+func flattenUsageMetric(usageMetric *types.MetricInfo) []any {
+	if usageMetric == nil {
+		return []any{}
+	}
+
+	var usageMetrics []any
+	var metricDimensions []any
+
+	if usageMetric.MetricDimensions != nil && usageMetric.MetricDimensions["Service"] != "" {
+		metricDimensions = append(metricDimensions, map[string]any{
+			"service":      usageMetric.MetricDimensions["Service"],
+			"class":        usageMetric.MetricDimensions["Class"],
+			names.AttrType: usageMetric.MetricDimensions["Type"],
+			"resource":     usageMetric.MetricDimensions["Resource"],
+		})
+	} else {
+		metricDimensions = append(metricDimensions, map[string]any{})
+	}
+
+	usageMetrics = append(usageMetrics, map[string]any{
+		names.AttrMetricName:              usageMetric.MetricName,
+		"metric_namespace":                usageMetric.MetricNamespace,
+		"metric_statistic_recommendation": usageMetric.MetricStatisticRecommendation,
+		"metric_dimensions":               metricDimensions,
+	})
+
+	return usageMetrics
+}

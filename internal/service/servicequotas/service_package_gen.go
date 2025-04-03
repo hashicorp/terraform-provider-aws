@@ -66,7 +66,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			},
 		},
 		{
-			Factory:  DataSourceServiceQuota,
+			Factory:  dataSourceServiceQuota,
 			TypeName: "aws_servicequotas_service_quota",
 			Name:     "Service Quota",
 			Region: &itypes.ServicePackageResourceRegion{
