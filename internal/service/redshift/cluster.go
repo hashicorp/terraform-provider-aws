@@ -135,12 +135,10 @@ func resourceCluster() *schema.Resource {
 			},
 			"cluster_public_key": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 			"cluster_revision_number": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 			"cluster_subnet_group_name": {
@@ -190,7 +188,6 @@ func resourceCluster() *schema.Resource {
 			},
 			names.AttrEndpoint: {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 			"enhanced_vpc_routing": {
