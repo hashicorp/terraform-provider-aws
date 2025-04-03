@@ -103,6 +103,8 @@ func TestAccAMPScraper_alias(t *testing.T) {
 
 	var scraper types.ScraperDescription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	aliasName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	aliasName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_prometheus_scraper.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -112,10 +114,22 @@ func TestAccAMPScraper_alias(t *testing.T) {
 		CheckDestroy:             testAccCheckScraperDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccScraperConfig_alias(rName),
+				Config: testAccScraperConfig_alias(rName, aliasName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScraperExists(ctx, resourceName, &scraper),
-					resource.TestCheckResourceAttr(resourceName, names.AttrAlias, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAlias, aliasName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccScraperConfig_alias(rName, aliasName2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScraperExists(ctx, resourceName, &scraper),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAlias, aliasName2),
 				),
 			},
 			{
@@ -184,6 +198,20 @@ func TestAccAMPScraper_roleConfiguration(t *testing.T) {
 				Config: testAccScraperConfig_roleConfiguration(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScraperExists(ctx, resourceName, &scraper),
+					resource.TestCheckResourceAttrSet(resourceName, "role_configuration.0.source_role_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "role_configuration.0.target_role_arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccScraperConfig_alias(rName, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScraperExists(ctx, resourceName, &scraper),
+					resource.TestCheckResourceAttr(resourceName, "role_configuration.#", "0"),
 				),
 			},
 			{
@@ -412,11 +440,11 @@ resource "aws_prometheus_scraper" "test" {
 `, scrapeConfigBlob))
 }
 
-func testAccScraperConfig_alias(rName string) string {
+func testAccScraperConfig_alias(rName, alias string) string {
 	return acctest.ConfigCompose(testAccScraperConfig_base(rName), fmt.Sprintf(`
 resource "aws_prometheus_scraper" "test" {
-  alias                = %[1]q
-  scrape_configuration = %[2]q
+  alias                = %[2]q
+  scrape_configuration = %[3]q
 
   source {
     eks {
@@ -431,7 +459,7 @@ resource "aws_prometheus_scraper" "test" {
     }
   }
 }
-`, rName, scrapeConfigBlob))
+`, rName, alias, scrapeConfigBlob))
 }
 
 func testAccScraperConfig_securityGroups(rName string) string {

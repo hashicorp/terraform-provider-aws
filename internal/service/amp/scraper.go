@@ -48,6 +48,7 @@ func newScraperResource(_ context.Context) (resource.ResourceWithConfigure, erro
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultDeleteTimeout(20 * time.Minute)
+	r.SetDefaultUpdateTimeout(2 * time.Minute)
 
 	return r, nil
 }
@@ -367,7 +368,12 @@ func (r *scraperResource) Update(ctx context.Context, req resource.UpdateRequest
 	_, err := conn.UpdateScraper(ctx, input)
 	if err != nil {
 		resp.Diagnostics.AddError("updating Prometheus Scraper", err.Error())
+		return
+	}
 
+	_, err = waitScraperUpdated(ctx, conn, plan.ID.ValueString(), r.UpdateTimeout(ctx, plan.Timeouts))
+	if err != nil {
+		resp.Diagnostics.AddError("updating Prometheus Scraper timeout", err.Error())
 		return
 	}
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
@@ -586,6 +592,24 @@ func waitScraperCreated(ctx context.Context, conn *amp.Client, id string, timeou
 	if output, ok := outputRaw.(*awstypes.ScraperDescription); ok {
 		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitScraperUpdated(ctx context.Context, conn *amp.Client, id string, timeout time.Duration) (*awstypes.ScraperDescription, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.ScraperStatusCodeUpdating),
+		Target:  enum.Slice(awstypes.ScraperStatusCodeActive),
+		Refresh: statusScraper(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.ScraperDescription); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 		return output, err
 	}
 
