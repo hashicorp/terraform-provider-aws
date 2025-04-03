@@ -41,7 +41,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			},
 		},
 		{
-			Factory:  newResourceTemplateAssociation,
+			Factory:  newTemplateAssociationResource,
 			TypeName: "aws_servicequotas_template_association",
 			Name:     "Template Association",
 			Region: &itypes.ServicePackageResourceRegion{

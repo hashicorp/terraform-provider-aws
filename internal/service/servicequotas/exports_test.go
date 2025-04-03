@@ -7,7 +7,8 @@ package servicequotas
 var (
 	ResourceServiceQuota        = resourceServiceQuota
 	ResourceTemplate            = newTemplateResource
-	ResourceTemplateAssociation = newResourceTemplateAssociation
+	ResourceTemplateAssociation = newTemplateAssociationResource
 
+	FindTemplateAssociation    = findTemplateAssociation
 	FindTemplateByThreePartKey = findTemplateByThreePartKey
 )
