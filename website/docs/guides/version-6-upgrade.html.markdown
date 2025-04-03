@@ -20,12 +20,15 @@ Upgrade topics:
 - [Dropping Support For Amazon Worklink](#dropping-support-for-amazon-worklink)
 - [AWS OpsWorks Stacks End of Life](#aws-opsworks-stacks-end-of-life)
 - [data-source/aws_batch_compute_environment](#data-sourceaws_batch_compute_environment)
+- [data-source/aws_globalaccelerator_accelerator](#data-sourceaws_globalaccelerator_accelerator)
 - [resource/aws_batch_compute_environment](#resourceaws_batch_compute_environment)
 - [resource/aws_cloudfront_response_headers_policy](#resourceaws_cloudfront_response_headers_policy)
 - [resource/aws_instance](#resourceaws_instance)
 - [resource/aws_kinesis_analytics_application](#resourceaws_kinesis_analytics_application)
+- [resource/aws_networkmanager_core_network](#resourceaws_networkmanager_core_network)
 - [resource/aws_redshift_cluster](#resourceaws_redshift_cluster)
 - [resource/aws_redshift_service_account](#resourceaws_redshift_service_account)
+- [resource/aws_sagemaker_notebook_instance](#resourceaws_sagemaker_notebook_instance)
 - [resource/aws_spot_instance_request](#resourceaws_spot_instance_request)
 
 <!-- /TOC -->
@@ -115,6 +118,10 @@ As the AWS OpsWorks Stacks service has reached [End Of Life](https://docs.aws.am
 
 * `compute_environment_name` has been renamed to `name`.
 
+## data-source/aws_globalaccelerator_accelerator
+
+`id` is now computed only.
+
 ## resource/aws_batch_compute_environment
 
 * `compute_environment_name` has been renamed to `name`.
@@ -132,20 +139,24 @@ The `user_data` attribute no longer applies hashing and is now stored in clear t
 
 This resource is deprecated and will be removed in a future version. [Effective January 27, 2026](https://aws.amazon.com/blogs/big-data/migrate-from-amazon-kinesis-data-analytics-for-sql-to-amazon-managed-service-for-apache-flink-and-amazon-managed-service-for-apache-flink-studio/), AWS will [no longer support](https://docs.aws.amazon.com/kinesisanalytics/latest/dev/discontinuation.html) Amazon Kinesis Data Analytics for SQL. Use the `aws_kinesisanalyticsv2_application` resource instead to manage Amazon Kinesis Data Analytics for Apache Flink applications. AWS provides guidance for migrating from [Amazon Kinesis Data Analytics for SQL Applications to Amazon Managed Service for Apache Flink Studio](https://aws.amazon.com/blogs/big-data/migrate-from-amazon-kinesis-data-analytics-for-sql-applications-to-amazon-managed-service-for-apache-flink-studio/) including [examples](https://docs.aws.amazon.com/kinesisanalytics/latest/dev/migrating-to-kda-studio-overview.html).
 
+## resource/aws_networkmanager_core_network
+
+The `base_policy_region` argument has been removed. Use `base_policy_regions` instead.
+
 ## resource/aws_redshift_cluster
 
 * The `publicly_accessible` attribute now defaults to `false`.
-* Remove `snapshot_copy` from configuration as it no longer exists. Use the `aws_redshift_snapshot_copy` resource instead.
-* Remove `logging` from configuration as it no longer exists. Use the `aws_redshift_logging` resource instead.
+* Remove `snapshot_copy` from your configuration—it no longer exists. Use the `aws_redshift_snapshot_copy` resource instead.
+* Remove `logging` from your configuration—it no longer exists. Use the `aws_redshift_logging` resource instead.
 
 ## resource/aws_redshift_service_account
 
 The `aws_redshift_service_account` resource has been removed. AWS [recommends](https://docs.aws.amazon.com/redshift/latest/mgmt/db-auditing.html#db-auditing-bucket-permissions) that a [service principal name](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_principal.html#principal-services) should be used instead of an AWS account ID in any relevant IAM policy.
 
+## resource/aws_sagemaker_notebook_instance
+
+Remove `accelerator_types` from your configuration—it no longer exists. Instead, use `instance_type` to use [Inferentia](https://docs.aws.amazon.com/sagemaker/latest/dg/neo-supported-cloud.html).
+
 ## resource/aws_spot_instance_request
 
 Remove `block_duration_minutes` from configuration as it no longer exists.
-
-## datasource/aws_globalaccelerator_accelerator
-
-`id` is now computed only.
