@@ -23,7 +23,7 @@ Upgrade topics:
 - [resource/aws_batch_compute_environment](#resourceaws_batch_compute_environment)
 - [resource/aws_cloudfront_response_headers_policy](#resourceaws_cloudfront_response_headers_policy)
 - [resource/aws_instance](#resourceaws_instance)
-- [resource/aws_kinesis_analytics_application]()
+- [resource/aws_kinesis_analytics_application](#resourceaws_kinesis_analytics_application)
 - [resource/aws_redshift_cluster](#resourceaws_redshift_cluster)
 - [resource/aws_redshift_service_account](#resourceaws_redshift_service_account)
 - [resource/aws_spot_instance_request](#resourceaws_spot_instance_request)
