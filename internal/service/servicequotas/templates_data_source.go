@@ -8,143 +8,98 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/servicequotas"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/servicequotas/types"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkDataSource("aws_servicequotas_templates", name="Templates")
-func newDataSourceTemplates(context.Context) (datasource.DataSourceWithConfigure, error) {
+// @Region(overrideEnabled=false)
+func newTemplatesDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceTemplates{}, nil
 }
-
-const (
-	DSNameTemplates = "Templates Data Source"
-)
 
 type dataSourceTemplates struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *dataSourceTemplates) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (d *dataSourceTemplates) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: framework.IDAttribute(),
 			names.AttrRegion: schema.StringAttribute{
 				Required: true,
 			},
-		},
-		Blocks: map[string]schema.Block{
-			"templates": schema.ListNestedBlock{
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"global_quota": schema.BoolAttribute{
-							Computed: true,
-						},
-						"quota_code": schema.StringAttribute{
-							Computed: true,
-						},
-						"quota_name": schema.StringAttribute{
-							Computed: true,
-						},
-						names.AttrRegion: schema.StringAttribute{
-							Computed: true,
-						},
-						"service_code": schema.StringAttribute{
-							Computed: true,
-						},
-						names.AttrServiceName: schema.StringAttribute{
-							Computed: true,
-						},
-						names.AttrUnit: schema.StringAttribute{
-							Computed: true,
-						},
-						names.AttrValue: schema.Float64Attribute{
-							Computed: true,
-						},
-					},
-				},
-			},
+			"templates": framework.DataSourceComputedListOfObjectAttribute[serviceQuotaIncreaseRequestInTemplateModel](ctx),
 		},
 	}
 }
 
-func (d *dataSourceTemplates) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	conn := d.Meta().ServiceQuotasClient(ctx)
-
-	var data dataSourceTemplatesData
-	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
+func (d *dataSourceTemplates) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+	var data templatesDataSourceModel
+	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
+
+	conn := d.Meta().ServiceQuotasClient(ctx)
 
 	input := servicequotas.ListServiceQuotaIncreaseRequestsInTemplateInput{
 		AwsRegion: data.Region.ValueStringPointer(),
 	}
-	out, err := conn.ListServiceQuotaIncreaseRequestsInTemplate(ctx, &input)
+	output, err := findTemplates(ctx, conn, &input)
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ServiceQuotas, create.ErrActionReading, DSNameTemplates, data.Region.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError("reading Service Quotas Templates", err.Error())
+
 		return
 	}
 
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data.Templates)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	// Additional fields.
 	data.ID = types.StringValue(data.Region.ValueString())
 
-	templates, diags := flattenTemplates(ctx, out.ServiceQuotaIncreaseRequestInTemplateList)
-	resp.Diagnostics.Append(diags...)
-	data.Templates = templates
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-var templatesSourceAttrTypes = map[string]attr.Type{
-	"global_quota":        types.BoolType,
-	"quota_code":          types.StringType,
-	"quota_name":          types.StringType,
-	names.AttrRegion:      types.StringType,
-	"service_code":        types.StringType,
-	names.AttrServiceName: types.StringType,
-	names.AttrUnit:        types.StringType,
-	names.AttrValue:       types.Float64Type,
-}
+func findTemplates(ctx context.Context, conn *servicequotas.Client, input *servicequotas.ListServiceQuotaIncreaseRequestsInTemplateInput) ([]awstypes.ServiceQuotaIncreaseRequestInTemplate, error) {
+	var output []awstypes.ServiceQuotaIncreaseRequestInTemplate
 
-type dataSourceTemplatesData struct {
-	Region    types.String `tfsdk:"region"`
-	ID        types.String `tfsdk:"id"`
-	Templates types.List   `tfsdk:"templates"`
-}
+	pages := servicequotas.NewListServiceQuotaIncreaseRequestsInTemplatePaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
-func flattenTemplates(ctx context.Context, apiObject []awstypes.ServiceQuotaIncreaseRequestInTemplate) (types.List, diag.Diagnostics) {
-	var diags diag.Diagnostics
-	elemType := types.ObjectType{AttrTypes: templatesSourceAttrTypes}
-
-	elems := []attr.Value{}
-	for _, t := range apiObject {
-		obj := map[string]attr.Value{
-			"global_quota":        types.BoolValue(t.GlobalQuota),
-			"quota_code":          flex.StringToFramework(ctx, t.QuotaCode),
-			"quota_name":          flex.StringToFramework(ctx, t.QuotaName),
-			names.AttrRegion:      flex.StringToFramework(ctx, t.AwsRegion),
-			"service_code":        flex.StringToFramework(ctx, t.ServiceCode),
-			names.AttrServiceName: flex.StringToFramework(ctx, t.ServiceName),
-			names.AttrUnit:        flex.StringToFramework(ctx, t.Unit),
-			names.AttrValue:       flex.Float64ToFramework(ctx, t.DesiredValue),
+		if err != nil {
+			return nil, err
 		}
-		objVal, d := types.ObjectValue(templatesSourceAttrTypes, obj)
-		diags.Append(d...)
 
-		elems = append(elems, objVal)
+		output = append(output, page.ServiceQuotaIncreaseRequestInTemplateList...)
 	}
-	listVal, d := types.ListValue(elemType, elems)
-	diags.Append(d...)
 
-	return listVal, diags
+	return output, nil
+}
+
+type templatesDataSourceModel struct {
+	ID        types.String                                                                `tfsdk:"id"`
+	Region    types.String                                                                `tfsdk:"region"`
+	Templates fwtypes.ListNestedObjectValueOf[serviceQuotaIncreaseRequestInTemplateModel] `tfsdk:"templates"`
+}
+
+type serviceQuotaIncreaseRequestInTemplateModel struct {
+	AWSRegion    types.String  `tfsdk:"region"`
+	DesiredValue types.Float64 `tfsdk:"value"`
+	GlobalQuota  types.Bool    `tfsdk:"global_quota"`
+	QuotaCode    types.String  `tfsdk:"quota_code"`
+	QuotaName    types.String  `tfsdk:"quota_name"`
+	ServiceCode  types.String  `tfsdk:"service_code"`
+	ServiceName  types.String  `tfsdk:"service_name"`
+	Unit         types.String  `tfsdk:"unit"`
 }

@@ -26,13 +26,15 @@ func testAccTemplatesDataSource_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTemplateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTemplatesDataSourceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrRegion, regionDataSourceName, names.AttrName),
 					resource.TestCheckResourceAttr(dataSourceName, "templates.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "templates.0.quota_code", lambdaStorageQuotaCode),
+					resource.TestCheckResourceAttr(dataSourceName, "templates.0.service_code", lambdaServiceCode),
+					resource.TestCheckResourceAttr(dataSourceName, "templates.0.value", lambdaStorageValue),
 				),
 			},
 		},
