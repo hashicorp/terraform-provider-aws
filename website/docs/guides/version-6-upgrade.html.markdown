@@ -25,6 +25,7 @@ Upgrade topics:
 - [data-source/aws_ecs_task_execution](#data-sourceaws_ecs_task_execution)
 - [data-source/aws_globalaccelerator_accelerator](#data-sourceaws_globalaccelerator_accelerator)
 - [data-source/aws_launch_template](#data-sourceaws_launch_template)
+- [data-source/aws_service_discovery_service](#data-sourceaws_service_discovery_service)
 - [resource/aws_batch_compute_environment](#resourceaws_batch_compute_environment)
 - [resource/aws_cloudfront_response_headers_policy](#resourceaws_cloudfront_response_headers_policy)
 - [resource/aws_ecs_task_definition](#resourceaws_ecs_task_definition)
@@ -130,16 +131,15 @@ This is not recommended.
 
 ## data-source/aws_batch_compute_environment
 
-* `compute_environment_name` has been renamed to `name`.
+`compute_environment_name` has been renamed to `name`.
 
 ## data-source/aws_globalaccelerator_accelerator
 
 `id` is now computed only.
 
-## resource/aws_batch_compute_environment
+## data-source/aws_service_discovery_service
 
-* `compute_environment_name` has been renamed to `name`.
-* `compute_environment_name_prefix` has been renamed to `name_prefix`.
+`tags_all` has been removed.
 
 ## data-source/aws_ecs_task_definition
 
@@ -152,6 +152,11 @@ Remove `inference_accelerator_overrides` from your configuration—it no longer 
 ## data-source/aws_launch_template
 
 Remove `elastic_inference_accelerator` from your configuration—it no longer exists. Amazon Elastic Inference reached end of life in April 2024.
+
+## resource/aws_batch_compute_environment
+
+* `compute_environment_name` has been renamed to `name`.
+* `compute_environment_name_prefix` has been renamed to `name_prefix`.
 
 ## resource/aws_cloudfront_response_headers_policy
 
