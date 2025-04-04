@@ -138,6 +138,7 @@ func TestAccEMRInstanceFleet_full(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceFleetExists(ctx, resourceName, &fleet),
 					resource.TestCheckResourceAttr(resourceName, "instance_type_configs.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "instance_type_configs.0.ebs_config.0.throughput", "256"),
 					resource.TestCheckResourceAttr(resourceName, "target_on_demand_capacity", "2"),
 					resource.TestCheckResourceAttr(resourceName, "target_spot_capacity", "2"),
 				),
@@ -495,7 +496,9 @@ resource "aws_emr_instance_fleet" "task" {
 
     ebs_config {
       size                 = 20
-      type                 = "gp2"
+      type                 = "gp3"
+      throughput           = 256
+      iops                 = 3000
       volumes_per_instance = 2
     }
 
