@@ -155,7 +155,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 				{{- end }}
 			},
 			{{- if gt (len $value.IdentityAttributes) 0 }}
-				{{- if $.IsGlobal }}
+				{{- if or $.IsGlobal $value.IsGlobal }}
 				Identity: itypes.GlobalParameterizedIdentity({{ range $value.IdentityAttributes }}
 					itypes.StringIdentityAttribute({{ .Name }},
 					{{- if .Optional }}false{{ else }}true{{ end }}),
