@@ -22,6 +22,7 @@ Upgrade topics:
 - [data-source/aws_ami](#data-sourceaws_ami)
 - [data-source/aws_batch_compute_environment](#data-sourceaws_batch_compute_environment)
 - [data-source/aws_globalaccelerator_accelerator](#data-sourceaws_globalaccelerator_accelerator)
+- [data-source/aws_service_discovery_service](#data-sourceaws_service_discovery_service)
 - [resource/aws_batch_compute_environment](#resourceaws_batch_compute_environment)
 - [resource/aws_cloudfront_response_headers_policy](#resourceaws_cloudfront_response_headers_policy)
 - [resource/aws_instance](#resourceaws_instance)
@@ -130,6 +131,10 @@ This is not recommended.
 ## data-source/aws_globalaccelerator_accelerator
 
 `id` is now computed only.
+
+## data-source/aws_service_discovery_service
+
+`tags_all` has been removed.
 
 ## resource/aws_batch_compute_environment
 
