@@ -249,13 +249,7 @@ resource "aws_ecs_task_definition" "test" {
     "command": ["sleep", "360"],
     "memory": 2048,
     "essential": true,
-    "portMappings": [{"protocol": "tcp", "containerPort": 8000}],
-     "resourceRequirements": [
-      {
-        "type": "InferenceAccelerator",
-        "value": "device_1"
-      }
-    ]
+    "portMappings": [{"protocol": "tcp", "containerPort": 8000}]
   }
 ]
 TASK_DEFINITION
