@@ -40,14 +40,17 @@ func (r identityInterceptor) run(ctx context.Context, opts interceptorOptions) d
 						return sdkdiag.AppendFromErr(diags, err)
 					}
 
-				// TODO: Update for multi-region
 				case names.AttrRegion:
 					if err := identity.Set(attr, awsClient.Region(ctx)); err != nil {
 						return sdkdiag.AppendFromErr(diags, err)
 					}
 
 				default:
-					if err := identity.Set(attr, r.getAttribute(d, attr)); err != nil {
+					val, ok := r.getAttributeOk(d, attr)
+					if !ok {
+						continue
+					}
+					if err := identity.Set(attr, val); err != nil {
 						return sdkdiag.AppendFromErr(diags, err)
 					}
 				}
@@ -58,11 +61,12 @@ func (r identityInterceptor) run(ctx context.Context, opts interceptorOptions) d
 	return diags
 }
 
-func (r identityInterceptor) getAttribute(d schemaResourceData, name string) string {
+func (r identityInterceptor) getAttributeOk(d schemaResourceData, name string) (string, bool) {
 	if name == "id" {
-		return d.Id()
+		return d.Id(), true
 	}
-	return d.Get(name).(string)
+	v, ok := d.GetOk(name)
+	return v.(string), ok
 }
 
 func newIdentityInterceptor(attributes []types.IdentityAttribute) interceptorItem {

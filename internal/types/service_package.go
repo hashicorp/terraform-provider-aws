@@ -119,3 +119,16 @@ func ARNIdentity() Identity {
 		},
 	}
 }
+
+func GlobalParameterizedIdentity(attributes ...IdentityAttribute) Identity {
+	baseAttributes := []IdentityAttribute{
+		{
+			Name:     "account_id",
+			Required: false,
+		},
+	}
+	baseAttributes = slices.Grow(baseAttributes, len(attributes))
+	return Identity{
+		Attributes: append(baseAttributes, attributes...),
+	}
+}
