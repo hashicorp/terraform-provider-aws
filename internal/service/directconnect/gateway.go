@@ -28,6 +28,7 @@ import (
 
 // @SDKResource("aws_dx_gateway", name="Gateway")
 // @Region(global=true)
+// @IdentityAttribute("id")
 func resourceGateway() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGatewayCreate,

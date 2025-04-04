@@ -132,6 +132,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
 			},
+			Identity: itypes.GlobalParameterizedIdentity(
+				itypes.StringIdentityAttribute(names.AttrID, true),
+			),
 		},
 		{
 			Factory:  resourceGatewayAssociation,
