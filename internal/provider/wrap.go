@@ -47,9 +47,10 @@ func (w *wrappedDataSource) read(f schema.ReadContextFunc) schema.ReadContextFun
 
 type wrappedResourceOptions struct {
 	// bootstrapContext is run on all wrapped methods before any interceptors.
-	bootstrapContext   contextFunc
-	crudInterceptors   crudInterceptorItems
-	customizeDiffFuncs []schema.CustomizeDiffFunc
+	bootstrapContext          contextFunc
+	crudInterceptors          crudInterceptorItems
+	customizeDiffInterceptors customizeDiffInterceptorItems
+	customizeDiffFuncs        []schema.CustomizeDiffFunc
 	// importsFuncs are called before bootstrapContext.
 	importFuncs []schema.StateContextFunc
 	typeName    string
@@ -132,6 +133,14 @@ func (w *wrappedResource) import_(f schema.StateContextFunc) schema.StateContext
 }
 
 func (w *wrappedResource) customizeDiff(f schema.CustomizeDiffFunc) schema.CustomizeDiffFunc {
+	// if f == nil {
+	// 	f = func(context.Context, *schema.ResourceDiff, any) error {
+	// 		return nil
+	// 	}
+	// }
+
+	// return interceptedCustomizeDiffHandler(w.opts.bootstrapContext, w.opts.customizeDiffInterceptors, f)
+
 	if len(w.opts.customizeDiffFuncs) > 0 {
 		customizeDiffFuncs := slices.Clone(w.opts.customizeDiffFuncs)
 		if f != nil {

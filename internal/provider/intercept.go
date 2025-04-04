@@ -5,10 +5,12 @@ package provider
 
 import (
 	"context"
+	"errors"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/slices"
 )
@@ -27,7 +29,8 @@ type interceptorOptions[D any] struct {
 }
 
 type (
-	crudInterceptorOptions = interceptorOptions[schemaResourceData]
+	crudInterceptorOptions          = interceptorOptions[schemaResourceData]
+	customizeDiffInterceptorOptions = interceptorOptions[*schema.ResourceDiff]
 )
 
 // An interceptor is functionality invoked during a request's lifecycle.
@@ -41,6 +44,8 @@ type interceptor[D any, E any] interface {
 type (
 	// crudInterceptor is functionality invoked during a CRUD request lifecycle.
 	crudInterceptor = interceptor[schemaResourceData, diag.Diagnostics]
+	// customizeDiffInterceptor is functionality invoked during a CustomizeDiff request lifecycle.
+	customizeDiffInterceptor = interceptor[*schema.ResourceDiff, error]
 )
 
 type interceptorFunc[D any, E any] func(context.Context, interceptorOptions[D]) E
@@ -61,7 +66,8 @@ type interceptorItem[D any, E any] struct {
 }
 
 type (
-	crudInterceptorItem = interceptorItem[schemaResourceData, diag.Diagnostics]
+	crudInterceptorItem          = interceptorItem[schemaResourceData, diag.Diagnostics]
+	customizeDiffInterceptorItem = interceptorItem[*schema.ResourceDiff, error]
 )
 
 // when represents the point in the CRUD request lifecycle that an interceptor is run.
@@ -80,12 +86,13 @@ const (
 type why uint16
 
 const (
-	Create why = 1 << iota // Interceptor is invoked for a Create call
-	Read                   // Interceptor is invoked for a Read call
-	Update                 // Interceptor is invoked for an Update call
-	Delete                 // Interceptor is invoked for a Delete call
+	Create        why = 1 << iota // Interceptor is invoked for a Create call
+	Read                          // Interceptor is invoked for a Read call
+	Update                        // Interceptor is invoked for an Update call
+	Delete                        // Interceptor is invoked for a Delete call
+	CustomizeDiff                 // Interceptor is invoked for a CustomizeDiff call
 
-	AllOps = Create | Read | Update | Delete // Interceptor is invoked for all calls
+	AllCRUDOps = Create | Read | Update | Delete // Interceptor is invoked for all CRUD calls
 )
 
 type interceptorItems[D any, E any] []interceptorItem[D, E]
@@ -97,7 +104,8 @@ func (s interceptorItems[D, E]) why(why why) interceptorItems[D, E] {
 }
 
 type (
-	crudInterceptorItems = interceptorItems[schemaResourceData, diag.Diagnostics]
+	crudInterceptorItems          = interceptorItems[schemaResourceData, diag.Diagnostics]
+	customizeDiffInterceptorItems = interceptorItems[*schema.ResourceDiff, error]
 )
 
 // interceptedCRUDHandler returns a handler that invokes the specified CRUD handler, running any interceptors.
@@ -164,5 +172,77 @@ func interceptedCRUDHandler[F ~func(context.Context, *schema.ResourceData, any) 
 		}
 
 		return diags
+	}
+}
+
+// interceptedCRUDHandler returns a handler that invokes the specified CustomizeDiff handler, running any interceptors.
+func interceptedCustomizeDiffHandler(bootstrapContext contextFunc, interceptors customizeDiffInterceptorItems, f schema.CustomizeDiffFunc) schema.CustomizeDiffFunc {
+	return func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+		ctx, diags := bootstrapContext(ctx, d.GetOk, meta)
+		if diags.HasError() {
+			return sdkdiag.DiagnosticsError(diags)
+		}
+
+		why := CustomizeDiff
+
+		// Before interceptors are run first to last.
+		forward := interceptors.why(why)
+
+		when := Before
+		for _, v := range forward {
+			if v.when&when != 0 {
+				opts := customizeDiffInterceptorOptions{
+					c:    meta.(*conns.AWSClient),
+					d:    d,
+					when: when,
+					why:  why,
+				}
+				// Short circuit if any Before interceptor errors.
+				if err := v.interceptor.run(ctx, opts); err != nil {
+					return err
+				}
+			}
+		}
+
+		// All other interceptors are run last to first.
+		reverse := slices.Reverse(forward)
+		var errs []error
+
+		if err := f(ctx, d, meta); err != nil {
+			when = OnError
+			errs = append(errs, err)
+		} else {
+			when = After
+		}
+		for _, v := range reverse {
+			if v.when&when != 0 {
+				opts := customizeDiffInterceptorOptions{
+					c:    meta.(*conns.AWSClient),
+					d:    d,
+					when: when,
+					why:  why,
+				}
+				if err := v.interceptor.run(ctx, opts); err != nil {
+					errs = append(errs, err)
+				}
+			}
+		}
+
+		when = Finally
+		for _, v := range reverse {
+			if v.when&when != 0 {
+				opts := customizeDiffInterceptorOptions{
+					c:    meta.(*conns.AWSClient),
+					d:    d,
+					when: when,
+					why:  why,
+				}
+				if err := v.interceptor.run(ctx, opts); err != nil {
+					errs = append(errs, err)
+				}
+			}
+		}
+
+		return errors.Join(errs...)
 	}
 }
