@@ -681,6 +681,7 @@ func TestAccEKSCluster_version(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, clusterVersionUpgradeInitial),
+					resource.TestCheckResourceAttr(resourceName, "force_version_update", acctest.CtFalse),
 				),
 			},
 			{
@@ -695,6 +696,7 @@ func TestAccEKSCluster_version(t *testing.T) {
 					testAccCheckClusterExists(ctx, resourceName, &cluster2),
 					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, clusterVersionUpgradeUpdated),
+					resource.TestCheckResourceAttr(resourceName, "force_version_update", acctest.CtFalse),
 				),
 			},
 		},
@@ -1330,6 +1332,54 @@ func TestAccEKSCluster_zonalShiftConfig(t *testing.T) {
 	})
 }
 
+func TestAccEKSCluster_forceVersionUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var cluster1, cluster2 types.Cluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_eks_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_version(rName, clusterVersionUpgradeInitial),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, clusterVersionUpgradeInitial),
+					resource.TestCheckResourceAttr(resourceName, "force_version_update", acctest.CtFalse),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons", "force_version_update"},
+			},
+			{
+				Config: testAccClusterConfig_version(rName, clusterVersionUpgradeUpdated, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster2),
+					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, clusterVersionUpgradeUpdated),
+					resource.TestCheckResourceAttr(resourceName, "force_version_update", acctest.CtTrue),
+				),
+			},
+			{
+				Config: testAccClusterConfig_version(rName, clusterVersionUpgradeUpdated),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster2),
+					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, clusterVersionUpgradeUpdated),
+					resource.TestCheckResourceAttr(resourceName, "force_version_update", acctest.CtFalse),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckClusterExists(ctx context.Context, n string, v *types.Cluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -1780,12 +1830,17 @@ resource "aws_eks_cluster" "test" {
 `, rName))
 }
 
-func testAccClusterConfig_version(rName, version string) string {
+func testAccClusterConfig_version(rName, version string, forceUpdate ...bool) string {
+	force := false
+	if len(forceUpdate) > 0 {
+		force = forceUpdate[0]
+	}
 	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_cluster" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.cluster.arn
   version  = %[2]q
+  force_version_update = %[3]t
 
   vpc_config {
     subnet_ids = aws_subnet.test[*].id
@@ -1793,7 +1848,7 @@ resource "aws_eks_cluster" "test" {
 
   depends_on = [aws_iam_role_policy_attachment.cluster_AmazonEKSClusterPolicy]
 }
-`, rName, version))
+`, rName, version, force))
 }
 
 func testAccClusterConfig_logging(rName string, logTypes []string) string {
