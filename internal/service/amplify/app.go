@@ -185,6 +185,11 @@ func resourceApp() *schema.Resource {
 					},
 				},
 			},
+			"compute_role_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: verify.ValidARN,
+			},
 			"custom_headers": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -346,6 +351,10 @@ func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta any) di
 		input.CacheConfig = expandCacheConfig(v.([]any)[0].(map[string]any))
 	}
 
+	if v, ok := d.GetOk("compute_role_arn"); ok {
+		input.ComputeRoleArn = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("custom_headers"); ok {
 		input.CustomHeaders = aws.String(v.(string))
 	}
@@ -437,6 +446,7 @@ func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 			return sdkdiag.AppendErrorf(diags, "setting cache_config: %s", err)
 		}
 	}
+	d.Set("compute_role_arn", app.ComputeRoleArn)
 	d.Set("custom_headers", app.CustomHeaders)
 	if err := d.Set("custom_rule", flattenCustomRules(app.CustomRules)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting custom_rule: %s", err)
@@ -506,6 +516,10 @@ func resourceAppUpdate(ctx context.Context, d *schema.ResourceData, meta any) di
 			if v, ok := d.GetOk("cache_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 				input.CacheConfig = expandCacheConfig(v.([]any)[0].(map[string]any))
 			}
+		}
+
+		if d.HasChange("compute_role_arn") {
+			input.ComputeRoleArn = aws.String(d.Get("compute_role_arn").(string))
 		}
 
 		if d.HasChange("custom_headers") {
