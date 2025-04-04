@@ -28,6 +28,9 @@ import (
 const (
 	clusterVersionUpgradeInitial = "1.27"
 	clusterVersionUpgradeUpdated = "1.28"
+
+	clusterVersionUpgradeForceInitial = "1.30"
+	clusterVersionUpgradeForceUpdated = "1.31"
 )
 
 func TestAccEKSCluster_basic(t *testing.T) {
@@ -658,6 +661,43 @@ func TestAccEKSCluster_Encryption_versionUpdate(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "encryption_config.0.provider.0.key_arn", kmsKeyResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "encryption_config.0.resources.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, clusterVersionUpgradeUpdated),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEKSCluster_ForceUpgradeVersion(t *testing.T) {
+	ctx := acctest.Context(t)
+	var cluster1, cluster2 types.Cluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_eks_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_preForceUpgradeVersion(rName, clusterVersionUpgradeForceInitial),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, clusterVersionUpgradeForceInitial),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
+			},
+			{
+				Config: testAccClusterConfig_version(rName, clusterVersionUpgradeForceUpdated),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster2),
+					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, clusterVersionUpgradeForceUpdated),
 				),
 			},
 		},
@@ -1786,12 +1826,35 @@ resource "aws_eks_cluster" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.cluster.arn
   version  = %[2]q
+  force    = true
 
   vpc_config {
     subnet_ids = aws_subnet.test[*].id
   }
 
   depends_on = [aws_iam_role_policy_attachment.cluster_AmazonEKSClusterPolicy]
+}
+`, rName, version))
+}
+
+func testAccClusterConfig_preForceUpgradeVersion(rName, version string) string {
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
+resource "aws_eks_cluster" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.cluster.arn
+  version  = %[2]q
+
+  vpc_config {
+    subnet_ids = aws_subnet.test[*].id
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.cluster_AmazonEKSClusterPolicy]
+}
+
+resource "aws_eks_addon" "vpc_cni" {
+  cluster_name  = aws_eks_cluster.test.name
+  addon_name    = "vpc-cni"
+  addon_version = "v1.16.0-eksbuild.1" # oldest version listed for EKS 1.30
 }
 `, rName, version))
 }
