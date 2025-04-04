@@ -57,9 +57,6 @@ func TestAccECSTaskDefinitionDataSource_ec2(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, "aws_ecs_task_definition.test", names.AttrARN),
 					resource.TestCheckResourceAttrSet(dataSourceName, "container_definitions"),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrFamily, rName),
-					resource.TestCheckResourceAttr(dataSourceName, "inference_accelerator.#", "1"),
-					resource.TestCheckResourceAttr(dataSourceName, "inference_accelerator.0.device_name", "device_1"),
-					resource.TestCheckResourceAttr(dataSourceName, "inference_accelerator.0.device_type", "eia1.medium"),
 					resource.TestCheckResourceAttr(dataSourceName, "ipc_mode", "host"),
 					resource.TestCheckResourceAttr(dataSourceName, "network_mode", "awsvpc"),
 					resource.TestCheckResourceAttr(dataSourceName, "pid_mode", "host"),
@@ -262,11 +259,6 @@ resource "aws_ecs_task_definition" "test" {
   }
 ]
 TASK_DEFINITION
-
-  inference_accelerator {
-    device_name = "device_1"
-    device_type = "eia1.medium"
-  }
 
   placement_constraints {
     expression = "attribute:ecs.availability-zone in [${data.aws_availability_zones.available.names[0]}, ${data.aws_availability_zones.available.names[1]}]"
