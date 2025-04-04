@@ -197,7 +197,7 @@ func resourceCluster() *schema.Resource {
 															"capacity_reservation_resource_group_arn": {
 																Type:             schema.TypeString,
 																ForceNew:         true,
-																Required:         true,
+																Optional:         true,
 																ValidateDiagFunc: validation.ToDiagFunc(verify.ValidARN),
 															},
 															"usage_strategy": {
@@ -2327,7 +2327,6 @@ func expandCapacityReservationOptions(tfMap map[string]any) *awstypes.OnDemandCa
 	if v, ok := tfMap["capacity_reservation_resource_group_arn"].(string); ok {
 		apiObject.CapacityReservationResourceGroupArn = aws.String(v)
 	}
-
 	if v, ok := tfMap["usage_strategy"].(string); ok {
 		apiObject.UsageStrategy = awstypes.OnDemandCapacityReservationUsageStrategy(v)
 	}
