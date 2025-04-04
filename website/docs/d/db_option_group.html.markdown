@@ -51,7 +51,7 @@ This data source exports the following attributes in addition to the arguments a
 * `db_security_group_membership` - If the option requires access to a port, then this DB security group allows access to the port. See the [`db_security_group_membership` attribute reference](#db-security-group-membership-attribute-reference) below.
 * `vpc_security_group_memberships` - If the option requires access to a port, then this VPC security group allows access to the port. See the [`vpc_security_group_memberships` attribute reference](#vpc-security-group-memberships) below.
 
-### `option_settings` Attribue Reference
+### `option_settings` Attribute Reference
 
 * `name` - The name of the option that has settings that you can set.
 * `value` - The current value of the option setting.
@@ -71,4 +71,4 @@ This data source exports the following attributes in addition to the arguments a
 ### `vpc_security_group_memberships` Attribute Reference
 
 * `vpc_security_group_id` - The name of the VPC security group.
-* `status` - The membership status of the VPC security group. 
+* `status` - The membership status of the VPC security group.
