@@ -41,6 +41,7 @@ const (
 
 // @SDKResource("aws_iam_role", name="Role")
 // @Tags(identifierAttribute="name", resourceType="Role")
+// @IdentityAttribute("name")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/iam/types;types.Role")
 func resourceRole() *schema.Resource {
 	return &schema.Resource{
@@ -48,20 +49,6 @@ func resourceRole() *schema.Resource {
 		ReadWithoutTimeout:   resourceRoleRead,
 		UpdateWithoutTimeout: resourceRoleUpdate,
 		DeleteWithoutTimeout: resourceRoleDelete,
-
-		Identity: &schema.ResourceIdentity{
-			Version: 1,
-			Schema: map[string]*schema.Schema{
-				names.AttrAccountID: {
-					Type:              schema.TypeString,
-					OptionalForImport: true,
-				},
-				names.AttrName: {
-					Type:              schema.TypeString,
-					RequiredForImport: true,
-				},
-			},
-		},
 
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceRoleImport,
@@ -264,18 +251,6 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 	}
 
 	d.SetId(roleName)
-	identity, err := d.Identity()
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-	err = identity.Set(names.AttrAccountID, meta.(*conns.AWSClient).AccountID(ctx))
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-	err = identity.Set(names.AttrName, name)
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
 	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
