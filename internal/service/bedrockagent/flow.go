@@ -13,8 +13,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent/document"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
-	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -23,17 +23,20 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_bedrockagent_flow", name="Flow")
+// @Tags(identifierAttribute="arn")
 func newResourceFlow(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceFlow{}
 
@@ -76,6 +79,8 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 			"description": schema.StringAttribute{
 				Optional: true,
 			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
 			"definition": schema.ListNestedBlock{
@@ -835,6 +840,9 @@ func (r *resourceFlow) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
+	input.ClientToken = aws.String(id.UniqueId())
+	input.Tags = getTagsIn(ctx)
+
 	out, err := conn.CreateFlow(ctx, &input)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -1002,6 +1010,8 @@ type resourceFlowModel struct {
 	CustomerEncryptionKeyARN types.String                                         `tfsdk:"customer_encryption_key_arn"`
 	Definition               fwtypes.ListNestedObjectValueOf[flowDefinitionModel] `tfsdk:"definition"`
 	Description              types.String                                         `tfsdk:"description"`
+	Tags                     tftags.Map                                           `tfsdk:"tags"`
+	TagsAll                  tftags.Map                                           `tfsdk:"tags_all"`
 	Timeouts                 timeouts.Value                                       `tfsdk:"timeouts"`
 }
 
