@@ -105,7 +105,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			TypeName: "aws_s3_account_public_access_block",
 			Name:     "Account Public Access Block",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
+				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
 			},

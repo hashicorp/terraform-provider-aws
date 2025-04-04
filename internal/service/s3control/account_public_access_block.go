@@ -25,6 +25,7 @@ import (
 )
 
 // @SDKResource("aws_s3_account_public_access_block", name="Account Public Access Block")
+// @Region(global=true)
 func resourceAccountPublicAccessBlock() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAccountPublicAccessBlockCreate,
