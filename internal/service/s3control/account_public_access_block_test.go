@@ -58,6 +58,7 @@ func testAccAccountPublicAccessBlock_basic(t *testing.T) {
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrAccountID),
 					resource.TestCheckResourceAttr(resourceName, "block_public_acls", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "block_public_policy", acctest.CtFalse),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrAccountID),
 					resource.TestCheckResourceAttr(resourceName, "ignore_public_acls", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "restrict_public_buckets", acctest.CtFalse),
 				),
@@ -110,6 +111,7 @@ func testAccAccountPublicAccessBlock_AccountID(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAccountPublicAccessBlockExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrAccountID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrAccountID),
 				),
 			},
 			{
