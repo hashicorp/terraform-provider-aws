@@ -73,7 +73,6 @@ This data source exports the following attributes in addition to the arguments a
 * `execution_role_arn` - ARN of the task execution role that the Amazon ECS container agent and the Docker daemon can assume.
 * `family` - A unique name for your task definition.
 The following arguments are optional:
-* `inference_accelerator` - Configuration block(s) with Inference Accelerators settings. [Detailed below.](#inference_accelerator)
 * `ipc_mode` - IPC resource namespace to be used for the containers in the task The valid values are `host`, `task`, and `none`.
 * `memory` - Amount (in MiB) of memory used by the task. If the `requires_compatibilities` is `FARGATE` this field is required.
 * `network_mode` - Docker networking mode to use for the containers in the task. Valid values are `none`, `bridge`, `awsvpc`, and `host`.
@@ -90,11 +89,6 @@ The following arguments are optional:
 ### ephemeral_storage
 
 * `size_in_gib` - The total amount, in GiB, of ephemeral storage to set for the task. The minimum supported value is `21` GiB and the maximum supported value is `200` GiB.
-
-### inference_accelerator
-
-* `device_name` - Elastic Inference accelerator device name. The deviceName must also be referenced in a container definition as a ResourceRequirement.
-* `device_type` - Elastic Inference accelerator type to use.
 
 ### placement_constraints
 
