@@ -493,9 +493,7 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 			}
 
 			if len(v.Identity.Attributes) > 0 {
-				if r.Identity == nil { // Temporary to avoid breaking existing implementations
-					r.Identity = newResourceIdentity(v.Identity)
-				}
+				r.Identity = newResourceIdentity(v.Identity)
 
 				interceptors = append(interceptors, newIdentityInterceptor(v.Identity.Attributes))
 			}
