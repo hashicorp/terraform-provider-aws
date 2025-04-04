@@ -1,4 +1,9 @@
 ## 5.95.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_sns_topic_subscription: Ignore `AuthorizationError` exceptions for `ListSubscriptionByTopic` operations. This fixes a regression introduced in [`v5.94.0`](https://github.com/hashicorp/terraform-provider-aws/pull/42093). ([#42117](https://github.com/hashicorp/terraform-provider-aws/issues/42117))
+
 ## 5.94.0 (April  3, 2025)
 
 NOTES:
