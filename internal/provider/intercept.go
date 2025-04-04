@@ -19,33 +19,50 @@ type schemaResourceData interface {
 	Set(string, any) error
 }
 
-type interceptorOptions struct {
+type interceptorOptions[D any] struct {
 	c    *conns.AWSClient
-	d    schemaResourceData
+	d    D
 	when when
 	why  why
 }
 
-// An interceptor is functionality invoked during the CRUD request lifecycle.
+type (
+	crudInterceptorOptions = interceptorOptions[schemaResourceData]
+)
+
+// An interceptor is functionality invoked during a request's lifecycle.
 // If a Before interceptor returns Diagnostics indicating an error occurred then
 // no further interceptors in the chain are run and neither is the schema's method.
 // In other cases all interceptors in the chain are run.
-type interceptor interface {
-	run(context.Context, interceptorOptions) diag.Diagnostics
+type interceptor[D any] interface {
+	run(context.Context, interceptorOptions[D]) diag.Diagnostics
 }
 
-type interceptorFunc func(context.Context, interceptorOptions) diag.Diagnostics
+type (
+	// crudInterceptor is functionality invoked during a CRUD request lifecycle.
+	crudInterceptor = interceptor[schemaResourceData]
+)
 
-func (f interceptorFunc) run(ctx context.Context, opts interceptorOptions) diag.Diagnostics {
+type interceptorFunc[D any] func(context.Context, interceptorOptions[D]) diag.Diagnostics
+
+func (f interceptorFunc[D]) run(ctx context.Context, opts interceptorOptions[D]) diag.Diagnostics {
 	return f(ctx, opts)
 }
 
-// interceptorItem represents a single interceptor invocation.
-type interceptorItem struct {
+type (
+	crudInterceptorFunc = interceptorFunc[schemaResourceData]
+)
+
+// interceptoryItem represents a single interceptor invocation.
+type interceptorItem[D any] struct {
 	when        when
 	why         why
-	interceptor interceptor
+	interceptor interceptor[D]
 }
+
+type (
+	crudInterceptorItem = interceptorItem[schemaResourceData]
+)
 
 // when represents the point in the CRUD request lifecycle that an interceptor is run.
 // Multiple values can be ORed together.
@@ -71,17 +88,20 @@ const (
 	AllOps = Create | Read | Update | Delete // Interceptor is invoked for all calls
 )
 
-type interceptorItems []interceptorItem
+type interceptorItems[D any] []interceptorItem[D]
 
-// why returns a slice of interceptors that run for the specified CRUD operation.
-func (s interceptorItems) why(why why) interceptorItems {
-	return slices.Filter(s, func(e interceptorItem) bool {
+func (s interceptorItems[D]) why(why why) interceptorItems[D] {
+	return slices.Filter(s, func(e interceptorItem[D]) bool {
 		return e.why&why != 0
 	})
 }
 
+type (
+	crudInterceptorItems = interceptorItems[schemaResourceData]
+)
+
 // interceptedCRUDHandler returns a handler that invokes the specified CRUD handler, running any interceptors.
-func interceptedCRUDHandler[F ~func(context.Context, *schema.ResourceData, any) diag.Diagnostics](bootstrapContext contextFunc, interceptors interceptorItems, f F, why why) F {
+func interceptedCRUDHandler[F ~func(context.Context, *schema.ResourceData, any) diag.Diagnostics](bootstrapContext contextFunc, interceptors crudInterceptorItems, f F, why why) F {
 	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 		ctx, diags := bootstrapContext(ctx, d.GetOk, meta)
 		if diags.HasError() {
@@ -94,7 +114,7 @@ func interceptedCRUDHandler[F ~func(context.Context, *schema.ResourceData, any) 
 		when := Before
 		for _, v := range forward {
 			if v.when&when != 0 {
-				opts := interceptorOptions{
+				opts := crudInterceptorOptions{
 					c:    meta.(*conns.AWSClient),
 					d:    d,
 					when: when,
@@ -120,7 +140,7 @@ func interceptedCRUDHandler[F ~func(context.Context, *schema.ResourceData, any) 
 		}
 		for _, v := range reverse {
 			if v.when&when != 0 {
-				opts := interceptorOptions{
+				opts := crudInterceptorOptions{
 					c:    meta.(*conns.AWSClient),
 					d:    d,
 					when: when,
@@ -133,7 +153,7 @@ func interceptedCRUDHandler[F ~func(context.Context, *schema.ResourceData, any) 
 		when = Finally
 		for _, v := range reverse {
 			if v.when&when != 0 {
-				opts := interceptorOptions{
+				opts := crudInterceptorOptions{
 					c:    meta.(*conns.AWSClient),
 					d:    d,
 					when: when,

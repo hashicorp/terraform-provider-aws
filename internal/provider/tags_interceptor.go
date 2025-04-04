@@ -23,7 +23,7 @@ type tagsResourceInterceptor struct {
 	tagsInterceptor
 }
 
-func newTagsResourceInterceptor(servicePackageResourceTags *types.ServicePackageResourceTags) interceptor {
+func newTagsResourceInterceptor(servicePackageResourceTags *types.ServicePackageResourceTags) crudInterceptor {
 	return &tagsResourceInterceptor{
 		tagsInterceptor: tagsInterceptor{
 			WithTaggingMethods: interceptors.WithTaggingMethods{
@@ -33,7 +33,7 @@ func newTagsResourceInterceptor(servicePackageResourceTags *types.ServicePackage
 	}
 }
 
-func (r tagsResourceInterceptor) run(ctx context.Context, opts interceptorOptions) diag.Diagnostics {
+func (r tagsResourceInterceptor) run(ctx context.Context, opts crudInterceptorOptions) diag.Diagnostics {
 	c := opts.c
 	var diags diag.Diagnostics
 
@@ -181,7 +181,7 @@ type tagsDataSourceInterceptor struct {
 	tagsInterceptor
 }
 
-func newTagsDataSourceInterceptor(servicePackageResourceTags *types.ServicePackageResourceTags) interceptor {
+func newTagsDataSourceInterceptor(servicePackageResourceTags *types.ServicePackageResourceTags) crudInterceptor {
 	return &tagsDataSourceInterceptor{
 		tagsInterceptor: tagsInterceptor{
 			WithTaggingMethods: interceptors.WithTaggingMethods{
@@ -191,7 +191,7 @@ func newTagsDataSourceInterceptor(servicePackageResourceTags *types.ServicePacka
 	}
 }
 
-func (r tagsDataSourceInterceptor) run(ctx context.Context, opts interceptorOptions) diag.Diagnostics {
+func (r tagsDataSourceInterceptor) run(ctx context.Context, opts crudInterceptorOptions) diag.Diagnostics {
 	c := opts.c
 	var diags diag.Diagnostics
 

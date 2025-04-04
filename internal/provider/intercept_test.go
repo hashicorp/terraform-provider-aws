@@ -15,28 +15,28 @@ import (
 func TestInterceptorsWhy(t *testing.T) {
 	t.Parallel()
 
-	var interceptors interceptorItems
+	var interceptors crudInterceptorItems
 
-	interceptors = append(interceptors, interceptorItem{
+	interceptors = append(interceptors, crudInterceptorItem{
 		when: Before,
 		why:  Create,
-		interceptor: interceptorFunc(func(ctx context.Context, opts interceptorOptions) diag.Diagnostics {
+		interceptor: crudInterceptorFunc(func(ctx context.Context, opts crudInterceptorOptions) diag.Diagnostics {
 			var diags diag.Diagnostics
 			return diags
 		}),
 	})
-	interceptors = append(interceptors, interceptorItem{
+	interceptors = append(interceptors, crudInterceptorItem{
 		when: After,
 		why:  Delete,
-		interceptor: interceptorFunc(func(ctx context.Context, opts interceptorOptions) diag.Diagnostics {
+		interceptor: crudInterceptorFunc(func(ctx context.Context, opts crudInterceptorOptions) diag.Diagnostics {
 			var diags diag.Diagnostics
 			return diags
 		}),
 	})
-	interceptors = append(interceptors, interceptorItem{
+	interceptors = append(interceptors, crudInterceptorItem{
 		when: Before,
 		why:  Create,
-		interceptor: interceptorFunc(func(ctx context.Context, opts interceptorOptions) diag.Diagnostics {
+		interceptor: crudInterceptorFunc(func(ctx context.Context, opts crudInterceptorOptions) diag.Diagnostics {
 			var diags diag.Diagnostics
 			return diags
 		}),
@@ -59,28 +59,28 @@ func TestInterceptorsWhy(t *testing.T) {
 func TestInterceptedHandler(t *testing.T) {
 	t.Parallel()
 
-	var interceptors interceptorItems
+	var interceptors crudInterceptorItems
 
-	interceptors = append(interceptors, interceptorItem{
+	interceptors = append(interceptors, crudInterceptorItem{
 		when: Before,
 		why:  Create,
-		interceptor: interceptorFunc(func(ctx context.Context, opts interceptorOptions) diag.Diagnostics {
+		interceptor: crudInterceptorFunc(func(ctx context.Context, opts crudInterceptorOptions) diag.Diagnostics {
 			var diags diag.Diagnostics
 			return diags
 		}),
 	})
-	interceptors = append(interceptors, interceptorItem{
+	interceptors = append(interceptors, crudInterceptorItem{
 		when: After,
 		why:  Delete,
-		interceptor: interceptorFunc(func(ctx context.Context, opts interceptorOptions) diag.Diagnostics {
+		interceptor: crudInterceptorFunc(func(ctx context.Context, opts crudInterceptorOptions) diag.Diagnostics {
 			var diags diag.Diagnostics
 			return diags
 		}),
 	})
-	interceptors = append(interceptors, interceptorItem{
+	interceptors = append(interceptors, crudInterceptorItem{
 		when: Before,
 		why:  Create,
-		interceptor: interceptorFunc(func(ctx context.Context, opts interceptorOptions) diag.Diagnostics {
+		interceptor: crudInterceptorFunc(func(ctx context.Context, opts crudInterceptorOptions) diag.Diagnostics {
 			var diags diag.Diagnostics
 			return diags
 		}),

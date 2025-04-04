@@ -78,13 +78,13 @@ type regionDataSourceInterceptor struct {
 	validateRegionInPartition bool
 }
 
-func newRegionDataSourceInterceptor(validateRegionInPartition bool) interceptor {
+func newRegionDataSourceInterceptor(validateRegionInPartition bool) crudInterceptor {
 	return &regionDataSourceInterceptor{
 		validateRegionInPartition: validateRegionInPartition,
 	}
 }
 
-func (r regionDataSourceInterceptor) run(ctx context.Context, opts interceptorOptions) diag.Diagnostics {
+func (r regionDataSourceInterceptor) run(ctx context.Context, opts crudInterceptorOptions) diag.Diagnostics {
 	c := opts.c
 	var diags diag.Diagnostics
 

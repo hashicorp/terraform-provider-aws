@@ -344,7 +344,7 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 				isRegionOverrideEnabled = true
 			}
 
-			var interceptors interceptorItems
+			var crudInterceptors crudInterceptorItems
 
 			if isRegionOverrideEnabled {
 				v := v.Region
@@ -368,7 +368,7 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 					}
 				}
 
-				interceptors = append(interceptors, interceptorItem{
+				crudInterceptors = append(crudInterceptors, crudInterceptorItem{
 					when:        Before | After,
 					why:         Read,
 					interceptor: newRegionDataSourceInterceptor(v.IsValidateOverrideInPartition),
@@ -376,7 +376,7 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 			}
 
 			if v.Tags != nil {
-				interceptors = append(interceptors, interceptorItem{
+				crudInterceptors = append(crudInterceptors, crudInterceptorItem{
 					when:        Before | After,
 					why:         Read,
 					interceptor: newTagsDataSourceInterceptor(v.Tags),
@@ -402,8 +402,8 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 
 					return ctx, diags
 				},
-				interceptors: interceptors,
-				typeName:     typeName,
+				crudInterceptors: crudInterceptors,
+				typeName:         typeName,
 			}
 			wrapDataSource(r, opts)
 			provider.DataSourcesMap[typeName] = r
@@ -444,7 +444,7 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 
 			var customizeDiffFuncs []schema.CustomizeDiffFunc
 			var importFuncs []schema.StateContextFunc
-			var interceptors interceptorItems
+			var crudInterceptors crudInterceptorItems
 
 			if isRegionOverrideEnabled {
 				v := v.Region
@@ -485,7 +485,7 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 
 			if v.Tags != nil {
 				customizeDiffFuncs = append(customizeDiffFuncs, setTagsAll)
-				interceptors = append(interceptors, interceptorItem{
+				crudInterceptors = append(crudInterceptors, crudInterceptorItem{
 					when:        Before | After | Finally,
 					why:         Create | Read | Update,
 					interceptor: newTagsResourceInterceptor(v.Tags),
@@ -512,9 +512,9 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 
 					return ctx, diags
 				},
+				crudInterceptors:   crudInterceptors,
 				customizeDiffFuncs: customizeDiffFuncs,
 				importFuncs:        importFuncs,
-				interceptors:       interceptors,
 				typeName:           typeName,
 			}
 			wrapResource(r, opts)
