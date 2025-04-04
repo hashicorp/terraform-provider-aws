@@ -1,3 +1,3 @@
 ```release-note:breaking-change
-data-source/aws_service_discovery_service: Attribute `tags_all` has been removed
+data-source/aws_service_discovery_service: Remove `tags_all` attribute
 ```
