@@ -34,34 +34,34 @@ type (
 // If a Before interceptor returns Diagnostics indicating an error occurred then
 // no further interceptors in the chain are run and neither is the schema's method.
 // In other cases all interceptors in the chain are run.
-type interceptor[D any] interface {
-	run(context.Context, interceptorOptions[D]) diag.Diagnostics
+type interceptor[D any, E any] interface {
+	run(context.Context, interceptorOptions[D]) E
 }
 
 type (
 	// crudInterceptor is functionality invoked during a CRUD request lifecycle.
-	crudInterceptor = interceptor[schemaResourceData]
+	crudInterceptor = interceptor[schemaResourceData, diag.Diagnostics]
 )
 
-type interceptorFunc[D any] func(context.Context, interceptorOptions[D]) diag.Diagnostics
+type interceptorFunc[D any, E any] func(context.Context, interceptorOptions[D]) E
 
-func (f interceptorFunc[D]) run(ctx context.Context, opts interceptorOptions[D]) diag.Diagnostics {
+func (f interceptorFunc[D, E]) run(ctx context.Context, opts interceptorOptions[D]) E {
 	return f(ctx, opts)
 }
 
 type (
-	crudInterceptorFunc = interceptorFunc[schemaResourceData]
+	crudInterceptorFunc = interceptorFunc[schemaResourceData, diag.Diagnostics]
 )
 
 // interceptoryItem represents a single interceptor invocation.
-type interceptorItem[D any] struct {
+type interceptorItem[D any, E any] struct {
 	when        when
 	why         why
-	interceptor interceptor[D]
+	interceptor interceptor[D, E]
 }
 
 type (
-	crudInterceptorItem = interceptorItem[schemaResourceData]
+	crudInterceptorItem = interceptorItem[schemaResourceData, diag.Diagnostics]
 )
 
 // when represents the point in the CRUD request lifecycle that an interceptor is run.
@@ -88,16 +88,16 @@ const (
 	AllOps = Create | Read | Update | Delete // Interceptor is invoked for all calls
 )
 
-type interceptorItems[D any] []interceptorItem[D]
+type interceptorItems[D any, E any] []interceptorItem[D, E]
 
-func (s interceptorItems[D]) why(why why) interceptorItems[D] {
-	return slices.Filter(s, func(e interceptorItem[D]) bool {
+func (s interceptorItems[D, E]) why(why why) interceptorItems[D, E] {
+	return slices.Filter(s, func(e interceptorItem[D, E]) bool {
 		return e.why&why != 0
 	})
 }
 
 type (
-	crudInterceptorItems = interceptorItems[schemaResourceData]
+	crudInterceptorItems = interceptorItems[schemaResourceData, diag.Diagnostics]
 )
 
 // interceptedCRUDHandler returns a handler that invokes the specified CRUD handler, running any interceptors.
