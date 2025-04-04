@@ -132,3 +132,14 @@ func GlobalParameterizedIdentity(attributes ...IdentityAttribute) Identity {
 		Attributes: append(baseAttributes, attributes...),
 	}
 }
+
+func GlobalSingletonIdentity() Identity {
+	return Identity{
+		Attributes: []IdentityAttribute{
+			{
+				Name:     "account_id",
+				Required: true,
+			},
+		},
+	}
+}

@@ -168,9 +168,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 				{{- end }}
 				),
 				{{- end }}
-			{{- end }}
-			{{- if $value.ARNIdentity }}
+			{{- else if $value.ARNIdentity }}
 			Identity: itypes.ARNIdentity(),
+			{{- else if $value.SingletonIdentity }}
+				{{- if or $.IsGlobal $value.IsGlobal }}
+				Identity: itypes.GlobalSingletonIdentity(),
+				{{- end }}
 			{{- end }}
 		},
 {{- end }}

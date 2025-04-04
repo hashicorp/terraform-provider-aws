@@ -129,6 +129,7 @@ type ResourceDatum struct {
 	ValidateRegionOverrideInPartition bool
 	IdentityAttributes                []identityAttribute
 	ARNIdentity                       bool
+	SingletonIdentity                 bool
 }
 
 type identityAttribute struct {
@@ -304,6 +305,9 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 			case "ArnIdentity":
 				d.ARNIdentity = true
+
+			case "SingletonIdentity":
+				d.SingletonIdentity = true
 			}
 		}
 	}
