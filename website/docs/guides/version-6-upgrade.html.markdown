@@ -157,6 +157,7 @@ The `base_policy_region` argument has been removed. Use `base_policy_regions` in
 * The `publicly_accessible` attribute now defaults to `false`.
 * Remove `snapshot_copy` from your configuration—it no longer exists. Use the `aws_redshift_snapshot_copy` resource instead.
 * Remove `logging` from your configuration—it no longer exists. Use the `aws_redshift_logging` resource instead.
+* Attributes `cluster_public_key`, `cluster_revision_number`, and `endpoint` are now read only and should not be set.
 
 ## resource/aws_redshift_service_account
 
