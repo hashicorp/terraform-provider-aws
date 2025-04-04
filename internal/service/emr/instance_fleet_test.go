@@ -288,6 +288,22 @@ resource "aws_iam_role_policy_attachment" "emr_service" {
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonElasticMapReduceRole"
 }
 
+resource "aws_iam_role_policy" "capacityreservations" {
+  role = aws_iam_role.emr_service.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+          "ec2:DescribeCapacityReservations",
+        ]
+        Effect   = "Allow"
+        Resource = "*"
+      },
+    ]
+  })
+}
+
 resource "aws_iam_instance_profile" "emr_instance_profile" {
   name = "%[1]s_profile"
   role = aws_iam_role.emr_instance_profile.name
@@ -369,6 +385,16 @@ resource "aws_emr_cluster" "test" {
   }
 
   core_instance_fleet {
+    launch_specifications {
+      on_demand_specification {
+        allocation_strategy = "prioritized"
+        capacity_reservation_options {
+          capacity_reservation_preference = "open"
+          usage_strategy                  = "use-capacity-reservations-first"
+        }
+      }
+    }
+
     instance_type_configs {
       bid_price_as_percentage_of_on_demand_price = 100
 
@@ -379,6 +405,7 @@ resource "aws_emr_cluster" "test" {
       }
 
       instance_type     = "m4.xlarge"
+      priority          = 1
       weighted_capacity = 1
     }
     name                      = "core fleet"

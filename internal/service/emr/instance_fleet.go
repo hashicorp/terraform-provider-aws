@@ -161,9 +161,11 @@ func resourceInstanceFleet() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"allocation_strategy": {
-										Type:             schema.TypeString,
-										Required:         true,
-										ForceNew:         true,
+										Type:     schema.TypeString,
+										Required: true,
+										ForceNew: true,
+										// The return value from api is wrong
+										DiffSuppressFunc: SuppressEquivalentStringScreamingSnakeCaseKebabCase,
 										ValidateDiagFunc: enum.Validate[awstypes.OnDemandProvisioningAllocationStrategy](),
 									},
 									"capacity_reservation_options": {
@@ -178,6 +180,8 @@ func resourceInstanceFleet() *schema.Resource {
 													ForceNew:         true,
 													Optional:         true,
 													ValidateDiagFunc: enum.Validate[awstypes.OnDemandCapacityReservationPreference](),
+													// The return value from api is wrong
+													DiffSuppressFunc: SuppressEquivalentStringScreamingSnakeCaseKebabCase,
 												},
 												"capacity_reservation_resource_group_arn": {
 													Type:             schema.TypeString,
@@ -190,6 +194,8 @@ func resourceInstanceFleet() *schema.Resource {
 													ForceNew:         true,
 													Optional:         true,
 													ValidateDiagFunc: enum.Validate[awstypes.OnDemandCapacityReservationUsageStrategy](),
+													// The return value from api is wrong
+													DiffSuppressFunc: SuppressEquivalentStringScreamingSnakeCaseKebabCase,
 												},
 											},
 										},
@@ -205,9 +211,11 @@ func resourceInstanceFleet() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"allocation_strategy": {
-										Type:             schema.TypeString,
-										ForceNew:         true,
-										Required:         true,
+										Type:     schema.TypeString,
+										ForceNew: true,
+										Required: true,
+										// The return value from api is wrong
+										DiffSuppressFunc: SuppressEquivalentStringScreamingSnakeCaseKebabCase,
 										ValidateDiagFunc: enum.Validate[awstypes.SpotProvisioningAllocationStrategy](),
 									},
 									"block_duration_minutes": {

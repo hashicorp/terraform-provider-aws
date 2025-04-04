@@ -1590,7 +1590,7 @@ func TestAccEMRCluster_InstanceFleet_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "ec2_attributes.0.subnet_ids.*", subnetResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "master_instance_group.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "core_instance_group.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "core_instance_fleet.0.launch_specifications.0.spot_specification.0.allocation_strategy", "capacity-optimized"),
+					resource.TestCheckResourceAttr(resourceName, "core_instance_fleet.0.launch_specifications.0.spot_specification.0.allocation_strategy", "CAPACITY_OPTIMIZED"),
 				),
 			},
 			{
