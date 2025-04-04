@@ -1,4 +1,5 @@
-## 5.94.1 (Unreleased)
+## 5.95.0 (Unreleased)
+## 5.94.1 (April  4, 2025)
 
 BUG FIXES:
 
