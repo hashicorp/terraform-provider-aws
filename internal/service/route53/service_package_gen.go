@@ -171,6 +171,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
 			},
+			Identity: itypes.GlobalParameterizedIdentity(
+				itypes.StringIdentityAttribute("zone_id", true),
+				itypes.StringIdentityAttribute(names.AttrName, true),
+				itypes.StringIdentityAttribute(names.AttrType, true),
+				itypes.StringIdentityAttribute("set_identifier", false),
+			),
 		},
 		{
 			Factory:  resourceTrafficPolicy,

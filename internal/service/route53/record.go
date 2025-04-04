@@ -31,6 +31,10 @@ import (
 )
 
 // @SDKResource("aws_route53_record", name="Record")
+// @IdentityAttribute("zone_id")
+// @IdentityAttribute("name")
+// @IdentityAttribute("type")
+// @IdentityAttribute("set_identifier", optional="true")
 func resourceRecord() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -38,32 +42,6 @@ func resourceRecord() *schema.Resource {
 		ReadWithoutTimeout:   resourceRecordRead,
 		UpdateWithoutTimeout: resourceRecordUpdate,
 		DeleteWithoutTimeout: resourceRecordDelete,
-
-		Identity: &schema.ResourceIdentity{
-			Version: 1,
-			Schema: map[string]*schema.Schema{
-				names.AttrAccountID: {
-					Type:              schema.TypeString,
-					OptionalForImport: true,
-				},
-				"zone_id": {
-					Type:              schema.TypeString,
-					RequiredForImport: true,
-				},
-				names.AttrName: {
-					Type:              schema.TypeString,
-					RequiredForImport: true,
-				},
-				names.AttrType: {
-					Type:              schema.TypeString,
-					RequiredForImport: true,
-				},
-				"set_identifier": {
-					Type:              schema.TypeString,
-					OptionalForImport: true,
-				},
-			},
-		},
 
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
@@ -418,32 +396,6 @@ func resourceRecordCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		vars = append(vars, v.(string))
 	}
 	d.SetId(strings.Join(vars, "_"))
-	identity, err := d.Identity()
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-	err = identity.Set(names.AttrAccountID, meta.(*conns.AWSClient).AccountID(ctx))
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-	err = identity.Set("zone_id", zoneID)
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-	err = identity.Set(names.AttrName, strings.ToLower(d.Get(names.AttrName).(string)))
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-	err = identity.Set(names.AttrType, d.Get(names.AttrType).(string))
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-	if v, ok := d.GetOk("set_identifier"); ok {
-		err = identity.Set("set_identifier", v.(string))
-		if err != nil {
-			return sdkdiag.AppendFromErr(diags, err)
-		}
-	}
 
 	if output := outputRaw.(*route53.ChangeResourceRecordSetsOutput); output.ChangeInfo != nil {
 		if _, err := waitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id), d.Timeout(schema.TimeoutCreate)); err != nil {
