@@ -6,18 +6,17 @@ package securitylake
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/securitylake"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/securitylake/types"
-	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -47,51 +46,35 @@ func (r *awsLogSourceResource) Schema(ctx context.Context, request resource.Sche
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: framework.IDAttribute(),
-		},
-		Blocks: map[string]schema.Block{
-			names.AttrSource: schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[awsLogSourceSourceModel](ctx),
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.RequiresReplace(),
+			"accounts": schema.SetAttribute{
+				CustomType:  fwtypes.SetOfStringType,
+				ElementType: types.StringType,
+				Optional:    true,
+				Computed:    true,
+				PlanModifiers: []planmodifier.Set{
+					setplanmodifier.RequiresReplace(),
 				},
-				Validators: []validator.List{
-					listvalidator.IsRequired(),
-					listvalidator.SizeAtLeast(1),
-					listvalidator.SizeAtMost(1),
+			},
+			"regions": schema.SetAttribute{
+				CustomType:  fwtypes.SetOfStringType,
+				ElementType: types.StringType,
+				Required:    true,
+				PlanModifiers: []planmodifier.Set{
+					setplanmodifier.RequiresReplace(),
 				},
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"accounts": schema.SetAttribute{
-							CustomType:  fwtypes.SetOfStringType,
-							ElementType: types.StringType,
-							Optional:    true,
-							Computed:    true,
-							PlanModifiers: []planmodifier.Set{
-								setplanmodifier.RequiresReplace(),
-							},
-						},
-						"regions": schema.SetAttribute{
-							CustomType:  fwtypes.SetOfStringType,
-							ElementType: types.StringType,
-							Required:    true,
-							PlanModifiers: []planmodifier.Set{
-								setplanmodifier.RequiresReplace(),
-							},
-						},
-						"source_name": schema.StringAttribute{
-							Required: true,
-							PlanModifiers: []planmodifier.String{
-								stringplanmodifier.RequiresReplace(),
-							},
-						},
-						"source_version": schema.StringAttribute{
-							Optional: true,
-							Computed: true,
-							PlanModifiers: []planmodifier.String{
-								stringplanmodifier.RequiresReplace(),
-							},
-						},
-					},
+			},
+			"source_name": schema.StringAttribute{
+				Required:   true,
+				CustomType: fwtypes.StringEnumType[awstypes.AwsLogSourceName](),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			"source_version": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
 				},
 			},
 		},
@@ -107,11 +90,19 @@ func (r *awsLogSourceResource) Create(ctx context.Context, request resource.Crea
 
 	conn := r.Meta().SecurityLakeClient(ctx)
 
+	in := fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
+
+	inLog, outLog := setupSerializationObjects[awsLogSourceResourceModel, awstypes.AwsLogSourceConfiguration](in)
+
 	input := &securitylake.CreateAwsLogSourceInput{}
-	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+	response.Diagnostics.Append(fwflex.Expand(ctx, inLog, &outLog)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	input.Sources = outLog.Data
+
+	log.Printf("[WARN] input: %v", input)
 
 	_, err := retryDataLakeConflictWithMutex(ctx, func() (*securitylake.CreateAwsLogSourceOutput, error) {
 		return conn.CreateAwsLogSource(ctx, input)
@@ -126,6 +117,8 @@ func (r *awsLogSourceResource) Create(ctx context.Context, request resource.Crea
 	// Set values for unknowns.
 	data.ID = fwflex.StringValueToFramework(ctx, input.Sources[0].SourceName)
 
+	log.Printf("[WARN] data.ID: %v", data.ID)
+
 	logSource, err := findAWSLogSourceBySourceName(ctx, conn, awstypes.AwsLogSourceName(data.ID.ValueString()))
 
 	if err != nil {
@@ -134,15 +127,8 @@ func (r *awsLogSourceResource) Create(ctx context.Context, request resource.Crea
 		return
 	}
 
-	sourceData, diags := data.Source.ToPtr(ctx)
-	response.Diagnostics.Append(diags...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	sourceData.Accounts.SetValue = fwflex.FlattenFrameworkStringValueSet(ctx, logSource.Accounts)
-	sourceData.SourceVersion = fwflex.StringToFramework(ctx, logSource.SourceVersion)
-	data.Source = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, sourceData)
+	data.Accounts.SetValue = fwflex.FlattenFrameworkStringValueSet(ctx, logSource.Accounts)
+	data.SourceVersion = fwflex.StringToFramework(ctx, logSource.SourceVersion)
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
@@ -157,6 +143,7 @@ func (r *awsLogSourceResource) Read(ctx context.Context, request resource.ReadRe
 	conn := r.Meta().SecurityLakeClient(ctx)
 
 	logSource, err := findAWSLogSourceBySourceName(ctx, conn, awstypes.AwsLogSourceName(data.ID.ValueString()))
+	log.Printf("[WARN] DID I GET HEERE logSource: %v", logSource)
 
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -172,13 +159,14 @@ func (r *awsLogSourceResource) Read(ctx context.Context, request resource.ReadRe
 	}
 
 	// We can't use AutoFlEx with the top-level resource model because the API structure uses Go interfaces.
-	var sourceData awsLogSourceSourceModel
+	var sourceData awsLogSourceResourceModel
 	response.Diagnostics.Append(fwflex.Flatten(ctx, logSource, &sourceData)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	data.Source = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &sourceData)
+	sourceData.ID = types.StringValue(string(logSource.SourceName))
+	data = sourceData
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -192,11 +180,17 @@ func (r *awsLogSourceResource) Delete(ctx context.Context, request resource.Dele
 
 	conn := r.Meta().SecurityLakeClient(ctx)
 
+	in := fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
+
+	delete1, delete2 := setupSerializationObjects[awsLogSourceResourceModel, awstypes.AwsLogSourceConfiguration](in)
+
 	input := &securitylake.DeleteAwsLogSourceInput{}
-	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+	response.Diagnostics.Append(fwflex.Expand(ctx, delete1, &delete2)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	input.Sources = delete2.Data
 
 	// Workaround for acceptance tests deletion.
 	if len(input.Sources) == 0 {
@@ -271,14 +265,31 @@ func findAWSLogSourceBySourceName(ctx context.Context, conn *securitylake.Client
 	return output, nil
 }
 
-type awsLogSourceResourceModel struct {
-	ID     types.String                                             `tfsdk:"id"`
-	Source fwtypes.ListNestedObjectValueOf[awsLogSourceSourceModel] `tfsdk:"source"`
+func (r *awsLogSourceResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	log.Printf("[WARN] DID I GET HERE importstate: %v", req)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
-type awsLogSourceSourceModel struct {
-	Accounts      fwtypes.SetValueOf[types.String] `tfsdk:"accounts"`
-	Regions       fwtypes.SetValueOf[types.String] `tfsdk:"regions"`
-	SourceName    types.String                     `tfsdk:"source_name"`
-	SourceVersion types.String                     `tfsdk:"source_version"`
+type awsLogSourceResourceModel struct {
+	ID            types.String                                  `tfsdk:"id"`
+	Accounts      fwtypes.SetValueOf[types.String]              `tfsdk:"accounts"`
+	Regions       fwtypes.SetValueOf[types.String]              `tfsdk:"regions"`
+	SourceName    fwtypes.StringEnum[awstypes.AwsLogSourceName] `tfsdk:"source_name"`
+	SourceVersion types.String                                  `tfsdk:"source_version"`
+}
+
+type objectForInput[T any] struct {
+	Data fwtypes.ListNestedObjectValueOf[T]
+}
+
+type objectForOutput[T any] struct {
+	Data []T
+}
+
+func setupSerializationObjects[T any, V any](input fwtypes.ListNestedObjectValueOf[T]) (objectForInput[T], objectForOutput[V]) { //nolint:unparam
+	in := objectForInput[T]{
+		Data: input,
+	}
+
+	return in, objectForOutput[V]{}
 }
