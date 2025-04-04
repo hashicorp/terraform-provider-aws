@@ -109,6 +109,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
 			},
+			Identity: itypes.GlobalSingletonIdentity(),
 		},
 		{
 			Factory:  resourceAccessPointPolicy,

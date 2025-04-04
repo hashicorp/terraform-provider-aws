@@ -138,7 +138,7 @@ func GlobalSingletonIdentity() Identity {
 		Attributes: []IdentityAttribute{
 			{
 				Name:     "account_id",
-				Required: true,
+				Required: false,
 			},
 		},
 	}
