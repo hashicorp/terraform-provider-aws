@@ -1,6 +1,6 @@
 module github.com/hashicorp/terraform-provider-aws
 
-go 1.23.7
+go 1.23.8
 
 // Disable experimental post-quantum key exchange mechanism X25519Kyber768Draft00
 // This was causing errors with AWS Network Firewall
