@@ -125,7 +125,6 @@ func TestAccS3Bucket_Basic_basic(t *testing.T) {
 func TestAccS3Bucket_Basic_Identity(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix("tf-test-bucket")
-	region := acctest.Region()
 	resourceName := "aws_s3_bucket.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -145,7 +144,7 @@ func TestAccS3Bucket_Basic_Identity(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
-						names.AttrRegion:    knownvalue.StringExact(region),
+						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
 						names.AttrBucket:    knownvalue.StringExact(rName),
 					}),
 				},
