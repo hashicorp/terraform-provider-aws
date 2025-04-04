@@ -143,3 +143,18 @@ func GlobalSingletonIdentity() Identity {
 		},
 	}
 }
+
+func RegionalSingletonIdentity() Identity {
+	return Identity{
+		Attributes: []IdentityAttribute{
+			{
+				Name:     "account_id",
+				Required: false,
+			},
+			{
+				Name:     "region",
+				Required: false,
+			},
+		},
+	}
+}

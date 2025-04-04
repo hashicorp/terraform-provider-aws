@@ -173,6 +173,8 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			{{- else if $value.SingletonIdentity }}
 				{{- if or $.IsGlobal $value.IsGlobal }}
 				Identity: itypes.GlobalSingletonIdentity(),
+				{{ else }}
+				Identity: itypes.RegionalSingletonIdentity(),
 				{{- end }}
 			{{- end }}
 		},

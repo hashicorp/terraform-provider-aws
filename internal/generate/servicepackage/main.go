@@ -448,7 +448,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					v.sdkResources[typeName] = d
 				}
 
-			case "IdentityAttribute", "ArnIdentity", "Region", "Tags":
+			case "IdentityAttribute", "ArnIdentity", "SingletonIdentity", "Region", "Tags":
 				// Handled above.
 			case "Testing":
 				// Ignored.
