@@ -149,9 +149,8 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 										Required: true,
 									},
 									"type": schema.StringAttribute{
-										// CustomType: fwtypes.StringEnumType[awstypes.FlowConnectionType](),
-										// TODO: could this be computed by us instead?
-										Required: true,
+										CustomType: fwtypes.StringEnumType[awstypes.FlowConnectionType](),
+										Required:   true,
 									},
 								},
 								Blocks: map[string]schema.Block{
@@ -209,9 +208,8 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 										Required: true,
 									},
 									"type": schema.StringAttribute{
-										// CustomType: fwtypes.StringEnumType[awstypes.FlowNodeType](),
-										// TODO: could this be computed by us instead?
-										Required: true,
+										CustomType: fwtypes.StringEnumType[awstypes.FlowNodeType](),
+										Required:   true,
 									},
 								},
 								Blocks: map[string]schema.Block{
@@ -388,9 +386,8 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 																						Required: true,
 																					},
 																					"template_type": schema.StringAttribute{
-																						// CustomType: fwtypes.StringEnumType[awstypes.PromptTemplateType](),
-																						// TODO: could this be computed by us instead?
-																						Required: true,
+																						CustomType: fwtypes.StringEnumType[awstypes.PromptTemplateType](),
+																						Required:   true,
 																					},
 																					"additional_model_request_fields": schema.StringAttribute{
 																						CustomType: fwtypes.NewSmithyJSONType(ctx, document.NewLazyDocument),
@@ -421,8 +418,8 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 																												NestedObject: schema.NestedBlockObject{
 																													Attributes: map[string]schema.Attribute{
 																														"role": schema.StringAttribute{
-																															// CustomType: fwtypes.StringEnum[awstypes.ConversationRole],
-																															Required: true,
+																															CustomType: fwtypes.StringEnumType[awstypes.ConversationRole](),
+																															Required:   true,
 																														},
 																													},
 																													Blocks: map[string]schema.Block{
@@ -445,8 +442,8 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 																																		NestedObject: schema.NestedBlockObject{
 																																			Attributes: map[string]schema.Attribute{
 																																				"type": schema.StringAttribute{
-																																					// CustomType: fwtypes.StringEnum[awstypes.CachePointType],
-																																					Required: true,
+																																					CustomType: fwtypes.StringEnumType[awstypes.CachePointType](),
+																																					Required:   true,
 																																				},
 																																			},
 																																		},
@@ -492,8 +489,8 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 																															NestedObject: schema.NestedBlockObject{
 																																Attributes: map[string]schema.Attribute{
 																																	"type": schema.StringAttribute{
-																																		// CustomType: fwtypes.StringEnum[awstypes.CachePointType],
-																																		Required: true,
+																																		CustomType: fwtypes.StringEnumType[awstypes.CachePointType](),
+																																		Required:   true,
 																																	},
 																																},
 																															},
@@ -537,8 +534,8 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 																																		NestedObject: schema.NestedBlockObject{
 																																			Attributes: map[string]schema.Attribute{
 																																				"type": schema.StringAttribute{
-																																					// CustomType: fwtypes.StringEnum[awstypes.CachePointType],
-																																					Required: true,
+																																					CustomType: fwtypes.StringEnumType[awstypes.CachePointType](),
+																																					Required:   true,
 																																				},
 																																			},
 																																		},
@@ -657,8 +654,8 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 																												NestedObject: schema.NestedBlockObject{
 																													Attributes: map[string]schema.Attribute{
 																														"type": schema.StringAttribute{
-																															// CustomType: fwtypes.StringEnum[awstypes.CachePointType],
-																															Required: true,
+																															CustomType: fwtypes.StringEnumType[awstypes.CachePointType](),
+																															Required:   true,
 																														},
 																													},
 																												},
@@ -839,8 +836,8 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 													Required: true,
 												},
 												"type": schema.StringAttribute{
-													// CustomType: fwtypes.StringEnumType[awstypes.FlowNodeIODataType](),
-													Required: true,
+													CustomType: fwtypes.StringEnumType[awstypes.FlowNodeIODataType](),
+													Required:   true,
 												},
 											},
 										},
@@ -853,8 +850,8 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 													Required: true,
 												},
 												"type": schema.StringAttribute{
-													// CustomType: fwtypes.StringEnumType[awstypes.FlowNodeIODataType](),
-													Required: true,
+													CustomType: fwtypes.StringEnumType[awstypes.FlowNodeIODataType](),
+													Required:   true,
 												},
 											},
 										}},
