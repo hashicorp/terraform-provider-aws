@@ -454,7 +454,9 @@ The `and` configuration block supports the following arguments:
 * `object_size_greater_than` - (Optional) Minimum object size to which the rule applies. Value must be at least `0` if specified. Defaults to 128000 (128 KB) for all `storage_class` values unless `transition_default_minimum_object_size` specifies otherwise.
 * `object_size_less_than` - (Optional) Maximum object size to which the rule applies. Value must be at least `1` if specified.
 * `prefix` - (Optional) Prefix identifying one or more objects to which the rule applies.
-* `tags` - (Optional) Key-value map of resource tags. All of these tags must exist in the object's tag set in order for the rule to apply.
+* `tags` - (Optional) Key-value map of resource tags.
+  All of these tags must exist in the object's tag set in order for the rule to apply.
+  If set, must contain at least one key-value pair.
 
 ### tag
 
