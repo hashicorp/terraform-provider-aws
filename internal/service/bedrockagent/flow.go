@@ -261,10 +261,19 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 														listvalidator.SizeAtMost(1),
 													},
 													NestedObject: schema.NestedBlockObject{
-														Attributes: map[string]schema.Attribute{
-															"conditions": schema.ListAttribute{
+														Blocks: map[string]schema.Block{
+															"condition": schema.ListNestedBlock{
 																CustomType: fwtypes.NewListNestedObjectTypeOf[flowConditionModel](ctx),
-																Required:   true,
+																NestedObject: schema.NestedBlockObject{
+																	Attributes: map[string]schema.Attribute{
+																		"name": schema.StringAttribute{
+																			Required: true,
+																		},
+																		"expression": schema.StringAttribute{
+																			Optional: true,
+																		},
+																	},
+																},
 															},
 														},
 													},
@@ -688,17 +697,17 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 																									NestedObject: schema.NestedBlockObject{
 																										Attributes: map[string]schema.Attribute{
 																											"max_tokens": schema.Int32Attribute{
-																												Required: true,
+																												Optional: true,
 																											},
 																											"stop_sequences": schema.ListAttribute{
 																												ElementType: types.StringType,
-																												Required:    true,
+																												Optional:    true,
 																											},
 																											"temperature": schema.Float32Attribute{
-																												Required: true,
+																												Optional: true,
 																											},
 																											"top_p": schema.Float32Attribute{
-																												Required: true,
+																												Optional: true,
 																											},
 																										},
 																									},
@@ -819,7 +828,7 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 											},
 										},
 									},
-									"inputs": schema.ListNestedBlock{
+									"input": schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[flowNodeInputModel](ctx),
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
@@ -836,7 +845,7 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 											},
 										},
 									},
-									"outputs": schema.ListNestedBlock{
+									"output": schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[flowNodeOutputModel](ctx),
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
@@ -1293,8 +1302,8 @@ type flowNodeModel struct {
 	Name          types.String                                                `tfsdk:"name"`
 	Type          fwtypes.StringEnum[awstypes.FlowNodeType]                   `tfsdk:"type"`
 	Configuration fwtypes.ListNestedObjectValueOf[flowNodeConfigurationModel] `tfsdk:"configuration"`
-	Inputs        fwtypes.ListNestedObjectValueOf[flowNodeInputModel]         `tfsdk:"inputs"`
-	Outputs       fwtypes.ListNestedObjectValueOf[flowNodeOutputModel]        `tfsdk:"outputs"`
+	Inputs        fwtypes.ListNestedObjectValueOf[flowNodeInputModel]         `tfsdk:"input"`
+	Outputs       fwtypes.ListNestedObjectValueOf[flowNodeOutputModel]        `tfsdk:"output"`
 }
 
 // Tagged union
@@ -1636,7 +1645,7 @@ type flowNodeConfigurationMemberCollectorModel struct {
 }
 
 type flowNodeConfigurationMemberConditionModel struct {
-	Conditions fwtypes.ListNestedObjectValueOf[flowConditionModel] `tfsdk:"conditions"`
+	Conditions fwtypes.ListNestedObjectValueOf[flowConditionModel] `tfsdk:"condition"`
 }
 
 type flowConditionModel struct {
