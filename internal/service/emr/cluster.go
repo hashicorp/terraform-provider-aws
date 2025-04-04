@@ -180,8 +180,6 @@ func resourceCluster() *schema.Resource {
 													Required:         true,
 													ForceNew:         true,
 													ValidateDiagFunc: enum.Validate[awstypes.OnDemandProvisioningAllocationStrategy](),
-													// The return value from api is wrong
-													DiffSuppressFunc: SuppressEquivalentStringScreamingSnakeCaseKebabCase,
 												},
 												"capacity_reservation_options": {
 													Type:     schema.TypeList,
@@ -191,11 +189,9 @@ func resourceCluster() *schema.Resource {
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"capacity_reservation_preference": {
-																Type:     schema.TypeString,
-																ForceNew: true,
-																Optional: true,
-																// The return value from api is wrong
-																DiffSuppressFunc: SuppressEquivalentStringScreamingSnakeCaseKebabCase,
+																Type:             schema.TypeString,
+																ForceNew:         true,
+																Optional:         true,
 																ValidateDiagFunc: enum.Validate[awstypes.OnDemandCapacityReservationPreference](),
 															},
 															"capacity_reservation_resource_group_arn": {
@@ -205,11 +201,9 @@ func resourceCluster() *schema.Resource {
 																ValidateDiagFunc: validation.ToDiagFunc(verify.ValidARN),
 															},
 															"usage_strategy": {
-																Type:     schema.TypeString,
-																ForceNew: true,
-																Optional: true,
-																// The return value from api is wrong
-																DiffSuppressFunc: SuppressEquivalentStringScreamingSnakeCaseKebabCase,
+																Type:             schema.TypeString,
+																ForceNew:         true,
+																Optional:         true,
 																ValidateDiagFunc: enum.Validate[awstypes.OnDemandCapacityReservationUsageStrategy](),
 															},
 														},
@@ -2186,7 +2180,7 @@ func flattenOnDemandProvisioningSpecification(apiObject *awstypes.OnDemandProvis
 	tfMap := map[string]any{
 		// The return value from api is wrong. it return the value with uppercase letters and '_' vs. '-'
 		// The value needs to be normalized to avoid perpetual difference in the Terraform plan
-		"allocation_strategy":          apiObject.AllocationStrategy,
+		"allocation_strategy":          convertScreamingSnakeCaseKebabCase(string(apiObject.AllocationStrategy)),
 		"capacity_reservation_options": flattenCapacityReservationOptions(apiObject.CapacityReservationOptions),
 	}
 
@@ -2199,9 +2193,9 @@ func flattenCapacityReservationOptions(apiObject *awstypes.OnDemandCapacityReser
 	}
 
 	tfMap := map[string]any{
-		"capacity_reservation_preference":         apiObject.CapacityReservationPreference,
+		"capacity_reservation_preference":         convertScreamingSnakeCaseKebabCase(string(apiObject.CapacityReservationPreference)),
 		"capacity_reservation_resource_group_arn": apiObject.CapacityReservationResourceGroupArn,
-		"usage_strategy":                          apiObject.UsageStrategy,
+		"usage_strategy":                          convertScreamingSnakeCaseKebabCase(string(apiObject.UsageStrategy)),
 	}
 
 	return []any{tfMap}
@@ -2221,7 +2215,7 @@ func flattenSpotProvisioningSpecification(apiObject *awstypes.SpotProvisioningSp
 		tfMap["block_duration_minutes"] = aws.ToInt32(apiObject.BlockDurationMinutes)
 	}
 
-	tfMap["allocation_strategy"] = apiObject.AllocationStrategy
+	tfMap["allocation_strategy"] = strings.Replace(strings.ToLower(string(apiObject.AllocationStrategy)), "_", "-", -1)
 
 	return []any{tfMap}
 }
@@ -2453,9 +2447,6 @@ func flattenPlacementGroupConfigs(apiObjects []awstypes.PlacementGroupConfig) []
 	return tfList
 }
 
-// SuppressEquivalentStringScreamingSnakeCaseKebabCase provides custom difference suppression
-// for strings that are equal between SOME_LONG_STRING and some-long-string.
-func SuppressEquivalentStringScreamingSnakeCaseKebabCase(k, old, new string, _ *schema.ResourceData) bool {
-	return strings.EqualFold(new, strings.Replace(strings.ToLower(old), "_", "-", -1))
-
+func convertScreamingSnakeCaseKebabCase(s string) string {
+	return strings.Replace(strings.ToLower(s), "_", "-", -1)
 }
