@@ -21,11 +21,16 @@ Upgrade topics:
 - [AWS OpsWorks Stacks End of Life](#aws-opsworks-stacks-end-of-life)
 - [data-source/aws_ami](#data-sourceaws_ami)
 - [data-source/aws_batch_compute_environment](#data-sourceaws_batch_compute_environment)
+- [data-source/aws_ecs_task_definition](#data-sourceaws_ecs_task_definition)
+- [data-source/aws_ecs_task_execution](#data-sourceaws_ecs_task_execution)
 - [data-source/aws_globalaccelerator_accelerator](#data-sourceaws_globalaccelerator_accelerator)
+- [data-source/aws_launch_template](#data-sourceaws_launch_template)
 - [resource/aws_batch_compute_environment](#resourceaws_batch_compute_environment)
 - [resource/aws_cloudfront_response_headers_policy](#resourceaws_cloudfront_response_headers_policy)
+- [resource/aws_ecs_task_definition](#resourceaws_ecs_task_definition)
 - [resource/aws_instance](#resourceaws_instance)
 - [resource/aws_kinesis_analytics_application](#resourceaws_kinesis_analytics_application)
+- [resource/aws_launch_template](#resourceaws_launch_template)
 - [resource/aws_networkmanager_core_network](#resourceaws_networkmanager_core_network)
 - [resource/aws_redshift_cluster](#resourceaws_redshift_cluster)
 - [resource/aws_redshift_service_account](#resourceaws_redshift_service_account)
@@ -136,9 +141,29 @@ This is not recommended.
 * `compute_environment_name` has been renamed to `name`.
 * `compute_environment_name_prefix` has been renamed to `name_prefix`.
 
+## data-source/aws_ecs_task_definition
+
+Remove `inference_accelerator` from your configuration—it no longer exists. Amazon Elastic Inference reached end of life in April 2024.
+
+## data-source/aws_ecs_task_execution
+
+Remove `inference_accelerator_overrides` from your configuration—it no longer exists. Amazon Elastic Inference reached end of life in April 2024.
+
+## data-source/aws_launch_template
+
+Remove `elastic_inference_accelerator` from your configuration—it no longer exists. Amazon Elastic Inference reached end of life in April 2024.
+
 ## resource/aws_cloudfront_response_headers_policy
 
 The `etag` argument is now computed only.
+
+## resource/aws_ecs_task_definition
+
+Remove `inference_accelerator` from your configuration—it no longer exists. Amazon Elastic Inference reached end of life in April 2024.
+
+## resource/aws_launch_template
+
+Remove `elastic_inference_accelerator` from your configuration—it no longer exists. Amazon Elastic Inference reached end of life in April 2024.
 
 ## resource/aws_instance
 
