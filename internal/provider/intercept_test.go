@@ -95,7 +95,7 @@ func TestInterceptedHandler(t *testing.T) {
 		return ctx, diags
 	}
 
-	diags := interceptedHandler(bootstrapContext, interceptors, read, Read)(context.Background(), nil, 42)
+	diags := interceptedCRUDHandler(bootstrapContext, interceptors, read, Read)(context.Background(), nil, 42)
 	if got, want := len(diags), 1; got != want {
 		t.Errorf("length of diags = %v, want %v", got, want)
 	}

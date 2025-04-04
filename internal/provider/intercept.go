@@ -80,8 +80,8 @@ func (s interceptorItems) why(why why) interceptorItems {
 	})
 }
 
-// interceptedHandler returns a handler that invokes the specified CRUD handler, running any interceptors.
-func interceptedHandler[F ~func(context.Context, *schema.ResourceData, any) diag.Diagnostics](bootstrapContext contextFunc, interceptors interceptorItems, f F, why why) F {
+// interceptedCRUDHandler returns a handler that invokes the specified CRUD handler, running any interceptors.
+func interceptedCRUDHandler[F ~func(context.Context, *schema.ResourceData, any) diag.Diagnostics](bootstrapContext contextFunc, interceptors interceptorItems, f F, why why) F {
 	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 		ctx, diags := bootstrapContext(ctx, d.GetOk, meta)
 		if diags.HasError() {
