@@ -482,7 +482,12 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 						interceptor: newVerifyRegionValueInConfiguredPartitionCustomizeDiffInterceptor(),
 					})
 				}
-				customizeDiffFuncs = append(customizeDiffFuncs, defaultRegionValue)
+				//customizeDiffFuncs = append(customizeDiffFuncs, defaultRegionValue)
+				customizeDiffInterceptors = append(customizeDiffInterceptors, customizeDiffInterceptorItem{
+					when:        Before,
+					why:         CustomizeDiff,
+					interceptor: newDefaultRegionValueCustomizeDiffInterceptor(),
+				})
 				if !v.IsGlobal {
 					customizeDiffFuncs = append(customizeDiffFuncs, forceNewIfRegionValueChanges)
 				}

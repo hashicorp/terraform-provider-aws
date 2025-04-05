@@ -70,6 +70,29 @@ func defaultRegionValue(ctx context.Context, d *schema.ResourceDiff, meta any) e
 	return nil
 }
 
+type defaultRegionValueCustomizeDiffInterceptor struct{}
+
+func newDefaultRegionValueCustomizeDiffInterceptor() customizeDiffInterceptor {
+	return &defaultRegionValueCustomizeDiffInterceptor{}
+}
+
+func (r defaultRegionValueCustomizeDiffInterceptor) run(ctx context.Context, opts customizeDiffInterceptorOptions) error {
+	c := opts.c
+
+	switch d, when, why := opts.d, opts.when, opts.why; when {
+	case Before:
+		switch why {
+		case CustomizeDiff:
+			// Sets the value of the top-level `region` attribute to the provider's configured Region if it is not set.
+			if _, ok := d.GetOk(names.AttrRegion); !ok {
+				return d.SetNew(names.AttrRegion, c.AwsConfig(ctx).Region)
+			}
+		}
+	}
+
+	return nil
+}
+
 // forceNewIfRegionValueChanges is a CustomizeDiff function that forces resource replacement
 // if the value of the top-level `region` attribute changes.
 func forceNewIfRegionValueChanges(ctx context.Context, d *schema.ResourceDiff, meta any) error {
