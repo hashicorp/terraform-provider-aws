@@ -5,10 +5,8 @@ package provider
 
 import (
 	"context"
-	"slices"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
@@ -50,7 +48,7 @@ type wrappedResourceOptions struct {
 	bootstrapContext          contextFunc
 	crudInterceptors          crudInterceptorItems
 	customizeDiffInterceptors customizeDiffInterceptorItems
-	customizeDiffFuncs        []schema.CustomizeDiffFunc
+	//customizeDiffFuncs        []schema.CustomizeDiffFunc
 	// importsFuncs are called before bootstrapContext.
 	importFuncs []schema.StateContextFunc
 	typeName    string
@@ -133,27 +131,27 @@ func (w *wrappedResource) import_(f schema.StateContextFunc) schema.StateContext
 }
 
 func (w *wrappedResource) customizeDiff(f schema.CustomizeDiffFunc) schema.CustomizeDiffFunc {
-	// if f == nil {
-	// 	f = func(context.Context, *schema.ResourceDiff, any) error {
-	// 		return nil
+	if f == nil {
+		f = func(context.Context, *schema.ResourceDiff, any) error {
+			return nil
+		}
+	}
+
+	return interceptedCustomizeDiffHandler(w.opts.bootstrapContext, w.opts.customizeDiffInterceptors, f)
+
+	// if len(w.opts.customizeDiffFuncs) > 0 {
+	// 	customizeDiffFuncs := slices.Clone(w.opts.customizeDiffFuncs)
+	// 	if f != nil {
+	// 		customizeDiffFuncs = append(customizeDiffFuncs, f)
 	// 	}
+	// 	return w.customizeDiffWithBootstrappedContext(customdiff.Sequence(customizeDiffFuncs...))
 	// }
 
-	// return interceptedCustomizeDiffHandler(w.opts.bootstrapContext, w.opts.customizeDiffInterceptors, f)
+	// if f == nil {
+	// 	return nil
+	// }
 
-	if len(w.opts.customizeDiffFuncs) > 0 {
-		customizeDiffFuncs := slices.Clone(w.opts.customizeDiffFuncs)
-		if f != nil {
-			customizeDiffFuncs = append(customizeDiffFuncs, f)
-		}
-		return w.customizeDiffWithBootstrappedContext(customdiff.Sequence(customizeDiffFuncs...))
-	}
-
-	if f == nil {
-		return nil
-	}
-
-	return w.customizeDiffWithBootstrappedContext(f)
+	// return w.customizeDiffWithBootstrappedContext(f)
 }
 
 func (w *wrappedResource) customizeDiffWithBootstrappedContext(f schema.CustomizeDiffFunc) schema.CustomizeDiffFunc {

@@ -442,7 +442,7 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 				isRegionOverrideEnabled = true
 			}
 
-			var customizeDiffFuncs []schema.CustomizeDiffFunc
+			//var customizeDiffFuncs []schema.CustomizeDiffFunc
 			var importFuncs []schema.StateContextFunc
 			var crudInterceptors crudInterceptorItems
 			var customizeDiffInterceptors customizeDiffInterceptorItems
@@ -535,9 +535,9 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 				},
 				crudInterceptors:          crudInterceptors,
 				customizeDiffInterceptors: customizeDiffInterceptors,
-				customizeDiffFuncs:        customizeDiffFuncs,
-				importFuncs:               importFuncs,
-				typeName:                  typeName,
+				//customizeDiffFuncs:        customizeDiffFuncs,
+				importFuncs: importFuncs,
+				typeName:    typeName,
 			}
 			wrapResource(r, opts)
 			provider.ResourcesMap[typeName] = r
