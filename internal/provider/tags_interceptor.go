@@ -18,13 +18,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// tagsResourceInterceptor implements transparent tagging for resources.
-type tagsResourceInterceptor struct {
+// tagsResourceCRUDInterceptor implements transparent tagging on CRUD operation for resources.
+type tagsResourceCRUDInterceptor struct {
 	tagsInterceptor
 }
 
 func newTagsResourceInterceptor(servicePackageResourceTags *types.ServicePackageResourceTags) crudInterceptor {
-	return &tagsResourceInterceptor{
+	return &tagsResourceCRUDInterceptor{
 		tagsInterceptor: tagsInterceptor{
 			WithTaggingMethods: interceptors.WithTaggingMethods{
 				ServicePackageResourceTags: servicePackageResourceTags,
@@ -33,7 +33,7 @@ func newTagsResourceInterceptor(servicePackageResourceTags *types.ServicePackage
 	}
 }
 
-func (r tagsResourceInterceptor) run(ctx context.Context, opts crudInterceptorOptions) diag.Diagnostics {
+func (r tagsResourceCRUDInterceptor) run(ctx context.Context, opts crudInterceptorOptions) diag.Diagnostics {
 	c := opts.c
 	var diags diag.Diagnostics
 
