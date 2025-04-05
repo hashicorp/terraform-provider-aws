@@ -465,6 +465,10 @@ func TestAccVPCSecurityGroupRule_expectInvalidCIDR(t *testing.T) {
 				Config:      testAccVPCSecurityGroupRuleConfig_invalidIPv6CIDR(rName),
 				ExpectError: regexache.MustCompile("invalid CIDR address: ::/244"),
 			},
+			{
+				Config:      testAccVPCSecurityGroupRuleConfig_emptyIngress(rName),
+				ExpectError: regexache.MustCompile("this resource must contain at least one rule"),
+			},
 		},
 	})
 }
@@ -2425,6 +2429,27 @@ resource "aws_security_group_rule" "test" {
   to_port           = 0
   protocol          = "-1"
   cidr_blocks       = ["1.2.3.4/33"]
+  security_group_id = aws_security_group.test.id
+}
+`, rName)
+}
+
+func testAccVPCSecurityGroupRuleConfig_emptyIngress(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_security_group_rule" "test" {
+  type              = "ingress"
+  from_port         = 0
+  to_port           = 0
+  protocol          = "-1"
+  cidr_blocks       = []
   security_group_id = aws_security_group.test.id
 }
 `, rName)
