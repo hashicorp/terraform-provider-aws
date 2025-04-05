@@ -379,7 +379,7 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 				crudInterceptors = append(crudInterceptors, crudInterceptorItem{
 					when:        Before | After,
 					why:         Read,
-					interceptor: newTagsDataSourceInterceptor(v.Tags),
+					interceptor: newTagsDataSourceCRUDInterceptor(v.Tags),
 				})
 			}
 

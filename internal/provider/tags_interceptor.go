@@ -181,7 +181,7 @@ type tagsDataSourceCRUDInterceptor struct {
 	tagsInterceptor
 }
 
-func newTagsDataSourceInterceptor(servicePackageResourceTags *types.ServicePackageResourceTags) crudInterceptor {
+func newTagsDataSourceCRUDInterceptor(servicePackageResourceTags *types.ServicePackageResourceTags) crudInterceptor {
 	return &tagsDataSourceCRUDInterceptor{
 		tagsInterceptor: tagsInterceptor{
 			WithTaggingMethods: interceptors.WithTaggingMethods{
