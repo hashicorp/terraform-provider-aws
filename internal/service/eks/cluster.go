@@ -436,6 +436,11 @@ func resourceCluster() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"force_version_update": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			names.AttrVPCConfig: {
 				Type:     schema.TypeList,
 				MinItems: 1,
@@ -691,6 +696,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 		input := &eks.UpdateClusterVersionInput{
 			Name:    aws.String(d.Id()),
 			Version: aws.String(d.Get(names.AttrVersion).(string)),
+			Force:   d.Get("force_version_update").(bool),
 		}
 
 		output, err := conn.UpdateClusterVersion(ctx, input)
