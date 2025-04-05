@@ -66,7 +66,7 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 				Validators: []validator.String{
 					stringvalidator.All(
 						stringvalidator.LengthBetween(1, 50),
-						stringvalidator.RegexMatches(regexp.MustCompile(`^[0-9A-Za-z_]+$`), "the name should only contain 0-9, A-Z, a-z, and _"),
+						stringvalidator.RegexMatches(regexp.MustCompile(`^[0-9A-Za-z-_]+$`), "the name should only contain 0-9, A-Z, a-z, and _"),
 					),
 				},
 			},

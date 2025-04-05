@@ -10,7 +10,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -21,50 +20,21 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 
-	// TIP: You will often need to import the package that this test file lives
-	// in. Since it is in the "test" context, it must import the package to use
-	// any normal context constants, variables, or functions.
 	tfbedrockagent "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagent"
 )
 
-// TIP: ==== UNIT TESTS ====
-// This is an example of a unit test. Its name is not prefixed with
-// "TestAcc" like an acceptance test.
-//
-// Unlike acceptance tests, unit tests do not access AWS and are focused on a
-// function (or method). Because of this, they are quick and cheap to run.
-//
-// In designing a resource's implementation, isolate complex bits from AWS bits
-// so that they can be tested through a unit test. We encourage more unit tests
-// in the provider.
-//
-// Cut and dry functions using well-used patterns, like typical flatteners and
-// expanders, don't need unit testing. However, if they are complex or
-// intricate, they should be unit tested.
-
-// TIP: ==== ACCEPTANCE TESTS ====
-// This is an example of a basic acceptance test. This should test as much of
-// standard functionality of the resource as possible, and test importing, if
-// applicable. We prefix its name with "TestAcc", the service, and the
-// resource name.
-//
-// Acceptance test access AWS and cost money to run.
 func TestAccBedrockAgentFlow_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	// TIP: This is a long-running test guard for tests that run longer than
-	// 300s (5 min) generally.
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 
 	var flow bedrockagent.GetFlowOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_flow.test"
+	foundationModel := "amazon.titan-text-express-v1"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.BedrockAgentEndpointID)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
@@ -72,20 +42,16 @@ func TestAccBedrockAgentFlow_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckFlowDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFlowConfig_basic(rName),
+				Config: testAccFlowConfig_basic(rName, foundationModel),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFlowExists(ctx, resourceName, &flow),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
-					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.day_of_week"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
-						"console_access": "false",
-						"groups.#":       "0",
-						"username":       "Test",
-						"password":       "TestTest1234",
-					}),
-					// TIP: If the ARN can be partially or completely determined by the parameters passed, e.g. it contains the
-					// value of `rName`, either include the values in the regex or check for an exact match using `acctest.CheckResourceAttrRegionalARN`
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "bedrockagent", regexache.MustCompile(`flow:.+$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "bedrock", regexache.MustCompile(`flow/.+$`)),
+					resource.TestCheckResourceAttrSet(resourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "description", "basic"),
+					resource.TestCheckResourceAttrPair(resourceName, "execution_role_arn", "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "definition.#", "0"),
+					resource.TestCheckNoResourceAttr(resourceName, "customer_encryption_key_arn"),
 				),
 			},
 			{
@@ -100,18 +66,16 @@ func TestAccBedrockAgentFlow_basic(t *testing.T) {
 
 func TestAccBedrockAgentFlow_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 
 	var flow bedrockagent.GetFlowOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_flow.test"
+	foundationModel := "amazon.titan-text-express-v1"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.BedrockAgentEndpointID)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
@@ -119,15 +83,9 @@ func TestAccBedrockAgentFlow_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckFlowDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFlowConfig_basic(rName),
+				Config: testAccFlowConfig_basic(rName, foundationModel),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFlowExists(ctx, resourceName, &flow),
-					// TIP: The Plugin-Framework disappears helper is similar to the Plugin-SDK version,
-					// but expects a new resource factory function as the third argument. To expose this
-					// private function to the testing package, you may need to add a line like the following
-					// to exports_test.go:
-					//
-					//   var ResourceFlow = newResourceFlow
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbedrockagent.ResourceFlow, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -145,9 +103,6 @@ func testAccCheckFlowDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			// TIP: ==== FINDERS ====
-			// The find function should be exported. Since it won't be used outside of the package, it can be exported
-			// in the `exports_test.go` file.
 			_, err := tfbedrockagent.FindFlowByID(ctx, conn, rs.Primary.ID)
 			if tfresource.NotFound(err) {
 				return nil
@@ -202,21 +157,54 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccCheckFlowNotRecreated(before, after *bedrockagent.GetFlowOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := aws.ToString(before.Id), aws.ToString(after.Id); before != after {
-			return create.Error(names.BedrockAgent, create.ErrActionCheckingNotRecreated, tfbedrockagent.ResNameFlow, before, errors.New("recreated"))
-		}
-
-		return nil
-	}
-}
-
-func testAccFlowConfig_basic(name string) string {
+func testAccFlowConfig_base(model string) string {
 	return fmt.Sprintf(`
-resource "aws_bedrockagent_flow" "test" {
-	name = %[1]q
-	execution_role_arn = "required"
+data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name_prefix        = "AmazonBedrockExecutionRoleForAgents_tf"
+  assume_role_policy = data.aws_iam_policy_document.test_trust.json
 }
-`, name)
+
+data "aws_iam_policy_document" "test_trust" {
+  statement {
+    actions = ["sts:AssumeRole"]
+    principals {
+      identifiers = ["bedrock.amazonaws.com"]
+      type        = "Service"
+    }
+  }
+}
+
+resource "aws_iam_role_policy" "test_permissions" {
+  role   = aws_iam_role.test.id
+  policy = data.aws_iam_policy_document.test_permissions.json
+}
+
+data "aws_iam_policy_document" "test_permissions" {
+  statement {
+    actions   = ["bedrock:GetFlow"]
+    effect    = "Allow"
+    resources = ["*"]
+  }
+  statement {
+    actions   = ["bedrock:InvokeModel"]
+    effect    = "Allow"
+    resources = [
+      "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}::foundation-model/%[1]s",
+    ]
+  }
+}`, model)
+}
+
+func testAccFlowConfig_basic(rName, model string) string {
+	return acctest.ConfigCompose(testAccFlowConfig_base(model), fmt.Sprintf(`
+resource "aws_bedrockagent_flow" "test" {
+  name               = %[1]q
+  execution_role_arn = aws_iam_role.test.arn
+  description        = "basic"
+}
+`, rName))
 }
