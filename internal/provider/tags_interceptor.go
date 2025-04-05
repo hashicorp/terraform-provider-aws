@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// tagsResourceCRUDInterceptor implements transparent tagging on CRUD operation for resources.
+// tagsResourceCRUDInterceptor implements transparent tagging on CRUD operations for resources.
 type tagsResourceCRUDInterceptor struct {
 	tagsInterceptor
 }
@@ -261,6 +261,69 @@ func (r tagsInterceptor) getIdentifier(d schemaResourceData) string {
 	}
 
 	return identifier
+}
+
+// tagsResourceCRUDInterceptor implements transparent tagging on CustomizeDiff operations for resources.
+type tagsResourceCustomizeDiffInterceptor struct{}
+
+func (r tagsResourceCustomizeDiffInterceptor) run(ctx context.Context, opts customizeDiffInterceptorOptions) error {
+	c := opts.c
+
+	switch d, when, why := opts.d, opts.when, opts.why; when {
+	case Before:
+		switch why {
+		case CustomizeDiff:
+			// Calculate the new value for the `tags_all` attribute.
+			if !d.GetRawPlan().GetAttr(names.AttrTags).IsWhollyKnown() {
+				if err := d.SetNewComputed(names.AttrTagsAll); err != nil {
+					return fmt.Errorf("setting tags_all to Computed: %w", err)
+				}
+				return nil
+			}
+
+			newTags := tftags.New(ctx, d.Get(names.AttrTags).(map[string]any))
+			allTags := c.DefaultTagsConfig(ctx).MergeTags(newTags).IgnoreConfig(c.IgnoreTagsConfig(ctx))
+			if d.HasChange(names.AttrTags) {
+				if newTags.HasZeroValue() {
+					if err := d.SetNewComputed(names.AttrTagsAll); err != nil {
+						return fmt.Errorf("setting tags_all to Computed: %w", err)
+					}
+				}
+
+				if len(allTags) > 0 && (!newTags.HasZeroValue() || !allTags.HasZeroValue()) {
+					if err := d.SetNew(names.AttrTagsAll, allTags.Map()); err != nil {
+						return fmt.Errorf("setting new tags_all diff: %w", err)
+					}
+				}
+
+				if len(allTags) == 0 {
+					if err := d.SetNew(names.AttrTagsAll, allTags.Map()); err != nil {
+						return fmt.Errorf("setting new tags_all diff: %w", err)
+					}
+				}
+			} else {
+				if len(allTags) > 0 && !allTags.HasZeroValue() {
+					if err := d.SetNew(names.AttrTagsAll, allTags.Map()); err != nil {
+						return fmt.Errorf("setting new tags_all diff: %w", err)
+					}
+					return nil
+				}
+
+				var newTagsAll tftags.KeyValueTags
+				if v, ok := d.Get(names.AttrTagsAll).(map[string]any); ok {
+					newTagsAll = tftags.New(ctx, v)
+				}
+				if len(allTags) > 0 && !newTagsAll.DeepEqual(allTags) && allTags.HasZeroValue() {
+					if err := d.SetNewComputed(names.AttrTagsAll); err != nil {
+						return fmt.Errorf("setting tags_all to Computed: %w", err)
+					}
+					return nil
+				}
+			}
+		}
+	}
+
+	return nil
 }
 
 // setTagsAll is a CustomizeDiff function that calculates the new value for the `tags_all` attribute.
