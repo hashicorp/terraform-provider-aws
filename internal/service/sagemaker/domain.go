@@ -3122,7 +3122,7 @@ func expanDefaultSpaceSettings(l []any) *awstypes.DefaultSpaceSettings {
 		if len(v) > 0 {
 			config.CustomFileSystemConfigs = expandCustomFileSystemConfigs(v)
 		} else {
-			config.CustomFileSystemConfigs = nil
+			config.CustomFileSystemConfigs = []awstypes.CustomFileSystemConfig{}
 		}
 	}
 
