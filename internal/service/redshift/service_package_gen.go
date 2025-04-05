@@ -42,6 +42,14 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Name:     "Data Share Consumer Association",
 		},
 		{
+			Factory:  newResourceIntegration,
+			TypeName: "aws_redshift_integration",
+			Name:     "Integration",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
 			Factory:  newResourceLogging,
 			TypeName: "aws_redshift_logging",
 			Name:     "Logging",

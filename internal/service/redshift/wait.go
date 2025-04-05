@@ -13,6 +13,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -216,6 +217,62 @@ func waitClusterSnapshotDeleted(ctx context.Context, conn *redshift.Client, id s
 		tfresource.SetLastError(err, errors.New(aws.ToString(output.Status)))
 
 		return output, err
+	}
+
+	return nil, err
+}
+
+func waitIntegrationCreated(ctx context.Context, conn *redshift.Client, arn string, timeout time.Duration) (*awstypes.Integration, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:        []string{integrationStatusCreating, integrationStatusModifying},
+		Target:         []string{integrationStatusActive},
+		Refresh:        statusIntegration(ctx, conn, arn),
+		Timeout:        timeout,
+		NotFoundChecks: 20,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*awstypes.Integration); ok {
+		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(out.Errors, integrationError)...))
+
+		return out, err
+	}
+
+	return nil, err
+}
+
+func waitIntegrationUpdated(ctx context.Context, conn *redshift.Client, arn string, timeout time.Duration) (*awstypes.Integration, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:        []string{integrationStatusModifying},
+		Target:         []string{integrationStatusActive},
+		Refresh:        statusIntegration(ctx, conn, arn),
+		Timeout:        timeout,
+		NotFoundChecks: 20,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*awstypes.Integration); ok {
+		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(out.Errors, integrationError)...))
+
+		return out, err
+	}
+
+	return nil, err
+}
+
+func waitIntegrationDeleted(ctx context.Context, conn *redshift.Client, arn string, timeout time.Duration) (*awstypes.Integration, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{integrationStatusDeleting, integrationStatusActive},
+		Target:  []string{},
+		Refresh: statusIntegration(ctx, conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*awstypes.Integration); ok {
+		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(out.Errors, integrationError)...))
+
+		return out, err
 	}
 
 	return nil, err

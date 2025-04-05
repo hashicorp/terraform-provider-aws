@@ -4,6 +4,7 @@
 package redshift
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -11,8 +12,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/redshift"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
@@ -48,6 +52,8 @@ func RegisterSweepers() {
 		Name: "aws_redshift_event_subscription",
 		F:    sweepEventSubscriptions,
 	})
+
+	awsv2.Register("aws_redshift_integration", sweepIntegrations)
 
 	resource.AddTestSweepers("aws_redshift_scheduled_action", &resource.Sweeper{
 		Name: "aws_redshift_scheduled_action",
@@ -190,6 +196,29 @@ func sweepEventSubscriptions(region string) error {
 	}
 
 	return nil
+}
+
+func sweepIntegrations(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	input := &redshift.DescribeIntegrationsInput{}
+	conn := client.RedshiftClient(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := redshift.NewDescribeIntegrationsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Integrations {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceIntegration, client,
+				framework.NewAttribute(names.AttrID, aws.ToString(v.IntegrationArn))),
+			)
+		}
+	}
+
+	return sweepResources, nil
 }
 
 func sweepScheduledActions(region string) error {
