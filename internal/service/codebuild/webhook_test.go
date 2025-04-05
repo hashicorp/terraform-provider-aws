@@ -569,3 +569,45 @@ resource "aws_codebuild_webhook" "test" {
 }
 `, rName))
 }
+
+func testAccWebhookConfig_manualCreation(rName string) string {
+	return acctest.ConfigCompose(testAccProjectConfig_basic(rName), `
+resource "aws_codebuild_webhook" "test" {
+  project_name      = aws_codebuild_project.test.name
+  manual_creation   = true
+}
+`)
+}
+
+func TestAccCodeBuildWebhook_manualCreation(t *testing.T) {
+	ctx := acctest.Context(t)
+	var webhook types.Webhook
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_codebuild_webhook.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+			testAccPreCheckSourceCredentialsForServerType(ctx, t, types.ServerTypeGithub)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeBuildServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebhookDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebhookConfig_manualCreation(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebhookExists(ctx, resourceName, &webhook),
+					resource.TestCheckResourceAttr(resourceName, "manual_creation", "true"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"secret"},
+			},
+		},
+	})
+}

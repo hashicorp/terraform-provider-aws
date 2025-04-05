@@ -105,6 +105,11 @@ func resourceWebhook() *schema.Resource {
 					},
 				},
 			},
+			"manual_creation": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"secret": {
 				Type:      schema.TypeString,
 				Computed:  true,
@@ -125,6 +130,10 @@ func resourceWebhookCreate(ctx context.Context, d *schema.ResourceData, meta any
 	projectName := d.Get("project_name").(string)
 	input := &codebuild.CreateWebhookInput{
 		ProjectName: aws.String(projectName),
+	}
+
+	if v, ok := d.GetOk("manual_creation"); ok {
+		input.ManualCreation = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("branch_filter"); ok {
@@ -173,6 +182,8 @@ func resourceWebhookRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	d.Set("build_type", webhook.BuildType)
+	// Support in-place update of create-only attribute.
+	d.Set("manual_creation", d.Get("manual_creation"))
 	d.Set("branch_filter", webhook.BranchFilter)
 	if err := d.Set("filter_group", flattenWebhookFilterGroups(webhook.FilterGroups)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting filter_group: %s", err)
