@@ -1853,8 +1853,12 @@ func expandUserSettings(l []any) *awstypes.UserSettings {
 		config.CodeEditorAppSettings = expandDomainCodeEditorAppSettings(v)
 	}
 
-	if v, ok := m["custom_file_system_config"].([]any); ok && len(v) > 0 {
-		config.CustomFileSystemConfigs = expandCustomFileSystemConfigs(v)
+	if v, ok := m["custom_file_system_config"].([]any); ok {
+		if len(v) > 0 {
+			config.CustomFileSystemConfigs = expandCustomFileSystemConfigs(v)
+		} else {
+			config.CustomFileSystemConfigs = []awstypes.CustomFileSystemConfig{}
+		}
 	}
 
 	if v, ok := m["custom_posix_user_config"].([]any); ok && len(v) > 0 {
@@ -3114,8 +3118,12 @@ func expanDefaultSpaceSettings(l []any) *awstypes.DefaultSpaceSettings {
 		config.SpaceStorageSettings = expandDefaultSpaceStorageSettings(v)
 	}
 
-	if v, ok := m["custom_file_system_config"].([]any); ok && len(v) > 0 {
-		config.CustomFileSystemConfigs = expandCustomFileSystemConfigs(v)
+	if v, ok := m["custom_file_system_config"].([]any); ok {
+		if len(v) > 0 {
+			config.CustomFileSystemConfigs = expandCustomFileSystemConfigs(v)
+		} else {
+			config.CustomFileSystemConfigs = []awstypes.CustomFileSystemConfig{}
+		}
 	}
 
 	if v, ok := m["custom_posix_user_config"].([]any); ok && len(v) > 0 {

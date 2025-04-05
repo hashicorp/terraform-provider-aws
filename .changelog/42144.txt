@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_sagemaker_domain: Allow removing `custom_file_system_config`
+```
+
+```release-note:bug
+resource/aws_sagemaker_user_profile: Allow removing `custom_file_system_config`
+```
