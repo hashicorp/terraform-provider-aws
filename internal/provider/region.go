@@ -35,6 +35,31 @@ func validateRegionInPartition(ctx context.Context, c *conns.AWSClient, region s
 	return nil
 }
 
+type verifyRegionValueInConfiguredPartitionCustomizeDiffInterceptor struct{}
+
+func newVerifyRegionValueInConfiguredPartitionCustomizeDiffInterceptor() customizeDiffInterceptor {
+	return &verifyRegionValueInConfiguredPartitionCustomizeDiffInterceptor{}
+}
+
+func (r verifyRegionValueInConfiguredPartitionCustomizeDiffInterceptor) run(ctx context.Context, opts customizeDiffInterceptorOptions) error {
+	c := opts.c
+
+	switch d, when, why := opts.d, opts.when, opts.why; when {
+	case Before:
+		switch why {
+		case CustomizeDiff:
+			// Verify that the value of the top-level `region` attribute is in the configured AWS partition.
+			if v, ok := d.GetOk(names.AttrRegion); ok {
+				if err := validateRegionInPartition(ctx, c, v.(string)); err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
 // defaultRegionValue is a CustomizeDiff function that sets the value of the top-level `region`
 // attribute to the provider's configured Region if it is not set.
 func defaultRegionValue(ctx context.Context, d *schema.ResourceDiff, meta any) error {
@@ -73,18 +98,18 @@ func importRegion(ctx context.Context, d *schema.ResourceData, meta any) ([]*sch
 	return []*schema.ResourceData{d}, nil
 }
 
-// regionDataSourceInterceptor implements per-resource Region override functionality for data sources.
-type regionDataSourceInterceptor struct {
+// regionDataSourceCRUDInterceptor implements per-resource Region override functionality on CRUD operations for data sources.
+type regionDataSourceCRUDInterceptor struct {
 	validateRegionInPartition bool
 }
 
-func newRegionDataSourceInterceptor(validateRegionInPartition bool) crudInterceptor {
-	return &regionDataSourceInterceptor{
+func newRegionDataSourceCRUDInterceptor(validateRegionInPartition bool) crudInterceptor {
+	return &regionDataSourceCRUDInterceptor{
 		validateRegionInPartition: validateRegionInPartition,
 	}
 }
 
-func (r regionDataSourceInterceptor) run(ctx context.Context, opts crudInterceptorOptions) diag.Diagnostics {
+func (r regionDataSourceCRUDInterceptor) run(ctx context.Context, opts crudInterceptorOptions) diag.Diagnostics {
 	c := opts.c
 	var diags diag.Diagnostics
 

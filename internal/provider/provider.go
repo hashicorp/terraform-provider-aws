@@ -371,7 +371,7 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 				crudInterceptors = append(crudInterceptors, crudInterceptorItem{
 					when:        Before | After,
 					why:         Read,
-					interceptor: newRegionDataSourceInterceptor(v.IsValidateOverrideInPartition),
+					interceptor: newRegionDataSourceCRUDInterceptor(v.IsValidateOverrideInPartition),
 				})
 			}
 
@@ -475,7 +475,12 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 				}
 
 				if v.IsValidateOverrideInPartition {
-					customizeDiffFuncs = append(customizeDiffFuncs, verifyRegionValueInConfiguredPartition)
+					//customizeDiffFuncs = append(customizeDiffFuncs, verifyRegionValueInConfiguredPartition)
+					customizeDiffInterceptors = append(customizeDiffInterceptors, customizeDiffInterceptorItem{
+						when:        Before,
+						why:         CustomizeDiff,
+						interceptor: newVerifyRegionValueInConfiguredPartitionCustomizeDiffInterceptor(),
+					})
 				}
 				customizeDiffFuncs = append(customizeDiffFuncs, defaultRegionValue)
 				if !v.IsGlobal {
