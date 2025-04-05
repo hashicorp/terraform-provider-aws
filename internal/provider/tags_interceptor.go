@@ -266,6 +266,10 @@ func (r tagsInterceptor) getIdentifier(d schemaResourceData) string {
 // tagsResourceCRUDInterceptor implements transparent tagging on CustomizeDiff operations for resources.
 type tagsResourceCustomizeDiffInterceptor struct{}
 
+func newTagsResourceCustomizeDiffInterceptor() customizeDiffInterceptor {
+	return &tagsResourceCustomizeDiffInterceptor{}
+}
+
 func (r tagsResourceCustomizeDiffInterceptor) run(ctx context.Context, opts customizeDiffInterceptorOptions) error {
 	c := opts.c
 

@@ -485,11 +485,16 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 			}
 
 			if v.Tags != nil {
-				customizeDiffFuncs = append(customizeDiffFuncs, setTagsAll)
+				//customizeDiffFuncs = append(customizeDiffFuncs, setTagsAll)
 				crudInterceptors = append(crudInterceptors, crudInterceptorItem{
 					when:        Before | After | Finally,
 					why:         Create | Read | Update,
 					interceptor: newTagsResourceCRUDInterceptor(v.Tags),
+				})
+				customizeDiffInterceptors = append(customizeDiffInterceptors, customizeDiffInterceptorItem{
+					when:        Before,
+					why:         CustomizeDiff,
+					interceptor: newTagsResourceCustomizeDiffInterceptor(),
 				})
 			}
 
