@@ -14,9 +14,10 @@ Provides an AWS Network Firewall Firewall Resource
 
 ```terraform
 resource "aws_networkfirewall_firewall" "example" {
-  name                = "example"
-  firewall_policy_arn = aws_networkfirewall_firewall_policy.example.arn
-  vpc_id              = aws_vpc.example.id
+  name                   = "example"
+  firewall_policy_arn    = aws_networkfirewall_firewall_policy.example.arn
+  vpc_id                 = aws_vpc.example.id
+  enabled_analysis_types = ["TLS_SNI", "HTTP_HOST"]
   subnet_mapping {
     subnet_id = aws_subnet.example.id
   }
@@ -41,6 +42,8 @@ This resource supports the following arguments:
 * `delete_protection` - (Optional) A flag indicating whether the firewall is protected against deletion. Use this setting to protect against accidentally deleting a firewall that is in use. Defaults to `false`.
 
 * `description` - (Optional) A friendly description of the firewall.
+
+* `enabled_analysis_types` - (Optional) Set of types for which to collect analysis metrics. See [Reporting on network traffic in Network Firewall](https://docs.aws.amazon.com/network-firewall/latest/developerguide/reporting.html) for details on how to use the data. Valid values: `TLS_SNI`, `HTTP_HOST`. Defaults to `[]`.
 
 * `encryption_configuration` - (Optional) KMS encryption configuration settings. See [Encryption Configuration](#encryption-configuration) below for details.
 
