@@ -15,18 +15,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// verifyRegionValueInConfiguredPartition is a CustomizeDiff function that verifies that the value of
-// the top-level `region` attribute is in the configured AWS partition.
-func verifyRegionValueInConfiguredPartition(ctx context.Context, d *schema.ResourceDiff, meta any) error {
-	if v, ok := d.GetOk(names.AttrRegion); ok {
-		if err := validateRegionInPartition(ctx, meta.(*conns.AWSClient), v.(string)); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
 func validateRegionInPartition(ctx context.Context, c *conns.AWSClient, region string) error {
 	if got, want := names.PartitionForRegion(region).ID(), c.Partition(ctx); got != want {
 		return fmt.Errorf("partition (%s) for per-resource Region (%s) is not the provider's configured partition (%s)", got, region, want)
@@ -37,7 +25,7 @@ func validateRegionInPartition(ctx context.Context, c *conns.AWSClient, region s
 
 type verifyRegionValueInConfiguredPartitionCustomizeDiffInterceptor struct{}
 
-func newVerifyRegionValueInConfiguredPartitionCustomizeDiffInterceptor() customizeDiffInterceptor {
+func verifyRegionValueInConfiguredPartition() customizeDiffInterceptor {
 	return &verifyRegionValueInConfiguredPartitionCustomizeDiffInterceptor{}
 }
 
@@ -60,19 +48,9 @@ func (r verifyRegionValueInConfiguredPartitionCustomizeDiffInterceptor) run(ctx 
 	return nil
 }
 
-// defaultRegionValue is a CustomizeDiff function that sets the value of the top-level `region`
-// attribute to the provider's configured Region if it is not set.
-func defaultRegionValue(ctx context.Context, d *schema.ResourceDiff, meta any) error {
-	if _, ok := d.GetOk(names.AttrRegion); !ok {
-		return d.SetNew(names.AttrRegion, meta.(*conns.AWSClient).AwsConfig(ctx).Region)
-	}
-
-	return nil
-}
-
 type defaultRegionValueCustomizeDiffInterceptor struct{}
 
-func newDefaultRegionValueCustomizeDiffInterceptor() customizeDiffInterceptor {
+func defaultRegionValue() customizeDiffInterceptor {
 	return &defaultRegionValueCustomizeDiffInterceptor{}
 }
 
@@ -93,24 +71,9 @@ func (r defaultRegionValueCustomizeDiffInterceptor) run(ctx context.Context, opt
 	return nil
 }
 
-// forceNewIfRegionValueChanges is a CustomizeDiff function that forces resource replacement
-// if the value of the top-level `region` attribute changes.
-func forceNewIfRegionValueChanges(ctx context.Context, d *schema.ResourceDiff, meta any) error {
-	if d.Id() != "" && d.HasChange(names.AttrRegion) {
-		providerRegion := meta.(*conns.AWSClient).AwsConfig(ctx).Region
-		o, n := d.GetChange(names.AttrRegion)
-		if o, n := o.(string), n.(string); (o == "" && n == providerRegion) || (o == providerRegion && n == "") {
-			return nil
-		}
-		return d.ForceNew(names.AttrRegion)
-	}
-
-	return nil
-}
-
 type forceNewIfRegionValueChangesCustomizeDiffInterceptor struct{}
 
-func newForceNewIfRegionValueChangesCustomizeDiffInterceptor() customizeDiffInterceptor {
+func forceNewIfRegionValueChanges() customizeDiffInterceptor {
 	return &forceNewIfRegionValueChangesCustomizeDiffInterceptor{}
 }
 

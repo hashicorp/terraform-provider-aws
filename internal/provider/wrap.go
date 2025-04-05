@@ -48,7 +48,6 @@ type wrappedResourceOptions struct {
 	bootstrapContext          contextFunc
 	crudInterceptors          crudInterceptorItems
 	customizeDiffInterceptors customizeDiffInterceptorItems
-	//customizeDiffFuncs        []schema.CustomizeDiffFunc
 	// importsFuncs are called before bootstrapContext.
 	importFuncs []schema.StateContextFunc
 	typeName    string
@@ -138,31 +137,6 @@ func (w *wrappedResource) customizeDiff(f schema.CustomizeDiffFunc) schema.Custo
 	}
 
 	return interceptedCustomizeDiffHandler(w.opts.bootstrapContext, w.opts.customizeDiffInterceptors, f)
-
-	// if len(w.opts.customizeDiffFuncs) > 0 {
-	// 	customizeDiffFuncs := slices.Clone(w.opts.customizeDiffFuncs)
-	// 	if f != nil {
-	// 		customizeDiffFuncs = append(customizeDiffFuncs, f)
-	// 	}
-	// 	return w.customizeDiffWithBootstrappedContext(customdiff.Sequence(customizeDiffFuncs...))
-	// }
-
-	// if f == nil {
-	// 	return nil
-	// }
-
-	// return w.customizeDiffWithBootstrappedContext(f)
-}
-
-func (w *wrappedResource) customizeDiffWithBootstrappedContext(f schema.CustomizeDiffFunc) schema.CustomizeDiffFunc {
-	return func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
-		ctx, diags := w.opts.bootstrapContext(ctx, d.GetOk, meta)
-		if diags.HasError() {
-			return sdkdiag.DiagnosticsError(diags)
-		}
-
-		return f(ctx, d, meta)
-	}
 }
 
 func (w *wrappedResource) stateUpgrade(f schema.StateUpgradeFunc) schema.StateUpgradeFunc {
