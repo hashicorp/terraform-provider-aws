@@ -1,4 +1,11 @@
-## 5.94.0 (Unreleased)
+## 5.95.0 (Unreleased)
+## 5.94.1 (April  4, 2025)
+
+BUG FIXES:
+
+* resource/aws_sns_topic_subscription: Ignore `AuthorizationError` exceptions for `ListSubscriptionByTopic` operations. This fixes a regression introduced in [`v5.94.0`](https://github.com/hashicorp/terraform-provider-aws/pull/42093). ([#42117](https://github.com/hashicorp/terraform-provider-aws/issues/42117))
+
+## 5.94.0 (April  3, 2025)
 
 NOTES:
 
@@ -10,6 +17,7 @@ ENHANCEMENTS:
 * resource/aws_ami: Add `last_launched_time` attribute ([#42049](https://github.com/hashicorp/terraform-provider-aws/issues/42049))
 * resource/aws_ami_copy: Add `last_launched_time` attribute ([#42049](https://github.com/hashicorp/terraform-provider-aws/issues/42049))
 * resource/aws_ami_from_instance: Add `last_launched_time` attribute ([#42049](https://github.com/hashicorp/terraform-provider-aws/issues/42049))
+* resource/aws_glue_job: Add `source_control_details` argument ([#42046](https://github.com/hashicorp/terraform-provider-aws/issues/42046))
 * resource/aws_lambda_function: Add support for `ruby3.4` `runtime` value ([#42052](https://github.com/hashicorp/terraform-provider-aws/issues/42052))
 * resource/aws_lambda_layer_version: Add support for `ruby3.4` `compatible_runtimes` value ([#42052](https://github.com/hashicorp/terraform-provider-aws/issues/42052))
 * resource/aws_prometheus_scraper: Add `role_configuration` argument ([#42039](https://github.com/hashicorp/terraform-provider-aws/issues/42039))
@@ -21,10 +29,13 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_cloudformation_type: Set the default version of an extension to the newly created version. This fixes `CFNRegistryException: Version '...' is the default version and cannot be deregistered` errors when deregistering an extension and the [`create_before_destroy` meta-argument](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#create_before_destroy) is `true` ([#38855](https://github.com/hashicorp/terraform-provider-aws/issues/38855))
+* resource/aws_connect_queue: Fix API limitation when assigning more than 50 Quick Connects to a queue ([#42108](https://github.com/hashicorp/terraform-provider-aws/issues/42108))
 * resource/aws_ecs_service: Fix missing `volume_configuration` and `service_connect_configurations` values from state read/refresh ([#41998](https://github.com/hashicorp/terraform-provider-aws/issues/41998))
 * resource/aws_ecs_service: Mark `service_connect_configuration.service.discovery_name` and `service_connect_configuration.service.client_alias.dns_name` as Computed ([#41998](https://github.com/hashicorp/terraform-provider-aws/issues/41998))
 * resource/aws_msk_cluster: Fix `Provider produced inconsistent final plan` errors when `configuration_info.revision` is [unknown](https://developer.hashicorp.com/terraform/language/expressions/references#values-not-yet-known) ([#42037](https://github.com/hashicorp/terraform-provider-aws/issues/42037))
+* resource/aws_quicksight_data_set: Fix perpetual diff when `refresh_properties` is not configured ([#42076](https://github.com/hashicorp/terraform-provider-aws/issues/42076))
 * resource/aws_s3_bucket_lifecycle_configuration: Removes incorrect warning for empty `rule.filter` ([#42036](https://github.com/hashicorp/terraform-provider-aws/issues/42036))
+* resource/aws_sns_topic_subscription: Fix to handle eventually consistent subscription read operations ([#42093](https://github.com/hashicorp/terraform-provider-aws/issues/42093))
 * resource/aws_sqs_queue: Fix `waiting for SQS Queue... attributes create: timeout while waiting` errors when `sqs_managed_sse_enabled = false` or omitted and `kms_master_key_id` is not set but `kms_data_key_reuse_period_seconds` is set to a non-default value. ([#42062](https://github.com/hashicorp/terraform-provider-aws/issues/42062))
 * resource/aws_workspaces_workspace: Properly update `workspace_properties.running_mode_auto_stop_timeout_in_minutes` when modified ([#40953](https://github.com/hashicorp/terraform-provider-aws/issues/40953))
 
