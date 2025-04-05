@@ -176,13 +176,13 @@ func (r tagsResourceCRUDInterceptor) run(ctx context.Context, opts crudIntercept
 	return diags
 }
 
-// tagsResourceInterceptor implements transparent tagging for data sources.
-type tagsDataSourceInterceptor struct {
+// tagsDataSourceCRUDInterceptor implements transparent tagging on CRUD operations for data sources.
+type tagsDataSourceCRUDInterceptor struct {
 	tagsInterceptor
 }
 
 func newTagsDataSourceInterceptor(servicePackageResourceTags *types.ServicePackageResourceTags) crudInterceptor {
-	return &tagsDataSourceInterceptor{
+	return &tagsDataSourceCRUDInterceptor{
 		tagsInterceptor: tagsInterceptor{
 			WithTaggingMethods: interceptors.WithTaggingMethods{
 				ServicePackageResourceTags: servicePackageResourceTags,
@@ -191,7 +191,7 @@ func newTagsDataSourceInterceptor(servicePackageResourceTags *types.ServicePacka
 	}
 }
 
-func (r tagsDataSourceInterceptor) run(ctx context.Context, opts crudInterceptorOptions) diag.Diagnostics {
+func (r tagsDataSourceCRUDInterceptor) run(ctx context.Context, opts crudInterceptorOptions) diag.Diagnostics {
 	c := opts.c
 	var diags diag.Diagnostics
 
