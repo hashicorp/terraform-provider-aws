@@ -65,7 +65,7 @@ func TestTagsResourceInterceptor(t *testing.T) {
 	sp := &types.ServicePackageResourceTags{
 		IdentifierAttribute: "id",
 	}
-	tags := newTagsResourceInterceptor(sp)
+	tags := newTagsResourceCRUDInterceptor(sp)
 	interceptors = append(interceptors, crudInterceptorItem{
 		when:        Finally,
 		why:         Update,

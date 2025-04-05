@@ -23,7 +23,7 @@ type tagsResourceCRUDInterceptor struct {
 	tagsInterceptor
 }
 
-func newTagsResourceInterceptor(servicePackageResourceTags *types.ServicePackageResourceTags) crudInterceptor {
+func newTagsResourceCRUDInterceptor(servicePackageResourceTags *types.ServicePackageResourceTags) crudInterceptor {
 	return &tagsResourceCRUDInterceptor{
 		tagsInterceptor: tagsInterceptor{
 			WithTaggingMethods: interceptors.WithTaggingMethods{
