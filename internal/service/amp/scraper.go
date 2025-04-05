@@ -293,89 +293,52 @@ func (r *scraperResource) Read(ctx context.Context, request resource.ReadRequest
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *scraperResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan, state scraperResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
+func (r *scraperResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var new, old scraperResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
+	if response.Diagnostics.HasError() {
 		return
-	}
-
-	diff, diags := fwflex.Diff(ctx, plan, state)
-	if diags.HasError() {
-		resp.Diagnostics.Append(diags...)
-		return
-	}
-
-	if !diff.HasChanges() {
-		resp.Diagnostics.Append(diags...)
-		return
-	}
-
-	destinationData, diags := plan.Destination.ToPtr(ctx)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	ampDestinationData, diags := destinationData.AMP.ToPtr(ctx)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	destination := awstypes.DestinationMemberAmpConfiguration{}
-	resp.Diagnostics.Append(fwflex.Expand(ctx, ampDestinationData, &destination.Value)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	scrapeConfiguration := awstypes.ScrapeConfigurationMemberConfigurationBlob{
-		Value: []byte(plan.ScrapeConfiguration.ValueString()),
-	}
-
-	input := amp.UpdateScraperInput{
-		ClientToken:         aws.String(sdkid.UniqueId()),
-		ScraperId:           state.ID.ValueStringPointer(),
-		Alias:               plan.Alias.ValueStringPointer(),
-		Destination:         &destination,
-		ScrapeConfiguration: &scrapeConfiguration,
-	}
-
-	if !plan.RoleConfiguration.IsNull() {
-		roleConfigurationData, diags := plan.RoleConfiguration.ToPtr(ctx)
-		resp.Diagnostics.Append(diags...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-
-		roleConfiguration := awstypes.RoleConfiguration{}
-		resp.Diagnostics.Append(fwflex.Expand(ctx, roleConfigurationData, &roleConfiguration)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		input.RoleConfiguration = &roleConfiguration
-	}
-	input.ScrapeConfiguration = &awstypes.ScrapeConfigurationMemberConfigurationBlob{
-		Value: []byte(plan.ScrapeConfiguration.ValueString()),
 	}
 
 	conn := r.Meta().AMPClient(ctx)
-	_, err := conn.UpdateScraper(ctx, &input)
-	if err != nil {
-		resp.Diagnostics.AddError("updating Prometheus Scraper", err.Error())
-		return
+
+	if !new.Alias.Equal(old.Alias) ||
+		!new.Destination.Equal(old.Destination) ||
+		!new.RoleConfiguration.Equal(old.RoleConfiguration) ||
+		!new.ScrapeConfiguration.Equal(old.ScrapeConfiguration) {
+		var input amp.UpdateScraperInput
+		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		// Additional fields.
+		input.ClientToken = aws.String(sdkid.UniqueId())
+		input.ScrapeConfiguration = &awstypes.ScrapeConfigurationMemberConfigurationBlob{
+			Value: []byte(new.ScrapeConfiguration.ValueString()),
+		}
+		input.ScraperId = fwflex.StringFromFramework(ctx, new.ID)
+
+		_, err := conn.UpdateScraper(ctx, &input)
+
+		if err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("updating Prometheus Scraper (%s)", new.ID.ValueString()), err.Error())
+
+			return
+		}
+
+		if _, err := waitScraperUpdated(ctx, conn, new.ID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("waiting for Prometheus Scraper (%s) update", new.ID.ValueString()), err.Error())
+
+			return
+		}
 	}
 
-	_, err = waitScraperUpdated(ctx, conn, plan.ID.ValueString(), r.UpdateTimeout(ctx, plan.Timeouts))
-	if err != nil {
-		resp.Diagnostics.AddError("updating Prometheus Scraper timeout", err.Error())
-		return
-	}
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
 func (r *scraperResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
@@ -389,7 +352,7 @@ func (r *scraperResource) Delete(ctx context.Context, request resource.DeleteReq
 
 	input := amp.DeleteScraperInput{
 		ClientToken: aws.String(sdkid.UniqueId()),
-		ScraperId:   data.ID.ValueStringPointer(),
+		ScraperId:   fwflex.StringFromFramework(ctx, data.ID),
 	}
 	_, err := conn.DeleteScraper(ctx, &input)
 
@@ -609,6 +572,7 @@ func waitScraperUpdated(ctx context.Context, conn *amp.Client, id string, timeou
 
 	if output, ok := outputRaw.(*awstypes.ScraperDescription); ok {
 		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+
 		return output, err
 	}
 
