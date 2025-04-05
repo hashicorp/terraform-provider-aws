@@ -91,7 +91,7 @@ func TestAccEKSCluster_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons", "force_version_update"},
 			},
 		},
 	})
@@ -146,7 +146,7 @@ func TestAccEKSCluster_AccessConfig_create(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       false,
-				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons", "force_version_update"},
 			},
 		},
 	})
@@ -235,7 +235,7 @@ func TestAccEKSCluster_BootstrapSelfManagedAddons_update(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons", "force_version_update"},
 			},
 			{
 				Config: testAccClusterConfig_bootstrapSelfManagedAddons(rName, true),
@@ -323,7 +323,7 @@ func TestAccEKSCluster_ComputeConfig_OnCreate(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons", "force_version_update"},
 			},
 			{
 				Config: testAccClusterConfig_computeConfig(rName, false, "aws_iam_role.node.arn"),
@@ -341,7 +341,7 @@ func TestAccEKSCluster_ComputeConfig_OnCreate(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons", "force_version_update"},
 			},
 			{
 				Config: testAccClusterConfig_computeConfig(rName, true, "aws_iam_role.node.arn"),
@@ -359,7 +359,7 @@ func TestAccEKSCluster_ComputeConfig_OnCreate(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons", "force_version_update"},
 			},
 		},
 	})
@@ -395,7 +395,7 @@ func TestAccEKSCluster_ComputeConfig_OnUpdate(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons", "force_version_update"},
 			},
 			{
 				Config: testAccClusterConfig_computeConfig(rName, true, "aws_iam_role.node.arn"),
@@ -422,7 +422,7 @@ func TestAccEKSCluster_ComputeConfig_OnUpdate(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons", "force_version_update"},
 			},
 		},
 	})
@@ -479,7 +479,7 @@ func TestAccEKSCluster_ComputeConfig_ModifyARN(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons", "force_version_update"},
 			},
 		},
 	})
@@ -537,7 +537,7 @@ func TestAccEKSCluster_ComputeConfig_AddARN(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons", "force_version_update"},
 			},
 		},
 	})
@@ -570,7 +570,7 @@ func TestAccEKSCluster_Encryption_create(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons", "force_version_update"},
 			},
 		},
 	})
@@ -611,7 +611,7 @@ func TestAccEKSCluster_Encryption_update(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons", "force_version_update"},
 			},
 		},
 	})
@@ -646,7 +646,7 @@ func TestAccEKSCluster_Encryption_versionUpdate(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons", "force_version_update"},
 			},
 			{
 				Config: testAccClusterConfig_encryptionVersion(rName, clusterVersionUpgradeUpdated),
@@ -688,7 +688,7 @@ func TestAccEKSCluster_version(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons", "force_version_update"},
 			},
 			{
 				Config: testAccClusterConfig_version(rName, clusterVersionUpgradeUpdated),
@@ -727,7 +727,7 @@ func TestAccEKSCluster_logging(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons", "force_version_update"},
 			},
 			{
 				Config: testAccClusterConfig_logging(rName, []string{"api", "audit"}),
@@ -776,7 +776,7 @@ func TestAccEKSCluster_tags(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons", "force_version_update"},
 			},
 			{
 				Config: testAccClusterConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
@@ -823,7 +823,7 @@ func TestAccEKSCluster_VPC_securityGroupIDs(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons", "force_version_update"},
 			},
 		},
 	})
@@ -864,7 +864,7 @@ func TestAccEKSCluster_VPC_securityGroupIDsAndSubnetIDs_update(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons", "force_version_update"},
 			},
 		},
 	})
@@ -894,7 +894,7 @@ func TestAccEKSCluster_VPC_endpointPrivateAccess(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons", "force_version_update"},
 			},
 			{
 				Config: testAccClusterConfig_vpcEndpointPrivateAccess(rName, false),
@@ -942,7 +942,7 @@ func TestAccEKSCluster_VPC_endpointPublicAccess(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons", "force_version_update"},
 			},
 			{
 				Config: testAccClusterConfig_vpcEndpointPublicAccess(rName, true),
@@ -990,7 +990,7 @@ func TestAccEKSCluster_VPC_publicAccessCIDRs(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons", "force_version_update"},
 			},
 			{
 				Config: testAccClusterConfig_vpcPublicAccessCIDRs(rName, `["4.3.2.1/32", "8.7.6.5/32"]`),
@@ -1048,7 +1048,7 @@ func TestAccEKSCluster_Network_serviceIPv4CIDR(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons", "force_version_update"},
 			},
 			{
 				Config:             testAccClusterConfig_networkServiceIPv4CIDR(rName, `"192.168.0.0/24"`),
@@ -1092,7 +1092,7 @@ func TestAccEKSCluster_Network_ipFamily(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons", "force_version_update"},
 			},
 			{
 				Config:             testAccClusterConfig_networkIPFamily(rName, `"ipv6"`),
@@ -1139,7 +1139,7 @@ func TestAccEKSCluster_Outpost_create(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons", "force_version_update"},
 			},
 		},
 	})
@@ -1173,7 +1173,7 @@ func TestAccEKSCluster_Outpost_placement(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons", "force_version_update"},
 			},
 		},
 	})
@@ -1207,7 +1207,7 @@ func TestAccEKSCluster_RemoteNetwork_Node(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons", "force_version_update"},
 			},
 		},
 	})
@@ -1244,7 +1244,7 @@ func TestAccEKSCluster_RemoteNetwork_Pod(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons", "force_version_update"},
 			},
 		},
 	})
@@ -1274,7 +1274,7 @@ func TestAccEKSCluster_upgradePolicy(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons", "force_version_update"},
 			},
 			{
 				Config: testAccClusterConfig_upgradePolicy(rName, "EXTENDED"),
@@ -1288,7 +1288,7 @@ func TestAccEKSCluster_upgradePolicy(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons", "force_version_update"},
 			},
 		},
 	})
@@ -1326,7 +1326,7 @@ func TestAccEKSCluster_zonalShiftConfig(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons", "force_version_update"},
 			},
 		},
 	})
