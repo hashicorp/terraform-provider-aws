@@ -403,13 +403,15 @@ func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta any) di
 		input.Repository = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateApp(ctx, &input)
+	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*types.BadRequestException](ctx, propagationTimeout, func() (any, error) {
+		return conn.CreateApp(ctx, &input)
+	}, "role provided cannot be assumed")
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Amplify App (%s): %s", name, err)
 	}
 
-	d.SetId(aws.ToString(output.App.AppId))
+	d.SetId(aws.ToString(outputRaw.(*amplify.CreateAppOutput).App.AppId))
 
 	return append(diags, resourceAppRead(ctx, d, meta)...)
 }
