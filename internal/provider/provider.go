@@ -489,7 +489,12 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 					interceptor: newDefaultRegionValueCustomizeDiffInterceptor(),
 				})
 				if !v.IsGlobal {
-					customizeDiffFuncs = append(customizeDiffFuncs, forceNewIfRegionValueChanges)
+					//customizeDiffFuncs = append(customizeDiffFuncs, forceNewIfRegionValueChanges)
+					customizeDiffInterceptors = append(customizeDiffInterceptors, customizeDiffInterceptorItem{
+						when:        Before,
+						why:         CustomizeDiff,
+						interceptor: newForceNewIfRegionValueChangesCustomizeDiffInterceptor(),
+					})
 				}
 				importFuncs = append(importFuncs, importRegion)
 			}

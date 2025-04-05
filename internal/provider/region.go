@@ -83,7 +83,7 @@ func (r defaultRegionValueCustomizeDiffInterceptor) run(ctx context.Context, opt
 	case Before:
 		switch why {
 		case CustomizeDiff:
-			// Sets the value of the top-level `region` attribute to the provider's configured Region if it is not set.
+			// Set the value of the top-level `region` attribute to the provider's configured Region if it is not set.
 			if _, ok := d.GetOk(names.AttrRegion); !ok {
 				return d.SetNew(names.AttrRegion, c.AwsConfig(ctx).Region)
 			}
@@ -103,6 +103,34 @@ func forceNewIfRegionValueChanges(ctx context.Context, d *schema.ResourceDiff, m
 			return nil
 		}
 		return d.ForceNew(names.AttrRegion)
+	}
+
+	return nil
+}
+
+type forceNewIfRegionValueChangesCustomizeDiffInterceptor struct{}
+
+func newForceNewIfRegionValueChangesCustomizeDiffInterceptor() customizeDiffInterceptor {
+	return &forceNewIfRegionValueChangesCustomizeDiffInterceptor{}
+}
+
+func (r forceNewIfRegionValueChangesCustomizeDiffInterceptor) run(ctx context.Context, opts customizeDiffInterceptorOptions) error {
+	c := opts.c
+
+	switch d, when, why := opts.d, opts.when, opts.why; when {
+	case Before:
+		switch why {
+		case CustomizeDiff:
+			// Force resource replacement if the value of the top-level `region` attribute changes.
+			if d.Id() != "" && d.HasChange(names.AttrRegion) {
+				providerRegion := c.AwsConfig(ctx).Region
+				o, n := d.GetChange(names.AttrRegion)
+				if o, n := o.(string), n.(string); (o == "" && n == providerRegion) || (o == providerRegion && n == "") {
+					return nil
+				}
+				return d.ForceNew(names.AttrRegion)
+			}
+		}
 	}
 
 	return nil
