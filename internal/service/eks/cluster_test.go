@@ -667,7 +667,7 @@ func TestAccEKSCluster_Encryption_versionUpdate(t *testing.T) {
 	})
 }
 
-func TestAccEKSCluster_ForceUpgradeVersion(t *testing.T) {
+func TestAccEKSCluster_forceUpdateVersion(t *testing.T) {
 	ctx := acctest.Context(t)
 	var cluster1, cluster2 types.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -680,7 +680,7 @@ func TestAccEKSCluster_ForceUpgradeVersion(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_preForceUpgradeVersion(rName, clusterVersionUpgradeForceInitial),
+				Config: testAccClusterConfig_preForceUpdateVersion(rName, clusterVersionUpgradeForceInitial),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, clusterVersionUpgradeForceInitial),
@@ -693,7 +693,7 @@ func TestAccEKSCluster_ForceUpgradeVersion(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
 			},
 			{
-				Config: testAccClusterConfig_version(rName, clusterVersionUpgradeForceUpdated),
+				Config: testAccClusterConfig_forceUpdateVersion(rName, clusterVersionUpgradeForceUpdated),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster2),
 					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
@@ -1826,7 +1826,6 @@ resource "aws_eks_cluster" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.cluster.arn
   version  = %[2]q
-  force    = true
 
   vpc_config {
     subnet_ids = aws_subnet.test[*].id
@@ -1837,7 +1836,7 @@ resource "aws_eks_cluster" "test" {
 `, rName, version))
 }
 
-func testAccClusterConfig_preForceUpgradeVersion(rName, version string) string {
+func testAccClusterConfig_preForceUpdateVersion(rName, version string) string {
 	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_cluster" "test" {
   name     = %[1]q
@@ -1850,11 +1849,22 @@ resource "aws_eks_cluster" "test" {
 
   depends_on = [aws_iam_role_policy_attachment.cluster_AmazonEKSClusterPolicy]
 }
+`, rName, version))
+}
 
-resource "aws_eks_addon" "vpc_cni" {
-  cluster_name  = aws_eks_cluster.test.name
-  addon_name    = "vpc-cni"
-  addon_version = "v1.16.0-eksbuild.1" # oldest version listed for EKS 1.30
+func testAccClusterConfig_forceUpdateVersion(rName, version string) string {
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
+resource "aws_eks_cluster" "test" {
+  name                 = %[1]q
+  role_arn             = aws_iam_role.cluster.arn
+  version              = %[2]q
+  force_update_version = true
+
+  vpc_config {
+    subnet_ids = aws_subnet.test[*].id
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.cluster_AmazonEKSClusterPolicy]
 }
 `, rName, version))
 }
