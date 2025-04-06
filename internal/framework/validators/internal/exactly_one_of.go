@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package s3
+package internal
 
 import (
 	"context"
@@ -12,17 +12,23 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 )
 
-// This is a copy of `stringvalidator.ExactlyOneOf` and `schemavalidator.ExactlyOneOfValidator`
-// that returns a warning instead of an error.
-// It could likely be moved to an internal validators package if useful elsewhere.
-
-func warnExactlyOneOf(expressions ...path.Expression) validator.String {
-	return ExactlyOneOfValidator{
-		PathExpressions: expressions,
-	}
-}
+var (
+	// _ validator.Bool    = ExactlyOneOfValidator{}
+	// _ validator.Float32 = ExactlyOneOfValidator{}
+	// _ validator.Float64 = ExactlyOneOfValidator{}
+	// _ validator.Int32   = ExactlyOneOfValidator{}
+	// _ validator.Int64   = ExactlyOneOfValidator{}
+	// _ validator.List    = ExactlyOneOfValidator{}
+	// _ validator.Map     = ExactlyOneOfValidator{}
+	// _ validator.Number  = ExactlyOneOfValidator{}
+	// _ validator.Object  = ExactlyOneOfValidator{}
+	// _ validator.Set     = ExactlyOneOfValidator{}
+	_ validator.String = ExactlyOneOfValidator{}
+	// _ validator.Dynamic = ExactlyOneOfValidator{}
+)
 
 type ExactlyOneOfValidator struct {
 	PathExpressions path.Expressions
@@ -54,9 +60,9 @@ func (av ExactlyOneOfValidator) ValidateString(ctx context.Context, req validato
 		Path:           req.Path,
 		PathExpression: req.PathExpression,
 	}
-	validateResp := &ExactlyOneOfValidatorResponse{}
+	var validateResp ExactlyOneOfValidatorResponse
 
-	av.Validate(ctx, validateReq, validateResp)
+	av.Validate(ctx, validateReq, &validateResp)
 
 	resp.Diagnostics.Append(validateResp.Diagnostics...)
 }
@@ -116,25 +122,16 @@ func (av ExactlyOneOfValidator) Validate(ctx context.Context, req ExactlyOneOfVa
 	}
 
 	if count == 0 {
-		res.Diagnostics.Append(warnInvalidAttributeCombinationDiagnostic(
+		res.Diagnostics.Append(fwdiag.WarningInvalidAttributeCombinationDiagnostic(
 			req.Path,
 			fmt.Sprintf("No attribute specified when one (and only one) of %s is required", expressions),
 		))
 	}
 
 	if count > 1 {
-		res.Diagnostics.Append(warnInvalidAttributeCombinationDiagnostic(
+		res.Diagnostics.Append(fwdiag.WarningInvalidAttributeCombinationDiagnostic(
 			req.Path,
 			fmt.Sprintf("%d attributes specified when one (and only one) of %s is required", count, expressions),
 		))
 	}
-}
-
-// warnInvalidAttributeCombinationDiagnostic returns a warning Diagnostic to be used when a schemavalidator of attributes is invalid.
-func warnInvalidAttributeCombinationDiagnostic(path path.Path, description string) diag.Diagnostic {
-	return diag.NewAttributeWarningDiagnostic(
-		path,
-		"Invalid Attribute Combination",
-		description+"\n\nThis will be an error in a future version of the provider",
-	)
 }
