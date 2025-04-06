@@ -389,7 +389,7 @@ data "aws_region" "current" {}
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "test" {
-  name_prefix        = "AmazonBedrockExecutionRoleForAgents_tf"
+  name_prefix        = "AmazonBedrockExecutionRoleForFlows_tf"
   assume_role_policy = data.aws_iam_policy_document.test_trust.json
 }
 
@@ -481,7 +481,6 @@ func testAccFlowConfig_withDefinition(rName, model string) string {
 resource "aws_bedrockagent_flow" "test" {
   name               = %[1]q
   execution_role_arn = aws_iam_role.test.arn
-
 
   definition {
     connection {
