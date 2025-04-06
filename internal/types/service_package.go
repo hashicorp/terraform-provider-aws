@@ -53,6 +53,7 @@ type ServicePackageFrameworkResource struct {
 	Name     string
 	Tags     *ServicePackageResourceTags
 	Region   *ServicePackageResourceRegion
+	Identity Identity
 }
 
 // ServicePackageSDKDataSource represents a Terraform Plugin SDK data source

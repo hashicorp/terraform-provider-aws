@@ -11,9 +11,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/identityschema"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 // Implemented by (Config|Plan|State).GetAttribute().
@@ -251,6 +253,7 @@ type wrappedResourceOptions struct {
 	interceptors     resourceInterceptors
 	modifyPlanFuncs  []modifyPlanFunc
 	typeName         string
+	identity         types.Identity
 }
 
 // wrappedResource represents an interceptor dispatcher for a Plugin Framework resource.
@@ -457,15 +460,27 @@ func (w *wrappedResource) MoveState(ctx context.Context) []resource.StateMover {
 }
 
 func (w *wrappedResource) IdentitySchema(ctx context.Context, req resource.IdentitySchemaRequest, resp *resource.IdentitySchemaResponse) {
-	if v, ok := w.inner.(resource.ResourceWithIdentity); ok {
-		ctx, diags := w.opts.bootstrapContext(ctx, nil, w.meta)
-		if diags.HasError() {
-			tflog.Warn(ctx, "wrapping IdentitySchema", map[string]any{
-				"resource":               w.opts.typeName,
-				"bootstrapContext error": fwdiag.DiagnosticsString(diags),
-			})
-		}
-
-		v.IdentitySchema(ctx, req, resp)
+	if len(w.opts.identity.Attributes) > 0 {
+		resp.IdentitySchema = newIdentitySchema(w.opts.identity.Attributes)
 	}
+}
+
+func newIdentitySchema(attributes []types.IdentityAttribute) identityschema.Schema {
+	schemaAttrs := make(map[string]identityschema.Attribute, len(attributes))
+	for _, attr := range attributes {
+		schemaAttrs[attr.Name] = newIdentityAttribute(attr)
+	}
+	return identityschema.Schema{
+		Attributes: schemaAttrs,
+	}
+}
+
+func newIdentityAttribute(attribute types.IdentityAttribute) identityschema.Attribute {
+	attr := identityschema.StringAttribute{}
+	if attribute.Required {
+		attr.RequiredForImport = true
+	} else {
+		attr.OptionalForImport = true
+	}
+	return attr
 }
