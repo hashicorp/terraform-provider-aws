@@ -61,12 +61,12 @@ func TestTagsResourceInterceptor(t *testing.T) {
 	t.Parallel()
 
 	ctx := context.Background()
-	var interceptors crudInterceptorItems
+	var interceptors interceptorInvocations
 	sp := &types.ServicePackageResourceTags{
 		IdentifierAttribute: "id",
 	}
 	tags := newTagsResourceCRUDInterceptor(sp)
-	interceptors = append(interceptors, crudInterceptorItem{
+	interceptors = append(interceptors, interceptorInvocation{
 		when:        Finally,
 		why:         Update,
 		interceptor: tags,
@@ -102,7 +102,7 @@ func TestTagsResourceInterceptor(t *testing.T) {
 			when: v.when,
 			why:  v.why,
 		}
-		diags := v.interceptor.run(ctx, opts)
+		diags := v.interceptor.(crudInterceptor).run(ctx, opts)
 		if got, want := len(diags), 1; got != want {
 			t.Errorf("length of diags = %v, want %v", got, want)
 		}

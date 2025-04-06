@@ -20,7 +20,7 @@ type contextFunc func(context.Context, getAttributeFunc, any) (context.Context, 
 type wrappedDataSourceOptions struct {
 	// bootstrapContext is run on all wrapped methods before any interceptors.
 	bootstrapContext contextFunc
-	crudInterceptors crudInterceptorItems
+	interceptors     interceptorInvocations
 	typeName         string
 }
 
@@ -40,14 +40,13 @@ func wrapDataSource(r *schema.Resource, opts wrappedDataSourceOptions) {
 }
 
 func (w *wrappedDataSource) read(f schema.ReadContextFunc) schema.ReadContextFunc {
-	return interceptedCRUDHandler(w.opts.bootstrapContext, w.opts.crudInterceptors, f, Read)
+	return interceptedCRUDHandler(w.opts.bootstrapContext, w.opts.interceptors, f, Read)
 }
 
 type wrappedResourceOptions struct {
 	// bootstrapContext is run on all wrapped methods before any interceptors.
-	bootstrapContext          contextFunc
-	crudInterceptors          crudInterceptorItems
-	customizeDiffInterceptors customizeDiffInterceptorItems
+	bootstrapContext contextFunc
+	interceptors     interceptorInvocations
 	// importsFuncs are called before bootstrapContext.
 	importFuncs []schema.StateContextFunc
 	typeName    string
@@ -81,7 +80,7 @@ func (w *wrappedResource) create(f schema.CreateContextFunc) schema.CreateContex
 		return nil
 	}
 
-	return interceptedCRUDHandler(w.opts.bootstrapContext, w.opts.crudInterceptors, f, Create)
+	return interceptedCRUDHandler(w.opts.bootstrapContext, w.opts.interceptors, f, Create)
 }
 
 func (w *wrappedResource) read(f schema.ReadContextFunc) schema.ReadContextFunc {
@@ -89,7 +88,7 @@ func (w *wrappedResource) read(f schema.ReadContextFunc) schema.ReadContextFunc 
 		return nil
 	}
 
-	return interceptedCRUDHandler(w.opts.bootstrapContext, w.opts.crudInterceptors, f, Read)
+	return interceptedCRUDHandler(w.opts.bootstrapContext, w.opts.interceptors, f, Read)
 }
 
 func (w *wrappedResource) update(f schema.UpdateContextFunc) schema.UpdateContextFunc {
@@ -97,7 +96,7 @@ func (w *wrappedResource) update(f schema.UpdateContextFunc) schema.UpdateContex
 		return nil
 	}
 
-	return interceptedCRUDHandler(w.opts.bootstrapContext, w.opts.crudInterceptors, f, Update)
+	return interceptedCRUDHandler(w.opts.bootstrapContext, w.opts.interceptors, f, Update)
 }
 
 func (w *wrappedResource) delete(f schema.DeleteContextFunc) schema.DeleteContextFunc {
@@ -105,7 +104,7 @@ func (w *wrappedResource) delete(f schema.DeleteContextFunc) schema.DeleteContex
 		return nil
 	}
 
-	return interceptedCRUDHandler(w.opts.bootstrapContext, w.opts.crudInterceptors, f, Delete)
+	return interceptedCRUDHandler(w.opts.bootstrapContext, w.opts.interceptors, f, Delete)
 }
 
 func (w *wrappedResource) import_(f schema.StateContextFunc) schema.StateContextFunc {
@@ -136,7 +135,7 @@ func (w *wrappedResource) customizeDiff(f schema.CustomizeDiffFunc) schema.Custo
 		}
 	}
 
-	return interceptedCustomizeDiffHandler(w.opts.bootstrapContext, w.opts.customizeDiffInterceptors, f)
+	return interceptedCustomizeDiffHandler(w.opts.bootstrapContext, w.opts.interceptors, f)
 }
 
 func (w *wrappedResource) stateUpgrade(f schema.StateUpgradeFunc) schema.StateUpgradeFunc {

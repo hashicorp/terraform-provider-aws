@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
-	"github.com/hashicorp/terraform-provider-aws/internal/slices"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 )
 
 // schemaResourceData is an interface that implements a subset of schema.ResourceData's public methods.
@@ -58,19 +58,25 @@ type (
 	crudInterceptorFunc = interceptorFunc[schemaResourceData, diag.Diagnostics]
 )
 
-// interceptoryItem represents a single interceptor invocation.
-type interceptorItem[D any, E any] struct {
+// interceptorInvocation represents a single interceptor invocation.
+type interceptorInvocation struct {
+	when        when
+	why         why
+	interceptor any
+}
+
+type typedInterceptorInvocation[D any, E any] struct {
 	when        when
 	why         why
 	interceptor interceptor[D, E]
 }
 
 type (
-	crudInterceptorItem          = interceptorItem[schemaResourceData, diag.Diagnostics]
-	customizeDiffInterceptorItem = interceptorItem[*schema.ResourceDiff, error]
+	crudInterceptorInvocation          = typedInterceptorInvocation[schemaResourceData, diag.Diagnostics]
+	customizeDiffInterceptorInvocation = typedInterceptorInvocation[*schema.ResourceDiff, error]
 )
 
-// when represents the point in the CRUD request lifecycle that an interceptor is run.
+// when represents the point in the request lifecycle that an interceptor is run.
 // Multiple values can be ORed together.
 type when uint16
 
@@ -81,7 +87,7 @@ const (
 	Finally                  // Interceptor is invoked after After or OnError
 )
 
-// why represents the CRUD operation(s) that an interceptor is run.
+// why represents the operation(s) that an interceptor is run.
 // Multiple values can be ORed together.
 type why uint16
 
@@ -95,21 +101,16 @@ const (
 	AllCRUDOps = Create | Read | Update | Delete // Interceptor is invoked for all CRUD calls
 )
 
-type interceptorItems[D any, E any] []interceptorItem[D, E]
+type interceptorInvocations []interceptorInvocation
 
-func (s interceptorItems[D, E]) why(why why) interceptorItems[D, E] {
-	return slices.Filter(s, func(e interceptorItem[D, E]) bool {
+func (s interceptorInvocations) why(why why) interceptorInvocations {
+	return tfslices.Filter(s, func(e interceptorInvocation) bool {
 		return e.why&why != 0
 	})
 }
 
-type (
-	crudInterceptorItems          = interceptorItems[schemaResourceData, diag.Diagnostics]
-	customizeDiffInterceptorItems = interceptorItems[*schema.ResourceDiff, error]
-)
-
 // interceptedCRUDHandler returns a handler that invokes the specified CRUD handler, running any interceptors.
-func interceptedCRUDHandler[F ~func(context.Context, *schema.ResourceData, any) diag.Diagnostics](bootstrapContext contextFunc, interceptors crudInterceptorItems, f F, why why) F {
+func interceptedCRUDHandler[F ~func(context.Context, *schema.ResourceData, any) diag.Diagnostics](bootstrapContext contextFunc, interceptorInvocations interceptorInvocations, f F, why why) F {
 	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 		ctx, diags := bootstrapContext(ctx, d.GetOk, meta)
 		if diags.HasError() {
@@ -117,7 +118,16 @@ func interceptedCRUDHandler[F ~func(context.Context, *schema.ResourceData, any) 
 		}
 
 		// Before interceptors are run first to last.
-		forward := interceptors.why(why)
+		forward := make([]crudInterceptorInvocation, 0)
+		for _, v := range interceptorInvocations.why(why) {
+			if interceptor, ok := v.interceptor.(crudInterceptor); ok {
+				forward = append(forward, crudInterceptorInvocation{
+					when:        v.when,
+					why:         v.why,
+					interceptor: interceptor,
+				})
+			}
+		}
 
 		when := Before
 		for _, v := range forward {
@@ -138,7 +148,7 @@ func interceptedCRUDHandler[F ~func(context.Context, *schema.ResourceData, any) 
 		}
 
 		// All other interceptors are run last to first.
-		reverse := slices.Reverse(forward)
+		reverse := tfslices.Reverse(forward)
 		diags = f(ctx, d, meta)
 
 		if diags.HasError() {
@@ -175,8 +185,8 @@ func interceptedCRUDHandler[F ~func(context.Context, *schema.ResourceData, any) 
 	}
 }
 
-// interceptedCRUDHandler returns a handler that invokes the specified CustomizeDiff handler, running any interceptors.
-func interceptedCustomizeDiffHandler(bootstrapContext contextFunc, interceptors customizeDiffInterceptorItems, f schema.CustomizeDiffFunc) schema.CustomizeDiffFunc {
+// interceptedCustomizeDiffHandler returns a handler that invokes the specified CustomizeDiff handler, running any interceptors.
+func interceptedCustomizeDiffHandler(bootstrapContext contextFunc, interceptorInvocations interceptorInvocations, f schema.CustomizeDiffFunc) schema.CustomizeDiffFunc {
 	return func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
 		ctx, diags := bootstrapContext(ctx, d.GetOk, meta)
 		if diags.HasError() {
@@ -186,7 +196,16 @@ func interceptedCustomizeDiffHandler(bootstrapContext contextFunc, interceptors 
 		why := CustomizeDiff
 
 		// Before interceptors are run first to last.
-		forward := interceptors.why(why)
+		forward := make([]customizeDiffInterceptorInvocation, 0)
+		for _, v := range interceptorInvocations.why(why) {
+			if interceptor, ok := v.interceptor.(customizeDiffInterceptor); ok {
+				forward = append(forward, customizeDiffInterceptorInvocation{
+					when:        v.when,
+					why:         v.why,
+					interceptor: interceptor,
+				})
+			}
+		}
 
 		when := Before
 		for _, v := range forward {
@@ -205,7 +224,7 @@ func interceptedCustomizeDiffHandler(bootstrapContext contextFunc, interceptors 
 		}
 
 		// All other interceptors are run last to first.
-		reverse := slices.Reverse(forward)
+		reverse := tfslices.Reverse(forward)
 		var errs []error
 
 		if err := f(ctx, d, meta); err != nil {

@@ -344,7 +344,7 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 				isRegionOverrideEnabled = true
 			}
 
-			var crudInterceptors crudInterceptorItems
+			var interceptors interceptorInvocations
 
 			if isRegionOverrideEnabled {
 				v := v.Region
@@ -368,7 +368,7 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 					}
 				}
 
-				crudInterceptors = append(crudInterceptors, crudInterceptorItem{
+				interceptors = append(interceptors, interceptorInvocation{
 					when:        Before | After,
 					why:         Read,
 					interceptor: newRegionDataSourceCRUDInterceptor(v.IsValidateOverrideInPartition),
@@ -376,7 +376,7 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 			}
 
 			if v.Tags != nil {
-				crudInterceptors = append(crudInterceptors, crudInterceptorItem{
+				interceptors = append(interceptors, interceptorInvocation{
 					when:        Before | After,
 					why:         Read,
 					interceptor: newTagsDataSourceCRUDInterceptor(v.Tags),
@@ -402,8 +402,8 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 
 					return ctx, diags
 				},
-				crudInterceptors: crudInterceptors,
-				typeName:         typeName,
+				interceptors: interceptors,
+				typeName:     typeName,
 			}
 			wrapDataSource(r, opts)
 			provider.DataSourcesMap[typeName] = r
@@ -443,8 +443,7 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 			}
 
 			var importFuncs []schema.StateContextFunc
-			var crudInterceptors crudInterceptorItems
-			var customizeDiffInterceptors customizeDiffInterceptorItems
+			var interceptors interceptorInvocations
 
 			if isRegionOverrideEnabled {
 				v := v.Region
@@ -474,19 +473,19 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 				}
 
 				if v.IsValidateOverrideInPartition {
-					customizeDiffInterceptors = append(customizeDiffInterceptors, customizeDiffInterceptorItem{
+					interceptors = append(interceptors, interceptorInvocation{
 						when:        Before,
 						why:         CustomizeDiff,
 						interceptor: verifyRegionValueInConfiguredPartition(),
 					})
 				}
-				customizeDiffInterceptors = append(customizeDiffInterceptors, customizeDiffInterceptorItem{
+				interceptors = append(interceptors, interceptorInvocation{
 					when:        Before,
 					why:         CustomizeDiff,
 					interceptor: defaultRegionValue(),
 				})
 				if !v.IsGlobal {
-					customizeDiffInterceptors = append(customizeDiffInterceptors, customizeDiffInterceptorItem{
+					interceptors = append(interceptors, interceptorInvocation{
 						when:        Before,
 						why:         CustomizeDiff,
 						interceptor: forceNewIfRegionValueChanges(),
@@ -496,12 +495,12 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 			}
 
 			if v.Tags != nil {
-				crudInterceptors = append(crudInterceptors, crudInterceptorItem{
+				interceptors = append(interceptors, interceptorInvocation{
 					when:        Before | After | Finally,
 					why:         Create | Read | Update,
 					interceptor: newTagsResourceCRUDInterceptor(v.Tags),
 				})
-				customizeDiffInterceptors = append(customizeDiffInterceptors, customizeDiffInterceptorItem{
+				interceptors = append(interceptors, interceptorInvocation{
 					when:        Before,
 					why:         CustomizeDiff,
 					interceptor: newTagsResourceCustomizeDiffInterceptor(),
@@ -528,10 +527,9 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 
 					return ctx, diags
 				},
-				crudInterceptors:          crudInterceptors,
-				customizeDiffInterceptors: customizeDiffInterceptors,
-				importFuncs:               importFuncs,
-				typeName:                  typeName,
+				interceptors: interceptors,
+				importFuncs:  importFuncs,
+				typeName:     typeName,
 			}
 			wrapResource(r, opts)
 			provider.ResourcesMap[typeName] = r
