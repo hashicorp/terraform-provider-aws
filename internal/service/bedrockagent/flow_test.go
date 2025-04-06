@@ -94,6 +94,46 @@ func TestAccBedrockAgentFlow_disappears(t *testing.T) {
 	})
 }
 
+func TestAccBedrockAgentFlow_withEncryptionKey(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var flow bedrockagent.GetFlowOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagent_flow.test"
+	foundationModel := "amazon.titan-text-express-v1"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFlowDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFlowConfig_withEncryptionKey(rName, foundationModel),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFlowExists(ctx, resourceName, &flow),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "bedrock", regexache.MustCompile(`flow/.+$`)),
+					resource.TestCheckResourceAttrSet(resourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrPair(resourceName, "execution_role_arn", "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "customer_encryption_key_arn", "aws_kms_key.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "definition.#", "0"),
+					resource.TestCheckNoResourceAttr(resourceName, "description"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+			},
+		},
+	})
+}
 func testAccCheckFlowDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentClient(ctx)
@@ -205,6 +245,21 @@ resource "aws_bedrockagent_flow" "test" {
   name               = %[1]q
   execution_role_arn = aws_iam_role.test.arn
   description        = "basic"
+}
+`, rName))
+}
+
+func testAccFlowConfig_withEncryptionKey(rName, model string) string {
+	return acctest.ConfigCompose(testAccFlowConfig_base(model), fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+}
+
+resource "aws_bedrockagent_flow" "test" {
+  name                        = %[1]q
+  execution_role_arn          = aws_iam_role.test.arn
+  customer_encryption_key_arn = aws_kms_key.test.arn
 }
 `, rName))
 }
