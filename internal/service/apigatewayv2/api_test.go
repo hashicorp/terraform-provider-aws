@@ -1271,7 +1271,8 @@ resource "aws_apigatewayv2_api" "test" {
   "info": {
     "title": "Title test",
     "version": "2.0",
-    "description": "Description test"
+    "description": "Description test",
+    "comment": "invalid field"
   },
   "paths": {
     "/update": {
