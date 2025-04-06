@@ -96,6 +96,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 				IsValidateOverrideInPartition: {{ $value.ValidateRegionOverrideInPartition }},
 			{{- end }}
 			},
+			{{- if $value.ARNIdentity }}
+			Identity: itypes.ARNIdentity(),
+			{{- end }}
 		},
 {{- end }}
 	}
