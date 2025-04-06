@@ -13,7 +13,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -55,10 +59,9 @@ func TestAccBedrockAgentFlow_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -126,10 +129,85 @@ func TestAccBedrockAgentFlow_withEncryptionKey(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentFlow_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var flow bedrockagent.GetFlowOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagent_flow.test"
+	foundationModel := "amazon.titan-text-express-v1"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFlowDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFlowConfig_tags1(rName, foundationModel, acctest.CtKey1, acctest.CtValue1),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFlowExists(ctx, resourceName, &flow),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccFlowConfig_tags2(rName, foundationModel, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFlowExists(ctx, resourceName, &flow),
+				),
+			},
+			{
+				Config: testAccFlowConfig_tags1(rName, foundationModel, acctest.CtKey2, acctest.CtValue2),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFlowExists(ctx, resourceName, &flow),
+				),
 			},
 		},
 	})
@@ -262,4 +340,31 @@ resource "aws_bedrockagent_flow" "test" {
   customer_encryption_key_arn = aws_kms_key.test.arn
 }
 `, rName))
+}
+
+func testAccFlowConfig_tags1(rName, model, tag1Key, tag1Value string) string {
+	return acctest.ConfigCompose(testAccFlowConfig_base(model), fmt.Sprintf(`
+resource "aws_bedrockagent_flow" "test" {
+  name               = %[1]q
+  execution_role_arn = aws_iam_role.test.arn
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tag1Key, tag1Value))
+}
+
+func testAccFlowConfig_tags2(rName, model, tag1Key, tag1Value, tag2Key, tag2Value string) string {
+	return acctest.ConfigCompose(testAccFlowConfig_base(model), fmt.Sprintf(`
+resource "aws_bedrockagent_flow" "test" {
+  name               = %[1]q
+  execution_role_arn = aws_iam_role.test.arn
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tag1Key, tag1Value, tag2Key, tag2Value))
 }
