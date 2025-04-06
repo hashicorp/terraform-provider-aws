@@ -33,9 +33,9 @@ func (p *servicePackage) EphemeralResources(ctx context.Context) []*itypes.Servi
 			Region: &itypes.ServicePackageResourceRegion {
 				IsGlobal:          {{ or $.IsGlobal $value.IsGlobal }},
 				IsOverrideEnabled: {{ $value.RegionOverrideEnabled }},
-	{{- if $value.RegionOverrideEnabled }}
+				{{- if $value.RegionOverrideEnabled }}
 				IsValidateOverrideInPartition: {{ $value.ValidateRegionOverrideInPartition }},
-	{{- end }}
+				{{- end }}
 			},
 		},
 {{- end }}
@@ -63,9 +63,9 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 			Region: &itypes.ServicePackageResourceRegion {
 				IsGlobal:          {{ or $.IsGlobal $value.IsGlobal }},
 				IsOverrideEnabled: {{ $value.RegionOverrideEnabled }},
-	{{- if $value.RegionOverrideEnabled }}
+				{{- if $value.RegionOverrideEnabled }}
 				IsValidateOverrideInPartition: {{ $value.ValidateRegionOverrideInPartition }},
-	{{- end }}
+				{{- end }}
 			},
 		},
 {{- end }}
@@ -92,9 +92,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Region: &itypes.ServicePackageResourceRegion {
 				IsGlobal:          {{ or $.IsGlobal $value.IsGlobal }},
 				IsOverrideEnabled: {{ $value.RegionOverrideEnabled }},
-	{{- if $value.RegionOverrideEnabled }}
+			{{- if $value.RegionOverrideEnabled }}
 				IsValidateOverrideInPartition: {{ $value.ValidateRegionOverrideInPartition }},
-	{{- end }}
+			{{- end }}
 			},
 		},
 {{- end }}
@@ -121,9 +121,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Region: &itypes.ServicePackageResourceRegion {
 				IsGlobal:          {{ or $.IsGlobal $value.IsGlobal }},
 				IsOverrideEnabled: {{ $value.RegionOverrideEnabled }},
-	{{- if $value.RegionOverrideEnabled }}
+				{{- if $value.RegionOverrideEnabled }}
 				IsValidateOverrideInPartition: {{ $value.ValidateRegionOverrideInPartition }},
-	{{- end }}
+				{{- end }}
 			},
 		},
 {{- end }}
