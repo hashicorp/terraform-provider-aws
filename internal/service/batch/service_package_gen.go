@@ -43,6 +43,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 				IsGlobal:          false,
 				IsOverrideEnabled: false,
 			},
+			Identity: itypes.ARNIdentity(),
 		},
 	}
 }
