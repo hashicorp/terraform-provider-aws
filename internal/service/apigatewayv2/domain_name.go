@@ -85,6 +85,12 @@ func resourceDomainName() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						names.AttrIPAddressType: {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Default:          "ipv4",
+							ValidateDiagFunc: enum.Validate[awstypes.IpAddressType](),
+						},
 						"security_policy": {
 							Type:         schema.TypeString,
 							Required:     true,
@@ -327,6 +333,10 @@ func expandDomainNameConfiguration(tfMap map[string]any) awstypes.DomainNameConf
 		apiObject.EndpointType = awstypes.EndpointType(v)
 	}
 
+	if v, ok := tfMap[names.AttrIPAddressType].(string); ok && v != "" {
+		apiObject.IpAddressType = awstypes.IpAddressType(v)
+	}
+
 	if v, ok := tfMap["security_policy"].(string); ok && v != "" {
 		apiObject.SecurityPolicy = awstypes.SecurityPolicy(v)
 	}
@@ -370,6 +380,10 @@ func flattenDomainNameConfiguration(apiObject awstypes.DomainNameConfiguration) 
 
 	if v := apiObject.HostedZoneId; v != nil {
 		tfMap[names.AttrHostedZoneID] = aws.ToString(v)
+	}
+
+	if v := apiObject.IpAddressType; v != "" {
+		tfMap[names.AttrIPAddressType] = string(apiObject.IpAddressType)
 	}
 
 	tfMap["security_policy"] = string(apiObject.SecurityPolicy)

@@ -132,6 +132,12 @@ func resourceAPI() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
+			names.AttrIPAddressType: {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          "ipv4",
+				ValidateDiagFunc: enum.Validate[awstypes.IpAddressType](),
+			},
 			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -200,6 +206,10 @@ func resourceAPICreate(ctx context.Context, d *schema.ResourceData, meta any) di
 		input.DisableExecuteApiEndpoint = aws.Bool(v.(bool))
 	}
 
+	if v, ok := d.GetOk(names.AttrIPAddressType); ok && v != "" {
+		input.IpAddressType = awstypes.IpAddressType(v.(string))
+	}
+
 	if v, ok := d.GetOk("route_key"); ok {
 		input.RouteKey = aws.String(v.(string))
 	}
@@ -258,6 +268,7 @@ func resourceAPIRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 	d.Set(names.AttrDescription, output.Description)
 	d.Set("disable_execute_api_endpoint", output.DisableExecuteApiEndpoint)
 	d.Set("execution_arn", apiInvokeARN(ctx, meta.(*conns.AWSClient), d.Id()))
+	d.Set(names.AttrIPAddressType, output.IpAddressType)
 	d.Set(names.AttrName, output.Name)
 	d.Set("protocol_type", output.ProtocolType)
 	d.Set("route_selection_expression", output.RouteSelectionExpression)
@@ -288,7 +299,7 @@ func resourceAPIUpdate(ctx context.Context, d *schema.ResourceData, meta any) di
 		}
 	}
 
-	if d.HasChanges("api_key_selection_expression", names.AttrDescription, "disable_execute_api_endpoint", names.AttrName, "route_selection_expression", names.AttrVersion) ||
+	if d.HasChanges("api_key_selection_expression", names.AttrDescription, "disable_execute_api_endpoint", names.AttrIPAddressType, names.AttrName, "route_selection_expression", names.AttrVersion) ||
 		(d.HasChange("cors_configuration") && !corsConfigurationDeleted) {
 		input := &apigatewayv2.UpdateApiInput{
 			ApiId: aws.String(d.Id()),
@@ -308,6 +319,10 @@ func resourceAPIUpdate(ctx context.Context, d *schema.ResourceData, meta any) di
 
 		if d.HasChange("disable_execute_api_endpoint") {
 			input.DisableExecuteApiEndpoint = aws.Bool(d.Get("disable_execute_api_endpoint").(bool))
+		}
+
+		if d.HasChange(names.AttrIPAddressType) {
+			input.IpAddressType = awstypes.IpAddressType(d.Get(names.AttrIPAddressType).(string))
 		}
 
 		if d.HasChange(names.AttrName) {
