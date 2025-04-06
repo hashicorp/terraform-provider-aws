@@ -45,6 +45,10 @@ func resourceServerlessCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"bootstrap_brokers_sasl_iam": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"client_authentication": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -183,6 +187,9 @@ func resourceServerlessClusterRead(ctx context.Context, d *schema.ResourceData, 
 	if err := d.Set(names.AttrVPCConfig, flattenVpcConfigs(cluster.Serverless.VpcConfigs)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting vpc_config: %s", err)
 	}
+
+	output, err := findBootstrapBrokersByARN(ctx, conn, d.Id())
+	d.Set("bootstrap_brokers_sasl_iam", SortEndpointsString(aws.ToString(output.BootstrapBrokerStringSaslIam)))
 
 	setTagsOut(ctx, cluster.Tags)
 
