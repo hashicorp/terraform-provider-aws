@@ -76,34 +76,18 @@ func wrapResource(r *schema.Resource, opts wrappedResourceOptions) {
 }
 
 func (w *wrappedResource) create(f schema.CreateContextFunc) schema.CreateContextFunc {
-	if f == nil {
-		return nil
-	}
-
 	return interceptedCRUDHandler(w.opts.bootstrapContext, w.opts.interceptors, f, Create)
 }
 
 func (w *wrappedResource) read(f schema.ReadContextFunc) schema.ReadContextFunc {
-	if f == nil {
-		return nil
-	}
-
 	return interceptedCRUDHandler(w.opts.bootstrapContext, w.opts.interceptors, f, Read)
 }
 
 func (w *wrappedResource) update(f schema.UpdateContextFunc) schema.UpdateContextFunc {
-	if f == nil {
-		return nil
-	}
-
 	return interceptedCRUDHandler(w.opts.bootstrapContext, w.opts.interceptors, f, Update)
 }
 
 func (w *wrappedResource) delete(f schema.DeleteContextFunc) schema.DeleteContextFunc {
-	if f == nil {
-		return nil
-	}
-
 	return interceptedCRUDHandler(w.opts.bootstrapContext, w.opts.interceptors, f, Delete)
 }
 
@@ -129,12 +113,6 @@ func (w *wrappedResource) import_(f schema.StateContextFunc) schema.StateContext
 }
 
 func (w *wrappedResource) customizeDiff(f schema.CustomizeDiffFunc) schema.CustomizeDiffFunc {
-	if f == nil {
-		f = func(context.Context, *schema.ResourceDiff, any) error {
-			return nil
-		}
-	}
-
 	return interceptedCustomizeDiffHandler(w.opts.bootstrapContext, w.opts.interceptors, f)
 }
 

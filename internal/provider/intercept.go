@@ -111,6 +111,11 @@ func (s interceptorInvocations) why(why why) interceptorInvocations {
 
 // interceptedCRUDHandler returns a handler that invokes the specified CRUD handler, running any interceptors.
 func interceptedCRUDHandler[F ~func(context.Context, *schema.ResourceData, any) diag.Diagnostics](bootstrapContext contextFunc, interceptorInvocations interceptorInvocations, f F, why why) F {
+	// We don't run CRUD interceptors if the resource has not defined a corresponding handler function.
+	if f == nil {
+		return nil
+	}
+
 	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 		ctx, diags := bootstrapContext(ctx, d.GetOk, meta)
 		if diags.HasError() {
@@ -187,6 +192,7 @@ func interceptedCRUDHandler[F ~func(context.Context, *schema.ResourceData, any) 
 
 // interceptedCustomizeDiffHandler returns a handler that invokes the specified CustomizeDiff handler, running any interceptors.
 func interceptedCustomizeDiffHandler(bootstrapContext contextFunc, interceptorInvocations interceptorInvocations, f schema.CustomizeDiffFunc) schema.CustomizeDiffFunc {
+	// We run CustomizeDiff interceptors even if the resource has not defined a CustomizeDiff function.
 	return func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
 		ctx, diags := bootstrapContext(ctx, d.GetOk, meta)
 		if diags.HasError() {
@@ -227,12 +233,14 @@ func interceptedCustomizeDiffHandler(bootstrapContext contextFunc, interceptorIn
 		reverse := tfslices.Reverse(forward)
 		var errs []error
 
-		if err := f(ctx, d, meta); err != nil {
-			when = OnError
-			errs = append(errs, err)
-		} else {
-			when = After
+		when = After
+		if f != nil {
+			if err := f(ctx, d, meta); err != nil {
+				when = OnError
+				errs = append(errs, err)
+			}
 		}
+
 		for _, v := range reverse {
 			if v.when&when != 0 {
 				opts := customizeDiffInterceptorOptions{
