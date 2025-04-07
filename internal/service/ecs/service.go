@@ -1253,7 +1253,6 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta any
 		input.PlatformVersion = aws.String(v.(string))
 	}
 
-	// Here???
 	if v, ok := d.GetOk(names.AttrPropagateTags); ok {
 		input.PropagateTags = awstypes.PropagateTags(v.(string))
 	}
