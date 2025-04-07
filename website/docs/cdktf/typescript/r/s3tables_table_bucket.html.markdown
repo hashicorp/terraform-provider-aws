@@ -47,28 +47,28 @@ The following argument is required:
 
 The following argument is optional:
 
-* `maintenanceConfiguration` - (Optional) A single table bucket maintenance configuration block.
+* `maintenanceConfiguration` - (Optional) A single table bucket maintenance configuration object.
   [See `maintenanceConfiguration` below](#maintenance_configuration).
 
 ### `maintenanceConfiguration`
 
-The `maintenanceConfiguration` configuration block supports the following argument:
+The `maintenanceConfiguration` object supports the following argument:
 
-* `iceberg_unreferenced_file_removal` - (Required) A single Iceberg unreferenced file removal settings block.
+* `iceberg_unreferenced_file_removal` - (Required) A single Iceberg unreferenced file removal settings object.
   [See `iceberg_unreferenced_file_removal` below](#iceberg_unreferenced_file_removal).
 
 ### `iceberg_unreferenced_file_removal`
 
-The `iceberg_unreferenced_file_removal` configuration block supports the following arguments:
+The `iceberg_unreferenced_file_removal` object supports the following arguments:
 
-* `settings` - (Required) Settings for unreferenced file removal.
+* `settings` - (Required) Settings object for unreferenced file removal.
   [See `iceberg_unreferenced_file_removal.settings` below](#iceberg_unreferenced_file_removalsettings).
 * `status` - (Required) Whether the configuration is enabled.
   Valid values are `enabled` and `disabled`.
 
 ### `iceberg_unreferenced_file_removal.settings`
 
-The `iceberg_unreferenced_file_removal.settings` configuration block supports the following arguments:
+The `iceberg_unreferenced_file_removal.settings` object supports the following arguments:
 
 * `non_current_days` - (Required) Data objects marked for deletion are deleted after this many days.
   Must be at least `1`.
@@ -115,4 +115,4 @@ Using `terraform import`, import S3 Tables Table Bucket using the `arn`. For exa
 % terraform import aws_s3tables_table_bucket.example arn:aws:s3tables:us-west-2:123456789012:bucket/example-bucket
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-5e9a78e537ec8916601a3176037952fd670874be496576aecd32b9baf865d766 -->
+<!-- cache-key: cdktf-0.20.8 input-f9317df876a0daeedf264a027d2ca947a205340cdbb3a2d3d6ea113167a47fcc -->
