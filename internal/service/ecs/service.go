@@ -801,7 +801,9 @@ func resourceService() *schema.Resource {
 					}
 					return false
 				},
+				DefaultFunc:      func() (any, error) { return awstypes.PropagateTagsNone, nil },
 				ValidateDiagFunc: enum.Validate[awstypes.PropagateTags](),
+				Computed:         true,
 			},
 			"scheduling_strategy": {
 				Type:             schema.TypeString,
@@ -1251,6 +1253,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta any
 		input.PlatformVersion = aws.String(v.(string))
 	}
 
+	// Here???
 	if v, ok := d.GetOk(names.AttrPropagateTags); ok {
 		input.PropagateTags = awstypes.PropagateTags(v.(string))
 	}

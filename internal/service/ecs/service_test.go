@@ -1845,7 +1845,7 @@ func TestAccECSService_Tags_managed(t *testing.T) {
 
 func TestAccECSService_Tags_propagate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var first, second, third awstypes.Service
+	var first, second, third, fourth awstypes.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
@@ -1874,6 +1874,13 @@ func TestAccECSService_Tags_propagate(t *testing.T) {
 				Config: testAccServiceConfig_propagateTags(rName, "NONE"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &third),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPropagateTags, string(awstypes.PropagateTagsNone)),
+				),
+			},
+			{
+				Config: testAccServiceConfig_propagateTags(rName, ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &fourth),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPropagateTags, string(awstypes.PropagateTagsNone)),
 				),
 			},
