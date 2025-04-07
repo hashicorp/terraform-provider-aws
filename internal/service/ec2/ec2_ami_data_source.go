@@ -128,6 +128,10 @@ func dataSourceAMI() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"last_launched_time": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrMostRecent: {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -321,6 +325,7 @@ func dataSourceAMIRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	d.Set("image_type", image.ImageType)
 	d.Set("imds_support", image.ImdsSupport)
 	d.Set("kernel_id", image.KernelId)
+	d.Set("last_launched_time", image.LastLaunchedTime)
 	d.Set(names.AttrName, image.Name)
 	d.Set(names.AttrOwnerID, image.OwnerId)
 	d.Set("platform", image.Platform)
