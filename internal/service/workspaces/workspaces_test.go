@@ -24,6 +24,10 @@ func TestAccWorkSpaces_serial(t *testing.T) {
 			"workspaceCreationProperties": testAccDirectory_workspaceCreationProperties,
 			"workspaceCreationProperties_customSecurityGroupId_defaultOu": testAccDirectory_workspaceCreationProperties_customSecurityGroupId_defaultOu,
 			"workspaceSamlProperties":                                     testAccDirectory_SamlProperties,
+			"workspacePoolsBasic":                                         testAccDirectory_poolsBasic,
+			"workspacePoolsADConfig":                                      testAccDirectory_poolsADConfig,
+			"workspacePoolsWorkspaceCreation":                             testAccDirectory_poolsWorkspaceCreation,
+			"workspacePoolsWorkspaceCreationAD":                           testAccDirectory_poolsWorkspaceCreationAD,
 		},
 		"IpGroup": {
 			acctest.CtBasic:       testAccIPGroup_basic,

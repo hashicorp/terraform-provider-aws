@@ -40,6 +40,24 @@ func resourceDirectory() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"active_directory_config": {
+				Type:     schema.TypeList,
+				ForceNew: true,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"domain_name": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"service_account_secret_arn": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
+			},
 			names.AttrAlias: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -50,8 +68,9 @@ func resourceDirectory() *schema.Resource {
 			},
 			"directory_id": {
 				Type:     schema.TypeString,
-				Required: true,
+				Computed: true,
 				ForceNew: true,
+				Optional: true,
 			},
 			"directory_name": {
 				Type:     schema.TypeString,
@@ -149,6 +168,13 @@ func resourceDirectory() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"user_identity_type": {
+				Type:             schema.TypeString,
+				Computed:         true,
+				ForceNew:         true,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[types.UserIdentityType](),
+			},
 			"workspace_access_properties": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -232,35 +258,74 @@ func resourceDirectory() *schema.Resource {
 					},
 				},
 			},
+			"workspace_directory_description": {
+				Type:     schema.TypeString,
+				ForceNew: true,
+				Optional: true,
+			},
+			"workspace_directory_name": {
+				Type:     schema.TypeString,
+				ForceNew: true,
+				Optional: true,
+			},
 			"workspace_security_group_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"workspace_type": {
+				Type:             schema.TypeString,
+				Default:          "PERSONAL",
+				ForceNew:         true,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[types.WorkspaceType](),
+			},
 		},
 	}
+	//TODO: CustomizeDiff for validation
 }
 
 func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WorkSpacesClient(ctx)
+	//TODO: add validation for directory_id if workspace_type is personal
+	//TODO: add validation to ensure resource specific values are set
+	//TODO: IF NOT CustomizeDiff or separate resource - workspace properties validation properties for pools - unsupported extra values
 
 	directoryID := d.Get("directory_id").(string)
+	workspaceType := d.Get("workspace_type").(string)
+	userIdentityType := d.Get("user_identity_type").(string)
+	workspaceDirectoryName := d.Get("workspace_directory_name").(string)
+	workspaceDirectoryDescription := d.Get("workspace_directory_description").(string)
+
 	input := &workspaces.RegisterWorkspaceDirectoryInput{
-		DirectoryId:       aws.String(directoryID),
-		EnableSelfService: aws.Bool(false), // this is handled separately below
-		EnableWorkDocs:    aws.Bool(false),
-		Tenancy:           types.TenancyShared,
-		Tags:              getTagsIn(ctx),
+		Tenancy:       types.TenancyShared,
+		Tags:          getTagsIn(ctx),
+		WorkspaceType: types.WorkspaceType(workspaceType),
 	}
 
 	if v, ok := d.GetOk(names.AttrSubnetIDs); ok {
 		input.SubnetIds = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
+	switch workspaceType {
+	case string(types.WorkspaceTypePools):
+		if v, ok := d.GetOk("active_directory_config"); ok {
+			input.ActiveDirectoryConfig = expandActiveDirectoryConfig(v.([]any))
+		}
+		input.UserIdentityType = types.UserIdentityType(userIdentityType)
+		input.WorkspaceDirectoryName = aws.String(workspaceDirectoryName)
+		input.WorkspaceDirectoryDescription = aws.String(workspaceDirectoryDescription)
+	case string(types.WorkspaceTypePersonal):
+		if v, ok := d.GetOk("directory_id"); ok {
+			input.DirectoryId = aws.String(v.(string))
+			input.EnableSelfService = aws.Bool(false)
+		}
+	}
+
 	const (
 		timeout = 2 * time.Minute
 	)
-	_, err := tfresource.RetryWhenIsA[*types.InvalidResourceStateException](ctx, timeout,
+	output, err := tfresource.RetryWhenIsA[*types.InvalidResourceStateException](ctx, timeout,
 		func() (any, error) {
 			return conn.RegisterWorkspaceDirectory(ctx, input)
 		})
@@ -269,7 +334,12 @@ func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta a
 		return sdkdiag.AppendErrorf(diags, "registering WorkSpaces Directory (%s): %s", directoryID, err)
 	}
 
-	d.SetId(directoryID)
+	switch workspaceType {
+	case string(types.WorkspaceTypePersonal):
+		d.SetId(directoryID)
+	case string(types.WorkspaceTypePools):
+		d.SetId(aws.ToString(output.(*workspaces.RegisterWorkspaceDirectoryOutput).DirectoryId))
+	}
 
 	if _, err := waitDirectoryRegistered(ctx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for WorkSpaces Directory (%s) create: %s", d.Id(), err)
@@ -317,7 +387,7 @@ func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta a
 	if v, ok := d.GetOk("workspace_creation_properties"); ok {
 		input := &workspaces.ModifyWorkspaceCreationPropertiesInput{
 			ResourceId:                  aws.String(d.Id()),
-			WorkspaceCreationProperties: expandWorkspaceCreationProperties(v.([]any)),
+			WorkspaceCreationProperties: expandWorkspaceCreationProperties(v.([]any), workspaceType),
 		}
 
 		_, err := conn.ModifyWorkspaceCreationProperties(ctx, input)
@@ -360,6 +430,9 @@ func resourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta any
 	}
 
 	d.Set(names.AttrAlias, directory.Alias)
+	if err := d.Set("active_directory_config", flattenActiveDirectoryConfig(directory.ActiveDirectoryConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting active_directory_config: %s", err)
+	}
 	d.Set("directory_id", directory.DirectoryId)
 	d.Set("directory_name", directory.DirectoryName)
 	d.Set("directory_type", directory.DirectoryType)
@@ -374,13 +447,17 @@ func resourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta any
 		return sdkdiag.AppendErrorf(diags, "setting saml_properties: %s", err)
 	}
 	d.Set(names.AttrSubnetIDs, directory.SubnetIds)
+	d.Set("user_identity_type", directory.UserIdentityType)
 	if err := d.Set("workspace_access_properties", flattenWorkspaceAccessProperties(directory.WorkspaceAccessProperties)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting workspace_access_properties: %s", err)
 	}
 	if err := d.Set("workspace_creation_properties", flattenDefaultWorkspaceCreationProperties(directory.WorkspaceCreationProperties)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting workspace_creation_properties: %s", err)
 	}
+	d.Set("workspace_directory_description", directory.WorkspaceDirectoryDescription)
+	d.Set("workspace_directory_name", directory.WorkspaceDirectoryName)
 	d.Set("workspace_security_group_id", directory.WorkspaceSecurityGroupId)
+	d.Set("workspace_type", directory.WorkspaceType)
 
 	return diags
 }
@@ -441,9 +518,10 @@ func resourceDirectoryUpdate(ctx context.Context, d *schema.ResourceData, meta a
 	}
 
 	if d.HasChange("workspace_creation_properties") {
+		workspaceType := d.Get("workspace_type").(string)
 		input := &workspaces.ModifyWorkspaceCreationPropertiesInput{
 			ResourceId:                  aws.String(d.Id()),
-			WorkspaceCreationProperties: expandWorkspaceCreationProperties(d.Get("workspace_creation_properties").([]any)),
+			WorkspaceCreationProperties: expandWorkspaceCreationProperties(d.Get("workspace_creation_properties").([]any), workspaceType),
 		}
 
 		_, err := conn.ModifyWorkspaceCreationProperties(ctx, input)
@@ -677,6 +755,25 @@ func expandWorkspaceAccessProperties(tfList []any) *types.WorkspaceAccessPropert
 	return apiObject
 }
 
+func expandActiveDirectoryConfig(tfList []any) *types.ActiveDirectoryConfig {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &types.ActiveDirectoryConfig{}
+
+	if tfMap["domain_name"].(string) != "" {
+		apiObject.DomainName = aws.String(tfMap["domain_name"].(string))
+	}
+
+	if tfMap["service_account_secret_arn"].(string) != "" {
+		apiObject.ServiceAccountSecretArn = aws.String(tfMap["service_account_secret_arn"].(string))
+	}
+
+	return apiObject
+}
+
 func expandSAMLProperties(tfList []any) *types.SamlProperties {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
@@ -741,16 +838,19 @@ func expandSelfservicePermissions(tfList []any) *types.SelfservicePermissions {
 	return apiObject
 }
 
-func expandWorkspaceCreationProperties(tfList []any) *types.WorkspaceCreationProperties {
+func expandWorkspaceCreationProperties(tfList []any, workspaceType string) *types.WorkspaceCreationProperties {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
 	tfMap := tfList[0].(map[string]any)
 	apiObject := &types.WorkspaceCreationProperties{
-		EnableInternetAccess:            aws.Bool(tfMap["enable_internet_access"].(bool)),
-		EnableMaintenanceMode:           aws.Bool(tfMap["enable_maintenance_mode"].(bool)),
-		UserEnabledAsLocalAdministrator: aws.Bool(tfMap["user_enabled_as_local_administrator"].(bool)),
+		EnableInternetAccess: aws.Bool(tfMap["enable_internet_access"].(bool)),
+	}
+
+	if workspaceType == string(types.WorkspaceTypePersonal) {
+		apiObject.EnableMaintenanceMode = aws.Bool(tfMap["enable_maintenance_mode"].(bool))
+		apiObject.UserEnabledAsLocalAdministrator = aws.Bool(tfMap["user_enabled_as_local_administrator"].(bool))
 	}
 
 	if tfMap["custom_security_group_id"].(string) != "" {
@@ -793,6 +893,19 @@ func flattenSAMLProperties(apiObject *types.SamlProperties) []any {
 			"relay_state_parameter_name": aws.ToString(apiObject.RelayStateParameterName),
 			names.AttrStatus:             apiObject.Status,
 			"user_access_url":            aws.ToString(apiObject.UserAccessUrl),
+		},
+	}
+}
+
+func flattenActiveDirectoryConfig(apiObject *types.ActiveDirectoryConfig) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	return []any{
+		map[string]any{
+			"domain_name":                aws.ToString(apiObject.DomainName),
+			"service_account_secret_arn": aws.ToString(apiObject.ServiceAccountSecretArn),
 		},
 	}
 }

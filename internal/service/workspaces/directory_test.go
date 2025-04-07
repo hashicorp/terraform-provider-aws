@@ -933,3 +933,363 @@ resource "aws_workspaces_directory" "test" {
 }
 `, rName))
 }
+
+func testAccDirectory_poolsBasic(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.WorkspaceDirectory
+	rName := sdkacctest.RandString(8)
+
+	resourceName := "aws_workspaces_directory.pool"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckDirectory(ctx, t)
+			acctest.PreCheckDirectoryServiceSimpleDirectory(ctx, t)
+			acctest.PreCheckHasIAMRole(ctx, t, "workspaces_DefaultRole")
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(workspaces.ServiceID)),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDirectoryDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDirectoryConfig_poolsBasic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDirectoryExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "workspace_type", "POOLS"),
+					resource.TestCheckResourceAttr(resourceName, "user_identity_type", "CUSTOMER_MANAGED"),
+					resource.TestCheckResourceAttr(resourceName, "workspace_directory_name", fmt.Sprintf("tf-testacc-workspaces-directory-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "workspace_directory_description", fmt.Sprintf("tf-testacc-workspaces-directory-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccDirectory_poolsADConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.WorkspaceDirectory
+	rName := sdkacctest.RandString(8)
+
+	resourceName := "aws_workspaces_directory.pool"
+	domain := acctest.RandomDomainName()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckDirectory(ctx, t)
+			acctest.PreCheckDirectoryServiceSimpleDirectory(ctx, t)
+			acctest.PreCheckHasIAMRole(ctx, t, "workspaces_DefaultRole")
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(workspaces.ServiceID)),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDirectoryDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDirectoryConfig_poolsADConfig(rName, domain),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDirectoryExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "workspace_type", "POOLS"),
+					resource.TestCheckResourceAttr(resourceName, "user_identity_type", "CUSTOMER_MANAGED"),
+					resource.TestCheckResourceAttr(resourceName, "active_directory_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "active_directory_config.0.domain_name", domain),
+					resource.TestCheckResourceAttrPair(resourceName, "active_directory_config.0.service_account_secret_arn", "aws_secretsmanager_secret.main", "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccDirectory_poolsWorkspaceCreation(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.WorkspaceDirectory
+	rName := sdkacctest.RandString(8)
+
+	resourceName := "aws_workspaces_directory.pool"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckDirectory(ctx, t)
+			acctest.PreCheckDirectoryServiceSimpleDirectory(ctx, t)
+			acctest.PreCheckHasIAMRole(ctx, t, "workspaces_DefaultRole")
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(workspaces.ServiceID)),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDirectoryDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDirectoryConfig_poolsWorkspaceCreation(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDirectoryExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "workspace_type", "POOLS"),
+					resource.TestCheckResourceAttr(resourceName, "user_identity_type", "CUSTOMER_MANAGED"),
+					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "workspace_creation_properties.0.custom_security_group_id", "aws_security_group.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.0.default_ou", ""),
+					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.0.enable_internet_access", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccDirectory_poolsWorkspaceCreationAD(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.WorkspaceDirectory
+	rName := sdkacctest.RandString(8)
+	domain := acctest.RandomDomainName()
+
+	resourceName := "aws_workspaces_directory.pool"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckDirectory(ctx, t)
+			acctest.PreCheckDirectoryServiceSimpleDirectory(ctx, t)
+			acctest.PreCheckHasIAMRole(ctx, t, "workspaces_DefaultRole")
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(workspaces.ServiceID)),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDirectoryDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDirectoryConfig_poolsWorkspaceCreationAD(rName, domain),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDirectoryExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "workspace_type", "POOLS"),
+					resource.TestCheckResourceAttr(resourceName, "user_identity_type", "CUSTOMER_MANAGED"),
+					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "workspace_creation_properties.0.custom_security_group_id", "aws_security_group.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.0.default_ou", "OU=AWS,DC=Workgroup,DC=Example,DC=com"),
+					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.0.enable_internet_access", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccDirectoryConfig_PoolsPrerequisites(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptIn(),
+		//lintignore:AWSAT003
+		fmt.Sprintf(`
+data "aws_region" "current" {}
+
+data "aws_caller_identity" "current" {}
+
+data "aws_iam_policy_document" "kms_policy" {
+  statement {
+    sid       = "EnableIAMUserPermissions"
+    effect    = "Allow"
+    actions   = ["kms:*"]
+    resources = ["*"]
+    principals {
+      type        = "AWS"
+      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
+    }
+  }
+  statement {
+    sid       = "AllowAccessForWorkspacesSP"
+    effect    = "Allow"
+    actions   = ["kms:Decrypt"]
+    resources = ["*"]
+    principals {
+      type        = "Service"
+      identifiers = ["workspaces.amazonaws.com"]
+    }
+  }
+}
+
+data "aws_iam_policy_document" "secretsmanager_policy" {
+  statement {
+    sid       = "AllowAccessForWorkspacesSP"
+    effect    = "Allow"
+    actions   = ["secretsmanager:GetSecretValue"]
+    resources = ["*"]
+    principals {
+      type        = "Service"
+      identifiers = ["workspaces.amazonaws.com"]
+    }
+  }
+}
+
+locals {
+  region_workspaces_az_ids = {
+    "us-east-1" = formatlist("use1-az%%d", [2, 4, 6])
+  }
+
+  workspaces_az_ids = lookup(local.region_workspaces_az_ids, data.aws_region.current.name, data.aws_availability_zones.available.zone_ids)
+}
+
+resource "aws_vpc" "main" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "tf-testacc-workspaces-directory-%[1]s"
+  }
+}
+
+resource "aws_subnet" "primary" {
+  vpc_id               = aws_vpc.main.id
+  availability_zone_id = local.workspaces_az_ids[0]
+  cidr_block           = "10.0.1.0/24"
+
+  tags = {
+    Name = "tf-testacc-workspaces-directory-%[1]s-primary"
+  }
+}
+
+resource "aws_subnet" "secondary" {
+  vpc_id               = aws_vpc.main.id
+  availability_zone_id = local.workspaces_az_ids[1]
+  cidr_block           = "10.0.2.0/24"
+
+  tags = {
+    Name = "tf-testacc-workspaces-directory-%[1]s-secondary"
+  }
+}
+
+resource "aws_security_group" "test" {
+  vpc_id = aws_vpc.main.id
+  name   = "tf-acctest-%[1]s"
+}
+
+resource "aws_kms_key" "main" {
+  description             = "tf-testacc-workspaces-directory-%[1]s"
+  enable_key_rotation     = false
+  deletion_window_in_days = 7
+}
+
+resource "aws_kms_key_policy" "main" {
+  key_id = aws_kms_key.main.key_id
+  policy = data.aws_iam_policy_document.kms_policy.json
+}
+
+resource "aws_secretsmanager_secret" "main" {
+name       								= "tf-testacc-workspaces-directory-%[1]s"
+  kms_key_id 							= aws_kms_key.main.arn
+	recovery_window_in_days = 0
+}
+
+resource "aws_secretsmanager_secret_policy" "main" {
+  secret_arn = aws_secretsmanager_secret.main.arn
+  policy     = data.aws_iam_policy_document.secretsmanager_policy.json
+}
+
+resource "aws_secretsmanager_secret_version" "main" {
+  secret_id = aws_secretsmanager_secret.main.id
+  secret_string = jsonencode({
+    "Service Account Name"     = "username",
+    "Service Account Password" = "password"
+  })
+}
+`, rName))
+}
+
+func testAccDirectoryConfig_poolsBasic(rName string) string {
+	return acctest.ConfigCompose(
+		testAccDirectoryConfig_PoolsPrerequisites(rName),
+		fmt.Sprintf(`
+resource "aws_workspaces_directory" "pool" {
+  subnet_ids   = [aws_subnet.primary.id, aws_subnet.secondary.id]
+  workspace_type                  = "POOLS"
+  workspace_directory_name        = "tf-testacc-workspaces-directory-%[1]s"
+  workspace_directory_description = "tf-testacc-workspaces-directory-%[1]s"
+  user_identity_type              = "CUSTOMER_MANAGED"
+	tags = {
+		Name = "tf-testacc-workspaces-directory-%[1]s"
+	}
+}
+`, rName))
+}
+
+func testAccDirectoryConfig_poolsADConfig(rName, domain string) string {
+	return acctest.ConfigCompose(
+		testAccDirectoryConfig_PoolsPrerequisites(rName),
+		fmt.Sprintf(`
+
+resource "aws_workspaces_directory" "pool" {
+  subnet_ids   = [aws_subnet.primary.id, aws_subnet.secondary.id]
+  workspace_type                  = "POOLS"
+  workspace_directory_name        = "tf-testacc-workspaces-directory-%[1]s"
+  workspace_directory_description = "tf-testacc-workspaces-directory-%[1]s"
+  user_identity_type              = "CUSTOMER_MANAGED"
+  active_directory_config {
+    domain_name                = "%[2]s"
+    service_account_secret_arn = aws_secretsmanager_secret.main.arn
+  }
+	tags = {
+		Name = "tf-testacc-workspaces-directory-%[1]s"
+	}
+}
+`, rName, domain))
+}
+
+func testAccDirectoryConfig_poolsWorkspaceCreation(rName string) string {
+	return acctest.ConfigCompose(
+		testAccDirectoryConfig_PoolsPrerequisites(rName),
+		fmt.Sprintf(`
+resource "aws_workspaces_directory" "pool" {
+  subnet_ids   = [aws_subnet.primary.id, aws_subnet.secondary.id]
+  workspace_type                  = "POOLS"
+  workspace_directory_name        = "tf-testacc-workspaces-directory-%[1]s"
+  workspace_directory_description = "tf-testacc-workspaces-directory-%[1]s"
+  user_identity_type              = "CUSTOMER_MANAGED"
+  workspace_creation_properties {
+    custom_security_group_id = aws_security_group.test.id
+    enable_internet_access   = true
+  }
+	tags = {
+		Name = "tf-testacc-workspaces-directory-%[1]s"
+	}
+}
+`, rName))
+}
+
+func testAccDirectoryConfig_poolsWorkspaceCreationAD(rName, domain string) string {
+	return acctest.ConfigCompose(
+		testAccDirectoryConfig_PoolsPrerequisites(rName),
+		fmt.Sprintf(`
+resource "aws_workspaces_directory" "pool" {
+  subnet_ids   = [aws_subnet.primary.id, aws_subnet.secondary.id]
+  workspace_type                  = "POOLS"
+  workspace_directory_name        = "tf-testacc-workspaces-directory-%[1]s"
+  workspace_directory_description = "tf-testacc-workspaces-directory-%[1]s"
+  user_identity_type              = "CUSTOMER_MANAGED"
+	active_directory_config {
+    domain_name                = "%[2]s"
+    service_account_secret_arn = aws_secretsmanager_secret.main.arn
+  }
+  workspace_creation_properties {
+    custom_security_group_id = aws_security_group.test.id
+    default_ou               = "OU=AWS,DC=Workgroup,DC=Example,DC=com"
+    enable_internet_access   = true
+  }
+	tags = {
+		Name = "tf-testacc-workspaces-directory-%[1]s"
+	}
+}
+`, rName, domain))
+}
