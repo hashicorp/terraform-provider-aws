@@ -141,42 +141,44 @@ resource "aws_bedrockagent_flow" "example" {
 
 The following arguments are required:
 
-* `name` - (Required) Name of the Flow.
-* `execution_role_arn` - (Required) ARN of the role.
+* `name` - (Required) A name for the flow.
+* `execution_role_arn` - (Required) The Amazon Resource Name (ARN) of the service role with permissions to create and manage a flow. For more information, see [Create a service role for flows in Amazon Bedrock](https://docs.aws.amazon.com/bedrock/latest/userguide/flows-permissions.html) in the Amazon Bedrock User Guide.
 
 The following arguments are optional:
 
-* `description` - (Optional) Description of the Flow.
-* `customer_encryption_key_arn` - (Optional) Customer encryption key ARN.
-* `definition` - (Optional) Definition of the Flow. See [Definition Config](#definition-config) for more information.
+* `description` - (Optional) A description for the flow.
+* `customer_encryption_key_arn` - (Optional) The Amazon Resource Name (ARN) of the KMS key to encrypt the flow.
+* `definition` - (Optional) A definition of the nodes and connections between nodes in the flow. See [Definition Config](#definition-config) for more information.
 * `tags` (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Definition Config
 
-* `connection` - (Optional) List of connections. See [Connection Config](#connection-config) for more information
-* `node` - (Optional) List of nodes. See [Node Config](#node-config) for more information
+* `connection` - (Optional) A list of connection definitions in the flow. See [Connection Config](#connection-config) for more information
+* `node` - (Optional) A list of node definitions in the flow. See [Node Config](#node-config) for more information
 
 ### Connection Config
 
-* `name` - (Required) Name of the connection.
-* `source` - (Required) Source of the connection.
-* `target` - (Required) Target of the connection.
-* `type` - (Required) Type of the connection, which is either `Data` or `Conditional`
+Contains information about a connection between two nodes in the flow.
+
+* `name` - (Required) A name for the connection that you can reference.
+* `source` - (Required) The node that the connection starts at.
+* `target` - (Required) The node that the connection ends at.
+* `type` - (Required) Whether the source node that the connection begins from is a condition node `Conditional` or not `Data`.
 * `configuration` - (Required) Configuration of the connection. See [Connection Configuration Config](#connection-configuration-config) for more information.
 
 ### Connection Configuration Config
 
-* `data` - (Optional) Data connection configuration. See [Data Connection Configuration Config](#data-connection-configuration-config) for more information.
-* `conditional` - (Optional) Conditional connection configuration. See [Conditional Connection Configuration Config](#conditional-connection-configuration-config) for more information.
+* `data` - (Optional) The configuration of a connection originating from a node that isn’t a Condition node. See [Data Connection Configuration Config](#data-connection-configuration-config) for more information.
+* `conditional` - (Optional) The configuration of a connection originating from a Condition node. See [Conditional Connection Configuration Config](#conditional-connection-configuration-config) for more information.
 
 ### Data Connection Configuration Config
 
-* `source_output` - (Required) The source output field name.
-* `target_input` - (Required) The target input field name.
+* `source_output` - (Required) The name of the output in the source node that the connection begins from.
+* `target_input` - (Required) The name of the input in the target node that the connection ends at.
 
 ### Conditional Connection Configuration Config
 
-* `condition` - (Required) The connection condition name.
+* `condition` - (Required) The condition that triggers this connection. For more information about how to write conditions, see the Condition node type in the [Node types](https://docs.aws.amazon.com/bedrock/latest/userguide/node-types.html) topic in the Amazon Bedrock User Guide.
 
 ### Node Config
 
