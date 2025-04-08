@@ -684,18 +684,18 @@ func findOriginEndpoint(ctx context.Context, conn *mediapackage.Client, id, chan
 		return nil, err
 	}
 
-	if len(out.OriginEndpoints) == 0 {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
-		}
-	}
-
 	var ep *types.OriginEndpoint
 
 	for _, e := range out.OriginEndpoints {
 		if aws.ToString(e.Id) == id {
 			ep = &e
+		}
+	}
+
+	if ep == nil {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
 		}
 	}
 
