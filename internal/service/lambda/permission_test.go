@@ -637,6 +637,23 @@ func TestAccLambdaPermission_iamRole(t *testing.T) {
 	})
 }
 
+func TestAccLambdaPermission_kms(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccPermissionConfig_kms(rName),
+				ExpectError: regexache.MustCompile(`KMSAccessDeniedException`),
+			},
+		},
+	})
+}
+
 func TestAccLambdaPermission_FunctionURLs_iam(t *testing.T) {
 	ctx := acctest.Context(t)
 	var statement tflambda.PolicyStatement
@@ -942,6 +959,94 @@ resource "aws_lambda_permission" "third" {
   principal     = "events.amazonaws.com"
 }
 `, funcName, roleName)
+}
+
+func testAccPermissionConfig_kms(rName string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+data "aws_partition" "current" {}
+
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+
+  policy = jsonencode({
+    Id = %[1]q
+    Statement = [
+      {
+        Action = "kms:*"
+        Effect = "Allow"
+        Principal = {
+          AWS = data.aws_caller_identity.current.arn
+        }
+
+        Resource = "*"
+        Sid      = "Enable IAM User Permissions"
+      },
+	  {
+		  "Sid": "DenyAllExceptRoot",
+		  "Effect": "Deny",
+		  "Principal": "*",
+		  "Action": "kms:Decrypt",
+		  "Resource": "*"
+	  }
+    ]
+    Version = "2012-10-17"
+  })
+}
+
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  role          = aws_iam_role.test.arn
+  kms_key_arn   = aws_kms_key.test.arn
+  handler       = "exports.handler"
+  runtime       = "nodejs16.x"
+  environment {
+    variables = {
+      foo = "bar"
+    }
+  }
+}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "execution_policy" {
+  role       = aws_iam_role.test.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
+data "aws_lambda_invocation" "test" {
+  function_name = aws_lambda_function.test.function_name
+
+  input = <<JSON
+{}
+JSON
+}
+
+output "result_entry" {
+  value = jsondecode(data.aws_lambda_invocation.test.result)
+}
+	`, rName)
 }
 
 func testAccPermissionConfig_s3(rName string) string {
