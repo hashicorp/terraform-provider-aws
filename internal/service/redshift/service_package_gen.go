@@ -42,7 +42,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Name:     "Data Share Consumer Association",
 		},
 		{
-			Factory:  newResourceIntegration,
+			Factory:  newIntegrationResource,
 			TypeName: "aws_redshift_integration",
 			Name:     "Integration",
 			Tags: &types.ServicePackageResourceTags{

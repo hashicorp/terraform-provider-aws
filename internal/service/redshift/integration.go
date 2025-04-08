@@ -5,7 +5,6 @@ package redshift
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"regexp"
 	"time"
@@ -21,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -35,8 +33,8 @@ import (
 // @FrameworkResource("aws_redshift_integration", name="Integration")
 // @Tags(identifierAttribute="arn")
 // @Testing(tagsTest=false)
-func newResourceIntegration(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceIntegration{}
+func newIntegrationResource(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &integrationResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
@@ -45,27 +43,12 @@ func newResourceIntegration(_ context.Context) (resource.ResourceWithConfigure, 
 	return r, nil
 }
 
-const (
-	integrationStatusActive         = "active"
-	integrationStatusCreating       = "creating"
-	integrationStatusDeleting       = "deleting"
-	integrationStatusFailed         = "failed"
-	integrationStatusModifying      = "modifying"
-	integrationStatusNeedsAttention = "needs_attention"
-	integrationStatusSyncing        = "syncing"
-)
-
-const (
-	ResNameIntegration = "Integration"
-)
-
-type resourceIntegration struct {
+type integrationResource struct {
 	framework.ResourceWithConfigure
-	framework.WithImportByID
 	framework.WithTimeouts
 }
 
-func (r *resourceIntegration) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *integrationResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"additional_encryption_context": schema.MapAttribute{
@@ -77,7 +60,6 @@ func (r *resourceIntegration) Schema(ctx context.Context, req resource.SchemaReq
 				},
 			},
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			names.AttrID:  framework.IDAttribute(),
 			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 			},
@@ -120,230 +102,170 @@ func (r *resourceIntegration) Schema(ctx context.Context, req resource.SchemaReq
 	}
 }
 
-func (r *resourceIntegration) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().RedshiftClient(ctx)
-
-	var plan resourceIntegrationModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
+func (r *integrationResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data integrationResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
+	conn := r.Meta().RedshiftClient(ctx)
+
 	var input redshift.CreateIntegrationInput
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(flex.Expand(ctx, data, &input)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
 	// Additional fields.
 	input.TagList = getTagsIn(ctx)
 
-	out, err := conn.CreateIntegration(ctx, &input)
+	output, err := conn.CreateIntegration(ctx, &input)
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Redshift, create.ErrActionCreating, ResNameIntegration, plan.IntegrationName.String(), err),
-			err.Error(),
-		)
-		return
-	}
-	if out == nil || out.IntegrationArn == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Redshift, create.ErrActionCreating, ResNameIntegration, plan.IntegrationName.String(), nil),
-			errors.New("empty output").Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("creating Redshift Integration (%s)", data.IntegrationName.ValueString()), err.Error())
+
 		return
 	}
 
 	// Set values for unknowns.
-	plan.IntegrationARN = flex.StringToFramework(ctx, out.IntegrationArn)
-	plan.setID()
+	data.IntegrationARN = flex.StringToFramework(ctx, output.IntegrationArn)
 
-	prevAdditionalEncryptionContext := plan.AdditionalEncryptionContext
+	integration, err := waitIntegrationCreated(ctx, conn, data.IntegrationARN.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	// Null vs. empty map handling.
-	if prevAdditionalEncryptionContext.IsNull() && !plan.AdditionalEncryptionContext.IsNull() && len(plan.AdditionalEncryptionContext.Elements()) == 0 {
-		plan.AdditionalEncryptionContext = prevAdditionalEncryptionContext
-	}
-
-	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	integration, err := waitIntegrationCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
 	if err != nil {
-		resp.State.SetAttribute(ctx, path.Root(names.AttrID), plan.ID) // Set 'id' so as to taint the resource.
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Redshift, create.ErrActionWaitingForCreation, ResNameIntegration, plan.IntegrationName.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for Redshift Integration (%s) create", data.IntegrationARN.ValueString()), err.Error())
+
 		return
 	}
 
 	// Set values for unknowns.
-	plan.KMSKeyID = flex.StringToFramework(ctx, integration.KMSKeyId)
+	data.KMSKeyID = flex.StringToFramework(ctx, integration.KMSKeyId)
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-func (r *resourceIntegration) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *integrationResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data integrationResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().RedshiftClient(ctx)
 
-	var state resourceIntegrationModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	if err := state.InitFromID(); err != nil {
-		resp.Diagnostics.AddError("parsing resource ID", err.Error())
-
-		return
-	}
-
-	out, err := findIntegrationByARN(ctx, conn, state.ID.ValueString())
+	output, err := findIntegrationByARN(ctx, conn, data.IntegrationARN.ValueString())
 
 	if tfresource.NotFound(err) {
-		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
-		resp.State.RemoveResource(ctx)
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
 		return
 	}
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Redshift, create.ErrActionReading, ResNameIntegration, state.ID.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("reading Redshift Integration (%s)", data.IntegrationARN.ValueString()), err.Error())
+
 		return
 	}
 
-	prevAdditionalEncryptionContext := state.AdditionalEncryptionContext
+	prevAdditionalEncryptionContext := data.AdditionalEncryptionContext
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(flex.Flatten(ctx, output, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
 	// Null vs. empty map handling.
-	if prevAdditionalEncryptionContext.IsNull() && !state.AdditionalEncryptionContext.IsNull() && len(state.AdditionalEncryptionContext.Elements()) == 0 {
-		state.AdditionalEncryptionContext = prevAdditionalEncryptionContext
+	if prevAdditionalEncryptionContext.IsNull() && !data.AdditionalEncryptionContext.IsNull() && len(data.AdditionalEncryptionContext.Elements()) == 0 {
+		data.AdditionalEncryptionContext = prevAdditionalEncryptionContext
 	}
 
-	setTagsOut(ctx, out.Tags)
+	setTagsOut(ctx, output.Tags)
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceIntegration) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *integrationResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var new, old integrationResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().RedshiftClient(ctx)
 
-	var plan, state resourceIntegrationModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	diff, d := flex.Diff(ctx, plan, state)
-	resp.Diagnostics.Append(d...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	if diff.HasChanges() {
+	if !new.Description.Equal(old.Description) ||
+		!new.IntegrationName.Equal(old.IntegrationName) {
 		var input redshift.ModifyIntegrationInput
-		resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
-		if resp.Diagnostics.HasError() {
+		response.Diagnostics.Append(flex.Expand(ctx, new, &input)...)
+		if response.Diagnostics.HasError() {
 			return
 		}
 
-		out, err := conn.ModifyIntegration(ctx, &input)
+		_, err := conn.ModifyIntegration(ctx, &input)
+
 		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.Redshift, create.ErrActionUpdating, ResNameIntegration, plan.ID.String(), err),
-				err.Error(),
-			)
-			return
-		}
-		if out == nil || out.IntegrationArn == nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.Redshift, create.ErrActionUpdating, ResNameIntegration, plan.ID.String(), nil),
-				errors.New("empty output").Error(),
-			)
+			response.Diagnostics.AddError(fmt.Sprintf("updating Redshift Integration (%s)", new.IntegrationARN.ValueString()), err.Error())
+
 			return
 		}
 
-		prevAdditionalEncryptionContext := plan.AdditionalEncryptionContext
+		if _, err := waitIntegrationUpdated(ctx, conn, new.IntegrationARN.ValueString(), r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("waiting for Redshift Integration (%s) update", new.IntegrationARN.ValueString()), err.Error())
 
-		resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
-		if resp.Diagnostics.HasError() {
 			return
-		}
-
-		// Null vs. empty map handling.
-		if prevAdditionalEncryptionContext.IsNull() && !plan.AdditionalEncryptionContext.IsNull() && len(plan.AdditionalEncryptionContext.Elements()) == 0 {
-			plan.AdditionalEncryptionContext = prevAdditionalEncryptionContext
 		}
 	}
 
-	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	_, err := waitIntegrationUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Redshift, create.ErrActionWaitingForUpdate, ResNameIntegration, plan.ID.String(), err),
-			err.Error(),
-		)
-		return
-	}
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
-func (r *resourceIntegration) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().RedshiftClient(ctx)
-
-	var state resourceIntegrationModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *integrationResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data integrationResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
+
+	conn := r.Meta().RedshiftClient(ctx)
 
 	input := redshift.DeleteIntegrationInput{
-		IntegrationArn: state.ID.ValueStringPointer(),
+		IntegrationArn: data.IntegrationARN.ValueStringPointer(),
 	}
-
 	_, err := conn.DeleteIntegration(ctx, &input)
-	if err != nil {
-		if errs.IsA[*awstypes.IntegrationNotFoundFault](err) {
-			return
-		}
 
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Redshift, create.ErrActionDeleting, ResNameIntegration, state.ID.String(), err),
-			err.Error(),
-		)
+	if errs.IsA[*awstypes.IntegrationNotFoundFault](err) {
 		return
 	}
 
-	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitIntegrationDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Redshift, create.ErrActionWaitingForDeletion, ResNameIntegration, state.ID.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("deleting Redshift Integration (%s)", data.IntegrationARN.ValueString()), err.Error())
+
 		return
 	}
+
+	if _, err := waitIntegrationDeleted(ctx, conn, data.IntegrationARN.ValueString(), r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for Redshift Integration (%s) delete", data.IntegrationARN.ValueString()), err.Error())
+
+		return
+	}
+}
+
+func (r *integrationResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrARN), request, response)
 }
 
 func integrationError(v awstypes.IntegrationError) error {
 	return fmt.Errorf("%s: %s", aws.ToString(v.ErrorCode), aws.ToString(v.ErrorMessage))
 }
 
-type resourceIntegrationModel struct {
+type integrationResourceModel struct {
 	AdditionalEncryptionContext fwtypes.MapValueOf[types.String] `tfsdk:"additional_encryption_context"`
 	Description                 types.String                     `tfsdk:"description"`
-	ID                          types.String                     `tfsdk:"id"`
 	IntegrationARN              types.String                     `tfsdk:"arn"`
 	IntegrationName             types.String                     `tfsdk:"integration_name"`
 	KMSKeyID                    types.String                     `tfsdk:"kms_key_id"`
@@ -352,16 +274,6 @@ type resourceIntegrationModel struct {
 	TagsAll                     tftags.Map                       `tfsdk:"tags_all"`
 	TargetARN                   fwtypes.ARN                      `tfsdk:"target_arn"`
 	Timeouts                    timeouts.Value                   `tfsdk:"timeouts"`
-}
-
-func (model *resourceIntegrationModel) InitFromID() error {
-	model.IntegrationARN = model.ID
-
-	return nil
-}
-
-func (model *resourceIntegrationModel) setID() {
-	model.ID = model.IntegrationARN
 }
 
 type ignoreKmsKeyIdForS3Modifier struct{}
@@ -375,7 +287,7 @@ func (m *ignoreKmsKeyIdForS3Modifier) MarkdownDescription(_ context.Context) str
 }
 
 func (m *ignoreKmsKeyIdForS3Modifier) PlanModifyString(ctx context.Context, req planmodifier.StringRequest, resp *planmodifier.StringResponse) {
-	var plan resourceIntegrationModel
+	var plan integrationResourceModel
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {

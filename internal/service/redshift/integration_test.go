@@ -5,7 +5,6 @@ package redshift_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
@@ -16,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -53,9 +51,11 @@ func TestAccRedshiftIntegration_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    testAccIntegrationImportStateIDFunc(resourceName),
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 		},
 	})
@@ -128,9 +128,11 @@ func TestAccRedshiftIntegration_optional(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    testAccIntegrationImportStateIDFunc(resourceName),
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 		},
 	})
@@ -171,9 +173,11 @@ func TestAccRedshiftIntegration_sourceUsesS3Bucket(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    testAccIntegrationImportStateIDFunc(resourceName),
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 			{
 				Config: testAccIntegrationConfig_sourceUsesS3Bucket(rName, description, integration_name),
@@ -188,9 +192,11 @@ func TestAccRedshiftIntegration_sourceUsesS3Bucket(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    testAccIntegrationImportStateIDFunc(resourceName),
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 		},
 	})
@@ -205,42 +211,52 @@ func testAccCheckIntegrationDestroy(ctx context.Context) resource.TestCheckFunc 
 				continue
 			}
 
-			_, err := tfredshift.FindIntegrationByARN(ctx, conn, rs.Primary.ID)
+			_, err := tfredshift.FindIntegrationByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
+
 			if tfresource.NotFound(err) {
-				return nil
-			}
-			if err != nil {
-				return create.Error(names.Redshift, create.ErrActionCheckingDestroyed, tfredshift.ResNameIntegration, rs.Primary.ID, err)
+				continue
 			}
 
-			return create.Error(names.Redshift, create.ErrActionCheckingDestroyed, tfredshift.ResNameIntegration, rs.Primary.ID, errors.New("not destroyed"))
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Redshift Integration still exists: %s", rs.Primary.Attributes[names.AttrARN])
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckIntegrationExists(ctx context.Context, name string, integration *awstypes.Integration) resource.TestCheckFunc {
+func testAccCheckIntegrationExists(ctx context.Context, n string, v *awstypes.Integration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.Redshift, create.ErrActionCheckingExistence, tfredshift.ResNameIntegration, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.Redshift, create.ErrActionCheckingExistence, tfredshift.ResNameIntegration, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
 
-		resp, err := tfredshift.FindIntegrationByARN(ctx, conn, rs.Primary.ID)
+		output, err := tfredshift.FindIntegrationByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
+
 		if err != nil {
-			return create.Error(names.Redshift, create.ErrActionCheckingExistence, tfredshift.ResNameIntegration, rs.Primary.ID, err)
+			return err
 		}
 
-		*integration = *resp
+		*v = *output
 
 		return nil
+	}
+}
+
+func testAccIntegrationImportStateIDFunc(n string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", n)
+		}
+
+		return rs.Primary.Attributes[names.AttrARN], nil
 	}
 }
 

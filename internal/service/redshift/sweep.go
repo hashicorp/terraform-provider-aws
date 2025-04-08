@@ -212,7 +212,7 @@ func sweepIntegrations(ctx context.Context, client *conns.AWSClient) ([]sweep.Sw
 		}
 
 		for _, v := range page.Integrations {
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceIntegration, client,
+			sweepResources = append(sweepResources, framework.NewSweepResource(newIntegrationResource, client,
 				framework.NewAttribute(names.AttrID, aws.ToString(v.IntegrationArn))),
 			)
 		}

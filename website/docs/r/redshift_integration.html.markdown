@@ -141,7 +141,6 @@ You can only include this parameter if `source_arn` references a DynamoDB table.
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Integration.
-* `id` - ID of the Integration.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
@@ -154,7 +153,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Redshift Integration using the `example_id_arg`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Redshift Integration using the `arn`. For example:
 
 ```terraform
 import {
@@ -163,7 +162,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Redshift Integration using the `example_id_arg`. For example:
+Using `terraform import`, import Redshift Integration using the `arn`. For example:
 
 ```console
 % terraform import aws_redshift_integration.example arn:aws:redshift:us-west-2:123456789012:integration:abcdefgh-0000-1111-2222-123456789012

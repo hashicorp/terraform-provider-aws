@@ -224,18 +224,18 @@ func waitClusterSnapshotDeleted(ctx context.Context, conn *redshift.Client, id s
 
 func waitIntegrationCreated(ctx context.Context, conn *redshift.Client, arn string, timeout time.Duration) (*awstypes.Integration, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:        []string{integrationStatusCreating, integrationStatusModifying},
-		Target:         []string{integrationStatusActive},
-		Refresh:        statusIntegration(ctx, conn, arn),
-		Timeout:        timeout,
-		NotFoundChecks: 20,
+		Pending: enum.Slice(awstypes.ZeroETLIntegrationStatusCreating, awstypes.ZeroETLIntegrationStatusModifying),
+		Target:  enum.Slice(awstypes.ZeroETLIntegrationStatusActive),
+		Refresh: statusIntegration(ctx, conn, arn),
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awstypes.Integration); ok {
-		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(out.Errors, integrationError)...))
 
-		return out, err
+	if output, ok := outputRaw.(*awstypes.Integration); ok {
+		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.Errors, integrationError)...))
+
+		return output, err
 	}
 
 	return nil, err
@@ -243,18 +243,18 @@ func waitIntegrationCreated(ctx context.Context, conn *redshift.Client, arn stri
 
 func waitIntegrationUpdated(ctx context.Context, conn *redshift.Client, arn string, timeout time.Duration) (*awstypes.Integration, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:        []string{integrationStatusModifying},
-		Target:         []string{integrationStatusActive},
-		Refresh:        statusIntegration(ctx, conn, arn),
-		Timeout:        timeout,
-		NotFoundChecks: 20,
+		Pending: enum.Slice(awstypes.ZeroETLIntegrationStatusModifying),
+		Target:  enum.Slice(awstypes.ZeroETLIntegrationStatusActive),
+		Refresh: statusIntegration(ctx, conn, arn),
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awstypes.Integration); ok {
-		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(out.Errors, integrationError)...))
 
-		return out, err
+	if output, ok := outputRaw.(*awstypes.Integration); ok {
+		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.Errors, integrationError)...))
+
+		return output, err
 	}
 
 	return nil, err
@@ -262,17 +262,18 @@ func waitIntegrationUpdated(ctx context.Context, conn *redshift.Client, arn stri
 
 func waitIntegrationDeleted(ctx context.Context, conn *redshift.Client, arn string, timeout time.Duration) (*awstypes.Integration, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{integrationStatusDeleting, integrationStatusActive},
+		Pending: enum.Slice(awstypes.ZeroETLIntegrationStatusDeleting, awstypes.ZeroETLIntegrationStatusActive),
 		Target:  []string{},
 		Refresh: statusIntegration(ctx, conn, arn),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awstypes.Integration); ok {
-		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(out.Errors, integrationError)...))
 
-		return out, err
+	if output, ok := outputRaw.(*awstypes.Integration); ok {
+		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.Errors, integrationError)...))
+
+		return output, err
 	}
 
 	return nil, err
