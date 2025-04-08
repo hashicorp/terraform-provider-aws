@@ -232,7 +232,7 @@ func (r *integrationResource) Delete(ctx context.Context, request resource.Delet
 	conn := r.Meta().RedshiftClient(ctx)
 
 	input := redshift.DeleteIntegrationInput{
-		IntegrationArn: data.IntegrationARN.ValueStringPointer(),
+		IntegrationArn: flex.StringFromFramework(ctx, data.IntegrationARN),
 	}
 	_, err := conn.DeleteIntegration(ctx, &input)
 

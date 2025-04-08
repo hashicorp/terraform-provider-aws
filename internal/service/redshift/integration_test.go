@@ -55,7 +55,7 @@ func TestAccRedshiftIntegration_basic(t *testing.T) {
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateIdFunc:                    testAccIntegrationImportStateIDFunc(resourceName),
-				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 			},
 		},
 	})
@@ -132,7 +132,7 @@ func TestAccRedshiftIntegration_optional(t *testing.T) {
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateIdFunc:                    testAccIntegrationImportStateIDFunc(resourceName),
-				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 			},
 		},
 	})
@@ -177,7 +177,7 @@ func TestAccRedshiftIntegration_sourceUsesS3Bucket(t *testing.T) {
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateIdFunc:                    testAccIntegrationImportStateIDFunc(resourceName),
-				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 			},
 			{
 				Config: testAccIntegrationConfig_sourceUsesS3Bucket(rName, description, integration_name),
@@ -196,7 +196,7 @@ func TestAccRedshiftIntegration_sourceUsesS3Bucket(t *testing.T) {
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateIdFunc:                    testAccIntegrationImportStateIDFunc(resourceName),
-				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 			},
 		},
 	})
