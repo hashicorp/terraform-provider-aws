@@ -6,7 +6,6 @@ package redshift
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -70,8 +69,7 @@ func (r *integrationResource) Schema(ctx context.Context, req resource.SchemaReq
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					&ignoreKmsKeyIdForS3Modifier{},
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
@@ -274,29 +272,4 @@ type integrationResourceModel struct {
 	TagsAll                     tftags.Map                       `tfsdk:"tags_all"`
 	TargetARN                   fwtypes.ARN                      `tfsdk:"target_arn"`
 	Timeouts                    timeouts.Value                   `tfsdk:"timeouts"`
-}
-
-type ignoreKmsKeyIdForS3Modifier struct{}
-
-func (m *ignoreKmsKeyIdForS3Modifier) Description(_ context.Context) string {
-	return "If source_arn is an S3 ARN and ConfigValue is null, do not show any differences."
-}
-
-func (m *ignoreKmsKeyIdForS3Modifier) MarkdownDescription(_ context.Context) string {
-	return "If source_arn is an S3 ARN and ConfigValue is null, do not show any differences."
-}
-
-func (m *ignoreKmsKeyIdForS3Modifier) PlanModifyString(ctx context.Context, req planmodifier.StringRequest, resp *planmodifier.StringResponse) {
-	var plan integrationResourceModel
-	diags := req.Plan.Get(ctx, &plan)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	// when source_arn is an S3 ARN and ConfigValue is null, do not show any differences.
-	matched, _ := regexp.MatchString(`^arn:aws[a-z\-]*:s3:.*$`, plan.SourceARN.ValueString())
-	if matched && req.ConfigValue.IsNull() {
-		resp.PlanValue = req.StateValue
-	}
 }
