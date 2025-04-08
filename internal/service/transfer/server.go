@@ -1281,6 +1281,6 @@ func (securityPolicyName) Values() []securityPolicyName {
 		securityPolicyNameRestricted_2018_11,
 		securityPolicyNameRestricted_2020_06,
 		securityPolicyNameRestricted_2024_06,
-		securityPolicyNameSshAuditCompliant_2025_02
+		securityPolicyNameSshAuditCompliant_2025_02,
 	}
 }
