@@ -527,7 +527,7 @@ func resourceDocumentDelete(ctx context.Context, d *schema.ResourceData, meta an
 		Name: aws.String(d.Get(names.AttrName).(string)),
 	})
 
-	if errs.IsAErrorMessageContains[*awstypes.InvalidDocument](err, "does not exist") {
+	if errs.IsA[*awstypes.InvalidDocument](err) {
 		return diags
 	}
 
@@ -549,7 +549,7 @@ func findDocumentByName(ctx context.Context, conn *ssm.Client, name string) (*aw
 
 	output, err := conn.DescribeDocument(ctx, input)
 
-	if errs.IsAErrorMessageContains[*awstypes.InvalidDocument](err, "does not exist") {
+	if errs.IsA[*awstypes.InvalidDocument](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
