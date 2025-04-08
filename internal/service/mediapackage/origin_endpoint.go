@@ -508,9 +508,6 @@ func resourceOriginEndpointCreate(ctx context.Context, d *schema.ResourceData, m
 		return create.AppendDiagError(diags, names.MediaPackage, create.ErrActionCreating, ResNameOriginEndpoint, d.Get(names.AttrARN).(string), errors.New("empty output"))
 	}
 
-	if err := d.Set("url", out.Url); err != nil {
-		return create.AppendDiagError(diags, names.MediaPackage, create.ErrActionCreating, ResNameOriginEndpoint, d.Get(names.AttrARN).(string), err)
-	}
 	d.SetId(aws.ToString(out.Id))
 
 	return append(diags, resourceOriginEndpointRead(ctx, d, meta)...)
