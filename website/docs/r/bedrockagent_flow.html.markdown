@@ -19,7 +19,7 @@ Terraform resource for managing an AWS Bedrock Agents Flow.
 
 ## Example Usage
 
-The default Flow definition:
+The default definition:
 ```terraform
 resource "aws_bedrockagent_flow" "example" {
   name               = "example"
@@ -141,14 +141,46 @@ resource "aws_bedrockagent_flow" "example" {
 
 The following arguments are required:
 
-* `name` - Name of the Flow.
-* `execution_role_arn` - ARN of the role.
+* `name` - (Required) Name of the Flow.
+* `execution_role_arn` - (Required) ARN of the role.
 
 The following arguments are optional:
 
-* `description` - Description of the Flow.
-* `customer_encryption_key_arn` - Customer encryption key ARN.
-* `definition` - Definition of the Flow.
+* `description` - (Optional) Description of the Flow.
+* `customer_encryption_key_arn` - (Optional) Customer encryption key ARN.
+* `definition` - (Optional) Definition of the Flow. See [Definition Config](#definition-config) for more information.
+* `tags` (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+### Definition Config
+
+* `connection` - (Optional) List of connections. See [Connection Config](#connection-config) for more information
+* `node` - (Optional) List of nodes. See [Node Config](#node-config) for more information
+
+### Connection Config
+
+* `name` - (Required) Name of the connection.
+* `source` - (Required) Source of the connection.
+* `target` - (Required) Target of the connection.
+* `type` - (Required) Type of the connection, which is either `Data` or `Conditional`
+* `configuration` - (Required) Configuration of the connection. See [Connection Configuration Config](#connection-configuration-config) for more information.
+
+### Connection Configuration Config
+
+* `data` - (Optional) Data connection configuration. See [Data Connection Configuration Config](#data-connection-configuration-config) for more information.
+* `conditional` - (Optional) Conditional connection configuration. See [Conditional Connection Configuration Config](#conditional-connection-configuration-config) for more information.
+
+### Data Connection Configuration Config
+
+* `source_output` - (Required) The source output field name.
+* `target_input` - (Required) The target input field name.
+
+### Conditional Connection Configuration Config
+
+* `condition` - (Required) The connection condition name.
+
+### Node Config
+
+TODO
 
 ## Attribute Reference
 
@@ -161,9 +193,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `60m`)
-* `update` - (Default `180m`)
-* `delete` - (Default `90m`)
+* `create` - (Default `5m`)
+* `update` - (Default `5m`)
+* `delete` - (Default `5m`)
 
 ## Import
 
