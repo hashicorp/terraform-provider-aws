@@ -20,7 +20,7 @@ func TestLegacyValue(t *testing.T) {
 
 	testCases := map[string]struct {
 		request  planmodifier.BoolRequest
-		expected *planmodifier.BoolResponse
+		expected planmodifier.BoolResponse
 	}{
 		"null-state": {
 			// when we first create the resource, use the zero value
@@ -29,7 +29,7 @@ func TestLegacyValue(t *testing.T) {
 				PlanValue:   types.BoolUnknown(),
 				ConfigValue: types.BoolNull(),
 			},
-			expected: &planmodifier.BoolResponse{
+			expected: planmodifier.BoolResponse{
 				PlanValue: types.BoolValue(false),
 			},
 		},
@@ -40,7 +40,7 @@ func TestLegacyValue(t *testing.T) {
 				PlanValue:   types.BoolValue(true),
 				ConfigValue: types.BoolNull(),
 			},
-			expected: &planmodifier.BoolResponse{
+			expected: planmodifier.BoolResponse{
 				PlanValue: types.BoolValue(true),
 			},
 		},
@@ -51,7 +51,7 @@ func TestLegacyValue(t *testing.T) {
 				PlanValue:   types.BoolUnknown(),
 				ConfigValue: types.BoolNull(),
 			},
-			expected: &planmodifier.BoolResponse{
+			expected: planmodifier.BoolResponse{
 				PlanValue: types.BoolValue(false),
 			},
 		},
@@ -67,7 +67,7 @@ func TestLegacyValue(t *testing.T) {
 				PlanValue:   types.BoolUnknown(),
 				ConfigValue: types.BoolUnknown(),
 			},
-			expected: &planmodifier.BoolResponse{
+			expected: planmodifier.BoolResponse{
 				PlanValue: types.BoolUnknown(),
 			},
 		},
@@ -78,7 +78,7 @@ func TestLegacyValue(t *testing.T) {
 				PlanValue:   types.BoolUnknown(),
 				StateValue:  types.BoolNull(),
 			},
-			expected: &planmodifier.BoolResponse{
+			expected: planmodifier.BoolResponse{
 				PlanValue: types.BoolValue(false),
 			},
 		},
@@ -107,7 +107,7 @@ func TestLegacyValue(t *testing.T) {
 				PlanValue:  types.BoolUnknown(),
 				StateValue: types.BoolNull(),
 			},
-			expected: &planmodifier.BoolResponse{
+			expected: planmodifier.BoolResponse{
 				PlanValue: types.BoolValue(false),
 			},
 		},
@@ -117,11 +117,11 @@ func TestLegacyValue(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			resp := &planmodifier.BoolResponse{
+			resp := planmodifier.BoolResponse{
 				PlanValue: testCase.request.PlanValue,
 			}
 
-			boolplanmodifier.LegacyValue().PlanModifyBool(context.Background(), testCase.request, resp)
+			boolplanmodifier.LegacyValue().PlanModifyBool(context.Background(), testCase.request, &resp)
 
 			if diff := cmp.Diff(testCase.expected, resp); diff != "" {
 				t.Errorf("unexpected difference: %s", diff)
