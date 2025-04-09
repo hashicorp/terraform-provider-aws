@@ -141,15 +141,15 @@ The following arguments are optional:
 
 * `description` - (Optional) A description for the flow.
 * `customer_encryption_key_arn` - (Optional) The Amazon Resource Name (ARN) of the KMS key to encrypt the flow.
-* `definition` - (Optional) A definition of the nodes and connections between nodes in the flow. See [Definition Config](#definition-config) for more information.
+* `definition` - (Optional) A definition of the nodes and connections between nodes in the flow. See [Definition](#definition) for more information.
 * `tags` (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### Definition Config
+### Definition
 
-* `connection` - (Optional) A list of connection definitions in the flow. See [Connection Config](#connection-config) for more information.
-* `node` - (Optional) A list of node definitions in the flow. See [Node Config](#node-config) for more information.
+* `connection` - (Optional) A list of connection definitions in the flow. See [Connection](#connection) for more information.
+* `node` - (Optional) A list of node definitions in the flow. See [Node](#node) for more information.
 
-### Connection Config
+### Connection
 
 * `name` - (Required) A name for the connection that you can reference.
 * `source` - (Required) The node that the connection starts at.
@@ -162,30 +162,30 @@ The following arguments are optional:
 * `data` - (Optional) The configuration of a connection originating from a node that isn’t a Condition node. See [Data Connection Configuration](#data-connection-configuration) for more information.
 * `conditional` - (Optional) The configuration of a connection originating from a Condition node. See [Conditional Connection Configuration](#conditional-connection-configuration) for more information.
 
-### Data Connection Configuration
+#### Data Connection Configuration
 
 * `source_output` - (Required) The name of the output in the source node that the connection begins from.
 * `target_input` - (Required) The name of the input in the target node that the connection ends at.
 
-### Conditional Connection Configuration
+#### Conditional Connection Configuration
 
 * `condition` - (Required) The condition that triggers this connection. For more information about how to write conditions, see the Condition node type in the [Node types](https://docs.aws.amazon.com/bedrock/latest/userguide/node-types.html) topic in the Amazon Bedrock User Guide.
 
-### Node Config
+### Node
 
 * `name` - (Required) A name for the node.
 * `type` - (Required) The type of node. This value must match the name of the key that you provide in the configuration. Valid values: `Agent`, `Collector`, `Condition`, `Input`, `Iterator`, `KnowledgeBase`, `LambdaFunction`, `Lex`, `Output`, `Prompt`, `Retrieval`, `Storage`
 * `configuration` - (Required) Contains configurations for the node. See [Node Configuration](#node-configuration) for more information.
-* `inputs` - (Optional) A list of objects containing information about an input into the node. See [Input Config](#input-config) for more information.
-* `outputs` - (Optional) A list of containing information about an output from the node. See [Output Config](#output-config) for more information.
+* `input` - (Optional) A list of objects containing information about an input into the node. See [Node Input](#node-input) for more information.
+* `output` - (Optional) A list of objects containing information about an output from the node. See [Node Output](#node-output) for more information.
 
-### Input Config
+### Node Input
 
 * `name` - (Required) A name for the input that you can reference.
 * `type` - (Required) The data type of the input. If the input doesn’t match this type at runtime, a validation error will be thrown.
 * `expression` - (Required) An expression that formats the input for the node. For an explanation of how to create expressions, see [Expressions in Prompt flows in Amazon Bedrock](https://docs.aws.amazon.com/bedrock/latest/userguide/flows-expressions.html).
 
-### Output Config
+### Node Output
 * `name` - (Required) A name for the output that you can reference.
 * `type` - (Required) The data type of the output. If the output doesn’t match this type at runtime, a validation error will be thrown.
 
@@ -210,7 +210,7 @@ The following arguments are optional:
 
 ### Condition Node Configuration
 
-* `conditions` - (Optional) A list of conditions. See [Condition Config](#condition-config) for more information.
+* `condition` - (Optional) A list of conditions. See [Condition Config](#condition-config) for more information.
 
 #### Condition Config
 
