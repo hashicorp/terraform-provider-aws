@@ -46,7 +46,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import QuickSight Account Settings using the AWS account ID `api-gateway-account`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import QuickSight Account Settings using the AWS account ID. For example:
 
 ```terraform
 import {
@@ -55,7 +55,7 @@ import {
 }
 ```
 
-Using `terraform import`, import QuickSight Account Settings using the AWS account ID `api-gateway-account`. For example:
+Using `terraform import`, import QuickSight Account Settings using the AWS account ID. For example:
 
 ```console
 % terraform import aws_quicksight_account_settings.example "012345678901"
