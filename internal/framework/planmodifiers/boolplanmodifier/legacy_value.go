@@ -42,8 +42,6 @@ func (m legacyValueModifier) PlanModifyBool(ctx context.Context, req planmodifie
 		return
 	}
 
-	if req.StateValue.IsNull() {
-		resp.PlanValue = types.BoolValue(false)
-		return
-	}
+	resp.PlanValue = types.BoolValue(false)
+	return
 }
