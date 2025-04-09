@@ -1,0 +1,5 @@
+```release-note:enhancement
+resource/aws_transfer_server: Add `TransferSecurityPolicy-2025-03` as a valid value for `security_policy_name`
+resource/aws_transfer_server: Add `TransferSecurityPolicy-FIPS-2025-03` as a valid value for `security_policy_name`
+resource/aws_transfer_server: Add `TransferSecurityPolicy-SshAuditCompliant-2025-02` as a valid value for `security_policy_name`
+```
