@@ -239,7 +239,102 @@ The following arguments are optional:
 
 ### Prompt Node Configuration
 
-TODO
+* `resource` - (Optional) Contains configurations for a prompt from Prompt management. See [Prompt Resource Configuration](#prompt-resource-configuration) for more information.
+* `inline` - (Optional) Contains configurations for a prompt that is defined inline. See [Prompt Inline Configuration](#prompt-inline-configuration) for more information.
+
+#### Prompt Resource Configuration
+
+* `prompt_arn` - (Required) The Amazon Resource Name (ARN) of the prompt from Prompt management.
+
+#### Prompt Inline Configuration
+
+* `additional_model_request_fields` - (Optional) Additional fields to be included in the model request for the Prompt node.
+* `inference_configuration` - (Optional) Contains inference configurations for the prompt. See [Prompt Inference Configuration](#prompt-inference-configuration) for more information.
+* `model_id` - (Required) The unique identifier of the model or [inference profile](https://docs.aws.amazon.com/bedrock/latest/userguide/cross-region-inference.html) to run inference with.
+* `template_type` - (Required) The type of prompt template. Valid values: `TEXT`, `CHAT`.
+* `template_configuration` - (Required) Contains a prompt and variables in the prompt that can be replaced with values at runtime. See [Prompt Template Configuration](#prompt-template-configuration) for more information.
+
+#### Prompt Inference Configuration
+
+* `text` - (Optional) Contains inference configurations for a text prompt. See [Text Inference Configuration](#text-inference-configuration) for more information.
+
+#### Text Inference Configuration
+
+* `max_tokens` - (Optional)
+* `stop_sequences` - (Optional)
+* `temperature` - (Optional)
+* `top_p` - (Optional)
+
+#### Prompt Template Configuration
+
+* `text` - (Optional) Contains configurations for the text in a message for a prompt. See [Text Template Configuration](#text-template-configuration)
+* `chat` - (Optional) Contains configurations to use the prompt in a conversational format. See [Chat Template Configuration](#chat-template-configuration) for more information.
+
+#### Text Template Configuration
+
+* `text` - (Required) The message for the prompt.
+* `input_variable` - (Optional) A list of variables in the prompt template. See [Input Variable](#input-variable) for more information.
+* `cache_point` - (Optional) A cache checkpoint within a template configuration. See [Cache Point](#cache-point) for more information.
+
+#### Chat Template Configuration
+
+* `input_variable` - (Optional) A list of variables in the prompt template. See [Input Variable](#input-variable) for more information.
+* `message` - (Optional) A list of messages in the chat for the prompt. See [Message](#message) for more information.
+* `system` - (Optional) A list of system prompts to provide context to the model or to describe how it should behave. See [System](#system) for more information.
+* `tool_configuration` - (Optional) Configuration information for the tools that the model can use when generating a response. See [Tool Configuration](#tool-configuration) for more information.
+
+#### Message
+
+* `role` - (Required) The role that the message belongs to.
+* `content` - (Required) Contains the content for the message you pass to, or receive from a model. See [Message Content] for more information.
+
+#### Message Content
+
+* `cache_point` - (Optional) Creates a cache checkpoint within a message. See [Cache Point](#cache-point) for more information.
+* `text` - (Optional) The text in the message.
+
+#### System
+
+* `cache_point` - (Optional) Creates a cache checkpoint within a tool designation. See [Cache Point](#cache-point) for more information.
+* `text` - (Optional) The text in the system prompt.
+
+#### Tool Configuration
+
+* `tool_choice` - (Optional) Defines which tools the model should request when invoked. See [Tool Choice](#tool-choice) for more information.
+* `tool` - (Optional) A list of tools to pass to a model. See [Tool Configuration](#tool-configuration) for more information.
+
+#### Tool Choice
+
+* `any` - (Optional) Defines tools, at least one of which must be requested by the model. No text is generated but the results of tool use are sent back to the model to help generate a response. This object has no fields.
+* `auto` - (Optional) Defines tools. The model automatically decides whether to call a tool or to generate text instead. This object has no fields.
+* `tool` - (Optional) Defines a specific tool that the model must request. No text is generated but the results of tool use are sent back to the model to help generate a response. See [Tool](#tool) for more information.
+
+#### Tool
+
+* `name` - (Required) The name of the tool.
+
+#### Tool Configuration
+
+* `cache_point` - (Optional) Creates a cache checkpoint within a tool designation. See [Cache Point](#cache-point) for more information.
+* `tool_spec` - (Optional) The specification for the tool. See [Tool Specification](#tool-specification) for more information.
+
+#### Tool Specification
+
+* `name` - (Required) The name of the tool.
+* `description` - (Optional) The description of the tool.
+* `input_schema` - (Optional) The input schema of the tool. See [Tool Input Schema](#tool-input-schema) for more information.
+
+#### Tool Input Schema
+
+* `json` - (Optional) A JSON object defining the input schema for the tool.
+
+#### Input Variable
+
+* `name` - (Required) The name of the variable.
+
+#### Cache Point
+
+* `type` - (Required) Indicates that the CachePointBlock is of the default type. Valid values: `default`.
 
 ### Retrieval Node Configuration
 
