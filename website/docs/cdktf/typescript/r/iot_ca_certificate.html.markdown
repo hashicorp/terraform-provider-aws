@@ -97,11 +97,11 @@ class MyConvertedCode extends TerraformStack {
 * `active` - (Required)  Boolean flag to indicate if the certificate should be active for device authentication.
 * `allowAutoRegistration` - (Required)  Boolean flag to indicate if the certificate should be active for device regisration.
 * `caCertificatePem` - (Required)  PEM encoded CA certificate.
-* `certificateMode` - (Optional)  The certificate mode in which the CA will be registered. Valida values: `DEFAULT` and `SNI_ONLY`. Default: `DEFAULT`.
+* `certificateMode` - (Optional)  The certificate mode in which the CA will be registered. Valid values: `DEFAULT` and `SNI_ONLY`. Default: `DEFAULT`.
 * `registrationConfig` - (Optional) Information about the registration configuration. See below.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `verificationCertificatePem` - (Optional) PEM encoded verification certificate containing the common name of a registration code. Review
-  [CreateVerificationCSR](https://docs.aws.amazon.com/iot/latest/developerguide/register-CA-cert.html). Reuired if `certificateMode` is `DEFAULT`.
+  [CreateVerificationCSR](https://docs.aws.amazon.com/iot/latest/developerguide/register-CA-cert.html). Required if `certificateMode` is `DEFAULT`.
 
 ### registration_config
 
