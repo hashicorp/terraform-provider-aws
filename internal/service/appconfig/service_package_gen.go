@@ -4,6 +4,7 @@ package appconfig
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/appconfig"
@@ -24,9 +25,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Factory:  newEnvironmentResource,
 			TypeName: "aws_appconfig_environment",
 			Name:     "Environment",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 	}
 }
@@ -37,9 +38,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Factory:  dataSourceConfigurationProfile,
 			TypeName: "aws_appconfig_configuration_profile",
 			Name:     "Configuration Profile",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 		{
 			Factory:  dataSourceConfigurationProfiles,
@@ -50,9 +51,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Factory:  dataSourceEnvironment,
 			TypeName: "aws_appconfig_environment",
 			Name:     "Environment",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 		{
 			Factory:  dataSourceEnvironments,
@@ -68,41 +69,41 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceApplication,
 			TypeName: "aws_appconfig_application",
 			Name:     "Application",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 		{
 			Factory:  resourceConfigurationProfile,
 			TypeName: "aws_appconfig_configuration_profile",
 			Name:     "Configuration Profile",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 		{
 			Factory:  resourceDeployment,
 			TypeName: "aws_appconfig_deployment",
 			Name:     "Deployment",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 		{
 			Factory:  resourceDeploymentStrategy,
 			TypeName: "aws_appconfig_deployment_strategy",
 			Name:     "Deployment Strategy",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 		{
 			Factory:  resourceExtension,
 			TypeName: "aws_appconfig_extension",
 			Name:     "Extension",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 		{
 			Factory:  resourceExtensionAssociation,

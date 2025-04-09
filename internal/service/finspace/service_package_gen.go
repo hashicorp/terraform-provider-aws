@@ -4,6 +4,7 @@ package finspace
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/finspace"
@@ -32,57 +33,57 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  ResourceKxCluster,
 			TypeName: "aws_finspace_kx_cluster",
 			Name:     "Kx Cluster",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 		{
 			Factory:  ResourceKxDatabase,
 			TypeName: "aws_finspace_kx_database",
 			Name:     "Kx Database",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 		{
 			Factory:  ResourceKxDataview,
 			TypeName: "aws_finspace_kx_dataview",
 			Name:     "Kx Dataview",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 		{
 			Factory:  ResourceKxEnvironment,
 			TypeName: "aws_finspace_kx_environment",
 			Name:     "Kx Environment",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 		{
 			Factory:  ResourceKxScalingGroup,
 			TypeName: "aws_finspace_kx_scaling_group",
 			Name:     "Kx Scaling Group",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 		{
 			Factory:  ResourceKxUser,
 			TypeName: "aws_finspace_kx_user",
 			Name:     "Kx User",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 		{
 			Factory:  ResourceKxVolume,
 			TypeName: "aws_finspace_kx_volume",
 			Name:     "Kx Volume",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 	}
 }

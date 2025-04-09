@@ -4,6 +4,7 @@ package cloudhsmv2
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudhsmv2"
@@ -38,9 +39,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceCluster,
 			TypeName: "aws_cloudhsm_v2_cluster",
 			Name:     "Cluster",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
 		},
 		{
 			Factory:  resourceHSM,

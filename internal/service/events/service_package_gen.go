@@ -4,6 +4,7 @@ package events
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/eventbridge"
@@ -64,9 +65,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceBus,
 			TypeName: "aws_cloudwatch_event_bus",
 			Name:     "Event Bus",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 		{
 			Factory:  resourceBusPolicy,
@@ -92,9 +93,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceRule,
 			TypeName: "aws_cloudwatch_event_rule",
 			Name:     "Rule",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 		{
 			Factory:  resourceTarget,

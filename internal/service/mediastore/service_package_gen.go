@@ -4,6 +4,7 @@ package mediastore
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/mediastore"
@@ -32,9 +33,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  ResourceContainer,
 			TypeName: "aws_media_store_container",
 			Name:     "Container",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 		{
 			Factory:  ResourceContainerPolicy,

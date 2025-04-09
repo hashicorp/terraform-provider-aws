@@ -4,6 +4,7 @@ package s3control
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3control"
@@ -24,13 +25,13 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Factory:  newAccessGrantResource,
 			TypeName: "aws_s3control_access_grant",
 			Name:     "Access Grant",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags:     unique.Make(types.ServicePackageResourceTags{}),
 		},
 		{
 			Factory:  newAccessGrantsInstanceResource,
 			TypeName: "aws_s3control_access_grants_instance",
 			Name:     "Access Grants Instance",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags:     unique.Make(types.ServicePackageResourceTags{}),
 		},
 		{
 			Factory:  newAccessGrantsInstanceResourcePolicyResource,
@@ -41,7 +42,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Factory:  newAccessGrantsLocationResource,
 			TypeName: "aws_s3control_access_grants_location",
 			Name:     "Access Grants Location",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags:     unique.Make(types.ServicePackageResourceTags{}),
 		},
 	}
 }
@@ -82,7 +83,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceBucket,
 			TypeName: "aws_s3control_bucket",
 			Name:     "Bucket",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags:     unique.Make(types.ServicePackageResourceTags{}),
 		},
 		{
 			Factory:  resourceBucketLifecycleConfiguration,
@@ -118,7 +119,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceStorageLensConfiguration,
 			TypeName: "aws_s3control_storage_lens_configuration",
 			Name:     "Storage Lens Configuration",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags:     unique.Make(types.ServicePackageResourceTags{}),
 		},
 	}
 }

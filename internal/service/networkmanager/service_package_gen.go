@@ -4,6 +4,7 @@ package networkmanager
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
@@ -24,9 +25,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Factory:  newDirectConnectGatewayAttachmentResource,
 			TypeName: "aws_networkmanager_dx_gateway_attachment",
 			Name:     "Direct Connect Gateway Attachment",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 	}
 }
@@ -102,33 +103,33 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceConnectAttachment,
 			TypeName: "aws_networkmanager_connect_attachment",
 			Name:     "Connect Attachment",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 		{
 			Factory:  resourceConnectPeer,
 			TypeName: "aws_networkmanager_connect_peer",
 			Name:     "Connect Peer",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 		{
 			Factory:  resourceConnection,
 			TypeName: "aws_networkmanager_connection",
 			Name:     "Connection",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 		{
 			Factory:  resourceCoreNetwork,
 			TypeName: "aws_networkmanager_core_network",
 			Name:     "Core Network",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 		{
 			Factory:  resourceCoreNetworkPolicyAttachment,
@@ -144,25 +145,25 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceDevice,
 			TypeName: "aws_networkmanager_device",
 			Name:     "Device",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 		{
 			Factory:  resourceGlobalNetwork,
 			TypeName: "aws_networkmanager_global_network",
 			Name:     "Global Network",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 		{
 			Factory:  resourceLink,
 			TypeName: "aws_networkmanager_link",
 			Name:     "Link",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 		{
 			Factory:  resourceLinkAssociation,
@@ -173,17 +174,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceSite,
 			TypeName: "aws_networkmanager_site",
 			Name:     "Site",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 		{
 			Factory:  resourceSiteToSiteVPNAttachment,
 			TypeName: "aws_networkmanager_site_to_site_vpn_attachment",
 			Name:     "Site To Site VPN Attachment",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 		{
 			Factory:  resourceTransitGatewayConnectPeerAssociation,
@@ -194,9 +195,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceTransitGatewayPeering,
 			TypeName: "aws_networkmanager_transit_gateway_peering",
 			Name:     "Transit Gateway Peering",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 		{
 			Factory:  resourceTransitGatewayRegistration,
@@ -207,17 +208,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceTransitGatewayRouteTableAttachment,
 			TypeName: "aws_networkmanager_transit_gateway_route_table_attachment",
 			Name:     "Transit Gateway Route Table Attachment",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 		{
 			Factory:  resourceVPCAttachment,
 			TypeName: "aws_networkmanager_vpc_attachment",
 			Name:     "VPC Attachment",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 	}
 }

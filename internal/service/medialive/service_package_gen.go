@@ -4,6 +4,7 @@ package medialive
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
@@ -20,7 +21,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 			Factory:  newDataSourceInput,
 			TypeName: "aws_medialive_input",
 			Name:     "Input",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags:     unique.Make(types.ServicePackageResourceTags{}),
 		},
 	}
 }
@@ -45,33 +46,33 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  ResourceChannel,
 			TypeName: "aws_medialive_channel",
 			Name:     "Channel",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 		{
 			Factory:  ResourceInput,
 			TypeName: "aws_medialive_input",
 			Name:     "Input",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 		{
 			Factory:  ResourceInputSecurityGroup,
 			TypeName: "aws_medialive_input_security_group",
 			Name:     "Input Security Group",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 		{
 			Factory:  ResourceMultiplex,
 			TypeName: "aws_medialive_multiplex",
 			Name:     "Multiplex",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 	}
 }

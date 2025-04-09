@@ -4,6 +4,7 @@ package devicefarm
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/devicefarm"
@@ -32,41 +33,41 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceDevicePool,
 			TypeName: "aws_devicefarm_device_pool",
 			Name:     "Device Pool",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 		{
 			Factory:  resourceInstanceProfile,
 			TypeName: "aws_devicefarm_instance_profile",
 			Name:     "Instance Profile",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 		{
 			Factory:  resourceNetworkProfile,
 			TypeName: "aws_devicefarm_network_profile",
 			Name:     "Network Profile",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 		{
 			Factory:  resourceProject,
 			TypeName: "aws_devicefarm_project",
 			Name:     "Project",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 		{
 			Factory:  resourceTestGridProject,
 			TypeName: "aws_devicefarm_test_grid_project",
 			Name:     "Test Grid Project",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 		{
 			Factory:  resourceUpload,

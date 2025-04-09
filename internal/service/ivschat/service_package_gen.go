@@ -4,6 +4,7 @@ package ivschat
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ivschat"
@@ -32,17 +33,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  ResourceLoggingConfiguration,
 			TypeName: "aws_ivschat_logging_configuration",
 			Name:     "Logging Configuration",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
 		},
 		{
 			Factory:  ResourceRoom,
 			TypeName: "aws_ivschat_room",
 			Name:     "Room",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
 		},
 	}
 }

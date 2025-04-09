@@ -4,6 +4,7 @@ package ssmquicksetup
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ssmquicksetup"
@@ -24,9 +25,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Factory:  newResourceConfigurationManager,
 			TypeName: "aws_ssmquicksetup_configuration_manager",
 			Name:     "Configuration Manager",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: "manager_arn",
-			},
+			}),
 		},
 	}
 }

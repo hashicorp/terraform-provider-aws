@@ -4,6 +4,7 @@ package directconnect
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/directconnect"
@@ -63,9 +64,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceConnection,
 			TypeName: "aws_dx_connection",
 			Name:     "Connection",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 		{
 			Factory:  resourceConnectionAssociation,
@@ -106,9 +107,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceHostedPrivateVirtualInterfaceAccepter,
 			TypeName: "aws_dx_hosted_private_virtual_interface_accepter",
 			Name:     "Hosted Private Virtual Interface Accepter",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 		{
 			Factory:  resourceHostedPublicVirtualInterface,
@@ -119,9 +120,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceHostedPublicVirtualInterfaceAccepter,
 			TypeName: "aws_dx_hosted_public_virtual_interface_accepter",
 			Name:     "Hosted Public Virtual Interface Accepter",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 		{
 			Factory:  resourceHostedTransitVirtualInterface,
@@ -132,17 +133,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceHostedTransitVirtualInterfaceAccepter,
 			TypeName: "aws_dx_hosted_transit_virtual_interface_accepter",
 			Name:     "Hosted Transit Virtual Interface Accepter",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 		{
 			Factory:  resourceLag,
 			TypeName: "aws_dx_lag",
 			Name:     "LAG",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 		{
 			Factory:  resourceMacSecKeyAssociation,
@@ -153,25 +154,25 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourcePrivateVirtualInterface,
 			TypeName: "aws_dx_private_virtual_interface",
 			Name:     "Private Virtual Interface",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 		{
 			Factory:  resourcePublicVirtualInterface,
 			TypeName: "aws_dx_public_virtual_interface",
 			Name:     "Public Virtual Interface",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 		{
 			Factory:  resourceTransitVirtualInterface,
 			TypeName: "aws_dx_transit_virtual_interface",
 			Name:     "Transit Virtual Interface",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 	}
 }

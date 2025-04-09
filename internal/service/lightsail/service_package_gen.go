@@ -4,6 +4,7 @@ package lightsail
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
@@ -32,10 +33,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  ResourceBucket,
 			TypeName: "aws_lightsail_bucket",
 			Name:     "Bucket",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 				ResourceType:        "Bucket",
-			},
+			}),
 		},
 		{
 			Factory:  ResourceBucketAccessKey,
@@ -51,19 +52,19 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  ResourceCertificate,
 			TypeName: "aws_lightsail_certificate",
 			Name:     "Certificate",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 				ResourceType:        "Certificate",
-			},
+			}),
 		},
 		{
 			Factory:  ResourceContainerService,
 			TypeName: "aws_lightsail_container_service",
 			Name:     "Container Service",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 				ResourceType:        "ContainerService",
-			},
+			}),
 		},
 		{
 			Factory:  ResourceContainerServiceDeploymentVersion,
@@ -74,19 +75,19 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  ResourceDatabase,
 			TypeName: "aws_lightsail_database",
 			Name:     "Database",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 				ResourceType:        "Database",
-			},
+			}),
 		},
 		{
 			Factory:  ResourceDisk,
 			TypeName: "aws_lightsail_disk",
 			Name:     "Disk",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 				ResourceType:        "Disk",
-			},
+			}),
 		},
 		{
 			Factory:  ResourceDiskAttachment,
@@ -97,10 +98,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  ResourceDistribution,
 			TypeName: "aws_lightsail_distribution",
 			Name:     "Distribution",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 				ResourceType:        "Distribution",
-			},
+			}),
 		},
 		{
 			Factory:  ResourceDomain,
@@ -116,10 +117,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  ResourceInstance,
 			TypeName: "aws_lightsail_instance",
 			Name:     "Instance",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 				ResourceType:        "Instance",
-			},
+			}),
 		},
 		{
 			Factory:  ResourceInstancePublicPorts,
@@ -130,19 +131,19 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  ResourceKeyPair,
 			TypeName: "aws_lightsail_key_pair",
 			Name:     "KeyPair",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 				ResourceType:        "KeyPair",
-			},
+			}),
 		},
 		{
 			Factory:  ResourceLoadBalancer,
 			TypeName: "aws_lightsail_lb",
 			Name:     "LB",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 				ResourceType:        "LB",
-			},
+			}),
 		},
 		{
 			Factory:  ResourceLoadBalancerAttachment,

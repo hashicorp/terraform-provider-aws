@@ -4,6 +4,7 @@ package ssoadmin
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
@@ -50,7 +51,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Factory:  newResourceApplication,
 			TypeName: "aws_ssoadmin_application",
 			Name:     "Application",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags:     unique.Make(types.ServicePackageResourceTags{}),
 		},
 		{
 			Factory:  newResourceApplicationAccessScope,
@@ -71,7 +72,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Factory:  newResourceTrustedTokenIssuer,
 			TypeName: "aws_ssoadmin_trusted_token_issuer",
 			Name:     "Trusted Token Issuer",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags:     unique.Make(types.ServicePackageResourceTags{}),
 		},
 	}
 }
@@ -117,7 +118,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  ResourcePermissionSet,
 			TypeName: "aws_ssoadmin_permission_set",
 			Name:     "Permission Set",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags:     unique.Make(types.ServicePackageResourceTags{}),
 		},
 		{
 			Factory:  ResourcePermissionSetInlinePolicy,

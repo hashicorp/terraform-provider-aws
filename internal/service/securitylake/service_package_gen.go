@@ -4,6 +4,7 @@ package securitylake
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/securitylake"
@@ -34,17 +35,17 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Factory:  newDataLakeResource,
 			TypeName: "aws_securitylake_data_lake",
 			Name:     "Data Lake",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 		{
 			Factory:  newSubscriberResource,
 			TypeName: "aws_securitylake_subscriber",
 			Name:     "Subscriber",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 		{
 			Factory:  newSubscriberNotificationResource,
