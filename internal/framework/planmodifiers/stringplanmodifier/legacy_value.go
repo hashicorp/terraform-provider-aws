@@ -42,8 +42,6 @@ func (m legacyValueModifier) PlanModifyString(ctx context.Context, req planmodif
 		return
 	}
 
-	if req.StateValue.IsNull() {
-		resp.PlanValue = types.StringValue("")
-		return
-	}
+	resp.PlanValue = types.StringValue("")
+	return
 }
