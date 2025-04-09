@@ -1,4 +1,15 @@
 ## 5.95.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_sagemaker_image_version: Add `horovod`, `job_type`, `ml_framework`, `processor`, `programming_lang`, `release_notes`, and `vendor_guidance` arguments ([#42143](https://github.com/hashicorp/terraform-provider-aws/issues/42143))
+* resource/aws_sagemaker_notebook_lifecycle_configuration: Add `tags` argument and `tags_all` attribute ([#42141](https://github.com/hashicorp/terraform-provider-aws/issues/42141))
+
+BUG FIXES:
+
+* resource/aws_sagemaker_domain: Allow `default_user_settings.custom_file_system_config` and `default_space_settings.custom_file_system_config` to be removed on Update ([#42144](https://github.com/hashicorp/terraform-provider-aws/issues/42144))
+* resource/aws_sagemaker_user_profile: Allow `user_settings.custom_file_system_config` to be removed on Update ([#42144](https://github.com/hashicorp/terraform-provider-aws/issues/42144))
+
 ## 5.94.1 (April  4, 2025)
 
 BUG FIXES:
