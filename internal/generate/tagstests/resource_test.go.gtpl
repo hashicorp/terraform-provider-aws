@@ -130,6 +130,7 @@ package {{ .ProviderPackage }}_test
 import (
 	{{ if .OverrideIdentifier }}
 	"context"
+	"unique"
 	{{- end }}
 	"testing"
 
@@ -2912,11 +2913,11 @@ func testAcc{{ .ResourceProviderNameUpper }}{{ .Name }}_removingTagNotSupported(
 
 {{ if .OverrideIdentifier }}
 func {{ template "expectFullResourceTags" . }}(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullResourceTagsSpecTags(tf{{ .ProviderPackage }}.ServicePackage(ctx), resourceAddress, &types.ServicePackageResourceTags{
+	return tfstatecheck.ExpectFullResourceTagsSpecTags(tf{{ .ProviderPackage }}.ServicePackage(ctx), resourceAddress, unique.Make(types.ServicePackageResourceTags{
 		IdentifierAttribute: {{ .OverrideIdentifierAttribute }},
 		{{ if ne .OverrideResourceType "" -}}
 		ResourceType:        "{{ .OverrideResourceType }}",
 		{{- end }}
-	}, knownValue)
+	}), knownValue)
 }
 {{ end }}

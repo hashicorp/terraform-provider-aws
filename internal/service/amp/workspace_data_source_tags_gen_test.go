@@ -5,6 +5,7 @@ package amp_test
 import (
 	"context"
 	"testing"
+	"unique"
 
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -186,7 +187,7 @@ func TestAccAMPWorkspaceDataSource_tags_IgnoreTags_Overlap_ResourceTag(t *testin
 }
 
 func expectFullWorkspaceDataSourceTags(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfamp.ServicePackage(ctx), resourceAddress, &types.ServicePackageResourceTags{
+	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfamp.ServicePackage(ctx), resourceAddress, unique.Make(types.ServicePackageResourceTags{
 		IdentifierAttribute: names.AttrARN,
-	}, knownValue)
+	}), knownValue)
 }
