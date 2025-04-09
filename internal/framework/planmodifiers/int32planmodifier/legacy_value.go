@@ -27,13 +27,13 @@ func (m legacyValueModifier) MarkdownDescription(ctx context.Context) string {
 }
 
 func (m legacyValueModifier) PlanModifyInt32(ctx context.Context, req planmodifier.Int32Request, resp *planmodifier.Int32Response) {
-	// Use value from Config if set
-	if !req.ConfigValue.IsNull() {
+	// Exit if another planmodifier has set the value
+	if !req.PlanValue.IsUnknown() {
 		return
 	}
 
-	// Exit if another planmodifier has set the value
-	if !req.PlanValue.IsUnknown() {
+	// Use value from Config if set
+	if !req.ConfigValue.IsNull() {
 		return
 	}
 
