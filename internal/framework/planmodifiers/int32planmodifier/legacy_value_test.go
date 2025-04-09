@@ -20,7 +20,7 @@ func TestLegacyValue(t *testing.T) {
 
 	testCases := map[string]struct {
 		request  planmodifier.Int32Request
-		expected *planmodifier.Int32Response
+		expected planmodifier.Int32Response
 	}{
 		"null-state": {
 			// when we first create the resource, use the zero value
@@ -29,7 +29,7 @@ func TestLegacyValue(t *testing.T) {
 				PlanValue:   types.Int32Unknown(),
 				ConfigValue: types.Int32Null(),
 			},
-			expected: &planmodifier.Int32Response{
+			expected: planmodifier.Int32Response{
 				PlanValue: types.Int32Value(0),
 			},
 		},
@@ -40,7 +40,7 @@ func TestLegacyValue(t *testing.T) {
 				PlanValue:   types.Int32Value(1),
 				ConfigValue: types.Int32Null(),
 			},
-			expected: &planmodifier.Int32Response{
+			expected: planmodifier.Int32Response{
 				PlanValue: types.Int32Value(1),
 			},
 		},
@@ -51,7 +51,7 @@ func TestLegacyValue(t *testing.T) {
 				PlanValue:   types.Int32Unknown(),
 				ConfigValue: types.Int32Null(),
 			},
-			expected: &planmodifier.Int32Response{
+			expected: planmodifier.Int32Response{
 				PlanValue: types.Int32Value(0),
 			},
 		},
@@ -67,7 +67,7 @@ func TestLegacyValue(t *testing.T) {
 				PlanValue:   types.Int32Unknown(),
 				ConfigValue: types.Int32Unknown(),
 			},
-			expected: &planmodifier.Int32Response{
+			expected: planmodifier.Int32Response{
 				PlanValue: types.Int32Unknown(),
 			},
 		},
@@ -78,7 +78,7 @@ func TestLegacyValue(t *testing.T) {
 				PlanValue:   types.Int32Unknown(),
 				StateValue:  types.Int32Null(),
 			},
-			expected: &planmodifier.Int32Response{
+			expected: planmodifier.Int32Response{
 				PlanValue: types.Int32Value(0),
 			},
 		},
@@ -107,7 +107,7 @@ func TestLegacyValue(t *testing.T) {
 				PlanValue:  types.Int32Unknown(),
 				StateValue: types.Int32Null(),
 			},
-			expected: &planmodifier.Int32Response{
+			expected: planmodifier.Int32Response{
 				PlanValue: types.Int32Value(0),
 			},
 		},
@@ -117,11 +117,11 @@ func TestLegacyValue(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			resp := &planmodifier.Int32Response{
+			resp := planmodifier.Int32Response{
 				PlanValue: testCase.request.PlanValue,
 			}
 
-			int32planmodifier.LegacyValue().PlanModifyInt32(context.Background(), testCase.request, resp)
+			int32planmodifier.LegacyValue().PlanModifyInt32(context.Background(), testCase.request, &resp)
 
 			if diff := cmp.Diff(testCase.expected, resp); diff != "" {
 				t.Errorf("unexpected difference: %s", diff)
