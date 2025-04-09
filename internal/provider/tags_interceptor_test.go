@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"unique"
 
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -62,9 +63,9 @@ func TestTagsResourceInterceptor(t *testing.T) {
 
 	ctx := context.Background()
 	var interceptors interceptorItems
-	sp := &types.ServicePackageResourceTags{
+	sp := unique.Make(types.ServicePackageResourceTags{
 		IdentifierAttribute: "id",
-	}
+	})
 	tags := newTagsResourceInterceptor(sp)
 	interceptors = append(interceptors, interceptorItem{
 		when:        Finally,
