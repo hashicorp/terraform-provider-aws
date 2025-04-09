@@ -42,8 +42,5 @@ func (m legacyValueModifier) PlanModifyInt32(ctx context.Context, req planmodifi
 		return
 	}
 
-	if req.StateValue.IsNull() {
-		resp.PlanValue = types.Int32Value(0)
-		return
-	}
+	resp.PlanValue = types.Int32Value(0)
 }
