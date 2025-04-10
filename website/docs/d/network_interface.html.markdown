@@ -60,12 +60,12 @@ This data source exports the following attributes in addition to the arguments a
 * `public_ip` - Address of the Elastic IP address bound to the network interface.
 
 ### `attachment`
+
 * `attachment_id` - The ID of the network interface attachment.
 * `device_index` - The device index of the network interface attachment on the instance.
 * `instance_id` - The ID of the instance.
 * `instance_owner_id` - The AWS account ID of the owner of the instance.
 * `network_card_index` - The index of the network card.
-
 
 ## Timeouts
 
