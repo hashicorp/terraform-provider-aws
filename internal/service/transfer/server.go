@@ -1260,7 +1260,7 @@ const (
 	securityPolicyNameRestricted_2018_11        securityPolicyName = "TransferSecurityPolicy-Restricted-2018-11"
 	securityPolicyNameRestricted_2020_06        securityPolicyName = "TransferSecurityPolicy-Restricted-2020-06"
 	securityPolicyNameRestricted_2024_06        securityPolicyName = "TransferSecurityPolicy-Restricted-2024-06"
-	securityPolicyNameSshAuditCompliant_2025_02 securityPolicyName = "TransferSecurityPolicy-SshAuditCompliant-2025-02"
+	securityPolicyNameSSHAuditCompliant_2025_02 securityPolicyName = "TransferSecurityPolicy-SshAuditCompliant-2025-02"
 )
 
 func (securityPolicyName) Values() []securityPolicyName {
@@ -1281,6 +1281,6 @@ func (securityPolicyName) Values() []securityPolicyName {
 		securityPolicyNameRestricted_2018_11,
 		securityPolicyNameRestricted_2020_06,
 		securityPolicyNameRestricted_2024_06,
-		securityPolicyNameSshAuditCompliant_2025_02,
+		securityPolicyNameSSHAuditCompliant_2025_02,
 	}
 }
