@@ -70,6 +70,10 @@ func dataSourceVirtualCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"security_configuration_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrState: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -105,6 +109,7 @@ func dataSourceVirtualClusterRead(ctx context.Context, d *schema.ResourceData, m
 	}
 	d.Set(names.AttrCreatedAt, aws.ToTime(vc.CreatedAt).String())
 	d.Set(names.AttrName, vc.Name)
+	d.Set("security_configuration_id", vc.SecurityConfigurationId)
 	d.Set(names.AttrState, vc.State)
 	d.Set("virtual_cluster_id", vc.Id)
 
