@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent/document"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
 
-	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -31,7 +30,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/json"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -508,7 +506,7 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 																																					NestedObject: schema.NestedBlockObject{
 																																						Attributes: map[string]schema.Attribute{
 																																							"json": schema.StringAttribute{
-																																								CustomType: jsontypes.NormalizedType{},
+																																								CustomType: fwtypes.NewSmithyJSONType(ctx, document.NewLazyDocument),
 																																								Optional:   true,
 																																								Validators: []validator.String{
 																																									stringvalidator.ExactlyOneOf(
@@ -1550,7 +1548,7 @@ type promptFlowNodeSourceConfigurationMemberInlineModel struct {
 	ModelID                      types.String                                                       `tfsdk:"model_id"`
 	TemplateConfiguration        fwtypes.ListNestedObjectValueOf[templateConfigurationModel]        `tfsdk:"template_configuration"`
 	TemplateType                 fwtypes.StringEnum[awstypes.PromptTemplateType]                    `tfsdk:"template_type"`
-	AdditionalModelRequestFields fwtypes.SmithyJSON[document.Interface]                             `tfsdk:"additional_model_request_fields"`
+	AdditionalModelRequestFields fwtypes.SmithyJSONType[document.Interface]                         `tfsdk:"additional_model_request_fields"`
 	InferenceConfiguration       fwtypes.ListNestedObjectValueOf[promptInferenceConfigurationModel] `tfsdk:"inference_configuration"`
 }
 
@@ -1926,38 +1924,7 @@ type toolMemberToolSpecModel struct {
 
 // Tagged union
 type toolInputSchemaModel struct {
-	Json jsontypes.Normalized `tfsdk:"json"`
-}
-
-// TODO
-func (m *toolInputSchemaModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
-	switch t := v.(type) {
-	case awstypes.ToolInputSchemaMemberJson:
-		doc, _ := json.SmithyDocumentToString(t.Value)
-		m.Json = jsontypes.NewNormalizedValue(doc)
-
-		return diags
-	default:
-		return diags
-	}
-}
-
-func (m toolInputSchemaModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
-	switch {
-	case !m.Json.IsNull():
-		toolInputSchemaJson, d := m.Json.ToStringValue(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-
-		var r awstypes.ToolInputSchemaMemberJson
-		r.Value, _ = json.SmithyDocumentFromString(toolInputSchemaJson.String(), document.NewLazyDocument)
-
-		return &r, diags
-	}
-
-	return nil, diags
+	Json fwtypes.SmithyJSON[document.Interface] `tfsdk:"json"`
 }
 
 // Tagged union
