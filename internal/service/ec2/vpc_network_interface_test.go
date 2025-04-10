@@ -418,7 +418,8 @@ func TestAccVPCNetworkInterface_attachment(t *testing.T) {
 					testAccCheckENIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "attachment.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attachment.*", map[string]string{
-						"device_index": "1",
+						"device_index":       "1",
+						"network_card_index": "0",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "private_ip", "172.16.10.100"),
 					resource.TestCheckResourceAttr(resourceName, "private_ips.#", "1"),
@@ -430,6 +431,48 @@ func TestAccVPCNetworkInterface_attachment(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"private_ip_list_enabled", "ipv6_address_list_enabled"},
+			},
+		},
+	})
+}
+
+// https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-eni.html#network-cards.
+// Only specialized (and expensive) instance types support multiple network cards (and hence network_card_index > 0).
+// This test verifies that the resource is not created when a non-zero network_card_index is specified on an instance that does not support multiple network cards.
+// This ensures that network_card_index is passed when calling the API.
+func TestAccVPCNetworkInterface_attachmentNetworkCardIndex(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	ctx := acctest.Context(t)
+	var conf types.NetworkInterface
+	resourceName := "aws_network_interface.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckENIDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccVPCNetworkInterfaceConfig_attachmentNetworkCardIndex(rName, 1),
+				ExpectError: regexache.MustCompile("NetworkCard index 1 exceeds the limit for"),
+			},
+			{
+				Config: testAccVPCNetworkInterfaceConfig_attachmentNetworkCardIndex(rName, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckENIExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "attachment.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attachment.*", map[string]string{
+						"device_index":       "1",
+						"network_card_index": "0",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "private_ip", "172.16.10.100"),
+					resource.TestCheckResourceAttr(resourceName, "private_ips.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "private_ips.*", "172.16.10.100"),
+				),
 			},
 		},
 	})
@@ -1444,6 +1487,52 @@ resource "aws_network_interface" "test" {
   }
 }
 `, rName))
+}
+
+func testAccVPCNetworkInterfaceConfig_attachmentNetworkCardIndex(rName string, networkCardIndex int) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
+		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
+		testAccVPCNetworkInterfaceConfig_baseIPV4(rName),
+		fmt.Sprintf(`
+resource "aws_subnet" "test2" {
+  vpc_id            = aws_vpc.test.id
+  cidr_block        = "172.16.11.0/24"
+  availability_zone = data.aws_availability_zones.available.names[0]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_instance" "test" {
+  ami                         = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+  instance_type               = data.aws_ec2_instance_type_offering.available.instance_type
+  subnet_id                   = aws_subnet.test2.id
+  associate_public_ip_address = false
+  private_ip                  = "172.16.11.50"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_network_interface" "test" {
+  subnet_id       = aws_subnet.test.id
+  private_ips     = ["172.16.10.100"]
+  security_groups = [aws_security_group.test.id]
+
+  attachment {
+    instance           = aws_instance.test.id
+    device_index       = 1
+    network_card_index = %[2]d
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, networkCardIndex))
 }
 
 func testAccVPCNetworkInterfaceConfig_externalAttachment(rName string) string {
