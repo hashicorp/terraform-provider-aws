@@ -205,3 +205,37 @@ data "aws_batch_job_definition" "test" {
 }
 `)
 }
+
+func TestAccJobDefinitionDataSourceConfig_basicARN_ContainerProperties(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSourceName := "data.aws_batch_job_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BatchEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccJobDefinitionDataSourceConfig_basicARN(rName, "1"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "container_properties.0.image", "busybox"),
+
+					resource.TestCheckResourceAttr(dataSourceName, "container_properties.0.command.#", "2"),
+					resource.TestCheckResourceAttr(dataSourceName, "container_properties.0.command.0", "echo"),
+					resource.TestCheckResourceAttr(dataSourceName, "container_properties.0.command.1", "test1"),
+
+					resource.TestCheckResourceAttr(dataSourceName, "container_properties.0.environment.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "container_properties.0.volumes.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "container_properties.0.mount_points.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "container_properties.0.ulimits.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "container_properties.0.resource_requirements.#", "2"),
+				),
+			},
+		},
+	})
+}
