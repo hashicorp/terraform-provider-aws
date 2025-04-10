@@ -4,6 +4,7 @@ package chimesdkmediapipelines
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines"
@@ -32,9 +33,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  ResourceMediaInsightsPipelineConfiguration,
 			TypeName: "aws_chimesdkmediapipelines_media_insights_pipeline_configuration",
 			Name:     "Media Insights Pipeline Configuration",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 	}
 }

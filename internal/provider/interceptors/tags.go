@@ -5,6 +5,7 @@ package interceptors
 
 import (
 	"context"
+	"unique"
 
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -13,17 +14,18 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	tfunique "github.com/hashicorp/terraform-provider-aws/internal/unique"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // WithTaggingMethods should be embedded in tagging interceptors.
 // It provides common methods for calling a service package's generic tagging methods.
 type WithTaggingMethods struct {
-	ServicePackageResourceTags *types.ServicePackageResourceTags
+	ServicePackageResourceTags unique.Handle[types.ServicePackageResourceTags]
 }
 
 func (w WithTaggingMethods) HasServicePackageResourceTags() bool {
-	return w.ServicePackageResourceTags != nil
+	return !tfunique.IsHandleNil(w.ServicePackageResourceTags)
 }
 
 // If the service package has a generic resource list tags methods, call it.
@@ -33,17 +35,17 @@ func (w WithTaggingMethods) ListTags(ctx context.Context, sp conns.ServicePackag
 	if v, ok := sp.(tftags.ServiceTagLister); ok {
 		err = v.ListTags(ctx, c, identifier) // Sets tags in Context
 	} else if v, ok := sp.(tftags.ResourceTypeTagLister); ok {
-		if w.ServicePackageResourceTags.ResourceType == "" {
+		if w.ServicePackageResourceTags.Value().ResourceType == "" {
 			tflog.Error(ctx, "ListTags method requires ResourceType but none set", map[string]any{
 				"ServicePackage": sp.ServicePackageName(),
 			})
 		} else {
-			err = v.ListTags(ctx, c, identifier, w.ServicePackageResourceTags.ResourceType) // Sets tags in Context
+			err = v.ListTags(ctx, c, identifier, w.ServicePackageResourceTags.Value().ResourceType) // Sets tags in Context
 		}
 	} else {
 		tflog.Warn(ctx, "No ListTags method found", map[string]any{
 			"ServicePackage": sp.ServicePackageName(),
-			"ResourceType":   w.ServicePackageResourceTags.ResourceType,
+			"ResourceType":   w.ServicePackageResourceTags.Value().ResourceType,
 		})
 	}
 
@@ -68,17 +70,17 @@ func (w WithTaggingMethods) UpdateTags(ctx context.Context, sp conns.ServicePack
 	if v, ok := sp.(tftags.ServiceTagUpdater); ok {
 		err = v.UpdateTags(ctx, c, identifier, oldTags, newTags)
 	} else if v, ok := sp.(tftags.ResourceTypeTagUpdater); ok {
-		if w.ServicePackageResourceTags.ResourceType == "" {
+		if w.ServicePackageResourceTags.Value().ResourceType == "" {
 			tflog.Error(ctx, "UpdateTags method requires ResourceType but none set", map[string]any{
 				"ServicePackage": sp.ServicePackageName(),
 			})
 		} else {
-			err = v.UpdateTags(ctx, c, identifier, w.ServicePackageResourceTags.ResourceType, oldTags, newTags)
+			err = v.UpdateTags(ctx, c, identifier, w.ServicePackageResourceTags.Value().ResourceType, oldTags, newTags)
 		}
 	} else {
 		tflog.Warn(ctx, "No UpdateTags method found", map[string]any{
 			"ServicePackage": sp.ServicePackageName(),
-			"ResourceType":   w.ServicePackageResourceTags.ResourceType,
+			"ResourceType":   w.ServicePackageResourceTags.Value().ResourceType,
 		})
 	}
 

@@ -4,6 +4,7 @@ package kinesis
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/kinesis"
@@ -49,9 +50,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceStream,
 			TypeName: "aws_kinesis_stream",
 			Name:     "Stream",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrName,
-			},
+			}),
 		},
 		{
 			Factory:  resourceStreamConsumer,

@@ -6,6 +6,7 @@ package provider
 import (
 	"context"
 	"fmt"
+	"unique"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -23,7 +24,7 @@ type tagsResourceInterceptor struct {
 	tagsInterceptor
 }
 
-func newTagsResourceInterceptor(servicePackageResourceTags *types.ServicePackageResourceTags) interceptor {
+func newTagsResourceInterceptor(servicePackageResourceTags unique.Handle[types.ServicePackageResourceTags]) interceptor {
 	return &tagsResourceInterceptor{
 		tagsInterceptor: tagsInterceptor{
 			WithTaggingMethods: interceptors.WithTaggingMethods{
@@ -181,7 +182,7 @@ type tagsDataSourceInterceptor struct {
 	tagsInterceptor
 }
 
-func newTagsDataSourceInterceptor(servicePackageResourceTags *types.ServicePackageResourceTags) interceptor {
+func newTagsDataSourceInterceptor(servicePackageResourceTags unique.Handle[types.ServicePackageResourceTags]) interceptor {
 	return &tagsDataSourceInterceptor{
 		tagsInterceptor: tagsInterceptor{
 			WithTaggingMethods: interceptors.WithTaggingMethods{
@@ -252,7 +253,7 @@ type tagsInterceptor struct {
 func (r tagsInterceptor) getIdentifier(d schemaResourceData) string {
 	var identifier string
 
-	if identifierAttribute := r.ServicePackageResourceTags.IdentifierAttribute; identifierAttribute != "" {
+	if identifierAttribute := r.ServicePackageResourceTags.Value().IdentifierAttribute; identifierAttribute != "" {
 		if identifierAttribute == "id" {
 			identifier = d.Id()
 		} else {

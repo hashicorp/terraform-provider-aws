@@ -4,6 +4,7 @@ package {{ .ProviderPackage }}
 
 import (
 	"context"
+	"unique"
 
 {{ if .GenerateClient }}
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -43,14 +44,14 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 			TypeName: "{{ $key }}",
 			Name:    "{{ $value.Name }}",
 			{{- if .TransparentTagging }}
-			Tags: &types.ServicePackageResourceTags {
+			Tags: unique.Make(types.ServicePackageResourceTags {
 				{{- if ne .TagsIdentifierAttribute "" }}
 				IdentifierAttribute: {{ .TagsIdentifierAttribute }},
 				{{- end }}
 				{{- if ne .TagsResourceType "" }}
 				ResourceType: "{{ .TagsResourceType }}",
 				{{- end }}
-			},
+			}),
 			{{- end }}
 		},
 {{- end }}
@@ -65,14 +66,14 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			TypeName: "{{ $key }}",
 			Name:     "{{ $value.Name }}",
 			{{- if .TransparentTagging }}
-			Tags: &types.ServicePackageResourceTags {
+			Tags: unique.Make(types.ServicePackageResourceTags {
 				{{- if ne .TagsIdentifierAttribute "" }}
 				IdentifierAttribute: {{ .TagsIdentifierAttribute }},
 				{{- end }}
 				{{- if ne .TagsResourceType "" }}
 				ResourceType: "{{ .TagsResourceType }}",
 				{{- end }}
-			},
+			}),
 			{{- end }}
 		},
 {{- end }}
@@ -87,14 +88,14 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "{{ $key }}",
 			Name:     "{{ $value.Name }}",
 			{{- if $value.TransparentTagging }}
-			Tags: &types.ServicePackageResourceTags {
+			Tags: unique.Make(types.ServicePackageResourceTags {
 				{{- if ne $value.TagsIdentifierAttribute "" }}
 				IdentifierAttribute: {{ $value.TagsIdentifierAttribute }},
 				{{- end }}
 				{{- if ne .TagsResourceType "" }}
 				ResourceType: "{{ .TagsResourceType }}",
 				{{- end }}
-			},
+			}),
 			{{- end }}
 		},
 {{- end }}
@@ -109,14 +110,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "{{ $key }}",
 			Name:     "{{ $value.Name }}",
 			{{- if $value.TransparentTagging }}
-			Tags: &types.ServicePackageResourceTags {
+			Tags: unique.Make(types.ServicePackageResourceTags {
 				{{- if ne $value.TagsIdentifierAttribute "" }}
 				IdentifierAttribute: {{ $value.TagsIdentifierAttribute }},
 				{{- end }}
 				{{- if ne .TagsResourceType "" }}
 				ResourceType: "{{ .TagsResourceType }}",
 				{{- end }}
-			},
+			}),
 			{{- end }}
 		},
 {{- end }}

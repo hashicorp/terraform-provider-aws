@@ -61,6 +61,7 @@ TF_ACC=1 go test \
     ./internal/tags/... \
     ./internal/tfresource/... \
     ./internal/types/... \
+    ./internal/unique/... \
     ./internal/vault/... \
     ./internal/verify/... \
     ./internal/yaml/... \

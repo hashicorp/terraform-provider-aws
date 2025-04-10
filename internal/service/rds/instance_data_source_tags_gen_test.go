@@ -5,6 +5,7 @@ package rds_test
 import (
 	"context"
 	"testing"
+	"unique"
 
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -199,7 +200,7 @@ func TestAccRDSDBInstanceDataSource_tags_IgnoreTags_Overlap_ResourceTag(t *testi
 }
 
 func expectFullDBInstanceDataSourceTags(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfrds.ServicePackage(ctx), resourceAddress, &types.ServicePackageResourceTags{
+	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfrds.ServicePackage(ctx), resourceAddress, unique.Make(types.ServicePackageResourceTags{
 		IdentifierAttribute: "db_instance_arn",
-	}, knownValue)
+	}), knownValue)
 }

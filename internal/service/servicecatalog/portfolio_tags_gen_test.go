@@ -5,6 +5,7 @@ package servicecatalog_test
 import (
 	"context"
 	"testing"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
 	"github.com/hashicorp/terraform-plugin-testing/config"
@@ -2275,8 +2276,8 @@ func TestAccServiceCatalogPortfolio_tags_IgnoreTags_Overlap_ResourceTag(t *testi
 }
 
 func expectFullPortfolioResourceTags(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullResourceTagsSpecTags(tfservicecatalog.ServicePackage(ctx), resourceAddress, &types.ServicePackageResourceTags{
+	return tfstatecheck.ExpectFullResourceTagsSpecTags(tfservicecatalog.ServicePackage(ctx), resourceAddress, unique.Make(types.ServicePackageResourceTags{
 		IdentifierAttribute: names.AttrID,
 		ResourceType:        "Portfolio",
-	}, knownValue)
+	}), knownValue)
 }

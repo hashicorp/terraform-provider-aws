@@ -5,6 +5,7 @@ package servicecatalog_test
 import (
 	"context"
 	"testing"
+	"unique"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	"github.com/hashicorp/terraform-plugin-testing/config"
@@ -2385,8 +2386,8 @@ func testAccServiceCatalogProvisionedProduct_removingTagNotSupported(t *testing.
 }
 
 func expectFullProvisionedProductResourceTags(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullResourceTagsSpecTags(tfservicecatalog.ServicePackage(ctx), resourceAddress, &types.ServicePackageResourceTags{
+	return tfstatecheck.ExpectFullResourceTagsSpecTags(tfservicecatalog.ServicePackage(ctx), resourceAddress, unique.Make(types.ServicePackageResourceTags{
 		IdentifierAttribute: names.AttrID,
 		ResourceType:        "Provisioned Product",
-	}, knownValue)
+	}), knownValue)
 }

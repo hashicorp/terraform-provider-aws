@@ -4,6 +4,7 @@ package datasync
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/datasync"
@@ -32,105 +33,105 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  ResourceAgent,
 			TypeName: "aws_datasync_agent",
 			Name:     "Agent",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
 		},
 		{
 			Factory:  resourceLocationAzureBlob,
 			TypeName: "aws_datasync_location_azure_blob",
 			Name:     "Location Microsoft Azure Blob Storage",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
 		},
 		{
 			Factory:  resourceLocationEFS,
 			TypeName: "aws_datasync_location_efs",
 			Name:     "Location EFS",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
 		},
 		{
 			Factory:  resourceLocationFSxLustreFileSystem,
 			TypeName: "aws_datasync_location_fsx_lustre_file_system",
 			Name:     "Location FSx for Lustre File System",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
 		},
 		{
 			Factory:  resourceLocationFSxONTAPFileSystem,
 			TypeName: "aws_datasync_location_fsx_ontap_file_system",
 			Name:     "Location FSx for NetApp ONTAP File System",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
 		},
 		{
 			Factory:  resourceLocationFSxOpenZFSFileSystem,
 			TypeName: "aws_datasync_location_fsx_openzfs_file_system",
 			Name:     "Location FSx for OpenZFS File System",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
 		},
 		{
 			Factory:  resourceLocationFSxWindowsFileSystem,
 			TypeName: "aws_datasync_location_fsx_windows_file_system",
 			Name:     "Location FSx for Windows File Server File System",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
 		},
 		{
 			Factory:  resourceLocationHDFS,
 			TypeName: "aws_datasync_location_hdfs",
 			Name:     "Location HDFS",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
 		},
 		{
 			Factory:  resourceLocationNFS,
 			TypeName: "aws_datasync_location_nfs",
 			Name:     "Location NFS",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
 		},
 		{
 			Factory:  resourceLocationObjectStorage,
 			TypeName: "aws_datasync_location_object_storage",
 			Name:     "Location Object Storage",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
 		},
 		{
 			Factory:  resourceLocationS3,
 			TypeName: "aws_datasync_location_s3",
 			Name:     "Location S3",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
 		},
 		{
 			Factory:  resourceLocationSMB,
 			TypeName: "aws_datasync_location_smb",
 			Name:     "Location SMB",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
 		},
 		{
 			Factory:  resourceTask,
 			TypeName: "aws_datasync_task",
 			Name:     "Task",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
 		},
 	}
 }

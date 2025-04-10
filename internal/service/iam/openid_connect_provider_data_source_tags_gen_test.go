@@ -5,6 +5,7 @@ package iam_test
 import (
 	"context"
 	"testing"
+	"unique"
 
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -199,8 +200,8 @@ func TestAccIAMOIDCProviderDataSource_tags_IgnoreTags_Overlap_ResourceTag(t *tes
 }
 
 func expectFullOIDCProviderDataSourceTags(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfiam.ServicePackage(ctx), resourceAddress, &types.ServicePackageResourceTags{
+	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfiam.ServicePackage(ctx), resourceAddress, unique.Make(types.ServicePackageResourceTags{
 		IdentifierAttribute: names.AttrARN,
 		ResourceType:        "OIDCProvider",
-	}, knownValue)
+	}), knownValue)
 }
