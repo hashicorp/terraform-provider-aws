@@ -442,7 +442,6 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 				isRegionOverrideEnabled = true
 			}
 
-			var importFuncs []schema.StateContextFunc
 			var interceptors interceptorInvocations
 
 			if isRegionOverrideEnabled {
@@ -491,7 +490,11 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 						interceptor: forceNewIfRegionValueChanges(),
 					})
 				}
-				importFuncs = append(importFuncs, importRegion)
+				interceptors = append(interceptors, interceptorInvocation{
+					when:        Before,
+					why:         Import,
+					interceptor: importRegion(),
+				})
 			}
 
 			if v.Tags != nil {
@@ -528,7 +531,6 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 					return ctx, diags
 				},
 				interceptors: interceptors,
-				importFuncs:  importFuncs,
 				typeName:     typeName,
 			}
 			wrapResource(r, opts)

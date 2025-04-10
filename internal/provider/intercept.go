@@ -31,14 +31,19 @@ type interceptorOptions[D any] struct {
 type (
 	crudInterceptorOptions          = interceptorOptions[schemaResourceData]
 	customizeDiffInterceptorOptions = interceptorOptions[*schema.ResourceDiff]
+	importInterceptorOptions        = interceptorOptions[*schema.ResourceData]
 )
 
 // An interceptor is functionality invoked during a request's lifecycle.
 // If a Before interceptor returns Diagnostics indicating an error occurred then
 // no further interceptors in the chain are run and neither is the schema's method.
 // In other cases all interceptors in the chain are run.
-type interceptor[D any, E any] interface {
+type interceptor[D, E any] interface {
 	run(context.Context, interceptorOptions[D]) E
+}
+
+type interceptor2[D, R, E any] interface {
+	run(context.Context, interceptorOptions[D]) (R, E)
 }
 
 type (
@@ -46,6 +51,8 @@ type (
 	crudInterceptor = interceptor[schemaResourceData, diag.Diagnostics]
 	// customizeDiffInterceptor is functionality invoked during a CustomizeDiff request lifecycle.
 	customizeDiffInterceptor = interceptor[*schema.ResourceDiff, error]
+	// importInterceptor is functionality invoked during an Import request lifecycle.
+	importInterceptor = interceptor2[*schema.ResourceData, []*schema.ResourceData, error]
 )
 
 type interceptorFunc[D any, E any] func(context.Context, interceptorOptions[D]) E
@@ -65,15 +72,22 @@ type interceptorInvocation struct {
 	interceptor any
 }
 
-type typedInterceptorInvocation[D any, E any] struct {
+type typedInterceptorInvocation[D, E any] struct {
 	when        when
 	why         why
 	interceptor interceptor[D, E]
 }
 
+type typedInterceptor2Invocation[D, R, E any] struct {
+	when        when
+	why         why
+	interceptor interceptor2[D, R, E]
+}
+
 type (
 	crudInterceptorInvocation          = typedInterceptorInvocation[schemaResourceData, diag.Diagnostics]
 	customizeDiffInterceptorInvocation = typedInterceptorInvocation[*schema.ResourceDiff, error]
+	importInterceptorInvocation        = typedInterceptor2Invocation[*schema.ResourceData, []*schema.ResourceData, error]
 )
 
 // when represents the point in the request lifecycle that an interceptor is run.
@@ -97,6 +111,7 @@ const (
 	Update                        // Interceptor is invoked for an Update call
 	Delete                        // Interceptor is invoked for a Delete call
 	CustomizeDiff                 // Interceptor is invoked for a CustomizeDiff call
+	Import                        // Interceptor is invoked for an Import call
 
 	AllCRUDOps = Create | Read | Update | Delete // Interceptor is invoked for all CRUD calls
 )
@@ -271,5 +286,93 @@ func interceptedCustomizeDiffHandler(bootstrapContext contextFunc, interceptorIn
 		}
 
 		return errors.Join(errs...)
+	}
+}
+
+// interceptedImportHandler returns a handler that invokes the specified Imort handler, running any interceptors.
+func interceptedImportHandler(bootstrapContext contextFunc, interceptorInvocations interceptorInvocations, f schema.StateContextFunc) schema.StateContextFunc {
+	// We don't run Import interceptors if the resource has not defined a corresponding handler function.
+	if f == nil {
+		return nil
+	}
+
+	return func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+		ctx, diags := bootstrapContext(ctx, d.GetOk, meta)
+		if diags.HasError() {
+			return nil, sdkdiag.DiagnosticsError(diags)
+		}
+
+		why := Import
+
+		// Before interceptors are run first to last.
+		forward := make([]importInterceptorInvocation, 0)
+		for _, v := range interceptorInvocations.why(why) {
+			if interceptor, ok := v.interceptor.(importInterceptor); ok {
+				forward = append(forward, importInterceptorInvocation{
+					when:        v.when,
+					why:         v.why,
+					interceptor: interceptor,
+				})
+			}
+		}
+
+		when := Before
+		for _, v := range forward {
+			if v.when&when != 0 {
+				opts := importInterceptorOptions{
+					c:    meta.(*conns.AWSClient),
+					d:    d,
+					when: when,
+					why:  why,
+				}
+				// Short circuit if any Before interceptor errors.
+				if _, err := v.interceptor.run(ctx, opts); err != nil {
+					return nil, err
+				}
+			}
+		}
+
+		// All other interceptors are run last to first.
+		reverse := tfslices.Reverse(forward)
+		var errs []error
+
+		r, err := f(ctx, d, meta)
+		if err != nil {
+			when = OnError
+			errs = append(errs, err)
+		} else {
+			when = After
+		}
+
+		for _, v := range reverse {
+			if v.when&when != 0 {
+				opts := importInterceptorOptions{
+					c:    meta.(*conns.AWSClient),
+					d:    d,
+					when: when,
+					why:  why,
+				}
+				if _, err := v.interceptor.run(ctx, opts); err != nil {
+					errs = append(errs, err)
+				}
+			}
+		}
+
+		when = Finally
+		for _, v := range reverse {
+			if v.when&when != 0 {
+				opts := importInterceptorOptions{
+					c:    meta.(*conns.AWSClient),
+					d:    d,
+					when: when,
+					why:  why,
+				}
+				if _, err := v.interceptor.run(ctx, opts); err != nil {
+					errs = append(errs, err)
+				}
+			}
+		}
+
+		return r, errors.Join(errs...)
 	}
 }

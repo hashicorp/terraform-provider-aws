@@ -23,13 +23,13 @@ func validateRegionInPartition(ctx context.Context, c *conns.AWSClient, region s
 	return nil
 }
 
-type verifyRegionValueInConfiguredPartitionCustomizeDiffInterceptor struct{}
+type verifyRegionValueInConfiguredPartitionInterceptor struct{}
 
 func verifyRegionValueInConfiguredPartition() customizeDiffInterceptor {
-	return &verifyRegionValueInConfiguredPartitionCustomizeDiffInterceptor{}
+	return &verifyRegionValueInConfiguredPartitionInterceptor{}
 }
 
-func (r verifyRegionValueInConfiguredPartitionCustomizeDiffInterceptor) run(ctx context.Context, opts customizeDiffInterceptorOptions) error {
+func (r verifyRegionValueInConfiguredPartitionInterceptor) run(ctx context.Context, opts customizeDiffInterceptorOptions) error {
 	c := opts.c
 
 	switch d, when, why := opts.d, opts.when, opts.why; when {
@@ -48,13 +48,13 @@ func (r verifyRegionValueInConfiguredPartitionCustomizeDiffInterceptor) run(ctx 
 	return nil
 }
 
-type defaultRegionValueCustomizeDiffInterceptor struct{}
+type defaultRegionValueInterceptor struct{}
 
 func defaultRegionValue() customizeDiffInterceptor {
-	return &defaultRegionValueCustomizeDiffInterceptor{}
+	return &defaultRegionValueInterceptor{}
 }
 
-func (r defaultRegionValueCustomizeDiffInterceptor) run(ctx context.Context, opts customizeDiffInterceptorOptions) error {
+func (r defaultRegionValueInterceptor) run(ctx context.Context, opts customizeDiffInterceptorOptions) error {
 	c := opts.c
 
 	switch d, when, why := opts.d, opts.when, opts.why; when {
@@ -71,13 +71,13 @@ func (r defaultRegionValueCustomizeDiffInterceptor) run(ctx context.Context, opt
 	return nil
 }
 
-type forceNewIfRegionValueChangesCustomizeDiffInterceptor struct{}
+type forceNewIfRegionValueChangesInterceptor struct{}
 
 func forceNewIfRegionValueChanges() customizeDiffInterceptor {
-	return &forceNewIfRegionValueChangesCustomizeDiffInterceptor{}
+	return &forceNewIfRegionValueChangesInterceptor{}
 }
 
-func (r forceNewIfRegionValueChangesCustomizeDiffInterceptor) run(ctx context.Context, opts customizeDiffInterceptorOptions) error {
+func (r forceNewIfRegionValueChangesInterceptor) run(ctx context.Context, opts customizeDiffInterceptorOptions) error {
 	c := opts.c
 
 	switch d, when, why := opts.d, opts.when, opts.why; when {
@@ -99,14 +99,27 @@ func (r forceNewIfRegionValueChangesCustomizeDiffInterceptor) run(ctx context.Co
 	return nil
 }
 
-// importRegion is a StateContextFunc that imports the Region attribute for a resource.
-func importRegion(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	// Import ID optionally ends with "@<region>".
-	if matches := regexache.MustCompile(`^(.+)@([a-z]{2}(?:-[a-z]+)+-\d{1,2})$`).FindStringSubmatch(d.Id()); len(matches) == 3 {
-		d.SetId(matches[1])
-		d.Set(names.AttrRegion, matches[2])
-	} else {
-		d.Set(names.AttrRegion, meta.(*conns.AWSClient).AwsConfig(ctx).Region)
+type importRegionInterceptor struct{}
+
+func importRegion() importInterceptor {
+	return &importRegionInterceptor{}
+}
+
+func (r importRegionInterceptor) run(ctx context.Context, opts importInterceptorOptions) ([]*schema.ResourceData, error) {
+	c, d := opts.c, opts.d
+
+	switch when, why := opts.when, opts.why; when {
+	case Before:
+		switch why {
+		case Import:
+			// Import ID optionally ends with "@<region>".
+			if matches := regexache.MustCompile(`^(.+)@([a-z]{2}(?:-[a-z]+)+-\d{1,2})$`).FindStringSubmatch(d.Id()); len(matches) == 3 {
+				d.SetId(matches[1])
+				d.Set(names.AttrRegion, matches[2])
+			} else {
+				d.Set(names.AttrRegion, c.AwsConfig(ctx).Region)
+			}
+		}
 	}
 
 	return []*schema.ResourceData{d}, nil

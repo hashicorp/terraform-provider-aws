@@ -47,9 +47,7 @@ type wrappedResourceOptions struct {
 	// bootstrapContext is run on all wrapped methods before any interceptors.
 	bootstrapContext contextFunc
 	interceptors     interceptorInvocations
-	// importsFuncs are called before bootstrapContext.
-	importFuncs []schema.StateContextFunc
-	typeName    string
+	typeName         string
 }
 
 // wrappedResource represents an interceptor dispatcher for a Plugin SDK v2 resource.
@@ -92,24 +90,7 @@ func (w *wrappedResource) delete(f schema.DeleteContextFunc) schema.DeleteContex
 }
 
 func (w *wrappedResource) import_(f schema.StateContextFunc) schema.StateContextFunc {
-	if f == nil {
-		return nil
-	}
-
-	return func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-		for _, f := range w.opts.importFuncs {
-			if _, err := f(ctx, d, meta); err != nil {
-				return nil, err
-			}
-		}
-
-		ctx, diags := w.opts.bootstrapContext(ctx, d.GetOk, meta)
-		if diags.HasError() {
-			return nil, sdkdiag.DiagnosticsError(diags)
-		}
-
-		return f(ctx, d, meta)
-	}
+	return interceptedImportHandler(w.opts.bootstrapContext, w.opts.interceptors, f)
 }
 
 func (w *wrappedResource) customizeDiff(f schema.CustomizeDiffFunc) schema.CustomizeDiffFunc {
