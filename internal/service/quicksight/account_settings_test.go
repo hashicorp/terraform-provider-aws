@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -21,10 +20,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	tfquicksight "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
-
-	tfquicksight "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
 )
 
 func TestAccQuickSightAccountSettings_basic(t *testing.T) {
@@ -100,11 +98,8 @@ func testAccCheckAccountSettingsDestroy(ctx context.Context) resource.TestCheckF
 
 			settings, err := tfquicksight.FindAccountSettingsByID(ctx, conn, rs.Primary.ID)
 			if tfresource.NotFound(err) {
-				return nil
+				continue
 			}
-
-			fmt.Println("testAccCheckAccountSettingsReset: ")
-			fmt.Println(settings)
 
 			if settings.AccountName == nil {
 				// Settings have not been reset
@@ -122,7 +117,7 @@ func testAccCheckAccountSettingsDestroy(ctx context.Context) resource.TestCheckF
 	}
 }
 
-func testAccCheckAccountSettingsExists(ctx context.Context, n string, v *types.AccountSettings) resource.TestCheckFunc {
+func testAccCheckAccountSettingsExists(ctx context.Context, n string, v *awstypes.AccountSettings) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {

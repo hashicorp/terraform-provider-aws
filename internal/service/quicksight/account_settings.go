@@ -185,7 +185,6 @@ func (r *resourceAccountSettings) Read(ctx context.Context, req resource.ReadReq
 }
 
 func (r *resourceAccountSettings) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-
 	conn := r.Meta().QuickSightClient(ctx)
 	var plan, state resourceAccountSettingsModel
 
