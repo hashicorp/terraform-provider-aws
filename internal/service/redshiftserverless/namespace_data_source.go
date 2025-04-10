@@ -6,87 +6,118 @@ package redshiftserverless
 import (
 	"context"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_redshiftserverless_namespace", name="Namespace")
-func dataSourceNamespace() *schema.Resource {
-	return &schema.Resource{
-		ReadWithoutTimeout: dataSourceNamespaceRead,
+// @FrameworkDataSource("aws_redshiftserverless_namespace", name="Namespace")
+func newDataSourceNamespace(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &dataSourceNamespace{}, nil
+}
 
-		Schema: map[string]*schema.Schema{
-			"admin_username": {
-				Type:     schema.TypeString,
+const (
+	DSNameNamespace = "Namespace Data Source"
+)
+
+type dataSourceNamespace struct {
+	framework.DataSourceWithConfigure
+}
+
+func (d *dataSourceNamespace) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			names.AttrARN: schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Computed:   true,
+			},
+			"admin_password_secret_arn": schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Computed:   true,
+			},
+			"admin_password_secret_kms_key_id": schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Computed:   true,
+			},
+			"admin_username": schema.StringAttribute{
 				Computed: true,
 			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
+			"db_name": schema.StringAttribute{
 				Computed: true,
 			},
-			"db_name": {
-				Type:     schema.TypeString,
+			"default_iam_role_arn": schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Computed:   true,
+			},
+			names.AttrID: framework.IDAttribute(),
+			"iam_roles": schema.SetAttribute{
+				CustomType:  fwtypes.SetOfARNType,
+				ElementType: fwtypes.ARNType,
+				Computed:    true,
+			},
+			names.AttrKMSKeyID: schema.StringAttribute{
+				Optional: true,
 				Computed: true,
 			},
-			"default_iam_role_arn": {
-				Type:     schema.TypeString,
+			"log_exports": schema.SetAttribute{
+				ElementType: types.StringType,
+				Computed:    true,
+			},
+			"namespace_id": schema.StringAttribute{
 				Computed: true,
 			},
-			"iam_roles": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
-			names.AttrKMSKeyID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"log_exports": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
-			"namespace_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"namespace_name": {
-				Type:     schema.TypeString,
+			"namespace_name": schema.StringAttribute{
 				Required: true,
 			},
 		},
 	}
 }
 
-func dataSourceNamespaceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftServerlessClient(ctx)
+func (d *dataSourceNamespace) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	conn := d.Meta().RedshiftServerlessClient(ctx)
 
-	namespaceName := d.Get("namespace_name").(string)
-	resource, err := findNamespaceByName(ctx, conn, namespaceName)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Redshift Serverless Namespace (%s): %s", namespaceName, err)
+	var data dataSourceNamespaceData
+	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	d.SetId(namespaceName)
+	out, err := findNamespaceByName(ctx, conn, data.NamespaceName.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.RedshiftServerless, create.ErrActionReading, DSNameNamespace, data.NamespaceName.ValueString(), err),
+			err.Error(),
+		)
+		return
+	}
 
-	d.Set("admin_username", resource.AdminUsername)
-	d.Set(names.AttrARN, resource.NamespaceArn)
-	d.Set("db_name", resource.DbName)
-	d.Set("default_iam_role_arn", resource.DefaultIamRoleArn)
-	d.Set("iam_roles", flattenNamespaceIAMRoles(resource.IamRoles))
-	d.Set(names.AttrKMSKeyID, resource.KmsKeyId)
-	d.Set("log_exports", resource.LogExports)
+	resp.Diagnostics.Append(flex.Flatten(ctx, out, &data, flex.WithIgnoredFieldNamesAppend("IamRoles"))...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	data.ID = flex.StringToFramework(ctx, out.NamespaceName)
+	data.ARN = flex.StringToFrameworkARN(ctx, out.NamespaceArn)
+	data.IAMRoles = fwtypes.NewSetValueOfMust[fwtypes.ARN](ctx, flattenNamespaceIAMRoles(ctx, out.IamRoles))
 
-	d.Set("namespace_id", resource.NamespaceId)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+}
 
-	return diags
+type dataSourceNamespaceData struct {
+	AdminPasswordSecretArn      fwtypes.ARN                     `tfsdk:"admin_password_secret_arn"`
+	AdminPasswordSecretKMSKeyID fwtypes.ARN                     `tfsdk:"admin_password_secret_kms_key_id"`
+	AdminUsername               types.String                    `tfsdk:"admin_username"`
+	ARN                         fwtypes.ARN                     `tfsdk:"arn"`
+	DBName                      types.String                    `tfsdk:"db_name"`
+	DefaultIAMRoleARN           fwtypes.ARN                     `tfsdk:"default_iam_role_arn"`
+	IAMRoles                    fwtypes.SetValueOf[fwtypes.ARN] `tfsdk:"iam_roles"`
+	ID                          types.String                    `tfsdk:"id"`
+	KMSKeyID                    types.String                    `tfsdk:"kms_key_id"`
+	LogExports                  types.Set                       `tfsdk:"log_exports"`
+	NamespaceID                 types.String                    `tfsdk:"namespace_id"`
+	NamespaceName               types.String                    `tfsdk:"namespace_name"`
 }

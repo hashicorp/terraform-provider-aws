@@ -68,6 +68,7 @@ rules:
         - internal/service/medialive/multiplex_program.go
         - internal/service/networkfirewall/tls_inspection_configuration.go
         - internal/service/opensearchserverless/security_config.go
+        - internal/service/redshiftserverless/namespace.go
         - internal/service/quicksight/iam_policy_assignment.go
         - internal/service/quicksight/refresh_schedule.go
         - internal/service/securitylake/subscriber.go
