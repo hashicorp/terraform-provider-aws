@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_network_interface: Add `network_card_index` argument in the `attachment` block to support multiple network interfaces, which is supported by some instance types.
+```
+
+```release-note:enhancement
+resource/aws_network_interface_attachment: Add `network_card_index` argument to support multiple network interfaces, which is supported by some instance types.
+```
+
+```release-note:enhancement
+data-source/aws_network_interfaces: Add `network_card_index` attribute in the `attachment` block.
+```
