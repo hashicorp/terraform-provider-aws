@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent/document"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
 
+	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -30,6 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/json"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -384,6 +386,11 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 																																listvalidator.SizeAtMost(1),
 																															},
 																															NestedObject: schema.NestedBlockObject{
+																																Attributes: map[string]schema.Attribute{
+																																	"text": schema.StringAttribute{
+																																		Optional: true,
+																																	},
+																																},
 																																Blocks: map[string]schema.Block{
 																																	"cache_point": schema.ListNestedBlock{
 																																		CustomType: fwtypes.NewListNestedObjectTypeOf[contentBlockMemberCachePointModel](ctx),
@@ -399,19 +406,6 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 																																				"type": schema.StringAttribute{
 																																					CustomType: fwtypes.StringEnumType[awstypes.CachePointType](),
 																																					Required:   true,
-																																				},
-																																			},
-																																		},
-																																	},
-																																	"text": schema.ListNestedBlock{
-																																		CustomType: fwtypes.NewListNestedObjectTypeOf[contentBlockMemberTextModel](ctx),
-																																		Validators: []validator.List{
-																																			listvalidator.SizeAtMost(1),
-																																		},
-																																		NestedObject: schema.NestedBlockObject{
-																																			Attributes: map[string]schema.Attribute{
-																																				"value": schema.StringAttribute{
-																																					Required: true,
 																																				},
 																																			},
 																																		},
@@ -435,10 +429,19 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 																											"system": schema.ListNestedBlock{
 																												CustomType: fwtypes.NewListNestedObjectTypeOf[systemContentBlockModel](ctx),
 																												NestedObject: schema.NestedBlockObject{
+																													Attributes: map[string]schema.Attribute{
+																														"text": schema.StringAttribute{
+																															Optional: true,
+																														},
+																													},
 																													Blocks: map[string]schema.Block{
 																														"cache_point": schema.ListNestedBlock{
 																															CustomType: fwtypes.NewListNestedObjectTypeOf[systemContentBlockMemberCachePointModel](ctx),
 																															Validators: []validator.List{
+																																listvalidator.ExactlyOneOf(
+																																	path.MatchRelative().AtParent().AtName("cache_point"),
+																																	path.MatchRelative().AtParent().AtName("text"),
+																																),
 																																listvalidator.SizeAtMost(1),
 																															},
 																															NestedObject: schema.NestedBlockObject{
@@ -446,19 +449,6 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 																																	"type": schema.StringAttribute{
 																																		CustomType: fwtypes.StringEnumType[awstypes.CachePointType](),
 																																		Required:   true,
-																																	},
-																																},
-																															},
-																														},
-																														"text": schema.ListNestedBlock{
-																															CustomType: fwtypes.NewListNestedObjectTypeOf[systemContentBlockMemberTextModel](ctx),
-																															Validators: []validator.List{
-																																listvalidator.SizeAtMost(1),
-																															},
-																															NestedObject: schema.NestedBlockObject{
-																																Attributes: map[string]schema.Attribute{
-																																	"value": schema.StringAttribute{
-																																		Required: true,
 																																	},
 																																},
 																															},
@@ -516,22 +506,14 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 																																						listvalidator.SizeAtMost(1),
 																																					},
 																																					NestedObject: schema.NestedBlockObject{
-																																						Blocks: map[string]schema.Block{
-																																							"json": schema.ListNestedBlock{
-																																								CustomType: fwtypes.NewListNestedObjectTypeOf[toolInputSchemaMemberJsonModel](ctx),
-																																								Validators: []validator.List{
-																																									listvalidator.SizeAtMost(1),
-																																									listvalidator.ExactlyOneOf(
+																																						Attributes: map[string]schema.Attribute{
+																																							"json": schema.StringAttribute{
+																																								CustomType: jsontypes.NormalizedType{},
+																																								Optional:   true,
+																																								Validators: []validator.String{
+																																									stringvalidator.ExactlyOneOf(
 																																										path.MatchRelative().AtParent().AtName("json"),
 																																									),
-																																								},
-																																								NestedObject: schema.NestedBlockObject{
-																																									Attributes: map[string]schema.Attribute{
-																																										"value": schema.StringAttribute{
-																																											CustomType: fwtypes.NewSmithyJSONType(ctx, document.NewLazyDocument),
-																																											Required:   true,
-																																										},
-																																									},
 																																								},
 																																							},
 																																						},
@@ -1708,7 +1690,7 @@ type messageModel struct {
 // Tagged union
 type contentBlockModel struct {
 	CachePoint fwtypes.ListNestedObjectValueOf[contentBlockMemberCachePointModel] `tfsdk:"cache_point"`
-	Text       fwtypes.ListNestedObjectValueOf[contentBlockMemberTextModel]       `tfsdk:"text"`
+	Text       types.String                                                       `tfsdk:"text"`
 }
 
 func (m *contentBlockModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
@@ -1725,14 +1707,14 @@ func (m *contentBlockModel) Flatten(ctx context.Context, v any) (diags diag.Diag
 
 		return diags
 	case awstypes.ContentBlockMemberText:
-		var model contentBlockMemberTextModel
-		d := flex.Flatten(ctx, t.Value, &model.Value)
+		var model string
+		d := flex.Flatten(ctx, t.Value, &model)
 		diags.Append(d...)
 		if diags.HasError() {
 			return diags
 		}
 
-		m.Text = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+		m.Text = types.StringValue(model)
 
 		return diags
 	default:
@@ -1757,14 +1739,14 @@ func (m contentBlockModel) Expand(ctx context.Context) (result any, diags diag.D
 
 		return &r, diags
 	case !m.Text.IsNull():
-		contentBlockText, d := m.Text.ToPtr(ctx)
+		contentBlockText, d := m.Text.ToStringValue(ctx)
 		diags.Append(d...)
 		if diags.HasError() {
 			return nil, diags
 		}
 
 		var r awstypes.ContentBlockMemberText
-		diags.Append(flex.Expand(ctx, contentBlockText.Value, &r.Value)...)
+		diags.Append(flex.Expand(ctx, contentBlockText, &r.Value)...)
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -1779,10 +1761,6 @@ type contentBlockMemberCachePointModel struct {
 	Type fwtypes.StringEnum[awstypes.CachePointType] `tfsdk:"type"`
 }
 
-type contentBlockMemberTextModel struct {
-	Value types.String `tfsdk:"value"`
-}
-
 type promptInputVariableModel struct {
 	Name types.String `tfsdk:"name"`
 }
@@ -1790,7 +1768,7 @@ type promptInputVariableModel struct {
 // Tagged union
 type systemContentBlockModel struct {
 	CachePoint fwtypes.ListNestedObjectValueOf[systemContentBlockMemberCachePointModel] `tfsdk:"cache_point"`
-	Text       fwtypes.ListNestedObjectValueOf[systemContentBlockMemberTextModel]       `tfsdk:"text"`
+	Text       types.String                                                             `tfsdk:"text"`
 }
 
 func (m *systemContentBlockModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
@@ -1807,14 +1785,14 @@ func (m *systemContentBlockModel) Flatten(ctx context.Context, v any) (diags dia
 
 		return diags
 	case awstypes.SystemContentBlockMemberText:
-		var model systemContentBlockMemberTextModel
-		d := flex.Flatten(ctx, t.Value, &model.Value)
+		var model string
+		d := flex.Flatten(ctx, t.Value, &model)
 		diags.Append(d...)
 		if diags.HasError() {
 			return diags
 		}
 
-		m.Text = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+		m.Text = types.StringValue(model)
 
 		return diags
 	default:
@@ -1839,14 +1817,14 @@ func (m systemContentBlockModel) Expand(ctx context.Context) (result any, diags 
 
 		return &r, diags
 	case !m.Text.IsNull():
-		systemContentBlockText, d := m.Text.ToPtr(ctx)
+		systemContentBlockText, d := m.Text.ToStringValue(ctx)
 		diags.Append(d...)
 		if diags.HasError() {
 			return nil, diags
 		}
 
 		var r awstypes.SystemContentBlockMemberText
-		diags.Append(flex.Expand(ctx, systemContentBlockText.Value, &r.Value)...)
+		diags.Append(flex.Expand(ctx, systemContentBlockText, &r.Value)...)
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -1859,10 +1837,6 @@ func (m systemContentBlockModel) Expand(ctx context.Context) (result any, diags 
 
 type systemContentBlockMemberCachePointModel struct {
 	Type fwtypes.StringEnum[awstypes.CachePointType] `tfsdk:"type"`
-}
-
-type systemContentBlockMemberTextModel struct {
-	Value types.String `tfsdk:"value"`
 }
 
 type toolConfigurationModel struct {
@@ -1952,20 +1926,15 @@ type toolMemberToolSpecModel struct {
 
 // Tagged union
 type toolInputSchemaModel struct {
-	Json fwtypes.ListNestedObjectValueOf[toolInputSchemaMemberJsonModel] `tfsdk:"json"`
+	Json jsontypes.Normalized `tfsdk:"json"`
 }
 
+// TODO
 func (m *toolInputSchemaModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
 	switch t := v.(type) {
 	case awstypes.ToolInputSchemaMemberJson:
-		var model toolInputSchemaMemberJsonModel
-		d := flex.Flatten(ctx, t.Value, &model.Value)
-		diags.Append(d...)
-		if diags.HasError() {
-			return diags
-		}
-
-		m.Json = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+		doc, _ := json.SmithyDocumentToString(t.Value)
+		m.Json = jsontypes.NewNormalizedValue(doc)
 
 		return diags
 	default:
@@ -1976,26 +1945,19 @@ func (m *toolInputSchemaModel) Flatten(ctx context.Context, v any) (diags diag.D
 func (m toolInputSchemaModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
 	switch {
 	case !m.Json.IsNull():
-		toolInputSchemaJson, d := m.Json.ToPtr(ctx)
+		toolInputSchemaJson, d := m.Json.ToStringValue(ctx)
 		diags.Append(d...)
 		if diags.HasError() {
 			return nil, diags
 		}
 
 		var r awstypes.ToolInputSchemaMemberJson
-		diags.Append(flex.Expand(ctx, toolInputSchemaJson.Value, &r.Value)...)
-		if diags.HasError() {
-			return nil, diags
-		}
+		r.Value, _ = json.SmithyDocumentFromString(toolInputSchemaJson.String(), document.NewLazyDocument)
 
 		return &r, diags
 	}
 
 	return nil, diags
-}
-
-type toolInputSchemaMemberJsonModel struct {
-	Value fwtypes.SmithyJSON[document.Interface] `tfsdk:"value"`
 }
 
 // Tagged union
