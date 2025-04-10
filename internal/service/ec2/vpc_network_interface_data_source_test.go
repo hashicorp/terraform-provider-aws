@@ -185,6 +185,7 @@ func TestAccVPCNetworkInterfaceDataSource_attachment(t *testing.T) {
 					resource.TestCheckResourceAttr(datasourceName, "attachment.0.device_index", "1"),
 					resource.TestCheckResourceAttrPair(datasourceName, "attachment.0.instance_id", instanceResourceName, names.AttrID),
 					acctest.CheckResourceAttrAccountID(ctx, datasourceName, "attachment.0.instance_owner_id"),
+					resource.TestCheckResourceAttr(datasourceName, "attachment.0.network_card_index", "0"),
 					resource.TestCheckResourceAttrSet(datasourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDescription, resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttr(datasourceName, "interface_type", "interface"),
