@@ -13,6 +13,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -447,7 +448,7 @@ func TestAccElastiCacheServerlessCache_updatesc(t *testing.T) {
 	})
 }
 
-func TestAccElastiCacheServerlessCache_update_RedisToValkey(t *testing.T) {
+func TestAccElastiCacheServerlessCache_engine(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -455,7 +456,7 @@ func TestAccElastiCacheServerlessCache_update_RedisToValkey(t *testing.T) {
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_serverless_cache.test"
-	var v1, v2 awstypes.ServerlessCache
+	var v awstypes.ServerlessCache
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -466,18 +467,40 @@ func TestAccElastiCacheServerlessCache_update_RedisToValkey(t *testing.T) {
 		),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServerlessCacheConfig_basicRedis(rName),
+				Config: testAccServerlessCacheConfig_engine(rName, tfelasticache.EngineRedis),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServerlessCacheExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "redis"),
+					testAccCheckServerlessCacheExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfelasticache.EngineRedis),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
-				Config: testAccServerlessCacheConfig_updateValkey(rName),
+				Config: testAccServerlessCacheConfig_engine(rName, tfelasticache.EngineValkey),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServerlessCacheExists(ctx, resourceName, &v2),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "valkey"),
+					testAccCheckServerlessCacheExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfelasticache.EngineValkey),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				Config: testAccServerlessCacheConfig_engine(rName, tfelasticache.EngineRedis),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckServerlessCacheExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfelasticache.EngineRedis),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
 			},
 		},
 	})
@@ -658,13 +681,13 @@ resource "aws_elasticache_serverless_cache" "test" {
 `, rName)
 }
 
-func testAccServerlessCacheConfig_updateValkey(rName string) string {
+func testAccServerlessCacheConfig_engine(rName, engine string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_serverless_cache" "test" {
-  engine = "valkey"
   name   = %[1]q
+  engine = %[2]q
 }
-`, rName)
+`, rName, engine)
 }
 
 func testAccServerlessCacheConfig_full(rName string) string {

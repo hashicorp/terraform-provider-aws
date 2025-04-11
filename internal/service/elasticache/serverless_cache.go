@@ -24,7 +24,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -91,18 +90,23 @@ func (r *serverlessCacheResource) Schema(ctx context.Context, request resource.S
 			names.AttrEngine: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplaceIf(func(ctx context.Context, sr planmodifier.StringRequest, rrifr *stringplanmodifier.RequiresReplaceIfFuncResponse) {
-						configIsRedis := sr.ConfigValue.Equal(basetypes.NewStringValue(engineRedis))
-						planIsValkey := sr.PlanValue.Equal(basetypes.NewStringValue(engineValkey))
-						rrifr.RequiresReplace = !(configIsRedis && planIsValkey)
-					}, "Replace engine diff", "Replace engine diff"),
+					stringplanmodifier.RequiresReplaceIf(
+						func(ctx context.Context, req planmodifier.StringRequest, resp *stringplanmodifier.RequiresReplaceIfFuncResponse) {
+							// In-place updates are only supported for redis -> valkey
+							if req.StateValue.Equal(types.StringValue(engineRedis)) && req.PlanValue.Equal(types.StringValue(engineValkey)) {
+								return
+							}
+
+							// Any other change will force a replacement
+							resp.RequiresReplace = true
+						},
+						"Engine modifications other than redis to valkey require a replacement",
+						"Engine modifications other than redis to valkey require a replacement",
+					),
 				},
 			},
 			"full_engine_version": schema.StringAttribute{
 				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
 			},
 			names.AttrID: framework.IDAttribute(),
 			names.AttrKMSKeyID: schema.StringAttribute{
@@ -259,7 +263,6 @@ func (r *serverlessCacheResource) Create(ctx context.Context, request resource.C
 	input.Tags = getTagsIn(ctx)
 
 	_, err := conn.CreateServerlessCache(ctx, input)
-
 	if err != nil {
 		response.Diagnostics.AddError("creating ElastiCache Serverless Cache", err.Error())
 
@@ -270,10 +273,8 @@ func (r *serverlessCacheResource) Create(ctx context.Context, request resource.C
 	data.setID()
 
 	output, err := waitServerlessCacheAvailable(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
-
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for ElastiCache Serverless Cache (%s) create", data.ID.ValueString()), err.Error())
-
 		return
 	}
 
@@ -294,7 +295,6 @@ func (r *serverlessCacheResource) Read(ctx context.Context, request resource.Rea
 
 	if err := data.InitFromID(); err != nil {
 		response.Diagnostics.AddError("parsing resource ID", err.Error())
-
 		return
 	}
 
@@ -305,13 +305,11 @@ func (r *serverlessCacheResource) Read(ctx context.Context, request resource.Rea
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
-
 		return
 	}
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("reading ElastiCache Serverless Cache (%s)", data.ID.ValueString()), err.Error())
-
 		return
 	}
 
@@ -326,9 +324,6 @@ func (r *serverlessCacheResource) Read(ctx context.Context, request resource.Rea
 func (r *serverlessCacheResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	var old, new serverlessCacheResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
 	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -336,7 +331,7 @@ func (r *serverlessCacheResource) Update(ctx context.Context, request resource.U
 
 	conn := r.Meta().ElastiCacheClient(ctx)
 
-	diff, d := fwflex.Diff(ctx, new, old)
+	diff, d := fwflex.Diff(ctx, new, old, fwflex.WithIgnoredField("FullEngineVersion"))
 	response.Diagnostics.Append(d...)
 	if response.Diagnostics.HasError() {
 		return
@@ -350,26 +345,28 @@ func (r *serverlessCacheResource) Update(ctx context.Context, request resource.U
 		if response.Diagnostics.HasError() {
 			return
 		}
-		// Unset engine related stuff to prevent the following error:
+
+		// If no engine changes are made, unset related fields to prevent the following error:
 		// This API supports only cross-engine upgrades to Valkey engine currently.
-		if new.Engine.Equal(old.Engine) {
+		if new.Engine.Equal(old.Engine) && new.MajorEngineVersion.Equal(old.MajorEngineVersion) {
 			input.Engine = nil
-		}
-		if new.MajorEngineVersion.Equal(old.MajorEngineVersion) {
 			input.MajorEngineVersion = nil
 		}
 
-		_, err := conn.ModifyServerlessCache(ctx, &input)
+		// If engine is changed but major_engine_version is omitted in configuration, explicitly
+		// include it in the request to prevent the following error:
+		// InvalidParameterCombination: No modifications were requested
+		if !new.Engine.Equal(old.Engine) && input.MajorEngineVersion == nil {
+			input.MajorEngineVersion = old.MajorEngineVersion.ValueStringPointer()
+		}
 
-		if err != nil {
+		if _, err := conn.ModifyServerlessCache(ctx, &input); err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("updating ElastiCache Serverless Cache (%s)", new.ID.ValueString()), err.Error())
-
 			return
 		}
 
 		if _, err := waitServerlessCacheAvailable(ctx, conn, old.ServerlessCacheName.ValueString(), r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("waiting for ElastiCache Serverless Cache (%s) update", new.ID.ValueString()), err.Error())
-
 			return
 		}
 	}
@@ -377,10 +374,8 @@ func (r *serverlessCacheResource) Update(ctx context.Context, request resource.U
 	// AWS returns null values for certain values that are available on redis/valkey only.
 	// always set these values to the state value to avoid unnecessary diff failures on computed values.
 	output, err := findServerlessCacheByID(ctx, conn, old.ID.ValueString())
-
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("reading ElastiCache Serverless Cache (%s)", old.ID.ValueString()), err.Error())
-
 		return
 	}
 
@@ -420,13 +415,11 @@ func (r *serverlessCacheResource) Delete(ctx context.Context, request resource.D
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("deleting ElastiCache Serverless Cache (%s)", data.ID.ValueString()), err.Error())
-
 		return
 	}
 
 	if _, err := waitServerlessCacheDeleted(ctx, conn, data.ID.ValueString(), r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for ElastiCache Serverless Cache (%s) delete", data.ID.ValueString()), err.Error())
-
 		return
 	}
 }
