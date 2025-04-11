@@ -16,6 +16,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -61,9 +62,9 @@ type resourceFlow struct {
 func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttributeComputedOnly(),
-			"id":  framework.IDAttribute(),
-			"name": schema.StringAttribute{
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			names.AttrID:  framework.IDAttribute(),
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.All(
@@ -78,8 +79,23 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 			"customer_encryption_key_arn": schema.StringAttribute{
 				Optional: true,
 			},
-			"description": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
+			},
+			names.AttrCreatedAt: schema.StringAttribute{
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
+			},
+			"updated_at": schema.StringAttribute{
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
+			},
+			names.AttrVersion: schema.StringAttribute{
+				Computed: true,
+			},
+			names.AttrStatus: schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.FlowStatus](),
+				Computed:   true,
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
@@ -994,6 +1010,10 @@ type resourceFlowModel struct {
 	CustomerEncryptionKeyARN types.String                                         `tfsdk:"customer_encryption_key_arn"`
 	Definition               fwtypes.ListNestedObjectValueOf[flowDefinitionModel] `tfsdk:"definition"`
 	Description              types.String                                         `tfsdk:"description"`
+	CreatedAt                timetypes.RFC3339                                    `tfsdk:"created_at"`
+	UpdatedAt                timetypes.RFC3339                                    `tfsdk:"updated_at"`
+	Version                  types.String                                         `tfsdk:"version"`
+	Status                   fwtypes.StringEnum[awstypes.FlowStatus]              `tfsdk:"status"`
 	Tags                     tftags.Map                                           `tfsdk:"tags"`
 	TagsAll                  tftags.Map                                           `tfsdk:"tags_all"`
 	Timeouts                 timeouts.Value                                       `tfsdk:"timeouts"`
