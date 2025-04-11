@@ -510,12 +510,12 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 																																					NestedObject: schema.NestedBlockObject{
 																																						Attributes: map[string]schema.Attribute{
 																																							"json": schema.StringAttribute{
-																																								CustomType: fwtypes.NewSmithyJSONType(ctx, document.NewLazyDocument),
-																																								Optional:   true,
+																																								Optional: true,
 																																								Validators: []validator.String{
 																																									stringvalidator.ExactlyOneOf(
 																																										path.MatchRelative().AtParent().AtName("json"),
 																																									),
+																																									validators.JSON(),
 																																								},
 																																							},
 																																						},
@@ -1495,7 +1495,10 @@ func (m *promptFlowNodeSourceConfigurationModel) Flatten(ctx context.Context, v 
 		}
 
 		if t.Value.AdditionalModelRequestFields != nil {
-			t.Value.AdditionalModelRequestFields.UnmarshalSmithyDocument(&model.AdditionalModelRequestFields)
+			if err := t.Value.AdditionalModelRequestFields.UnmarshalSmithyDocument(&model.AdditionalModelRequestFields); err != nil {
+				diags.AddError("Unmarshalling tool input schema", err.Error())
+				return diags
+			}
 		}
 
 		m.Inline = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
@@ -1943,7 +1946,49 @@ type toolMemberToolSpecModel struct {
 
 // Tagged union
 type toolInputSchemaModel struct {
-	Json fwtypes.SmithyJSON[document.Interface] `tfsdk:"json"`
+	Json types.String `tfsdk:"json"`
+}
+
+func (m *toolInputSchemaModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
+	switch t := v.(type) {
+	case awstypes.ToolInputSchemaMemberJson:
+		var model string
+		d := flex.Flatten(ctx, t.Value, &model)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		if t.Value != nil {
+			if err := t.Value.UnmarshalSmithyDocument(&model); err != nil {
+				diags.AddError("Unmarshalling tool input schema", err.Error())
+				return diags
+			}
+		}
+
+		m.Json = types.StringValue(model)
+
+		return diags
+	default:
+		return diags
+	}
+}
+
+func (m toolInputSchemaModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
+	switch {
+	case !m.Json.IsNull():
+		var r awstypes.ToolInputSchemaMemberJson
+		var doc any
+		if err := json.Unmarshal([]byte(m.Json.ValueString()), &doc); err != nil {
+			diags.AddError("Marshalling tool input schema", err.Error())
+			return nil, diags
+		}
+		r.Value = document.NewLazyDocument(doc)
+
+		return &r, diags
+	}
+
+	return nil, diags
 }
 
 // Tagged union
