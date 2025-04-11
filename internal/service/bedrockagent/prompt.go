@@ -70,7 +70,7 @@ func (r *resourcePrompt) Schema(ctx context.Context, req resource.SchemaRequest,
 				Optional: true,
 			},
 			"default_variant": schema.StringAttribute{
-				Required: true,
+				Optional: true,
 			},
 			"customer_encryption_key_arn": schema.StringAttribute{
 				Optional: true,
@@ -98,7 +98,7 @@ func (r *resourcePrompt) Schema(ctx context.Context, req resource.SchemaRequest,
 							Required: true,
 						},
 						"model_id": schema.StringAttribute{
-							Required: true,
+							Optional: true,
 						},
 						"template_type": schema.StringAttribute{
 							CustomType: fwtypes.StringEnumType[awstypes.PromptTemplateType](),
@@ -165,6 +165,10 @@ func (r *resourcePrompt) Schema(ctx context.Context, req resource.SchemaRequest,
 							CustomType: fwtypes.NewListNestedObjectTypeOf[promptGenAiResourceModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
+								listvalidator.ExactlyOneOf(
+									path.MatchRelative().AtParent().AtName("model_id"),
+									path.MatchRelative().AtParent().AtName("gen_ai_resource"),
+								),
 							},
 							NestedObject: schema.NestedBlockObject{
 								Blocks: map[string]schema.Block{
