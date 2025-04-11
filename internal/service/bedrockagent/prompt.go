@@ -870,15 +870,7 @@ func (m *contentBlockModel) Flatten(ctx context.Context, v any) (diags diag.Diag
 
 		return diags
 	case awstypes.ContentBlockMemberText:
-		var model string
-		d := flex.Flatten(ctx, t.Value, &model)
-		diags.Append(d...)
-		if diags.HasError() {
-			return diags
-		}
-
-		m.Text = types.StringValue(model)
-
+		m.Text = types.StringValue(t.Value)
 		return diags
 	default:
 		return diags
@@ -948,15 +940,7 @@ func (m *systemContentBlockModel) Flatten(ctx context.Context, v any) (diags dia
 
 		return diags
 	case awstypes.SystemContentBlockMemberText:
-		var model string
-		d := flex.Flatten(ctx, t.Value, &model)
-		diags.Append(d...)
-		if diags.HasError() {
-			return diags
-		}
-
-		m.Text = types.StringValue(model)
-
+		m.Text = types.StringValue(t.Value)
 		return diags
 	default:
 		return diags
@@ -1095,21 +1079,15 @@ type toolInputSchemaModel struct {
 func (m *toolInputSchemaModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
 	switch t := v.(type) {
 	case awstypes.ToolInputSchemaMemberJson:
-		var model string
-		d := flex.Flatten(ctx, t.Value, &model)
-		diags.Append(d...)
-		if diags.HasError() {
-			return diags
-		}
-
 		if t.Value != nil {
-			if err := t.Value.UnmarshalSmithyDocument(&model); err != nil {
-				diags.AddError("Unmarshalling tool input schema", err.Error())
+			inputSchema, err := t.Value.MarshalSmithyDocument()
+			if err != nil {
+				diags.AddError("Marshalling tool input schema", err.Error())
 				return diags
 			}
-		}
 
-		m.Json = types.StringValue(model)
+			m.Json = types.StringValue(string(inputSchema))
+		}
 
 		return diags
 	default:
@@ -1123,7 +1101,7 @@ func (m toolInputSchemaModel) Expand(ctx context.Context) (result any, diags dia
 		var r awstypes.ToolInputSchemaMemberJson
 		var doc any
 		if err := json.Unmarshal([]byte(m.Json.ValueString()), &doc); err != nil {
-			diags.AddError("Marshalling tool input schema", err.Error())
+			diags.AddError("Unmarshalling tool input schema", err.Error())
 			return nil, diags
 		}
 		r.Value = document.NewLazyDocument(doc)
