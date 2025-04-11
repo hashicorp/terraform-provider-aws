@@ -87,6 +87,10 @@ func dataSourceAPI() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			names.AttrIPAddressType: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -133,6 +137,7 @@ func dataSourceAPIRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	d.Set(names.AttrDescription, api.Description)
 	d.Set("disable_execute_api_endpoint", api.DisableExecuteApiEndpoint)
 	d.Set("execution_arn", apiInvokeARN(ctx, meta.(*conns.AWSClient), d.Id()))
+	d.Set(names.AttrIPAddressType, api.IpAddressType)
 	d.Set(names.AttrName, api.Name)
 	d.Set("protocol_type", api.ProtocolType)
 	d.Set("route_selection_expression", api.RouteSelectionExpression)
