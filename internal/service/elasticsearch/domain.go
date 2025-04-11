@@ -55,7 +55,7 @@ func resourceDomain() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			customdiff.ForceNewIf("elasticsearch_version", func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) bool {
+			customdiff.ForceNewIf("elasticsearch_version", func(ctx context.Context, d *schema.ResourceDiff, meta any) bool {
 				newVersion := d.Get("elasticsearch_version").(string)
 				domainName := d.Get(names.AttrDomainName).(string)
 
@@ -70,14 +70,9 @@ func resourceDomain() *schema.Resource {
 				if len(resp.CompatibleElasticsearchVersions) != 1 {
 					return true
 				}
-				for _, targetVersion := range resp.CompatibleElasticsearchVersions[0].TargetVersions {
-					if targetVersion == newVersion {
-						return false
-					}
-				}
-				return true
+				return !slices.Contains(resp.CompatibleElasticsearchVersions[0].TargetVersions, newVersion)
 			}),
-			customdiff.ForceNewIf("encrypt_at_rest.0.enabled", func(_ context.Context, d *schema.ResourceDiff, meta interface{}) bool {
+			customdiff.ForceNewIf("encrypt_at_rest.0.enabled", func(_ context.Context, d *schema.ResourceDiff, meta any) bool {
 				// cannot disable (at all) or enable if < 6.7 without forcenew
 				o, n := d.GetChange("encrypt_at_rest.0.enabled")
 				if o.(bool) && !n.(bool) {
@@ -86,7 +81,7 @@ func resourceDomain() *schema.Resource {
 
 				return !inPlaceEncryptionEnableVersion(d.Get("elasticsearch_version").(string))
 			}),
-			customdiff.ForceNewIf("node_to_node_encryption.0.enabled", func(_ context.Context, d *schema.ResourceDiff, meta interface{}) bool {
+			customdiff.ForceNewIf("node_to_node_encryption.0.enabled", func(_ context.Context, d *schema.ResourceDiff, meta any) bool {
 				o, n := d.GetChange("node_to_node_encryption.0.enabled")
 				if o.(bool) && !n.(bool) {
 					return true
@@ -94,7 +89,6 @@ func resourceDomain() *schema.Resource {
 
 				return !inPlaceEncryptionEnableVersion(d.Get("elasticsearch_version").(string))
 			}),
-			verify.SetTagsDiff,
 		),
 
 		Schema: map[string]*schema.Schema{
@@ -105,7 +99,7 @@ func resourceDomain() *schema.Resource {
 				ValidateFunc:          validation.StringIsJSON,
 				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
 				DiffSuppressOnRefresh: true,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
@@ -536,7 +530,7 @@ func resourceDomain() *schema.Resource {
 	}
 }
 
-func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticsearchClient(ctx)
 
@@ -566,52 +560,52 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if v, ok := d.GetOk("advanced_options"); ok {
-		input.AdvancedOptions = flex.ExpandStringValueMap(v.(map[string]interface{}))
+		input.AdvancedOptions = flex.ExpandStringValueMap(v.(map[string]any))
 	}
 
 	if v, ok := d.GetOk("advanced_security_options"); ok {
-		input.AdvancedSecurityOptions = expandAdvancedSecurityOptions(v.([]interface{}))
+		input.AdvancedSecurityOptions = expandAdvancedSecurityOptions(v.([]any))
 	}
 
-	if v, ok := d.GetOk("auto_tune_options"); ok && len(v.([]interface{})) > 0 {
-		input.AutoTuneOptions = expandAutoTuneOptionsInput(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("auto_tune_options"); ok && len(v.([]any)) > 0 {
+		input.AutoTuneOptions = expandAutoTuneOptionsInput(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("cluster_config"); ok {
-		if v := v.([]interface{}); len(v) == 1 {
+		if v := v.([]any); len(v) == 1 {
 			if v[0] == nil {
 				return sdkdiag.AppendErrorf(diags, "At least one field is expected inside cluster_config")
 			}
 
-			input.ElasticsearchClusterConfig = expandElasticsearchClusterConfig(v[0].(map[string]interface{}))
+			input.ElasticsearchClusterConfig = expandElasticsearchClusterConfig(v[0].(map[string]any))
 		}
 	}
 
 	if v, ok := d.GetOk("cognito_options"); ok {
-		input.CognitoOptions = expandCognitoOptions(v.([]interface{}))
+		input.CognitoOptions = expandCognitoOptions(v.([]any))
 	}
 
 	if v, ok := d.GetOk("domain_endpoint_options"); ok {
-		input.DomainEndpointOptions = expandDomainEndpointOptions(v.([]interface{}))
+		input.DomainEndpointOptions = expandDomainEndpointOptions(v.([]any))
 	}
 
 	if v, ok := d.GetOk("ebs_options"); ok {
-		if v := v.([]interface{}); len(v) == 1 {
+		if v := v.([]any); len(v) == 1 {
 			if v[0] == nil {
 				return sdkdiag.AppendErrorf(diags, "At least one field is expected inside ebs_options")
 			}
 
-			input.EBSOptions = expandEBSOptions(v[0].(map[string]interface{}))
+			input.EBSOptions = expandEBSOptions(v[0].(map[string]any))
 		}
 	}
 
 	if v, ok := d.GetOk("encrypt_at_rest"); ok {
-		if v := v.([]interface{}); len(v) == 1 {
+		if v := v.([]any); len(v) == 1 {
 			if v[0] == nil {
 				return sdkdiag.AppendErrorf(diags, "At least one field is expected inside encrypt_at_rest")
 			}
 
-			input.EncryptionAtRestOptions = expandEncryptAtRestOptions(v[0].(map[string]interface{}))
+			input.EncryptionAtRestOptions = expandEncryptAtRestOptions(v[0].(map[string]any))
 		}
 	}
 
@@ -620,22 +614,22 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if v, ok := d.GetOk("node_to_node_encryption"); ok {
-		if v := v.([]interface{}); len(v) == 1 {
+		if v := v.([]any); len(v) == 1 {
 			if v[0] == nil {
 				return sdkdiag.AppendErrorf(diags, "At least one field is expected inside node_to_node_encryption")
 			}
 
-			input.NodeToNodeEncryptionOptions = expandNodeToNodeEncryptionOptions(v[0].(map[string]interface{}))
+			input.NodeToNodeEncryptionOptions = expandNodeToNodeEncryptionOptions(v[0].(map[string]any))
 		}
 	}
 
 	if v, ok := d.GetOk("snapshot_options"); ok {
-		if v := v.([]interface{}); len(v) == 1 {
+		if v := v.([]any); len(v) == 1 {
 			if v[0] == nil {
 				return sdkdiag.AppendErrorf(diags, "At least one field is expected inside snapshot_options")
 			}
 
-			tfMap := v[0].(map[string]interface{})
+			tfMap := v[0].(map[string]any)
 
 			input.SnapshotOptions = &awstypes.SnapshotOptions{
 				AutomatedSnapshotStartHour: aws.Int32(int32(tfMap["automated_snapshot_start_hour"].(int))),
@@ -644,17 +638,17 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if v, ok := d.GetOk("vpc_options"); ok {
-		if v := v.([]interface{}); len(v) == 1 {
+		if v := v.([]any); len(v) == 1 {
 			if v[0] == nil {
 				return sdkdiag.AppendErrorf(diags, "At least one field is expected inside vpc_options")
 			}
 
-			input.VPCOptions = expandVPCOptions(v[0].(map[string]interface{}))
+			input.VPCOptions = expandVPCOptions(v[0].(map[string]any))
 		}
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.CreateElasticsearchDomain(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -683,9 +677,9 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "waiting for Elasticsearch Domain (%s) create: %s", d.Id(), err)
 	}
 
-	if v, ok := d.GetOk("auto_tune_options"); ok && len(v.([]interface{})) > 0 {
+	if v, ok := d.GetOk("auto_tune_options"); ok && len(v.([]any)) > 0 {
 		input := &elasticsearch.UpdateElasticsearchDomainConfigInput{
-			AutoTuneOptions: expandAutoTuneOptions(v.([]interface{})[0].(map[string]interface{})),
+			AutoTuneOptions: expandAutoTuneOptions(v.([]any)[0].(map[string]any)),
 			DomainName:      aws.String(name),
 		}
 
@@ -703,7 +697,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceDomainRead(ctx, d, meta)...)
 }
 
-func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticsearchClient(ctx)
 
@@ -738,7 +732,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 		d.Set("access_policies", policies)
 	}
-	if err := d.Set("advanced_options", advancedOptionsIgnoreDefault(d.Get("advanced_options").(map[string]interface{}), flex.FlattenStringValueMap(ds.AdvancedOptions))); err != nil {
+	if err := d.Set("advanced_options", advancedOptionsIgnoreDefault(d.Get("advanced_options").(map[string]any), flex.FlattenStringValueMap(ds.AdvancedOptions))); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting advanced_options: %s", err)
 	}
 	// Populate AdvancedSecurityOptions with values returned from
@@ -758,7 +752,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 	d.Set(names.AttrARN, ds.ARN)
 	if v := dc.AutoTuneOptions; v != nil {
-		if err := d.Set("auto_tune_options", []interface{}{flattenAutoTuneOptions(v.Options)}); err != nil {
+		if err := d.Set("auto_tune_options", []any{flattenAutoTuneOptions(v.Options)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting auto_tune_options: %s", err)
 		}
 	}
@@ -790,7 +784,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "setting snapshot_options: %s", err)
 	}
 	if ds.VPCOptions != nil {
-		if err := d.Set("vpc_options", []interface{}{flattenVPCDerivedInfo(ds.VPCOptions)}); err != nil {
+		if err := d.Set("vpc_options", []any{flattenVPCDerivedInfo(ds.VPCOptions)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting vpc_options: %s", err)
 		}
 
@@ -814,7 +808,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticsearchClient(ctx)
 
@@ -833,29 +827,29 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 
 		if d.HasChange("advanced_options") {
-			input.AdvancedOptions = flex.ExpandStringValueMap(d.Get("advanced_options").(map[string]interface{}))
+			input.AdvancedOptions = flex.ExpandStringValueMap(d.Get("advanced_options").(map[string]any))
 		}
 
 		if d.HasChange("advanced_security_options") {
-			input.AdvancedSecurityOptions = expandAdvancedSecurityOptions(d.Get("advanced_security_options").([]interface{}))
+			input.AdvancedSecurityOptions = expandAdvancedSecurityOptions(d.Get("advanced_security_options").([]any))
 		}
 
 		if d.HasChange("auto_tune_options") {
-			input.AutoTuneOptions = expandAutoTuneOptions(d.Get("auto_tune_options").([]interface{})[0].(map[string]interface{}))
+			input.AutoTuneOptions = expandAutoTuneOptions(d.Get("auto_tune_options").([]any)[0].(map[string]any))
 		}
 
 		if d.HasChange("domain_endpoint_options") {
-			input.DomainEndpointOptions = expandDomainEndpointOptions(d.Get("domain_endpoint_options").([]interface{}))
+			input.DomainEndpointOptions = expandDomainEndpointOptions(d.Get("domain_endpoint_options").([]any))
 		}
 
 		if d.HasChanges("ebs_options", "cluster_config") {
-			if v := d.Get("ebs_options").([]interface{}); len(v) == 1 {
-				input.EBSOptions = expandEBSOptions(v[0].(map[string]interface{}))
+			if v := d.Get("ebs_options").([]any); len(v) == 1 {
+				input.EBSOptions = expandEBSOptions(v[0].(map[string]any))
 			}
 
 			if d.HasChange("cluster_config") {
-				if v := d.Get("cluster_config").([]interface{}); len(v) == 1 {
-					input.ElasticsearchClusterConfig = expandElasticsearchClusterConfig(v[0].(map[string]interface{}))
+				if v := d.Get("cluster_config").([]any); len(v) == 1 {
+					input.ElasticsearchClusterConfig = expandElasticsearchClusterConfig(v[0].(map[string]any))
 
 					// Work around "ValidationException: Your domain's Elasticsearch version does not support cold storage options. Upgrade to Elasticsearch 7.9 or later.".
 					if semver.LessThan(d.Get("elasticsearch_version").(string), "7.9") {
@@ -868,26 +862,26 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		if d.HasChange("encrypt_at_rest") {
 			input.EncryptionAtRestOptions = nil
 			if v, ok := d.GetOk("encrypt_at_rest"); ok {
-				v := v.([]interface{})
+				v := v.([]any)
 				if v[0] == nil {
 					return sdkdiag.AppendErrorf(diags, "At least one field is expected inside encrypt_at_rest")
 				}
 
-				input.EncryptionAtRestOptions = expandEncryptAtRestOptions(v[0].(map[string]interface{}))
+				input.EncryptionAtRestOptions = expandEncryptAtRestOptions(v[0].(map[string]any))
 			}
 		}
 
 		if d.HasChange("node_to_node_encryption") {
 			input.NodeToNodeEncryptionOptions = nil
 			if v, ok := d.GetOk("node_to_node_encryption"); ok {
-				v := v.([]interface{})
-				input.NodeToNodeEncryptionOptions = expandNodeToNodeEncryptionOptions(v[0].(map[string]interface{}))
+				v := v.([]any)
+				input.NodeToNodeEncryptionOptions = expandNodeToNodeEncryptionOptions(v[0].(map[string]any))
 			}
 		}
 
 		if d.HasChange("snapshot_options") {
-			if v := d.Get("snapshot_options").([]interface{}); len(v) == 1 {
-				tfMap := v[0].(map[string]interface{})
+			if v := d.Get("snapshot_options").([]any); len(v) == 1 {
+				tfMap := v[0].(map[string]any)
 
 				snapshotOptions := &awstypes.SnapshotOptions{
 					AutomatedSnapshotStartHour: aws.Int32(int32(tfMap["automated_snapshot_start_hour"].(int))),
@@ -898,12 +892,12 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 
 		if d.HasChange("vpc_options") {
-			v := d.Get("vpc_options").([]interface{})
-			input.VPCOptions = expandVPCOptions(v[0].(map[string]interface{}))
+			v := d.Get("vpc_options").([]any)
+			input.VPCOptions = expandVPCOptions(v[0].(map[string]any))
 		}
 
 		if d.HasChange("cognito_options") {
-			input.CognitoOptions = expandCognitoOptions(d.Get("cognito_options").([]interface{}))
+			input.CognitoOptions = expandCognitoOptions(d.Get("cognito_options").([]any))
 		}
 
 		if d.HasChange("log_publishing_options") {
@@ -941,7 +935,7 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceDomainRead(ctx, d, meta)...)
 }
 
-func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticsearchClient(ctx)
 
@@ -967,7 +961,7 @@ func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func resourceDomainImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceDomainImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	conn := meta.(*conns.AWSClient).ElasticsearchClient(ctx)
 
 	d.Set(names.AttrDomainName, d.Id())
@@ -1082,7 +1076,7 @@ func findDomainUpgradeStatus(ctx context.Context, conn *elasticsearch.Client, in
 }
 
 func statusDomainProcessing(ctx context.Context, conn *elasticsearch.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		// Don't call findDomainByName here as the domain's Deleted flag will be set while DomainProcessingStatus is "Deleting".
 		input := &elasticsearch.DescribeElasticsearchDomainInput{
 			DomainName: aws.String(name),
@@ -1102,7 +1096,7 @@ func statusDomainProcessing(ctx context.Context, conn *elasticsearch.Client, nam
 }
 
 func statusDomainUpgrade(ctx context.Context, conn *elasticsearch.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findDomainUpgradeStatusByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
@@ -1230,7 +1224,7 @@ func getKibanaEndpoint(d *schema.ResourceData) string {
 
 func isDedicatedMasterDisabled(k, old, new string, d *schema.ResourceData) bool {
 	if v, ok := d.GetOk("cluster_config"); ok {
-		tfMap := v.([]interface{})[0].(map[string]interface{})
+		tfMap := v.([]any)[0].(map[string]any)
 		return !tfMap["dedicated_master_enabled"].(bool)
 	}
 	return false
@@ -1238,13 +1232,13 @@ func isDedicatedMasterDisabled(k, old, new string, d *schema.ResourceData) bool 
 
 func isCustomEndpointDisabled(k, old, new string, d *schema.ResourceData) bool {
 	if v, ok := d.GetOk("domain_endpoint_options"); ok {
-		tfMap := v.([]interface{})[0].(map[string]interface{})
+		tfMap := v.([]any)[0].(map[string]any)
 		return !tfMap["custom_endpoint_enabled"].(bool)
 	}
 	return false
 }
 
-func expandNodeToNodeEncryptionOptions(tfMap map[string]interface{}) *awstypes.NodeToNodeEncryptionOptions {
+func expandNodeToNodeEncryptionOptions(tfMap map[string]any) *awstypes.NodeToNodeEncryptionOptions {
 	apiObject := &awstypes.NodeToNodeEncryptionOptions{}
 
 	if v, ok := tfMap[names.AttrEnabled]; ok {
@@ -1254,25 +1248,25 @@ func expandNodeToNodeEncryptionOptions(tfMap map[string]interface{}) *awstypes.N
 	return apiObject
 }
 
-func flattenNodeToNodeEncryptionOptions(apiObject *awstypes.NodeToNodeEncryptionOptions) []interface{} {
+func flattenNodeToNodeEncryptionOptions(apiObject *awstypes.NodeToNodeEncryptionOptions) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.Enabled != nil {
 		tfMap[names.AttrEnabled] = aws.ToBool(apiObject.Enabled)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func expandElasticsearchClusterConfig(tfMap map[string]interface{}) *awstypes.ElasticsearchClusterConfig { // nosemgrep:ci.elasticsearch-in-func-name
+func expandElasticsearchClusterConfig(tfMap map[string]any) *awstypes.ElasticsearchClusterConfig { // nosemgrep:ci.elasticsearch-in-func-name
 	apiObject := &awstypes.ElasticsearchClusterConfig{}
 
-	if v, ok := tfMap["cold_storage_options"].([]interface{}); ok && len(v) > 0 {
-		apiObject.ColdStorageOptions = expandColdStorageOptions(v[0].(map[string]interface{}))
+	if v, ok := tfMap["cold_storage_options"].([]any); ok && len(v) > 0 {
+		apiObject.ColdStorageOptions = expandColdStorageOptions(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["dedicated_master_enabled"]; ok {
@@ -1302,7 +1296,7 @@ func expandElasticsearchClusterConfig(tfMap map[string]interface{}) *awstypes.El
 
 		if isEnabled {
 			if v, ok := tfMap["zone_awareness_config"]; ok {
-				apiObject.ZoneAwarenessConfig = expandZoneAwarenessConfig(v.([]interface{}))
+				apiObject.ZoneAwarenessConfig = expandZoneAwarenessConfig(v.([]any))
 			}
 		}
 	}
@@ -1325,7 +1319,7 @@ func expandElasticsearchClusterConfig(tfMap map[string]interface{}) *awstypes.El
 	return apiObject
 }
 
-func expandColdStorageOptions(tfMap map[string]interface{}) *awstypes.ColdStorageOptions {
+func expandColdStorageOptions(tfMap map[string]any) *awstypes.ColdStorageOptions {
 	if tfMap == nil {
 		return nil
 	}
@@ -1339,12 +1333,12 @@ func expandColdStorageOptions(tfMap map[string]interface{}) *awstypes.ColdStorag
 	return apiObject
 }
 
-func expandZoneAwarenessConfig(tfList []interface{}) *awstypes.ZoneAwarenessConfig {
+func expandZoneAwarenessConfig(tfList []any) *awstypes.ZoneAwarenessConfig {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 	apiObject := &awstypes.ZoneAwarenessConfig{}
 
 	if v, ok := tfMap["availability_zone_count"]; ok && v.(int) > 0 {
@@ -1354,8 +1348,8 @@ func expandZoneAwarenessConfig(tfList []interface{}) *awstypes.ZoneAwarenessConf
 	return apiObject
 }
 
-func flattenElasticsearchClusterConfig(apiObject *awstypes.ElasticsearchClusterConfig) []interface{} { // nosemgrep:ci.elasticsearch-in-func-name
-	tfMap := map[string]interface{}{
+func flattenElasticsearchClusterConfig(apiObject *awstypes.ElasticsearchClusterConfig) []any { // nosemgrep:ci.elasticsearch-in-func-name
+	tfMap := map[string]any{
 		"zone_awareness_config":  flattenZoneAwarenessConfig(apiObject.ZoneAwarenessConfig),
 		"zone_awareness_enabled": aws.ToBool(apiObject.ZoneAwarenessEnabled),
 	}
@@ -1382,37 +1376,37 @@ func flattenElasticsearchClusterConfig(apiObject *awstypes.ElasticsearchClusterC
 	}
 	tfMap["warm_type"] = string(apiObject.WarmType)
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenColdStorageOptions(apiObject *awstypes.ColdStorageOptions) []interface{} {
+func flattenColdStorageOptions(apiObject *awstypes.ColdStorageOptions) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		names.AttrEnabled: aws.ToBool(apiObject.Enabled),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenZoneAwarenessConfig(apiObject *awstypes.ZoneAwarenessConfig) []interface{} {
+func flattenZoneAwarenessConfig(apiObject *awstypes.ZoneAwarenessConfig) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"availability_zone_count": aws.ToInt32(apiObject.AvailabilityZoneCount),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
 // advancedOptionsIgnoreDefault checks for defaults in the n map and, if
 // they don't exist in the o map, it deletes them. AWS returns default advanced
 // options that cause perpetual diffs.
-func advancedOptionsIgnoreDefault(o map[string]interface{}, n map[string]interface{}) map[string]interface{} {
+func advancedOptionsIgnoreDefault(o map[string]any, n map[string]any) map[string]any {
 	for k, v := range n {
 		switch fmt.Sprintf("%s=%s", k, v) {
 		case "override_main_response_version=false":

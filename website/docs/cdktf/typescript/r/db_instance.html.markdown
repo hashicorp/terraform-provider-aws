@@ -29,6 +29,8 @@ See the AWS Docs on [RDS Instance Maintenance][instance-maintenance] for more in
 ~> **Note:** All arguments including the username and password will be stored in the raw state as plain-text.
 [Read more about sensitive data instate](https://www.terraform.io/docs/state/sensitive-data.html).
 
+-> **Note:** Write-Only argument `passwordWo` is available to use in place of `password`. Write-Only arguments are supported in HashiCorp Terraform 1.11.0 and later. [Learn more](https://developer.hashicorp.com/terraform/language/v1.11.x/resources/ephemeral#write-only-arguments).
+
 > **Hands-on:** Try the [Manage AWS RDS Instances](https://learn.hashicorp.com/tutorials/terraform/aws-rds) tutorial on HashiCorp Learn.
 
 ## RDS Instance Class Types
@@ -427,6 +429,7 @@ Defaults to true.
   Cannot be set  with `replicateSourceDb`, `restoreToPointInTime`, `s3Import`, or `snapshotIdentifier`.
 * `copyTagsToSnapshot` – (Optional, boolean) Copy all Instance `tags` to snapshots. Default is `false`.
 * `customIamInstanceProfile` - (Optional) The instance profile associated with the underlying Amazon EC2 instance of an RDS Custom DB instance.
+* `databaseInsightsMode` - (Optional) The mode of Database Insights that is enabled for the instance. Valid values: `standard`, `advanced` .
 * `dbName` - (Optional) The name of the database to create when the DB instance is created. If this parameter is not specified, no database is created in the DB instance. Note that this does not apply for Oracle or SQL Server engines. See the [AWS documentation](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/create-db-instance.html) for more details on what applies for those engines. If you are providing an Oracle db name, it needs to be in all upper case. Cannot be specified for a replica.
 * `dbSubnetGroupName` - (Optional) Name of [DB subnet group](/docs/providers/aws/r/db_subnet_group.html).
   DB instance will be created in the VPC associated with the DB subnet group.
@@ -706,4 +709,4 @@ Using `terraform import`, import DB Instances using the `identifier`. For exampl
 % terraform import aws_db_instance.default mydb-rds-instance
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-c9a73848d36bd6157a41a2fb0deeceaae062b69c18bf84a1aa374ce2e7fbb950 -->
+<!-- cache-key: cdktf-0.20.8 input-170bb3fe17db99a19e0decb8cf130ef3d8124cee3b70926c6903689609912c96 -->

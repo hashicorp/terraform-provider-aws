@@ -55,7 +55,7 @@ func ResourceIndex() *schema.Resource {
 			Update: schema.DefaultTimeout(60 * time.Minute),
 			Delete: schema.DefaultTimeout(60 * time.Minute),
 		},
-		CustomizeDiff: verify.SetTagsDiff,
+
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,
@@ -379,7 +379,7 @@ func ResourceIndex() *schema.Resource {
 	}
 }
 
-func resourceIndexCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIndexCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
@@ -401,7 +401,7 @@ func resourceIndexCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if v, ok := d.GetOk("server_side_encryption_configuration"); ok {
-		input.ServerSideEncryptionConfiguration = expandServerSideEncryptionConfiguration(v.([]interface{}))
+		input.ServerSideEncryptionConfiguration = expandServerSideEncryptionConfiguration(v.([]any))
 	}
 
 	if v, ok := d.GetOk("user_context_policy"); ok {
@@ -409,15 +409,15 @@ func resourceIndexCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if v, ok := d.GetOk("user_group_resolution_configuration"); ok {
-		input.UserGroupResolutionConfiguration = expandUserGroupResolutionConfiguration(v.([]interface{}))
+		input.UserGroupResolutionConfiguration = expandUserGroupResolutionConfiguration(v.([]any))
 	}
 
 	if v, ok := d.GetOk("user_token_configurations"); ok {
-		input.UserTokenConfigurations = expandUserTokenConfigurations(v.([]interface{}))
+		input.UserTokenConfigurations = expandUserTokenConfigurations(v.([]any))
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.CreateIndex(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -451,7 +451,7 @@ func resourceIndexCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	callUpdateIndex := false
 
 	// CreateIndex API does not support capacity_units but UpdateIndex does
-	if v, ok := d.GetOk("capacity_units"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk("capacity_units"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		callUpdateIndex = true
 	}
 
@@ -467,7 +467,7 @@ func resourceIndexCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceIndexRead(ctx, d, meta)...)
 }
 
-func resourceIndexRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIndexRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
@@ -530,7 +530,7 @@ func resourceIndexRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	return diags
 }
 
-func resourceIndexUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIndexUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
@@ -542,7 +542,7 @@ func resourceIndexUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			Id: aws.String(id),
 		}
 		if d.HasChange("capacity_units") {
-			input.CapacityUnits = expandCapacityUnits(d.Get("capacity_units").([]interface{}))
+			input.CapacityUnits = expandCapacityUnits(d.Get("capacity_units").([]any))
 		}
 		if d.HasChange(names.AttrDescription) {
 			input.Description = aws.String(d.Get(names.AttrDescription).(string))
@@ -560,14 +560,14 @@ func resourceIndexUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			input.UserContextPolicy = types.UserContextPolicy(d.Get("user_context_policy").(string))
 		}
 		if d.HasChange("user_group_resolution_configuration") {
-			input.UserGroupResolutionConfiguration = expandUserGroupResolutionConfiguration(d.Get("user_group_resolution_configuration").([]interface{}))
+			input.UserGroupResolutionConfiguration = expandUserGroupResolutionConfiguration(d.Get("user_group_resolution_configuration").([]any))
 		}
 		if d.HasChange("user_token_configurations") {
-			input.UserTokenConfigurations = expandUserTokenConfigurations(d.Get("user_token_configurations").([]interface{}))
+			input.UserTokenConfigurations = expandUserTokenConfigurations(d.Get("user_token_configurations").([]any))
 		}
 
 		_, err := tfresource.RetryWhen(ctx, propagationTimeout,
-			func() (interface{}, error) {
+			func() (any, error) {
 				return conn.UpdateIndex(ctx, input)
 			},
 			func(err error) (bool, error) {
@@ -594,7 +594,7 @@ func resourceIndexUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceIndexRead(ctx, d, meta)...)
 }
 
-func resourceIndexDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIndexDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
@@ -644,7 +644,7 @@ func findIndexByID(ctx context.Context, conn *kendra.Client, id string) (*kendra
 }
 
 func statusIndex(ctx context.Context, conn *kendra.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findIndexByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
@@ -718,12 +718,12 @@ func waitIndexDeleted(ctx context.Context, conn *kendra.Client, id string, timeo
 	return nil, err
 }
 
-func expandCapacityUnits(capacityUnits []interface{}) *types.CapacityUnitsConfiguration {
+func expandCapacityUnits(capacityUnits []any) *types.CapacityUnitsConfiguration {
 	if len(capacityUnits) == 0 || capacityUnits[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := capacityUnits[0].(map[string]interface{})
+	tfMap, ok := capacityUnits[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -736,7 +736,7 @@ func expandCapacityUnits(capacityUnits []interface{}) *types.CapacityUnitsConfig
 	return result
 }
 
-func expandDocumentMetadataConfigurationUpdates(documentMetadataConfigurationUpdates []interface{}) []types.DocumentMetadataConfiguration {
+func expandDocumentMetadataConfigurationUpdates(documentMetadataConfigurationUpdates []any) []types.DocumentMetadataConfiguration {
 	if len(documentMetadataConfigurationUpdates) == 0 {
 		return nil
 	}
@@ -744,14 +744,14 @@ func expandDocumentMetadataConfigurationUpdates(documentMetadataConfigurationUpd
 	documentMetadataConfigurationUpdateConfigs := []types.DocumentMetadataConfiguration{}
 
 	for _, documentMetadataConfigurationUpdate := range documentMetadataConfigurationUpdates {
-		tfMap := documentMetadataConfigurationUpdate.(map[string]interface{})
+		tfMap := documentMetadataConfigurationUpdate.(map[string]any)
 		documentMetadataConfigurationUpdateConfig := types.DocumentMetadataConfiguration{
 			Name: aws.String(tfMap[names.AttrName].(string)),
 			Type: types.DocumentAttributeValueType(tfMap[names.AttrType].(string)),
 		}
 
-		documentMetadataConfigurationUpdateConfig.Relevance = expandRelevance(tfMap["relevance"].([]interface{}), tfMap[names.AttrType].(string))
-		documentMetadataConfigurationUpdateConfig.Search = expandSearch(tfMap["search"].([]interface{}))
+		documentMetadataConfigurationUpdateConfig.Relevance = expandRelevance(tfMap["relevance"].([]any), tfMap[names.AttrType].(string))
+		documentMetadataConfigurationUpdateConfig.Search = expandSearch(tfMap["search"].([]any))
 
 		documentMetadataConfigurationUpdateConfigs = append(documentMetadataConfigurationUpdateConfigs, documentMetadataConfigurationUpdateConfig)
 	}
@@ -759,12 +759,12 @@ func expandDocumentMetadataConfigurationUpdates(documentMetadataConfigurationUpd
 	return documentMetadataConfigurationUpdateConfigs
 }
 
-func expandRelevance(relevance []interface{}, documentAttributeValueType string) *types.Relevance {
+func expandRelevance(relevance []any, documentAttributeValueType string) *types.Relevance {
 	if len(relevance) == 0 || relevance[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := relevance[0].(map[string]interface{})
+	tfMap, ok := relevance[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -788,19 +788,19 @@ func expandRelevance(relevance []interface{}, documentAttributeValueType string)
 		result.RankOrder = types.Order(v)
 	}
 
-	if v, ok := tfMap["values_importance_map"].(map[string]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["values_importance_map"].(map[string]any); ok && len(v) > 0 {
 		result.ValueImportanceMap = flex.ExpandInt32Map(v)
 	}
 
 	return result
 }
 
-func expandSearch(search []interface{}) *types.Search {
+func expandSearch(search []any) *types.Search {
 	if len(search) == 0 || search[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := search[0].(map[string]interface{})
+	tfMap, ok := search[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -826,12 +826,12 @@ func expandSearch(search []interface{}) *types.Search {
 	return result
 }
 
-func expandServerSideEncryptionConfiguration(serverSideEncryptionConfiguration []interface{}) *types.ServerSideEncryptionConfiguration {
+func expandServerSideEncryptionConfiguration(serverSideEncryptionConfiguration []any) *types.ServerSideEncryptionConfiguration {
 	if len(serverSideEncryptionConfiguration) == 0 || serverSideEncryptionConfiguration[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := serverSideEncryptionConfiguration[0].(map[string]interface{})
+	tfMap, ok := serverSideEncryptionConfiguration[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -845,12 +845,12 @@ func expandServerSideEncryptionConfiguration(serverSideEncryptionConfiguration [
 	return result
 }
 
-func expandUserGroupResolutionConfiguration(userGroupResolutionConfiguration []interface{}) *types.UserGroupResolutionConfiguration {
+func expandUserGroupResolutionConfiguration(userGroupResolutionConfiguration []any) *types.UserGroupResolutionConfiguration {
 	if len(userGroupResolutionConfiguration) == 0 || userGroupResolutionConfiguration[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := userGroupResolutionConfiguration[0].(map[string]interface{})
+	tfMap, ok := userGroupResolutionConfiguration[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -862,7 +862,7 @@ func expandUserGroupResolutionConfiguration(userGroupResolutionConfiguration []i
 	return result
 }
 
-func expandUserTokenConfigurations(userTokenConfigurations []interface{}) []types.UserTokenConfiguration {
+func expandUserTokenConfigurations(userTokenConfigurations []any) []types.UserTokenConfiguration {
 	if len(userTokenConfigurations) == 0 {
 		return nil
 	}
@@ -870,14 +870,14 @@ func expandUserTokenConfigurations(userTokenConfigurations []interface{}) []type
 	userTokenConfigurationsConfigs := []types.UserTokenConfiguration{}
 
 	for _, userTokenConfiguration := range userTokenConfigurations {
-		tfMap := userTokenConfiguration.(map[string]interface{})
+		tfMap := userTokenConfiguration.(map[string]any)
 		userTokenConfigurationConfig := types.UserTokenConfiguration{}
 
-		if v, ok := tfMap["json_token_type_configuration"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := tfMap["json_token_type_configuration"].([]any); ok && len(v) > 0 {
 			userTokenConfigurationConfig.JsonTokenTypeConfiguration = expandJSONTokenTypeConfiguration(v)
 		}
 
-		if v, ok := tfMap["jwt_token_type_configuration"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := tfMap["jwt_token_type_configuration"].([]any); ok && len(v) > 0 {
 			userTokenConfigurationConfig.JwtTokenTypeConfiguration = expandJwtTokenTypeConfiguration(v)
 		}
 
@@ -887,12 +887,12 @@ func expandUserTokenConfigurations(userTokenConfigurations []interface{}) []type
 	return userTokenConfigurationsConfigs
 }
 
-func expandJSONTokenTypeConfiguration(jsonTokenTypeConfiguration []interface{}) *types.JsonTokenTypeConfiguration {
+func expandJSONTokenTypeConfiguration(jsonTokenTypeConfiguration []any) *types.JsonTokenTypeConfiguration {
 	if len(jsonTokenTypeConfiguration) == 0 || jsonTokenTypeConfiguration[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := jsonTokenTypeConfiguration[0].(map[string]interface{})
+	tfMap, ok := jsonTokenTypeConfiguration[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -905,12 +905,12 @@ func expandJSONTokenTypeConfiguration(jsonTokenTypeConfiguration []interface{}) 
 	return result
 }
 
-func expandJwtTokenTypeConfiguration(jwtTokenTypeConfiguration []interface{}) *types.JwtTokenTypeConfiguration {
+func expandJwtTokenTypeConfiguration(jwtTokenTypeConfiguration []any) *types.JwtTokenTypeConfiguration {
 	if len(jwtTokenTypeConfiguration) == 0 || jwtTokenTypeConfiguration[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := jwtTokenTypeConfiguration[0].(map[string]interface{})
+	tfMap, ok := jwtTokenTypeConfiguration[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -946,24 +946,24 @@ func expandJwtTokenTypeConfiguration(jwtTokenTypeConfiguration []interface{}) *t
 	return result
 }
 
-func flattenCapacityUnits(capacityUnits *types.CapacityUnitsConfiguration) []interface{} {
+func flattenCapacityUnits(capacityUnits *types.CapacityUnitsConfiguration) []any {
 	if capacityUnits == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	values := map[string]interface{}{
+	values := map[string]any{
 		"query_capacity_units":   aws.ToInt32(capacityUnits.QueryCapacityUnits),
 		"storage_capacity_units": aws.ToInt32(capacityUnits.StorageCapacityUnits),
 	}
 
-	return []interface{}{values}
+	return []any{values}
 }
 
-func flattenDocumentMetadataConfigurations(documentMetadataConfigurations []types.DocumentMetadataConfiguration) []interface{} {
-	documentMetadataConfigurationsList := []interface{}{}
+func flattenDocumentMetadataConfigurations(documentMetadataConfigurations []types.DocumentMetadataConfiguration) []any {
+	documentMetadataConfigurationsList := []any{}
 
 	for _, documentMetadataConfiguration := range documentMetadataConfigurations {
-		values := map[string]interface{}{
+		values := map[string]any{
 			names.AttrName: documentMetadataConfiguration.Name,
 			"relevance":    flattenRelevance(documentMetadataConfiguration.Relevance, string(documentMetadataConfiguration.Type)),
 			"search":       flattenSearch(documentMetadataConfiguration.Search),
@@ -976,12 +976,12 @@ func flattenDocumentMetadataConfigurations(documentMetadataConfigurations []type
 	return documentMetadataConfigurationsList
 }
 
-func flattenRelevance(relevance *types.Relevance, documentAttributeValueType string) []interface{} {
+func flattenRelevance(relevance *types.Relevance, documentAttributeValueType string) []any {
 	if relevance == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	values := map[string]interface{}{
+	values := map[string]any{
 		"rank_order": relevance.RankOrder,
 	}
 
@@ -1001,93 +1001,93 @@ func flattenRelevance(relevance *types.Relevance, documentAttributeValueType str
 		values["values_importance_map"] = v
 	}
 
-	return []interface{}{values}
+	return []any{values}
 }
 
-func flattenSearch(search *types.Search) []interface{} {
+func flattenSearch(search *types.Search) []any {
 	if search == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	values := map[string]interface{}{
+	values := map[string]any{
 		"displayable": search.Displayable,
 		"facetable":   search.Facetable,
 		"searchable":  search.Searchable,
 		"sortable":    search.Sortable,
 	}
 
-	return []interface{}{values}
+	return []any{values}
 }
 
-func flattenIndexStatistics(indexStatistics *types.IndexStatistics) []interface{} {
+func flattenIndexStatistics(indexStatistics *types.IndexStatistics) []any {
 	if indexStatistics == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	values := map[string]interface{}{
+	values := map[string]any{
 		"faq_statistics":           flattenFaqStatistics(indexStatistics.FaqStatistics),
 		"text_document_statistics": flattenTextDocumentStatistics(indexStatistics.TextDocumentStatistics),
 	}
 
-	return []interface{}{values}
+	return []any{values}
 }
 
-func flattenFaqStatistics(faqStatistics *types.FaqStatistics) []interface{} {
+func flattenFaqStatistics(faqStatistics *types.FaqStatistics) []any {
 	if faqStatistics == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	values := map[string]interface{}{
+	values := map[string]any{
 		"indexed_question_answers_count": aws.ToInt32(&faqStatistics.IndexedQuestionAnswersCount),
 	}
 
-	return []interface{}{values}
+	return []any{values}
 }
 
-func flattenTextDocumentStatistics(textDocumentStatistics *types.TextDocumentStatistics) []interface{} {
+func flattenTextDocumentStatistics(textDocumentStatistics *types.TextDocumentStatistics) []any {
 	if textDocumentStatistics == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	values := map[string]interface{}{
+	values := map[string]any{
 		"indexed_text_bytes":           aws.ToInt64(&textDocumentStatistics.IndexedTextBytes),
 		"indexed_text_documents_count": aws.ToInt32(&textDocumentStatistics.IndexedTextDocumentsCount),
 	}
 
-	return []interface{}{values}
+	return []any{values}
 }
 
-func flattenServerSideEncryptionConfiguration(serverSideEncryptionConfiguration *types.ServerSideEncryptionConfiguration) []interface{} {
+func flattenServerSideEncryptionConfiguration(serverSideEncryptionConfiguration *types.ServerSideEncryptionConfiguration) []any {
 	if serverSideEncryptionConfiguration == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	values := map[string]interface{}{}
+	values := map[string]any{}
 
 	if v := serverSideEncryptionConfiguration.KmsKeyId; v != nil {
 		values[names.AttrKMSKeyID] = aws.ToString(v)
 	}
 
-	return []interface{}{values}
+	return []any{values}
 }
 
-func flattenUserGroupResolutionConfiguration(userGroupResolutionConfiguration *types.UserGroupResolutionConfiguration) []interface{} {
+func flattenUserGroupResolutionConfiguration(userGroupResolutionConfiguration *types.UserGroupResolutionConfiguration) []any {
 	if userGroupResolutionConfiguration == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	values := map[string]interface{}{
+	values := map[string]any{
 		"user_group_resolution_mode": userGroupResolutionConfiguration.UserGroupResolutionMode,
 	}
 
-	return []interface{}{values}
+	return []any{values}
 }
 
-func flattenUserTokenConfigurations(userTokenConfigurations []types.UserTokenConfiguration) []interface{} {
-	userTokenConfigurationsList := []interface{}{}
+func flattenUserTokenConfigurations(userTokenConfigurations []types.UserTokenConfiguration) []any {
+	userTokenConfigurationsList := []any{}
 
 	for _, userTokenConfiguration := range userTokenConfigurations {
-		values := map[string]interface{}{}
+		values := map[string]any{}
 
 		if v := userTokenConfiguration.JsonTokenTypeConfiguration; v != nil {
 			values["json_token_type_configuration"] = flattenJSONTokenTypeConfiguration(v)
@@ -1103,25 +1103,25 @@ func flattenUserTokenConfigurations(userTokenConfigurations []types.UserTokenCon
 	return userTokenConfigurationsList
 }
 
-func flattenJSONTokenTypeConfiguration(jsonTokenTypeConfiguration *types.JsonTokenTypeConfiguration) []interface{} {
+func flattenJSONTokenTypeConfiguration(jsonTokenTypeConfiguration *types.JsonTokenTypeConfiguration) []any {
 	if jsonTokenTypeConfiguration == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	values := map[string]interface{}{
+	values := map[string]any{
 		"group_attribute_field":     jsonTokenTypeConfiguration.GroupAttributeField,
 		"user_name_attribute_field": jsonTokenTypeConfiguration.UserNameAttributeField,
 	}
 
-	return []interface{}{values}
+	return []any{values}
 }
 
-func flattenJwtTokenTypeConfiguration(jwtTokenTypeConfiguration *types.JwtTokenTypeConfiguration) []interface{} {
+func flattenJwtTokenTypeConfiguration(jwtTokenTypeConfiguration *types.JwtTokenTypeConfiguration) []any {
 	if jwtTokenTypeConfiguration == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	values := map[string]interface{}{
+	values := map[string]any{
 		"key_location": jwtTokenTypeConfiguration.KeyLocation,
 	}
 
@@ -1149,5 +1149,5 @@ func flattenJwtTokenTypeConfiguration(jwtTokenTypeConfiguration *types.JwtTokenT
 		values["user_name_attribute_field"] = aws.ToString(v)
 	}
 
-	return []interface{}{values}
+	return []any{values}
 }

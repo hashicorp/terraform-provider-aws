@@ -137,15 +137,13 @@ func resourceFindingsFilter() *schema.Resource {
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(4 * time.Minute),
 		},
 	}
 }
 
-func resourceFindingsFilterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFindingsFilterCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Macie2Client(ctx)
 
@@ -161,7 +159,7 @@ func resourceFindingsFilterCreate(ctx context.Context, d *schema.ResourceData, m
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, err := expandFindingCriteriaFilter(d.Get("finding_criteria").([]interface{})); err == nil {
+	if v, err := expandFindingCriteriaFilter(d.Get("finding_criteria").([]any)); err == nil {
 		input.FindingCriteria = v
 	} else {
 		return sdkdiag.AppendErrorf(diags, "expanding finding_criteria: %s", err)
@@ -171,7 +169,7 @@ func resourceFindingsFilterCreate(ctx context.Context, d *schema.ResourceData, m
 		input.Position = aws.Int32(int32(v.(int)))
 	}
 
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
 		return conn.CreateFindingsFilter(ctx, &input)
 	}, errCodeClientError)
 
@@ -184,7 +182,7 @@ func resourceFindingsFilterCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceFindingsFilterRead(ctx, d, meta)...)
 }
 
-func resourceFindingsFilterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFindingsFilterRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Macie2Client(ctx)
 
@@ -215,7 +213,7 @@ func resourceFindingsFilterRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceFindingsFilterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFindingsFilterUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Macie2Client(ctx)
 
@@ -226,7 +224,7 @@ func resourceFindingsFilterUpdate(ctx context.Context, d *schema.ResourceData, m
 
 		var err error
 		if d.HasChange("finding_criteria") {
-			input.FindingCriteria, err = expandFindingCriteriaFilter(d.Get("finding_criteria").([]interface{}))
+			input.FindingCriteria, err = expandFindingCriteriaFilter(d.Get("finding_criteria").([]any))
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating Macie FindingsFilter (%s): %s", d.Id(), err)
 			}
@@ -241,7 +239,7 @@ func resourceFindingsFilterUpdate(ctx context.Context, d *schema.ResourceData, m
 		}
 
 		if d.HasChange("finding_criteria") {
-			if v, err := expandFindingCriteriaFilter(d.Get("finding_criteria").([]interface{})); err == nil {
+			if v, err := expandFindingCriteriaFilter(d.Get("finding_criteria").([]any)); err == nil {
 				input.FindingCriteria = v
 			} else {
 				return sdkdiag.AppendErrorf(diags, "expanding finding_criteria: %s", err)
@@ -266,7 +264,7 @@ func resourceFindingsFilterUpdate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceFindingsFilterRead(ctx, d, meta)...)
 }
 
-func resourceFindingsFilterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFindingsFilterDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Macie2Client(ctx)
 
@@ -325,17 +323,17 @@ func isFindingsFilterNotFoundError(err error) bool {
 	return false
 }
 
-func expandFindingCriteriaFilter(findingCriterias []interface{}) (*awstypes.FindingCriteria, error) {
+func expandFindingCriteriaFilter(findingCriterias []any) (*awstypes.FindingCriteria, error) {
 	if len(findingCriterias) == 0 {
 		return nil, nil
 	}
 
 	criteria := map[string]awstypes.CriterionAdditionalProperties{}
-	findingCriteria := findingCriterias[0].(map[string]interface{})
+	findingCriteria := findingCriterias[0].(map[string]any)
 	inputFindingCriteria := findingCriteria["criterion"].(*schema.Set).List()
 
 	for _, criterion := range inputFindingCriteria {
-		crit := criterion.(map[string]interface{})
+		crit := criterion.(map[string]any)
 		field := crit[names.AttrField].(string)
 		conditional := awstypes.CriterionAdditionalProperties{}
 
@@ -397,15 +395,15 @@ func expandFindingCriteriaFilter(findingCriterias []interface{}) (*awstypes.Find
 	return &awstypes.FindingCriteria{Criterion: criteria}, nil
 }
 
-func flattenFindingCriteriaFindingsFilter(findingCriteria *awstypes.FindingCriteria) []interface{} {
+func flattenFindingCriteriaFindingsFilter(findingCriteria *awstypes.FindingCriteria) []any {
 	if findingCriteria == nil {
 		return nil
 	}
 
-	var flatCriteria []interface{}
+	var flatCriteria []any
 
 	for field, conditions := range findingCriteria.Criterion {
-		criterion := map[string]interface{}{
+		criterion := map[string]any{
 			names.AttrField: field,
 		}
 		if len(conditions.Eq) != 0 {
@@ -432,8 +430,8 @@ func flattenFindingCriteriaFindingsFilter(findingCriteria *awstypes.FindingCrite
 		flatCriteria = append(flatCriteria, criterion)
 	}
 
-	return []interface{}{
-		map[string][]interface{}{
+	return []any{
+		map[string][]any{
 			"criterion": flatCriteria,
 		},
 	}

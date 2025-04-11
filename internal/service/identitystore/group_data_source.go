@@ -96,7 +96,7 @@ func dataSourceGroup() *schema.Resource {
 				},
 			},
 			names.AttrFilter: {
-				Deprecated:    "Use the alternate_identifier attribute instead.",
+				Deprecated:    "filter is deprecated. Use alternate_identifier instead.",
 				Type:          schema.TypeList,
 				Optional:      true,
 				MaxItems:      1,
@@ -138,18 +138,18 @@ func dataSourceGroup() *schema.Resource {
 	}
 }
 
-func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IdentityStoreClient(ctx)
 
 	identityStoreID := d.Get("identity_store_id").(string)
 
-	if v, ok := d.GetOk(names.AttrFilter); ok && len(v.([]interface{})) > 0 {
+	if v, ok := d.GetOk(names.AttrFilter); ok && len(v.([]any)) > 0 {
 		// Use ListGroups for backwards compat.
 		var output []types.Group
 		input := &identitystore.ListGroupsInput{
 			IdentityStoreId: aws.String(identityStoreID),
-			Filters:         expandFilters(d.Get(names.AttrFilter).([]interface{})),
+			Filters:         expandFilters(d.Get(names.AttrFilter).([]any)),
 		}
 
 		pages := identitystore.NewListGroupsPaginator(conn, input)
@@ -188,9 +188,9 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	var groupID string
 
-	if v, ok := d.GetOk("alternate_identifier"); ok && len(v.([]interface{})) > 0 {
+	if v, ok := d.GetOk("alternate_identifier"); ok && len(v.([]any)) > 0 {
 		input := &identitystore.GetGroupIdInput{
-			AlternateIdentifier: expandAlternateIdentifier(v.([]interface{})[0].(map[string]interface{})),
+			AlternateIdentifier: expandAlternateIdentifier(v.([]any)[0].(map[string]any)),
 			IdentityStoreId:     aws.String(identityStoreID),
 		}
 
@@ -229,7 +229,7 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func expandFilters(tfList []interface{}) []types.Filter {
+func expandFilters(tfList []any) []types.Filter {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -237,7 +237,7 @@ func expandFilters(tfList []interface{}) []types.Filter {
 	apiObjects := make([]types.Filter, 0, len(tfList))
 
 	for _, v := range tfList {
-		tfMap, ok := v.(map[string]interface{})
+		tfMap, ok := v.(map[string]any)
 		if !ok {
 			continue
 		}

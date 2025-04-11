@@ -43,6 +43,11 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			TypeName: "aws_route53_cidr_location",
 			Name:     "CIDR Location",
 		},
+		{
+			Factory:  newResourceRecordsExclusive,
+			TypeName: "aws_route53_records_exclusive",
+			Name:     "Records Exclusive",
+		},
 	}
 }
 

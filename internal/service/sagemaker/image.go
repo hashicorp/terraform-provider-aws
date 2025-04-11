@@ -71,12 +71,10 @@ func resourceImage() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceImageCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceImageCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -99,19 +97,19 @@ func resourceImageCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	time.Sleep(1 * time.Minute)
 	_, err := conn.CreateImage(ctx, input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker Image %s: %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Image %s: %s", name, err)
 	}
 
 	d.SetId(name)
 
 	if err := waitImageCreated(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Image (%s) to be created: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Image (%s) to be created: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceImageRead(ctx, d, meta)...)
 }
 
-func resourceImageRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceImageRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -119,12 +117,12 @@ func resourceImageRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		d.SetId("")
-		log.Printf("[WARN] Unable to find SageMaker Image (%s); removing from state", d.Id())
+		log.Printf("[WARN] Unable to find SageMaker AI Image (%s); removing from state", d.Id())
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SageMaker Image (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI Image (%s): %s", d.Id(), err)
 	}
 
 	d.Set("image_name", image.ImageName)
@@ -136,7 +134,7 @@ func resourceImageRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	return diags
 }
 
-func resourceImageUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceImageUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 	needsUpdate := false
@@ -171,18 +169,18 @@ func resourceImageUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		log.Printf("[DEBUG] sagemaker Image update config: %#v", *input)
 		_, err := conn.UpdateImage(ctx, input)
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating SageMaker Image: %s", err)
+			return sdkdiag.AppendErrorf(diags, "updating SageMaker AI Image: %s", err)
 		}
 
 		if err := waitImageCreated(ctx, conn, d.Id()); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Image (%s) to update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Image (%s) to update: %s", d.Id(), err)
 		}
 	}
 
 	return append(diags, resourceImageRead(ctx, d, meta)...)
 }
 
-func resourceImageDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceImageDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -194,11 +192,11 @@ func resourceImageDelete(ctx context.Context, d *schema.ResourceData, meta inter
 		if errs.IsAErrorMessageContains[*awstypes.ResourceNotFound](err, "does not exist") {
 			return diags
 		}
-		return sdkdiag.AppendErrorf(diags, "deleting SageMaker Image (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SageMaker AI Image (%s): %s", d.Id(), err)
 	}
 
 	if err := waitImageDeleted(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Image (%s) to delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Image (%s) to delete: %s", d.Id(), err)
 	}
 
 	return diags

@@ -89,7 +89,7 @@ This resource supports the following arguments:
 
 The `subnetMapping` block supports the following arguments:
 
-* `ipAddressType` - (Optional) The subnet's IP address type. Valida values: `"DUALSTACK"`, `"IPV4"`.
+* `ipAddressType` - (Optional) The subnet's IP address type. Valid values: `"DUALSTACK"`, `"IPV4"`.
 * `subnetId` - (Required) The unique identifier for the subnet.
 
 ## Attribute Reference

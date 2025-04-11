@@ -18,11 +18,13 @@ Provides a Glue Job resource.
 
 ```terraform
 resource "aws_glue_job" "example" {
-  name     = "example"
-  role_arn = aws_iam_role.example.arn
+  name         = "example"
+  glue_version = "5.0"
+  role_arn     = aws_iam_role.example.arn
 
   command {
     script_location = "s3://${aws_s3_bucket.example.bucket}/example.py"
+    python_version  = "3"
   }
 }
 ```
@@ -119,6 +121,7 @@ This resource supports the following arguments:
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `timeout` – (Optional) The job timeout in minutes. The default is 2880 minutes (48 hours) for `glueetl` and `pythonshell` jobs, and null (unlimited) for `gluestreaming` jobs.
 * `security_configuration` - (Optional) The name of the Security Configuration to be associated with the job.
+* `source_control_details` - (Optional) The details for a source control configuration for a job, allowing synchronization of job artifacts to or from a remote repository. Defined below.
 * `worker_type` - (Optional) The type of predefined worker that is allocated when a job runs. Accepts a value of Standard, G.1X, G.2X, or G.025X for Spark jobs. Accepts the value Z.2X for Ray jobs.
     * For the Standard worker type, each worker provides 4 vCPU, 16 GB of memory and a 50GB disk, and 2 executors per worker.
     * For the G.1X worker type, each worker maps to 1 DPU (4 vCPU, 16 GB of memory, 64 GB disk), and provides 1 executor per worker. Recommended for memory-intensive jobs.
@@ -133,7 +136,7 @@ This resource supports the following arguments:
 
 * `name` - (Optional) The name of the job command. Defaults to `glueetl`. Use `pythonshell` for Python Shell Job Type, `glueray` for Ray Job Type, or `gluestreaming` for Streaming Job Type. `max_capacity` needs to be set if `pythonshell` is chosen.
 * `script_location` - (Required) Specifies the S3 path to a script that executes a job.
-* `python_version` - (Optional) The Python version being used to execute a Python shell job. Allowed values are 2, 3 or 3.9. Version 3 refers to Python 3.6.
+* `python_version` - (Optional) The Python version being used to execute a Python shell job. Allowed values are 2, 3 or 3.9. Version 3 refers to Python 3.11 when `glue_version` is set to 5.0.
 * `runtime` - (Optional) In Ray jobs, runtime is used to specify the versions of Ray, Python and additional libraries available in your environment. This field is not used in other job types. For supported runtime environment values, see [Working with Ray jobs](https://docs.aws.amazon.com/glue/latest/dg/ray-jobs-section.html#author-job-ray-runtimes) in the Glue Developer Guide.
 
 ### execution_property Argument Reference
@@ -143,6 +146,17 @@ This resource supports the following arguments:
 ### notification_property Argument Reference
 
 * `notify_delay_after` - (Optional) After a job run starts, the number of minutes to wait before sending a job run delay notification.
+
+### source_control_details Argument Reference
+
+* `auth_strategy` - (Optional) The type of authentication, which can be an authentication token stored in Amazon Web Services Secrets Manager, or a personal access token. Valid values are: `PERSONAL_ACCESS_TOKEN` and `AWS_SECRETS_MANAGER`.
+* `auth_token` - (Optional) The value of an authorization token.
+* `branch` - (Optional) A branch in the remote repository.
+* `folder` - (Optional) A folder in the remote repository.
+* `last_commit_id` - (Optional) The last commit ID for a commit in the remote repository.
+* `owner` - (Optional) The owner of the remote repository that contains the job artifacts.
+* `provider` - (Optional) The provider for the remote repository. Valid values are: `GITHUB`, `GITLAB`, `BITBUCKET`, and `AWS_CODE_COMMIT`.
+* `repository` - (Optional) The name of the remote repository that contains the job artifacts.
 
 ## Attribute Reference
 

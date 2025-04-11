@@ -86,6 +86,7 @@ An `identity_info` block supports the following attributes:
 * `email` - The email address.
 * `first_name` - The first name.
 * `last_name` - The last name.
+* `secondary_email` - The secondary email address. If present, email notifications will be sent to this email address instead of the primary one.
 
 ### `phone_config`
 
@@ -96,4 +97,4 @@ A `phone_config` block supports the following attributes:
 * `desk_phone_number` - The phone number for the user's desk phone.
 * `phone_type` - The phone type. Valid values are `DESK_PHONE` and `SOFT_PHONE`.
 
-<!-- cache-key: cdktf-0.20.8 input-c25bf43664c73166a832756c06c50d944796dfadba58e27c218ef474c427f5f9 -->
+<!-- cache-key: cdktf-0.20.8 input-7f88146fd5e714f31cff5512374264e830c13ef50c58f6f741b40f7c96f77171 -->

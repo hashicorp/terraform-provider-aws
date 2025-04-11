@@ -69,7 +69,7 @@ func dataSourceLink() *schema.Resource {
 	}
 }
 
-func dataSourceLinkRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceLinkRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
@@ -86,7 +86,7 @@ func dataSourceLinkRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.SetId(linkID)
 	d.Set(names.AttrARN, link.LinkArn)
 	if link.Bandwidth != nil {
-		if err := d.Set("bandwidth", []interface{}{flattenBandwidth(link.Bandwidth)}); err != nil {
+		if err := d.Set("bandwidth", []any{flattenBandwidth(link.Bandwidth)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting bandwidth: %s", err)
 		}
 	} else {

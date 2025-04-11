@@ -13,7 +13,7 @@ import (
 )
 
 func statusNotebookInstance(ctx context.Context, conn *sagemaker.Client, notebookName string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findNotebookInstanceByName(ctx, conn, notebookName)
 
 		if tfresource.NotFound(err) {
@@ -29,7 +29,7 @@ func statusNotebookInstance(ctx context.Context, conn *sagemaker.Client, noteboo
 }
 
 func statusModelPackageGroup(ctx context.Context, conn *sagemaker.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findModelPackageGroupByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
@@ -45,7 +45,7 @@ func statusModelPackageGroup(ctx context.Context, conn *sagemaker.Client, name s
 }
 
 func statusImage(ctx context.Context, conn *sagemaker.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findImageByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
@@ -61,7 +61,7 @@ func statusImage(ctx context.Context, conn *sagemaker.Client, name string) retry
 }
 
 func statusImageVersion(ctx context.Context, conn *sagemaker.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findImageVersionByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
@@ -77,7 +77,7 @@ func statusImageVersion(ctx context.Context, conn *sagemaker.Client, name string
 }
 
 func statusDomain(ctx context.Context, conn *sagemaker.Client, domainID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findDomainByName(ctx, conn, domainID)
 
 		if tfresource.NotFound(err) {
@@ -93,7 +93,7 @@ func statusDomain(ctx context.Context, conn *sagemaker.Client, domainID string) 
 }
 
 func statusFeatureGroup(ctx context.Context, conn *sagemaker.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findFeatureGroupByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
@@ -109,7 +109,7 @@ func statusFeatureGroup(ctx context.Context, conn *sagemaker.Client, name string
 }
 
 func statusFeatureGroupUpdate(ctx context.Context, conn *sagemaker.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findFeatureGroupByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
@@ -129,7 +129,7 @@ func statusFeatureGroupUpdate(ctx context.Context, conn *sagemaker.Client, name 
 }
 
 func statusFlowDefinition(ctx context.Context, conn *sagemaker.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findFlowDefinitionByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
@@ -145,7 +145,7 @@ func statusFlowDefinition(ctx context.Context, conn *sagemaker.Client, name stri
 }
 
 func statusApp(ctx context.Context, conn *sagemaker.Client, domainID, userProfileOrSpaceName, appType, appName string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findAppByName(ctx, conn, domainID, userProfileOrSpaceName, appType, appName)
 
 		if tfresource.NotFound(err) {
@@ -161,7 +161,7 @@ func statusApp(ctx context.Context, conn *sagemaker.Client, domainID, userProfil
 }
 
 func statusProject(ctx context.Context, conn *sagemaker.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findProjectByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
@@ -177,7 +177,7 @@ func statusProject(ctx context.Context, conn *sagemaker.Client, name string) ret
 }
 
 func statusWorkforce(ctx context.Context, conn *sagemaker.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findWorkforceByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
@@ -193,7 +193,7 @@ func statusWorkforce(ctx context.Context, conn *sagemaker.Client, name string) r
 }
 
 func statusSpace(ctx context.Context, conn *sagemaker.Client, domainId, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findSpaceByName(ctx, conn, domainId, name)
 
 		if tfresource.NotFound(err) {
@@ -209,7 +209,7 @@ func statusSpace(ctx context.Context, conn *sagemaker.Client, domainId, name str
 }
 
 func statusMonitoringSchedule(ctx context.Context, conn *sagemaker.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findMonitoringScheduleByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
@@ -225,7 +225,7 @@ func statusMonitoringSchedule(ctx context.Context, conn *sagemaker.Client, name 
 }
 
 func statusMlflowTrackingServer(ctx context.Context, conn *sagemaker.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findMlflowTrackingServerByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
@@ -241,7 +241,7 @@ func statusMlflowTrackingServer(ctx context.Context, conn *sagemaker.Client, nam
 }
 
 func statusHub(ctx context.Context, conn *sagemaker.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findHubByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {

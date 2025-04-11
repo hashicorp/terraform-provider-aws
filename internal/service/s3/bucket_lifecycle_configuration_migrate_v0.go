@@ -289,7 +289,7 @@ func upgradeAbortIncompleteMultipartStateFromV0(ctx context.Context, old fwtypes
 	newThings := make([]abortIncompleteMultipartUploadModel, len(oldThings))
 	for i, oldThing := range oldThings {
 		newThing := abortIncompleteMultipartUploadModel{
-			DaysAfterInitiation: types.Int32Value(fwflex.Int32ValueFromFramework(ctx, oldThing.DaysAfterInitiation)),
+			DaysAfterInitiation: types.Int32Value(fwflex.Int32ValueFromFrameworkInt64(ctx, oldThing.DaysAfterInitiation)),
 		}
 
 		newThings[i] = newThing

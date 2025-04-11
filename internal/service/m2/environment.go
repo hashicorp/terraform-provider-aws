@@ -394,7 +394,7 @@ func (r *environmentResource) Update(ctx context.Context, request resource.Updat
 					return
 				}
 
-				input.DesiredCapacity = fwflex.Int32FromFramework(ctx, highAvailabilityConfigData.DesiredCapacity)
+				input.DesiredCapacity = fwflex.Int32FromFrameworkInt64(ctx, highAvailabilityConfigData.DesiredCapacity)
 			}
 			if !new.InstanceType.Equal(old.InstanceType) {
 				input.InstanceType = fwflex.StringFromFramework(ctx, new.InstanceType)
@@ -477,7 +477,7 @@ func findEnvironmentByID(ctx context.Context, conn *m2.Client, id string) (*m2.G
 }
 
 func statusEnvironment(ctx context.Context, conn *m2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findEnvironmentByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

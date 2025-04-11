@@ -40,8 +40,6 @@ func resourceAccessEntry() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
 			Delete: schema.DefaultTimeout(10 * time.Minute),
@@ -98,7 +96,7 @@ func resourceAccessEntry() *schema.Resource {
 	}
 }
 
-func resourceAccessEntryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccessEntryCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
@@ -120,7 +118,7 @@ func resourceAccessEntryCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.Username = aws.String(v.(string))
 	}
 
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidParameterException](ctx, propagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidParameterException](ctx, propagationTimeout, func() (any, error) {
 		return conn.CreateAccessEntry(ctx, input)
 	}, "The specified principalArn is invalid: invalid principal")
 
@@ -133,7 +131,7 @@ func resourceAccessEntryCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceAccessEntryRead(ctx, d, meta)...)
 }
 
-func resourceAccessEntryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccessEntryRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
@@ -168,7 +166,7 @@ func resourceAccessEntryRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceAccessEntryUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccessEntryUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
@@ -196,7 +194,7 @@ func resourceAccessEntryUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceAccessEntryRead(ctx, d, meta)...)
 }
 
-func resourceAccessEntryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccessEntryDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 

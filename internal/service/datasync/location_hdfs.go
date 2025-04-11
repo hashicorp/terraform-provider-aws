@@ -173,12 +173,10 @@ func resourceLocationHDFS() *schema.Resource {
 				Computed: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceLocationHDFSCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLocationHDFSCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
@@ -224,8 +222,8 @@ func resourceLocationHDFSCreate(ctx context.Context, d *schema.ResourceData, met
 		input.KmsKeyProviderUri = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("qop_configuration"); ok && len(v.([]interface{})) > 0 {
-		input.QopConfiguration = expandHDFSQOPConfiguration(v.([]interface{}))
+	if v, ok := d.GetOk("qop_configuration"); ok && len(v.([]any)) > 0 {
+		input.QopConfiguration = expandHDFSQOPConfiguration(v.([]any))
 	}
 
 	if v, ok := d.GetOk("replication_factor"); ok {
@@ -247,7 +245,7 @@ func resourceLocationHDFSCreate(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceLocationHDFSRead(ctx, d, meta)...)
 }
 
-func resourceLocationHDFSRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLocationHDFSRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
@@ -289,7 +287,7 @@ func resourceLocationHDFSRead(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func resourceLocationHDFSUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLocationHDFSUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
@@ -349,7 +347,7 @@ func resourceLocationHDFSUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 
 		if d.HasChange("qop_configuration") {
-			input.QopConfiguration = expandHDFSQOPConfiguration(d.Get("qop_configuration").([]interface{}))
+			input.QopConfiguration = expandHDFSQOPConfiguration(d.Get("qop_configuration").([]any))
 		}
 
 		if d.HasChange("replication_factor") {
@@ -374,7 +372,7 @@ func resourceLocationHDFSUpdate(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceLocationHDFSRead(ctx, d, meta)...)
 }
 
-func resourceLocationHDFSDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLocationHDFSDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
@@ -423,7 +421,7 @@ func findLocationHDFSByARN(ctx context.Context, conn *datasync.Client, arn strin
 func expandHDFSNameNodes(l *schema.Set) []awstypes.HdfsNameNode {
 	nameNodes := make([]awstypes.HdfsNameNode, 0)
 	for _, m := range l.List() {
-		raw := m.(map[string]interface{})
+		raw := m.(map[string]any)
 		nameNode := awstypes.HdfsNameNode{
 			Hostname: aws.String(raw["hostname"].(string)),
 			Port:     aws.Int32(int32(raw[names.AttrPort].(int))),
@@ -434,11 +432,11 @@ func expandHDFSNameNodes(l *schema.Set) []awstypes.HdfsNameNode {
 	return nameNodes
 }
 
-func flattenHDFSNameNodes(nodes []awstypes.HdfsNameNode) []map[string]interface{} {
-	dataResources := make([]map[string]interface{}, 0, len(nodes))
+func flattenHDFSNameNodes(nodes []awstypes.HdfsNameNode) []map[string]any {
+	dataResources := make([]map[string]any, 0, len(nodes))
 
 	for _, raw := range nodes {
-		item := make(map[string]interface{})
+		item := make(map[string]any)
 		item["hostname"] = aws.ToString(raw.Hostname)
 		item[names.AttrPort] = aws.ToInt32(raw.Port)
 
@@ -448,12 +446,12 @@ func flattenHDFSNameNodes(nodes []awstypes.HdfsNameNode) []map[string]interface{
 	return dataResources
 }
 
-func expandHDFSQOPConfiguration(l []interface{}) *awstypes.QopConfiguration {
+func expandHDFSQOPConfiguration(l []any) *awstypes.QopConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	qopConfig := &awstypes.QopConfiguration{
 		DataTransferProtection: awstypes.HdfsDataTransferProtection(m["data_transfer_protection"].(string)),
@@ -463,15 +461,15 @@ func expandHDFSQOPConfiguration(l []interface{}) *awstypes.QopConfiguration {
 	return qopConfig
 }
 
-func flattenHDFSQOPConfiguration(qopConfig *awstypes.QopConfiguration) []interface{} {
+func flattenHDFSQOPConfiguration(qopConfig *awstypes.QopConfiguration) []any {
 	if qopConfig == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"data_transfer_protection": string(qopConfig.DataTransferProtection),
 		"rpc_protection":           string(qopConfig.RpcProtection),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }

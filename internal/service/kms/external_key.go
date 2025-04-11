@@ -49,8 +49,6 @@ func resourceExternalKey() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,
@@ -111,7 +109,7 @@ func resourceExternalKey() *schema.Resource {
 					validation.StringLenBetween(0, 32768),
 					validation.StringIsJSON,
 				),
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
@@ -127,7 +125,7 @@ func resourceExternalKey() *schema.Resource {
 	}
 }
 
-func resourceExternalKeyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceExternalKeyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
@@ -203,7 +201,7 @@ func resourceExternalKeyCreate(ctx context.Context, d *schema.ResourceData, meta
 		}
 	}
 
-	if tags := KeyValueTags(ctx, getTagsIn(ctx)); len(tags) > 0 {
+	if tags := keyValueTags(ctx, getTagsIn(ctx)); len(tags) > 0 {
 		if err := waitTagsPropagated(ctx, conn, d.Id(), tags); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for KMS External Key (%s) tag update: %s", d.Id(), err)
 		}
@@ -212,7 +210,7 @@ func resourceExternalKeyCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceExternalKeyRead(ctx, d, meta)...)
 }
 
-func resourceExternalKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceExternalKeyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
@@ -268,7 +266,7 @@ func resourceExternalKeyRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceExternalKeyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceExternalKeyUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
@@ -319,7 +317,7 @@ func resourceExternalKeyUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceExternalKeyRead(ctx, d, meta)...)
 }
 
-func resourceExternalKeyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceExternalKeyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
@@ -357,7 +355,7 @@ func resourceExternalKeyDelete(ctx context.Context, d *schema.ResourceData, meta
 
 func importExternalKeyMaterial(ctx context.Context, conn *kms.Client, resourceTypeName, keyID, keyMaterialBase64, validTo string) error {
 	// Wait for propagation since KMS is eventually consistent.
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.NotFoundException](ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.NotFoundException](ctx, propagationTimeout, func() (any, error) {
 		return conn.GetParametersForImport(ctx, &kms.GetParametersForImportInput{
 			KeyId:             aws.String(keyID),
 			WrappingAlgorithm: awstypes.AlgorithmSpecRsaesOaepSha256,
@@ -404,7 +402,7 @@ func importExternalKeyMaterial(ctx context.Context, conn *kms.Client, resourceTy
 	}
 
 	// Wait for propagation since KMS is eventually consistent.
-	_, err = tfresource.RetryWhenIsA[*awstypes.NotFoundException](ctx, propagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenIsA[*awstypes.NotFoundException](ctx, propagationTimeout, func() (any, error) {
 		return conn.ImportKeyMaterial(ctx, input)
 	})
 

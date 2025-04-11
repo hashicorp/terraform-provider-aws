@@ -153,7 +153,7 @@ func resourceScheduledAction() *schema.Resource {
 	}
 }
 
-func resourceScheduledActionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceScheduledActionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
@@ -163,7 +163,7 @@ func resourceScheduledActionCreate(ctx context.Context, d *schema.ResourceData, 
 		IamRole:             aws.String(d.Get("iam_role").(string)),
 		Schedule:            aws.String(d.Get(names.AttrSchedule).(string)),
 		ScheduledActionName: aws.String(name),
-		TargetAction:        expandScheduledActionType(d.Get("target_action").([]interface{})[0].(map[string]interface{})),
+		TargetAction:        expandScheduledActionType(d.Get("target_action").([]any)[0].(map[string]any)),
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -184,7 +184,7 @@ func resourceScheduledActionCreate(ctx context.Context, d *schema.ResourceData, 
 
 	log.Printf("[DEBUG] Creating Redshift Scheduled Action: %#v", input)
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.CreateScheduledAction(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -205,7 +205,7 @@ func resourceScheduledActionCreate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceScheduledActionRead(ctx, d, meta)...)
 }
 
-func resourceScheduledActionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceScheduledActionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
@@ -242,7 +242,7 @@ func resourceScheduledActionRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if scheduledAction.TargetAction != nil {
-		if err := d.Set("target_action", []interface{}{flattenScheduledActionType(scheduledAction.TargetAction)}); err != nil {
+		if err := d.Set("target_action", []any{flattenScheduledActionType(scheduledAction.TargetAction)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting target_action: %s", err)
 		}
 	} else {
@@ -252,7 +252,7 @@ func resourceScheduledActionRead(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func resourceScheduledActionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceScheduledActionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
@@ -289,7 +289,7 @@ func resourceScheduledActionUpdate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if d.HasChange("target_action") {
-		input.TargetAction = expandScheduledActionType(d.Get("target_action").([]interface{})[0].(map[string]interface{}))
+		input.TargetAction = expandScheduledActionType(d.Get("target_action").([]any)[0].(map[string]any))
 	}
 
 	log.Printf("[DEBUG] Updating Redshift Scheduled Action: %#v", input)
@@ -302,7 +302,7 @@ func resourceScheduledActionUpdate(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func resourceScheduledActionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceScheduledActionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
@@ -322,29 +322,29 @@ func resourceScheduledActionDelete(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func expandScheduledActionType(tfMap map[string]interface{}) *awstypes.ScheduledActionType {
+func expandScheduledActionType(tfMap map[string]any) *awstypes.ScheduledActionType {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.ScheduledActionType{}
 
-	if v, ok := tfMap["pause_cluster"].([]interface{}); ok && len(v) > 0 {
-		apiObject.PauseCluster = expandPauseClusterMessage(v[0].(map[string]interface{}))
+	if v, ok := tfMap["pause_cluster"].([]any); ok && len(v) > 0 {
+		apiObject.PauseCluster = expandPauseClusterMessage(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["resize_cluster"].([]interface{}); ok && len(v) > 0 {
-		apiObject.ResizeCluster = expandResizeClusterMessage(v[0].(map[string]interface{}))
+	if v, ok := tfMap["resize_cluster"].([]any); ok && len(v) > 0 {
+		apiObject.ResizeCluster = expandResizeClusterMessage(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["resume_cluster"].([]interface{}); ok && len(v) > 0 {
-		apiObject.ResumeCluster = expandResumeClusterMessage(v[0].(map[string]interface{}))
+	if v, ok := tfMap["resume_cluster"].([]any); ok && len(v) > 0 {
+		apiObject.ResumeCluster = expandResumeClusterMessage(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandPauseClusterMessage(tfMap map[string]interface{}) *awstypes.PauseClusterMessage {
+func expandPauseClusterMessage(tfMap map[string]any) *awstypes.PauseClusterMessage {
 	if tfMap == nil {
 		return nil
 	}
@@ -358,7 +358,7 @@ func expandPauseClusterMessage(tfMap map[string]interface{}) *awstypes.PauseClus
 	return apiObject
 }
 
-func expandResizeClusterMessage(tfMap map[string]interface{}) *awstypes.ResizeClusterMessage {
+func expandResizeClusterMessage(tfMap map[string]any) *awstypes.ResizeClusterMessage {
 	if tfMap == nil {
 		return nil
 	}
@@ -388,7 +388,7 @@ func expandResizeClusterMessage(tfMap map[string]interface{}) *awstypes.ResizeCl
 	return apiObject
 }
 
-func expandResumeClusterMessage(tfMap map[string]interface{}) *awstypes.ResumeClusterMessage {
+func expandResumeClusterMessage(tfMap map[string]any) *awstypes.ResumeClusterMessage {
 	if tfMap == nil {
 		return nil
 	}
@@ -402,34 +402,34 @@ func expandResumeClusterMessage(tfMap map[string]interface{}) *awstypes.ResumeCl
 	return apiObject
 }
 
-func flattenScheduledActionType(apiObject *awstypes.ScheduledActionType) map[string]interface{} {
+func flattenScheduledActionType(apiObject *awstypes.ScheduledActionType) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.PauseCluster; v != nil {
-		tfMap["pause_cluster"] = []interface{}{flattenPauseClusterMessage(v)}
+		tfMap["pause_cluster"] = []any{flattenPauseClusterMessage(v)}
 	}
 
 	if v := apiObject.ResizeCluster; v != nil {
-		tfMap["resize_cluster"] = []interface{}{flattenResizeClusterMessage(v)}
+		tfMap["resize_cluster"] = []any{flattenResizeClusterMessage(v)}
 	}
 
 	if v := apiObject.ResumeCluster; v != nil {
-		tfMap["resume_cluster"] = []interface{}{flattenResumeClusterMessage(v)}
+		tfMap["resume_cluster"] = []any{flattenResumeClusterMessage(v)}
 	}
 
 	return tfMap
 }
 
-func flattenPauseClusterMessage(apiObject *awstypes.PauseClusterMessage) map[string]interface{} {
+func flattenPauseClusterMessage(apiObject *awstypes.PauseClusterMessage) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.ClusterIdentifier; v != nil {
 		tfMap[names.AttrClusterIdentifier] = aws.ToString(v)
@@ -438,12 +438,12 @@ func flattenPauseClusterMessage(apiObject *awstypes.PauseClusterMessage) map[str
 	return tfMap
 }
 
-func flattenResizeClusterMessage(apiObject *awstypes.ResizeClusterMessage) map[string]interface{} {
+func flattenResizeClusterMessage(apiObject *awstypes.ResizeClusterMessage) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Classic; v != nil {
 		tfMap["classic"] = aws.ToBool(v)
@@ -468,12 +468,12 @@ func flattenResizeClusterMessage(apiObject *awstypes.ResizeClusterMessage) map[s
 	return tfMap
 }
 
-func flattenResumeClusterMessage(apiObject *awstypes.ResumeClusterMessage) map[string]interface{} {
+func flattenResumeClusterMessage(apiObject *awstypes.ResumeClusterMessage) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.ClusterIdentifier; v != nil {
 		tfMap[names.AttrClusterIdentifier] = aws.ToString(v)

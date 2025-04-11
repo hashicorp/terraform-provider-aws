@@ -242,7 +242,7 @@ func (r *resourceBot) Read(ctx context.Context, req resource.ReadRequest, resp *
 	state.Name = flex.StringToFramework(ctx, out.BotName)
 	state.Type = flex.StringValueToFramework(ctx, out.BotType)
 	state.Description = flex.StringToFramework(ctx, out.Description)
-	state.IdleSessionTTLInSeconds = flex.Int32ToFramework(ctx, out.IdleSessionTTLInSeconds)
+	state.IdleSessionTTLInSeconds = flex.Int32ToFrameworkInt64(ctx, out.IdleSessionTTLInSeconds)
 
 	members, errDiags := flattenMembers(ctx, out.BotMembers)
 	resp.Diagnostics.Append(errDiags...)
@@ -433,7 +433,7 @@ func waitBotDeleted(ctx context.Context, conn *lexmodelsv2.Client, id string, ti
 }
 
 func statusBot(ctx context.Context, conn *lexmodelsv2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := FindBotByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -564,7 +564,7 @@ func (rd *resourceBotData) refreshFromOutput(ctx context.Context, out *lexmodels
 	rd.Name = flex.StringToFramework(ctx, out.BotName)
 	rd.Type = flex.StringToFramework(ctx, (*string)(&out.BotType))
 	rd.Description = flex.StringToFramework(ctx, out.Description)
-	rd.IdleSessionTTLInSeconds = flex.Int32ToFramework(ctx, out.IdleSessionTTLInSeconds)
+	rd.IdleSessionTTLInSeconds = flex.Int32ToFrameworkInt64(ctx, out.IdleSessionTTLInSeconds)
 
 	datap, d := flattenDataPrivacy(out.DataPrivacy)
 	diags.Append(d...)

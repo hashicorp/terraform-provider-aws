@@ -21,7 +21,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -29,7 +28,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -631,10 +629,7 @@ func resourceVPNConnection() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: customdiff.Sequence(
-			customizeDiffValidateOutsideIPAddressType,
-			verify.SetTagsDiff,
-		),
+		CustomizeDiff: customizeDiffValidateOutsideIPAddressType,
 	}
 }
 
@@ -678,7 +673,7 @@ var (
 	defaultVPNTunnelOptionsStartupAction          = vpnTunnelOptionsStartupActionAdd
 )
 
-func resourceVPNConnectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPNConnectionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -713,7 +708,7 @@ func resourceVPNConnectionCreate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceVPNConnectionRead(ctx, d, meta)...)
 }
 
-func resourceVPNConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPNConnectionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -850,7 +845,7 @@ func resourceVPNConnectionRead(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func resourceVPNConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPNConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -937,7 +932,7 @@ func resourceVPNConnectionUpdate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceVPNConnectionRead(ctx, d, meta)...)
 }
 
-func resourceVPNConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPNConnectionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -1030,8 +1025,8 @@ func expandVPNTunnelOptionsSpecification(d *schema.ResourceData, prefix string) 
 		}
 	}
 
-	if v, ok := d.GetOk(prefix + "log_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		apiObject.LogOptions = expandVPNTunnelLogOptionsSpecification(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk(prefix + "log_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		apiObject.LogOptions = expandVPNTunnelLogOptionsSpecification(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk(prefix + "phase1_dh_group_numbers"); ok {
@@ -1109,21 +1104,21 @@ func expandVPNTunnelOptionsSpecification(d *schema.ResourceData, prefix string) 
 	return apiObject
 }
 
-func expandVPNTunnelLogOptionsSpecification(tfMap map[string]interface{}) *awstypes.VpnTunnelLogOptionsSpecification {
+func expandVPNTunnelLogOptionsSpecification(tfMap map[string]any) *awstypes.VpnTunnelLogOptionsSpecification {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.VpnTunnelLogOptionsSpecification{}
 
-	if v, ok := tfMap["cloudwatch_log_options"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.CloudWatchLogOptions = expandCloudWatchLogOptionsSpecification(v[0].(map[string]interface{}))
+	if v, ok := tfMap["cloudwatch_log_options"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.CloudWatchLogOptions = expandCloudWatchLogOptionsSpecification(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandCloudWatchLogOptionsSpecification(tfMap map[string]interface{}) *awstypes.CloudWatchLogOptionsSpecification {
+func expandCloudWatchLogOptionsSpecification(tfMap map[string]any) *awstypes.CloudWatchLogOptionsSpecification {
 	if tfMap == nil {
 		return nil
 	}
@@ -1197,8 +1192,8 @@ func expandModifyVPNTunnelOptionsSpecification(d *schema.ResourceData, prefix st
 	}
 
 	if key := prefix + "log_options"; d.HasChange(key) {
-		if v, ok := d.GetOk(key); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			apiObject.LogOptions = expandVPNTunnelLogOptionsSpecification(v.([]interface{})[0].(map[string]interface{}))
+		if v, ok := d.GetOk(key); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			apiObject.LogOptions = expandVPNTunnelLogOptionsSpecification(v.([]any)[0].(map[string]any))
 		}
 
 		hasChange = true
@@ -1376,7 +1371,7 @@ func flattenTunnelOption(d *schema.ResourceData, prefix string, apiObject awstyp
 	s = nil
 
 	if apiObject.LogOptions != nil {
-		if err := d.Set(prefix+"log_options", []interface{}{flattenVPNTunnelLogOptions(apiObject.LogOptions)}); err != nil {
+		if err := d.Set(prefix+"log_options", []any{flattenVPNTunnelLogOptions(apiObject.LogOptions)}); err != nil {
 			return fmt.Errorf("setting %s: %w", prefix+"log_options", err)
 		}
 	} else {
@@ -1430,8 +1425,8 @@ func flattenTunnelOption(d *schema.ResourceData, prefix string, apiObject awstyp
 	return nil
 }
 
-func flattenVPNStaticRoute(apiObject awstypes.VpnStaticRoute) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenVPNStaticRoute(apiObject awstypes.VpnStaticRoute) map[string]any {
+	tfMap := map[string]any{}
 
 	if v := apiObject.DestinationCidrBlock; v != nil {
 		tfMap["destination_cidr_block"] = aws.ToString(v)
@@ -1443,12 +1438,12 @@ func flattenVPNStaticRoute(apiObject awstypes.VpnStaticRoute) map[string]interfa
 	return tfMap
 }
 
-func flattenVPNStaticRoutes(apiObjects []awstypes.VpnStaticRoute) []interface{} {
+func flattenVPNStaticRoutes(apiObjects []awstypes.VpnStaticRoute) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenVPNStaticRoute(apiObject))
@@ -1457,26 +1452,26 @@ func flattenVPNStaticRoutes(apiObjects []awstypes.VpnStaticRoute) []interface{} 
 	return tfList
 }
 
-func flattenVPNTunnelLogOptions(apiObject *awstypes.VpnTunnelLogOptions) map[string]interface{} {
+func flattenVPNTunnelLogOptions(apiObject *awstypes.VpnTunnelLogOptions) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.CloudWatchLogOptions; v != nil {
-		tfMap["cloudwatch_log_options"] = []interface{}{flattenCloudWatchLogOptions(v)}
+		tfMap["cloudwatch_log_options"] = []any{flattenCloudWatchLogOptions(v)}
 	}
 
 	return tfMap
 }
 
-func flattenCloudWatchLogOptions(apiObject *awstypes.CloudWatchLogOptions) map[string]interface{} {
+func flattenCloudWatchLogOptions(apiObject *awstypes.CloudWatchLogOptions) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.LogEnabled; v != nil {
 		enabled := aws.ToBool(v)
@@ -1497,8 +1492,8 @@ func flattenCloudWatchLogOptions(apiObject *awstypes.CloudWatchLogOptions) map[s
 	return tfMap
 }
 
-func flattenVGWTelemetry(apiObject awstypes.VgwTelemetry) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenVGWTelemetry(apiObject awstypes.VgwTelemetry) map[string]any {
+	tfMap := map[string]any{}
 
 	if v := apiObject.AcceptedRouteCount; v != nil {
 		tfMap["accepted_route_count"] = aws.ToInt32(v)
@@ -1525,12 +1520,12 @@ func flattenVGWTelemetry(apiObject awstypes.VgwTelemetry) map[string]interface{}
 	return tfMap
 }
 
-func flattenVGWTelemetries(apiObjects []awstypes.VgwTelemetry) []interface{} {
+func flattenVGWTelemetries(apiObjects []awstypes.VgwTelemetry) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenVGWTelemetry(apiObject))
@@ -1665,7 +1660,7 @@ func validVPNConnectionTunnelInsideIPv6CIDR() schema.SchemaValidateFunc {
 }
 
 // customizeDiffValidateOutsideIPAddressType validates that if provided `outside_ip_address_type` is `PrivateIpv4` then `transport_transit_gateway_attachment_id` must be provided
-func customizeDiffValidateOutsideIPAddressType(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+func customizeDiffValidateOutsideIPAddressType(_ context.Context, diff *schema.ResourceDiff, v any) error {
 	if v, ok := diff.GetOk("outside_ip_address_type"); !ok || v.(string) == outsideIPAddressTypePublicIPv4 {
 		return nil
 	}

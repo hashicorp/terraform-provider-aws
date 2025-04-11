@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -46,10 +45,6 @@ func resourceSecretVersion() *schema.Resource {
 				d.Set("has_secret_string_wo", false)
 				return []*schema.ResourceData{d}, nil
 			},
-		},
-
-		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("secret_string"), cty.GetAttrPath("secret_string_wo")),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -87,6 +82,7 @@ func resourceSecretVersion() *schema.Resource {
 				WriteOnly:     true,
 				Sensitive:     true,
 				ConflictsWith: []string{"secret_binary", "secret_string"},
+				RequiredWith:  []string{"secret_string_wo_version"},
 			},
 			"secret_string_wo_version": {
 				Type:         schema.TypeInt,
@@ -108,7 +104,7 @@ func resourceSecretVersion() *schema.Resource {
 	}
 }
 
-func resourceSecretVersionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSecretVersionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
 
@@ -153,7 +149,7 @@ func resourceSecretVersionCreate(ctx context.Context, d *schema.ResourceData, me
 	versionID := aws.ToString(output.VersionId)
 	d.SetId(secretVersionCreateResourceID(secretID, versionID))
 
-	_, err = tfresource.RetryWhenNotFound(ctx, PropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, PropagationTimeout, func() (any, error) {
 		return findSecretVersionByTwoPartKey(ctx, conn, secretID, versionID)
 	})
 
@@ -164,7 +160,7 @@ func resourceSecretVersionCreate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceSecretVersionRead(ctx, d, meta)...)
 }
 
-func resourceSecretVersionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSecretVersionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
 
@@ -212,7 +208,7 @@ func resourceSecretVersionRead(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func resourceSecretVersionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSecretVersionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
 
@@ -299,7 +295,7 @@ func resourceSecretVersionUpdate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceSecretVersionRead(ctx, d, meta)...)
 }
 
-func resourceSecretVersionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSecretVersionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
 
@@ -337,7 +333,7 @@ func resourceSecretVersionDelete(ctx context.Context, d *schema.ResourceData, me
 		}
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, PropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, PropagationTimeout, func() (any, error) {
 		output, err := findSecretVersionByTwoPartKey(ctx, conn, secretID, versionID)
 
 		if err != nil {

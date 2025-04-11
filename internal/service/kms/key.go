@@ -49,8 +49,6 @@ func resourceKey() *schema.Resource {
 			Create: schema.DefaultTimeout(iamPropagationTimeout),
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,
@@ -119,7 +117,7 @@ func resourceKey() *schema.Resource {
 				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
 				DiffSuppressOnRefresh: true,
 				ValidateFunc:          validation.StringIsJSON,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
@@ -144,7 +142,7 @@ func resourceKey() *schema.Resource {
 	}
 }
 
-func resourceKeyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKeyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
@@ -217,7 +215,7 @@ func resourceKeyCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		}
 	}
 
-	if tags := KeyValueTags(ctx, getTagsIn(ctx)); len(tags) > 0 {
+	if tags := keyValueTags(ctx, getTagsIn(ctx)); len(tags) > 0 {
 		if err := waitTagsPropagated(ctx, conn, d.Id(), tags); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for KMS Key (%s) tag update: %s", d.Id(), err)
 		}
@@ -226,7 +224,7 @@ func resourceKeyCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	return append(diags, resourceKeyRead(ctx, d, meta)...)
 }
 
-func resourceKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKeyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
@@ -276,7 +274,7 @@ func resourceKeyRead(ctx context.Context, d *schema.ResourceData, meta interface
 	return diags
 }
 
-func resourceKeyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKeyUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
@@ -319,7 +317,7 @@ func resourceKeyUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 	return append(diags, resourceKeyRead(ctx, d, meta)...)
 }
 
-func resourceKeyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKeyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
@@ -365,7 +363,7 @@ type kmsKeyInfo struct {
 
 func findKeyInfo(ctx context.Context, conn *kms.Client, keyID string, isNewResource bool) (*kmsKeyInfo, error) {
 	// Wait for propagation since KMS is eventually consistent.
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (any, error) {
 		var err error
 		var key kmsKeyInfo
 
@@ -405,7 +403,7 @@ func findKeyInfo(ctx context.Context, conn *kms.Client, keyID string, isNewResou
 			return nil, fmt.Errorf("listing tags for KMS Key (%s): %w", keyID, err)
 		}
 
-		key.tags = Tags(tags)
+		key.tags = svcTags(tags)
 
 		return &key, nil
 	}, isNewResource)
@@ -547,7 +545,7 @@ func updateKeyDescription(ctx context.Context, conn *kms.Client, resourceTypeNam
 func updateKeyEnabled(ctx context.Context, conn *kms.Client, resourceTypeName, keyID string, enabled bool) error {
 	var action string
 
-	updateFunc := func() (interface{}, error) {
+	updateFunc := func() (any, error) {
 		var err error
 
 		if enabled {
@@ -583,7 +581,7 @@ func updateKeyPolicy(ctx context.Context, conn *kms.Client, resourceTypeName, ke
 		return fmt.Errorf("policy contains invalid JSON: %w", err)
 	}
 
-	updateFunc := func() (interface{}, error) {
+	updateFunc := func() (any, error) {
 		var err error
 
 		input := &kms.PutKeyPolicyInput{
@@ -613,7 +611,7 @@ func updateKeyPolicy(ctx context.Context, conn *kms.Client, resourceTypeName, ke
 func updateKeyRotationEnabled(ctx context.Context, conn *kms.Client, resourceTypeName, keyID string, enabled bool, rotationPeriod int) error {
 	var action string
 
-	updateFunc := func() (interface{}, error) {
+	updateFunc := func() (any, error) {
 		var err error
 
 		if enabled {
@@ -648,7 +646,7 @@ func updateKeyRotationEnabled(ctx context.Context, conn *kms.Client, resourceTyp
 }
 
 func statusKeyState(ctx context.Context, conn *kms.Client, keyID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findKeyByID(ctx, conn, keyID)
 
 		if tfresource.NotFound(err) {

@@ -17,6 +17,8 @@ Provides a Redshift Cluster Resource.
 
 ~> **NOTE:** A Redshift cluster's default IAM role can be managed both by this resource's `defaultIamRoleArn` argument and the [`aws_redshift_cluster_iam_roles`](redshift_cluster_iam_roles.html) resource's `defaultIamRoleArn` argument. Do not configure different values for both arguments. Doing so will cause a conflict of default IAM roles.
 
+-> **Note:** Write-Only argument `masterPasswordWo` is available to use in place of `masterPassword`. Write-Only arguments are supported in HashiCorp Terraform 1.11.0 and later. [Learn more](https://developer.hashicorp.com/terraform/language/v1.11.x/resources/ephemeral#write-only-arguments).
+
 ## Example Usage
 
 ### Basic Usage
@@ -236,4 +238,4 @@ Using `terraform import`, import Redshift Clusters using the `clusterIdentifier`
 % terraform import aws_redshift_cluster.myprodcluster tf-redshift-cluster-12345
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-1b2f0b4fa8ee0694111767e2c344a9b9b3a9611245f1ba836435490c650099fb -->
+<!-- cache-key: cdktf-0.20.8 input-508eb7588c9fdc96d467c7370b89cbae8d075f257098ddab0a90edeb84dfa679 -->
