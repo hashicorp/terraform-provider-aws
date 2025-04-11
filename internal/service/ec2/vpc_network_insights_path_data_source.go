@@ -21,6 +21,44 @@ import (
 // @Tags
 // @Testing(tagsTest=false)
 func dataSourceNetworkInsightsPath() *schema.Resource {
+	requestFilterPortRangeSchema := func() map[string]*schema.Schema {
+		return map[string]*schema.Schema{
+			"from_port": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"to_port": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+		}
+	}
+	pathRequestFilterSchema := func() map[string]*schema.Schema {
+		return map[string]*schema.Schema{
+			"destination_address": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"destination_port_range": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: requestFilterPortRangeSchema(),
+				},
+			},
+			"source_address": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"source_port_range": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: requestFilterPortRangeSchema(),
+				},
+			},
+		}
+	}
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceNetworkInsightsPathRead,
 
@@ -50,6 +88,20 @@ func dataSourceNetworkInsightsPath() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+			},
+			"filter_at_destination": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: pathRequestFilterSchema(),
+				},
+			},
+			"filter_at_source": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: pathRequestFilterSchema(),
+				},
 			},
 			names.AttrProtocol: {
 				Type:     schema.TypeString,
@@ -104,6 +156,18 @@ func dataSourceNetworkInsightsPathRead(ctx context.Context, d *schema.ResourceDa
 	d.Set(names.AttrDestinationARN, nip.DestinationArn)
 	d.Set("destination_ip", nip.DestinationIp)
 	d.Set("destination_port", nip.DestinationPort)
+	if v := nip.FilterAtDestination; v != nil {
+		d.Set("filter_at_destination", []any{flattenPathRequestFilter(v)})
+	} else {
+		d.Set("filter_at_destination", nil)
+	}
+	if v := nip.FilterAtSource; v != nil {
+		d.Set("filter_at_source", []any{flattenPathRequestFilter(v)})
+	} else {
+		d.Set("filter_at_source", nil)
+	}
+	//d.Set("filter_at_destination", []any{flattenPathRequestFilter(nip.FilterAtDestination)})
+	//d.Set("filter_at_source", []any{flattenPathRequestFilter(nip.FilterAtSource)})
 	d.Set("network_insights_path_id", networkInsightsPathID)
 	d.Set(names.AttrProtocol, nip.Protocol)
 	d.Set(names.AttrSource, nip.Source)
