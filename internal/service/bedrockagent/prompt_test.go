@@ -10,7 +10,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -26,20 +25,16 @@ import (
 
 func TestAccBedrockAgentPrompt_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	// TIP: This is a long-running test guard for tests that run longer than
-	// 300s (5 min) generally.
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 
 	var prompt bedrockagent.GetPromptOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_prompt.test"
+	foundationModel := "amazon.titan-text-express-v1"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.BedrockAgentEndpointID)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
@@ -47,20 +42,32 @@ func TestAccBedrockAgentPrompt_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckPromptDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPromptConfig_basic(rName),
+				Config: testAccPromptConfig_basic(rName, foundationModel),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPromptExists(ctx, resourceName, &prompt),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
-					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.day_of_week"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
-						"console_access": "false",
-						"groups.#":       "0",
-						"username":       "Test",
-						"password":       "TestTest1234",
-					}),
-					// TIP: If the ARN can be partially or completely determined by the parameters passed, e.g. it contains the
-					// value of `rName`, either include the values in the regex or check for an exact match using `acctest.CheckResourceAttrRegionalARN`
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "bedrockagent", regexache.MustCompile(`prompt:.+$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "bedrock", regexache.MustCompile(`prompt/.+$`)),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
+					resource.TestCheckResourceAttrSet(resourceName, "updated_at"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrVersion),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "basic"),
+					resource.TestCheckResourceAttr(resourceName, "default_variant", "test-variant"),
+					resource.TestCheckResourceAttr(resourceName, "variant.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "variant.0.name", "test-variant"),
+					resource.TestCheckResourceAttr(resourceName, "variant.0.model_id", foundationModel),
+					resource.TestCheckResourceAttr(resourceName, "variant.0.metadata.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "variant.0.metadata.0.key", "Key1"),
+					resource.TestCheckResourceAttr(resourceName, "variant.0.metadata.0.value", "Value1"),
+					resource.TestCheckResourceAttr(resourceName, "variant.0.metadata.1.key", "Key2"),
+					resource.TestCheckResourceAttr(resourceName, "variant.0.metadata.1.value", "Value2"),
+					resource.TestCheckResourceAttr(resourceName, "variant.0.additional_model_request_fields", "{\"Key1\":\"Value1\"}"),
+					resource.TestCheckResourceAttr(resourceName, "variant.0.template_type", "TEXT"),
+					resource.TestCheckResourceAttr(resourceName, "variant.0.template_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "variant.0.template_configuration.0.text.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "variant.0.template_configuration.0.text.0.text", "{{prompt}}"),
+					resource.TestCheckResourceAttr(resourceName, "variant.0.template_configuration.0.text.0.input_variable.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "variant.0.template_configuration.0.text.0.input_variable.0.name", "prompt"),
 				),
 			},
 			{
@@ -75,18 +82,16 @@ func TestAccBedrockAgentPrompt_basic(t *testing.T) {
 
 func TestAccBedrockAgentPrompt_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 
 	var prompt bedrockagent.GetPromptOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_prompt.test"
+	foundationModel := "amazon.titan-text-express-v1"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.BedrockAgentEndpointID)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
@@ -94,15 +99,9 @@ func TestAccBedrockAgentPrompt_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckPromptDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPromptConfig_basic(rName),
+				Config: testAccPromptConfig_basic(rName, foundationModel),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPromptExists(ctx, resourceName, &prompt),
-					// TIP: The Plugin-Framework disappears helper is similar to the Plugin-SDK version,
-					// but expects a new resource factory function as the third argument. To expose this
-					// private function to the testing package, you may need to add a line like the following
-					// to exports_test.go:
-					//
-					//   var ResourcePrompt = newResourcePrompt
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbedrockagent.ResourcePrompt, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -120,9 +119,6 @@ func testAccCheckPromptDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			// TIP: ==== FINDERS ====
-			// The find function should be exported. Since it won't be used outside of the package, it can be exported
-			// in the `exports_test.go` file.
 			_, err := tfbedrockagent.FindPromptByID(ctx, conn, rs.Primary.ID)
 			if tfresource.NotFound(err) {
 				return nil
@@ -177,20 +173,39 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccCheckPromptNotRecreated(before, after *bedrockagent.GetPromptOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := aws.ToString(before.Id), aws.ToString(after.Id); before != after {
-			return create.Error(names.BedrockAgent, create.ErrActionCheckingNotRecreated, tfbedrockagent.ResNamePrompt, before, errors.New("recreated"))
-		}
-
-		return nil
-	}
-}
-
-func testAccPromptConfig_basic(rName string) string {
+func testAccPromptConfig_basic(rName, model string) string {
 	return fmt.Sprintf(`
 resource "aws_bedrockagent_prompt" "test" {
-  name = %[1]q
+  name            = %[1]q
+  description     = "basic"
+  default_variant = "test-variant"
+
+  variant {
+    name                            = "test-variant"
+    model_id                        = %[2]q
+    additional_model_request_fields = jsonencode({ "Key1" = "Value1" })
+
+    metadata {
+      key   = "Key1"
+      value = "Value1"
+    }
+
+    metadata {
+      key   = "Key2"
+      value = "Value2"
+    }
+
+    template_type = "TEXT"
+    template_configuration {
+      text {
+        text = "{{prompt}}"
+
+        input_variable {
+          name = "prompt"
+        }
+      }
+    }
+  }
 }
-`, rName)
+`, rName, model)
 }

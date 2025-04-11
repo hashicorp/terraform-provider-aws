@@ -671,8 +671,12 @@ func (m *variantModel) Flatten(ctx context.Context, v any) (diags diag.Diagnosti
 	diags.Append(flex.Flatten(ctx, t.ModelId, &m.ModelID)...)
 	diags.Append(flex.Flatten(ctx, t.TemplateType, &m.TemplateType)...)
 	diags.Append(flex.Flatten(ctx, t.Metadata, &m.Metadata)...)
-	diags.Append(flex.Flatten(ctx, t.InferenceConfiguration, &m.InferenceConfiguration)...)
-	diags.Append(flex.Flatten(ctx, t.GenAiResource, &m.GenAIResource)...)
+	if t.InferenceConfiguration != nil {
+		diags.Append(flex.Flatten(ctx, t.InferenceConfiguration, &m.InferenceConfiguration)...)
+	}
+	if t.GenAiResource != nil {
+		diags.Append(flex.Flatten(ctx, t.GenAiResource, &m.GenAIResource)...)
+	}
 	diags.Append(flex.Flatten(ctx, t.TemplateConfiguration, &m.TemplateConfiguration)...)
 	if diags.HasError() {
 		return diags
