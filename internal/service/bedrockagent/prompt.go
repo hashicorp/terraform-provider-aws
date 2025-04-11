@@ -664,6 +664,58 @@ type variantModel struct {
 	TemplateConfiguration        fwtypes.ListNestedObjectValueOf[promptTemplateConfigurationModel]  `tfsdk:"template_configuration"`
 }
 
+func (m *variantModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
+	t := v.(awstypes.PromptVariant)
+
+	diags.Append(flex.Flatten(ctx, t.Name, &m.Name)...)
+	diags.Append(flex.Flatten(ctx, t.ModelId, &m.ModelID)...)
+	diags.Append(flex.Flatten(ctx, t.TemplateType, &m.TemplateType)...)
+	diags.Append(flex.Flatten(ctx, t.Metadata, &m.Metadata)...)
+	diags.Append(flex.Flatten(ctx, t.InferenceConfiguration, &m.InferenceConfiguration)...)
+	diags.Append(flex.Flatten(ctx, t.GenAiResource, &m.GenAIResource)...)
+	diags.Append(flex.Flatten(ctx, t.TemplateConfiguration, &m.TemplateConfiguration)...)
+	if diags.HasError() {
+		return diags
+	}
+
+	if t.AdditionalModelRequestFields != nil {
+		additionalFields, err := t.AdditionalModelRequestFields.MarshalSmithyDocument()
+		if err != nil {
+			diags.AddError("Marshalling additional model request fields", err.Error())
+			return diags
+		}
+
+		m.AdditionalModelRequestFields = types.StringValue(string(additionalFields))
+	}
+
+	return diags
+}
+
+func (m variantModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
+	var r awstypes.PromptVariant
+	diags.Append(flex.Expand(ctx, m.Name, &r.Name)...)
+	diags.Append(flex.Expand(ctx, m.ModelID, &r.ModelId)...)
+	diags.Append(flex.Expand(ctx, m.TemplateType, &r.TemplateType)...)
+	diags.Append(flex.Expand(ctx, m.Metadata, &r.Metadata)...)
+	diags.Append(flex.Expand(ctx, m.InferenceConfiguration, &r.InferenceConfiguration)...)
+	diags.Append(flex.Expand(ctx, m.GenAIResource, &r.GenAiResource)...)
+	diags.Append(flex.Expand(ctx, m.TemplateConfiguration, &r.TemplateConfiguration)...)
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	if !m.AdditionalModelRequestFields.IsNull() {
+		var doc any
+		if err := json.Unmarshal([]byte(m.AdditionalModelRequestFields.ValueString()), &doc); err != nil {
+			diags.AddError("Unmarshalling additional model request fields", err.Error())
+			return nil, diags
+		}
+		r.AdditionalModelRequestFields = document.NewLazyDocument(doc)
+	}
+
+	return &r, diags
+}
+
 type promptMetadataEntryModel struct {
 	Key   types.String `tfsdk:"key"`
 	Value types.String `tfsdk:"value"`
