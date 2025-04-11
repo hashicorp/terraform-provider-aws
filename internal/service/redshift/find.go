@@ -11,6 +11,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -437,4 +438,54 @@ func findResourcePolicyByARN(ctx context.Context, conn *redshift.Client, arn str
 	}
 
 	return output.ResourcePolicy, nil
+}
+
+func findIntegrations(ctx context.Context, conn *redshift.Client, input *redshift.DescribeIntegrationsInput, filter tfslices.Predicate[*awstypes.Integration]) ([]awstypes.Integration, error) {
+	var out []awstypes.Integration
+
+	pages := redshift.NewDescribeIntegrationsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.IntegrationNotFoundFault](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Integrations {
+			if filter(&v) {
+				out = append(out, v)
+			}
+		}
+	}
+
+	return out, nil
+}
+
+func findIntegration(ctx context.Context, conn *redshift.Client, input *redshift.DescribeIntegrationsInput, filter tfslices.Predicate[*awstypes.Integration]) (*awstypes.Integration, error) {
+	out, err := findIntegrations(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if out == nil || out[0].IntegrationArn == nil {
+		return nil, tfresource.NewEmptyResultError(&input)
+	}
+
+	return tfresource.AssertSingleValueResult(out)
+}
+
+func findIntegrationByARN(ctx context.Context, conn *redshift.Client, arn string) (*awstypes.Integration, error) {
+	input := &redshift.DescribeIntegrationsInput{
+		IntegrationArn: aws.String(arn),
+	}
+
+	return findIntegration(ctx, conn, input, tfslices.PredicateTrue[*awstypes.Integration]())
 }
