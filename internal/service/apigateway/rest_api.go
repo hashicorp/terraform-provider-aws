@@ -5,6 +5,7 @@ package apigateway
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"slices"
@@ -93,6 +94,12 @@ func resourceRestAPI() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						names.AttrIPAddressType: {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ValidateDiagFunc: enum.Validate[types.IpAddressType](),
+						},
 						"types": {
 							Type:     schema.TypeList,
 							Required: true,
@@ -203,7 +210,11 @@ func resourceRestAPICreate(ctx context.Context, d *schema.ResourceData, meta any
 	}
 
 	if v, ok := d.GetOk("endpoint_configuration"); ok {
-		input.EndpointConfiguration = expandEndpointConfiguration(v.([]any))
+		if v, err := expandEndpointConfiguration(v.([]any)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "%s", err)
+		} else {
+			input.EndpointConfiguration = v
+		}
 	}
 
 	if v, ok := d.GetOk("minimum_compression_size"); ok && v.(string) != "" && v.(string) != "-1" {
@@ -455,6 +466,18 @@ func resourceRestAPIUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			}
 		}
 
+		if d.HasChange("endpoint_configuration.0.ip_address_type") {
+			if v, ok := d.GetOk("endpoint_configuration"); ok && len(v.([]any)) > 0 {
+				tfMap := v.([]any)[0].(map[string]any)
+
+				operations = append(operations, types.PatchOperation{
+					Op:    types.OpReplace,
+					Path:  aws.String("/endpointConfiguration/ipAddressType"),
+					Value: aws.String(tfMap[names.AttrIPAddressType].(string)),
+				})
+			}
+		}
+
 		if d.HasChange("minimum_compression_size") {
 			v := d.Get("minimum_compression_size").(string)
 			value := aws.String(v)
@@ -640,9 +663,9 @@ func resourceRestAPIWithBodyUpdateOperations(d *schema.ResourceData, output *api
 
 	// Compare the defined values to the output values, don't blindly remove as they can cause race conditions with DNS and endpoint creation
 	if v, ok := d.GetOk("endpoint_configuration"); ok {
-		endpointConfiguration := expandEndpointConfiguration(v.([]any))
-		prefix := "/endpointConfiguration/vpcEndpointIds"
+		endpointConfiguration, _ := expandEndpointConfiguration(v.([]any))
 		if endpointConfiguration != nil && len(endpointConfiguration.VpcEndpointIds) > 0 {
+			prefix := "/endpointConfiguration/vpcEndpointIds"
 			if output.EndpointConfiguration != nil {
 				for _, v := range output.EndpointConfiguration.VpcEndpointIds {
 					if slices.Contains(endpointConfiguration.VpcEndpointIds, v) {
@@ -664,6 +687,17 @@ func resourceRestAPIWithBodyUpdateOperations(d *schema.ResourceData, output *api
 					Op:    types.OpAdd,
 					Path:  aws.String(prefix),
 					Value: aws.String(v),
+				})
+			}
+		}
+		if endpointConfiguration != nil && endpointConfiguration.IpAddressType != "" && endpointConfiguration.IpAddressType != output.EndpointConfiguration.IpAddressType {
+			if len(v.([]any)) > 0 {
+				tfMap := v.([]any)[0].(map[string]any)
+
+				operations = append(operations, types.PatchOperation{
+					Op:    types.OpReplace,
+					Path:  aws.String("/endpointConfiguration/ipAddressType"),
+					Value: aws.String(tfMap[names.AttrIPAddressType].(string)),
 				})
 			}
 		}
@@ -720,9 +754,9 @@ func modeConfigOrDefault(d *schema.ResourceData) string {
 	}
 }
 
-func expandEndpointConfiguration(l []any) *types.EndpointConfiguration {
+func expandEndpointConfiguration(l []any) (*types.EndpointConfiguration, error) {
 	if len(l) == 0 {
-		return nil
+		return nil, nil
 	}
 
 	m := l[0].(map[string]any)
@@ -735,7 +769,15 @@ func expandEndpointConfiguration(l []any) *types.EndpointConfiguration {
 		endpointConfiguration.VpcEndpointIds = flex.ExpandStringValueSet(endpointIds.(*schema.Set))
 	}
 
-	return endpointConfiguration
+	if ipAddressType, ok := m[names.AttrIPAddressType]; ok {
+		endpointConfiguration.IpAddressType = types.IpAddressType(ipAddressType.(string))
+	}
+
+	if endpointConfiguration.Types[0] == types.EndpointTypePrivate && endpointConfiguration.IpAddressType == types.IpAddressTypeIpv4 {
+		return nil, errors.New("only ip_address_type \"dualstack\" is supported for \"PRIVATE\" endpoint type")
+	}
+
+	return endpointConfiguration, nil
 }
 
 func flattenEndpointConfiguration(endpointConfiguration *types.EndpointConfiguration) []any {
@@ -750,6 +792,8 @@ func flattenEndpointConfiguration(endpointConfiguration *types.EndpointConfigura
 	if len(endpointConfiguration.VpcEndpointIds) > 0 {
 		m["vpc_endpoint_ids"] = endpointConfiguration.VpcEndpointIds
 	}
+
+	m[names.AttrIPAddressType] = endpointConfiguration.IpAddressType
 
 	return []any{m}
 }

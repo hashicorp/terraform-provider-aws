@@ -111,6 +111,12 @@ func resourceDomainName() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						names.AttrIPAddressType: {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ValidateDiagFunc: enum.Validate[types.IpAddressType](),
+						},
 						"types": {
 							Type:     schema.TypeList,
 							Required: true,
@@ -221,7 +227,12 @@ func resourceDomainNameCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if v, ok := d.GetOk("endpoint_configuration"); ok {
-		input.EndpointConfiguration = expandEndpointConfiguration(v.([]any))
+		v, err := expandEndpointConfiguration(v.([]any))
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "%s", err)
+		} else {
+			input.EndpointConfiguration = v
+		}
 	}
 
 	if v, ok := d.GetOk("ownership_verification_certificate_arn"); ok {
@@ -349,6 +360,18 @@ func resourceDomainNameUpdate(ctx context.Context, d *schema.ResourceData, meta 
 					Op:    types.OpReplace,
 					Path:  aws.String("/endpointConfiguration/types/0"),
 					Value: aws.String(tfMap["types"].([]any)[0].(string)),
+				})
+			}
+		}
+
+		if d.HasChange("endpoint_configuration.0.ip_address_type") {
+			if v, ok := d.GetOk("endpoint_configuration"); ok && len(v.([]any)) > 0 {
+				tfMap := v.([]any)[0].(map[string]any)
+
+				operations = append(operations, types.PatchOperation{
+					Op:    types.OpReplace,
+					Path:  aws.String("/endpointConfiguration/ipAddressType"),
+					Value: aws.String(tfMap[names.AttrIPAddressType].(string)),
 				})
 			}
 		}

@@ -485,6 +485,53 @@ func TestAccAPIGatewayDomainName_updateIDFormat(t *testing.T) {
 	})
 }
 
+func TestAccAPIGatewayDomainName_ipAddressType(t *testing.T) {
+	ctx := acctest.Context(t)
+	var domainName apigateway.GetDomainNameOutput
+	resourceName := "aws_api_gateway_domain_name.test"
+	rName := acctest.RandomSubdomain()
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, rName)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainNameDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainNameConfig_ipAddressType(rName, key, certificate, "ipv4"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainNameExists(ctx, resourceName, &domainName),
+					testAccCheckResourceAttrRegionalARNRegionalDomainName(resourceName, names.AttrARN, "apigateway", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, rName),
+					resource.TestCheckResourceAttr(resourceName, "domain_name_id", ""),
+					acctest.MatchResourceAttrRegionalHostname(resourceName, "regional_domain_name", "execute-api", regexache.MustCompile(`d-[0-9a-z]+`)),
+					resource.TestMatchResourceAttr(resourceName, "regional_zone_id", regexache.MustCompile(`^Z`)),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.ip_address_type", "ipv4"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDomainNameConfig_ipAddressType(rName, key, certificate, "dualstack"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainNameExists(ctx, resourceName, &domainName),
+					testAccCheckResourceAttrRegionalARNRegionalDomainName(resourceName, names.AttrARN, "apigateway", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, rName),
+					resource.TestCheckResourceAttr(resourceName, "domain_name_id", ""),
+					acctest.MatchResourceAttrRegionalHostname(resourceName, "regional_domain_name", "execute-api", regexache.MustCompile(`d-[0-9a-z]+`)),
+					resource.TestMatchResourceAttr(resourceName, "regional_zone_id", regexache.MustCompile(`^Z`)),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.ip_address_type", "dualstack"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckDomainNameExists(ctx context.Context, n string, v *apigateway.GetDomainNameOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -818,4 +865,23 @@ resource "aws_api_gateway_domain_name" "test" {
   }
 }
 `, rName, certificate, key))
+}
+
+func testAccDomainNameConfig_ipAddressType(domainName, key, certificate, ipAddressType string) string {
+	return fmt.Sprintf(`
+resource "aws_acm_certificate" "test" {
+  certificate_body = "%[2]s"
+  private_key      = "%[3]s"
+}
+
+resource "aws_api_gateway_domain_name" "test" {
+  domain_name              = %[1]q
+  regional_certificate_arn = aws_acm_certificate.test.arn
+
+  endpoint_configuration {
+    types           = ["REGIONAL"]
+    ip_address_type = %[4]q
+  }
+}
+`, domainName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key), ipAddressType)
 }

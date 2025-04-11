@@ -51,6 +51,10 @@ func dataSourceRestAPI() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						names.AttrIPAddressType: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						"types": {
 							Type:     schema.TypeList,
 							Computed: true,
