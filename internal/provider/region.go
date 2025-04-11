@@ -71,6 +71,31 @@ func (r defaultRegionValueInterceptor) run(ctx context.Context, opts customizeDi
 	return nil
 }
 
+type newRegionValueInterceptor struct{}
+
+func newRegionValue() crudInterceptor {
+	return &newRegionValueInterceptor{}
+}
+
+// TODO REGION This is the same logic as in the data source interceptor.
+func (r newRegionValueInterceptor) run(ctx context.Context, opts crudInterceptorOptions) diag.Diagnostics {
+	c := opts.c
+	var diags diag.Diagnostics
+
+	switch d, when, why := opts.d, opts.when, opts.why; when {
+	case After:
+		// Set region in state after R.
+		switch why {
+		case Read:
+			if err := d.Set(names.AttrRegion, c.Region(ctx)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "setting %s: %s", names.AttrRegion, err)
+			}
+		}
+	}
+
+	return diags
+}
+
 type forceNewIfRegionValueChangesInterceptor struct{}
 
 func forceNewIfRegionValueChanges() customizeDiffInterceptor {

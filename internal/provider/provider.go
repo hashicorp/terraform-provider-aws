@@ -483,6 +483,11 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 					why:         CustomizeDiff,
 					interceptor: defaultRegionValue(),
 				})
+				interceptors = append(interceptors, interceptorInvocation{
+					when:        After,
+					why:         Read,
+					interceptor: newRegionValue(),
+				})
 				if !v.IsGlobal {
 					interceptors = append(interceptors, interceptorInvocation{
 						when:        Before,
