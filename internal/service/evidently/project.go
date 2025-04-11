@@ -32,6 +32,8 @@ func ResourceProject() *schema.Resource {
 		UpdateWithoutTimeout: resourceProjectUpdate,
 		DeleteWithoutTimeout: resourceProjectDelete,
 
+		DeprecationMessage: "Warning: this resource is deprecated",
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
