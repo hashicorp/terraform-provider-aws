@@ -5,6 +5,7 @@ package bedrockagent
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"regexp"
 	"time"
@@ -30,6 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -345,8 +347,10 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 																						Required:   true,
 																					},
 																					"additional_model_request_fields": schema.StringAttribute{
-																						CustomType: fwtypes.NewSmithyJSONType(ctx, document.NewLazyDocument),
-																						Optional:   true,
+																						Optional: true,
+																						Validators: []validator.String{
+																							validators.JSON(),
+																						},
 																					},
 																				},
 																				Blocks: map[string]schema.Block{
@@ -1490,6 +1494,10 @@ func (m *promptFlowNodeSourceConfigurationModel) Flatten(ctx context.Context, v 
 			return diags
 		}
 
+		if t.Value.AdditionalModelRequestFields != nil {
+			t.Value.AdditionalModelRequestFields.UnmarshalSmithyDocument(&model.AdditionalModelRequestFields)
+		}
+
 		m.Inline = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 
 		return diags
@@ -1524,6 +1532,17 @@ func (m promptFlowNodeSourceConfigurationModel) Expand(ctx context.Context) (res
 			return nil, diags
 		}
 
+		additionalFields := promptFlowNodeSourceConfigurationInline.AdditionalModelRequestFields
+		if !additionalFields.IsNull() {
+			var doc any
+			if err := json.Unmarshal([]byte(additionalFields.ValueString()), &doc); err != nil {
+				diags.AddError("Marshalling additional model request fields", err.Error())
+				return nil, diags
+			}
+
+			r.Value.AdditionalModelRequestFields = document.NewLazyDocument(doc)
+		}
+
 		return &r, diags
 	case !m.Resource.IsNull():
 		promptFlowNodeSourceConfigurationResource, d := m.Resource.ToPtr(ctx)
@@ -1548,7 +1567,7 @@ type promptFlowNodeSourceConfigurationMemberInlineModel struct {
 	ModelID                      types.String                                                       `tfsdk:"model_id"`
 	TemplateConfiguration        fwtypes.ListNestedObjectValueOf[templateConfigurationModel]        `tfsdk:"template_configuration"`
 	TemplateType                 fwtypes.StringEnum[awstypes.PromptTemplateType]                    `tfsdk:"template_type"`
-	AdditionalModelRequestFields fwtypes.SmithyJSONType[document.Interface]                         `tfsdk:"additional_model_request_fields"`
+	AdditionalModelRequestFields types.String                                                       `tfsdk:"additional_model_request_fields"`
 	InferenceConfiguration       fwtypes.ListNestedObjectValueOf[promptInferenceConfigurationModel] `tfsdk:"inference_configuration"`
 }
 
