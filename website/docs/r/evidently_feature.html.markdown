@@ -10,6 +10,8 @@ description: |-
 
 Provides a CloudWatch Evidently Feature resource.
 
+**Warning:** This resource is deprecated.
+
 ## Example Usage
 
 ### Basic

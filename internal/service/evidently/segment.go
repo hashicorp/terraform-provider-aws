@@ -34,6 +34,8 @@ func ResourceSegment() *schema.Resource {
 		UpdateWithoutTimeout: resourceSegmentUpdate,
 		DeleteWithoutTimeout: resourceSegmentDelete,
 
+		DeprecationMessage: "This resource is deprecated",
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
