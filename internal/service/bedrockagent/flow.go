@@ -371,7 +371,7 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 																				},
 																				Blocks: map[string]schema.Block{
 																					"template_configuration": schema.ListNestedBlock{
-																						CustomType: fwtypes.NewListNestedObjectTypeOf[templateConfigurationModel](ctx),
+																						CustomType: fwtypes.NewListNestedObjectTypeOf[promptTemplateConfigurationModel](ctx),
 																						Validators: []validator.List{
 																							listvalidator.SizeAtMost(1),
 																						},
@@ -1515,10 +1515,13 @@ func (m *promptFlowNodeSourceConfigurationModel) Flatten(ctx context.Context, v 
 		}
 
 		if t.Value.AdditionalModelRequestFields != nil {
-			if err := t.Value.AdditionalModelRequestFields.UnmarshalSmithyDocument(&model.AdditionalModelRequestFields); err != nil {
-				diags.AddError("Unmarshalling tool input schema", err.Error())
+			additionalFields, err := t.Value.AdditionalModelRequestFields.MarshalSmithyDocument()
+			if err != nil {
+				diags.AddError("Marshalling additional model request fields", err.Error())
 				return diags
 			}
+
+			model.AdditionalModelRequestFields = types.StringValue(string(additionalFields))
 		}
 
 		m.Inline = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
@@ -1559,7 +1562,7 @@ func (m promptFlowNodeSourceConfigurationModel) Expand(ctx context.Context) (res
 		if !additionalFields.IsNull() {
 			var doc any
 			if err := json.Unmarshal([]byte(additionalFields.ValueString()), &doc); err != nil {
-				diags.AddError("Marshalling additional model request fields", err.Error())
+				diags.AddError("Unmarshalling additional model request fields", err.Error())
 				return nil, diags
 			}
 
@@ -1588,7 +1591,7 @@ func (m promptFlowNodeSourceConfigurationModel) Expand(ctx context.Context) (res
 
 type promptFlowNodeSourceConfigurationMemberInlineModel struct {
 	ModelID                      types.String                                                       `tfsdk:"model_id"`
-	TemplateConfiguration        fwtypes.ListNestedObjectValueOf[templateConfigurationModel]        `tfsdk:"template_configuration"`
+	TemplateConfiguration        fwtypes.ListNestedObjectValueOf[promptTemplateConfigurationModel]  `tfsdk:"template_configuration"`
 	TemplateType                 fwtypes.StringEnum[awstypes.PromptTemplateType]                    `tfsdk:"template_type"`
 	AdditionalModelRequestFields types.String                                                       `tfsdk:"additional_model_request_fields"`
 	InferenceConfiguration       fwtypes.ListNestedObjectValueOf[promptInferenceConfigurationModel] `tfsdk:"inference_configuration"`
@@ -1646,12 +1649,12 @@ type promptInferenceConfigurationMemberText struct {
 }
 
 // Tagged union
-type templateConfigurationModel struct {
+type promptTemplateConfigurationModel struct {
 	Chat fwtypes.ListNestedObjectValueOf[promptTemplateConfigurationMemberChatModel] `tfsdk:"chat"`
 	Text fwtypes.ListNestedObjectValueOf[promptTemplateConfigurationMemberTextModel] `tfsdk:"text"`
 }
 
-func (m *templateConfigurationModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
+func (m *promptTemplateConfigurationModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
 	switch t := v.(type) {
 	case awstypes.PromptTemplateConfigurationMemberChat:
 		var model promptTemplateConfigurationMemberChatModel
@@ -1680,7 +1683,7 @@ func (m *templateConfigurationModel) Flatten(ctx context.Context, v any) (diags 
 	}
 }
 
-func (m templateConfigurationModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
+func (m promptTemplateConfigurationModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
 	switch {
 	case !m.Chat.IsNull():
 		promptTemplateConfigurationChat, d := m.Chat.ToPtr(ctx)
@@ -1747,15 +1750,7 @@ func (m *contentBlockModel) Flatten(ctx context.Context, v any) (diags diag.Diag
 
 		return diags
 	case awstypes.ContentBlockMemberText:
-		var model string
-		d := flex.Flatten(ctx, t.Value, &model)
-		diags.Append(d...)
-		if diags.HasError() {
-			return diags
-		}
-
-		m.Text = types.StringValue(model)
-
+		m.Text = types.StringValue(t.Value)
 		return diags
 	default:
 		return diags
@@ -1825,15 +1820,7 @@ func (m *systemContentBlockModel) Flatten(ctx context.Context, v any) (diags dia
 
 		return diags
 	case awstypes.SystemContentBlockMemberText:
-		var model string
-		d := flex.Flatten(ctx, t.Value, &model)
-		diags.Append(d...)
-		if diags.HasError() {
-			return diags
-		}
-
-		m.Text = types.StringValue(model)
-
+		m.Text = types.StringValue(t.Value)
 		return diags
 	default:
 		return diags
@@ -1972,21 +1959,15 @@ type toolInputSchemaModel struct {
 func (m *toolInputSchemaModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
 	switch t := v.(type) {
 	case awstypes.ToolInputSchemaMemberJson:
-		var model string
-		d := flex.Flatten(ctx, t.Value, &model)
-		diags.Append(d...)
-		if diags.HasError() {
-			return diags
-		}
-
 		if t.Value != nil {
-			if err := t.Value.UnmarshalSmithyDocument(&model); err != nil {
-				diags.AddError("Unmarshalling tool input schema", err.Error())
+			inputSchema, err := t.Value.MarshalSmithyDocument()
+			if err != nil {
+				diags.AddError("Marshalling tool input schema", err.Error())
 				return diags
 			}
-		}
 
-		m.Json = types.StringValue(model)
+			m.Json = types.StringValue(string(inputSchema))
+		}
 
 		return diags
 	default:
@@ -2000,7 +1981,7 @@ func (m toolInputSchemaModel) Expand(ctx context.Context) (result any, diags dia
 		var r awstypes.ToolInputSchemaMemberJson
 		var doc any
 		if err := json.Unmarshal([]byte(m.Json.ValueString()), &doc); err != nil {
-			diags.AddError("Marshalling tool input schema", err.Error())
+			diags.AddError("Unmarshalling tool input schema", err.Error())
 			return nil, diags
 		}
 		r.Value = document.NewLazyDocument(doc)
