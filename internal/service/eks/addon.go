@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"log"
 	"math"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -41,7 +40,7 @@ type EksAddonVersion struct {
 	Raw   string
 }
 
-var addonVersionRegex = regexp.MustCompile(`^v(\d+)\.(\d+)\.(\d+)-eksbuild\.(\d+)$`)
+var addonVersionRegex = regexache.MustCompile(`^v(\d+)\.(\d+)\.(\d+)-eksbuild\.(\d+)$`)
 
 // @SDKResource("aws_eks_addon", name="Add-On")
 // @Tags(identifierAttribute="arn")
@@ -303,7 +302,7 @@ func resourceAddonUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 			if oldRaw != nil && newRaw != nil {
 				oldVerStr := oldRaw.(string)
 				newVerStr := newRaw.(string)
-				if err := incrementalVersionUpdate(oldVerStr, newVerStr, ctx); err != nil {
+				if err := incrementalVersionUpdate(oldVerStr, newVerStr); err != nil {
 					return sdkdiag.AppendFromErr(diags, err)
 				}
 			}
@@ -663,7 +662,7 @@ func ParseAddonVersion(version string) (EksAddonVersion, error) {
 	}, nil
 }
 
-func incrementalVersionUpdate(oldRaw, newRaw string, ctx context.Context) error {
+func incrementalVersionUpdate(oldRaw, newRaw string) error {
 	oldVer, err := ParseAddonVersion(oldRaw)
 	if err != nil {
 		return fmt.Errorf("invalid old version: %w", err)
