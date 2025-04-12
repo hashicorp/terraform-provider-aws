@@ -33,7 +33,6 @@ func TestAccBedrockAgentPrompt_basic(t *testing.T) {
 	var prompt bedrockagent.GetPromptOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_prompt.test"
-	foundationModel := "amazon.titan-text-express-v1"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -46,7 +45,7 @@ func TestAccBedrockAgentPrompt_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckPromptDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPromptConfig_basic(rName, foundationModel),
+				Config: testAccPromptConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPromptExists(ctx, resourceName, &prompt),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "bedrock", regexache.MustCompile(`prompt/.+$`)),
@@ -57,6 +56,44 @@ func TestAccBedrockAgentPrompt_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "basic"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentPrompt_withEncryption(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var prompt bedrockagent.GetPromptOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagent_prompt.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPromptDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPromptConfig_withEncryption(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPromptExists(ctx, resourceName, &prompt),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "bedrock", regexache.MustCompile(`prompt/.+$`)),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
+					resource.TestCheckResourceAttrSet(resourceName, "updated_at"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrVersion),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrPair(resourceName, "customer_encryption_key_arn", "aws_kms_key.test", names.AttrARN)),
 			},
 			{
 				ResourceName:      resourceName,
@@ -206,7 +243,6 @@ func TestAccBedrockAgentPrompt_disappears(t *testing.T) {
 	var prompt bedrockagent.GetPromptOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_prompt.test"
-	foundationModel := "amazon.titan-text-express-v1"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -219,7 +255,7 @@ func TestAccBedrockAgentPrompt_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckPromptDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPromptConfig_basic(rName, foundationModel),
+				Config: testAccPromptConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPromptExists(ctx, resourceName, &prompt),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbedrockagent.ResourcePrompt, resourceName),
@@ -368,13 +404,27 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccPromptConfig_basic(rName, model string) string {
+func testAccPromptConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_bedrockagent_prompt" "test" {
   name            = %[1]q
   description     = "basic"
 }
-`, rName, model)
+`, rName)
+}
+
+func testAccPromptConfig_withEncryption(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+}
+
+resource "aws_bedrockagent_prompt" "test" {
+  name                        = %[1]q
+  customer_encryption_key_arn = aws_kms_key.test.arn
+}
+`, rName)
 }
 
 func testAccPromptConfig_tags1(rName, tag1Key, tag1Value string) string {
