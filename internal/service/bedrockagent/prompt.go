@@ -61,12 +61,12 @@ type resourcePrompt struct {
 func (r *resourcePrompt) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id":  framework.IDAttribute(),
-			"arn": framework.ARNAttributeComputedOnly(),
-			"name": schema.StringAttribute{
+			names.AttrID:  framework.IDAttribute(),
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 			},
-			"description": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 			},
 			"default_variant": schema.StringAttribute{
@@ -75,10 +75,10 @@ func (r *resourcePrompt) Schema(ctx context.Context, req resource.SchemaRequest,
 			"customer_encryption_key_arn": schema.StringAttribute{
 				Optional: true,
 			},
-			"version": schema.StringAttribute{
+			names.AttrVersion: schema.StringAttribute{
 				Computed: true,
 			},
-			"created_at": schema.StringAttribute{
+			names.AttrCreatedAt: schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
 			},
@@ -94,7 +94,7 @@ func (r *resourcePrompt) Schema(ctx context.Context, req resource.SchemaRequest,
 				CustomType: fwtypes.NewListNestedObjectTypeOf[variantModel](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"name": schema.StringAttribute{
+						names.AttrName: schema.StringAttribute{
 							Required: true,
 						},
 						"model_id": schema.StringAttribute{
@@ -116,10 +116,10 @@ func (r *resourcePrompt) Schema(ctx context.Context, req resource.SchemaRequest,
 							CustomType: fwtypes.NewListNestedObjectTypeOf[promptMetadataEntryModel](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"key": schema.StringAttribute{
+									names.AttrKey: schema.StringAttribute{
 										Required: true,
 									},
-									"value": schema.StringAttribute{
+									names.AttrValue: schema.StringAttribute{
 										Required: true,
 									},
 								},
@@ -242,7 +242,7 @@ func (r *resourcePrompt) Schema(ctx context.Context, req resource.SchemaRequest,
 																			},
 																			NestedObject: schema.NestedBlockObject{
 																				Attributes: map[string]schema.Attribute{
-																					"type": schema.StringAttribute{
+																					names.AttrType: schema.StringAttribute{
 																						CustomType: fwtypes.StringEnumType[awstypes.CachePointType](),
 																						Required:   true,
 																					},
@@ -259,7 +259,7 @@ func (r *resourcePrompt) Schema(ctx context.Context, req resource.SchemaRequest,
 													CustomType: fwtypes.NewListNestedObjectTypeOf[promptInputVariableModel](ctx),
 													NestedObject: schema.NestedBlockObject{
 														Attributes: map[string]schema.Attribute{
-															"name": schema.StringAttribute{
+															names.AttrName: schema.StringAttribute{
 																Required: true,
 															},
 														},
@@ -285,7 +285,7 @@ func (r *resourcePrompt) Schema(ctx context.Context, req resource.SchemaRequest,
 																},
 																NestedObject: schema.NestedBlockObject{
 																	Attributes: map[string]schema.Attribute{
-																		"type": schema.StringAttribute{
+																		names.AttrType: schema.StringAttribute{
 																			CustomType: fwtypes.StringEnumType[awstypes.CachePointType](),
 																			Required:   true,
 																		},
@@ -317,7 +317,7 @@ func (r *resourcePrompt) Schema(ctx context.Context, req resource.SchemaRequest,
 																			},
 																			NestedObject: schema.NestedBlockObject{
 																				Attributes: map[string]schema.Attribute{
-																					"type": schema.StringAttribute{
+																					names.AttrType: schema.StringAttribute{
 																						CustomType: fwtypes.StringEnumType[awstypes.CachePointType](),
 																						Required:   true,
 																					},
@@ -331,10 +331,10 @@ func (r *resourcePrompt) Schema(ctx context.Context, req resource.SchemaRequest,
 																			},
 																			NestedObject: schema.NestedBlockObject{
 																				Attributes: map[string]schema.Attribute{
-																					"name": schema.StringAttribute{
+																					names.AttrName: schema.StringAttribute{
 																						Required: true,
 																					},
-																					"description": schema.StringAttribute{
+																					names.AttrDescription: schema.StringAttribute{
 																						Required: true,
 																					},
 																				},
@@ -395,7 +395,7 @@ func (r *resourcePrompt) Schema(ctx context.Context, req resource.SchemaRequest,
 																			},
 																			NestedObject: schema.NestedBlockObject{
 																				Attributes: map[string]schema.Attribute{
-																					"name": schema.StringAttribute{
+																					names.AttrName: schema.StringAttribute{
 																						Required: true,
 																					},
 																				},
@@ -429,7 +429,7 @@ func (r *resourcePrompt) Schema(ctx context.Context, req resource.SchemaRequest,
 													},
 													NestedObject: schema.NestedBlockObject{
 														Attributes: map[string]schema.Attribute{
-															"type": schema.StringAttribute{
+															names.AttrType: schema.StringAttribute{
 																CustomType: fwtypes.StringEnumType[awstypes.CachePointType](),
 																Required:   true,
 															},
@@ -440,7 +440,7 @@ func (r *resourcePrompt) Schema(ctx context.Context, req resource.SchemaRequest,
 													CustomType: fwtypes.NewListNestedObjectTypeOf[promptInputVariableModel](ctx),
 													NestedObject: schema.NestedBlockObject{
 														Attributes: map[string]schema.Attribute{
-															"name": schema.StringAttribute{
+															names.AttrName: schema.StringAttribute{
 																Required: true,
 															},
 														},
