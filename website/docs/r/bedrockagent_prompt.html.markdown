@@ -69,9 +69,9 @@ The following arguments are optional:
 
 ### Variant
 
-* `name` - (Optional) Name of the prompt variant.
+* `name` - (Required) Name of the prompt variant.
 * `model_id` - (Optional) Unique identifier of the model or [inference profile](https://docs.aws.amazon.com/bedrock/latest/userguide/cross-region-inference.html) with which to run inference on the prompt. If this is not supplied, then a `gen_ai_resource` must be defined.
-* `template_type` - (Optional) Type of prompt template to use. Valid values: `CHAT`, `TEXT`.
+* `template_type` - (Required) Type of prompt template to use. Valid values: `CHAT`, `TEXT`.
 * `additional_model_request_fields` - (Optional) Contains model-specific inference configurations that aren’t in the inferenceConfiguration field. To see model-specific inference parameters, see [Inference request parameters and response fields for foundation models](https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters.html).
 * `metadata` - (Optional) A list of objects, each containing a key-value pair that defines a metadata tag and value to attach to a prompt variant. See [Metadata](#metadata) for more information.
 * `inference_configuration` - (Optional) Contains inference configurations for the prompt variant. See [Inference Configuration](#inference-configuration) for more information.
