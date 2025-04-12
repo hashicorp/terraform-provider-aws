@@ -3,7 +3,7 @@ subcategory: "Bedrock Agents"
 layout: "aws"
 page_title: "AWS: aws_bedrockagent_flow"
 description: |-
-  Terraform resource for managing an AWS Bedrock Agents Flows.
+  Terraform resource for managing an AWS Bedrock Agents Flow.
 ---
 
 # Resource: aws_bedrockagent_flow
@@ -260,10 +260,10 @@ The following arguments are optional:
 
 #### Text Inference Configuration
 
-* `max_tokens` - (Optional)
-* `stop_sequences` - (Optional)
-* `temperature` - (Optional)
-* `top_p` - (Optional)
+* `max_tokens` - (Optional) Maximum number of tokens to return in the response.
+* `stop_sequences` - (Optional) List of strings that define sequences after which the model will stop generating.
+* `temperature` - (Optional) Controls the randomness of the response. Choose a lower value for more predictable outputs and a higher value for more surprising outputs.
+* `top_p` - (Optional) Percentage of most-likely candidates that the model considers for the next token.
 
 #### Prompt Template Configuration
 
@@ -301,19 +301,19 @@ The following arguments are optional:
 #### Tool Configuration
 
 * `tool_choice` - (Optional) Defines which tools the model should request when invoked. See [Tool Choice](#tool-choice) for more information.
-* `tool` - (Optional) A list of tools to pass to a model. See [Tool Configuration](#tool-configuration) for more information.
+* `tool` - (Optional) A list of tools to pass to a model. See [Tool](#tool) for more information.
 
 #### Tool Choice
 
 * `any` - (Optional) Defines tools, at least one of which must be requested by the model. No text is generated but the results of tool use are sent back to the model to help generate a response. This object has no fields.
 * `auto` - (Optional) Defines tools. The model automatically decides whether to call a tool or to generate text instead. This object has no fields.
-* `tool` - (Optional) Defines a specific tool that the model must request. No text is generated but the results of tool use are sent back to the model to help generate a response. See [Tool](#tool) for more information.
+* `tool` - (Optional) Defines a specific tool that the model must request. No text is generated but the results of tool use are sent back to the model to help generate a response. See [Named Tool](#named-tool) for more information.
 
-#### Tool
+#### Named Tool
 
 * `name` - (Required) The name of the tool.
 
-#### Tool Configuration
+#### Tool
 
 * `cache_point` - (Optional) Creates a cache checkpoint within a tool designation. See [Cache Point](#cache-point) for more information.
 * `tool_spec` - (Optional) The specification for the tool. See [Tool Specification](#tool-specification) for more information.
