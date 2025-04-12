@@ -8,6 +8,9 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"math"
+	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -29,6 +32,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+type EksAddonVersion struct {
+	Major int
+	Minor int
+	Patch int
+	Build int
+	Raw   string
+}
+
+var addonVersionRegex = regexp.MustCompile(`^v(\d+)\.(\d+)\.(\d+)-eksbuild\.(\d+)$`)
 
 // @SDKResource("aws_eks_addon", name="Add-On")
 // @Tags(identifierAttribute="arn")
@@ -83,6 +96,11 @@ func resourceAddon() *schema.Resource {
 			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"incremental_version_update": {
+				Type:     schema.TypeBool,
+				Default:  false,
+				Optional: true,
 			},
 			"modified_at": {
 				Type:     schema.TypeString,
@@ -277,6 +295,18 @@ func resourceAddonUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 
 		if d.HasChange("addon_version") {
 			input.AddonVersion = aws.String(d.Get("addon_version").(string))
+		}
+
+		if d.Get("incremental_version_update").(bool) {
+			oldRaw, newRaw := d.GetChange("addon_version")
+
+			if oldRaw != nil && newRaw != nil {
+				oldVerStr := oldRaw.(string)
+				newVerStr := newRaw.(string)
+				if err := incrementalVersionUpdate(oldVerStr, newVerStr, ctx); err != nil {
+					return sdkdiag.AppendFromErr(diags, err)
+				}
+			}
 		}
 
 		if d.HasChange("configuration_values") {
@@ -611,4 +641,42 @@ func errorDetailsError(apiObjects []types.ErrorDetail) error {
 	}
 
 	return errors.Join(errs...)
+}
+
+func ParseAddonVersion(version string) (EksAddonVersion, error) {
+	matches := addonVersionRegex.FindStringSubmatch(version)
+	if len(matches) != 5 {
+		return EksAddonVersion{}, fmt.Errorf("invalid version format: %s", version)
+	}
+
+	major, _ := strconv.Atoi(matches[1])
+	minor, _ := strconv.Atoi(matches[2])
+	patch, _ := strconv.Atoi(matches[3])
+	build, _ := strconv.Atoi(matches[4])
+
+	return EksAddonVersion{
+		Major: major,
+		Minor: minor,
+		Patch: patch,
+		Build: build,
+		Raw:   version,
+	}, nil
+}
+
+func incrementalVersionUpdate(oldRaw, newRaw string, ctx context.Context) error {
+	oldVer, err := ParseAddonVersion(oldRaw)
+	if err != nil {
+		return fmt.Errorf("invalid old version: %w", err)
+	}
+	newVer, err := ParseAddonVersion(newRaw)
+	if err != nil {
+		return fmt.Errorf("invalid new version: %w", err)
+	}
+	diff := int(math.Abs(float64(oldVer.Minor - newVer.Minor)))
+
+	if diff > 1 {
+		return fmt.Errorf("incremental_version_update is enabled: minor version upgrade must be done one version at a time (detected jump: %d → %d)", oldVer.Minor, newVer.Minor)
+	}
+
+	return nil
 }
