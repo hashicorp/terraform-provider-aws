@@ -116,7 +116,7 @@ func TestAccVPCLatticeListenerRule_methodMatch(t *testing.T) {
 	})
 }
 
-func TestAccVPCLatticeListenerRule_emptyMatchError(t *testing.T) {
+func TestAccVPCLatticeListenerRule_emptyBlockError(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -129,6 +129,10 @@ func TestAccVPCLatticeListenerRule_emptyMatchError(t *testing.T) {
 			{
 				Config:      testAccListenerRuleConfig_emptyMatchError(rName),
 				ExpectError: regexache.MustCompile("Invalid \"match\" value"),
+			},
+			{
+				Config:      testAccListenerRuleConfig_emptyActionError(rName),
+				ExpectError: regexache.MustCompile("Invalid \"action\" value"),
 			},
 		},
 	})
@@ -445,6 +449,41 @@ resource "aws_vpclattice_listener_rule" "test" {
       }
     }
   }
+}
+`, rName))
+}
+
+func testAccListenerRuleConfig_emptyActionError(rName string) string {
+	return acctest.ConfigCompose(testAccListenerRuleConfig_base(rName), fmt.Sprintf(`
+resource "aws_vpclattice_listener_rule" "test" {
+  name                = %[1]q
+  listener_identifier = aws_vpclattice_listener.test.listener_id
+  service_identifier  = aws_vpclattice_service.test.id
+  priority            = 40
+  match {
+    http_match {
+
+      method = "POST"
+
+      header_matches {
+        name           = "example-header"
+        case_sensitive = false
+
+        match {
+          contains = "example-contains"
+        }
+      }
+
+      path_match {
+        case_sensitive = true
+        match {
+          prefix = "/example-path"
+        }
+      }
+
+    }
+  }
+  action {}
 }
 `, rName))
 }
