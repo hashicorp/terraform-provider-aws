@@ -60,7 +60,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudsearch v1.27.2
 	github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.48.4
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.44.3
-	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.47.2
+	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.47.3
 	github.com/aws/aws-sdk-go-v2/service/codeartifact v1.34.2
 	github.com/aws/aws-sdk-go-v2/service/codebuild v1.58.1
 	github.com/aws/aws-sdk-go-v2/service/codecatalyst v1.17.19
