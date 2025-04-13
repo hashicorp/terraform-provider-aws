@@ -219,6 +219,8 @@ func (r *integrationResource) Update(ctx context.Context, request resource.Updat
 		}
 	}
 
+	new.KMSKeyID = old.KMSKeyID
+
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 

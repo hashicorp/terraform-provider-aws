@@ -12,7 +12,11 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
@@ -49,6 +53,11 @@ func TestAccRedshiftIntegration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTargetARN, "aws_redshiftserverless_namespace.test", names.AttrARN),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:                         resourceName,
@@ -123,9 +132,12 @@ func TestAccRedshiftIntegration_optional(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "source_arn", "aws_dynamodb_table.test", names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTargetARN, "aws_redshiftserverless_namespace.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "additional_encryption_context.department", "test"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:                         resourceName,
@@ -147,7 +159,7 @@ func TestAccRedshiftIntegration_sourceUsesS3Bucket(t *testing.T) {
 	var integration awstypes.Integration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	description := sdkacctest.RandomWithPrefix("tf-acc-test-update")
-	integration_name := sdkacctest.RandomWithPrefix("tf-acc-test-update")
+	integrationName := sdkacctest.RandomWithPrefix("tf-acc-test-update")
 	resourceName := "aws_redshift_integration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -168,9 +180,12 @@ func TestAccRedshiftIntegration_sourceUsesS3Bucket(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "integration_name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "source_arn", "aws_s3_bucket.test", names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTargetARN, "aws_redshiftserverless_namespace.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:                         resourceName,
@@ -180,16 +195,19 @@ func TestAccRedshiftIntegration_sourceUsesS3Bucket(t *testing.T) {
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 			},
 			{
-				Config: testAccIntegrationConfig_sourceUsesS3Bucket(rName, description, integration_name),
+				Config: testAccIntegrationConfig_sourceUsesS3Bucket(rName, description, integrationName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIntegrationExists(ctx, resourceName, &integration),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
-					resource.TestCheckResourceAttr(resourceName, "integration_name", integration_name),
+					resource.TestCheckResourceAttr(resourceName, "integration_name", integrationName),
 					resource.TestCheckResourceAttrPair(resourceName, "source_arn", "aws_s3_bucket.test", names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTargetARN, "aws_redshiftserverless_namespace.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
 				ResourceName:                         resourceName,
@@ -197,6 +215,86 @@ func TestAccRedshiftIntegration_sourceUsesS3Bucket(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateIdFunc:                    testAccIntegrationImportStateIDFunc(resourceName),
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+		},
+	})
+}
+
+func TestAccRedshiftIntegration_tags(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	ctx := acctest.Context(t)
+	var integration awstypes.Integration
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_redshift_integration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.RedshiftEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIntegrationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIntegrationConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckIntegrationExists(ctx, resourceName, &integration),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    testAccIntegrationImportStateIDFunc(resourceName),
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+			{
+				Config: testAccIntegrationConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckIntegrationExists(ctx, resourceName, &integration),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+				},
+			},
+			{
+				Config: testAccIntegrationConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckIntegrationExists(ctx, resourceName, &integration),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+				},
 			},
 		},
 	})
@@ -275,7 +373,7 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccIntegrationConfig_baseSourceAndTarget(rName string) string {
+func testAccIntegrationConfig_base(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 3), fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
@@ -496,7 +594,7 @@ resource "aws_redshift_resource_policy" "test" {
 }
 
 func testAccIntegrationConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccIntegrationConfig_baseSourceAndTarget(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccIntegrationConfig_base(rName), fmt.Sprintf(`
 resource "aws_redshift_integration" "test" {
   integration_name = %[1]q
   source_arn       = aws_dynamodb_table.test.arn
@@ -514,7 +612,7 @@ resource "aws_redshift_integration" "test" {
 }
 
 func testAccIntegrationConfig_optional(rName string) string {
-	return acctest.ConfigCompose(testAccIntegrationConfig_baseSourceAndTarget(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccIntegrationConfig_base(rName), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 10
@@ -568,6 +666,43 @@ resource "aws_redshift_integration" "test" {
     "department" : "test",
   }
 
+  depends_on = [
+    aws_dynamodb_table.test,
+    aws_redshiftserverless_namespace.test,
+    aws_redshiftserverless_workgroup.test,
+    aws_redshift_resource_policy.test,
+    aws_dynamodb_resource_policy.test,
+  ]
+}
+`, rName))
+}
+
+func testAccIntegrationConfig_sourceUsesS3Bucket(rName, description, integrationName string) string {
+	return acctest.ConfigCompose(testAccIntegrationConfig_base(rName), fmt.Sprintf(`
+resource "aws_redshift_integration" "test" {
+  description      = %[1]q
+  integration_name = %[2]q
+  source_arn       = aws_s3_bucket.test.arn
+  target_arn       = aws_redshiftserverless_namespace.test.arn
+
+  depends_on = [
+    aws_s3_bucket.test,
+    aws_redshiftserverless_namespace.test,
+    aws_redshiftserverless_workgroup.test,
+    aws_redshift_resource_policy.test,
+    aws_s3_bucket_policy.test,
+  ]
+}
+`, description, integrationName))
+}
+
+func testAccIntegrationConfig_tags1(rName, tag1Key, tag1Value string) string {
+	return acctest.ConfigCompose(testAccIntegrationConfig_base(rName), fmt.Sprintf(`
+resource "aws_redshift_integration" "test" {
+  integration_name = %[1]q
+  source_arn       = aws_dynamodb_table.test.arn
+  target_arn       = aws_redshiftserverless_namespace.test.arn
+
   tags = {
     %[2]q = %[3]q
   }
@@ -580,28 +715,28 @@ resource "aws_redshift_integration" "test" {
     aws_dynamodb_resource_policy.test,
   ]
 }
-`, rName, acctest.CtKey1, acctest.CtValue1))
+`, rName, tag1Key, tag1Value))
 }
 
-func testAccIntegrationConfig_sourceUsesS3Bucket(rName, description, integration_name string) string {
-	return acctest.ConfigCompose(testAccIntegrationConfig_baseSourceAndTarget(rName), fmt.Sprintf(`
+func testAccIntegrationConfig_tags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
+	return acctest.ConfigCompose(testAccIntegrationConfig_base(rName), fmt.Sprintf(`
 resource "aws_redshift_integration" "test" {
-  description      = %[1]q
-  integration_name = %[2]q
-  source_arn       = aws_s3_bucket.test.arn
+  integration_name = %[1]q
+  source_arn       = aws_dynamodb_table.test.arn
   target_arn       = aws_redshiftserverless_namespace.test.arn
 
   tags = {
-    %[3]q = %[4]q
+    %[2]q = %[3]q
+    %[4]q = %[5]q
   }
 
   depends_on = [
-    aws_s3_bucket.test,
+    aws_dynamodb_table.test,
     aws_redshiftserverless_namespace.test,
     aws_redshiftserverless_workgroup.test,
     aws_redshift_resource_policy.test,
-    aws_s3_bucket_policy.test,
+    aws_dynamodb_resource_policy.test,
   ]
 }
-`, description, integration_name, acctest.CtKey1, acctest.CtValue1))
+`, rName, tag1Key, tag1Value, tag2Key, tag2Value))
 }
