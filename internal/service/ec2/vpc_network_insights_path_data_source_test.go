@@ -146,20 +146,20 @@ resource "aws_network_interface" "test" {
 }
 
 resource "aws_ec2_network_insights_path" "test" {
-  source                = aws_network_interface.test[0].id
+  source = aws_network_interface.test[0].id
   filter_at_source {
     destination_address = aws_network_interface.test[1].private_ip
     destination_port_range {
       from_port = 80
       to_port   = 80
     }
-    source_address      = aws_network_interface.test[0].private_ip
+    source_address = aws_network_interface.test[0].private_ip
     source_port_range {
       from_port = 0
       to_port   = 65535
     }
   }
-  protocol              = "tcp"
+  protocol = "tcp"
 
   tags = {
     Name = %[1]q
@@ -185,21 +185,21 @@ resource "aws_network_interface" "test" {
 }
 
 resource "aws_ec2_network_insights_path" "test" {
-  source                = aws_network_interface.test[0].id
-  destination           = aws_network_interface.test[1].id
+  source      = aws_network_interface.test[0].id
+  destination = aws_network_interface.test[1].id
   filter_at_destination {
     destination_address = aws_network_interface.test[1].private_ip
     destination_port_range {
       from_port = 80
       to_port   = 80
     }
-    source_address      = aws_network_interface.test[0].private_ip
+    source_address = aws_network_interface.test[0].private_ip
     source_port_range {
       from_port = 0
       to_port   = 65535
     }
   }
-  protocol              = "tcp"
+  protocol = "tcp"
 
   tags = {
     Name = %[1]q

@@ -11,7 +11,6 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -291,12 +290,12 @@ func suppressEquivalentIDOrARN(_, old, new string, _ *schema.ResourceData) bool 
 	return idFromIDOrARN(old) == idFromIDOrARN(new)
 }
 
-func expandRequestFilterPortRange(tfMap map[string]any) *types.RequestFilterPortRange {
+func expandRequestFilterPortRange(tfMap map[string]any) *awstypes.RequestFilterPortRange {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &types.RequestFilterPortRange{}
+	apiObject := &awstypes.RequestFilterPortRange{}
 
 	if v, ok := tfMap["from_port"]; ok {
 		apiObject.FromPort = aws.Int32(int32(v.(int)))
@@ -307,12 +306,12 @@ func expandRequestFilterPortRange(tfMap map[string]any) *types.RequestFilterPort
 
 	return apiObject
 }
-func expandPathRequestFilter(tfMap map[string]any) *types.PathRequestFilter {
+func expandPathRequestFilter(tfMap map[string]any) *awstypes.PathRequestFilter {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &types.PathRequestFilter{}
+	apiObject := &awstypes.PathRequestFilter{}
 
 	if v, ok := tfMap["destination_address"]; ok {
 		apiObject.DestinationAddress = aws.String(v.(string))
@@ -329,7 +328,7 @@ func expandPathRequestFilter(tfMap map[string]any) *types.PathRequestFilter {
 	return apiObject
 }
 
-func flattenRequestFilterPortRange(portRange *types.FilterPortRange) map[string]any {
+func flattenRequestFilterPortRange(portRange *awstypes.FilterPortRange) map[string]any {
 	if portRange == nil {
 		return nil
 	}
@@ -346,7 +345,7 @@ func flattenRequestFilterPortRange(portRange *types.FilterPortRange) map[string]
 	return tfMap
 }
 
-func flattenPathRequestFilter(requestFilter *types.PathFilter) map[string]any {
+func flattenPathRequestFilter(requestFilter *awstypes.PathFilter) map[string]any {
 	if requestFilter == nil {
 		return nil
 	}
