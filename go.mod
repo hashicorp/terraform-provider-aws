@@ -266,7 +266,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/worklink v1.23.2
 	github.com/aws/aws-sdk-go-v2/service/workspaces v1.55.2
 	github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.27.2
-	github.com/aws/aws-sdk-go-v2/service/xray v1.31.2
+	github.com/aws/aws-sdk-go-v2/service/xray v1.31.3
 	github.com/aws/smithy-go v1.22.3
 	github.com/beevik/etree v1.5.0
 	github.com/cedar-policy/cedar-go v0.1.0
