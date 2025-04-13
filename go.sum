@@ -369,8 +369,8 @@ github.com/aws/aws-sdk-go-v2/service/memorydb v1.26.2 h1:tATif/PN3iHcbo1kNDhel/u
 github.com/aws/aws-sdk-go-v2/service/memorydb v1.26.2/go.mod h1:pfuDC5zBwunXdE44WT1PRbtzuXWGohKFcFLtv+ezI6k=
 github.com/aws/aws-sdk-go-v2/service/mgn v1.33.2 h1:hZe6qtd8T3I5ODDb2pDQn5L4ao4HeQXrXkt82mVsf70=
 github.com/aws/aws-sdk-go-v2/service/mgn v1.33.2/go.mod h1:Q3LcqUai7bxdsXUf0OYomhv9LTrAK/Xu0vkkyzeEhxY=
-github.com/aws/aws-sdk-go-v2/service/mq v1.28.2 h1:z8vcvLi+SUV/TPdZbIeb0nNx/mDBsUf1ynnuKTXfJ9Q=
-github.com/aws/aws-sdk-go-v2/service/mq v1.28.2/go.mod h1:0x3GT0RZzP/DvhbV+ujNOGfM1sZD3yOKzrnka9WLtLY=
+github.com/aws/aws-sdk-go-v2/service/mq v1.28.3 h1:5LkM5v6NUcnyt6lHi0T8Eqh6PFENFkJmMYPwtwqWscU=
+github.com/aws/aws-sdk-go-v2/service/mq v1.28.3/go.mod h1:0x3GT0RZzP/DvhbV+ujNOGfM1sZD3yOKzrnka9WLtLY=
 github.com/aws/aws-sdk-go-v2/service/mwaa v1.34.2 h1:wtrT73Li/1XnRUqvk/F7wbNi2At3ZTfuYfxlBlCoLYA=
 github.com/aws/aws-sdk-go-v2/service/mwaa v1.34.2/go.mod h1:+xHea+IFoSOxPuhE2N2+oBHHiZe3duHcomiap/OjImo=
 github.com/aws/aws-sdk-go-v2/service/neptune v1.36.2 h1:a2o9NU6RfXB39dPKPiCXfQA5EL1HmO7O0Im1szML9+w=
