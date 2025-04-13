@@ -91,7 +91,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/datasync v1.47.1
 	github.com/aws/aws-sdk-go-v2/service/datazone v1.29.1
 	github.com/aws/aws-sdk-go-v2/service/dax v1.24.2
-	github.com/aws/aws-sdk-go-v2/service/detective v1.32.3
+	github.com/aws/aws-sdk-go-v2/service/detective v1.33.0
 	github.com/aws/aws-sdk-go-v2/service/devicefarm v1.30.2
 	github.com/aws/aws-sdk-go-v2/service/devopsguru v1.35.2
 	github.com/aws/aws-sdk-go-v2/service/directconnect v1.32.1
