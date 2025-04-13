@@ -116,6 +116,24 @@ func TestAccVPCLatticeListenerRule_methodMatch(t *testing.T) {
 	})
 }
 
+func TestAccVPCLatticeListenerRule_emptyMatchError(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccListenerRuleConfig_emptyMatchError(rName),
+				ExpectError: regexache.MustCompile("Invalid \"match\" value"),
+			},
+		},
+	})
+}
+
 func TestAccVPCLatticeListenerRule_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var listenerRule vpclattice.GetRuleOutput
@@ -391,6 +409,30 @@ resource "aws_vpclattice_listener_rule" "test" {
 
     }
   }
+  action {
+    forward {
+      target_groups {
+        target_group_identifier = aws_vpclattice_target_group.test[0].id
+        weight                  = 1
+      }
+      target_groups {
+        target_group_identifier = aws_vpclattice_target_group.test[1].id
+        weight                  = 2
+      }
+    }
+  }
+}
+`, rName))
+}
+
+func testAccListenerRuleConfig_emptyMatchError(rName string) string {
+	return acctest.ConfigCompose(testAccListenerRuleConfig_base(rName), fmt.Sprintf(`
+resource "aws_vpclattice_listener_rule" "test" {
+  name                = %[1]q
+  listener_identifier = aws_vpclattice_listener.test.listener_id
+  service_identifier  = aws_vpclattice_service.test.id
+  priority            = 40
+  match {}
   action {
     forward {
       target_groups {
