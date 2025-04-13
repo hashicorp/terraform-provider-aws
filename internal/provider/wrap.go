@@ -6,16 +6,14 @@ package provider
 import (
 	"context"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 // Implemented by (schema.ResourceData|schema.ResourceDiff).GetOk().
 type getAttributeFunc func(string) (any, bool)
 
 // contextFunc augments Context.
-type contextFunc func(context.Context, getAttributeFunc, any) (context.Context, diag.Diagnostics)
+type contextFunc func(context.Context, getAttributeFunc, any) (context.Context, error)
 
 type wrappedDataSourceOptions struct {
 	// bootstrapContext is run on all wrapped methods before any interceptors.
@@ -103,9 +101,9 @@ func (w *wrappedResource) stateUpgrade(f schema.StateUpgradeFunc) schema.StateUp
 	}
 
 	return func(ctx context.Context, rawState map[string]any, meta any) (map[string]any, error) {
-		ctx, diags := w.opts.bootstrapContext(ctx, func(key string) (any, bool) { v, ok := rawState[key]; return v, ok }, meta)
-		if diags.HasError() {
-			return nil, sdkdiag.DiagnosticsError(diags)
+		ctx, err := w.opts.bootstrapContext(ctx, func(key string) (any, bool) { v, ok := rawState[key]; return v, ok }, meta)
+		if err != nil {
+			return nil, err
 		}
 
 		return f(ctx, rawState, meta)

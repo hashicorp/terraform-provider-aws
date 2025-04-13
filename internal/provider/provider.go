@@ -384,8 +384,7 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 			}
 
 			opts := wrappedDataSourceOptions{
-				bootstrapContext: func(ctx context.Context, getAttribute getAttributeFunc, meta any) (context.Context, diag.Diagnostics) {
-					var diags diag.Diagnostics
+				bootstrapContext: func(ctx context.Context, getAttribute getAttributeFunc, meta any) (context.Context, error) {
 					var overrideRegion string
 
 					if v := v.Region; v != nil && v.IsOverrideEnabled && getAttribute != nil {
@@ -400,7 +399,7 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 						ctx = c.RegisterLogger(ctx)
 					}
 
-					return ctx, diags
+					return ctx, nil
 				},
 				interceptors: interceptors,
 				typeName:     typeName,
@@ -517,8 +516,7 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 
 			opts := wrappedResourceOptions{
 				// bootstrapContext is run on all wrapped methods before any interceptors.
-				bootstrapContext: func(ctx context.Context, getAttribute getAttributeFunc, meta any) (context.Context, diag.Diagnostics) {
-					var diags diag.Diagnostics
+				bootstrapContext: func(ctx context.Context, getAttribute getAttributeFunc, meta any) (context.Context, error) {
 					var overrideRegion string
 
 					if isRegionOverrideEnabled && getAttribute != nil {
@@ -533,7 +531,7 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 						ctx = c.RegisterLogger(ctx)
 					}
 
-					return ctx, diags
+					return ctx, nil
 				},
 				interceptors: interceptors,
 				typeName:     typeName,

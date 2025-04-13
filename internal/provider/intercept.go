@@ -132,9 +132,11 @@ func interceptedCRUDHandler[F ~func(context.Context, *schema.ResourceData, any) 
 	}
 
 	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-		ctx, diags := bootstrapContext(ctx, d.GetOk, meta)
-		if diags.HasError() {
-			return diags
+		var diags diag.Diagnostics
+
+		ctx, err := bootstrapContext(ctx, d.GetOk, meta)
+		if err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 
 		// Before interceptors are run first to last.
@@ -209,9 +211,9 @@ func interceptedCRUDHandler[F ~func(context.Context, *schema.ResourceData, any) 
 func interceptedCustomizeDiffHandler(bootstrapContext contextFunc, interceptorInvocations interceptorInvocations, f schema.CustomizeDiffFunc) schema.CustomizeDiffFunc {
 	// We run CustomizeDiff interceptors even if the resource has not defined a CustomizeDiff function.
 	return func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
-		ctx, diags := bootstrapContext(ctx, d.GetOk, meta)
-		if diags.HasError() {
-			return sdkdiag.DiagnosticsError(diags)
+		ctx, err := bootstrapContext(ctx, d.GetOk, meta)
+		if err != nil {
+			return err
 		}
 
 		why := CustomizeDiff
@@ -297,9 +299,9 @@ func interceptedImportHandler(bootstrapContext contextFunc, interceptorInvocatio
 	}
 
 	return func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-		ctx, diags := bootstrapContext(ctx, d.GetOk, meta)
-		if diags.HasError() {
-			return nil, sdkdiag.DiagnosticsError(diags)
+		ctx, err := bootstrapContext(ctx, d.GetOk, meta)
+		if err != nil {
+			return nil, err
 		}
 
 		why := Import
