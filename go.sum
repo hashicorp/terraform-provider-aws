@@ -143,8 +143,8 @@ github.com/aws/aws-sdk-go-v2/service/codecommit v1.28.2 h1:enL75gIdaPAoBztv/GDuM
 github.com/aws/aws-sdk-go-v2/service/codecommit v1.28.2/go.mod h1:JsdLne5QNlqJdCQFm2DbHLNmNfEWSU7HnTuvi8SIl+E=
 github.com/aws/aws-sdk-go-v2/service/codeconnections v1.6.2 h1:TOjwCtYqEwwGXd7/Cllw8ba7TLylEfNKeyR9EmajXpQ=
 github.com/aws/aws-sdk-go-v2/service/codeconnections v1.6.2/go.mod h1:7YWryj3wr+GSfFC62owpkrqtqmcijbXnYDLlxd3JPP8=
-github.com/aws/aws-sdk-go-v2/service/codedeploy v1.30.2 h1:U537VhZff2WqhxBsrdvgeucnxIftEOfHBro6qijL1hE=
-github.com/aws/aws-sdk-go-v2/service/codedeploy v1.30.2/go.mod h1:32JRv9exrmbpVxDJc0aoovh4K2CxStudvLctugWBR/o=
+github.com/aws/aws-sdk-go-v2/service/codedeploy v1.30.3 h1:6gvzjZYWlzDuT/VQxetlunnHbGfQt6Sq6PeWLMQyqMo=
+github.com/aws/aws-sdk-go-v2/service/codedeploy v1.30.3/go.mod h1:32JRv9exrmbpVxDJc0aoovh4K2CxStudvLctugWBR/o=
 github.com/aws/aws-sdk-go-v2/service/codeguruprofiler v1.25.2 h1:+BuFGmVCEYQc9uPs2Em/Crgfsss8yZ/V8QBrhyUvR7E=
 github.com/aws/aws-sdk-go-v2/service/codeguruprofiler v1.25.2/go.mod h1:zYj7dX/joiDCndpJXnlEi6f8HnNWW0lwYxaA/v+k4RI=
 github.com/aws/aws-sdk-go-v2/service/codegurureviewer v1.30.2 h1:TurFQLWgybH/TupFyQy9TAic0AXmNdm8eqSoq8HkDvg=
