@@ -368,10 +368,17 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 					}
 				}
 
+				if v.IsValidateOverrideInPartition {
+					interceptors = append(interceptors, interceptorInvocation{
+						when:        Before,
+						why:         Read,
+						interceptor: validateRegionDataSource,
+					})
+				}
 				interceptors = append(interceptors, interceptorInvocation{
-					when:        Before | After,
+					when:        After,
 					why:         Read,
-					interceptor: newRegionDataSourceCRUDInterceptor(v.IsValidateOverrideInPartition),
+					interceptor: setRegionInState,
 				})
 			}
 
@@ -485,7 +492,7 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 				interceptors = append(interceptors, interceptorInvocation{
 					when:        After,
 					why:         Read,
-					interceptor: newRegionValue(),
+					interceptor: setRegionInState,
 				})
 				if !v.IsGlobal {
 					interceptors = append(interceptors, interceptorInvocation{

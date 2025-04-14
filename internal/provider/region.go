@@ -42,6 +42,28 @@ var (
 
 		return nil
 	})
+
+	validateRegionDataSource crudInterceptor = interceptorFunc[schemaResourceData, diag.Diagnostics](func(ctx context.Context, opts crudInterceptorOptions) diag.Diagnostics {
+		c := opts.c
+		var diags diag.Diagnostics
+
+		switch when, why := opts.when, opts.why; when {
+		case Before:
+			switch why {
+			case Read:
+				// As data sources have no CustomizeDiff functionality, we validate the per-resource Region override value here.
+				if inContext, ok := conns.FromContext(ctx); ok {
+					if v := inContext.OverrideRegion(); v != "" {
+						if err := validateRegionInPartition(ctx, c, v); err != nil {
+							return sdkdiag.AppendFromErr(diags, err)
+						}
+					}
+				}
+			}
+		}
+
+		return diags
+	})
 )
 
 type defaultRegionValueInterceptor struct{}
@@ -67,30 +89,25 @@ func (r defaultRegionValueInterceptor) run(ctx context.Context, opts customizeDi
 	return nil
 }
 
-type newRegionValueInterceptor struct{}
+var (
+	setRegionInState crudInterceptor = interceptorFunc[schemaResourceData, diag.Diagnostics](func(ctx context.Context, opts crudInterceptorOptions) diag.Diagnostics {
+		c := opts.c
+		var diags diag.Diagnostics
 
-func newRegionValue() crudInterceptor {
-	return &newRegionValueInterceptor{}
-}
-
-// TODO REGION This is the same logic as in the data source interceptor.
-func (r newRegionValueInterceptor) run(ctx context.Context, opts crudInterceptorOptions) diag.Diagnostics {
-	c := opts.c
-	var diags diag.Diagnostics
-
-	switch d, when, why := opts.d, opts.when, opts.why; when {
-	case After:
-		// Set region in state after R.
-		switch why {
-		case Read:
-			if err := d.Set(names.AttrRegion, c.Region(ctx)); err != nil {
-				return sdkdiag.AppendErrorf(diags, "setting %s: %s", names.AttrRegion, err)
+		switch d, when, why := opts.d, opts.when, opts.why; when {
+		case After:
+			// Set region in state after R.
+			switch why {
+			case Read:
+				if err := d.Set(names.AttrRegion, c.Region(ctx)); err != nil {
+					return sdkdiag.AppendErrorf(diags, "setting %s: %s", names.AttrRegion, err)
+				}
 			}
 		}
-	}
 
-	return diags
-}
+		return diags
+	})
+)
 
 type forceNewIfRegionValueChangesInterceptor struct{}
 
@@ -141,46 +158,3 @@ var (
 		return []*schema.ResourceData{d}, nil
 	})
 )
-
-// regionDataSourceCRUDInterceptor implements per-resource Region override functionality on CRUD operations for data sources.
-type regionDataSourceCRUDInterceptor struct {
-	validateRegionInPartition bool
-}
-
-func newRegionDataSourceCRUDInterceptor(validateRegionInPartition bool) crudInterceptor {
-	return &regionDataSourceCRUDInterceptor{
-		validateRegionInPartition: validateRegionInPartition,
-	}
-}
-
-func (r regionDataSourceCRUDInterceptor) run(ctx context.Context, opts crudInterceptorOptions) diag.Diagnostics {
-	c := opts.c
-	var diags diag.Diagnostics
-
-	switch d, when, why := opts.d, opts.when, opts.why; when {
-	case Before:
-		switch why {
-		case Read:
-			// As data sources have no CustomizeDiff functionality we validate the per-resource Region override value here.
-			if r.validateRegionInPartition {
-				if inContext, ok := conns.FromContext(ctx); ok {
-					if v := inContext.OverrideRegion(); v != "" {
-						if err := validateRegionInPartition(ctx, c, v); err != nil {
-							return sdkdiag.AppendFromErr(diags, err)
-						}
-					}
-				}
-			}
-		}
-	case After:
-		// Set region in state after R.
-		switch why {
-		case Read:
-			if err := d.Set(names.AttrRegion, c.Region(ctx)); err != nil {
-				return sdkdiag.AppendErrorf(diags, "setting %s: %s", names.AttrRegion, err)
-			}
-		}
-	}
-
-	return diags
-}
