@@ -4,6 +4,7 @@ package firehose
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/firehose"
@@ -38,9 +39,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceDeliveryStream,
 			TypeName: "aws_kinesis_firehose_delivery_stream",
 			Name:     "Delivery Stream",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrName,
-			},
+			}),
 		},
 	}
 }

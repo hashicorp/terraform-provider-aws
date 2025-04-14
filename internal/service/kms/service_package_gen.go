@@ -4,6 +4,7 @@ package kms
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/kms"
@@ -93,9 +94,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceExternalKey,
 			TypeName: "aws_kms_external_key",
 			Name:     "External Key",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
 		},
 		{
 			Factory:  resourceGrant,
@@ -106,9 +107,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceKey,
 			TypeName: "aws_kms_key",
 			Name:     "Key",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
 		},
 		{
 			Factory:  resourceKeyPolicy,
@@ -119,17 +120,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceReplicaExternalKey,
 			TypeName: "aws_kms_replica_external_key",
 			Name:     "Replica External Key",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
 		},
 		{
 			Factory:  resourceReplicaKey,
 			TypeName: "aws_kms_replica_key",
 			Name:     "Replica Key",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
 		},
 	}
 }

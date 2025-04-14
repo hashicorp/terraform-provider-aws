@@ -4,6 +4,7 @@ package detective
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/detective"
@@ -32,9 +33,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  ResourceGraph,
 			TypeName: "aws_detective_graph",
 			Name:     "Graph",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: "graph_arn",
-			},
+			}),
 		},
 		{
 			Factory:  ResourceInvitationAccepter,

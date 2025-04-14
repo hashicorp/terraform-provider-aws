@@ -4,6 +4,7 @@ package networkfirewall
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/networkfirewall"
@@ -24,9 +25,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Factory:  newTLSInspectionConfigurationResource,
 			TypeName: "aws_networkfirewall_tls_inspection_configuration",
 			Name:     "TLS Inspection Configuration",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 	}
 }
@@ -37,13 +38,13 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Factory:  dataSourceFirewall,
 			TypeName: "aws_networkfirewall_firewall",
 			Name:     "Firewall",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags:     unique.Make(types.ServicePackageResourceTags{}),
 		},
 		{
 			Factory:  dataSourceFirewallPolicy,
 			TypeName: "aws_networkfirewall_firewall_policy",
 			Name:     "Firewall Policy",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags:     unique.Make(types.ServicePackageResourceTags{}),
 		},
 		{
 			Factory:  dataSourceResourcePolicy,
@@ -59,17 +60,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceFirewall,
 			TypeName: "aws_networkfirewall_firewall",
 			Name:     "Firewall",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
 		},
 		{
 			Factory:  resourceFirewallPolicy,
 			TypeName: "aws_networkfirewall_firewall_policy",
 			Name:     "Firewall Policy",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
 		},
 		{
 			Factory:  resourceLoggingConfiguration,
@@ -85,9 +86,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceRuleGroup,
 			TypeName: "aws_networkfirewall_rule_group",
 			Name:     "Rule Group",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
 		},
 	}
 }

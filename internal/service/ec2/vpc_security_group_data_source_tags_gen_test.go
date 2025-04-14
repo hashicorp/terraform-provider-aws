@@ -5,6 +5,7 @@ package ec2_test
 import (
 	"context"
 	"testing"
+	"unique"
 
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -199,7 +200,7 @@ func TestAccVPCSecurityGroupDataSource_tags_IgnoreTags_Overlap_ResourceTag(t *te
 }
 
 func expectFullSecurityGroupDataSourceTags(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfec2.ServicePackage(ctx), resourceAddress, &types.ServicePackageResourceTags{
+	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfec2.ServicePackage(ctx), resourceAddress, unique.Make(types.ServicePackageResourceTags{
 		IdentifierAttribute: names.AttrID,
-	}, knownValue)
+	}), knownValue)
 }
