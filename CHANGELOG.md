@@ -1,5 +1,9 @@
 ## 5.95.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_redshift_integration` ([#42105](https://github.com/hashicorp/terraform-provider-aws/issues/42105))
+
 ENHANCEMENTS:
 
 * data-source/aws_ec2_network_insights_path: Support `filter_at_destination` and `filter_at_source` attributes ([#42214](https://github.com/hashicorp/terraform-provider-aws/issues/42214))
