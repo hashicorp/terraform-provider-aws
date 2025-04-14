@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -195,6 +194,7 @@ func resourceSecretCreate(ctx context.Context, d *schema.ResourceData, meta inte
 			return false, err
 		},
 	)
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Secrets Manager Secret (%s): %s", name, err)
 	}
@@ -204,6 +204,7 @@ func resourceSecretCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	_, err = tfresource.RetryWhenNotFound(ctx, PropagationTimeout, func() (interface{}, error) {
 		return findSecretByID(ctx, conn, d.Id())
 	})
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Secrets Manager Secret (%s) create: %s", d.Id(), err)
 	}
@@ -255,6 +256,7 @@ func resourceSecretRead(ctx context.Context, d *schema.ResourceData, meta interf
 	var policy *secretsmanager.GetResourcePolicyOutput
 	err = tfresource.Retry(ctx, PropagationTimeout, func() *retry.RetryError {
 		output, err := findSecretPolicyByID(ctx, conn, d.Id())
+
 		if err != nil {
 			return retry.NonRetryableError(err)
 		}
@@ -324,6 +326,7 @@ func resourceSecretUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 
 		_, err := conn.UpdateSecret(ctx, input)
+
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Secrets Manager Secret (%s): %s", d.Id(), err)
 		}
@@ -445,6 +448,7 @@ func putSecretPolicy(ctx context.Context, conn *secretsmanager.Client, input *se
 	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*types.MalformedPolicyDocumentException](ctx, PropagationTimeout, func() (interface{}, error) {
 		return conn.PutResourcePolicy(ctx, input)
 	}, "This resource policy contains an unsupported principal")
+
 	if err != nil {
 		return nil, fmt.Errorf("putting Secrets Manager Secret (%s) policy: %w", aws.ToString(input.SecretId), err)
 	}
@@ -458,6 +462,7 @@ func deleteSecretPolicy(ctx context.Context, conn *secretsmanager.Client, id str
 	}
 
 	_, err := conn.DeleteResourcePolicy(ctx, input)
+
 	if err != nil {
 		return fmt.Errorf("deleting Secrets Manager Secret (%s) policy: %w", id, err)
 	}
@@ -492,6 +497,7 @@ func findSecretByID(ctx context.Context, conn *secretsmanager.Client, id string)
 	}
 
 	output, err := findSecret(ctx, conn, input)
+
 	if err != nil {
 		return nil, err
 	}
