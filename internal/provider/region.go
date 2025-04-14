@@ -66,28 +66,24 @@ var (
 	})
 )
 
-type defaultRegionValueInterceptor struct{}
+var (
+	defaultRegion customizeDiffInterceptor = interceptorFunc[*schema.ResourceDiff, error](func(ctx context.Context, opts customizeDiffInterceptorOptions) error {
+		c := opts.c
 
-func defaultRegionValue() customizeDiffInterceptor {
-	return &defaultRegionValueInterceptor{}
-}
-
-func (r defaultRegionValueInterceptor) run(ctx context.Context, opts customizeDiffInterceptorOptions) error {
-	c := opts.c
-
-	switch d, when, why := opts.d, opts.when, opts.why; when {
-	case Before:
-		switch why {
-		case CustomizeDiff:
-			// Set the value of the top-level `region` attribute to the provider's configured Region if it is not set.
-			if _, ok := d.GetOk(names.AttrRegion); !ok {
-				return d.SetNew(names.AttrRegion, c.AwsConfig(ctx).Region)
+		switch d, when, why := opts.d, opts.when, opts.why; when {
+		case Before:
+			switch why {
+			case CustomizeDiff:
+				// Set the value of the top-level `region` attribute to the provider's configured Region if it is not set.
+				if _, ok := d.GetOk(names.AttrRegion); !ok {
+					return d.SetNew(names.AttrRegion, c.AwsConfig(ctx).Region)
+				}
 			}
 		}
-	}
 
-	return nil
-}
+		return nil
+	})
+)
 
 var (
 	setRegionInState crudInterceptor = interceptorFunc[schemaResourceData, diag.Diagnostics](func(ctx context.Context, opts crudInterceptorOptions) diag.Diagnostics {
