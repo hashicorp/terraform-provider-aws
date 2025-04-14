@@ -156,7 +156,7 @@ resource "aws_secretsmanager_secret_version" "test" {
 }
 ```
 
-### Example Using `container_definitions` and `inference_accelerator`
+### Example Using `container_definitions`
 
 ```terraform
 resource "aws_ecs_task_definition" "test" {
@@ -179,21 +179,10 @@ resource "aws_ecs_task_definition" "test" {
         "containerPort": 80,
         "hostPort": 8080
       }
-    ],
-        "resourceRequirements":[
-            {
-                "type":"InferenceAccelerator",
-                "value":"device_1"
-            }
-        ]
+    ]
   }
 ]
 TASK_DEFINITION
-
-  inference_accelerator {
-    device_name = "device_1"
-    device_type = "eia1.medium"
-  }
 }
 ```
 
@@ -241,7 +230,6 @@ The following arguments are optional:
 
     **Note:** Fault injection only works with tasks using the `awsvpc` or `host` network modes. Fault injection isn't available on Windows.
 * `execution_role_arn` - (Optional) ARN of the task execution role that the Amazon ECS container agent and the Docker daemon can assume.
-* `inference_accelerator` - (Optional) Configuration block(s) with Inference Accelerators settings. [Detailed below.](#inference_accelerator)
 * `ipc_mode` - (Optional) IPC resource namespace to be used for the containers in the task The valid values are `host`, `task`, and `none`.
 * `memory` - (Optional) Amount (in MiB) of memory used by the task. If the `requires_compatibilities` is `FARGATE` this field is required.
 * `network_mode` - (Optional) Docker networking mode to use for the containers in the task. Valid values are `none`, `bridge`, `awsvpc`, and `host`.
@@ -324,11 +312,6 @@ For more information, see [Specifying an FSX Windows File Server volume in your 
 ### ephemeral_storage
 
 * `size_in_gib` - (Required) The total amount, in GiB, of ephemeral storage to set for the task. The minimum supported value is `21` GiB and the maximum supported value is `200` GiB.
-
-### inference_accelerator
-
-* `device_name` - (Required) Elastic Inference accelerator device name. The deviceName must also be referenced in a container definition as a ResourceRequirement.
-* `device_type` - (Required) Elastic Inference accelerator type to use.
 
 ## Attribute Reference
 
