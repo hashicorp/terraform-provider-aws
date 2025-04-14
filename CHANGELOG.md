@@ -13,6 +13,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_elasticache_serverless_cache: Fix to allow in-place updates when `engine` is changed from `redis` to `valkey` ([#42208](https://github.com/hashicorp/terraform-provider-aws/issues/42208))
 * resource/aws_sagemaker_domain: Allow `default_user_settings.custom_file_system_config` and `default_space_settings.custom_file_system_config` to be removed on Update ([#42144](https://github.com/hashicorp/terraform-provider-aws/issues/42144))
 * resource/aws_sagemaker_user_profile: Allow `user_settings.custom_file_system_config` to be removed on Update ([#42144](https://github.com/hashicorp/terraform-provider-aws/issues/42144))
 
