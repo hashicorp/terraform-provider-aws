@@ -13,7 +13,7 @@ import (
 )
 
 type (
-	crudInterceptorFunc = interceptorFunc[schemaResourceData, diag.Diagnostics]
+	crudInterceptorFunc = interceptorFunc1[schemaResourceData, diag.Diagnostics]
 )
 
 func TestInterceptorsWhy(t *testing.T) {

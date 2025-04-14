@@ -38,7 +38,8 @@ type (
 // If a Before interceptor returns Diagnostics indicating an error occurred then
 // no further interceptors in the chain are run and neither is the schema's method.
 // In other cases all interceptors in the chain are run.
-type interceptor[D, E any] interface {
+
+type interceptor1[D, E any] interface {
 	run(context.Context, interceptorOptions[D]) E
 }
 
@@ -48,16 +49,16 @@ type interceptor2[D, R, E any] interface {
 
 type (
 	// crudInterceptor is functionality invoked during a CRUD request lifecycle.
-	crudInterceptor = interceptor[schemaResourceData, diag.Diagnostics]
+	crudInterceptor = interceptor1[schemaResourceData, diag.Diagnostics]
 	// customizeDiffInterceptor is functionality invoked during a CustomizeDiff request lifecycle.
-	customizeDiffInterceptor = interceptor[*schema.ResourceDiff, error]
+	customizeDiffInterceptor = interceptor1[*schema.ResourceDiff, error]
 	// importInterceptor is functionality invoked during an Import request lifecycle.
 	importInterceptor = interceptor2[*schema.ResourceData, []*schema.ResourceData, error]
 )
 
-type interceptorFunc[D, E any] func(context.Context, interceptorOptions[D]) E
+type interceptorFunc1[D, E any] func(context.Context, interceptorOptions[D]) E
 
-func (f interceptorFunc[D, E]) run(ctx context.Context, opts interceptorOptions[D]) E {
+func (f interceptorFunc1[D, E]) run(ctx context.Context, opts interceptorOptions[D]) E {
 	return f(ctx, opts)
 }
 
@@ -77,7 +78,7 @@ type interceptorInvocation struct {
 type typedInterceptorInvocation[D, E any] struct {
 	when        when
 	why         why
-	interceptor interceptor[D, E]
+	interceptor interceptor1[D, E]
 }
 
 type typedInterceptor2Invocation[D, R, E any] struct {

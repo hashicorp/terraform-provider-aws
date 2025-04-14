@@ -24,7 +24,7 @@ func validateRegionInPartition(ctx context.Context, c *conns.AWSClient, region s
 }
 
 var (
-	validateRegionResource customizeDiffInterceptor = interceptorFunc[*schema.ResourceDiff, error](func(ctx context.Context, opts customizeDiffInterceptorOptions) error {
+	validateRegionResource customizeDiffInterceptor = interceptorFunc1[*schema.ResourceDiff, error](func(ctx context.Context, opts customizeDiffInterceptorOptions) error {
 		c := opts.c
 
 		switch d, when, why := opts.d, opts.when, opts.why; when {
@@ -43,7 +43,7 @@ var (
 		return nil
 	})
 
-	validateRegionDataSource crudInterceptor = interceptorFunc[schemaResourceData, diag.Diagnostics](func(ctx context.Context, opts crudInterceptorOptions) diag.Diagnostics {
+	validateRegionDataSource crudInterceptor = interceptorFunc1[schemaResourceData, diag.Diagnostics](func(ctx context.Context, opts crudInterceptorOptions) diag.Diagnostics {
 		c := opts.c
 		var diags diag.Diagnostics
 
@@ -67,7 +67,7 @@ var (
 )
 
 var (
-	defaultRegion customizeDiffInterceptor = interceptorFunc[*schema.ResourceDiff, error](func(ctx context.Context, opts customizeDiffInterceptorOptions) error {
+	defaultRegion customizeDiffInterceptor = interceptorFunc1[*schema.ResourceDiff, error](func(ctx context.Context, opts customizeDiffInterceptorOptions) error {
 		c := opts.c
 
 		switch d, when, why := opts.d, opts.when, opts.why; when {
@@ -86,7 +86,7 @@ var (
 )
 
 var (
-	setRegionInState crudInterceptor = interceptorFunc[schemaResourceData, diag.Diagnostics](func(ctx context.Context, opts crudInterceptorOptions) diag.Diagnostics {
+	setRegionInState crudInterceptor = interceptorFunc1[schemaResourceData, diag.Diagnostics](func(ctx context.Context, opts crudInterceptorOptions) diag.Diagnostics {
 		c := opts.c
 		var diags diag.Diagnostics
 
