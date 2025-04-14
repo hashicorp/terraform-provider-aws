@@ -341,14 +341,14 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 			}
 
 			var isRegionOverrideEnabled bool
-			if v := v.Region; v != nil && v.IsOverrideEnabled {
+			if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
 				isRegionOverrideEnabled = true
 			}
 
 			var interceptors interceptorInvocations
 
 			if isRegionOverrideEnabled {
-				v := v.Region
+				v := v.Region.Value()
 				s := r.SchemaMap()
 
 				if _, ok := s[names.AttrRegion]; !ok {
@@ -395,7 +395,7 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 				bootstrapContext: func(ctx context.Context, getAttribute getAttributeFunc, meta any) (context.Context, error) {
 					var overrideRegion string
 
-					if v := v.Region; v != nil && v.IsOverrideEnabled && getAttribute != nil {
+					if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled && getAttribute != nil {
 						if region, ok := getAttribute(names.AttrRegion); ok {
 							overrideRegion = region.(string)
 						}
@@ -445,14 +445,14 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 			}
 
 			var isRegionOverrideEnabled bool
-			if v := v.Region; v != nil && v.IsOverrideEnabled {
+			if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
 				isRegionOverrideEnabled = true
 			}
 
 			var interceptors interceptorInvocations
 
 			if isRegionOverrideEnabled {
-				v := v.Region
+				v := v.Region.Value()
 				s := r.SchemaMap()
 
 				if _, ok := s[names.AttrRegion]; !ok {
@@ -562,7 +562,7 @@ func validateResourceSchemas(ctx context.Context) error {
 			r := v.Factory()
 			s := r.SchemaMap()
 
-			if v := v.Region; v != nil && v.IsOverrideEnabled {
+			if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
 				if _, ok := s[names.AttrRegion]; ok {
 					errs = append(errs, fmt.Errorf("`%s` attribute is defined: %s data source", names.AttrRegion, typeName))
 					continue
@@ -589,7 +589,7 @@ func validateResourceSchemas(ctx context.Context) error {
 			r := v.Factory()
 			s := r.SchemaMap()
 
-			if v := v.Region; v != nil && v.IsOverrideEnabled {
+			if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
 				if _, ok := s[names.AttrRegion]; ok {
 					errs = append(errs, fmt.Errorf("`%s` attribute is defined: %s resource", names.AttrRegion, typeName))
 					continue

@@ -418,7 +418,7 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 					var diags diag.Diagnostics
 					var overrideRegion string
 
-					if v.Region != nil && v.Region.IsOverrideEnabled && getAttribute != nil {
+					if !tfunique.IsHandleNil(v.Region) && v.Region.Value().IsOverrideEnabled && getAttribute != nil {
 						diags.Append(getAttribute(ctx, path.Root(names.AttrRegion), &overrideRegion)...)
 						if diags.HasError() {
 							return ctx, diags
@@ -462,7 +462,7 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 						var diags diag.Diagnostics
 						var overrideRegion string
 
-						if v.Region != nil && v.Region.IsOverrideEnabled && getAttribute != nil {
+						if !tfunique.IsHandleNil(v.Region) && v.Region.Value().IsOverrideEnabled && getAttribute != nil {
 							diags.Append(getAttribute(ctx, path.Root(names.AttrRegion), &overrideRegion)...)
 							if diags.HasError() {
 								return ctx, diags
@@ -511,7 +511,7 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 					var diags diag.Diagnostics
 					var overrideRegion string
 
-					if v.Region != nil && v.Region.IsOverrideEnabled && getAttribute != nil {
+					if !tfunique.IsHandleNil(v.Region) && v.Region.Value().IsOverrideEnabled && getAttribute != nil {
 						diags.Append(getAttribute(ctx, path.Root(names.AttrRegion), &overrideRegion)...)
 						if diags.HasError() {
 							return ctx, diags
@@ -557,7 +557,7 @@ func (p *fwprovider) validateResourceSchemas(ctx context.Context) error {
 			schemaResponse := datasource.SchemaResponse{}
 			ds.Schema(ctx, datasource.SchemaRequest{}, &schemaResponse)
 
-			if v := v.Region; v != nil && v.IsOverrideEnabled {
+			if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
 				if _, ok := schemaResponse.Schema.Attributes[names.AttrRegion]; ok {
 					errs = append(errs, fmt.Errorf("`%s` attribute is defined: %s data source", names.AttrRegion, typeName))
 					continue
@@ -592,7 +592,7 @@ func (p *fwprovider) validateResourceSchemas(ctx context.Context) error {
 				schemaResponse := ephemeral.SchemaResponse{}
 				er.Schema(ctx, ephemeral.SchemaRequest{}, &schemaResponse)
 
-				if v := v.Region; v != nil && v.IsOverrideEnabled {
+				if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
 					if _, ok := schemaResponse.Schema.Attributes[names.AttrRegion]; ok {
 						errs = append(errs, fmt.Errorf("`%s` attribute is defined: %s ephemeral resource", names.AttrRegion, typeName))
 						continue
@@ -613,7 +613,7 @@ func (p *fwprovider) validateResourceSchemas(ctx context.Context) error {
 			schemaResponse := resource.SchemaResponse{}
 			r.Schema(ctx, resource.SchemaRequest{}, &schemaResponse)
 
-			if v := v.Region; v != nil && v.IsOverrideEnabled {
+			if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
 				if _, ok := schemaResponse.Schema.Attributes[names.AttrRegion]; ok {
 					errs = append(errs, fmt.Errorf("`%s` attribute is defined: %s resource", names.AttrRegion, typeName))
 					continue
