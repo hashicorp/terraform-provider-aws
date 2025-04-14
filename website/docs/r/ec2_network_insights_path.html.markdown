@@ -37,7 +37,7 @@ The following arguments are optional:
 * `filter_at_source` - (Optional) Scopes the analysis to network paths that match specific filters at the source. If you specify this parameter, you can't specify `source_ip` or `destination_port`. See below for details. Note that Terraform performs drift detection on this argument only when the value is provided.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-`filter_at_destination` and `filter_at_source` configuration block support the following arguments:
+The `filter_at_destination` and `filter_at_source` configuration blocks support the following arguments:
 
 * `destination_address` - (Optional) The destination IPv4 address.
 * `destination_port_range` - (Optional) The destination port range. See below for details.
