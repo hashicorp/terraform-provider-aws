@@ -633,7 +633,7 @@ func (r *resourceBucketLifecycleConfiguration) ImportState(ctx context.Context, 
 	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrBucket), bucket)...)
 	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrExpectedBucketOwner), expectedBucketOwner)...)
 
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), request.ID)...)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), request, response)
 }
 
 func (r *resourceBucketLifecycleConfiguration) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
