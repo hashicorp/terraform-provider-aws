@@ -37,7 +37,7 @@ class MyConvertedCode extends TerraformStack {
       this,
       "example_1",
       {
-        namespace: "example-namespace",
+        namespace: "example_namespace",
         tableBucketArn: example.arn,
       }
     );
@@ -45,7 +45,7 @@ class MyConvertedCode extends TerraformStack {
     awsS3TablesNamespaceExample.overrideLogicalId("example");
     const awsS3TablesTableExample = new S3TablesTable(this, "example_2", {
       format: "ICEBERG",
-      name: "example-table",
+      name: "example_table",
       namespace: Token.asString(awsS3TablesNamespaceExample.namespace),
       tableBucketArn: Token.asString(
         awsS3TablesNamespaceExample.tableBucketArn
@@ -169,4 +169,4 @@ Using `terraform import`, import S3 Tables Table using the `tableBucketArn`, the
 % terraform import aws_s3tables_table.example 'arn:aws:s3tables:us-west-2:123456789012:bucket/example-bucket;example-namespace;example-table'
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-797ff4b5faf99758da256f313992983b4f90adbb830aef7b731a39cfaa1ebb91 -->
+<!-- cache-key: cdktf-0.20.8 input-1b0334bf078537baac156fabb7f8bff27cbf2351a1e4db60cfa59ebb04a9a318 -->

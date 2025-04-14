@@ -52,6 +52,15 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 				IsOverrideEnabled: false,
 			},
 		},
+		{
+			Factory:  newResourceRestAPIPut,
+			TypeName: "aws_api_gateway_rest_api_put",
+			Name:     "Rest API Put",
+			Region: &itypes.ServicePackageResourceRegion{
+				IsGlobal:          false,
+				IsOverrideEnabled: false,
+			},
+		},
 	}
 }
 

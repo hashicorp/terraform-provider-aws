@@ -63,7 +63,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceAuthPolicy,
+			Factory:  dataSourceAuthPolicy,
 			TypeName: "aws_vpclattice_auth_policy",
 			Name:     "Auth Policy",
 			Region: &itypes.ServicePackageResourceRegion{
@@ -73,9 +73,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			},
 		},
 		{
-			Factory:  DataSourceListener,
+			Factory:  dataSourceListener,
 			TypeName: "aws_vpclattice_listener",
 			Name:     "Listener",
+			Tags: &itypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
 			Region: &itypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
@@ -83,7 +86,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			},
 		},
 		{
-			Factory:  DataSourceResourcePolicy,
+			Factory:  dataSourceResourcePolicy,
 			TypeName: "aws_vpclattice_resource_policy",
 			Name:     "Resource Policy",
 			Region: &itypes.ServicePackageResourceRegion{
@@ -133,7 +136,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			},
 		},
 		{
-			Factory:  ResourceAuthPolicy,
+			Factory:  resourceAuthPolicy,
 			TypeName: "aws_vpclattice_auth_policy",
 			Name:     "Auth Policy",
 			Region: &itypes.ServicePackageResourceRegion{
@@ -156,7 +159,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			},
 		},
 		{
-			Factory:  ResourceListenerRule,
+			Factory:  resourceListenerRule,
 			TypeName: "aws_vpclattice_listener_rule",
 			Name:     "Listener Rule",
 			Tags: &itypes.ServicePackageResourceTags{
@@ -169,7 +172,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			},
 		},
 		{
-			Factory:  ResourceResourcePolicy,
+			Factory:  resourceResourcePolicy,
 			TypeName: "aws_vpclattice_resource_policy",
 			Name:     "Resource Policy",
 			Region: &itypes.ServicePackageResourceRegion{

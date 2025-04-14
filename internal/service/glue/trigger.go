@@ -29,15 +29,17 @@ import (
 
 // @SDKResource("aws_glue_trigger", name="Trigger")
 // @Tags(identifierAttribute="arn")
-func ResourceTrigger() *schema.Resource {
+func resourceTrigger() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTriggerCreate,
 		ReadWithoutTimeout:   resourceTriggerRead,
 		UpdateWithoutTimeout: resourceTriggerUpdate,
 		DeleteWithoutTimeout: resourceTriggerDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(5 * time.Minute),
 			Update: schema.DefaultTimeout(5 * time.Minute),
@@ -312,7 +314,7 @@ func resourceTriggerRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
-	output, err := FindTriggerByName(ctx, conn, d.Id())
+	output, err := findTriggerByName(ctx, conn, d.Id())
 	if err != nil {
 		if errs.IsA[*awstypes.EntityNotFoundException](err) {
 			log.Printf("[WARN] Glue Trigger (%s) not found, removing from state", d.Id())
@@ -476,6 +478,83 @@ func deleteTrigger(ctx context.Context, conn *glue.Client, Name string) error {
 	}
 
 	return nil
+}
+
+func findTriggerByName(ctx context.Context, conn *glue.Client, name string) (*glue.GetTriggerOutput, error) {
+	input := &glue.GetTriggerInput{
+		Name: aws.String(name),
+	}
+
+	output, err := conn.GetTrigger(ctx, input)
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func statusTrigger(ctx context.Context, conn *glue.Client, triggerName string) retry.StateRefreshFunc {
+	const (
+		triggerStatusUnknown = "Unknown"
+	)
+	return func() (any, string, error) {
+		input := &glue.GetTriggerInput{
+			Name: aws.String(triggerName),
+		}
+
+		output, err := conn.GetTrigger(ctx, input)
+
+		if err != nil {
+			return nil, triggerStatusUnknown, err
+		}
+
+		if output == nil {
+			return output, triggerStatusUnknown, nil
+		}
+
+		return output, string(output.Trigger.State), nil
+	}
+}
+
+func waitTriggerCreated(ctx context.Context, conn *glue.Client, triggerName string, timeout time.Duration) (*glue.GetTriggerOutput, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(
+			awstypes.TriggerStateActivating,
+			awstypes.TriggerStateCreating,
+			awstypes.TriggerStateUpdating,
+		),
+		Target: enum.Slice(
+			awstypes.TriggerStateActivated,
+			awstypes.TriggerStateCreated,
+		),
+		Refresh: statusTrigger(ctx, conn, triggerName),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*glue.GetTriggerOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitTriggerDeleted(ctx context.Context, conn *glue.Client, triggerName string, timeout time.Duration) (*glue.GetTriggerOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.TriggerStateDeleting),
+		Target:  []string{},
+		Refresh: statusTrigger(ctx, conn, triggerName),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*glue.GetTriggerOutput); ok {
+		return output, err
+	}
+
+	return nil, err
 }
 
 func expandActions(l []any) []awstypes.Action {

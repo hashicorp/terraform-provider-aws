@@ -18,8 +18,8 @@ import (
 
 // []*SERVICE.Tag handling
 
-// Tags returns ssm service tags.
-func Tags(tags tftags.KeyValueTags) []awstypes.Tag {
+// svcTags returns ssm service tags.
+func svcTags(tags tftags.KeyValueTags) []awstypes.Tag {
 	result := make([]awstypes.Tag, 0, len(tags))
 
 	for k, v := range tags.Map() {
@@ -34,8 +34,8 @@ func Tags(tags tftags.KeyValueTags) []awstypes.Tag {
 	return result
 }
 
-// KeyValueTags creates tftags.KeyValueTags from ssm service tags.
-func KeyValueTags(ctx context.Context, tags []awstypes.Tag) tftags.KeyValueTags {
+// keyValueTags creates tftags.KeyValueTags from ssm service tags.
+func keyValueTags(ctx context.Context, tags []awstypes.Tag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
@@ -49,7 +49,7 @@ func KeyValueTags(ctx context.Context, tags []awstypes.Tag) tftags.KeyValueTags 
 // nil is returned if there are no input tags.
 func getTagsIn(ctx context.Context) []awstypes.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
+		if tags := svcTags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
 		}
 	}
@@ -60,7 +60,7 @@ func getTagsIn(ctx context.Context) []awstypes.Tag {
 // setTagsOut sets ssm service tags in Context.
 func setTagsOut(ctx context.Context, tags []awstypes.Tag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		inContext.TagsOut = option.Some(KeyValueTags(ctx, tags))
+		inContext.TagsOut = option.Some(keyValueTags(ctx, tags))
 	}
 }
 
@@ -70,7 +70,7 @@ func createTags(ctx context.Context, conn *ssm.Client, identifier, resourceType 
 		return nil
 	}
 
-	return updateTags(ctx, conn, identifier, resourceType, nil, KeyValueTags(ctx, tags), optFns...)
+	return updateTags(ctx, conn, identifier, resourceType, nil, keyValueTags(ctx, tags), optFns...)
 }
 
 // updateTags updates ssm service tags.
@@ -104,7 +104,7 @@ func updateTags(ctx context.Context, conn *ssm.Client, identifier, resourceType 
 		input := ssm.AddTagsToResourceInput{
 			ResourceId:   aws.String(identifier),
 			ResourceType: awstypes.ResourceTypeForTagging(resourceType),
-			Tags:         Tags(updatedTags),
+			Tags:         svcTags(updatedTags),
 		}
 
 		_, err := conn.AddTagsToResource(ctx, &input, optFns...)

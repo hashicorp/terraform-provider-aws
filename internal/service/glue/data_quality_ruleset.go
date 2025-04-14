@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/glue"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -26,12 +27,13 @@ import (
 
 // @SDKResource("aws_glue_data_quality_ruleset", name="Data Quality Ruleset")
 // @Tags(identifierAttribute="arn")
-func ResourceDataQualityRuleset() *schema.Resource {
+func resourceDataQualityRuleset() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDataQualityRulesetCreate,
 		ReadWithoutTimeout:   resourceDataQualityRulesetRead,
 		UpdateWithoutTimeout: resourceDataQualityRulesetUpdate,
 		DeleteWithoutTimeout: resourceDataQualityRulesetDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -139,7 +141,7 @@ func resourceDataQualityRulesetRead(ctx context.Context, d *schema.ResourceData,
 
 	name := d.Id()
 
-	dataQualityRuleset, err := FindDataQualityRulesetByName(ctx, conn, name)
+	dataQualityRuleset, err := findDataQualityRulesetByName(ctx, conn, name)
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Glue Data Quality Ruleset (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -218,6 +220,30 @@ func resourceDataQualityRulesetDelete(ctx context.Context, d *schema.ResourceDat
 	}
 
 	return diags
+}
+
+func findDataQualityRulesetByName(ctx context.Context, conn *glue.Client, name string) (*glue.GetDataQualityRulesetOutput, error) {
+	input := &glue.GetDataQualityRulesetInput{
+		Name: aws.String(name),
+	}
+
+	output, err := conn.GetDataQualityRuleset(ctx, input)
+	if errs.IsA[*awstypes.EntityNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }
 
 func expandTargetTable(tfMap map[string]any) *awstypes.DataQualityTargetTable {

@@ -708,23 +708,23 @@ tools: prereq-go ## Install tools
 
 ts: testacc-short ## Alias to testacc-short
 
-update: ## Update dependencies
+update: prereq-go ## Update dependencies
 	@echo "make: Updating dependencies..."
 	$(GO_VER) get -u ./...
-	go mod tidy
-	cd ./tools/literally && $(GO_VER) get -u ./... && go mod tidy
-	cd ./tools/tfsdk2fw && $(GO_VER) get -u ./... && go mod tidy
-	cd .ci/tools && $(GO_VER) get -u && go mod tidy
-	cd .ci/providerlint && $(GO_VER) get -u && go mod tidy
-	cd .ci/providerlint/passes/AWSAT005/testdata && $(GO_VER) get -u ./... && go mod tidy
-	cd .ci/providerlint/passes/AWSAT002/testdata && $(GO_VER) get -u ./... && go mod tidy
-	cd .ci/providerlint/passes/AWSAT003/testdata && $(GO_VER) get -u ./... && go mod tidy
-	cd .ci/providerlint/passes/AWSAT004/testdata && $(GO_VER) get -u ./... && go mod tidy
-	cd .ci/providerlint/passes/AWSV001/testdata && $(GO_VER) get -u ./... && go mod tidy
-	cd .ci/providerlint/passes/AWSR001/testdata && $(GO_VER) get -u ./... && go mod tidy
-	cd .ci/providerlint/passes/AWSAT001/testdata && $(GO_VER) get -u ./... && go mod tidy
-	cd .ci/providerlint/passes/AWSAT006/testdata && $(GO_VER) get -u ./... && go mod tidy
-	cd ./skaff && $(GO_VER) get -u ./... && go mod tidy
+	$(GO_VER) mod tidy
+	cd ./tools/literally && $(GO_VER) get -u ./... && $(GO_VER) mod tidy
+	cd ./tools/tfsdk2fw && $(GO_VER) get -u ./... && $(GO_VER) mod tidy
+	cd .ci/tools && $(GO_VER) get -u && $(GO_VER) mod tidy
+	cd .ci/providerlint && $(GO_VER) get -u && $(GO_VER) mod tidy
+	cd .ci/providerlint/passes/AWSAT005/testdata && $(GO_VER) get -u ./... && $(GO_VER) mod tidy
+	cd .ci/providerlint/passes/AWSAT002/testdata && $(GO_VER) get -u ./... && $(GO_VER) mod tidy
+	cd .ci/providerlint/passes/AWSAT003/testdata && $(GO_VER) get -u ./... && $(GO_VER) mod tidy
+	cd .ci/providerlint/passes/AWSAT004/testdata && $(GO_VER) get -u ./... && $(GO_VER) mod tidy
+	cd .ci/providerlint/passes/AWSV001/testdata && $(GO_VER) get -u ./... && $(GO_VER) mod tidy
+	cd .ci/providerlint/passes/AWSR001/testdata && $(GO_VER) get -u ./... && $(GO_VER) mod tidy
+	cd .ci/providerlint/passes/AWSAT001/testdata && $(GO_VER) get -u ./... && $(GO_VER) mod tidy
+	cd .ci/providerlint/passes/AWSAT006/testdata && $(GO_VER) get -u ./... && $(GO_VER) mod tidy
+	cd ./skaff && $(GO_VER) get -u ./... && $(GO_VER) mod tidy
 
 website: website-link-check-markdown website-link-check-md website-markdown-lint website-misspell website-terrafmt website-tflint ## [CI] Run all CI website checks
 

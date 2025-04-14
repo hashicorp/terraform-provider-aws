@@ -146,7 +146,7 @@ func dataSourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceDat
 
 	if v, ok := d.GetOk(names.AttrTags); ok {
 		input.Filters = append(input.Filters, newTagFilterList(
-			Tags(tftags.New(ctx, v.(map[string]any))))...)
+			svcTags(tftags.New(ctx, v.(map[string]any))))...)
 	}
 
 	input.Filters = append(input.Filters, newCustomFilterList(

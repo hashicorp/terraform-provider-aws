@@ -36,6 +36,10 @@ func dataSourceAMI() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"allow_unsafe_filter": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"architecture": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -125,6 +129,10 @@ func dataSourceAMI() *schema.Resource {
 				Default:  false,
 			},
 			"kernel_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"last_launched_time": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -253,7 +261,7 @@ func dataSourceAMIRead(ctx context.Context, d *schema.ResourceData, meta any) di
 		describeImagesInput.Owners = flex.ExpandStringValueList(v.([]any))
 	}
 
-	diags = checkMostRecentAndMissingFilters(diags, &describeImagesInput, d.Get(names.AttrMostRecent).(bool))
+	diags = checkMostRecentAndMissingFilters(diags, &describeImagesInput, d.Get(names.AttrMostRecent).(bool), d.Get("allow_unsafe_filter").(bool))
 
 	images, err := findImages(ctx, conn, &describeImagesInput)
 
@@ -321,6 +329,7 @@ func dataSourceAMIRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	d.Set("image_type", image.ImageType)
 	d.Set("imds_support", image.ImdsSupport)
 	d.Set("kernel_id", image.KernelId)
+	d.Set("last_launched_time", image.LastLaunchedTime)
 	d.Set(names.AttrName, image.Name)
 	d.Set(names.AttrOwnerID, image.OwnerId)
 	d.Set("platform", image.Platform)
@@ -435,7 +444,7 @@ func flattenAMIStateReason(m *awstypes.StateReason) map[string]any {
 
 // checkMostRecentAndMissingFilters appends a diagnostic if the provided configuration
 // uses the most recent image and is not filtered by owner or image ID
-func checkMostRecentAndMissingFilters(diags diag.Diagnostics, input *ec2.DescribeImagesInput, mostRecent bool) diag.Diagnostics {
+func checkMostRecentAndMissingFilters(diags diag.Diagnostics, input *ec2.DescribeImagesInput, mostRecent, allowUnsafe bool) diag.Diagnostics {
 	filtered := false
 	for _, f := range input.Filters {
 		name := aws.ToString(f.Name)
@@ -445,14 +454,19 @@ func checkMostRecentAndMissingFilters(diags diag.Diagnostics, input *ec2.Describ
 	}
 
 	if mostRecent && len(input.Owners) == 0 && !filtered {
-		return append(diags, diag.Diagnostic{
-			Severity: diag.Warning,
+		d := diag.Diagnostic{
+			Severity: diag.Error,
 			Summary:  "Most Recent Image Not Filtered",
 			Detail: `"most_recent" is set to "true" and results are not filtered by owner or image ID. ` +
 				"With this configuration, a third party may introduce a new image which " +
-				"will be returned by this data source. Consider filtering by owner or image ID " +
-				"to avoid this possibility.",
-		})
+				"will be returned by this data source. Filter by owner or image ID to " +
+				"avoid this possibility.",
+		}
+		if allowUnsafe {
+			d.Severity = diag.Warning
+		}
+
+		return append(diags, d)
 	}
 
 	return diags

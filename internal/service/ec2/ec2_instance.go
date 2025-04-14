@@ -808,7 +808,6 @@ func resourceInstance() *schema.Resource {
 			"user_data": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				Computed:      true,
 				ConflictsWith: []string{"user_data_base64"},
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					// Sometimes the EC2 API responds with the equivalent, empty SHA1 sum
@@ -817,17 +816,38 @@ func resourceInstance() *schema.Resource {
 						(old == "" && new == "da39a3ee5e6b4b0d3255bfef95601890afd80709") {
 						return true
 					}
+
+					oldHashExists := old == userDataHashSum(new)
+					base64Encoded := userDataHashSum(old) == userDataHashSum(new)
+					if oldHashExists || base64Encoded {
+						return true
+					}
 					return false
 				},
-				StateFunc: func(v any) string {
-					switch v := v.(type) {
-					case string:
-						return userDataHashSum(v)
-					default:
-						return ""
-					}
-				},
-				ValidateFunc: validation.StringLenBetween(0, 16384),
+				ValidateDiagFunc: validation.AllDiag(
+					validation.ToDiagFunc(validation.StringLenBetween(0, 16384)),
+					func(i any, path cty.Path) diag.Diagnostics {
+						var diags diag.Diagnostics
+						v, ok := i.(string)
+						if !ok {
+							return sdkdiag.AppendErrorf(diags, "expected type to be string")
+						}
+
+						if _, err := itypes.Base64Decode(v); err == nil {
+							// value is a base46 encoded string
+							return diag.Diagnostics{
+								diag.Diagnostic{
+									Severity:      diag.Warning,
+									Summary:       "Value is base64 encoded",
+									Detail:        "The value is base64 encoded. If you want to use base64 encoding, please use the user_data_base64 argument. user_data attribute is set as cleartext in state",
+									AttributePath: path,
+								},
+							}
+						}
+
+						return diags
+					},
+				),
 			},
 			"user_data_base64": {
 				Type:          schema.TypeString,
@@ -913,7 +933,7 @@ func resourceInstance() *schema.Resource {
 				if diff.Id() != "" && diff.HasChanges(names.AttrInstanceType, "user_data", "user_data_base64") {
 					// user_data is stored in state as a hash.
 					if diff.HasChange("user_data") && !diff.HasChange(names.AttrInstanceType) {
-						if o, n := diff.GetChange("user_data"); userDataHashSum(n.(string)) == o.(string) {
+						if o, n := diff.GetChange("user_data"); n.(string) == o.(string) {
 							return nil
 						}
 					}
@@ -1138,7 +1158,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 	}
 
 	for vol, blockDeviceTags := range blockDeviceTagsToCreate {
-		if err := createTags(ctx, conn, vol, Tags(tftags.New(ctx, blockDeviceTags))); err != nil {
+		if err := createTags(ctx, conn, vol, svcTags(tftags.New(ctx, blockDeviceTags))); err != nil {
 			log.Printf("[ERR] Error creating tags for EBS volume %s: %s", vol, err)
 		}
 	}
@@ -1454,7 +1474,11 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta any)
 			if b64 {
 				d.Set("user_data_base64", attr.UserData.Value)
 			} else {
-				d.Set("user_data", userDataHashSum(aws.ToString(attr.UserData.Value)))
+				data, err := itypes.Base64Decode(aws.ToString(attr.UserData.Value))
+				if err != nil {
+					return sdkdiag.AppendErrorf(diags, "decoding user_data: %s", err)
+				}
+				d.Set("user_data", string(data))
 			}
 		}
 	}

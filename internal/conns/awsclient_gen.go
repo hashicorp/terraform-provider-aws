@@ -250,7 +250,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/wafregional"
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
 	"github.com/aws/aws-sdk-go-v2/service/wellarchitected"
-	"github.com/aws/aws-sdk-go-v2/service/worklink"
 	"github.com/aws/aws-sdk-go-v2/service/workspaces"
 	"github.com/aws/aws-sdk-go-v2/service/workspacesweb"
 	"github.com/aws/aws-sdk-go-v2/service/xray"
@@ -1240,10 +1239,6 @@ func (c *AWSClient) WAFV2Client(ctx context.Context) *wafv2.Client {
 
 func (c *AWSClient) WellArchitectedClient(ctx context.Context) *wellarchitected.Client {
 	return errs.Must(client[*wellarchitected.Client](ctx, c, names.WellArchitected, make(map[string]any)))
-}
-
-func (c *AWSClient) WorkLinkClient(ctx context.Context) *worklink.Client {
-	return errs.Must(client[*worklink.Client](ctx, c, names.WorkLink, make(map[string]any)))
 }
 
 func (c *AWSClient) WorkSpacesClient(ctx context.Context) *workspaces.Client {

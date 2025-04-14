@@ -46,7 +46,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
 	return []*itypes.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceCatalogTable,
+			Factory:  dataSourceCatalogTable,
 			TypeName: "aws_glue_catalog_table",
 			Name:     "Catalog Table",
 			Region: &itypes.ServicePackageResourceRegion{
@@ -56,7 +56,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			},
 		},
 		{
-			Factory:  DataSourceConnection,
+			Factory:  dataSourceConnection,
 			TypeName: "aws_glue_connection",
 			Name:     "Connection",
 			Region: &itypes.ServicePackageResourceRegion{
@@ -66,7 +66,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			},
 		},
 		{
-			Factory:  DataSourceDataCatalogEncryptionSettings,
+			Factory:  dataSourceDataCatalogEncryptionSettings,
 			TypeName: "aws_glue_data_catalog_encryption_settings",
 			Name:     "Data Catalog Encryption Settings",
 			Region: &itypes.ServicePackageResourceRegion{
@@ -76,7 +76,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			},
 		},
 		{
-			Factory:  DataSourceScript,
+			Factory:  dataSourceScript,
 			TypeName: "aws_glue_script",
 			Name:     "Script",
 			Region: &itypes.ServicePackageResourceRegion{
@@ -91,7 +91,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:  ResourceCatalogDatabase,
+			Factory:  resourceCatalogDatabase,
 			TypeName: "aws_glue_catalog_database",
 			Name:     "Database",
 			Tags: &itypes.ServicePackageResourceTags{
@@ -104,7 +104,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			},
 		},
 		{
-			Factory:  ResourceCatalogTable,
+			Factory:  resourceCatalogTable,
 			TypeName: "aws_glue_catalog_table",
 			Name:     "Catalog Table",
 			Region: &itypes.ServicePackageResourceRegion{
@@ -114,7 +114,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			},
 		},
 		{
-			Factory:  ResourceClassifier,
+			Factory:  resourceClassifier,
 			TypeName: "aws_glue_classifier",
 			Name:     "Classifier",
 			Region: &itypes.ServicePackageResourceRegion{
@@ -124,7 +124,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			},
 		},
 		{
-			Factory:  ResourceConnection,
+			Factory:  resourceConnection,
 			TypeName: "aws_glue_connection",
 			Name:     "Connection",
 			Tags: &itypes.ServicePackageResourceTags{
@@ -137,7 +137,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			},
 		},
 		{
-			Factory:  ResourceCrawler,
+			Factory:  resourceCrawler,
 			TypeName: "aws_glue_crawler",
 			Name:     "Crawler",
 			Tags: &itypes.ServicePackageResourceTags{
@@ -150,7 +150,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			},
 		},
 		{
-			Factory:  ResourceDataCatalogEncryptionSettings,
+			Factory:  resourceDataCatalogEncryptionSettings,
 			TypeName: "aws_glue_data_catalog_encryption_settings",
 			Name:     "Data Catalog Encryption Settings",
 			Region: &itypes.ServicePackageResourceRegion{
@@ -160,7 +160,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			},
 		},
 		{
-			Factory:  ResourceDataQualityRuleset,
+			Factory:  resourceDataQualityRuleset,
 			TypeName: "aws_glue_data_quality_ruleset",
 			Name:     "Data Quality Ruleset",
 			Tags: &itypes.ServicePackageResourceTags{
@@ -173,7 +173,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			},
 		},
 		{
-			Factory:  ResourceDevEndpoint,
+			Factory:  resourceDevEndpoint,
 			TypeName: "aws_glue_dev_endpoint",
 			Name:     "Dev Endpoint",
 			Tags: &itypes.ServicePackageResourceTags{
@@ -186,7 +186,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			},
 		},
 		{
-			Factory:  ResourceJob,
+			Factory:  resourceJob,
 			TypeName: "aws_glue_job",
 			Name:     "Job",
 			Tags: &itypes.ServicePackageResourceTags{
@@ -199,7 +199,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			},
 		},
 		{
-			Factory:  ResourceMLTransform,
+			Factory:  resourceMLTransform,
 			TypeName: "aws_glue_ml_transform",
 			Name:     "ML Transform",
 			Tags: &itypes.ServicePackageResourceTags{
@@ -212,7 +212,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			},
 		},
 		{
-			Factory:  ResourcePartition,
+			Factory:  resourcePartition,
 			TypeName: "aws_glue_partition",
 			Name:     "Partition",
 			Region: &itypes.ServicePackageResourceRegion{
@@ -222,7 +222,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			},
 		},
 		{
-			Factory:  ResourcePartitionIndex,
+			Factory:  resourcePartitionIndex,
 			TypeName: "aws_glue_partition_index",
 			Name:     "Partition Index",
 			Region: &itypes.ServicePackageResourceRegion{
@@ -232,7 +232,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			},
 		},
 		{
-			Factory:  ResourceRegistry,
+			Factory:  resourceRegistry,
 			TypeName: "aws_glue_registry",
 			Name:     "Registry",
 			Tags: &itypes.ServicePackageResourceTags{
@@ -245,7 +245,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			},
 		},
 		{
-			Factory:  ResourceResourcePolicy,
+			Factory:  resourceResourcePolicy,
 			TypeName: "aws_glue_resource_policy",
 			Name:     "Resource Policy",
 			Region: &itypes.ServicePackageResourceRegion{
@@ -255,7 +255,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			},
 		},
 		{
-			Factory:  ResourceSchema,
+			Factory:  resourceSchema,
 			TypeName: "aws_glue_schema",
 			Name:     "Schema",
 			Tags: &itypes.ServicePackageResourceTags{
@@ -268,7 +268,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			},
 		},
 		{
-			Factory:  ResourceSecurityConfiguration,
+			Factory:  resourceSecurityConfiguration,
 			TypeName: "aws_glue_security_configuration",
 			Name:     "Security Configuration",
 			Region: &itypes.ServicePackageResourceRegion{
@@ -278,7 +278,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			},
 		},
 		{
-			Factory:  ResourceTrigger,
+			Factory:  resourceTrigger,
 			TypeName: "aws_glue_trigger",
 			Name:     "Trigger",
 			Tags: &itypes.ServicePackageResourceTags{
@@ -291,7 +291,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			},
 		},
 		{
-			Factory:  ResourceUserDefinedFunction,
+			Factory:  resourceUserDefinedFunction,
 			TypeName: "aws_glue_user_defined_function",
 			Name:     "User Defined Function",
 			Region: &itypes.ServicePackageResourceRegion{
@@ -301,7 +301,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			},
 		},
 		{
-			Factory:  ResourceWorkflow,
+			Factory:  resourceWorkflow,
 			TypeName: "aws_glue_workflow",
 			Name:     "Workflow",
 			Tags: &itypes.ServicePackageResourceTags{

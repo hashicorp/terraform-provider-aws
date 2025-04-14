@@ -18,7 +18,7 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.ServicePackageFrameworkDataSource {
 	return []*itypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:  newDataSourceImage,
+			Factory:  newImageDataSource,
 			TypeName: "aws_appstream_image",
 			Name:     "Image",
 			Region: &itypes.ServicePackageResourceRegion{
@@ -40,7 +40,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
 	return []*itypes.ServicePackageSDKResource{
 		{
-			Factory:  ResourceDirectoryConfig,
+			Factory:  resourceDirectoryConfig,
 			TypeName: "aws_appstream_directory_config",
 			Name:     "Directory Config",
 			Region: &itypes.ServicePackageResourceRegion{
@@ -50,7 +50,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			},
 		},
 		{
-			Factory:  ResourceFleet,
+			Factory:  resourceFleet,
 			TypeName: "aws_appstream_fleet",
 			Name:     "Fleet",
 			Tags: &itypes.ServicePackageResourceTags{
@@ -63,7 +63,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			},
 		},
 		{
-			Factory:  ResourceFleetStackAssociation,
+			Factory:  resourceFleetStackAssociation,
 			TypeName: "aws_appstream_fleet_stack_association",
 			Name:     "Fleet Stack Association",
 			Region: &itypes.ServicePackageResourceRegion{
@@ -73,7 +73,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			},
 		},
 		{
-			Factory:  ResourceImageBuilder,
+			Factory:  resourceImageBuilder,
 			TypeName: "aws_appstream_image_builder",
 			Name:     "Image Builder",
 			Tags: &itypes.ServicePackageResourceTags{
@@ -86,7 +86,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			},
 		},
 		{
-			Factory:  ResourceStack,
+			Factory:  resourceStack,
 			TypeName: "aws_appstream_stack",
 			Name:     "Stack",
 			Tags: &itypes.ServicePackageResourceTags{
@@ -99,7 +99,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			},
 		},
 		{
-			Factory:  ResourceUser,
+			Factory:  resourceUser,
 			TypeName: "aws_appstream_user",
 			Name:     "User",
 			Region: &itypes.ServicePackageResourceRegion{
@@ -109,7 +109,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			},
 		},
 		{
-			Factory:  ResourceUserStackAssociation,
+			Factory:  resourceUserStackAssociation,
 			TypeName: "aws_appstream_user_stack_association",
 			Name:     "User Stack Association",
 			Region: &itypes.ServicePackageResourceRegion{

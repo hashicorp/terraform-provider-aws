@@ -7,21 +7,20 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -167,13 +166,11 @@ func resourceTargetGroup() *schema.Resource {
 							ValidateDiagFunc: enum.Validate[types.TargetGroupProtocol](),
 						},
 						"protocol_version": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
-							StateFunc: func(v any) string {
-								return strings.ToUpper(v.(string))
-							},
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ForceNew:         true,
+							StateFunc:        sdkv2.ToUpperSchemaStateFunc,
 							ValidateDiagFunc: enum.Validate[types.TargetGroupProtocolVersion](),
 						},
 						"vpc_identifier": {
@@ -207,36 +204,32 @@ func resourceTargetGroup() *schema.Resource {
 	}
 }
 
-const (
-	ResNameTargetGroup = "Target Group"
-)
-
 func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	in := vpclattice.CreateTargetGroupInput{
-		ClientToken: aws.String(id.UniqueId()),
+	input := vpclattice.CreateTargetGroupInput{
+		ClientToken: aws.String(sdkid.UniqueId()),
 		Name:        aws.String(name),
 		Tags:        getTagsIn(ctx),
 		Type:        types.TargetGroupType(d.Get(names.AttrType).(string)),
 	}
 
 	if v, ok := d.GetOk("config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-		in.Config = expandTargetGroupConfig(v.([]any)[0].(map[string]any))
+		input.Config = expandTargetGroupConfig(v.([]any)[0].(map[string]any))
 	}
 
-	out, err := conn.CreateTargetGroup(ctx, &in)
+	out, err := conn.CreateTargetGroup(ctx, &input)
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionCreating, ResNameService, name, err)
+		return sdkdiag.AppendErrorf(diags, "creating VPCLattice Target Group (%s): %s", name, err)
 	}
 
 	d.SetId(aws.ToString(out.Id))
 
 	if _, err := waitTargetGroupCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionWaitingForCreation, ResNameTargetGroup, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for VPCLattice Target Group (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceTargetGroupRead(ctx, d, meta)...)
@@ -255,13 +248,13 @@ func resourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta a
 	}
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionReading, ResNameTargetGroup, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading VPCLattice Target Group (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrARN, out.Arn)
 	if out.Config != nil {
 		if err := d.Set("config", []any{flattenTargetGroupConfig(out.Config)}); err != nil {
-			return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionSetting, ResNameTargetGroup, d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "setting config: %s", err)
 		}
 	} else {
 		d.Set("config", nil)
@@ -278,7 +271,7 @@ func resourceTargetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		in := vpclattice.UpdateTargetGroupInput{
+		input := vpclattice.UpdateTargetGroupInput{
 			TargetGroupIdentifier: aws.String(d.Id()),
 		}
 
@@ -287,19 +280,19 @@ func resourceTargetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 				config := expandTargetGroupConfig(v.([]any)[0].(map[string]any))
 
 				if v := config.HealthCheck; v != nil {
-					in.HealthCheck = v
+					input.HealthCheck = v
 				}
 			}
 		}
 
-		if in.HealthCheck == nil {
+		if input.HealthCheck == nil {
 			return diags
 		}
 
-		_, err := conn.UpdateTargetGroup(ctx, &in)
+		_, err := conn.UpdateTargetGroup(ctx, &input)
 
 		if err != nil {
-			return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionUpdating, ResNameTargetGroup, d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating VPCLattice Target Group (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -325,14 +318,59 @@ func resourceTargetGroupDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionDeleting, ResNameTargetGroup, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading VPCLattice Target Group (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitTargetGroupDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionWaitingForDeletion, ResNameTargetGroup, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for VPCLattice Target Group (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
+}
+
+func findTargetGroupByID(ctx context.Context, conn *vpclattice.Client, id string) (*vpclattice.GetTargetGroupOutput, error) {
+	input := vpclattice.GetTargetGroupInput{
+		TargetGroupIdentifier: aws.String(id),
+	}
+
+	return findTargetGroup(ctx, conn, &input)
+}
+
+func findTargetGroup(ctx context.Context, conn *vpclattice.Client, input *vpclattice.GetTargetGroupInput) (*vpclattice.GetTargetGroupOutput, error) {
+	output, err := conn.GetTargetGroup(ctx, input)
+
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func statusTargetGroup(ctx context.Context, conn *vpclattice.Client, id string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findTargetGroupByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.Status), nil
+	}
 }
 
 func waitTargetGroupCreated(ctx context.Context, conn *vpclattice.Client, id string, timeout time.Duration) (*vpclattice.GetTargetGroupOutput, error) {
@@ -341,15 +379,17 @@ func waitTargetGroupCreated(ctx context.Context, conn *vpclattice.Client, id str
 		Target:                    enum.Slice(types.TargetGroupStatusActive),
 		Refresh:                   statusTargetGroup(ctx, conn, id),
 		Timeout:                   timeout,
-		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*vpclattice.GetTargetGroupOutput); ok {
-		tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(out.FailureCode), aws.ToString(out.FailureMessage)))
 
-		return out, err
+	if output, ok := outputRaw.(*vpclattice.GetTargetGroupOutput); ok {
+		if output.Status == types.TargetGroupStatusCreateFailed {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
+		}
+
+		return output, err
 	}
 
 	return nil, err
@@ -364,53 +404,16 @@ func waitTargetGroupDeleted(ctx context.Context, conn *vpclattice.Client, id str
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*vpclattice.GetTargetGroupOutput); ok {
-		tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(out.FailureCode), aws.ToString(out.FailureMessage)))
 
-		return out, err
+	if output, ok := outputRaw.(*vpclattice.GetTargetGroupOutput); ok {
+		if output.Status == types.TargetGroupStatusDeleteFailed {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
+		}
+
+		return output, err
 	}
 
 	return nil, err
-}
-
-func statusTargetGroup(ctx context.Context, conn *vpclattice.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
-		out, err := findTargetGroupByID(ctx, conn, id)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return out, string(out.Status), nil
-	}
-}
-
-func findTargetGroupByID(ctx context.Context, conn *vpclattice.Client, id string) (*vpclattice.GetTargetGroupOutput, error) {
-	in := vpclattice.GetTargetGroupInput{
-		TargetGroupIdentifier: aws.String(id),
-	}
-	out, err := conn.GetTargetGroup(ctx, &in)
-
-	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
-	}
-
-	return out, nil
 }
 
 func flattenTargetGroupConfig(apiObject *types.TargetGroupConfig) map[string]any {

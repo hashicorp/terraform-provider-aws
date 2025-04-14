@@ -53,6 +53,11 @@ recent AMI.
 several valid keys, for a full reference, check out
 [describe-images in the AWS CLI reference][1].
 
+* `allow_unsafe_filter` - (Optional) If true, allow unsafe filter values. With unsafe
+filters and `most_recent` set to `true`, a third party may introduce a new image which
+will be returned by this data source. Consider filtering by owner or image ID rather
+than setting this argument.
+
 * `name_regex` - (Optional) Regex string to apply to the AMI list returned
 by AWS. This allows more advanced filtering not supported from the AWS API. This
 filtering is done locally on what AWS returns, and could have a performance
@@ -100,6 +105,7 @@ interpolation.
 * `imds_support` - Instance Metadata Service (IMDS) support mode for the image. Set to `v2.0` if instances ran from this image enforce IMDSv2.
 * `kernel_id` - Kernel associated with the image, if any. Only applicable
   for machine images.
+* `last_launched_time` - Date and time, in ISO 8601 date-time format , when the AMI was last used to launch an EC2 instance. When the AMI is used to launch an instance, there is a 24-hour delay before that usage is reported. For more information, see the following [AWS document](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ami-last-launched-time.html).
 * `name` - Name of the AMI that was provided during image creation.
 * `owner_id` - AWS account ID of the image owner.
 * `platform` - Value is Windows for `Windows` AMIs; otherwise blank.

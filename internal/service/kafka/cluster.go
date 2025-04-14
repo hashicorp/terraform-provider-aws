@@ -319,10 +319,9 @@ func resourceCluster() *schema.Resource {
 				Computed: true,
 			},
 			"configuration_info": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				MaxItems:         1,
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						names.AttrARN: {
@@ -682,8 +681,12 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	clusterUUID, _ := clusterUUIDFromARN(clusterARN)
 	d.Set("cluster_uuid", clusterUUID)
 	if cluster.CurrentBrokerSoftwareInfo != nil {
-		if err := d.Set("configuration_info", []any{flattenBrokerSoftwareInfo(cluster.CurrentBrokerSoftwareInfo)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting configuration_info: %s", err)
+		if tfMap := flattenBrokerSoftwareInfo(cluster.CurrentBrokerSoftwareInfo); len(tfMap) > 0 {
+			if err := d.Set("configuration_info", []any{tfMap}); err != nil {
+				return sdkdiag.AppendErrorf(diags, "setting configuration_info: %s", err)
+			}
+		} else {
+			d.Set("configuration_info", nil)
 		}
 	} else {
 		d.Set("configuration_info", nil)
