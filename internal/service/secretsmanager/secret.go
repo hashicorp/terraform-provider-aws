@@ -45,6 +45,8 @@ func resourceSecret() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				// Note: The AWS SDK does not currently support reading the 'recovery_window_in_days' and 'force_overwrite_replica_secret' fields during read operations.
+				// These parameters can be set during write operations, but will not be returned when querying the resource.
 				d.Set("force_overwrite_replica_secret", false)
 				d.Set("recovery_window_in_days", 30)
 				return []*schema.ResourceData{d}, nil
