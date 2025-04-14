@@ -4,6 +4,7 @@ package eks
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/eks"
@@ -49,9 +50,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newPodIdentityAssociationResource,
 			TypeName: "aws_eks_pod_identity_association",
 			Name:     "Pod Identity Association",
-			Tags: &inttypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: "association_arn",
-			},
+			}),
 			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:          false,
 				IsOverrideEnabled: false,
@@ -151,9 +152,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceAccessEntry,
 			TypeName: "aws_eks_access_entry",
 			Name:     "Access Entry",
-			Tags: &inttypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: "access_entry_arn",
-			},
+			}),
 			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
@@ -174,9 +175,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceAddon,
 			TypeName: "aws_eks_addon",
 			Name:     "Add-On",
-			Tags: &inttypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
@@ -187,9 +188,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceCluster,
 			TypeName: "aws_eks_cluster",
 			Name:     "Cluster",
-			Tags: &inttypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
@@ -200,9 +201,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceFargateProfile,
 			TypeName: "aws_eks_fargate_profile",
 			Name:     "Fargate Profile",
-			Tags: &inttypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
@@ -213,9 +214,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceIdentityProviderConfig,
 			TypeName: "aws_eks_identity_provider_config",
 			Name:     "Identity Provider Config",
-			Tags: &inttypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
@@ -226,9 +227,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceNodeGroup,
 			TypeName: "aws_eks_node_group",
 			Name:     "Node Group",
-			Tags: &inttypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,

@@ -4,6 +4,7 @@ package auditmanager
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/auditmanager"
@@ -53,9 +54,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newResourceAssessment,
 			TypeName: "aws_auditmanager_assessment",
 			Name:     "Assessment",
-			Tags: &inttypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:          false,
 				IsOverrideEnabled: false,
@@ -83,9 +84,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newResourceControl,
 			TypeName: "aws_auditmanager_control",
 			Name:     "Control",
-			Tags: &inttypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:          false,
 				IsOverrideEnabled: false,
@@ -95,9 +96,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newResourceFramework,
 			TypeName: "aws_auditmanager_framework",
 			Name:     "Framework",
-			Tags: &inttypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:          false,
 				IsOverrideEnabled: false,

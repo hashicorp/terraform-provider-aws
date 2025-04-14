@@ -4,6 +4,7 @@ package ssm
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
@@ -118,7 +119,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceActivation,
 			TypeName: "aws_ssm_activation",
 			Name:     "Activation",
-			Tags:     &inttypes.ServicePackageResourceTags{},
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
 			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
@@ -129,10 +130,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceAssociation,
 			TypeName: "aws_ssm_association",
 			Name:     "Association",
-			Tags: &inttypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 				ResourceType:        "Association",
-			},
+			}),
 			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
@@ -153,10 +154,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceDocument,
 			TypeName: "aws_ssm_document",
 			Name:     "Document",
-			Tags: &inttypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 				ResourceType:        "Document",
-			},
+			}),
 			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
@@ -167,10 +168,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceMaintenanceWindow,
 			TypeName: "aws_ssm_maintenance_window",
 			Name:     "Maintenance Window",
-			Tags: &inttypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 				ResourceType:        "MaintenanceWindow",
-			},
+			}),
 			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
@@ -201,10 +202,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceParameter,
 			TypeName: "aws_ssm_parameter",
 			Name:     "Parameter",
-			Tags: &inttypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 				ResourceType:        "Parameter",
-			},
+			}),
 			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
@@ -215,10 +216,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourcePatchBaseline,
 			TypeName: "aws_ssm_patch_baseline",
 			Name:     "Patch Baseline",
-			Tags: &inttypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 				ResourceType:        "PatchBaseline",
-			},
+			}),
 			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,

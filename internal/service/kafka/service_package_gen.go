@@ -4,6 +4,7 @@ package kafka
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/kafka"
@@ -89,7 +90,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Factory:  dataSourceVPCConnection,
 			TypeName: "aws_msk_vpc_connection",
 			Name:     "VPC Connection",
-			Tags:     &inttypes.ServicePackageResourceTags{},
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
 			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
@@ -105,9 +106,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceCluster,
 			TypeName: "aws_msk_cluster",
 			Name:     "Cluster",
-			Tags: &inttypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
 			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
@@ -138,9 +139,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceReplicator,
 			TypeName: "aws_msk_replicator",
 			Name:     "Replicator",
-			Tags: &inttypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
 			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
@@ -161,9 +162,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceServerlessCluster,
 			TypeName: "aws_msk_serverless_cluster",
 			Name:     "Serverless Cluster",
-			Tags: &inttypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
 			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
@@ -174,9 +175,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceVPCConnection,
 			TypeName: "aws_msk_vpc_connection",
 			Name:     "VPC Connection",
-			Tags: &inttypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
 			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,

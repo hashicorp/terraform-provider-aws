@@ -4,6 +4,7 @@ package lambda
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
@@ -82,7 +83,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Factory:  dataSourceFunction,
 			TypeName: "aws_lambda_function",
 			Name:     "Function",
-			Tags:     &inttypes.ServicePackageResourceTags{},
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
 			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
@@ -148,9 +149,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceCodeSigningConfig,
 			TypeName: "aws_lambda_code_signing_config",
 			Name:     "Code Signing Config",
-			Tags: &inttypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
@@ -161,9 +162,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceEventSourceMapping,
 			TypeName: "aws_lambda_event_source_mapping",
 			Name:     "Event Source Mapping",
-			Tags: &inttypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
@@ -174,9 +175,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceFunction,
 			TypeName: "aws_lambda_function",
 			Name:     "Function",
-			Tags: &inttypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,

@@ -4,6 +4,7 @@ package cloudwatch
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
@@ -35,9 +36,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newResourceContributorInsightRule,
 			TypeName: "aws_cloudwatch_contributor_insight_rule",
 			Name:     "Contributor Insight Rule",
-			Tags: &inttypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrResourceARN,
-			},
+			}),
 			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:          false,
 				IsOverrideEnabled: false,
@@ -47,9 +48,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newResourceContributorManagedInsightRule,
 			TypeName: "aws_cloudwatch_contributor_managed_insight_rule",
 			Name:     "Contributor Managed Insight Rule",
-			Tags: &inttypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:          false,
 				IsOverrideEnabled: false,
@@ -68,9 +69,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceCompositeAlarm,
 			TypeName: "aws_cloudwatch_composite_alarm",
 			Name:     "Composite Alarm",
-			Tags: &inttypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
@@ -91,9 +92,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceMetricAlarm,
 			TypeName: "aws_cloudwatch_metric_alarm",
 			Name:     "Metric Alarm",
-			Tags: &inttypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
@@ -104,9 +105,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceMetricStream,
 			TypeName: "aws_cloudwatch_metric_stream",
 			Name:     "Metric Stream",
-			Tags: &inttypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,

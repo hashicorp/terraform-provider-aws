@@ -4,6 +4,7 @@ package osis
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/osis"
@@ -25,9 +26,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newPipelineResource,
 			TypeName: "aws_osis_pipeline",
 			Name:     "Pipeline",
-			Tags: &inttypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: "pipeline_arn",
-			},
+			}),
 			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:          false,
 				IsOverrideEnabled: false,

@@ -4,6 +4,7 @@ package route53
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/route53"
@@ -122,10 +123,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceHealthCheck,
 			TypeName: "aws_route53_health_check",
 			Name:     "Health Check",
-			Tags: &inttypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 				ResourceType:        "healthcheck",
-			},
+			}),
 			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
@@ -206,10 +207,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceZone,
 			TypeName: "aws_route53_zone",
 			Name:     "Hosted Zone",
-			Tags: &inttypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: "zone_id",
 				ResourceType:        "hostedzone",
-			},
+			}),
 			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,

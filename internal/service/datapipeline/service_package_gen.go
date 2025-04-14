@@ -4,6 +4,7 @@ package datapipeline
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/datapipeline"
@@ -29,7 +30,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Factory:  dataSourcePipeline,
 			TypeName: "aws_datapipeline_pipeline",
 			Name:     "Pipeline",
-			Tags:     &inttypes.ServicePackageResourceTags{},
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
 			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
@@ -55,10 +56,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourcePipeline,
 			TypeName: "aws_datapipeline_pipeline",
 			Name:     "Pipeline",
-			Tags: &inttypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 				ResourceType:        "Pipeline",
-			},
+			}),
 			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,

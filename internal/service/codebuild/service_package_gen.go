@@ -4,6 +4,7 @@ package codebuild
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/codebuild"
@@ -44,9 +45,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceFleet,
 			TypeName: "aws_codebuild_fleet",
 			Name:     "Fleet",
-			Tags: &inttypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
@@ -57,7 +58,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceProject,
 			TypeName: "aws_codebuild_project",
 			Name:     "Project",
-			Tags:     &inttypes.ServicePackageResourceTags{},
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
 			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
@@ -68,7 +69,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceReportGroup,
 			TypeName: "aws_codebuild_report_group",
 			Name:     "Report Group",
-			Tags:     &inttypes.ServicePackageResourceTags{},
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
 			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,

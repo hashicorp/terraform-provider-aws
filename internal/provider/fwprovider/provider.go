@@ -27,6 +27,7 @@ import (
 	tffunction "github.com/hashicorp/terraform-provider-aws/internal/function"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	tfunique "github.com/hashicorp/terraform-provider-aws/internal/unique"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -407,7 +408,7 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 
 			// TODO REGION Inject a top-level "region" attribute.
 
-			if v.Tags != nil {
+			if !tfunique.IsHandleNil(v.Tags) {
 				interceptors = append(interceptors, newTagsDataSourceInterceptor(v.Tags))
 			}
 
@@ -499,7 +500,7 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 
 			// TODO REGION Inject a top-level "region" attribute.
 
-			if v.Tags != nil {
+			if !tfunique.IsHandleNil(v.Tags) {
 				modifyPlanFuncs = append(modifyPlanFuncs, setTagsAll)
 				interceptors = append(interceptors, newTagsResourceInterceptor(v.Tags))
 			}
@@ -563,7 +564,7 @@ func (p *fwprovider) validateResourceSchemas(ctx context.Context) error {
 				}
 			}
 
-			if v.Tags != nil {
+			if !tfunique.IsHandleNil(v.Tags) {
 				// The data source has opted in to transparent tagging.
 				// Ensure that the schema look OK.
 				if v, ok := schemaResponse.Schema.Attributes[names.AttrTags]; ok {
@@ -619,7 +620,7 @@ func (p *fwprovider) validateResourceSchemas(ctx context.Context) error {
 				}
 			}
 
-			if v.Tags != nil {
+			if !tfunique.IsHandleNil(v.Tags) {
 				// The resource has opted in to transparent tagging.
 				// Ensure that the schema look OK.
 				if v, ok := schemaResponse.Schema.Attributes[names.AttrTags]; ok {

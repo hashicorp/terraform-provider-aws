@@ -4,6 +4,7 @@ package iam
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
@@ -143,7 +144,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Factory:  dataSourceOpenIDConnectProvider,
 			TypeName: "aws_iam_openid_connect_provider",
 			Name:     "OIDC Provider",
-			Tags:     &inttypes.ServicePackageResourceTags{},
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
 			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
@@ -154,7 +155,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Factory:  dataSourcePolicy,
 			TypeName: "aws_iam_policy",
 			Name:     "Policy",
-			Tags:     &inttypes.ServicePackageResourceTags{},
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
 			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
@@ -185,7 +186,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Factory:  dataSourceRole,
 			TypeName: "aws_iam_role",
 			Name:     "Role",
-			Tags:     &inttypes.ServicePackageResourceTags{},
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
 			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
@@ -236,7 +237,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Factory:  dataSourceUser,
 			TypeName: "aws_iam_user",
 			Name:     "User",
-			Tags:     &inttypes.ServicePackageResourceTags{},
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
 			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
@@ -342,10 +343,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceInstanceProfile,
 			TypeName: "aws_iam_instance_profile",
 			Name:     "Instance Profile",
-			Tags: &inttypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 				ResourceType:        "InstanceProfile",
-			},
+			}),
 			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
@@ -356,10 +357,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceOpenIDConnectProvider,
 			TypeName: "aws_iam_openid_connect_provider",
 			Name:     "OIDC Provider",
-			Tags: &inttypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 				ResourceType:        "OIDCProvider",
-			},
+			}),
 			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
@@ -370,10 +371,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourcePolicy,
 			TypeName: "aws_iam_policy",
 			Name:     "Policy",
-			Tags: &inttypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 				ResourceType:        "Policy",
-			},
+			}),
 			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
@@ -394,10 +395,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceRole,
 			TypeName: "aws_iam_role",
 			Name:     "Role",
-			Tags: &inttypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrName,
 				ResourceType:        "Role",
-			},
+			}),
 			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
@@ -428,10 +429,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceSAMLProvider,
 			TypeName: "aws_iam_saml_provider",
 			Name:     "SAML Provider",
-			Tags: &inttypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 				ResourceType:        "SAMLProvider",
-			},
+			}),
 			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
@@ -452,10 +453,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceServerCertificate,
 			TypeName: "aws_iam_server_certificate",
 			Name:     "Server Certificate",
-			Tags: &inttypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrName,
 				ResourceType:        "ServerCertificate",
-			},
+			}),
 			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
@@ -466,10 +467,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceServiceLinkedRole,
 			TypeName: "aws_iam_service_linked_role",
 			Name:     "Service Linked Role",
-			Tags: &inttypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 				ResourceType:        "ServiceLinkedRole",
-			},
+			}),
 			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
@@ -500,10 +501,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceUser,
 			TypeName: "aws_iam_user",
 			Name:     "User",
-			Tags: &inttypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrName,
 				ResourceType:        "User",
-			},
+			}),
 			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
@@ -564,10 +565,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceVirtualMFADevice,
 			TypeName: "aws_iam_virtual_mfa_device",
 			Name:     "Virtual MFA Device",
-			Tags: &inttypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 				ResourceType:        "VirtualMFADevice",
-			},
+			}),
 			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,

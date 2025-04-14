@@ -7,11 +7,12 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"unique"
 
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
 )
 
@@ -22,20 +23,20 @@ var (
 	_ tftags.ServiceTagUpdater = &mockService{}
 )
 
-func (t *mockService) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
-	return []*types.ServicePackageFrameworkDataSource{}
+func (t *mockService) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
+	return []*inttypes.ServicePackageFrameworkDataSource{}
 }
 
-func (t *mockService) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{}
+func (t *mockService) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
+	return []*inttypes.ServicePackageFrameworkResource{}
 }
 
-func (t *mockService) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
-	return []*types.ServicePackageSDKDataSource{}
+func (t *mockService) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
+	return []*inttypes.ServicePackageSDKDataSource{}
 }
 
-func (t *mockService) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
-	return []*types.ServicePackageSDKResource{}
+func (t *mockService) SDKResources(ctx context.Context) []*inttypes.ServicePackageSDKResource {
+	return []*inttypes.ServicePackageSDKResource{}
 }
 
 func (t *mockService) ServicePackageName() string {
@@ -62,9 +63,9 @@ func TestTagsResourceInterceptor(t *testing.T) {
 
 	ctx := context.Background()
 	var interceptors interceptorInvocations
-	sp := &types.ServicePackageResourceTags{
+	sp := unique.Make(inttypes.ServicePackageResourceTags{
 		IdentifierAttribute: "id",
-	}
+	})
 	tags := transparentTaggingResource(sp)
 	interceptors = append(interceptors, interceptorInvocation{
 		when:        Finally,

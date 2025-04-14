@@ -4,6 +4,7 @@ package {{ .ProviderPackage }}
 
 import (
 	"context"
+	"unique"
 
 {{ if .GenerateClient }}
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -51,14 +52,14 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			TypeName: "{{ $key }}",
 			Name:     "{{ $value.Name }}",
 			{{- if .TransparentTagging }}
-			Tags: &inttypes.ServicePackageResourceTags {
+			Tags: unique.Make(inttypes.ServicePackageResourceTags {
 				{{- if ne .TagsIdentifierAttribute "" }}
 				IdentifierAttribute: {{ .TagsIdentifierAttribute }},
 				{{- end }}
 				{{- if ne .TagsResourceType "" }}
 				ResourceType: "{{ .TagsResourceType }}",
 				{{- end }}
-			},
+			}),
 			{{- end }}
 			Region: &inttypes.ServicePackageResourceRegion {
 				IsGlobal:          {{ or $.IsGlobal $value.IsGlobal }},
@@ -80,14 +81,14 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "{{ $key }}",
 			Name:     "{{ $value.Name }}",
 			{{- if .TransparentTagging }}
-			Tags: &inttypes.ServicePackageResourceTags {
+			Tags: unique.Make(inttypes.ServicePackageResourceTags {
 				{{- if ne .TagsIdentifierAttribute "" }}
 				IdentifierAttribute: {{ .TagsIdentifierAttribute }},
 				{{- end }}
 				{{- if ne .TagsResourceType "" }}
 				ResourceType: "{{ .TagsResourceType }}",
 				{{- end }}
-			},
+			}),
 			{{- end }}
 			Region: &inttypes.ServicePackageResourceRegion {
 				IsGlobal:          {{ or $.IsGlobal $value.IsGlobal }},
@@ -109,14 +110,14 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			TypeName: "{{ $key }}",
 			Name:     "{{ $value.Name }}",
 			{{- if $value.TransparentTagging }}
-			Tags: &inttypes.ServicePackageResourceTags {
+			Tags: unique.Make(inttypes.ServicePackageResourceTags {
 				{{- if ne $value.TagsIdentifierAttribute "" }}
 				IdentifierAttribute: {{ $value.TagsIdentifierAttribute }},
 				{{- end }}
 				{{- if ne .TagsResourceType "" }}
 				ResourceType: "{{ .TagsResourceType }}",
 				{{- end }}
-			},
+			}),
 			{{- end }}
 			Region: &inttypes.ServicePackageResourceRegion {
 				IsGlobal:          {{ or $.IsGlobal $value.IsGlobal }},
@@ -138,14 +139,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "{{ $key }}",
 			Name:     "{{ $value.Name }}",
 			{{- if $value.TransparentTagging }}
-			Tags: &inttypes.ServicePackageResourceTags {
+			Tags: unique.Make(inttypes.ServicePackageResourceTags {
 				{{- if ne $value.TagsIdentifierAttribute "" }}
 				IdentifierAttribute: {{ $value.TagsIdentifierAttribute }},
 				{{- end }}
 				{{- if ne .TagsResourceType "" }}
 				ResourceType: "{{ .TagsResourceType }}",
 				{{- end }}
-			},
+			}),
 			{{- end }}
 			Region: &inttypes.ServicePackageResourceRegion {
 				IsGlobal:          {{ or $.IsGlobal $value.IsGlobal }},

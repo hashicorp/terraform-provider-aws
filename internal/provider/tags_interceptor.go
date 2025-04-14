@@ -6,13 +6,14 @@ package provider
 import (
 	"context"
 	"fmt"
+	"unique"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/interceptors"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -22,7 +23,7 @@ type tagsResourceCRUDInterceptor struct {
 	tagsInterceptor
 }
 
-func transparentTaggingResource(servicePackageResourceTags *types.ServicePackageResourceTags) crudInterceptor {
+func transparentTaggingResource(servicePackageResourceTags unique.Handle[inttypes.ServicePackageResourceTags]) crudInterceptor {
 	return &tagsResourceCRUDInterceptor{
 		tagsInterceptor: tagsInterceptor{
 			WithTaggingMethods: interceptors.WithTaggingMethods{
@@ -180,7 +181,7 @@ type tagsDataSourceCRUDInterceptor struct {
 	tagsInterceptor
 }
 
-func transparentTaggingDataSource(servicePackageResourceTags *types.ServicePackageResourceTags) crudInterceptor {
+func transparentTaggingDataSource(servicePackageResourceTags unique.Handle[inttypes.ServicePackageResourceTags]) crudInterceptor {
 	return &tagsDataSourceCRUDInterceptor{
 		tagsInterceptor: tagsInterceptor{
 			WithTaggingMethods: interceptors.WithTaggingMethods{
@@ -251,7 +252,7 @@ type tagsInterceptor struct {
 func (r tagsInterceptor) getIdentifier(d schemaResourceData) string {
 	var identifier string
 
-	if identifierAttribute := r.ServicePackageResourceTags.IdentifierAttribute; identifierAttribute != "" {
+	if identifierAttribute := r.ServicePackageResourceTags.Value().IdentifierAttribute; identifierAttribute != "" {
 		if identifierAttribute == "id" {
 			identifier = d.Id()
 		} else {

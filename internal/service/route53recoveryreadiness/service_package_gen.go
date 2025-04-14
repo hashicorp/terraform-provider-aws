@@ -4,6 +4,7 @@ package route53recoveryreadiness
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/route53recoveryreadiness"
@@ -34,9 +35,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceCell,
 			TypeName: "aws_route53recoveryreadiness_cell",
 			Name:     "Cell",
-			Tags: &inttypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
@@ -47,9 +48,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceReadinessCheck,
 			TypeName: "aws_route53recoveryreadiness_readiness_check",
 			Name:     "Readiness Check",
-			Tags: &inttypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
@@ -60,9 +61,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceRecoveryGroup,
 			TypeName: "aws_route53recoveryreadiness_recovery_group",
 			Name:     "Recovery Group",
-			Tags: &inttypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
@@ -73,9 +74,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceResourceSet,
 			TypeName: "aws_route53recoveryreadiness_resource_set",
 			Name:     "Resource Set",
-			Tags: &inttypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,

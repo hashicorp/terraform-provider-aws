@@ -28,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	tfunique "github.com/hashicorp/terraform-provider-aws/internal/unique"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -382,7 +383,7 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 				})
 			}
 
-			if v.Tags != nil {
+			if !tfunique.IsHandleNil(v.Tags) {
 				interceptors = append(interceptors, interceptorInvocation{
 					when:        Before | After,
 					why:         Read,
@@ -508,7 +509,7 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 				})
 			}
 
-			if v.Tags != nil {
+			if !tfunique.IsHandleNil(v.Tags) {
 				interceptors = append(interceptors, interceptorInvocation{
 					when:        Before | After | Finally,
 					why:         Create | Read | Update,
@@ -568,7 +569,7 @@ func validateResourceSchemas(ctx context.Context) error {
 				}
 			}
 
-			if v.Tags != nil {
+			if !tfunique.IsHandleNil(v.Tags) {
 				// The data source has opted in to transparent tagging.
 				// Ensure that the schema look OK.
 				if v, ok := s[names.AttrTags]; ok {
@@ -595,7 +596,7 @@ func validateResourceSchemas(ctx context.Context) error {
 				}
 			}
 
-			if v.Tags != nil {
+			if !tfunique.IsHandleNil(v.Tags) {
 				// The resource has opted in to transparent tagging.
 				// Ensure that the schema look OK.
 				if v, ok := s[names.AttrTags]; ok {

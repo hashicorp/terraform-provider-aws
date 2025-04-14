@@ -5,6 +5,7 @@ package types
 
 import (
 	"context"
+	"unique"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
@@ -40,7 +41,7 @@ type ServicePackageFrameworkDataSource struct {
 	Factory  func(context.Context) (datasource.DataSourceWithConfigure, error)
 	TypeName string
 	Name     string
-	Tags     *ServicePackageResourceTags
+	Tags     unique.Handle[ServicePackageResourceTags]
 	Region   *ServicePackageResourceRegion
 }
 
@@ -50,7 +51,7 @@ type ServicePackageFrameworkResource struct {
 	Factory  func(context.Context) (resource.ResourceWithConfigure, error)
 	TypeName string
 	Name     string
-	Tags     *ServicePackageResourceTags
+	Tags     unique.Handle[ServicePackageResourceTags]
 	Region   *ServicePackageResourceRegion
 }
 
@@ -60,7 +61,7 @@ type ServicePackageSDKDataSource struct {
 	Factory  func() *schema.Resource
 	TypeName string
 	Name     string
-	Tags     *ServicePackageResourceTags
+	Tags     unique.Handle[ServicePackageResourceTags]
 	Region   *ServicePackageResourceRegion
 }
 
@@ -70,6 +71,6 @@ type ServicePackageSDKResource struct {
 	Factory  func() *schema.Resource
 	TypeName string
 	Name     string
-	Tags     *ServicePackageResourceTags
+	Tags     unique.Handle[ServicePackageResourceTags]
 	Region   *ServicePackageResourceRegion
 }

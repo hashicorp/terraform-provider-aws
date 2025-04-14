@@ -4,6 +4,7 @@ package serverlessrepo
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/serverlessapplicationrepository"
@@ -44,7 +45,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  ResourceCloudFormationStack,
 			TypeName: "aws_serverlessapplicationrepository_cloudformation_stack",
 			Name:     "CloudFormation Stack",
-			Tags:     &inttypes.ServicePackageResourceTags{},
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
 			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
