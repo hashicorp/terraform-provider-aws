@@ -44,7 +44,7 @@ The `filter_at_destination` and `filter_at_source` configuration blocks support 
 * `source_address` - (Optional) IP address of the source resource.
 * `source_port_range` - (Optional) The source port range. See below for details.
 
-`destination_port_range` and `source_port_range` configuration block support the following arguments:
+The `destination_port_range` and `source_port_range` configuration blocks support the following arguments:
 
 * `from_port` - (Optional) The first port in the range.
 * `to_port` - (Optional) The last port in the range.
