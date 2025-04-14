@@ -1,0 +1,8 @@
+rules:
+  - id: import-state-passthrough-id
+    languages: [go]
+    message: Prefer `resource.ImportStatePassthroughID` to directly setting attribute
+    patterns:
+      - pattern: $RESP.Diagnostics.Append($RESP.State.SetAttribute(ctx, path.Root($X), $REQ.ID)...)
+    severity: WARNING
+    fix: resource.ImportStatePassthroughID(ctx, path.Root($X), $REQ, $RESP)
