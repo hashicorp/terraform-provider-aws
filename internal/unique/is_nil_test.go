@@ -11,6 +11,8 @@ import (
 )
 
 func TestIsHandleNil(t *testing.T) {
+	t.Parallel()
+
 	type test struct {
 		value string
 	}
@@ -37,6 +39,8 @@ func TestIsHandleNil(t *testing.T) {
 
 	for name, testcase := range testcases {
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			a := tfunique.IsHandleNil(testcase.in)
 			e := testcase.expected
 
