@@ -32,6 +32,7 @@ Upgrade topics:
 - [resource/aws_redshift_service_account](#resourceaws_redshift_service_account)
 - [resource/aws_sagemaker_notebook_instance](#resourceaws_sagemaker_notebook_instance)
 - [resource/aws_spot_instance_request](#resourceaws_spot_instance_request)
+- [resource/aws_ssm_association](#resourceaws_ssm_association)
 
 <!-- /TOC -->
 
@@ -175,3 +176,7 @@ Remove `accelerator_types` from your configuration—it no longer exists. Instea
 ## resource/aws_spot_instance_request
 
 Remove `block_duration_minutes` from your configuration—it no longer exists.
+
+## resource/aws_ssm_association
+
+Remove `instance_id` from configuration—it no longer exists. Use `targets` instead.
