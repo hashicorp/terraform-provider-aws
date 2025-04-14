@@ -92,14 +92,14 @@ func (r *keyValueStoreResource) Create(ctx context.Context, request resource.Cre
 
 	conn := r.Meta().CloudFrontClient(ctx)
 
-	input := &cloudfront.CreateKeyValueStoreInput{}
-	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+	var input cloudfront.CreateKeyValueStoreInput
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	name := aws.ToString(input.Name)
-	_, err := conn.CreateKeyValueStore(ctx, input)
+	_, err := conn.CreateKeyValueStore(ctx, &input)
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("creating CloudFront Key Value Store (%s)", name), err.Error())
@@ -181,15 +181,15 @@ func (r *keyValueStoreResource) Update(ctx context.Context, request resource.Upd
 	conns.GlobalMutexKV.Lock(mutexKey)
 	defer conns.GlobalMutexKV.Unlock(mutexKey)
 
-	input := &cloudfront.UpdateKeyValueStoreInput{}
-	response.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
+	var input cloudfront.UpdateKeyValueStoreInput
+	response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	input.IfMatch = fwflex.StringFromFramework(ctx, old.ETag)
 
-	output, err := conn.UpdateKeyValueStore(ctx, input)
+	output, err := conn.UpdateKeyValueStore(ctx, &input)
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("updating CloudFront Key Value Store (%s)", new.Name.ValueString()), err.Error())
@@ -223,12 +223,12 @@ func (r *keyValueStoreResource) Delete(ctx context.Context, request resource.Del
 	conns.GlobalMutexKV.Lock(mutexKey)
 	defer conns.GlobalMutexKV.Unlock(mutexKey)
 
-	input := &cloudfront.DeleteKeyValueStoreInput{
+	input := cloudfront.DeleteKeyValueStoreInput{
 		IfMatch: fwflex.StringFromFramework(ctx, data.ETag),
 		Name:    fwflex.StringFromFramework(ctx, data.Name),
 	}
 
-	_, err := conn.DeleteKeyValueStore(ctx, input)
+	_, err := conn.DeleteKeyValueStore(ctx, &input)
 
 	if errs.IsA[*awstypes.EntityNotFound](err) {
 		return
@@ -246,16 +246,15 @@ func (w *keyValueStoreResource) ImportState(ctx context.Context, request resourc
 }
 
 func findKeyValueStoreByName(ctx context.Context, conn *cloudfront.Client, name string) (*cloudfront.DescribeKeyValueStoreOutput, error) {
-	input := &cloudfront.DescribeKeyValueStoreInput{
+	input := cloudfront.DescribeKeyValueStoreInput{
 		Name: aws.String(name),
 	}
 
-	output, err := conn.DescribeKeyValueStore(ctx, input)
+	output, err := conn.DescribeKeyValueStore(ctx, &input)
 
 	if errs.IsA[*awstypes.EntityNotFound](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
