@@ -32,7 +32,7 @@ type ServicePackageEphemeralResource struct {
 	Factory  func(context.Context) (ephemeral.EphemeralResourceWithConfigure, error)
 	TypeName string
 	Name     string
-	Region   *ServicePackageResourceRegion
+	Region   unique.Handle[ServicePackageResourceRegion]
 }
 
 // ServicePackageFrameworkDataSource represents a Terraform Plugin Framework data source
@@ -42,7 +42,7 @@ type ServicePackageFrameworkDataSource struct {
 	TypeName string
 	Name     string
 	Tags     unique.Handle[ServicePackageResourceTags]
-	Region   *ServicePackageResourceRegion
+	Region   unique.Handle[ServicePackageResourceRegion]
 }
 
 // ServicePackageFrameworkResource represents a Terraform Plugin Framework resource
@@ -52,7 +52,7 @@ type ServicePackageFrameworkResource struct {
 	TypeName string
 	Name     string
 	Tags     unique.Handle[ServicePackageResourceTags]
-	Region   *ServicePackageResourceRegion
+	Region   unique.Handle[ServicePackageResourceRegion]
 }
 
 // ServicePackageSDKDataSource represents a Terraform Plugin SDK data source
@@ -62,7 +62,7 @@ type ServicePackageSDKDataSource struct {
 	TypeName string
 	Name     string
 	Tags     unique.Handle[ServicePackageResourceTags]
-	Region   *ServicePackageResourceRegion
+	Region   unique.Handle[ServicePackageResourceRegion]
 }
 
 // ServicePackageSDKResource represents a Terraform Plugin SDK resource
@@ -72,5 +72,5 @@ type ServicePackageSDKResource struct {
 	TypeName string
 	Name     string
 	Tags     unique.Handle[ServicePackageResourceTags]
-	Region   *ServicePackageResourceRegion
+	Region   unique.Handle[ServicePackageResourceRegion]
 }
