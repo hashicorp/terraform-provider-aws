@@ -23,10 +23,10 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Factory:  newAcceleratorDataSource,
 			TypeName: "aws_globalaccelerator_accelerator",
 			Name:     "Accelerator",
-			Region: &inttypes.ServicePackageResourceRegion{
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsGlobal:          true,
 				IsOverrideEnabled: false,
-			},
+			}),
 		},
 	}
 }
@@ -40,10 +40,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			}),
-			Region: &inttypes.ServicePackageResourceRegion{
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsGlobal:          true,
 				IsOverrideEnabled: false,
-			},
+			}),
 		},
 	}
 }
@@ -54,11 +54,11 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Factory:  dataSourceCustomRoutingAccelerator,
 			TypeName: "aws_globalaccelerator_custom_routing_accelerator",
 			Name:     "Custom Routing Accelerator",
-			Region: &inttypes.ServicePackageResourceRegion{
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 	}
 }
@@ -72,11 +72,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			}),
-			Region: &inttypes.ServicePackageResourceRegion{
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 		{
 			Factory:  resourceCustomRoutingAccelerator,
@@ -85,51 +85,51 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			}),
-			Region: &inttypes.ServicePackageResourceRegion{
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 		{
 			Factory:  resourceCustomRoutingEndpointGroup,
 			TypeName: "aws_globalaccelerator_custom_routing_endpoint_group",
 			Name:     "Custom Routing Endpoint Group",
-			Region: &inttypes.ServicePackageResourceRegion{
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 		{
 			Factory:  resourceCustomRoutingListener,
 			TypeName: "aws_globalaccelerator_custom_routing_listener",
 			Name:     "Custom Routing Listener",
-			Region: &inttypes.ServicePackageResourceRegion{
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 		{
 			Factory:  resourceEndpointGroup,
 			TypeName: "aws_globalaccelerator_endpoint_group",
 			Name:     "Endpoint Group",
-			Region: &inttypes.ServicePackageResourceRegion{
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 		{
 			Factory:  resourceListener,
 			TypeName: "aws_globalaccelerator_listener",
 			Name:     "Listener",
-			Region: &inttypes.ServicePackageResourceRegion{
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 	}
 }

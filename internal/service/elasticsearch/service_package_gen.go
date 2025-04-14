@@ -30,11 +30,11 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Factory:  dataSourceDomain,
 			TypeName: "aws_elasticsearch_domain",
 			Name:     "Domain",
-			Region: &inttypes.ServicePackageResourceRegion{
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 	}
 }
@@ -48,41 +48,41 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			}),
-			Region: &inttypes.ServicePackageResourceRegion{
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 		{
 			Factory:  resourceDomainPolicy,
 			TypeName: "aws_elasticsearch_domain_policy",
 			Name:     "Domain Policy",
-			Region: &inttypes.ServicePackageResourceRegion{
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 		{
 			Factory:  resourceDomainSAMLOptions,
 			TypeName: "aws_elasticsearch_domain_saml_options",
 			Name:     "Domain SAML Options",
-			Region: &inttypes.ServicePackageResourceRegion{
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 		{
 			Factory:  resourceVPCEndpoint,
 			TypeName: "aws_elasticsearch_vpc_endpoint",
 			Name:     "VPC Endpoint",
-			Region: &inttypes.ServicePackageResourceRegion{
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 	}
 }

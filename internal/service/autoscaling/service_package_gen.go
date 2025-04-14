@@ -4,6 +4,7 @@ package autoscaling
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/autoscaling"
@@ -29,31 +30,31 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Factory:  dataSourceGroup,
 			TypeName: "aws_autoscaling_group",
 			Name:     "Group",
-			Region: &inttypes.ServicePackageResourceRegion{
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 		{
 			Factory:  dataSourceGroups,
 			TypeName: "aws_autoscaling_groups",
 			Name:     "Groups",
-			Region: &inttypes.ServicePackageResourceRegion{
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 		{
 			Factory:  dataSourceLaunchConfiguration,
 			TypeName: "aws_launch_configuration",
 			Name:     "Launch Configuration",
-			Region: &inttypes.ServicePackageResourceRegion{
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 	}
 }
@@ -64,91 +65,91 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceAttachment,
 			TypeName: "aws_autoscaling_attachment",
 			Name:     "Attachment",
-			Region: &inttypes.ServicePackageResourceRegion{
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 		{
 			Factory:  resourceGroup,
 			TypeName: "aws_autoscaling_group",
 			Name:     "Group",
-			Region: &inttypes.ServicePackageResourceRegion{
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 		{
 			Factory:  resourceGroupTag,
 			TypeName: "aws_autoscaling_group_tag",
 			Name:     "Group Tag",
-			Region: &inttypes.ServicePackageResourceRegion{
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 		{
 			Factory:  resourceLifecycleHook,
 			TypeName: "aws_autoscaling_lifecycle_hook",
 			Name:     "Lifecycle Hook",
-			Region: &inttypes.ServicePackageResourceRegion{
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 		{
 			Factory:  resourceNotification,
 			TypeName: "aws_autoscaling_notification",
 			Name:     "Notification",
-			Region: &inttypes.ServicePackageResourceRegion{
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 		{
 			Factory:  resourcePolicy,
 			TypeName: "aws_autoscaling_policy",
 			Name:     "Policy",
-			Region: &inttypes.ServicePackageResourceRegion{
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 		{
 			Factory:  resourceSchedule,
 			TypeName: "aws_autoscaling_schedule",
 			Name:     "Scheduled Action",
-			Region: &inttypes.ServicePackageResourceRegion{
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 		{
 			Factory:  resourceTrafficSourceAttachment,
 			TypeName: "aws_autoscaling_traffic_source_attachment",
 			Name:     "Traffic Source Attachment",
-			Region: &inttypes.ServicePackageResourceRegion{
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 		{
 			Factory:  resourceLaunchConfiguration,
 			TypeName: "aws_launch_configuration",
 			Name:     "Launch Configuration",
-			Region: &inttypes.ServicePackageResourceRegion{
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 	}
 }

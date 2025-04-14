@@ -4,6 +4,7 @@ package cloudfrontkeyvaluestore
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfrontkeyvaluestore"
@@ -25,10 +26,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newKeyResource,
 			TypeName: "aws_cloudfrontkeyvaluestore_key",
 			Name:     "Key",
-			Region: &inttypes.ServicePackageResourceRegion{
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsGlobal:          true,
 				IsOverrideEnabled: false,
-			},
+			}),
 		},
 	}
 }
