@@ -1054,8 +1054,12 @@ DOC
 }
 
 resource "aws_ssm_association" "test" {
-  name        = %[1]q
-  instance_id = aws_instance.test.id
+  name = %[1]q
+
+  targets {
+    key    = "InstanceIds"
+    values = [aws_instance.test.id]
+  }
 }
 `, rName)
 }
