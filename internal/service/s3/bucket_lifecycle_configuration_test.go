@@ -3611,8 +3611,8 @@ func TestAccS3BucketLifecycleConfiguration_removeRule(t *testing.T) {
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
 							"expiration":                        checkExpiration_Days(1),
-							names.AttrFilter:                    checkFilter_Prefix("asdf1"),
-							names.AttrID:                        knownvalue.StringExact("del asdf1"),
+							names.AttrFilter:                    checkFilter_Prefix("prefix/"),
+							names.AttrID:                        knownvalue.StringExact("to delete"),
 							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
 							"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
 							names.AttrPrefix:                    knownvalue.StringExact(""),
@@ -4811,11 +4811,11 @@ resource "aws_s3_bucket_lifecycle_configuration" "test" {
   bucket = aws_s3_bucket.test.bucket
 
   rule {
-    id     = "del asdf1"
+    id     = "to delete"
     status = "Enabled"
 
-    filter { # the issue happens even without prefix, keeping it to show how disastrous the result is
-      prefix = "asdf1"
+    filter {
+      prefix = "prefix/"
     }
     expiration {
       days = 1
