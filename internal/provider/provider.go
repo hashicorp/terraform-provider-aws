@@ -386,7 +386,7 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 				interceptors = append(interceptors, interceptorInvocation{
 					when:        Before | After,
 					why:         Read,
-					interceptor: newTagsDataSourceCRUDInterceptor(v.Tags),
+					interceptor: transparentTaggingResource(v.Tags),
 				})
 			}
 
@@ -512,12 +512,12 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 				interceptors = append(interceptors, interceptorInvocation{
 					when:        Before | After | Finally,
 					why:         Create | Read | Update,
-					interceptor: newTagsResourceCRUDInterceptor(v.Tags),
+					interceptor: transparentTaggingResource(v.Tags),
 				})
 				interceptors = append(interceptors, interceptorInvocation{
 					when:        Before,
 					why:         CustomizeDiff,
-					interceptor: newTagsResourceCustomizeDiffInterceptor(),
+					interceptor: setTagsAll,
 				})
 			}
 
