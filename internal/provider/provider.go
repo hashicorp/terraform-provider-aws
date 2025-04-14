@@ -28,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	tfunique "github.com/hashicorp/terraform-provider-aws/internal/unique"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -293,7 +294,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			}
 
 			interceptors := interceptorItems{}
-			if v.Tags != nil {
+			if !tfunique.IsHandleNil(v.Tags) {
 				schema := r.SchemaMap()
 
 				// The data source has opted in to transparent tagging.
@@ -364,7 +365,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 
 			var customizeDiffFuncs []schema.CustomizeDiffFunc
 			interceptors := interceptorItems{}
-			if v.Tags != nil {
+			if !tfunique.IsHandleNil(v.Tags) {
 				schema := r.SchemaMap()
 
 				// The resource has opted in to transparent tagging.

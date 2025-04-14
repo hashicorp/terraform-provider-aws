@@ -4,6 +4,7 @@ package shield
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/shield"
@@ -66,17 +67,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceProtection,
 			TypeName: "aws_shield_protection",
 			Name:     "Protection",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 		{
 			Factory:  ResourceProtectionGroup,
 			TypeName: "aws_shield_protection_group",
 			Name:     "Protection Group",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: "protection_group_arn",
-			},
+			}),
 		},
 		{
 			Factory:  ResourceProtectionHealthCheckAssociation,
