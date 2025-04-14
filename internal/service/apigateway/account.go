@@ -13,8 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -60,14 +58,7 @@ func (r *resourceAccount) Schema(ctx context.Context, request resource.SchemaReq
 				ElementType: types.StringType,
 				Computed:    true,
 			},
-			names.AttrID: framework.IDAttributeDeprecatedNoReplacement(),
-			"reset_on_delete": schema.BoolAttribute{
-				Optional: true,
-				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.UseStateForUnknown(),
-				},
-				DeprecationMessage: `The "reset_on_delete" attribute will be removed in a future version of the provider`,
-			},
+			names.AttrID:        framework.IDAttributeDeprecatedNoReplacement(),
 			"throttle_settings": framework.DataSourceComputedListOfObjectAttribute[throttleSettingsModel](ctx),
 		},
 	}
@@ -227,28 +218,19 @@ func (r *resourceAccount) Delete(ctx context.Context, request resource.DeleteReq
 		return
 	}
 
-	if data.ResetOnDelete.ValueBool() {
-		conn := r.Meta().APIGatewayClient(ctx)
+	conn := r.Meta().APIGatewayClient(ctx)
 
-		input := apigateway.UpdateAccountInput{}
+	input := apigateway.UpdateAccountInput{}
 
-		input.PatchOperations = []awstypes.PatchOperation{{
-			Op:    awstypes.OpReplace,
-			Path:  aws.String("/cloudwatchRoleArn"),
-			Value: nil,
-		}}
+	input.PatchOperations = []awstypes.PatchOperation{{
+		Op:    awstypes.OpReplace,
+		Path:  aws.String("/cloudwatchRoleArn"),
+		Value: nil,
+	}}
 
-		_, err := conn.UpdateAccount(ctx, &input)
-		if err != nil {
-			response.Diagnostics.AddError("resetting API Gateway Account", err.Error())
-		}
-	} else {
-		response.Diagnostics.AddWarning(
-			"Resource Destruction",
-			"This resource has only been removed from Terraform state. "+
-				"Manually use the AWS Console to fully destroy this resource. "+
-				"Setting the attribute \"reset_on_delete\" will also fully destroy resources of this type.",
-		)
+	_, err := conn.UpdateAccount(ctx, &input)
+	if err != nil {
+		response.Diagnostics.AddError("resetting API Gateway Account", err.Error())
 	}
 }
 
@@ -261,33 +243,12 @@ type resourceAccountModel struct {
 	CloudwatchRoleARN types.String                                           `tfsdk:"cloudwatch_role_arn" autoflex:",legacy"`
 	Features          types.Set                                              `tfsdk:"features"`
 	ID                types.String                                           `tfsdk:"id"`
-	ResetOnDelete     types.Bool                                             `tfsdk:"reset_on_delete"`
 	ThrottleSettings  fwtypes.ListNestedObjectValueOf[throttleSettingsModel] `tfsdk:"throttle_settings"`
 }
 
 type throttleSettingsModel struct {
 	BurstLimit types.Int32   `tfsdk:"burst_limit"`
 	RateLimit  types.Float64 `tfsdk:"rate_limit"`
-}
-
-func (r *resourceAccount) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	// If the entire plan is null, the resource is planned for destruction.
-	if request.Plan.Raw.IsNull() {
-		var resetOnDelete types.Bool
-		response.Diagnostics.Append(request.State.GetAttribute(ctx, path.Root("reset_on_delete"), &resetOnDelete)...)
-		if response.Diagnostics.HasError() {
-			return
-		}
-
-		if !resetOnDelete.ValueBool() {
-			response.Diagnostics.AddWarning(
-				"Resource Destruction",
-				"Applying this resource destruction will only remove the resource from Terraform state and will not reset account settings. "+
-					"Either manually use the AWS Console to fully destroy this resource or "+
-					"update the resource with \"reset_on_delete\" set to true.",
-			)
-		}
-	}
 }
 
 func findAccount(ctx context.Context, conn *apigateway.Client) (*apigateway.GetAccountOutput, error) {

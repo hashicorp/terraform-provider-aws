@@ -26,6 +26,7 @@ Upgrade topics:
 - [data-source/aws_globalaccelerator_accelerator](#data-sourceaws_globalaccelerator_accelerator)
 - [data-source/aws_launch_template](#data-sourceaws_launch_template)
 - [data-source/aws_service_discovery_service](#data-sourceaws_service_discovery_service)
+- [resource/aws_api_gateway_account](#resourceaws_api_gateway_account)
 - [resource/aws_batch_compute_environment](#resourceaws_batch_compute_environment)
 - [resource/aws_cloudfront_response_headers_policy](#resourceaws_cloudfront_response_headers_policy)
 - [resource/aws_ecs_task_definition](#resourceaws_ecs_task_definition)
@@ -153,6 +154,12 @@ Remove `inference_accelerator_overrides` from your configuration—it no longer 
 ## data-source/aws_launch_template
 
 Remove `elastic_inference_accelerator` from your configuration—it no longer exists. Amazon Elastic Inference reached end of life in April 2024.
+
+## resource/aws_api_gateway_account
+
+`reset_on_delete` has been removed.
+The destroy operation will now always reset the API Gateway account settings.
+Use a [removed](https://developer.hashicorp.com/terraform/language/resources/syntax#removing-resources) block to retain the previous behavior which left the account settings unchanged upon destruction.
 
 ## resource/aws_batch_compute_environment
 
