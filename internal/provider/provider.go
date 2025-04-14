@@ -497,7 +497,7 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 				interceptors = append(interceptors, interceptorInvocation{
 					when:        Before,
 					why:         Import,
-					interceptor: importRegion(),
+					interceptor: importRegion,
 				})
 			}
 

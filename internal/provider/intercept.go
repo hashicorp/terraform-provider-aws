@@ -55,7 +55,7 @@ type (
 	importInterceptor = interceptor2[*schema.ResourceData, []*schema.ResourceData, error]
 )
 
-type interceptorFunc[D any, E any] func(context.Context, interceptorOptions[D]) E
+type interceptorFunc[D, E any] func(context.Context, interceptorOptions[D]) E
 
 func (f interceptorFunc[D, E]) run(ctx context.Context, opts interceptorOptions[D]) E {
 	return f(ctx, opts)
@@ -63,6 +63,16 @@ func (f interceptorFunc[D, E]) run(ctx context.Context, opts interceptorOptions[
 
 type (
 	crudInterceptorFunc = interceptorFunc[schemaResourceData, diag.Diagnostics]
+)
+
+type interceptorFunc2[D, R, E any] func(context.Context, interceptorOptions[D]) (R, E)
+
+func (f interceptorFunc2[D, R, E]) run(ctx context.Context, opts interceptorOptions[D]) (R, E) {
+	return f(ctx, opts)
+}
+
+type (
+	importInterceptorFunc = interceptorFunc2[*schema.ResourceData, []*schema.ResourceData, error]
 )
 
 // interceptorInvocation represents a single interceptor invocation.

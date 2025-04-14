@@ -124,31 +124,27 @@ func (r forceNewIfRegionValueChangesInterceptor) run(ctx context.Context, opts c
 	return nil
 }
 
-type importRegionInterceptor struct{}
+var (
+	importRegion importInterceptor = importInterceptorFunc(func(ctx context.Context, opts importInterceptorOptions) ([]*schema.ResourceData, error) {
+		c, d := opts.c, opts.d
 
-func importRegion() importInterceptor {
-	return &importRegionInterceptor{}
-}
-
-func (r importRegionInterceptor) run(ctx context.Context, opts importInterceptorOptions) ([]*schema.ResourceData, error) {
-	c, d := opts.c, opts.d
-
-	switch when, why := opts.when, opts.why; when {
-	case Before:
-		switch why {
-		case Import:
-			// Import ID optionally ends with "@<region>".
-			if matches := regexache.MustCompile(`^(.+)@([a-z]{2}(?:-[a-z]+)+-\d{1,2})$`).FindStringSubmatch(d.Id()); len(matches) == 3 {
-				d.SetId(matches[1])
-				d.Set(names.AttrRegion, matches[2])
-			} else {
-				d.Set(names.AttrRegion, c.AwsConfig(ctx).Region)
+		switch when, why := opts.when, opts.why; when {
+		case Before:
+			switch why {
+			case Import:
+				// Import ID optionally ends with "@<region>".
+				if matches := regexache.MustCompile(`^(.+)@([a-z]{2}(?:-[a-z]+)+-\d{1,2})$`).FindStringSubmatch(d.Id()); len(matches) == 3 {
+					d.SetId(matches[1])
+					d.Set(names.AttrRegion, matches[2])
+				} else {
+					d.Set(names.AttrRegion, c.AwsConfig(ctx).Region)
+				}
 			}
 		}
-	}
 
-	return []*schema.ResourceData{d}, nil
-}
+		return []*schema.ResourceData{d}, nil
+	})
+)
 
 // regionDataSourceCRUDInterceptor implements per-resource Region override functionality on CRUD operations for data sources.
 type regionDataSourceCRUDInterceptor struct {
