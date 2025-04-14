@@ -331,7 +331,7 @@ func (r *serverlessCacheResource) Update(ctx context.Context, request resource.U
 
 	conn := r.Meta().ElastiCacheClient(ctx)
 
-	diff, d := fwflex.Diff(ctx, new, old, fwflex.WithIgnoredField("FullEngineVersion"))
+	diff, d := fwflex.Diff(ctx, new, old)
 	response.Diagnostics.Append(d...)
 	if response.Diagnostics.HasError() {
 		return
