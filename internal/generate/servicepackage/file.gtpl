@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 {{- end }}
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 {{- if ne .ProviderPackage "meta" }}
 	"github.com/hashicorp/terraform-provider-aws/names"
 {{- end }}
@@ -23,14 +23,14 @@ import (
 type servicePackage struct {}
 
 {{- if .EphemeralResources }}
-func (p *servicePackage) EphemeralResources(ctx context.Context) []*itypes.ServicePackageEphemeralResource {
-	return []*itypes.ServicePackageEphemeralResource {
+func (p *servicePackage) EphemeralResources(ctx context.Context) []*inttypes.ServicePackageEphemeralResource {
+	return []*inttypes.ServicePackageEphemeralResource {
 {{- range $key, $value := .EphemeralResources }}
 		{
 			Factory:                 {{ $value.FactoryName }},
 			TypeName:                "{{ $key }}",
 			Name:                    "{{ $value.Name }}",
-			Region: &itypes.ServicePackageResourceRegion {
+			Region: &inttypes.ServicePackageResourceRegion {
 				IsGlobal:          {{ or $.IsGlobal $value.IsGlobal }},
 				IsOverrideEnabled: {{ $value.RegionOverrideEnabled }},
 	{{- if $value.RegionOverrideEnabled }}
@@ -43,15 +43,15 @@ func (p *servicePackage) EphemeralResources(ctx context.Context) []*itypes.Servi
 }
 {{- end }}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.ServicePackageFrameworkDataSource {
-	return []*itypes.ServicePackageFrameworkDataSource {
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
+	return []*inttypes.ServicePackageFrameworkDataSource {
 {{- range $key, $value := .FrameworkDataSources }}
 		{
 			Factory:  {{ $value.FactoryName }},
 			TypeName: "{{ $key }}",
 			Name:     "{{ $value.Name }}",
 			{{- if .TransparentTagging }}
-			Tags: &itypes.ServicePackageResourceTags {
+			Tags: &inttypes.ServicePackageResourceTags {
 				{{- if ne .TagsIdentifierAttribute "" }}
 				IdentifierAttribute: {{ .TagsIdentifierAttribute }},
 				{{- end }}
@@ -60,7 +60,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 				{{- end }}
 			},
 			{{- end }}
-			Region: &itypes.ServicePackageResourceRegion {
+			Region: &inttypes.ServicePackageResourceRegion {
 				IsGlobal:          {{ or $.IsGlobal $value.IsGlobal }},
 				IsOverrideEnabled: {{ $value.RegionOverrideEnabled }},
 	{{- if $value.RegionOverrideEnabled }}
@@ -72,15 +72,15 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 	}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.ServicePackageFrameworkResource {
-	return []*itypes.ServicePackageFrameworkResource {
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
+	return []*inttypes.ServicePackageFrameworkResource {
 {{- range $key, $value := .FrameworkResources }}
 		{
 			Factory:  {{ $value.FactoryName }},
 			TypeName: "{{ $key }}",
 			Name:     "{{ $value.Name }}",
 			{{- if .TransparentTagging }}
-			Tags: &itypes.ServicePackageResourceTags {
+			Tags: &inttypes.ServicePackageResourceTags {
 				{{- if ne .TagsIdentifierAttribute "" }}
 				IdentifierAttribute: {{ .TagsIdentifierAttribute }},
 				{{- end }}
@@ -89,7 +89,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 				{{- end }}
 			},
 			{{- end }}
-			Region: &itypes.ServicePackageResourceRegion {
+			Region: &inttypes.ServicePackageResourceRegion {
 				IsGlobal:          {{ or $.IsGlobal $value.IsGlobal }},
 				IsOverrideEnabled: {{ $value.RegionOverrideEnabled }},
 	{{- if $value.RegionOverrideEnabled }}
@@ -101,15 +101,15 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 	}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
-	return []*itypes.ServicePackageSDKDataSource {
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
+	return []*inttypes.ServicePackageSDKDataSource {
 {{- range $key, $value := .SDKDataSources }}
 		{
 			Factory:  {{ $value.FactoryName }},
 			TypeName: "{{ $key }}",
 			Name:     "{{ $value.Name }}",
 			{{- if $value.TransparentTagging }}
-			Tags: &itypes.ServicePackageResourceTags {
+			Tags: &inttypes.ServicePackageResourceTags {
 				{{- if ne $value.TagsIdentifierAttribute "" }}
 				IdentifierAttribute: {{ $value.TagsIdentifierAttribute }},
 				{{- end }}
@@ -118,7 +118,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 				{{- end }}
 			},
 			{{- end }}
-			Region: &itypes.ServicePackageResourceRegion {
+			Region: &inttypes.ServicePackageResourceRegion {
 				IsGlobal:          {{ or $.IsGlobal $value.IsGlobal }},
 				IsOverrideEnabled: {{ $value.RegionOverrideEnabled }},
 	{{- if $value.RegionOverrideEnabled }}
@@ -130,15 +130,15 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 	}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
-	return []*itypes.ServicePackageSDKResource {
+func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePackageSDKResource {
+	return []*inttypes.ServicePackageSDKResource {
 {{- range $key, $value := .SDKResources }}
 		{
 			Factory:  {{ $value.FactoryName }},
 			TypeName: "{{ $key }}",
 			Name:     "{{ $value.Name }}",
 			{{- if $value.TransparentTagging }}
-			Tags: &itypes.ServicePackageResourceTags {
+			Tags: &inttypes.ServicePackageResourceTags {
 				{{- if ne $value.TagsIdentifierAttribute "" }}
 				IdentifierAttribute: {{ $value.TagsIdentifierAttribute }},
 				{{- end }}
@@ -147,7 +147,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 				{{- end }}
 			},
 			{{- end }}
-			Region: &itypes.ServicePackageResourceRegion {
+			Region: &inttypes.ServicePackageResourceRegion {
 				IsGlobal:          {{ or $.IsGlobal $value.IsGlobal }},
 				IsOverrideEnabled: {{ $value.RegionOverrideEnabled }},
 	{{- if $value.RegionOverrideEnabled }}
