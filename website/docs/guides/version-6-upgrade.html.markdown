@@ -27,6 +27,7 @@ Upgrade topics:
 - [data-source/aws_launch_template](#data-sourceaws_launch_template)
 - [data-source/aws_service_discovery_service](#data-sourceaws_service_discovery_service)
 - [resource/aws_batch_compute_environment](#resourceaws_batch_compute_environment)
+- [resource/aws_cloudfront_key_value_store](#resourceaws_cloudfront_key_value_store)
 - [resource/aws_cloudfront_response_headers_policy](#resourceaws_cloudfront_response_headers_policy)
 - [resource/aws_ecs_task_definition](#resourceaws_ecs_task_definition)
 - [resource/aws_instance](#resourceaws_instance)
@@ -158,6 +159,11 @@ Remove `elastic_inference_accelerator` from your configuration—it no longer ex
 
 * `compute_environment_name` has been renamed to `name`.
 * `compute_environment_name_prefix` has been renamed to `name_prefix`.
+
+## resource/aws_cloudfront_key_value_store
+
+The `id` attribute is now set the to ID value returned by the AWS API.
+For the name, use the `name` attribute.
 
 ## resource/aws_cloudfront_response_headers_policy
 
