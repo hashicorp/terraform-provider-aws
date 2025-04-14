@@ -53,10 +53,9 @@ func TestAccSecretsManagerSecret_basic(t *testing.T) {
 				},
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"recovery_window_in_days", "force_overwrite_replica_secret"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -82,10 +81,9 @@ func TestAccSecretsManagerSecret_withNamePrefix(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"recovery_window_in_days", "force_overwrite_replica_secret"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -142,10 +140,9 @@ func TestAccSecretsManagerSecret_description(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"recovery_window_in_days", "force_overwrite_replica_secret"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -239,10 +236,9 @@ func TestAccSecretsManagerSecret_kmsKeyID(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"recovery_window_in_days", "force_overwrite_replica_secret"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -362,7 +358,6 @@ func testAccCheckSecretExists(ctx context.Context, n string, v *secretsmanager.D
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerClient(ctx)
 
 		output, err := tfsecretsmanager.FindSecretByID(ctx, conn, rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}

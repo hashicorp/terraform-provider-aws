@@ -36,7 +36,6 @@ import (
 // @SDKResource("aws_secretsmanager_secret", name="Secret")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/secretsmanager;secretsmanager.DescribeSecretOutput")
-// @Testing(importIgnore="force_overwrite_replica_secret;recovery_window_in_days")
 func resourceSecret() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSecretCreate,
