@@ -9,19 +9,19 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.ServicePackageFrameworkDataSource {
-	return []*itypes.ServicePackageFrameworkDataSource{
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
+	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
 			Factory:  newDirectoryBucketsDataSource,
 			TypeName: "aws_s3_directory_buckets",
 			Name:     "Directory Buckets",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:          false,
 				IsOverrideEnabled: false,
 			},
@@ -29,13 +29,13 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 	}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.ServicePackageFrameworkResource {
-	return []*itypes.ServicePackageFrameworkResource{
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
+	return []*inttypes.ServicePackageFrameworkResource{
 		{
 			Factory:  newResourceBucketLifecycleConfiguration,
 			TypeName: "aws_s3_bucket_lifecycle_configuration",
 			Name:     "Bucket Lifecycle Configuration",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:          false,
 				IsOverrideEnabled: false,
 			},
@@ -44,7 +44,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Factory:  newDirectoryBucketResource,
 			TypeName: "aws_s3_directory_bucket",
 			Name:     "Directory Bucket",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:          false,
 				IsOverrideEnabled: false,
 			},
@@ -52,13 +52,13 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 	}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
-	return []*itypes.ServicePackageSDKDataSource{
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
+	return []*inttypes.ServicePackageSDKDataSource{
 		{
 			Factory:  dataSourceCanonicalUserID,
 			TypeName: "aws_canonical_user_id",
 			Name:     "Canonical User ID",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -68,7 +68,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Factory:  dataSourceBucket,
 			TypeName: "aws_s3_bucket",
 			Name:     "Bucket",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -78,11 +78,11 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Factory:  dataSourceBucketObject,
 			TypeName: "aws_s3_bucket_object",
 			Name:     "Bucket Object",
-			Tags: &itypes.ServicePackageResourceTags{
+			Tags: &inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 				ResourceType:        "BucketObject",
 			},
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -92,7 +92,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Factory:  dataSourceBucketObjects,
 			TypeName: "aws_s3_bucket_objects",
 			Name:     "Bucket Objects",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -102,7 +102,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Factory:  dataSourceBucketPolicy,
 			TypeName: "aws_s3_bucket_policy",
 			Name:     "Bucket Policy",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -112,11 +112,11 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Factory:  dataSourceObject,
 			TypeName: "aws_s3_object",
 			Name:     "Object",
-			Tags: &itypes.ServicePackageResourceTags{
+			Tags: &inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 				ResourceType:        "Object",
 			},
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -126,7 +126,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Factory:  dataSourceObjects,
 			TypeName: "aws_s3_objects",
 			Name:     "Objects",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -135,17 +135,17 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 	}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
-	return []*itypes.ServicePackageSDKResource{
+func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePackageSDKResource {
+	return []*inttypes.ServicePackageSDKResource{
 		{
 			Factory:  resourceBucket,
 			TypeName: "aws_s3_bucket",
 			Name:     "Bucket",
-			Tags: &itypes.ServicePackageResourceTags{
+			Tags: &inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrBucket,
 				ResourceType:        "Bucket",
 			},
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -155,7 +155,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Factory:  resourceBucketAccelerateConfiguration,
 			TypeName: "aws_s3_bucket_accelerate_configuration",
 			Name:     "Bucket Accelerate Configuration",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -165,7 +165,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Factory:  resourceBucketACL,
 			TypeName: "aws_s3_bucket_acl",
 			Name:     "Bucket ACL",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -175,7 +175,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Factory:  resourceBucketAnalyticsConfiguration,
 			TypeName: "aws_s3_bucket_analytics_configuration",
 			Name:     "Bucket Analytics Configuration",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -185,7 +185,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Factory:  resourceBucketCorsConfiguration,
 			TypeName: "aws_s3_bucket_cors_configuration",
 			Name:     "Bucket CORS Configuration",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -195,7 +195,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Factory:  resourceBucketIntelligentTieringConfiguration,
 			TypeName: "aws_s3_bucket_intelligent_tiering_configuration",
 			Name:     "Bucket Intelligent-Tiering Configuration",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -205,7 +205,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Factory:  resourceBucketInventory,
 			TypeName: "aws_s3_bucket_inventory",
 			Name:     "Bucket Inventory",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -215,7 +215,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Factory:  resourceBucketLogging,
 			TypeName: "aws_s3_bucket_logging",
 			Name:     "Bucket Logging",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -225,7 +225,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Factory:  resourceBucketMetric,
 			TypeName: "aws_s3_bucket_metric",
 			Name:     "Bucket Metric",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -235,7 +235,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Factory:  resourceBucketNotification,
 			TypeName: "aws_s3_bucket_notification",
 			Name:     "Bucket Notification",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -245,11 +245,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Factory:  resourceBucketObject,
 			TypeName: "aws_s3_bucket_object",
 			Name:     "Bucket Object",
-			Tags: &itypes.ServicePackageResourceTags{
+			Tags: &inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 				ResourceType:        "BucketObject",
 			},
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -259,7 +259,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Factory:  resourceBucketObjectLockConfiguration,
 			TypeName: "aws_s3_bucket_object_lock_configuration",
 			Name:     "Bucket Object Lock Configuration",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -269,7 +269,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Factory:  resourceBucketOwnershipControls,
 			TypeName: "aws_s3_bucket_ownership_controls",
 			Name:     "Bucket Ownership Controls",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -279,7 +279,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Factory:  resourceBucketPolicy,
 			TypeName: "aws_s3_bucket_policy",
 			Name:     "Bucket Policy",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -289,7 +289,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Factory:  resourceBucketPublicAccessBlock,
 			TypeName: "aws_s3_bucket_public_access_block",
 			Name:     "Bucket Public Access Block",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -299,7 +299,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Factory:  resourceBucketReplicationConfiguration,
 			TypeName: "aws_s3_bucket_replication_configuration",
 			Name:     "Bucket Replication Configuration",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -309,7 +309,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Factory:  resourceBucketRequestPaymentConfiguration,
 			TypeName: "aws_s3_bucket_request_payment_configuration",
 			Name:     "Bucket Request Payment Configuration",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -319,7 +319,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Factory:  resourceBucketServerSideEncryptionConfiguration,
 			TypeName: "aws_s3_bucket_server_side_encryption_configuration",
 			Name:     "Bucket Server-side Encryption Configuration",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -329,7 +329,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Factory:  resourceBucketVersioning,
 			TypeName: "aws_s3_bucket_versioning",
 			Name:     "Bucket Versioning",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -339,7 +339,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Factory:  resourceBucketWebsiteConfiguration,
 			TypeName: "aws_s3_bucket_website_configuration",
 			Name:     "Bucket Website Configuration",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -349,11 +349,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Factory:  resourceObject,
 			TypeName: "aws_s3_object",
 			Name:     "Object",
-			Tags: &itypes.ServicePackageResourceTags{
+			Tags: &inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 				ResourceType:        "Object",
 			},
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -363,11 +363,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Factory:  resourceObjectCopy,
 			TypeName: "aws_s3_object_copy",
 			Name:     "Object Copy",
-			Tags: &itypes.ServicePackageResourceTags{
+			Tags: &inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 				ResourceType:        "ObjectCopy",
 			},
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,

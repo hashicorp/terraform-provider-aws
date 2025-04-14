@@ -9,27 +9,27 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kendra"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.ServicePackageFrameworkDataSource {
-	return []*itypes.ServicePackageFrameworkDataSource{}
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
+	return []*inttypes.ServicePackageFrameworkDataSource{}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.ServicePackageFrameworkResource {
-	return []*itypes.ServicePackageFrameworkResource{}
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
+	return []*inttypes.ServicePackageFrameworkResource{}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
-	return []*itypes.ServicePackageSDKDataSource{
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
+	return []*inttypes.ServicePackageSDKDataSource{
 		{
 			Factory:  DataSourceExperience,
 			TypeName: "aws_kendra_experience",
 			Name:     "Experience",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -39,7 +39,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Factory:  DataSourceFaq,
 			TypeName: "aws_kendra_faq",
 			Name:     "FAQ",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -49,7 +49,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Factory:  DataSourceIndex,
 			TypeName: "aws_kendra_index",
 			Name:     "Index",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -59,7 +59,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Factory:  DataSourceQuerySuggestionsBlockList,
 			TypeName: "aws_kendra_query_suggestions_block_list",
 			Name:     "Query Suggestions Block List",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -69,7 +69,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Factory:  DataSourceThesaurus,
 			TypeName: "aws_kendra_thesaurus",
 			Name:     "Thesaurus",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -78,16 +78,16 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 	}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
-	return []*itypes.ServicePackageSDKResource{
+func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePackageSDKResource {
+	return []*inttypes.ServicePackageSDKResource{
 		{
 			Factory:  ResourceDataSource,
 			TypeName: "aws_kendra_data_source",
 			Name:     "Data Source",
-			Tags: &itypes.ServicePackageResourceTags{
+			Tags: &inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -97,7 +97,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Factory:  ResourceExperience,
 			TypeName: "aws_kendra_experience",
 			Name:     "Experience",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -107,10 +107,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Factory:  ResourceFaq,
 			TypeName: "aws_kendra_faq",
 			Name:     "FAQ",
-			Tags: &itypes.ServicePackageResourceTags{
+			Tags: &inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -120,10 +120,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Factory:  ResourceIndex,
 			TypeName: "aws_kendra_index",
 			Name:     "Index",
-			Tags: &itypes.ServicePackageResourceTags{
+			Tags: &inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -133,10 +133,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Factory:  ResourceQuerySuggestionsBlockList,
 			TypeName: "aws_kendra_query_suggestions_block_list",
 			Name:     "Query Suggestions Block List",
-			Tags: &itypes.ServicePackageResourceTags{
+			Tags: &inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -146,10 +146,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Factory:  ResourceThesaurus,
 			TypeName: "aws_kendra_thesaurus",
 			Name:     "Thesaurus",
-			Tags: &itypes.ServicePackageResourceTags{
+			Tags: &inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,

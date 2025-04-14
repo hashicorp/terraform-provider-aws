@@ -10,34 +10,34 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.ServicePackageFrameworkDataSource {
-	return []*itypes.ServicePackageFrameworkDataSource{}
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
+	return []*inttypes.ServicePackageFrameworkDataSource{}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.ServicePackageFrameworkResource {
-	return []*itypes.ServicePackageFrameworkResource{}
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
+	return []*inttypes.ServicePackageFrameworkResource{}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
-	return []*itypes.ServicePackageSDKDataSource{}
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
+	return []*inttypes.ServicePackageSDKDataSource{}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
-	return []*itypes.ServicePackageSDKResource{
+func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePackageSDKResource {
+	return []*inttypes.ServicePackageSDKResource{
 		{
 			Factory:  resourceCell,
 			TypeName: "aws_route53recoveryreadiness_cell",
 			Name:     "Cell",
-			Tags: &itypes.ServicePackageResourceTags{
+			Tags: &inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -47,10 +47,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Factory:  resourceReadinessCheck,
 			TypeName: "aws_route53recoveryreadiness_readiness_check",
 			Name:     "Readiness Check",
-			Tags: &itypes.ServicePackageResourceTags{
+			Tags: &inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -60,10 +60,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Factory:  resourceRecoveryGroup,
 			TypeName: "aws_route53recoveryreadiness_recovery_group",
 			Name:     "Recovery Group",
-			Tags: &itypes.ServicePackageResourceTags{
+			Tags: &inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -73,10 +73,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Factory:  resourceResourceSet,
 			TypeName: "aws_route53recoveryreadiness_resource_set",
 			Name:     "Resource Set",
-			Tags: &itypes.ServicePackageResourceTags{
+			Tags: &inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,

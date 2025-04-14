@@ -9,19 +9,19 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) EphemeralResources(ctx context.Context) []*itypes.ServicePackageEphemeralResource {
-	return []*itypes.ServicePackageEphemeralResource{
+func (p *servicePackage) EphemeralResources(ctx context.Context) []*inttypes.ServicePackageEphemeralResource {
+	return []*inttypes.ServicePackageEphemeralResource{
 		{
 			Factory:  newEphemeralRandomPassword,
 			TypeName: "aws_secretsmanager_random_password",
 			Name:     "Random Password",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:          false,
 				IsOverrideEnabled: false,
 			},
@@ -30,7 +30,7 @@ func (p *servicePackage) EphemeralResources(ctx context.Context) []*itypes.Servi
 			Factory:  newEphemeralSecretVersion,
 			TypeName: "aws_secretsmanager_secret_version",
 			Name:     "Secret Version",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:          false,
 				IsOverrideEnabled: false,
 			},
@@ -38,13 +38,13 @@ func (p *servicePackage) EphemeralResources(ctx context.Context) []*itypes.Servi
 	}
 }
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.ServicePackageFrameworkDataSource {
-	return []*itypes.ServicePackageFrameworkDataSource{
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
+	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
 			Factory:  newDataSourceSecretVersions,
 			TypeName: "aws_secretsmanager_secret_versions",
 			Name:     "Secret Versions",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:          false,
 				IsOverrideEnabled: false,
 			},
@@ -52,17 +52,17 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 	}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.ServicePackageFrameworkResource {
-	return []*itypes.ServicePackageFrameworkResource{}
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
+	return []*inttypes.ServicePackageFrameworkResource{}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
-	return []*itypes.ServicePackageSDKDataSource{
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
+	return []*inttypes.ServicePackageSDKDataSource{
 		{
 			Factory:  dataSourceRandomPassword,
 			TypeName: "aws_secretsmanager_random_password",
 			Name:     "Random Password",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -72,10 +72,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Factory:  dataSourceSecret,
 			TypeName: "aws_secretsmanager_secret",
 			Name:     "Secret",
-			Tags: &itypes.ServicePackageResourceTags{
+			Tags: &inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -85,7 +85,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Factory:  dataSourceSecretRotation,
 			TypeName: "aws_secretsmanager_secret_rotation",
 			Name:     "Secret Rotation",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -95,7 +95,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Factory:  dataSourceSecretVersion,
 			TypeName: "aws_secretsmanager_secret_version",
 			Name:     "Secret Version",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -105,7 +105,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Factory:  dataSourceSecrets,
 			TypeName: "aws_secretsmanager_secrets",
 			Name:     "Secrets",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -114,16 +114,16 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 	}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
-	return []*itypes.ServicePackageSDKResource{
+func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePackageSDKResource {
+	return []*inttypes.ServicePackageSDKResource{
 		{
 			Factory:  resourceSecret,
 			TypeName: "aws_secretsmanager_secret",
 			Name:     "Secret",
-			Tags: &itypes.ServicePackageResourceTags{
+			Tags: &inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -133,7 +133,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Factory:  resourceSecretPolicy,
 			TypeName: "aws_secretsmanager_secret_policy",
 			Name:     "Secret Policy",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -143,7 +143,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Factory:  resourceSecretRotation,
 			TypeName: "aws_secretsmanager_secret_rotation",
 			Name:     "Secret Rotation",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -153,7 +153,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Factory:  resourceSecretVersion,
 			TypeName: "aws_secretsmanager_secret_version",
 			Name:     "Secret Version",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,

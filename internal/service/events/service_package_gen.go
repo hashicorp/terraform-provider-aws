@@ -9,19 +9,19 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/eventbridge"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.ServicePackageFrameworkDataSource {
-	return []*itypes.ServicePackageFrameworkDataSource{
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
+	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
 			Factory:  newEventBusesDataSource,
 			TypeName: "aws_cloudwatch_event_buses",
 			Name:     "Event Buses",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:          false,
 				IsOverrideEnabled: false,
 			},
@@ -29,17 +29,17 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.Ser
 	}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.ServicePackageFrameworkResource {
-	return []*itypes.ServicePackageFrameworkResource{}
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
+	return []*inttypes.ServicePackageFrameworkResource{}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
-	return []*itypes.ServicePackageSDKDataSource{
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
+	return []*inttypes.ServicePackageSDKDataSource{
 		{
 			Factory:  dataSourceBus,
 			TypeName: "aws_cloudwatch_event_bus",
 			Name:     "Event Bus",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -49,7 +49,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Factory:  dataSourceConnection,
 			TypeName: "aws_cloudwatch_event_connection",
 			Name:     "Connection",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -59,7 +59,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Factory:  dataSourceSource,
 			TypeName: "aws_cloudwatch_event_source",
 			Name:     "Source",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -68,13 +68,13 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 	}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
-	return []*itypes.ServicePackageSDKResource{
+func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePackageSDKResource {
+	return []*inttypes.ServicePackageSDKResource{
 		{
 			Factory:  resourceAPIDestination,
 			TypeName: "aws_cloudwatch_event_api_destination",
 			Name:     "API Destination",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -84,7 +84,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Factory:  resourceArchive,
 			TypeName: "aws_cloudwatch_event_archive",
 			Name:     "Archive",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -94,10 +94,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Factory:  resourceBus,
 			TypeName: "aws_cloudwatch_event_bus",
 			Name:     "Event Bus",
-			Tags: &itypes.ServicePackageResourceTags{
+			Tags: &inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -107,7 +107,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Factory:  resourceBusPolicy,
 			TypeName: "aws_cloudwatch_event_bus_policy",
 			Name:     "Event Bus Policy",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -117,7 +117,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Factory:  resourceConnection,
 			TypeName: "aws_cloudwatch_event_connection",
 			Name:     "Connection",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -127,7 +127,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Factory:  resourceEndpoint,
 			TypeName: "aws_cloudwatch_event_endpoint",
 			Name:     "Global Endpoint",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -137,7 +137,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Factory:  resourcePermission,
 			TypeName: "aws_cloudwatch_event_permission",
 			Name:     "Permission",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -147,10 +147,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Factory:  resourceRule,
 			TypeName: "aws_cloudwatch_event_rule",
 			Name:     "Rule",
-			Tags: &itypes.ServicePackageResourceTags{
+			Tags: &inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -160,7 +160,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Factory:  resourceTarget,
 			TypeName: "aws_cloudwatch_event_target",
 			Name:     "Target",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,

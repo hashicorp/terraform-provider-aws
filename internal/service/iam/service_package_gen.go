@@ -9,23 +9,23 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.ServicePackageFrameworkDataSource {
-	return []*itypes.ServicePackageFrameworkDataSource{}
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
+	return []*inttypes.ServicePackageFrameworkDataSource{}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.ServicePackageFrameworkResource {
-	return []*itypes.ServicePackageFrameworkResource{
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
+	return []*inttypes.ServicePackageFrameworkResource{
 		{
 			Factory:  newResourceGroupPoliciesExclusive,
 			TypeName: "aws_iam_group_policies_exclusive",
 			Name:     "Group Policies Exclusive",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
@@ -34,7 +34,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Factory:  newResourceGroupPolicyAttachmentsExclusive,
 			TypeName: "aws_iam_group_policy_attachments_exclusive",
 			Name:     "Group Policy Attachments Exclusive",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
@@ -43,7 +43,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Factory:  newOrganizationsFeaturesResource,
 			TypeName: "aws_iam_organizations_features",
 			Name:     "Organizations Features",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
@@ -52,7 +52,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Factory:  newResourceRolePoliciesExclusive,
 			TypeName: "aws_iam_role_policies_exclusive",
 			Name:     "Role Policies Exclusive",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
@@ -61,7 +61,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Factory:  newResourceRolePolicyAttachmentsExclusive,
 			TypeName: "aws_iam_role_policy_attachments_exclusive",
 			Name:     "Role Policy Attachments Exclusive",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
@@ -70,7 +70,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Factory:  newResourceUserPoliciesExclusive,
 			TypeName: "aws_iam_user_policies_exclusive",
 			Name:     "User Policies Exclusive",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
@@ -79,7 +79,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			Factory:  newResourceUserPolicyAttachmentsExclusive,
 			TypeName: "aws_iam_user_policy_attachments_exclusive",
 			Name:     "User Policy Attachments Exclusive",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
@@ -87,13 +87,13 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 	}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
-	return []*itypes.ServicePackageSDKDataSource{
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
+	return []*inttypes.ServicePackageSDKDataSource{
 		{
 			Factory:  dataSourceAccessKeys,
 			TypeName: "aws_iam_access_keys",
 			Name:     "Access Keys",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -103,7 +103,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Factory:  dataSourceAccountAlias,
 			TypeName: "aws_iam_account_alias",
 			Name:     "Account Alias",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -113,7 +113,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Factory:  dataSourceGroup,
 			TypeName: "aws_iam_group",
 			Name:     "Group",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -123,7 +123,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Factory:  dataSourceInstanceProfile,
 			TypeName: "aws_iam_instance_profile",
 			Name:     "Instance Profile",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -133,7 +133,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Factory:  dataSourceInstanceProfiles,
 			TypeName: "aws_iam_instance_profiles",
 			Name:     "Instance Profiles",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -143,8 +143,8 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Factory:  dataSourceOpenIDConnectProvider,
 			TypeName: "aws_iam_openid_connect_provider",
 			Name:     "OIDC Provider",
-			Tags:     &itypes.ServicePackageResourceTags{},
-			Region: &itypes.ServicePackageResourceRegion{
+			Tags:     &inttypes.ServicePackageResourceTags{},
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -154,8 +154,8 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Factory:  dataSourcePolicy,
 			TypeName: "aws_iam_policy",
 			Name:     "Policy",
-			Tags:     &itypes.ServicePackageResourceTags{},
-			Region: &itypes.ServicePackageResourceRegion{
+			Tags:     &inttypes.ServicePackageResourceTags{},
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -165,7 +165,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Factory:  dataSourcePolicyDocument,
 			TypeName: "aws_iam_policy_document",
 			Name:     "Policy Document",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -175,7 +175,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Factory:  dataSourcePrincipalPolicySimulation,
 			TypeName: "aws_iam_principal_policy_simulation",
 			Name:     "Principal Policy Simulation",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -185,8 +185,8 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Factory:  dataSourceRole,
 			TypeName: "aws_iam_role",
 			Name:     "Role",
-			Tags:     &itypes.ServicePackageResourceTags{},
-			Region: &itypes.ServicePackageResourceRegion{
+			Tags:     &inttypes.ServicePackageResourceTags{},
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -196,7 +196,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Factory:  dataSourceRoles,
 			TypeName: "aws_iam_roles",
 			Name:     "Roles",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -206,7 +206,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Factory:  dataSourceSAMLProvider,
 			TypeName: "aws_iam_saml_provider",
 			Name:     "SAML Provider",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -216,7 +216,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Factory:  dataSourceServerCertificate,
 			TypeName: "aws_iam_server_certificate",
 			Name:     "Server Certificate",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -226,7 +226,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Factory:  dataSourceSessionContext,
 			TypeName: "aws_iam_session_context",
 			Name:     "Session Context",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -236,8 +236,8 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Factory:  dataSourceUser,
 			TypeName: "aws_iam_user",
 			Name:     "User",
-			Tags:     &itypes.ServicePackageResourceTags{},
-			Region: &itypes.ServicePackageResourceRegion{
+			Tags:     &inttypes.ServicePackageResourceTags{},
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -247,7 +247,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Factory:  dataSourceUserSSHKey,
 			TypeName: "aws_iam_user_ssh_key",
 			Name:     "User SSH Key",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -257,7 +257,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			Factory:  dataSourceUsers,
 			TypeName: "aws_iam_users",
 			Name:     "Users",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -266,13 +266,13 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 	}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
-	return []*itypes.ServicePackageSDKResource{
+func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePackageSDKResource {
+	return []*inttypes.ServicePackageSDKResource{
 		{
 			Factory:  resourceAccessKey,
 			TypeName: "aws_iam_access_key",
 			Name:     "Access Key",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -282,7 +282,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Factory:  resourceAccountAlias,
 			TypeName: "aws_iam_account_alias",
 			Name:     "Account Alias",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -292,7 +292,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Factory:  resourceAccountPasswordPolicy,
 			TypeName: "aws_iam_account_password_policy",
 			Name:     "Account Password Policy",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -302,7 +302,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Factory:  resourceGroup,
 			TypeName: "aws_iam_group",
 			Name:     "Group",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -312,7 +312,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Factory:  resourceGroupMembership,
 			TypeName: "aws_iam_group_membership",
 			Name:     "Group Membership",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -322,7 +322,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Factory:  resourceGroupPolicy,
 			TypeName: "aws_iam_group_policy",
 			Name:     "Group Policy",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -332,7 +332,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Factory:  resourceGroupPolicyAttachment,
 			TypeName: "aws_iam_group_policy_attachment",
 			Name:     "Group Policy Attachment",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -342,11 +342,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Factory:  resourceInstanceProfile,
 			TypeName: "aws_iam_instance_profile",
 			Name:     "Instance Profile",
-			Tags: &itypes.ServicePackageResourceTags{
+			Tags: &inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 				ResourceType:        "InstanceProfile",
 			},
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -356,11 +356,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Factory:  resourceOpenIDConnectProvider,
 			TypeName: "aws_iam_openid_connect_provider",
 			Name:     "OIDC Provider",
-			Tags: &itypes.ServicePackageResourceTags{
+			Tags: &inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 				ResourceType:        "OIDCProvider",
 			},
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -370,11 +370,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Factory:  resourcePolicy,
 			TypeName: "aws_iam_policy",
 			Name:     "Policy",
-			Tags: &itypes.ServicePackageResourceTags{
+			Tags: &inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 				ResourceType:        "Policy",
 			},
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -384,7 +384,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Factory:  resourcePolicyAttachment,
 			TypeName: "aws_iam_policy_attachment",
 			Name:     "Policy Attachment",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -394,11 +394,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Factory:  resourceRole,
 			TypeName: "aws_iam_role",
 			Name:     "Role",
-			Tags: &itypes.ServicePackageResourceTags{
+			Tags: &inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrName,
 				ResourceType:        "Role",
 			},
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -408,7 +408,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Factory:  resourceRolePolicy,
 			TypeName: "aws_iam_role_policy",
 			Name:     "Role Policy",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -418,7 +418,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Factory:  resourceRolePolicyAttachment,
 			TypeName: "aws_iam_role_policy_attachment",
 			Name:     "Role Policy Attachment",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -428,11 +428,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Factory:  resourceSAMLProvider,
 			TypeName: "aws_iam_saml_provider",
 			Name:     "SAML Provider",
-			Tags: &itypes.ServicePackageResourceTags{
+			Tags: &inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 				ResourceType:        "SAMLProvider",
 			},
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -442,7 +442,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Factory:  resourceSecurityTokenServicePreferences,
 			TypeName: "aws_iam_security_token_service_preferences",
 			Name:     "Security Token Service Preferences",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -452,11 +452,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Factory:  resourceServerCertificate,
 			TypeName: "aws_iam_server_certificate",
 			Name:     "Server Certificate",
-			Tags: &itypes.ServicePackageResourceTags{
+			Tags: &inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrName,
 				ResourceType:        "ServerCertificate",
 			},
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -466,11 +466,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Factory:  resourceServiceLinkedRole,
 			TypeName: "aws_iam_service_linked_role",
 			Name:     "Service Linked Role",
-			Tags: &itypes.ServicePackageResourceTags{
+			Tags: &inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 				ResourceType:        "ServiceLinkedRole",
 			},
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -480,7 +480,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Factory:  resourceServiceSpecificCredential,
 			TypeName: "aws_iam_service_specific_credential",
 			Name:     "Service Specific Credential",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -490,7 +490,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Factory:  resourceSigningCertificate,
 			TypeName: "aws_iam_signing_certificate",
 			Name:     "Signing Certificate",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -500,11 +500,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Factory:  resourceUser,
 			TypeName: "aws_iam_user",
 			Name:     "User",
-			Tags: &itypes.ServicePackageResourceTags{
+			Tags: &inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrName,
 				ResourceType:        "User",
 			},
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -514,7 +514,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Factory:  resourceUserGroupMembership,
 			TypeName: "aws_iam_user_group_membership",
 			Name:     "User Group Membership",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -524,7 +524,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Factory:  resourceUserLoginProfile,
 			TypeName: "aws_iam_user_login_profile",
 			Name:     "User Login Profile",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -534,7 +534,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Factory:  resourceUserPolicy,
 			TypeName: "aws_iam_user_policy",
 			Name:     "User Policy",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -544,7 +544,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Factory:  resourceUserPolicyAttachment,
 			TypeName: "aws_iam_user_policy_attachment",
 			Name:     "User Policy Attachment",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -554,7 +554,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Factory:  resourceUserSSHKey,
 			TypeName: "aws_iam_user_ssh_key",
 			Name:     "User SSH Key",
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
@@ -564,11 +564,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			Factory:  resourceVirtualMFADevice,
 			TypeName: "aws_iam_virtual_mfa_device",
 			Name:     "Virtual MFA Device",
-			Tags: &itypes.ServicePackageResourceTags{
+			Tags: &inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 				ResourceType:        "VirtualMFADevice",
 			},
-			Region: &itypes.ServicePackageResourceRegion{
+			Region: &inttypes.ServicePackageResourceRegion{
 				IsGlobal:                      true,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
