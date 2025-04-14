@@ -8,7 +8,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/auditmanager"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/auditmanager/types"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -29,6 +28,7 @@ const (
 
 type resourceAccountRegistration struct {
 	framework.ResourceWithConfigure
+	framework.WithImportByID
 }
 
 func (r *resourceAccountRegistration) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -171,10 +171,6 @@ func (r *resourceAccountRegistration) Delete(ctx context.Context, req resource.D
 			)
 		}
 	}
-}
-
-func (r *resourceAccountRegistration) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 type resourceAccountRegistrationData struct {

@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/auditmanager"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/auditmanager/types"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -39,6 +38,7 @@ const (
 
 type resourceAssessmentReport struct {
 	framework.ResourceWithConfigure
+	framework.WithImportByID
 }
 
 func (r *resourceAssessmentReport) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -183,10 +183,6 @@ func (r *resourceAssessmentReport) Delete(ctx context.Context, req resource.Dele
 			err.Error(),
 		)
 	}
-}
-
-func (r *resourceAssessmentReport) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func FindAssessmentReportByID(ctx context.Context, conn *auditmanager.Client, id string) (*awstypes.AssessmentReportMetadata, error) {

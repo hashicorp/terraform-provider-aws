@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -40,6 +39,7 @@ const (
 
 type resourceApplicationAssignment struct {
 	framework.ResourceWithConfigure
+	framework.WithImportByID
 }
 
 func (r *resourceApplicationAssignment) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -168,10 +168,6 @@ func (r *resourceApplicationAssignment) Delete(ctx context.Context, req resource
 		)
 		return
 	}
-}
-
-func (r *resourceApplicationAssignment) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func findApplicationAssignmentByID(ctx context.Context, conn *ssoadmin.Client, id string) (*ssoadmin.DescribeApplicationAssignmentOutput, error) {
