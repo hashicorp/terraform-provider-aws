@@ -12,11 +12,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+type (
+	crudInterceptorFunc = interceptorFunc[schemaResourceData, diag.Diagnostics]
+)
+
 func TestInterceptorsWhy(t *testing.T) {
 	t.Parallel()
 
 	var interceptors interceptorInvocations
-
 	interceptors = append(interceptors, interceptorInvocation{
 		when: Before,
 		why:  Create,

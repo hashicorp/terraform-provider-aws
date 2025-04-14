@@ -474,7 +474,7 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 					interceptors = append(interceptors, interceptorInvocation{
 						when:        Before,
 						why:         CustomizeDiff,
-						interceptor: verifyRegionValueInConfiguredPartition(),
+						interceptor: validateRegionResource,
 					})
 				}
 				interceptors = append(interceptors, interceptorInvocation{

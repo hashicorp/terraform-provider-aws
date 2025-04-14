@@ -23,30 +23,26 @@ func validateRegionInPartition(ctx context.Context, c *conns.AWSClient, region s
 	return nil
 }
 
-type verifyRegionValueInConfiguredPartitionInterceptor struct{}
+var (
+	validateRegionResource customizeDiffInterceptor = interceptorFunc[*schema.ResourceDiff, error](func(ctx context.Context, opts customizeDiffInterceptorOptions) error {
+		c := opts.c
 
-func verifyRegionValueInConfiguredPartition() customizeDiffInterceptor {
-	return &verifyRegionValueInConfiguredPartitionInterceptor{}
-}
-
-func (r verifyRegionValueInConfiguredPartitionInterceptor) run(ctx context.Context, opts customizeDiffInterceptorOptions) error {
-	c := opts.c
-
-	switch d, when, why := opts.d, opts.when, opts.why; when {
-	case Before:
-		switch why {
-		case CustomizeDiff:
-			// Verify that the value of the top-level `region` attribute is in the configured AWS partition.
-			if v, ok := d.GetOk(names.AttrRegion); ok {
-				if err := validateRegionInPartition(ctx, c, v.(string)); err != nil {
-					return err
+		switch d, when, why := opts.d, opts.when, opts.why; when {
+		case Before:
+			switch why {
+			case CustomizeDiff:
+				// Verify that the value of the top-level `region` attribute is in the configured AWS partition.
+				if v, ok := d.GetOk(names.AttrRegion); ok {
+					if err := validateRegionInPartition(ctx, c, v.(string)); err != nil {
+						return err
+					}
 				}
 			}
 		}
-	}
 
-	return nil
-}
+		return nil
+	})
+)
 
 type defaultRegionValueInterceptor struct{}
 
@@ -125,7 +121,7 @@ func (r forceNewIfRegionValueChangesInterceptor) run(ctx context.Context, opts c
 }
 
 var (
-	importRegion importInterceptor = importInterceptorFunc(func(ctx context.Context, opts importInterceptorOptions) ([]*schema.ResourceData, error) {
+	importRegion importInterceptor = interceptorFunc2[*schema.ResourceData, []*schema.ResourceData, error](func(ctx context.Context, opts importInterceptorOptions) ([]*schema.ResourceData, error) {
 		c, d := opts.c, opts.d
 
 		switch when, why := opts.when, opts.why; when {
