@@ -14,40 +14,44 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newARNDataSource,
-			Name:    "ARN",
+			Factory:  newARNDataSource,
+			TypeName: "aws_arn",
+			Name:     "ARN",
 		},
 		{
-			Factory: newBillingServiceAccountDataSource,
-			Name:    "Billing Service Account",
+			Factory:  newDefaultTagsDataSource,
+			TypeName: "aws_default_tags",
+			Name:     "Default Tags",
 		},
 		{
-			Factory: newDefaultTagsDataSource,
-			Name:    "Default Tags",
+			Factory:  newIPRangesDataSource,
+			TypeName: "aws_ip_ranges",
+			Name:     "IP Ranges",
 		},
 		{
-			Factory: newIPRangesDataSource,
-			Name:    "IP Ranges",
+			Factory:  newPartitionDataSource,
+			TypeName: "aws_partition",
+			Name:     "Partition",
 		},
 		{
-			Factory: newPartitionDataSource,
-			Name:    "Partition",
+			Factory:  newRegionDataSource,
+			TypeName: "aws_region",
+			Name:     "Region",
 		},
 		{
-			Factory: newRegionDataSource,
-			Name:    "Region",
+			Factory:  newRegionsDataSource,
+			TypeName: "aws_regions",
+			Name:     "Regions",
 		},
 		{
-			Factory: newRegionsDataSource,
-			Name:    "Regions",
+			Factory:  newServiceDataSource,
+			TypeName: "aws_service",
+			Name:     "Service",
 		},
 		{
-			Factory: newServiceDataSource,
-			Name:    "Service",
-		},
-		{
-			Factory: newServicePrincipalDataSource,
-			Name:    "Service Principal",
+			Factory:  newServicePrincipalDataSource,
+			TypeName: "aws_service_principal",
+			Name:     "Service Principal",
 		},
 	}
 }

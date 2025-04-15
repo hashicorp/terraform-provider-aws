@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_eip: Prevents application from failing when hitting "InvalidAction" error for specific regions
+```

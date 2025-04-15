@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Runtime Versions")
+// @FrameworkDataSource("aws_synthetics_runtime_versions", name="Runtime Versions")
 func newDataSourceRuntimeVersions(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceRuntimeVersions{}, nil
 }
@@ -28,10 +28,6 @@ const (
 
 type dataSourceRuntimeVersions struct {
 	framework.DataSourceWithConfigure
-}
-
-func (d *dataSourceRuntimeVersions) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_synthetics_runtime_versions"
 }
 
 func (d *dataSourceRuntimeVersions) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {

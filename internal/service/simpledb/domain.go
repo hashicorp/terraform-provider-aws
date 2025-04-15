@@ -24,7 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource
+// @FrameworkResource("aws_simpledb_domain", name="Domain")
 func newDomainResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &domainResource{}
 
@@ -35,10 +35,6 @@ type domainResource struct {
 	framework.ResourceWithConfigure
 	framework.WithNoUpdate
 	framework.WithImportByID
-}
-
-func (*domainResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_simpledb_domain"
 }
 
 func (r *domainResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -121,7 +117,7 @@ func (r *domainResource) Delete(ctx context.Context, request resource.DeleteRequ
 
 	conn := simpleDBConn(ctx, r.Meta())
 
-	tflog.Debug(ctx, "deleting SimpleDB Domain", map[string]interface{}{
+	tflog.Debug(ctx, "deleting SimpleDB Domain", map[string]any{
 		names.AttrID: data.ID.ValueString(),
 	})
 

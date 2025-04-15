@@ -38,7 +38,7 @@ func resourceGatewayAssociationProposal() *schema.Resource {
 		CustomizeDiff: customdiff.Sequence(
 			// Accepting the proposal with overridden prefixes changes the returned RequestedAllowedPrefixesToDirectConnectGateway value (allowed_prefixes attribute).
 			// We only want to force a new resource if this value changes and the current proposal state is "requested".
-			customdiff.ForceNewIf("allowed_prefixes", func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) bool {
+			customdiff.ForceNewIf("allowed_prefixes", func(ctx context.Context, d *schema.ResourceDiff, meta any) bool {
 				conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
 				log.Printf("[DEBUG] CustomizeDiff for Direct Connect Gateway Association Proposal (%s) allowed_prefixes", d.Id())
@@ -94,7 +94,7 @@ func resourceGatewayAssociationProposal() *schema.Resource {
 	}
 }
 
-func resourceGatewayAssociationProposalCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGatewayAssociationProposalCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
@@ -121,7 +121,7 @@ func resourceGatewayAssociationProposalCreate(ctx context.Context, d *schema.Res
 	return append(diags, resourceGatewayAssociationProposalRead(ctx, d, meta)...)
 }
 
-func resourceGatewayAssociationProposalRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGatewayAssociationProposalRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
@@ -176,14 +176,15 @@ func resourceGatewayAssociationProposalRead(ctx context.Context, d *schema.Resou
 	return diags
 }
 
-func resourceGatewayAssociationProposalDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGatewayAssociationProposalDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Direct Connect Gateway Association Proposal: %s", d.Id())
-	_, err := conn.DeleteDirectConnectGatewayAssociationProposal(ctx, &directconnect.DeleteDirectConnectGatewayAssociationProposalInput{
+	input := directconnect.DeleteDirectConnectGatewayAssociationProposalInput{
 		ProposalId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteDirectConnectGatewayAssociationProposal(ctx, &input)
 
 	if errs.IsAErrorMessageContains[*awstypes.DirectConnectClientException](err, "is not found") {
 		return diags
@@ -196,7 +197,7 @@ func resourceGatewayAssociationProposalDelete(ctx context.Context, d *schema.Res
 	return diags
 }
 
-func resourceGatewayAssociationProposalImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceGatewayAssociationProposalImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	switch parts := strings.Split(strings.ToLower(d.Id()), "/"); len(parts) {
 	case 1:
 		break
@@ -281,7 +282,7 @@ func findGatewayAssociationProposals(ctx context.Context, conn *directconnect.Cl
 	return output, nil
 }
 
-func expandRouteFilterPrefixes(tfList []interface{}) []awstypes.RouteFilterPrefix {
+func expandRouteFilterPrefixes(tfList []any) []awstypes.RouteFilterPrefix {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -304,12 +305,12 @@ func expandRouteFilterPrefixes(tfList []interface{}) []awstypes.RouteFilterPrefi
 	return apiObjects
 }
 
-func flattenRouteFilterPrefixes(apiObjects []awstypes.RouteFilterPrefix) []interface{} {
+func flattenRouteFilterPrefixes(apiObjects []awstypes.RouteFilterPrefix) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, aws.ToString(apiObject.Cidr))

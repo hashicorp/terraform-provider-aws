@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -35,8 +36,11 @@ func TestAccCloudFrontVPCOrigin_basic(t *testing.T) {
 				Config: testAccVPCOriginConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCOriginExists(ctx, resourceName, &vpcOrigin),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrGlobalARNFormat(ctx, resourceName, names.AttrARN, "cloudfront", "vpcorigin/{id}"),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
+					func(s *terraform.State) error {
+						return resource.TestCheckResourceAttr(resourceName, names.AttrID, aws.ToString(vpcOrigin.Id))(s)
+					},
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_origin_endpoint_config.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "vpc_origin_endpoint_config.0.arn"),
@@ -99,7 +103,7 @@ func TestAccCloudFrontVPCOrigin_update(t *testing.T) {
 				Config: testAccVPCOriginConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCOriginExists(ctx, resourceName, &vpcOrigin),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrGlobalARNFormat(ctx, resourceName, names.AttrARN, "cloudfront", "vpcorigin/{id}"),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_origin_endpoint_config.#", "1"),
@@ -117,7 +121,7 @@ func TestAccCloudFrontVPCOrigin_update(t *testing.T) {
 				Config: testAccVPCOriginConfig_httpsOnly(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCOriginExists(ctx, resourceName, &vpcOrigin),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrGlobalARNFormat(ctx, resourceName, names.AttrARN, "cloudfront", "vpcorigin/{id}"),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_origin_endpoint_config.#", "1"),

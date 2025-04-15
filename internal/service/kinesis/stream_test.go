@@ -36,11 +36,12 @@ func TestAccKinesisStream_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStreamConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStreamExists(ctx, resourceName, &stream),
-					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesis", fmt.Sprintf("stream/%s", rName)),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "kinesis", "stream/{name}"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_type", "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "enforce_consumer_deletion", acctest.CtFalse),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrRetentionPeriod, "24"),

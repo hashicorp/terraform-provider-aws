@@ -14,6 +14,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
 )
 
+// Only include configuration that is used in 3+ or more services.
+// Go idiom: "A little copying is better than a little dependency."
+
 // ConfigCompose can be called to concatenate multiple strings to build test configurations
 func ConfigCompose(config ...string) string {
 	var str strings.Builder
@@ -786,4 +789,151 @@ resource "null_resource" "db_setup" {
   }
 }
 `, rName, model))
+}
+
+func ConfigBedrockAgentKnowledgeBaseRDSUpdateBase(rName, model string) string {
+	return ConfigCompose(
+		ConfigBedrockAgentKnowledgeBaseRDSBase(rName, model), //nolint:mnd
+		fmt.Sprintf(`
+resource "aws_iam_role" "test_update" {
+  name               = "%[1]s-update"
+  path               = "/service-role/"
+  assume_role_policy = <<POLICY
+{
+	"Version": "2012-10-17",
+	"Statement": [{
+		"Action": "sts:AssumeRole",
+		"Principal": {
+		"Service": "bedrock.amazonaws.com"
+		},
+		"Effect": "Allow"
+	}]
+}
+POLICY
+}
+
+# See https://docs.aws.amazon.com/bedrock/latest/userguide/kb-permissions.html.
+resource "aws_iam_role_policy" "test_update" {
+  name   = "%[1]s-update"
+  role   = aws_iam_role.test_update.name
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "bedrock:ListFoundationModels",
+        "bedrock:ListCustomModels"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "bedrock:InvokeModel"
+      ],
+      "Resource": [
+        "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}::foundation-model/%[2]s"
+      ]
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_iam_role_policy_attachment" "rds_data_full_access_update" {
+  role       = aws_iam_role.test_update.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::${data.aws_partition.current.partition}:policy/AmazonRDSDataFullAccess"
+}
+
+resource "aws_iam_role_policy_attachment" "secrets_manager_read_write_update" {
+  role       = aws_iam_role.test_update.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::${data.aws_partition.current.partition}:policy/SecretsManagerReadWrite"
+}
+`, rName, model))
+}
+
+// ConfigRandomPassword returns the configuration for an ephemeral resource that
+// describes a random password.
+//
+// The ephemeral resource is named 'test'. Use
+// ephemeral.aws_secretsmanager_random_password.test.random_password to
+// reference the password value, assigning it to a write-only argument ("_wo").
+//
+// The function accepts a variable number of string arguments in the format
+// "key=value". The following keys are supported:
+//   - password_length: The length of the password. Default is 20.
+//   - exclude_punctuation: Whether to exclude punctuation characters. Default is true.
+//   - exclude_characters: A string of characters to exclude from the password.
+//   - exclude_lowercase: Whether to exclude lowercase letters. Default is false.
+//   - exclude_numbers: Whether to exclude numbers. Default is false.
+//   - exclude_uppercase: Whether to exclude uppercase letters. Default is false.
+//   - include_space: Whether to include a space character. Default is false.
+//   - require_each_included_type: Whether to require at least one character from each included type. Default is false.
+//
+// Called without overrides, the function returns the default configuration:
+//
+//	ephemeral "aws_secretsmanager_random_password" "test" {
+//	  password_length     = 20
+//	  exclude_punctuation = true
+//	}
+func ConfigRandomPassword(overrides ...string) string {
+	// Default configuration values
+	config := map[string]string{
+		"password_length":     "20",
+		"exclude_punctuation": "true",
+	}
+
+	// Additional keys without defaults
+	optionalKeys := []string{
+		"exclude_characters",
+		"exclude_lowercase",
+		"exclude_numbers",
+		"exclude_uppercase",
+		"include_space",
+		"require_each_included_type",
+	}
+
+	// Parse overrides and update the config map
+	for _, override := range overrides {
+		parts := strings.SplitN(override, "=", 2)
+		if len(parts) == 2 {
+			key := strings.TrimSpace(parts[0])
+			value := strings.TrimSpace(parts[1])
+			config[key] = value
+		}
+	}
+
+	// Build the Terraform configuration string
+	var builder strings.Builder
+	builder.WriteString(`
+ephemeral "aws_secretsmanager_random_password" "test" {
+`)
+
+	// Add default keys
+	builder.WriteString(fmt.Sprintf("  password_length     = %s\n", config["password_length"]))
+	builder.WriteString(fmt.Sprintf("  exclude_punctuation = %s\n", config["exclude_punctuation"]))
+
+	// Add optional keys in a consistent order
+	for _, key := range optionalKeys {
+		if value, exists := config[key]; exists {
+			if key == "exclude_characters" {
+				// Special handling for exclude_characters
+				if strings.HasPrefix(value, `"`) && strings.HasSuffix(value, `"`) {
+					// Trim surrounding quotes
+					value = value[1 : len(value)-1]
+				}
+				value = strings.ReplaceAll(value, `\"`, `"`)
+				builder.WriteString(fmt.Sprintf("  %s = %q\n", key, value))
+				continue
+			}
+
+			// Default handling for other keys
+			builder.WriteString(fmt.Sprintf("  %s = %s\n", key, value))
+		}
+	}
+
+	builder.WriteString("}\n")
+	return builder.String()
 }

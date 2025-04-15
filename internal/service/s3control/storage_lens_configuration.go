@@ -389,12 +389,10 @@ func resourceStorageLensConfiguration() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceStorageLensConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStorageLensConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
@@ -410,8 +408,8 @@ func resourceStorageLensConfigurationCreate(ctx context.Context, d *schema.Resou
 		Tags:      storageLensTags(keyValueTagsS3(ctx, getTagsInS3(ctx))),
 	}
 
-	if v, ok := d.GetOk("storage_lens_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.StorageLensConfiguration = expandStorageLensConfiguration(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("storage_lens_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.StorageLensConfiguration = expandStorageLensConfiguration(v.([]any)[0].(map[string]any))
 		input.StorageLensConfiguration.Id = aws.String(configID)
 	}
 
@@ -426,7 +424,7 @@ func resourceStorageLensConfigurationCreate(ctx context.Context, d *schema.Resou
 	return append(diags, resourceStorageLensConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceStorageLensConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStorageLensConfigurationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
@@ -450,7 +448,7 @@ func resourceStorageLensConfigurationRead(ctx context.Context, d *schema.Resourc
 	d.Set(names.AttrAccountID, accountID)
 	d.Set(names.AttrARN, output.StorageLensArn)
 	d.Set("config_id", configID)
-	if err := d.Set("storage_lens_configuration", []interface{}{flattenStorageLensConfiguration(output)}); err != nil {
+	if err := d.Set("storage_lens_configuration", []any{flattenStorageLensConfiguration(output)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting storage_lens_configuration: %s", err)
 	}
 
@@ -465,7 +463,7 @@ func resourceStorageLensConfigurationRead(ctx context.Context, d *schema.Resourc
 	return diags
 }
 
-func resourceStorageLensConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStorageLensConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
@@ -480,8 +478,8 @@ func resourceStorageLensConfigurationUpdate(ctx context.Context, d *schema.Resou
 			ConfigId:  aws.String(configID),
 		}
 
-		if v, ok := d.GetOk("storage_lens_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.StorageLensConfiguration = expandStorageLensConfiguration(v.([]interface{})[0].(map[string]interface{}))
+		if v, ok := d.GetOk("storage_lens_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.StorageLensConfiguration = expandStorageLensConfiguration(v.([]any)[0].(map[string]any))
 			input.StorageLensConfiguration.Id = aws.String(configID)
 		}
 
@@ -503,7 +501,7 @@ func resourceStorageLensConfigurationUpdate(ctx context.Context, d *schema.Resou
 	return append(diags, resourceStorageLensConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceStorageLensConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStorageLensConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
@@ -655,73 +653,73 @@ func storageLensConfigurationUpdateTags(ctx context.Context, conn *s3control.Cli
 	return nil
 }
 
-func expandStorageLensConfiguration(tfMap map[string]interface{}) *types.StorageLensConfiguration {
+func expandStorageLensConfiguration(tfMap map[string]any) *types.StorageLensConfiguration {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &types.StorageLensConfiguration{}
 
-	if v, ok := tfMap["account_level"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.AccountLevel = expandAccountLevel(v[0].(map[string]interface{}))
+	if v, ok := tfMap["account_level"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.AccountLevel = expandAccountLevel(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["aws_org"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.AwsOrg = expandStorageLensAwsOrg(v[0].(map[string]interface{}))
+	if v, ok := tfMap["aws_org"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.AwsOrg = expandStorageLensAwsOrg(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["data_export"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.DataExport = expandStorageLensDataExport(v[0].(map[string]interface{}))
+	if v, ok := tfMap["data_export"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.DataExport = expandStorageLensDataExport(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
 		apiObject.IsEnabled = v
 	}
 
-	if v, ok := tfMap["exclude"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.Exclude = expandExclude(v[0].(map[string]interface{}))
+	if v, ok := tfMap["exclude"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Exclude = expandExclude(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["include"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.Include = expandInclude(v[0].(map[string]interface{}))
+	if v, ok := tfMap["include"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Include = expandInclude(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandAccountLevel(tfMap map[string]interface{}) *types.AccountLevel {
+func expandAccountLevel(tfMap map[string]any) *types.AccountLevel {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &types.AccountLevel{}
 
-	if v, ok := tfMap["activity_metrics"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.ActivityMetrics = expandActivityMetrics(v[0].(map[string]interface{}))
+	if v, ok := tfMap["activity_metrics"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.ActivityMetrics = expandActivityMetrics(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["advanced_cost_optimization_metrics"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.AdvancedCostOptimizationMetrics = expandAdvancedCostOptimizationMetrics(v[0].(map[string]interface{}))
+	if v, ok := tfMap["advanced_cost_optimization_metrics"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.AdvancedCostOptimizationMetrics = expandAdvancedCostOptimizationMetrics(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["advanced_data_protection_metrics"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.AdvancedDataProtectionMetrics = expandAdvancedDataProtectionMetrics(v[0].(map[string]interface{}))
+	if v, ok := tfMap["advanced_data_protection_metrics"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.AdvancedDataProtectionMetrics = expandAdvancedDataProtectionMetrics(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["bucket_level"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.BucketLevel = expandBucketLevel(v[0].(map[string]interface{}))
+	if v, ok := tfMap["bucket_level"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.BucketLevel = expandBucketLevel(v[0].(map[string]any))
 	} else {
 		apiObject.BucketLevel = &types.BucketLevel{}
 	}
 
-	if v, ok := tfMap["detailed_status_code_metrics"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.DetailedStatusCodesMetrics = expandDetailedStatusCodesMetrics(v[0].(map[string]interface{}))
+	if v, ok := tfMap["detailed_status_code_metrics"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.DetailedStatusCodesMetrics = expandDetailedStatusCodesMetrics(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandActivityMetrics(tfMap map[string]interface{}) *types.ActivityMetrics {
+func expandActivityMetrics(tfMap map[string]any) *types.ActivityMetrics {
 	if tfMap == nil {
 		return nil
 	}
@@ -735,37 +733,37 @@ func expandActivityMetrics(tfMap map[string]interface{}) *types.ActivityMetrics 
 	return apiObject
 }
 
-func expandBucketLevel(tfMap map[string]interface{}) *types.BucketLevel {
+func expandBucketLevel(tfMap map[string]any) *types.BucketLevel {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &types.BucketLevel{}
 
-	if v, ok := tfMap["activity_metrics"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.ActivityMetrics = expandActivityMetrics(v[0].(map[string]interface{}))
+	if v, ok := tfMap["activity_metrics"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.ActivityMetrics = expandActivityMetrics(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["advanced_cost_optimization_metrics"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.AdvancedCostOptimizationMetrics = expandAdvancedCostOptimizationMetrics(v[0].(map[string]interface{}))
+	if v, ok := tfMap["advanced_cost_optimization_metrics"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.AdvancedCostOptimizationMetrics = expandAdvancedCostOptimizationMetrics(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["advanced_data_protection_metrics"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.AdvancedDataProtectionMetrics = expandAdvancedDataProtectionMetrics(v[0].(map[string]interface{}))
+	if v, ok := tfMap["advanced_data_protection_metrics"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.AdvancedDataProtectionMetrics = expandAdvancedDataProtectionMetrics(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["detailed_status_code_metrics"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.DetailedStatusCodesMetrics = expandDetailedStatusCodesMetrics(v[0].(map[string]interface{}))
+	if v, ok := tfMap["detailed_status_code_metrics"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.DetailedStatusCodesMetrics = expandDetailedStatusCodesMetrics(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["prefix_level"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.PrefixLevel = expandPrefixLevel(v[0].(map[string]interface{}))
+	if v, ok := tfMap["prefix_level"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.PrefixLevel = expandPrefixLevel(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandAdvancedCostOptimizationMetrics(tfMap map[string]interface{}) *types.AdvancedCostOptimizationMetrics {
+func expandAdvancedCostOptimizationMetrics(tfMap map[string]any) *types.AdvancedCostOptimizationMetrics {
 	if tfMap == nil {
 		return nil
 	}
@@ -779,7 +777,7 @@ func expandAdvancedCostOptimizationMetrics(tfMap map[string]interface{}) *types.
 	return apiObject
 }
 
-func expandAdvancedDataProtectionMetrics(tfMap map[string]interface{}) *types.AdvancedDataProtectionMetrics {
+func expandAdvancedDataProtectionMetrics(tfMap map[string]any) *types.AdvancedDataProtectionMetrics {
 	if tfMap == nil {
 		return nil
 	}
@@ -793,7 +791,7 @@ func expandAdvancedDataProtectionMetrics(tfMap map[string]interface{}) *types.Ad
 	return apiObject
 }
 
-func expandDetailedStatusCodesMetrics(tfMap map[string]interface{}) *types.DetailedStatusCodesMetrics {
+func expandDetailedStatusCodesMetrics(tfMap map[string]any) *types.DetailedStatusCodesMetrics {
 	if tfMap == nil {
 		return nil
 	}
@@ -807,21 +805,21 @@ func expandDetailedStatusCodesMetrics(tfMap map[string]interface{}) *types.Detai
 	return apiObject
 }
 
-func expandPrefixLevel(tfMap map[string]interface{}) *types.PrefixLevel {
+func expandPrefixLevel(tfMap map[string]any) *types.PrefixLevel {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &types.PrefixLevel{}
 
-	if v, ok := tfMap["storage_metrics"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.StorageMetrics = expandPrefixLevelStorageMetrics(v[0].(map[string]interface{}))
+	if v, ok := tfMap["storage_metrics"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.StorageMetrics = expandPrefixLevelStorageMetrics(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandPrefixLevelStorageMetrics(tfMap map[string]interface{}) *types.PrefixLevelStorageMetrics {
+func expandPrefixLevelStorageMetrics(tfMap map[string]any) *types.PrefixLevelStorageMetrics {
 	if tfMap == nil {
 		return nil
 	}
@@ -832,14 +830,14 @@ func expandPrefixLevelStorageMetrics(tfMap map[string]interface{}) *types.Prefix
 		apiObject.IsEnabled = v
 	}
 
-	if v, ok := tfMap["selection_criteria"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.SelectionCriteria = expandSelectionCriteria(v[0].(map[string]interface{}))
+	if v, ok := tfMap["selection_criteria"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.SelectionCriteria = expandSelectionCriteria(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandSelectionCriteria(tfMap map[string]interface{}) *types.SelectionCriteria {
+func expandSelectionCriteria(tfMap map[string]any) *types.SelectionCriteria {
 	if tfMap == nil {
 		return nil
 	}
@@ -861,7 +859,7 @@ func expandSelectionCriteria(tfMap map[string]interface{}) *types.SelectionCrite
 	return apiObject
 }
 
-func expandStorageLensAwsOrg(tfMap map[string]interface{}) *types.StorageLensAwsOrg { // nosemgrep:ci.aws-in-func-name
+func expandStorageLensAwsOrg(tfMap map[string]any) *types.StorageLensAwsOrg { // nosemgrep:ci.aws-in-func-name
 	if tfMap == nil {
 		return nil
 	}
@@ -875,25 +873,25 @@ func expandStorageLensAwsOrg(tfMap map[string]interface{}) *types.StorageLensAws
 	return apiObject
 }
 
-func expandStorageLensDataExport(tfMap map[string]interface{}) *types.StorageLensDataExport {
+func expandStorageLensDataExport(tfMap map[string]any) *types.StorageLensDataExport {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &types.StorageLensDataExport{}
 
-	if v, ok := tfMap["cloud_watch_metrics"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.CloudWatchMetrics = expandCloudWatchMetrics(v[0].(map[string]interface{}))
+	if v, ok := tfMap["cloud_watch_metrics"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.CloudWatchMetrics = expandCloudWatchMetrics(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["s3_bucket_destination"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.S3BucketDestination = expandS3BucketDestination(v[0].(map[string]interface{}))
+	if v, ok := tfMap["s3_bucket_destination"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.S3BucketDestination = expandS3BucketDestination(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandCloudWatchMetrics(tfMap map[string]interface{}) *types.CloudWatchMetrics {
+func expandCloudWatchMetrics(tfMap map[string]any) *types.CloudWatchMetrics {
 	if tfMap == nil {
 		return nil
 	}
@@ -907,7 +905,7 @@ func expandCloudWatchMetrics(tfMap map[string]interface{}) *types.CloudWatchMetr
 	return apiObject
 }
 
-func expandS3BucketDestination(tfMap map[string]interface{}) *types.S3BucketDestination {
+func expandS3BucketDestination(tfMap map[string]any) *types.S3BucketDestination {
 	if tfMap == nil {
 		return nil
 	}
@@ -922,8 +920,8 @@ func expandS3BucketDestination(tfMap map[string]interface{}) *types.S3BucketDest
 		apiObject.Arn = aws.String(v)
 	}
 
-	if v, ok := tfMap["encryption"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.Encryption = expandStorageLensDataExportEncryption(v[0].(map[string]interface{}))
+	if v, ok := tfMap["encryption"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Encryption = expandStorageLensDataExportEncryption(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap[names.AttrFormat].(string); ok && v != "" {
@@ -941,25 +939,25 @@ func expandS3BucketDestination(tfMap map[string]interface{}) *types.S3BucketDest
 	return apiObject
 }
 
-func expandStorageLensDataExportEncryption(tfMap map[string]interface{}) *types.StorageLensDataExportEncryption {
+func expandStorageLensDataExportEncryption(tfMap map[string]any) *types.StorageLensDataExportEncryption {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &types.StorageLensDataExportEncryption{}
 
-	if v, ok := tfMap["sse_kms"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.SSEKMS = expandSSEKMS(v[0].(map[string]interface{}))
+	if v, ok := tfMap["sse_kms"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.SSEKMS = expandSSEKMS(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["sse_s3"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["sse_s3"].([]any); ok && len(v) > 0 {
 		apiObject.SSES3 = &types.SSES3{}
 	}
 
 	return apiObject
 }
 
-func expandSSEKMS(tfMap map[string]interface{}) *types.SSEKMS {
+func expandSSEKMS(tfMap map[string]any) *types.SSEKMS {
 	if tfMap == nil {
 		return nil
 	}
@@ -973,7 +971,7 @@ func expandSSEKMS(tfMap map[string]interface{}) *types.SSEKMS {
 	return apiObject
 }
 
-func expandExclude(tfMap map[string]interface{}) *types.Exclude {
+func expandExclude(tfMap map[string]any) *types.Exclude {
 	if tfMap == nil {
 		return nil
 	}
@@ -991,7 +989,7 @@ func expandExclude(tfMap map[string]interface{}) *types.Exclude {
 	return apiObject
 }
 
-func expandInclude(tfMap map[string]interface{}) *types.Include {
+func expandInclude(tfMap map[string]any) *types.Include {
 	if tfMap == nil {
 		return nil
 	}
@@ -1009,182 +1007,182 @@ func expandInclude(tfMap map[string]interface{}) *types.Include {
 	return apiObject
 }
 
-func flattenStorageLensConfiguration(apiObject *types.StorageLensConfiguration) map[string]interface{} {
+func flattenStorageLensConfiguration(apiObject *types.StorageLensConfiguration) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.AccountLevel; v != nil {
-		tfMap["account_level"] = []interface{}{flattenAccountLevel(v)}
+		tfMap["account_level"] = []any{flattenAccountLevel(v)}
 	}
 
 	if v := apiObject.AwsOrg; v != nil {
-		tfMap["aws_org"] = []interface{}{flattenStorageLensAwsOrg(v)}
+		tfMap["aws_org"] = []any{flattenStorageLensAwsOrg(v)}
 	}
 
 	if v := apiObject.DataExport; v != nil {
-		tfMap["data_export"] = []interface{}{flattenStorageLensDataExport(v)}
+		tfMap["data_export"] = []any{flattenStorageLensDataExport(v)}
 	}
 
 	tfMap[names.AttrEnabled] = apiObject.IsEnabled
 
 	if v := apiObject.Exclude; v != nil {
-		tfMap["exclude"] = []interface{}{flattenExclude(v)}
+		tfMap["exclude"] = []any{flattenExclude(v)}
 	}
 
 	if v := apiObject.Include; v != nil {
-		tfMap["include"] = []interface{}{flattenInclude(v)}
+		tfMap["include"] = []any{flattenInclude(v)}
 	}
 
 	return tfMap
 }
 
-func flattenAccountLevel(apiObject *types.AccountLevel) map[string]interface{} {
+func flattenAccountLevel(apiObject *types.AccountLevel) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.ActivityMetrics; v != nil {
-		tfMap["activity_metrics"] = []interface{}{flattenActivityMetrics(v)}
+		tfMap["activity_metrics"] = []any{flattenActivityMetrics(v)}
 	}
 
 	if v := apiObject.AdvancedCostOptimizationMetrics; v != nil {
-		tfMap["advanced_cost_optimization_metrics"] = []interface{}{flattenAdvancedCostOptimizationMetrics(v)}
+		tfMap["advanced_cost_optimization_metrics"] = []any{flattenAdvancedCostOptimizationMetrics(v)}
 	}
 
 	if v := apiObject.AdvancedDataProtectionMetrics; v != nil {
-		tfMap["advanced_data_protection_metrics"] = []interface{}{flattenAdvancedDataProtectionMetrics(v)}
+		tfMap["advanced_data_protection_metrics"] = []any{flattenAdvancedDataProtectionMetrics(v)}
 	}
 
 	if v := apiObject.BucketLevel; v != nil {
-		tfMap["bucket_level"] = []interface{}{flattenBucketLevel(v)}
+		tfMap["bucket_level"] = []any{flattenBucketLevel(v)}
 	}
 
 	if v := apiObject.DetailedStatusCodesMetrics; v != nil {
-		tfMap["detailed_status_code_metrics"] = []interface{}{flattenDetailedStatusCodesMetrics(v)}
+		tfMap["detailed_status_code_metrics"] = []any{flattenDetailedStatusCodesMetrics(v)}
 	}
 
 	return tfMap
 }
 
-func flattenActivityMetrics(apiObject *types.ActivityMetrics) map[string]interface{} {
+func flattenActivityMetrics(apiObject *types.ActivityMetrics) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	tfMap[names.AttrEnabled] = apiObject.IsEnabled
 
 	return tfMap
 }
 
-func flattenBucketLevel(apiObject *types.BucketLevel) map[string]interface{} {
+func flattenBucketLevel(apiObject *types.BucketLevel) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.ActivityMetrics; v != nil {
-		tfMap["activity_metrics"] = []interface{}{flattenActivityMetrics(v)}
+		tfMap["activity_metrics"] = []any{flattenActivityMetrics(v)}
 	}
 
 	if v := apiObject.AdvancedCostOptimizationMetrics; v != nil {
-		tfMap["advanced_cost_optimization_metrics"] = []interface{}{flattenAdvancedCostOptimizationMetrics(v)}
+		tfMap["advanced_cost_optimization_metrics"] = []any{flattenAdvancedCostOptimizationMetrics(v)}
 	}
 
 	if v := apiObject.AdvancedDataProtectionMetrics; v != nil {
-		tfMap["advanced_data_protection_metrics"] = []interface{}{flattenAdvancedDataProtectionMetrics(v)}
+		tfMap["advanced_data_protection_metrics"] = []any{flattenAdvancedDataProtectionMetrics(v)}
 	}
 
 	if v := apiObject.DetailedStatusCodesMetrics; v != nil {
-		tfMap["detailed_status_code_metrics"] = []interface{}{flattenDetailedStatusCodesMetrics(v)}
+		tfMap["detailed_status_code_metrics"] = []any{flattenDetailedStatusCodesMetrics(v)}
 	}
 
 	if v := apiObject.PrefixLevel; v != nil {
-		tfMap["prefix_level"] = []interface{}{flattenPrefixLevel(v)}
+		tfMap["prefix_level"] = []any{flattenPrefixLevel(v)}
 	}
 
 	return tfMap
 }
 
-func flattenAdvancedCostOptimizationMetrics(apiObject *types.AdvancedCostOptimizationMetrics) map[string]interface{} {
+func flattenAdvancedCostOptimizationMetrics(apiObject *types.AdvancedCostOptimizationMetrics) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	tfMap[names.AttrEnabled] = apiObject.IsEnabled
 
 	return tfMap
 }
 
-func flattenAdvancedDataProtectionMetrics(apiObject *types.AdvancedDataProtectionMetrics) map[string]interface{} {
+func flattenAdvancedDataProtectionMetrics(apiObject *types.AdvancedDataProtectionMetrics) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	tfMap[names.AttrEnabled] = apiObject.IsEnabled
 
 	return tfMap
 }
 
-func flattenDetailedStatusCodesMetrics(apiObject *types.DetailedStatusCodesMetrics) map[string]interface{} {
+func flattenDetailedStatusCodesMetrics(apiObject *types.DetailedStatusCodesMetrics) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	tfMap[names.AttrEnabled] = apiObject.IsEnabled
 
 	return tfMap
 }
 
-func flattenPrefixLevel(apiObject *types.PrefixLevel) map[string]interface{} {
+func flattenPrefixLevel(apiObject *types.PrefixLevel) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.StorageMetrics; v != nil {
-		tfMap["storage_metrics"] = []interface{}{flattenPrefixLevelStorageMetrics(v)}
+		tfMap["storage_metrics"] = []any{flattenPrefixLevelStorageMetrics(v)}
 	}
 
 	return tfMap
 }
 
-func flattenPrefixLevelStorageMetrics(apiObject *types.PrefixLevelStorageMetrics) map[string]interface{} {
+func flattenPrefixLevelStorageMetrics(apiObject *types.PrefixLevelStorageMetrics) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	tfMap[names.AttrEnabled] = apiObject.IsEnabled
 
 	if v := apiObject.SelectionCriteria; v != nil {
-		tfMap["selection_criteria"] = []interface{}{flattenSelectionCriteria(v)}
+		tfMap["selection_criteria"] = []any{flattenSelectionCriteria(v)}
 	}
 
 	return tfMap
 }
 
-func flattenSelectionCriteria(apiObject *types.SelectionCriteria) map[string]interface{} {
+func flattenSelectionCriteria(apiObject *types.SelectionCriteria) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Delimiter; v != nil {
 		tfMap["delimiter"] = aws.ToString(v)
@@ -1196,12 +1194,12 @@ func flattenSelectionCriteria(apiObject *types.SelectionCriteria) map[string]int
 	return tfMap
 }
 
-func flattenStorageLensAwsOrg(apiObject *types.StorageLensAwsOrg) map[string]interface{} { // nosemgrep:ci.aws-in-func-name
+func flattenStorageLensAwsOrg(apiObject *types.StorageLensAwsOrg) map[string]any { // nosemgrep:ci.aws-in-func-name
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Arn; v != nil {
 		tfMap[names.AttrARN] = aws.ToString(v)
@@ -1210,42 +1208,42 @@ func flattenStorageLensAwsOrg(apiObject *types.StorageLensAwsOrg) map[string]int
 	return tfMap
 }
 
-func flattenStorageLensDataExport(apiObject *types.StorageLensDataExport) map[string]interface{} {
+func flattenStorageLensDataExport(apiObject *types.StorageLensDataExport) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.CloudWatchMetrics; v != nil {
-		tfMap["cloud_watch_metrics"] = []interface{}{flattenCloudWatchMetrics(v)}
+		tfMap["cloud_watch_metrics"] = []any{flattenCloudWatchMetrics(v)}
 	}
 
 	if v := apiObject.S3BucketDestination; v != nil {
-		tfMap["s3_bucket_destination"] = []interface{}{flattenS3BucketDestination(v)}
+		tfMap["s3_bucket_destination"] = []any{flattenS3BucketDestination(v)}
 	}
 
 	return tfMap
 }
 
-func flattenCloudWatchMetrics(apiObject *types.CloudWatchMetrics) map[string]interface{} {
+func flattenCloudWatchMetrics(apiObject *types.CloudWatchMetrics) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	tfMap[names.AttrEnabled] = apiObject.IsEnabled
 
 	return tfMap
 }
 
-func flattenS3BucketDestination(apiObject *types.S3BucketDestination) map[string]interface{} {
+func flattenS3BucketDestination(apiObject *types.S3BucketDestination) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.AccountId; v != nil {
 		tfMap[names.AttrAccountID] = aws.ToString(v)
@@ -1256,7 +1254,7 @@ func flattenS3BucketDestination(apiObject *types.S3BucketDestination) map[string
 	}
 
 	if v := apiObject.Encryption; v != nil {
-		tfMap["encryption"] = []interface{}{flattenStorageLensDataExportEncryption(v)}
+		tfMap["encryption"] = []any{flattenStorageLensDataExportEncryption(v)}
 	}
 
 	tfMap[names.AttrFormat] = apiObject.Format
@@ -1269,30 +1267,30 @@ func flattenS3BucketDestination(apiObject *types.S3BucketDestination) map[string
 	return tfMap
 }
 
-func flattenStorageLensDataExportEncryption(apiObject *types.StorageLensDataExportEncryption) map[string]interface{} {
+func flattenStorageLensDataExportEncryption(apiObject *types.StorageLensDataExportEncryption) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.SSEKMS; v != nil {
-		tfMap["sse_kms"] = []interface{}{flattenSSEKMS(v)}
+		tfMap["sse_kms"] = []any{flattenSSEKMS(v)}
 	}
 
 	if v := apiObject.SSES3; v != nil {
-		tfMap["sse_s3"] = []interface{}{flattenSSES3(v)}
+		tfMap["sse_s3"] = []any{flattenSSES3(v)}
 	}
 
 	return tfMap
 }
 
-func flattenSSEKMS(apiObject *types.SSEKMS) map[string]interface{} {
+func flattenSSEKMS(apiObject *types.SSEKMS) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.KeyId; v != nil {
 		tfMap[names.AttrKeyID] = aws.ToString(v)
@@ -1301,22 +1299,22 @@ func flattenSSEKMS(apiObject *types.SSEKMS) map[string]interface{} {
 	return tfMap
 }
 
-func flattenSSES3(apiObject *types.SSES3) map[string]interface{} {
+func flattenSSES3(apiObject *types.SSES3) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	return tfMap
 }
 
-func flattenExclude(apiObject *types.Exclude) map[string]interface{} {
+func flattenExclude(apiObject *types.Exclude) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	tfMap["buckets"] = apiObject.Buckets
 	tfMap["regions"] = apiObject.Regions
@@ -1324,12 +1322,12 @@ func flattenExclude(apiObject *types.Exclude) map[string]interface{} {
 	return tfMap
 }
 
-func flattenInclude(apiObject *types.Include) map[string]interface{} {
+func flattenInclude(apiObject *types.Include) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	tfMap["buckets"] = apiObject.Buckets
 	tfMap["regions"] = apiObject.Regions

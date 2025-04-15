@@ -58,10 +58,6 @@ type jobQueueResource struct {
 	framework.WithTimeouts
 }
 
-func (*jobQueueResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_batch_job_queue"
-}
-
 func (r *jobQueueResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Version: 1,
@@ -159,7 +155,7 @@ func (r *jobQueueResource) Create(ctx context.Context, request resource.CreateRe
 	name := data.JobQueueName.ValueString()
 	input := &batch.CreateJobQueueInput{
 		JobQueueName: aws.String(name),
-		Priority:     fwflex.Int32FromFramework(ctx, data.Priority),
+		Priority:     fwflex.Int32FromFrameworkInt64(ctx, data.Priority),
 		State:        awstypes.JQState(data.State.ValueString()),
 		Tags:         getTagsIn(ctx),
 	}
@@ -248,7 +244,7 @@ func (r *jobQueueResource) Read(ctx context.Context, request resource.ReadReques
 	if response.Diagnostics.HasError() {
 		return
 	}
-	data.Priority = fwflex.Int32ToFrameworkLegacy(ctx, jobQueue.Priority)
+	data.Priority = fwflex.Int32ToFrameworkInt64Legacy(ctx, jobQueue.Priority)
 	data.SchedulingPolicyARN = fwflex.StringToFrameworkARN(ctx, jobQueue.SchedulingPolicyArn)
 	data.State = fwflex.StringValueToFramework(ctx, jobQueue.State)
 
@@ -296,7 +292,7 @@ func (r *jobQueueResource) Update(ctx context.Context, request resource.UpdateRe
 		update = true
 	}
 	if !new.Priority.Equal(old.Priority) {
-		input.Priority = fwflex.Int32FromFramework(ctx, new.Priority)
+		input.Priority = fwflex.Int32FromFrameworkInt64(ctx, new.Priority)
 		update = true
 	}
 	if !new.State.Equal(old.State) {
@@ -348,10 +344,11 @@ func (r *jobQueueResource) Delete(ctx context.Context, request resource.DeleteRe
 
 	conn := r.Meta().BatchClient(ctx)
 
-	_, err := conn.UpdateJobQueue(ctx, &batch.UpdateJobQueueInput{
+	updateInput := batch.UpdateJobQueueInput{
 		JobQueue: fwflex.StringFromFramework(ctx, data.ID),
 		State:    awstypes.JQStateDisabled,
-	})
+	}
+	_, err := conn.UpdateJobQueue(ctx, &updateInput)
 
 	// "An error occurred (ClientException) when calling the UpdateJobQueue operation: ... does not exist".
 	if errs.IsAErrorMessageContains[*awstypes.ClientException](err, "does not exist") {
@@ -371,9 +368,10 @@ func (r *jobQueueResource) Delete(ctx context.Context, request resource.DeleteRe
 		return
 	}
 
-	_, err = conn.DeleteJobQueue(ctx, &batch.DeleteJobQueueInput{
+	deleteInput := batch.DeleteJobQueueInput{
 		JobQueue: fwflex.StringFromFramework(ctx, data.ID),
-	})
+	}
+	_, err = conn.DeleteJobQueue(ctx, &deleteInput)
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("deleting Batch Job Queue (%s)", data.ID.ValueString()), err.Error())
@@ -386,10 +384,6 @@ func (r *jobQueueResource) Delete(ctx context.Context, request resource.DeleteRe
 
 		return
 	}
-}
-
-func (r *jobQueueResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func (r *jobQueueResource) ConfigValidators(_ context.Context) []resource.ConfigValidator {
@@ -461,7 +455,7 @@ func findJobQueues(ctx context.Context, conn *batch.Client, input *batch.Describ
 }
 
 func statusJobQueue(ctx context.Context, conn *batch.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findJobQueueByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

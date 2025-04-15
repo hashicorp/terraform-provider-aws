@@ -55,10 +55,6 @@ type resourceClusterSnapshotCopy struct {
 	framework.WithTimeouts
 }
 
-func (r *resourceClusterSnapshotCopy) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_rds_cluster_snapshot_copy"
-}
-
 func (r *resourceClusterSnapshotCopy) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -366,7 +362,7 @@ func (r *resourceClusterSnapshotCopy) Delete(ctx context.Context, req resource.D
 		return
 	}
 
-	tflog.Debug(ctx, fmt.Sprintf("deleting %s", ResNameClusterSnapshotCopy), map[string]interface{}{
+	tflog.Debug(ctx, fmt.Sprintf("deleting %s", ResNameClusterSnapshotCopy), map[string]any{
 		names.AttrID: data.ID.ValueString(),
 	})
 
@@ -388,10 +384,6 @@ func (r *resourceClusterSnapshotCopy) Delete(ctx context.Context, req resource.D
 
 func (r *resourceClusterSnapshotCopy) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-}
-
-func (r *resourceClusterSnapshotCopy) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, req, resp)
 }
 
 type resourceClusterSnapshotCopyData struct {

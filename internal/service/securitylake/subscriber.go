@@ -39,8 +39,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
-// @FrameworkResource(name="Subscriber")
+// @FrameworkResource("aws_securitylake_subscriber", name="Subscriber")
 // @Tags(identifierAttribute="arn")
 func newSubscriberResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &subscriberResource{}
@@ -59,10 +58,6 @@ const (
 type subscriberResource struct {
 	framework.ResourceWithConfigure
 	framework.WithTimeouts
-}
-
-func (r *subscriberResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_securitylake_subscriber"
 }
 
 func (r *subscriberResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -291,7 +286,7 @@ func (r *subscriberResource) Read(ctx context.Context, request resource.ReadRequ
 	}
 
 	if tags, err := listTags(ctx, conn, data.ID.ValueString()); err == nil {
-		setTagsOut(ctx, Tags(tags))
+		setTagsOut(ctx, svcTags(tags))
 	}
 
 	response.Diagnostics.Append(data.refreshFromOutput(ctx, subscriberIdentity, output)...)
@@ -411,10 +406,6 @@ func (r *subscriberResource) ImportState(ctx context.Context, request resource.I
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), request, resp)
 }
 
-func (r *subscriberResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, resp)
-}
-
 func findSubscriberByID(ctx context.Context, conn *securitylake.Client, id string) (*awstypes.SubscriberResource, error) {
 	input := &securitylake.GetSubscriberInput{
 		SubscriberId: aws.String(id),
@@ -442,7 +433,7 @@ func findSubscriberByID(ctx context.Context, conn *securitylake.Client, id strin
 }
 
 func statusSubscriber(ctx context.Context, conn *securitylake.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findSubscriberByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

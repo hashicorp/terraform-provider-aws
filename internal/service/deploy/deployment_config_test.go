@@ -37,11 +37,12 @@ func TestAccDeployDeploymentConfig_basic(t *testing.T) {
 				Config: testAccDeploymentConfigConfig_fleet(rName, 75),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDeploymentConfigExists(ctx, resourceName, &config),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "codedeploy", "deploymentconfig:{deployment_config_name}"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_config_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "compute_platform", "Server"),
 					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "zonal_config.#", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, "deployment_config_name"),
 				),
 			},
 			{

@@ -16,7 +16,7 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
 
-// @FrameworkDataSource(name="Profiles")
+// @FrameworkDataSource("aws_route53profiles_profiles", name="Profiles")
 func newDataSourceProfiles(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceProfiles{}, nil
 }
@@ -27,10 +27,6 @@ const (
 
 type dataSourceProfiles struct {
 	framework.DataSourceWithConfigure
-}
-
-func (d *dataSourceProfiles) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_route53profiles_profiles"
 }
 
 func (d *dataSourceProfiles) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {

@@ -117,17 +117,15 @@ func resourceLocationEFS() *schema.Resource {
 				Computed: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceLocationEFSCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLocationEFSCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
 	input := &datasync.CreateLocationEfsInput{
-		Ec2Config:        expandEC2Config(d.Get("ec2_config").([]interface{})),
+		Ec2Config:        expandEC2Config(d.Get("ec2_config").([]any)),
 		EfsFilesystemArn: aws.String(d.Get("efs_file_system_arn").(string)),
 		Subdirectory:     aws.String(d.Get("subdirectory").(string)),
 		Tags:             getTagsIn(ctx),
@@ -156,7 +154,7 @@ func resourceLocationEFSCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceLocationEFSRead(ctx, d, meta)...)
 }
 
-func resourceLocationEFSRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLocationEFSRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
@@ -202,7 +200,7 @@ func resourceLocationEFSRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceLocationEFSUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLocationEFSUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Tags only.
@@ -210,14 +208,15 @@ func resourceLocationEFSUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceLocationEFSRead(ctx, d, meta)...)
 }
 
-func resourceLocationEFSDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLocationEFSDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
 	log.Printf("[DEBUG] Deleting DataSync Location EFS: %s", d.Id())
-	_, err := conn.DeleteLocation(ctx, &datasync.DeleteLocationInput{
+	input := datasync.DeleteLocationInput{
 		LocationArn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteLocation(ctx, &input)
 
 	if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "not found") {
 		return diags
@@ -255,25 +254,25 @@ func findLocationEFSByARN(ctx context.Context, conn *datasync.Client, arn string
 	return output, nil
 }
 
-func flattenEC2Config(ec2Config *awstypes.Ec2Config) []interface{} {
+func flattenEC2Config(ec2Config *awstypes.Ec2Config) []any {
 	if ec2Config == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"security_group_arns": flex.FlattenStringValueSet(ec2Config.SecurityGroupArns),
 		"subnet_arn":          aws.ToString(ec2Config.SubnetArn),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func expandEC2Config(l []interface{}) *awstypes.Ec2Config {
+func expandEC2Config(l []any) *awstypes.Ec2Config {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	ec2Config := &awstypes.Ec2Config{
 		SecurityGroupArns: flex.ExpandStringValueSet(m["security_group_arns"].(*schema.Set)),

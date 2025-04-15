@@ -48,7 +48,7 @@ func resourceAlertManagerDefinition() *schema.Resource {
 	}
 }
 
-func resourceAlertManagerDefinitionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAlertManagerDefinitionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AMPClient(ctx)
 
@@ -73,7 +73,7 @@ func resourceAlertManagerDefinitionCreate(ctx context.Context, d *schema.Resourc
 	return append(diags, resourceAlertManagerDefinitionRead(ctx, d, meta)...)
 }
 
-func resourceAlertManagerDefinitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAlertManagerDefinitionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AMPClient(ctx)
 
@@ -95,7 +95,7 @@ func resourceAlertManagerDefinitionRead(ctx context.Context, d *schema.ResourceD
 	return diags
 }
 
-func resourceAlertManagerDefinitionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAlertManagerDefinitionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AMPClient(ctx)
 
@@ -117,7 +117,7 @@ func resourceAlertManagerDefinitionUpdate(ctx context.Context, d *schema.Resourc
 	return append(diags, resourceAlertManagerDefinitionRead(ctx, d, meta)...)
 }
 
-func resourceAlertManagerDefinitionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAlertManagerDefinitionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AMPClient(ctx)
 
@@ -168,7 +168,7 @@ func findAlertManagerDefinitionByID(ctx context.Context, conn *amp.Client, id st
 }
 
 func statusAlertManagerDefinition(ctx context.Context, conn *amp.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findAlertManagerDefinitionByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

@@ -36,7 +36,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Slack Channel Configuration")
+// @FrameworkResource("aws_chatbot_slack_channel_configuration", name="Slack Channel Configuration")
 // @Tags(identifierAttribute="chat_configuration_arn")
 func newSlackChannelConfigurationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &slackChannelConfigurationResource{}
@@ -51,10 +51,6 @@ func newSlackChannelConfigurationResource(_ context.Context) (resource.ResourceW
 type slackChannelConfigurationResource struct {
 	framework.ResourceWithConfigure
 	framework.WithTimeouts
-}
-
-func (r *slackChannelConfigurationResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	response.TypeName = "aws_chatbot_slack_channel_configuration"
 }
 
 func (r *slackChannelConfigurationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -221,7 +217,7 @@ func (r *slackChannelConfigurationResource) Update(ctx context.Context, request 
 
 	conn := r.Meta().ChatbotClient(ctx)
 
-	diff, d := fwflex.Calculate(ctx, new, old)
+	diff, d := fwflex.Diff(ctx, new, old)
 	response.Diagnostics.Append(d...)
 	if response.Diagnostics.HasError() {
 		return
@@ -272,7 +268,7 @@ func (r *slackChannelConfigurationResource) Delete(ctx context.Context, request 
 
 	conn := r.Meta().ChatbotClient(ctx)
 
-	tflog.Debug(ctx, "deleting Chatbot Slack Channel Configuration", map[string]interface{}{
+	tflog.Debug(ctx, "deleting Chatbot Slack Channel Configuration", map[string]any{
 		"chat_configuration_arn": data.ChatConfigurationARN.ValueString(),
 	})
 
@@ -280,7 +276,7 @@ func (r *slackChannelConfigurationResource) Delete(ctx context.Context, request 
 		ChatConfigurationArn: data.ChatConfigurationARN.ValueStringPointer(),
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, r.DeleteTimeout(ctx, data.Timeouts), func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, r.DeleteTimeout(ctx, data.Timeouts), func() (any, error) {
 		return conn.DeleteSlackChannelConfiguration(ctx, input)
 	}, "DependencyViolation")
 
@@ -297,10 +293,6 @@ func (r *slackChannelConfigurationResource) Delete(ctx context.Context, request 
 		create.AddError(&response.Diagnostics, names.Chatbot, create.ErrActionWaitingForDeletion, ResNameSlackChannelConfiguration, data.ChatConfigurationARN.ValueString(), err)
 		return
 	}
-}
-
-func (r *slackChannelConfigurationResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func (r *slackChannelConfigurationResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
@@ -354,7 +346,7 @@ const (
 )
 
 func statusSlackChannelConfiguration(ctx context.Context, conn *chatbot.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findSlackChannelConfigurationByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {

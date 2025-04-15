@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_lightsail_lb_certificate_attachment")
+// @SDKResource("aws_lightsail_lb_certificate_attachment", name="Load Balancer Certificate Attachment")
 func ResourceLoadBalancerCertificateAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLoadBalancerCertificateAttachmentCreate,
@@ -54,7 +54,7 @@ func ResourceLoadBalancerCertificateAttachment() *schema.Resource {
 	}
 }
 
-func resourceLoadBalancerCertificateAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLoadBalancerCertificateAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
@@ -87,7 +87,7 @@ func resourceLoadBalancerCertificateAttachmentCreate(ctx context.Context, d *sch
 	return append(diags, resourceLoadBalancerCertificateAttachmentRead(ctx, d, meta)...)
 }
 
-func resourceLoadBalancerCertificateAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLoadBalancerCertificateAttachmentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
@@ -110,7 +110,7 @@ func resourceLoadBalancerCertificateAttachmentRead(ctx context.Context, d *schem
 	return diags
 }
 
-func resourceLoadBalancerCertificateAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLoadBalancerCertificateAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	log.Printf("[WARN] Cannot destroy Lightsail Load Balancer Certificate Attachment. Terraform will remove this resource from the state file, however resources may remain.")
 	return nil // nosemgrep:ci.semgrep.pluginsdk.return-diags-not-nil
 }

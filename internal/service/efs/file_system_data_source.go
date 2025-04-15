@@ -119,7 +119,7 @@ func dataSourceFileSystem() *schema.Resource {
 	}
 }
 
-func dataSourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EFSClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
@@ -136,9 +136,9 @@ func dataSourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	filter := tfslices.PredicateTrue[*awstypes.FileSystemDescription]()
 
-	if tagsToMatch := tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig); len(tagsToMatch) > 0 {
+	if tagsToMatch := tftags.New(ctx, d.Get(names.AttrTags).(map[string]any)).IgnoreAWS().IgnoreConfig(ignoreTagsConfig); len(tagsToMatch) > 0 {
 		filter = func(v *awstypes.FileSystemDescription) bool {
-			return KeyValueTags(ctx, v.Tags).ContainsAll(tagsToMatch)
+			return keyValueTags(ctx, v.Tags).ContainsAll(tagsToMatch)
 		}
 	}
 

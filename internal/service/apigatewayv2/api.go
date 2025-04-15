@@ -166,12 +166,10 @@ func resourceAPI() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 64),
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceAPICreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAPICreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
@@ -187,7 +185,7 @@ func resourceAPICreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	if v, ok := d.GetOk("cors_configuration"); ok {
-		input.CorsConfiguration = expandCORSConfiguration(v.([]interface{}))
+		input.CorsConfiguration = expandCORSConfiguration(v.([]any))
 	}
 
 	if v, ok := d.GetOk("credentials_arn"); ok {
@@ -235,7 +233,7 @@ func resourceAPICreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	return append(diags, resourceAPIRead(ctx, d, meta)...)
 }
 
-func resourceAPIRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAPIRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
@@ -270,13 +268,13 @@ func resourceAPIRead(ctx context.Context, d *schema.ResourceData, meta interface
 	return diags
 }
 
-func resourceAPIUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAPIUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	corsConfigurationDeleted := false
 	if d.HasChange("cors_configuration") {
-		if v := d.Get("cors_configuration"); len(v.([]interface{})) == 0 {
+		if v := d.Get("cors_configuration"); len(v.([]any)) == 0 {
 			corsConfigurationDeleted = true
 			input := &apigatewayv2.DeleteCorsConfigurationInput{
 				ApiId: aws.String(d.Id()),
@@ -301,7 +299,7 @@ func resourceAPIUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 		}
 
 		if d.HasChange("cors_configuration") {
-			input.CorsConfiguration = expandCORSConfiguration(d.Get("cors_configuration").([]interface{}))
+			input.CorsConfiguration = expandCORSConfiguration(d.Get("cors_configuration").([]any))
 		}
 
 		if d.HasChange(names.AttrDescription) {
@@ -342,14 +340,15 @@ func resourceAPIUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 	return append(diags, resourceAPIRead(ctx, d, meta)...)
 }
 
-func resourceAPIDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAPIDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 API: %s", d.Id())
-	_, err := conn.DeleteApi(ctx, &apigatewayv2.DeleteApiInput{
+	input := apigatewayv2.DeleteApiInput{
 		ApiId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteApi(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags
@@ -362,7 +361,7 @@ func resourceAPIDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 	return diags
 }
 
-func reimportOpenAPIDefinition(ctx context.Context, d *schema.ResourceData, meta interface{}) error {
+func reimportOpenAPIDefinition(ctx context.Context, d *schema.ResourceData, meta any) error {
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	if body, ok := d.GetOk("body"); ok {
@@ -421,7 +420,7 @@ func reimportOpenAPIDefinition(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		if !reflect.DeepEqual(configuredCORSConfiguration, d.Get("cors_configuration")) {
-			if len(configuredCORSConfiguration.([]interface{})) == 0 {
+			if len(configuredCORSConfiguration.([]any)) == 0 {
 				input := &apigatewayv2.DeleteCorsConfigurationInput{
 					ApiId: aws.String(d.Id()),
 				}
@@ -432,7 +431,7 @@ func reimportOpenAPIDefinition(ctx context.Context, d *schema.ResourceData, meta
 					return fmt.Errorf("deleting API Gateway v2 API (%s) CORS configuration: %w", d.Id(), err)
 				}
 			} else {
-				inputUA.CorsConfiguration = expandCORSConfiguration(configuredCORSConfiguration.([]interface{}))
+				inputUA.CorsConfiguration = expandCORSConfiguration(configuredCORSConfiguration.([]any))
 			}
 		}
 
@@ -474,13 +473,13 @@ func findAPI(ctx context.Context, conn *apigatewayv2.Client, input *apigatewayv2
 	return output, nil
 }
 
-func expandCORSConfiguration(vConfiguration []interface{}) *awstypes.Cors {
+func expandCORSConfiguration(vConfiguration []any) *awstypes.Cors {
 	configuration := &awstypes.Cors{}
 
 	if len(vConfiguration) == 0 || vConfiguration[0] == nil {
 		return configuration
 	}
-	mConfiguration := vConfiguration[0].(map[string]interface{})
+	mConfiguration := vConfiguration[0].(map[string]any)
 
 	if vAllowCredentials, ok := mConfiguration["allow_credentials"].(bool); ok {
 		configuration.AllowCredentials = aws.Bool(vAllowCredentials)
@@ -504,12 +503,12 @@ func expandCORSConfiguration(vConfiguration []interface{}) *awstypes.Cors {
 	return configuration
 }
 
-func flattenCORSConfiguration(configuration *awstypes.Cors) []interface{} {
+func flattenCORSConfiguration(configuration *awstypes.Cors) []any {
 	if configuration == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	return []interface{}{map[string]interface{}{
+	return []any{map[string]any{
 		"allow_credentials": aws.ToBool(configuration.AllowCredentials),
 		"allow_headers":     flex.FlattenStringValueSetCaseInsensitive(configuration.AllowHeaders),
 		"allow_methods":     flex.FlattenStringValueSetCaseInsensitive(configuration.AllowMethods),

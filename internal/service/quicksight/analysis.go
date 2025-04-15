@@ -42,7 +42,7 @@ func resourceAnalysis() *schema.Resource {
 		DeleteWithoutTimeout: resourceAnalysisDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 				d.Set("recovery_window_in_days", 30) //nolint:mnd // 30days is the default value (see below)
 				return []*schema.ResourceData{d}, nil
 			},
@@ -114,12 +114,10 @@ func resourceAnalysis() *schema.Resource {
 				},
 			}
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceAnalysisCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAnalysisCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
@@ -136,20 +134,20 @@ func resourceAnalysisCreate(ctx context.Context, d *schema.ResourceData, meta in
 		Tags:         getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("definition"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Definition = quicksightschema.ExpandAnalysisDefinition(d.Get("definition").([]interface{}))
+	if v, ok := d.GetOk("definition"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.Definition = quicksightschema.ExpandAnalysisDefinition(d.Get("definition").([]any))
 	}
 
-	if v, ok := d.GetOk(names.AttrParameters); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Parameters = quicksightschema.ExpandParameters(d.Get(names.AttrParameters).([]interface{}))
+	if v, ok := d.GetOk(names.AttrParameters); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.Parameters = quicksightschema.ExpandParameters(d.Get(names.AttrParameters).([]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrPermissions); ok && v.(*schema.Set).Len() != 0 {
 		input.Permissions = quicksightschema.ExpandResourcePermissions(v.(*schema.Set).List())
 	}
 
-	if v, ok := d.GetOk("source_entity"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.SourceEntity = quicksightschema.ExpandAnalysisSourceEntity(v.([]interface{}))
+	if v, ok := d.GetOk("source_entity"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.SourceEntity = quicksightschema.ExpandAnalysisSourceEntity(v.([]any))
 	}
 
 	if v, ok := d.Get("theme_arn").(string); ok && v != "" {
@@ -171,7 +169,7 @@ func resourceAnalysisCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceAnalysisRead(ctx, d, meta)...)
 }
 
-func resourceAnalysisRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAnalysisRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
@@ -224,7 +222,7 @@ func resourceAnalysisRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func resourceAnalysisUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAnalysisUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
@@ -241,13 +239,13 @@ func resourceAnalysisUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		if v, ok := d.GetOk("source_entity"); ok {
-			input.SourceEntity = quicksightschema.ExpandAnalysisSourceEntity(v.([]interface{}))
+			input.SourceEntity = quicksightschema.ExpandAnalysisSourceEntity(v.([]any))
 		} else {
-			input.Definition = quicksightschema.ExpandAnalysisDefinition(d.Get("definition").([]interface{}))
+			input.Definition = quicksightschema.ExpandAnalysisDefinition(d.Get("definition").([]any))
 		}
 
-		if v, ok := d.GetOk(names.AttrParameters); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.Parameters = quicksightschema.ExpandParameters(d.Get(names.AttrParameters).([]interface{}))
+		if v, ok := d.GetOk(names.AttrParameters); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.Parameters = quicksightschema.ExpandParameters(d.Get(names.AttrParameters).([]any))
 		}
 
 		if v, ok := d.Get("theme_arn").(string); ok && v != "" {
@@ -293,7 +291,7 @@ func resourceAnalysisUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceAnalysisRead(ctx, d, meta)...)
 }
 
-func resourceAnalysisDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAnalysisDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
@@ -450,7 +448,7 @@ func findAnalysisPermissions(ctx context.Context, conn *quicksight.Client, input
 }
 
 func statusAnalysis(ctx context.Context, conn *quicksight.Client, awsAccountID, analysisID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findAnalysisByTwoPartKey(ctx, conn, awsAccountID, analysisID)
 
 		if tfresource.NotFound(err) {

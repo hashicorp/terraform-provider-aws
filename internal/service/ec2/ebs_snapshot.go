@@ -40,8 +40,6 @@ func resourceEBSSnapshot() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
 			Delete: schema.DefaultTimeout(10 * time.Minute),
@@ -112,12 +110,12 @@ func resourceEBSSnapshot() *schema.Resource {
 	}
 }
 
-func resourceEBSSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEBSSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	volumeID := d.Get("volume_id").(string)
-	input := &ec2.CreateSnapshotInput{
+	input := ec2.CreateSnapshotInput{
 		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeSnapshot),
 		VolumeId:          aws.String(volumeID),
 	}
@@ -131,8 +129,8 @@ func resourceEBSSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, 1*time.Minute,
-		func() (interface{}, error) {
-			return conn.CreateSnapshot(ctx, input)
+		func() (any, error) {
+			return conn.CreateSnapshot(ctx, &input)
 		},
 		errCodeSnapshotCreationPerVolumeRateExceeded, "The maximum per volume CreateSnapshot request rate has been exceeded")
 
@@ -143,7 +141,7 @@ func resourceEBSSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta
 	d.SetId(aws.ToString(outputRaw.(*ec2.CreateSnapshotOutput).SnapshotId))
 
 	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate),
-		func() (interface{}, error) {
+		func() (any, error) {
 			waiter := ec2.NewSnapshotCompletedWaiter(conn)
 			return waiter.WaitForOutput(ctx, &ec2.DescribeSnapshotsInput{
 				SnapshotIds: []string{d.Id()},
@@ -156,10 +154,11 @@ func resourceEBSSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if v, ok := d.GetOk("storage_tier"); ok && v.(string) == string(awstypes.TargetStorageTierArchive) {
-		_, err = conn.ModifySnapshotTier(ctx, &ec2.ModifySnapshotTierInput{
+		input := ec2.ModifySnapshotTierInput{
 			SnapshotId:  aws.String(d.Id()),
 			StorageTier: awstypes.TargetStorageTier(v.(string)),
-		})
+		}
+		_, err = conn.ModifySnapshotTier(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EBS Snapshot (%s) Storage Tier: %s", d.Id(), err)
@@ -173,7 +172,7 @@ func resourceEBSSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceEBSSnapshotRead(ctx, d, meta)...)
 }
 
-func resourceEBSSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEBSSnapshotRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -212,16 +211,17 @@ func resourceEBSSnapshotRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceEBSSnapshotUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEBSSnapshotUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	if d.HasChange("storage_tier") {
 		if tier := d.Get("storage_tier").(string); tier == string(awstypes.TargetStorageTierArchive) {
-			_, err := conn.ModifySnapshotTier(ctx, &ec2.ModifySnapshotTierInput{
+			input := ec2.ModifySnapshotTierInput{
 				SnapshotId:  aws.String(d.Id()),
 				StorageTier: awstypes.TargetStorageTier(tier),
-			})
+			}
+			_, err := conn.ModifySnapshotTier(ctx, &input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating EBS Snapshot (%s) Storage Tier: %s", d.Id(), err)
@@ -231,7 +231,7 @@ func resourceEBSSnapshotUpdate(ctx context.Context, d *schema.ResourceData, meta
 				return sdkdiag.AppendErrorf(diags, "waiting for EBS Snapshot (%s) Storage Tier archive: %s", d.Id(), err)
 			}
 		} else {
-			input := &ec2.RestoreSnapshotTierInput{
+			input := ec2.RestoreSnapshotTierInput{
 				SnapshotId: aws.String(d.Id()),
 			}
 
@@ -244,7 +244,7 @@ func resourceEBSSnapshotUpdate(ctx context.Context, d *schema.ResourceData, meta
 			}
 
 			//Skipping waiter as restoring a snapshot takes 24-72 hours so state will reamin (https://aws.amazon.com/blogs/aws/new-amazon-ebs-snapshots-archive/)
-			_, err := conn.RestoreSnapshotTier(ctx, input)
+			_, err := conn.RestoreSnapshotTier(ctx, &input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "restoring EBS Snapshot (%s): %s", d.Id(), err)
@@ -255,12 +255,12 @@ func resourceEBSSnapshotUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceEBSSnapshotRead(ctx, d, meta)...)
 }
 
-func resourceEBSSnapshotDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEBSSnapshotDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[INFO] Deleting EBS Snapshot: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete), func() (any, error) {
 		return conn.DeleteSnapshot(ctx, &ec2.DeleteSnapshotInput{
 			SnapshotId: aws.String(d.Id()),
 		})

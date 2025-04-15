@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_location_place_index")
+// @SDKDataSource("aws_location_place_index", name="Place Index")
 func DataSourcePlaceIndex() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePlaceIndexRead,
@@ -65,7 +65,7 @@ func DataSourcePlaceIndex() *schema.Resource {
 	}
 }
 
-func dataSourcePlaceIndexRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourcePlaceIndexRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LocationClient(ctx)
 
@@ -90,7 +90,7 @@ func dataSourcePlaceIndexRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("data_source", output.DataSource)
 
 	if output.DataSourceConfiguration != nil {
-		d.Set("data_source_configuration", []interface{}{flattenDataSourceConfiguration(output.DataSourceConfiguration)})
+		d.Set("data_source_configuration", []any{flattenDataSourceConfiguration(output.DataSourceConfiguration)})
 	} else {
 		d.Set("data_source_configuration", nil)
 	}

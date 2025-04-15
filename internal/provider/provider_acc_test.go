@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"slices"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -830,11 +831,8 @@ func testAccCheckIgnoreTagsKeyPrefixes(ctx context.Context, t *testing.T, p **sc
 		for _, expectedElement := range expectedKeyPrefixes {
 			var found bool
 
-			for _, actualElement := range actualKeyPrefixes {
-				if actualElement == expectedElement {
-					found = true
-					break
-				}
+			if slices.Contains(actualKeyPrefixes, expectedElement) {
+				found = true
 			}
 
 			if !found {
@@ -845,11 +843,8 @@ func testAccCheckIgnoreTagsKeyPrefixes(ctx context.Context, t *testing.T, p **sc
 		for _, actualElement := range actualKeyPrefixes {
 			var found bool
 
-			for _, expectedElement := range expectedKeyPrefixes {
-				if actualElement == expectedElement {
-					found = true
-					break
-				}
+			if slices.Contains(expectedKeyPrefixes, actualElement) {
+				found = true
 			}
 
 			if !found {
@@ -887,11 +882,8 @@ func testAccCheckIgnoreTagsKeys(ctx context.Context, t *testing.T, p **schema.Pr
 		for _, expectedElement := range expectedKeys {
 			var found bool
 
-			for _, actualElement := range actualKeys {
-				if actualElement == expectedElement {
-					found = true
-					break
-				}
+			if slices.Contains(actualKeys, expectedElement) {
+				found = true
 			}
 
 			if !found {
@@ -902,11 +894,8 @@ func testAccCheckIgnoreTagsKeys(ctx context.Context, t *testing.T, p **schema.Pr
 		for _, actualElement := range actualKeys {
 			var found bool
 
-			for _, expectedElement := range expectedKeys {
-				if actualElement == expectedElement {
-					found = true
-					break
-				}
+			if slices.Contains(expectedKeys, actualElement) {
+				found = true
 			}
 
 			if !found {

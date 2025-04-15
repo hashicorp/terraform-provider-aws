@@ -243,11 +243,12 @@ func testAccCheckRunDynamoDBTableBackupJob(ctx context.Context, rName string) re
 			AccountID: client.AccountID(ctx),
 			Resource:  fmt.Sprintf("table/%s", rName),
 		}.String()
-		output, err := conn.StartBackupJob(ctx, &backup.StartBackupJobInput{
+		input := backup.StartBackupJobInput{
 			BackupVaultName: aws.String(rName),
 			IamRoleArn:      aws.String(iamRoleARN),
 			ResourceArn:     aws.String(resourceARN),
-		})
+		}
+		output, err := conn.StartBackupJob(ctx, &input)
 
 		if err != nil {
 			return fmt.Errorf("error starting Backup Job: %w", err)
@@ -307,7 +308,7 @@ func findJobByID(ctx context.Context, conn *backup.Client, id string) (*backup.D
 }
 
 func statusJobState(ctx context.Context, conn *backup.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findJobByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

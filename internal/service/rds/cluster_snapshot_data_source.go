@@ -113,7 +113,7 @@ func dataSourceClusterSnapshot() *schema.Resource {
 	}
 }
 
-func dataSourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -137,7 +137,7 @@ func dataSourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, 
 	f := tfslices.PredicateTrue[*types.DBClusterSnapshot]()
 	if tags := getTagsIn(ctx); len(tags) > 0 {
 		f = func(v *types.DBClusterSnapshot) bool {
-			return KeyValueTags(ctx, v.TagList).ContainsAll(KeyValueTags(ctx, tags))
+			return keyValueTags(ctx, v.TagList).ContainsAll(keyValueTags(ctx, tags))
 		}
 	}
 

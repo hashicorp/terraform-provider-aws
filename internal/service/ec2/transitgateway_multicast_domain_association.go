@@ -53,7 +53,7 @@ func resourceTransitGatewayMulticastDomainAssociation() *schema.Resource {
 	}
 }
 
-func resourceTransitGatewayMulticastDomainAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitGatewayMulticastDomainAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -83,7 +83,7 @@ func resourceTransitGatewayMulticastDomainAssociationCreate(ctx context.Context,
 	return append(diags, resourceTransitGatewayMulticastDomainAssociationRead(ctx, d, meta)...)
 }
 
-func resourceTransitGatewayMulticastDomainAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitGatewayMulticastDomainAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -111,7 +111,7 @@ func resourceTransitGatewayMulticastDomainAssociationRead(ctx context.Context, d
 	return diags
 }
 
-func resourceTransitGatewayMulticastDomainAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitGatewayMulticastDomainAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -137,11 +137,12 @@ func disassociateTransitGatewayMulticastDomain(ctx context.Context, conn *ec2.Cl
 	id := transitGatewayMulticastDomainAssociationCreateResourceID(multicastDomainID, attachmentID, subnetID)
 
 	log.Printf("[DEBUG] Deleting EC2 Transit Gateway Multicast Domain Association: %s", id)
-	_, err := conn.DisassociateTransitGatewayMulticastDomain(ctx, &ec2.DisassociateTransitGatewayMulticastDomainInput{
+	input := ec2.DisassociateTransitGatewayMulticastDomainInput{
 		SubnetIds:                       []string{subnetID},
 		TransitGatewayAttachmentId:      aws.String(attachmentID),
 		TransitGatewayMulticastDomainId: aws.String(multicastDomainID),
-	})
+	}
+	_, err := conn.DisassociateTransitGatewayMulticastDomain(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayMulticastDomainIdNotFound) {
 		return nil

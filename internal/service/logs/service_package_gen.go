@@ -21,40 +21,46 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newAnomalyDetectorResource,
-			Name:    "Anomaly Detector",
+			Factory:  newAnomalyDetectorResource,
+			TypeName: "aws_cloudwatch_log_anomaly_detector",
+			Name:     "Anomaly Detector",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
-			Factory: newDeliveryDestinationPolicyResource,
-			Name:    "Delivery Destination Policy",
-		},
-		{
-			Factory: newDeliveryDestinationResource,
-			Name:    "Delivery Destination",
+			Factory:  newDeliveryResource,
+			TypeName: "aws_cloudwatch_log_delivery",
+			Name:     "Delivery",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
-			Factory: newDeliveryResource,
-			Name:    "Delivery",
+			Factory:  newDeliveryDestinationResource,
+			TypeName: "aws_cloudwatch_log_delivery_destination",
+			Name:     "Delivery Destination",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
-			Factory: newDeliverySourceResource,
-			Name:    "Delivery Source",
+			Factory:  newDeliveryDestinationPolicyResource,
+			TypeName: "aws_cloudwatch_log_delivery_destination_policy",
+			Name:     "Delivery Destination Policy",
+		},
+		{
+			Factory:  newDeliverySourceResource,
+			TypeName: "aws_cloudwatch_log_delivery_source",
+			Name:     "Delivery Source",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
-			Factory: newIndexPolicyResource,
-			Name:    "Index Policy",
+			Factory:  newIndexPolicyResource,
+			TypeName: "aws_cloudwatch_log_index_policy",
+			Name:     "Index Policy",
 		},
 	}
 }
@@ -64,6 +70,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  dataSourceDataProtectionPolicyDocument,
 			TypeName: "aws_cloudwatch_log_data_protection_policy_document",
+			Name:     "Data Protection Policy Document",
 		},
 		{
 			Factory:  dataSourceGroup,
@@ -149,11 +156,31 @@ func (p *servicePackage) ServicePackageName() string {
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*cloudwatchlogs.Client, error) {
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
-
-	return cloudwatchlogs.NewFromConfig(cfg,
+	optFns := []func(*cloudwatchlogs.Options){
 		cloudwatchlogs.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
-	), nil
+		withExtraOptions(ctx, p, config),
+	}
+
+	return cloudwatchlogs.NewFromConfig(cfg, optFns...), nil
+}
+
+// withExtraOptions returns a functional option that allows this service package to specify extra API client options.
+// This option is always called after any generated options.
+func withExtraOptions(ctx context.Context, sp conns.ServicePackage, config map[string]any) func(*cloudwatchlogs.Options) {
+	if v, ok := sp.(interface {
+		withExtraOptions(context.Context, map[string]any) []func(*cloudwatchlogs.Options)
+	}); ok {
+		optFns := v.withExtraOptions(ctx, config)
+
+		return func(o *cloudwatchlogs.Options) {
+			for _, optFn := range optFns {
+				optFn(o)
+			}
+		}
+	}
+
+	return func(*cloudwatchlogs.Options) {}
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

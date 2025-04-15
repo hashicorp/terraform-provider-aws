@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Connector")
+// @FrameworkDataSource("aws_transfer_connector", name="Connector")
 func newDataSourceConnector(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceConnector{}, nil
 }
@@ -32,10 +32,6 @@ const (
 
 type dataSourceConnector struct {
 	framework.DataSourceWithConfigure
-}
-
-func (d *dataSourceConnector) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_transfer_connector"
 }
 
 func (d *dataSourceConnector) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {

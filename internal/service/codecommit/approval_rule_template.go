@@ -45,7 +45,7 @@ func resourceApprovalRuleTemplate() *schema.Resource {
 				Type:             schema.TypeString,
 				Required:         true,
 				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
@@ -84,7 +84,7 @@ func resourceApprovalRuleTemplate() *schema.Resource {
 	}
 }
 
-func resourceApprovalRuleTemplateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceApprovalRuleTemplateCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeCommitClient(ctx)
 
@@ -109,7 +109,7 @@ func resourceApprovalRuleTemplateCreate(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourceApprovalRuleTemplateRead(ctx, d, meta)...)
 }
 
-func resourceApprovalRuleTemplateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceApprovalRuleTemplateRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeCommitClient(ctx)
 
@@ -137,7 +137,7 @@ func resourceApprovalRuleTemplateRead(ctx context.Context, d *schema.ResourceDat
 	return diags
 }
 
-func resourceApprovalRuleTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceApprovalRuleTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeCommitClient(ctx)
 
@@ -188,14 +188,15 @@ func resourceApprovalRuleTemplateUpdate(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourceApprovalRuleTemplateRead(ctx, d, meta)...)
 }
 
-func resourceApprovalRuleTemplateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceApprovalRuleTemplateDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeCommitClient(ctx)
 
 	log.Printf("[INFO] Deleting CodeCommit Approval Rule Template: %s", d.Id())
-	_, err := conn.DeleteApprovalRuleTemplate(ctx, &codecommit.DeleteApprovalRuleTemplateInput{
+	input := codecommit.DeleteApprovalRuleTemplateInput{
 		ApprovalRuleTemplateName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteApprovalRuleTemplate(ctx, &input)
 
 	if errs.IsA[*types.ApprovalRuleTemplateDoesNotExistException](err) {
 		return diags

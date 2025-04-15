@@ -36,6 +36,7 @@ const (
 // @Tags
 func resourceStack() *schema.Resource {
 	return &schema.Resource{
+		DeprecationMessage:   "This resource is deprecated and will be removed in the next major version of the AWS Provider. Consider the AWS Systems Manager service instead.",
 		CreateWithoutTimeout: resourceStackCreate,
 		ReadWithoutTimeout:   resourceStackRead,
 		UpdateWithoutTimeout: resourceStackUpdate,
@@ -198,12 +199,10 @@ func resourceStack() *schema.Resource {
 				ConflictsWith: []string{"default_availability_zone"},
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpsWorksClient(ctx)
 
@@ -237,8 +236,8 @@ func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
-	if v, ok := d.GetOk("custom_cookbooks_source"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.CustomCookbooksSource = expandSource(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("custom_cookbooks_source"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.CustomCookbooksSource = expandSource(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("custom_json"); ok {
@@ -270,7 +269,7 @@ func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, d.Timeout(schema.TimeoutCreate),
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.CreateStack(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -320,7 +319,7 @@ func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceStackRead(ctx, d, meta)...)
 }
 
-func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	var err error
 	conn := meta.(*conns.AWSClient).OpsWorksClient(ctx)
@@ -381,14 +380,14 @@ func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 		// CustomCookbooksSource.Password and CustomCookbooksSource.SshKey will, on read, contain the placeholder string "*****FILTERED*****",
 		// so we ignore it on read and let persist the value already in the state.
-		if v, ok := d.GetOk("custom_cookbooks_source"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			v := v.([]interface{})[0].(map[string]interface{})
+		if v, ok := d.GetOk("custom_cookbooks_source"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			v := v.([]any)[0].(map[string]any)
 
 			tfMap[names.AttrPassword] = v[names.AttrPassword]
 			tfMap["ssh_key"] = v["ssh_key"]
 		}
 
-		if err := d.Set("custom_cookbooks_source", []interface{}{tfMap}); err != nil {
+		if err := d.Set("custom_cookbooks_source", []any{tfMap}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting custom_cookbooks_source: %s", err)
 		}
 	} else {
@@ -415,12 +414,12 @@ func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "listing tags for OpsWorks Stack (%s): %s", arn, err)
 	}
 
-	setTagsOut(ctx, Tags(tags))
+	setTagsOut(ctx, svcTags(tags))
 
 	return diags
 }
 
-func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	var err error
 	conn := meta.(*conns.AWSClient).OpsWorksClient(ctx)
@@ -467,8 +466,8 @@ func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 
 		if d.HasChange("custom_cookbooks_source") {
-			if v, ok := d.GetOk("custom_cookbooks_source"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.CustomCookbooksSource = expandSource(v.([]interface{})[0].(map[string]interface{}))
+			if v, ok := d.GetOk("custom_cookbooks_source"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.CustomCookbooksSource = expandSource(v.([]any)[0].(map[string]any))
 			}
 		}
 
@@ -536,7 +535,7 @@ func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceStackRead(ctx, d, meta)...)
 }
 
-func resourceStackDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStackDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	var err error
 	conn := meta.(*conns.AWSClient).OpsWorksClient(ctx)
@@ -612,7 +611,7 @@ func findStackByID(ctx context.Context, conn *opsworks.Client, id string, optFns
 	return tfresource.AssertSingleValueResult(output.Stacks)
 }
 
-func expandSource(tfMap map[string]interface{}) *awstypes.Source {
+func expandSource(tfMap map[string]any) *awstypes.Source {
 	if tfMap == nil {
 		return nil
 	}
@@ -646,12 +645,12 @@ func expandSource(tfMap map[string]interface{}) *awstypes.Source {
 	return apiObject
 }
 
-func flattenSource(apiObject *awstypes.Source) map[string]interface{} {
+func flattenSource(apiObject *awstypes.Source) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Password; v != nil {
 		tfMap[names.AttrPassword] = aws.ToString(v)

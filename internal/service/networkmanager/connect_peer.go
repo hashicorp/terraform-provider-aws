@@ -5,15 +5,11 @@ package networkmanager
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -27,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -43,8 +38,6 @@ func resourceConnectPeer() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
@@ -191,22 +184,20 @@ func resourceConnectPeer() *schema.Resource {
 	}
 }
 
-func resourceConnectPeerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConnectPeerCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
 	connectAttachmentID := d.Get("connect_attachment_id").(string)
 	peerAddress := d.Get("peer_address").(string)
-
 	input := &networkmanager.CreateConnectPeerInput{
 		ConnectAttachmentId: aws.String(connectAttachmentID),
 		PeerAddress:         aws.String(peerAddress),
 		Tags:                getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("bgp_options"); ok && len(v.([]interface{})) > 0 {
-		input.BgpOptions = expandPeerOptions(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("bgp_options"); ok && len(v.([]any)) > 0 {
+		input.BgpOptions = expandPeerOptions(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("core_network_address"); ok {
@@ -214,7 +205,7 @@ func resourceConnectPeerCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if v, ok := d.GetOk("inside_cidr_blocks"); ok {
-		input.InsideCidrBlocks = flex.ExpandStringValueList(v.([]interface{}))
+		input.InsideCidrBlocks = flex.ExpandStringValueList(v.([]any))
 	}
 
 	if v, ok := d.GetOk("subnet_arn"); ok {
@@ -222,7 +213,7 @@ func resourceConnectPeerCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, d.Timeout(schema.TimeoutCreate),
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.CreateConnectPeer(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -240,7 +231,7 @@ func resourceConnectPeerCreate(ctx context.Context, d *schema.ResourceData, meta
 			//   Message_: "Connect attachment state is invalid. attachment id: attachment-06cb63ed3fe0008df",
 			//   Reason: "Other"
 			// }
-			if validationExceptionMessage_Contains(err, awstypes.ValidationExceptionReasonOther, "Connect attachment state is invalid") {
+			if validationExceptionMessageContains(err, awstypes.ValidationExceptionReasonOther, "Connect attachment state is invalid") {
 				return true, err
 			}
 
@@ -260,9 +251,8 @@ func resourceConnectPeerCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceConnectPeerRead(ctx, d, meta)...)
 }
 
-func resourceConnectPeerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConnectPeerRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
 	connectPeer, err := findConnectPeerByID(ctx, conn, d.Id())
@@ -277,17 +267,11 @@ func resourceConnectPeerRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading Network Manager Connect Peer (%s): %s", d.Id(), err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   "networkmanager",
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  fmt.Sprintf("connect-peer/%s", d.Id()),
-	}.String()
-	d.Set(names.AttrARN, arn)
-	bgpOptions := map[string]interface{}{}
-	bgpOptions["peer_asn"] = connectPeer.Configuration.BgpConfigurations[0].PeerAsn
-	d.Set("bgp_options", []interface{}{bgpOptions})
-	d.Set(names.AttrConfiguration, []interface{}{flattenPeerConfiguration(connectPeer.Configuration)})
+	d.Set(names.AttrARN, connectPeerARN(ctx, meta.(*conns.AWSClient), d.Id()))
+	d.Set("bgp_options", []any{map[string]any{
+		"peer_asn": connectPeer.Configuration.BgpConfigurations[0].PeerAsn,
+	}})
+	d.Set(names.AttrConfiguration, []any{flattenPeerConfiguration(connectPeer.Configuration)})
 	d.Set("connect_peer_id", connectPeer.ConnectPeerId)
 	d.Set("core_network_id", connectPeer.CoreNetworkId)
 	if connectPeer.CreatedAt != nil {
@@ -307,14 +291,13 @@ func resourceConnectPeerRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceConnectPeerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConnectPeerUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	// Tags only.
 	return resourceConnectPeerRead(ctx, d, meta)
 }
 
-func resourceConnectPeerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConnectPeerDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Network Manager Connect Peer: %s", d.Id())
@@ -337,7 +320,7 @@ func resourceConnectPeerDelete(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func expandPeerOptions(o map[string]interface{}) *awstypes.BgpOptions {
+func expandPeerOptions(o map[string]any) *awstypes.BgpOptions {
 	if o == nil {
 		return nil
 	}
@@ -376,15 +359,15 @@ func findConnectPeerByID(ctx context.Context, conn *networkmanager.Client, id st
 	return output.ConnectPeer, nil
 }
 
-func flattenPeerConfiguration(apiObject *awstypes.ConnectPeerConfiguration) map[string]interface{} {
+func flattenPeerConfiguration(apiObject *awstypes.ConnectPeerConfiguration) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	confMap := map[string]interface{}{}
+	confMap := map[string]any{}
 
 	for _, v := range apiObject.BgpConfigurations {
-		bgpConfMap := map[string]interface{}{}
+		bgpConfMap := map[string]any{}
 
 		if a := v.CoreNetworkAddress; a != nil {
 			bgpConfMap["core_network_address"] = aws.ToString(a)
@@ -398,9 +381,9 @@ func flattenPeerConfiguration(apiObject *awstypes.ConnectPeerConfiguration) map[
 		if a := v.PeerAsn; a != nil {
 			bgpConfMap["peer_asn"] = aws.ToInt64(a)
 		}
-		var existing []interface{}
+		var existing []any
 		if c, ok := confMap["bgp_configurations"]; ok {
-			existing = c.([]interface{})
+			existing = c.([]any)
 		}
 		confMap["bgp_configurations"] = append(existing, bgpConfMap)
 	}
@@ -420,7 +403,7 @@ func flattenPeerConfiguration(apiObject *awstypes.ConnectPeerConfiguration) map[
 }
 
 func statusConnectPeerState(ctx context.Context, conn *networkmanager.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findConnectPeerByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
@@ -446,6 +429,8 @@ func waitConnectPeerCreated(ctx context.Context, conn *networkmanager.Client, id
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.ConnectPeer); ok {
+		tfresource.SetLastError(err, connectPeersError(output.LastModificationErrors))
+
 		return output, err
 	}
 
@@ -464,24 +449,15 @@ func waitConnectPeerDeleted(ctx context.Context, conn *networkmanager.Client, id
 	outputRaw, err := stateconf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.ConnectPeer); ok {
+		tfresource.SetLastError(err, connectPeersError(output.LastModificationErrors))
+
 		return output, err
 	}
 
 	return nil, err
 }
 
-// validationExceptionMessage_Contains returns true if the error matches all these conditions:
-//   - err is of type networkmanager.ValidationException
-//   - ValidationException.Reason equals reason
-//   - ValidationException.Message_ contains message
-func validationExceptionMessage_Contains(err error, reason awstypes.ValidationExceptionReason, message string) bool {
-	var validationException *awstypes.ValidationException
-
-	if errors.As(err, &validationException) && validationException.Reason == reason {
-		if strings.Contains(aws.ToString(validationException.Message), message) {
-			return true
-		}
-	}
-
-	return false
+// See https://docs.aws.amazon.com/service-authorization/latest/reference/list_awsnetworkmanager.html#awsnetworkmanager-resources-for-iam-policies.
+func connectPeerARN(ctx context.Context, c *conns.AWSClient, id string) string {
+	return c.GlobalARN(ctx, "networkmanager", "connect-peer/"+id)
 }

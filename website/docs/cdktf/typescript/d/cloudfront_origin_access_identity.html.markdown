@@ -44,6 +44,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source exports the following attributes in addition to the arguments above:
 
+* `arn` - The origin access identity ARN.
 * `callerReference` - Internal value used by CloudFront to allow future
    updates to the origin access identity.
 * `cloudfrontAccessIdentityPath` - A shortcut to the full path for the
@@ -58,4 +59,4 @@ This data source exports the following attributes in addition to the arguments a
    access identity, which you use when giving the origin access identity read
    permission to an object in Amazon S3.
 
-<!-- cache-key: cdktf-0.20.8 input-a7cd9b1786140626f45007d44ca5d963414beca09e6e286c1818e2e771206508 -->
+<!-- cache-key: cdktf-0.20.8 input-d6aa01a36ddcd8aafd4a0701f1d664d82a0f23828a5b6b35aa4e9d44cc3124f6 -->

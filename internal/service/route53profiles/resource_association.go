@@ -52,10 +52,6 @@ type resourceResourceAssociation struct {
 	framework.WithImportByID
 }
 
-func (r *resourceResourceAssociation) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_route53profiles_resource_association"
-}
-
 func (r *resourceResourceAssociation) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -262,7 +258,7 @@ func waitResourceAssociationDeleted(ctx context.Context, conn *route53profiles.C
 }
 
 func statusResourceAssociation(ctx context.Context, conn *route53profiles.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := findResourceAssociationByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil

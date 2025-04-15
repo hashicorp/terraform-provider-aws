@@ -47,10 +47,6 @@ type vpcOriginResource struct {
 	framework.WithTimeouts
 }
 
-func (*vpcOriginResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_cloudfront_vpc_origin"
-}
-
 func (r *vpcOriginResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -313,10 +309,6 @@ func (r *vpcOriginResource) Delete(ctx context.Context, request resource.DeleteR
 	}
 }
 
-func (r *vpcOriginResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func vpcOriginETag(ctx context.Context, conn *cloudfront.Client, id string) (string, error) {
 	output, err := findVPCOriginByID(ctx, conn, id)
 
@@ -357,7 +349,7 @@ func findVPCOrigin(ctx context.Context, conn *cloudfront.Client, input *cloudfro
 }
 
 func vpcOriginStatus(ctx context.Context, conn *cloudfront.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findVPCOriginByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

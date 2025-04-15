@@ -22,8 +22,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_glue_catalog_table")
-func DataSourceCatalogTable() *schema.Resource {
+// @SDKDataSource("aws_glue_catalog_table", name="Catalog Table")
+func dataSourceCatalogTable() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceCatalogTableRead,
 
@@ -330,7 +330,7 @@ func DataSourceCatalogTable() *schema.Resource {
 	}
 }
 
-func dataSourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
@@ -399,7 +399,7 @@ func dataSourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if table.TargetTable != nil {
-		if err := d.Set("target_table", []interface{}{flattenTableTargetTable(table.TargetTable)}); err != nil {
+		if err := d.Set("target_table", []any{flattenTableTargetTable(table.TargetTable)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting target_table: %s", err)
 		}
 	} else {

@@ -16,6 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/redshift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -67,7 +68,7 @@ func resourceCluster() *schema.Resource {
 				Optional:         true,
 				Computed:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.AquaConfigurationStatus](),
-				Deprecated:       "This parameter is no longer supported by the AWS API. It will be removed in the next major version of the provider.",
+				Deprecated:       "aqua_configuration_status is deprecated. This parameter is no longer supported by the AWS API. It will be removed in the next major version of the provider.",
 				DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
 					return true
 				},
@@ -224,7 +225,7 @@ func resourceCluster() *schema.Resource {
 			},
 			"logging": {
 				Type: schema.TypeList,
-				Deprecated: "Use the aws_redshift_logging resource instead. " +
+				Deprecated: "logging is deprecated. Use the aws_redshift_logging resource instead. " +
 					"This argument will be removed in a future major version.",
 				MaxItems:         1,
 				Optional:         true,
@@ -267,7 +268,7 @@ func resourceCluster() *schema.Resource {
 			"manage_master_password": {
 				Type:          schema.TypeBool,
 				Optional:      true,
-				ConflictsWith: []string{"master_password"},
+				ConflictsWith: []string{"master_password", "master_password_wo"},
 			},
 			"manual_snapshot_retention_period": {
 				Type:         schema.TypeInt,
@@ -286,7 +287,27 @@ func resourceCluster() *schema.Resource {
 					validation.StringMatch(regexache.MustCompile(`^.*[0-9].*`), "must contain at least one number"),
 					validation.StringMatch(regexache.MustCompile(`^[^\@\/'" ]*$`), "cannot contain [/@\"' ]"),
 				),
-				ConflictsWith: []string{"manage_master_password"},
+				ConflictsWith: []string{"manage_master_password", "master_password_wo"},
+			},
+			"master_password_wo": {
+				Type:      schema.TypeString,
+				Optional:  true,
+				WriteOnly: true,
+				Sensitive: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(8, 64),
+					validation.StringMatch(regexache.MustCompile(`^.*[a-z].*`), "must contain at least one lowercase letter"),
+					validation.StringMatch(regexache.MustCompile(`^.*[A-Z].*`), "must contain at least one uppercase letter"),
+					validation.StringMatch(regexache.MustCompile(`^.*[0-9].*`), "must contain at least one number"),
+					validation.StringMatch(regexache.MustCompile(`^[^\@\/'" ]*$`), "cannot contain [/@\"' ]"),
+				),
+				ConflictsWith: []string{"manage_master_password", "master_password"},
+				RequiredWith:  []string{"master_password_wo_version"},
+			},
+			"master_password_wo_version": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"master_password_wo"},
 			},
 			"master_password_secret_arn": {
 				Type:     schema.TypeString,
@@ -304,9 +325,8 @@ func resourceCluster() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 128),
-					validation.StringMatch(regexache.MustCompile(`^\w+$`), "must contain only alphanumeric characters"),
-					validation.StringMatch(regexache.MustCompile(`(?i)^[a-z_]`), "first character must be a letter"),
-				),
+					validation.StringMatch(regexache.MustCompile(`^[A-Za-z][0-9A-Za-z_.@+-]*$`),
+						"must start with a letter and only contain alphanumeric characters, underscores, plus signs, dots, @ symbols, or hyphens")),
 			},
 			"multi_az": {
 				Type:     schema.TypeBool,
@@ -337,7 +357,7 @@ func resourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
-				StateFunc: func(val interface{}) string {
+				StateFunc: func(val any) string {
 					if val == nil {
 						return ""
 					}
@@ -369,7 +389,7 @@ func resourceCluster() *schema.Resource {
 			},
 			"snapshot_copy": {
 				Type: schema.TypeList,
-				Deprecated: "Use the aws_redshift_snapshot_copy resource instead. " +
+				Deprecated: "snapshot_copy is deprecated. Use the aws_redshift_snapshot_copy resource instead. " +
 					"This argument will be removed in a future major version.",
 				MaxItems: 1,
 				Optional: true,
@@ -409,8 +429,7 @@ func resourceCluster() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			verify.SetTagsDiff,
-			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+			func(_ context.Context, diff *schema.ResourceDiff, v any) error {
 				azRelocationEnabled, multiAZ := diff.Get("availability_zone_relocation_enabled").(bool), diff.Get("multi_az").(bool)
 
 				if azRelocationEnabled && multiAZ {
@@ -429,7 +448,7 @@ func resourceCluster() *schema.Resource {
 	}
 }
 
-func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
@@ -453,6 +472,13 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		Port:                             aws.Int32(int32(d.Get(names.AttrPort).(int))),
 		PubliclyAccessible:               aws.Bool(d.Get(names.AttrPubliclyAccessible).(bool)),
 		Tags:                             getTagsIn(ctx),
+	}
+
+	// get write-only value from configuration
+	masterPasswordWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("master_password_wo"))
+	diags = append(diags, di...)
+	if diags.HasError() {
+		return diags
 	}
 
 	if v, ok := d.GetOk("aqua_configuration_status"); ok {
@@ -491,7 +517,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if v, ok := d.GetOk(names.AttrEncrypted); ok {
-		inputC.Encrypted = aws.Bool(v.(bool))
+		inputC.Encrypted = aws.Bool(v.(bool)) // encryption is true by default
 		inputR.Encrypted = aws.Bool(v.(bool))
 	}
 
@@ -527,6 +553,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	if v, ok := d.GetOk("master_password"); ok {
 		inputC.MasterUserPassword = aws.String(v.(string))
+	}
+
+	if masterPasswordWO != "" {
+		inputC.MasterUserPassword = aws.String(masterPasswordWO)
 	}
 
 	if v, ok := d.GetOk("master_password_secret_kms_key_id"); ok {
@@ -579,7 +609,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 		d.SetId(aws.ToString(output.Cluster.ClusterIdentifier))
 	} else {
-		if _, ok := d.GetOk("master_password"); !ok {
+		if _, ok := d.GetOk("master_password"); !ok && masterPasswordWO == "" {
 			if _, ok := d.GetOk("manage_master_password"); !ok {
 				return sdkdiag.AppendErrorf(diags, `provider.aws: aws_redshift_cluster: %s: one of "manage_master_password" or "master_password" is required`, d.Get(names.AttrClusterIdentifier).(string))
 			}
@@ -613,14 +643,14 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "creating Redshift Cluster (%s): waiting for relocation: %s", d.Id(), err)
 	}
 
-	if v, ok := d.GetOk("snapshot_copy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		if err := enableSnapshotCopy(ctx, conn, d.Id(), v.([]interface{})[0].(map[string]interface{})); err != nil {
+	if v, ok := d.GetOk("snapshot_copy"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		if err := enableSnapshotCopy(ctx, conn, d.Id(), v.([]any)[0].(map[string]any)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating Redshift Cluster (%s): %s", d.Id(), err)
 		}
 	}
 
-	if v, ok := d.GetOk("logging"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		tfMap := v.([]interface{})[0].(map[string]interface{})
+	if v, ok := d.GetOk("logging"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		tfMap := v.([]any)[0].(map[string]any)
 
 		if v, ok := tfMap["enable"].(bool); ok && v {
 			if err := enableLogging(ctx, conn, d.Id(), tfMap); err != nil {
@@ -632,7 +662,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceClusterRead(ctx, d, meta)...)
 }
 
-func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
@@ -742,7 +772,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
@@ -806,6 +836,18 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if d.HasChange("master_password") {
 			input.MasterUserPassword = aws.String(d.Get("master_password").(string))
+		}
+
+		if d.HasChange("master_password_wo_version") {
+			masterPasswordWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("master_password_wo"))
+			diags = append(diags, di...)
+			if diags.HasError() {
+				return diags
+			}
+
+			if masterPasswordWO != "" {
+				input.MasterUserPassword = aws.String(masterPasswordWO)
+			}
 		}
 
 		if d.HasChange("master_password_secret_kms_key_id") {
@@ -884,7 +926,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			}
 
 			_, err := tfresource.RetryWhenIsA[*awstypes.InvalidClusterStateFault](ctx, clusterInvalidClusterStateFaultTimeout,
-				func() (interface{}, error) {
+				func() (any, error) {
 					return conn.RebootCluster(ctx, input)
 				})
 
@@ -921,12 +963,12 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if d.HasChange("snapshot_copy") {
-		if v, ok := d.GetOk("snapshot_copy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			if err := enableSnapshotCopy(ctx, conn, d.Id(), v.([]interface{})[0].(map[string]interface{})); err != nil {
+		if v, ok := d.GetOk("snapshot_copy"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			if err := enableSnapshotCopy(ctx, conn, d.Id(), v.([]any)[0].(map[string]any)); err != nil {
 				if !errs.IsA[*awstypes.SnapshotCopyAlreadyEnabledFault](err) {
 					return sdkdiag.AppendErrorf(diags, "updating Redshift Cluster (%s) snapshot_copy: %s", d.Id(), err)
 				}
-				if err := toggleSnapshotCopy(ctx, conn, d.Id(), v.([]interface{})[0].(map[string]interface{})); err != nil {
+				if err := toggleSnapshotCopy(ctx, conn, d.Id(), v.([]any)[0].(map[string]any)); err != nil {
 					return sdkdiag.AppendErrorf(diags, "updating Redshift Cluster (%s) snapshot_copy: %s", d.Id(), err)
 				}
 			}
@@ -938,8 +980,8 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if d.HasChange("logging") {
-		if v, ok := d.GetOk("logging"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			tfMap := v.([]interface{})[0].(map[string]interface{})
+		if v, ok := d.GetOk("logging"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			tfMap := v.([]any)[0].(map[string]any)
 
 			if v, ok := tfMap["enable"].(bool); ok && v {
 				if err := enableLogging(ctx, conn, d.Id(), tfMap); err != nil {
@@ -993,7 +1035,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceClusterRead(ctx, d, meta)...)
 }
 
-func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
@@ -1013,7 +1055,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 
 	log.Printf("[DEBUG] Deleting Redshift Cluster: %s", d.Id())
 	_, err := tfresource.RetryWhenIsA[*awstypes.InvalidClusterStateFault](ctx, clusterInvalidClusterStateFaultTimeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.DeleteCluster(ctx, input)
 		})
 
@@ -1032,7 +1074,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func resourceClusterImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceClusterImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	// Neither skip_final_snapshot nor final_snapshot_identifier can be fetched
 	// from any API call, so we need to default skip_final_snapshot to true so
 	// that final_snapshot_identifier is not required.
@@ -1041,7 +1083,7 @@ func resourceClusterImport(ctx context.Context, d *schema.ResourceData, meta int
 	return []*schema.ResourceData{d}, nil
 }
 
-func enableLogging(ctx context.Context, conn *redshift.Client, clusterID string, tfMap map[string]interface{}) error {
+func enableLogging(ctx context.Context, conn *redshift.Client, clusterID string, tfMap map[string]any) error {
 	input := &redshift.EnableLoggingInput{
 		ClusterIdentifier: aws.String(clusterID),
 	}
@@ -1063,7 +1105,7 @@ func enableLogging(ctx context.Context, conn *redshift.Client, clusterID string,
 	}
 
 	_, err := tfresource.RetryWhenIsA[*awstypes.InvalidClusterStateFault](ctx, clusterInvalidClusterStateFaultTimeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.EnableLogging(ctx, input)
 		})
 
@@ -1080,7 +1122,7 @@ func disableLogging(ctx context.Context, conn *redshift.Client, clusterID string
 	}
 
 	_, err := tfresource.RetryWhenIsA[*awstypes.InvalidClusterStateFault](ctx, clusterInvalidClusterStateFaultTimeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.DisableLogging(ctx, input)
 		})
 
@@ -1091,7 +1133,7 @@ func disableLogging(ctx context.Context, conn *redshift.Client, clusterID string
 	return nil
 }
 
-func enableSnapshotCopy(ctx context.Context, conn *redshift.Client, clusterID string, tfMap map[string]interface{}) error {
+func enableSnapshotCopy(ctx context.Context, conn *redshift.Client, clusterID string, tfMap map[string]any) error {
 	input := &redshift.EnableSnapshotCopyInput{
 		ClusterIdentifier: aws.String(clusterID),
 		DestinationRegion: aws.String(tfMap["destination_region"].(string)),
@@ -1133,7 +1175,7 @@ func disableSnapshotCopy(ctx context.Context, conn *redshift.Client, clusterID s
 // settings. While the `ModifySnapshotCopyRetentionPeriod` API is available to update the
 // `retention_period` argument, there is no mechanism to update other arguments such
 // as `destination_region` or `snapshot_copy_grant_name` without disabling first.
-func toggleSnapshotCopy(ctx context.Context, conn *redshift.Client, clusterID string, tfMap map[string]interface{}) error {
+func toggleSnapshotCopy(ctx context.Context, conn *redshift.Client, clusterID string, tfMap map[string]any) error {
 	if err := disableSnapshotCopy(ctx, conn, clusterID); err != nil {
 		return err
 	}
@@ -1143,8 +1185,8 @@ func toggleSnapshotCopy(ctx context.Context, conn *redshift.Client, clusterID st
 	return nil
 }
 
-func flattenClusterNode(apiObject awstypes.ClusterNode) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenClusterNode(apiObject awstypes.ClusterNode) map[string]any {
+	tfMap := map[string]any{}
 
 	if v := apiObject.NodeRole; v != nil {
 		tfMap["node_role"] = aws.ToString(v)
@@ -1161,12 +1203,12 @@ func flattenClusterNode(apiObject awstypes.ClusterNode) map[string]interface{} {
 	return tfMap
 }
 
-func flattenClusterNodes(apiObjects []awstypes.ClusterNode) []interface{} {
+func flattenClusterNodes(apiObjects []awstypes.ClusterNode) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenClusterNode(apiObject))
@@ -1199,12 +1241,12 @@ func clusterMultiAZStatus(cluster *awstypes.Cluster) (bool, error) {
 	}
 }
 
-func flattenLogging(ls *redshift.DescribeLoggingStatusOutput) []interface{} {
+func flattenLogging(ls *redshift.DescribeLoggingStatusOutput) []any {
 	if ls == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	cfg := make(map[string]interface{})
+	cfg := make(map[string]any)
 
 	cfg["enable"] = aws.ToBool(ls.LoggingEnabled)
 
@@ -1222,15 +1264,15 @@ func flattenLogging(ls *redshift.DescribeLoggingStatusOutput) []interface{} {
 		cfg[names.AttrS3KeyPrefix] = aws.ToString(ls.S3KeyPrefix)
 	}
 
-	return []interface{}{cfg}
+	return []any{cfg}
 }
 
-func flattenSnapshotCopy(scs *awstypes.ClusterSnapshotCopyStatus) []interface{} {
+func flattenSnapshotCopy(scs *awstypes.ClusterSnapshotCopyStatus) []any {
 	if scs == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	cfg := make(map[string]interface{})
+	cfg := make(map[string]any)
 	if scs.DestinationRegion != nil {
 		cfg["destination_region"] = aws.ToString(scs.DestinationRegion)
 	}
@@ -1241,5 +1283,5 @@ func flattenSnapshotCopy(scs *awstypes.ClusterSnapshotCopyStatus) []interface{} 
 		cfg["grant_name"] = aws.ToString(scs.SnapshotCopyGrantName)
 	}
 
-	return []interface{}{cfg}
+	return []any{cfg}
 }

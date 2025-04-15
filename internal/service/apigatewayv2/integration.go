@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"maps"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -182,7 +183,7 @@ func resourceIntegration() *schema.Resource {
 	}
 }
 
-func resourceIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
@@ -232,11 +233,11 @@ func resourceIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if v, ok := d.GetOk("request_parameters"); ok {
-		input.RequestParameters = flex.ExpandStringValueMap(v.(map[string]interface{}))
+		input.RequestParameters = flex.ExpandStringValueMap(v.(map[string]any))
 	}
 
 	if v, ok := d.GetOk("request_templates"); ok {
-		input.RequestTemplates = flex.ExpandStringValueMap(v.(map[string]interface{}))
+		input.RequestTemplates = flex.ExpandStringValueMap(v.(map[string]any))
 	}
 
 	if v, ok := d.GetOk("response_parameters"); ok && v.(*schema.Set).Len() > 0 {
@@ -252,7 +253,7 @@ func resourceIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if v, ok := d.GetOk("tls_config"); ok {
-		input.TlsConfig = expandTLSConfig(v.([]interface{}))
+		input.TlsConfig = expandTLSConfig(v.([]any))
 	}
 
 	output, err := conn.CreateIntegration(ctx, input)
@@ -266,7 +267,7 @@ func resourceIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceIntegrationRead(ctx, d, meta)...)
 }
 
-func resourceIntegrationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIntegrationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
@@ -308,7 +309,7 @@ func resourceIntegrationRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
@@ -362,27 +363,23 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 	if d.HasChange("request_parameters") {
 		o, n := d.GetChange("request_parameters")
-		add, del, nop := flex.DiffStringValueMaps(o.(map[string]interface{}), n.(map[string]interface{}))
+		add, del, nop := flex.DiffStringValueMaps(o.(map[string]any), n.(map[string]any))
 
 		// Parameters are removed by setting the associated value to "".
 		for k := range del {
 			del[k] = ""
 		}
 		variables := del
-		for k, v := range add {
-			variables[k] = v
-		}
+		maps.Copy(variables, add)
 		// Also specify any request parameters that are unchanged as for AWS service integrations some parameters are always required:
 		// https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-aws-services-reference.html
-		for k, v := range nop {
-			variables[k] = v
-		}
+		maps.Copy(variables, nop)
 
 		input.RequestParameters = variables
 	}
 
 	if d.HasChange("request_templates") {
-		input.RequestTemplates = flex.ExpandStringValueMap(d.Get("request_templates").(map[string]interface{}))
+		input.RequestTemplates = flex.ExpandStringValueMap(d.Get("request_templates").(map[string]any))
 	}
 
 	if d.HasChange("response_parameters") {
@@ -395,7 +392,7 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 		// Parameters are removed by setting the associated value to {}.
 		for _, tfMapRaw := range del {
-			tfMap, ok := tfMapRaw.(map[string]interface{})
+			tfMap, ok := tfMapRaw.(map[string]any)
 
 			if !ok {
 				continue
@@ -419,7 +416,7 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if d.HasChange("tls_config") {
-		input.TlsConfig = expandTLSConfig(d.Get("tls_config").([]interface{}))
+		input.TlsConfig = expandTLSConfig(d.Get("tls_config").([]any))
 	}
 
 	_, err := conn.UpdateIntegration(ctx, input)
@@ -431,15 +428,16 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceIntegrationRead(ctx, d, meta)...)
 }
 
-func resourceIntegrationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIntegrationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 Integration: %s", d.Id())
-	_, err := conn.DeleteIntegration(ctx, &apigatewayv2.DeleteIntegrationInput{
+	input := apigatewayv2.DeleteIntegrationInput{
 		ApiId:         aws.String(d.Get("api_id").(string)),
 		IntegrationId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteIntegration(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags
@@ -452,7 +450,7 @@ func resourceIntegrationDelete(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func resourceIntegrationImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceIntegrationImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 2 {
 		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'api-id/integration-id'", d.Id())
@@ -536,13 +534,13 @@ func findIntegrations(ctx context.Context, conn *apigatewayv2.Client, input *api
 	return output, nil
 }
 
-func expandTLSConfig(vConfig []interface{}) *awstypes.TlsConfigInput {
+func expandTLSConfig(vConfig []any) *awstypes.TlsConfigInput {
 	config := &awstypes.TlsConfigInput{}
 
 	if len(vConfig) == 0 || vConfig[0] == nil {
 		return config
 	}
-	mConfig := vConfig[0].(map[string]interface{})
+	mConfig := vConfig[0].(map[string]any)
 
 	if vServerNameToVerify, ok := mConfig["server_name_to_verify"].(string); ok && vServerNameToVerify != "" {
 		config.ServerNameToVerify = aws.String(vServerNameToVerify)
@@ -551,17 +549,17 @@ func expandTLSConfig(vConfig []interface{}) *awstypes.TlsConfigInput {
 	return config
 }
 
-func flattenTLSConfig(config *awstypes.TlsConfig) []interface{} {
+func flattenTLSConfig(config *awstypes.TlsConfig) []any {
 	if config == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	return []interface{}{map[string]interface{}{
+	return []any{map[string]any{
 		"server_name_to_verify": aws.ToString(config.ServerNameToVerify),
 	}}
 }
 
-func expandIntegrationResponseParameters(tfList []interface{}) map[string]map[string]string {
+func expandIntegrationResponseParameters(tfList []any) map[string]map[string]string {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -569,14 +567,14 @@ func expandIntegrationResponseParameters(tfList []interface{}) map[string]map[st
 	responseParameters := map[string]map[string]string{}
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
 		}
 
 		if vStatusCode, ok := tfMap[names.AttrStatusCode].(string); ok && vStatusCode != "" {
-			if v, ok := tfMap["mappings"].(map[string]interface{}); ok && len(v) > 0 {
+			if v, ok := tfMap["mappings"].(map[string]any); ok && len(v) > 0 {
 				responseParameters[vStatusCode] = flex.ExpandStringValueMap(v)
 			}
 		}
@@ -585,19 +583,19 @@ func expandIntegrationResponseParameters(tfList []interface{}) map[string]map[st
 	return responseParameters
 }
 
-func flattenIntegrationResponseParameters(responseParameters map[string]map[string]string) []interface{} {
+func flattenIntegrationResponseParameters(responseParameters map[string]map[string]string) []any {
 	if len(responseParameters) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for statusCode, mappings := range responseParameters {
 		if len(mappings) == 0 {
 			continue
 		}
 
-		tfMap := map[string]interface{}{}
+		tfMap := map[string]any{}
 
 		tfMap[names.AttrStatusCode] = statusCode
 		tfMap["mappings"] = mappings

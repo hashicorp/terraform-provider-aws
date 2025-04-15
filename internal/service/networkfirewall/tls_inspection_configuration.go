@@ -40,7 +40,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="TLS Inspection Configuration")
+// @FrameworkResource("aws_networkfirewall_tls_inspection_configuration", name="TLS Inspection Configuration")
 // @Tags(identifierAttribute="arn")
 func newTLSInspectionConfigurationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &tlsInspectionConfigurationResource{}
@@ -56,10 +56,6 @@ type tlsInspectionConfigurationResource struct {
 	framework.ResourceWithConfigure
 	framework.WithImportByID
 	framework.WithTimeouts
-}
-
-func (*tlsInspectionConfigurationResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_networkfirewall_tls_inspection_configuration"
 }
 
 func (r *tlsInspectionConfigurationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -465,10 +461,6 @@ func (r *tlsInspectionConfigurationResource) ConfigValidators(context.Context) [
 	}
 }
 
-func (r *tlsInspectionConfigurationResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func findTLSInspectionConfigurationByARN(ctx context.Context, conn *networkfirewall.Client, arn string) (*networkfirewall.DescribeTLSInspectionConfigurationOutput, error) {
 	input := &networkfirewall.DescribeTLSInspectionConfigurationInput{
 		TLSInspectionConfigurationArn: aws.String(arn),
@@ -495,7 +487,7 @@ func findTLSInspectionConfigurationByARN(ctx context.Context, conn *networkfirew
 }
 
 func statusTLSInspectionConfiguration(ctx context.Context, conn *networkfirewall.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findTLSInspectionConfigurationByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
@@ -515,7 +507,7 @@ const (
 )
 
 func statusTLSInspectionConfigurationCertificates(ctx context.Context, conn *networkfirewall.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findTLSInspectionConfigurationByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {

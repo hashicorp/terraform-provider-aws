@@ -1573,6 +1573,67 @@ rules:
           patterns:
             - pattern-regex: "(?i)DS"
     severity: WARNING
+  - id: dsql-in-func-name
+    languages:
+      - go
+    message: Do not use "DSQL" in func name inside dsql package
+    paths:
+      include:
+        - internal/service/dsql
+      exclude:
+        - internal/service/dsql/list_pages_gen.go
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)DSQL"
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
+    severity: WARNING
+  - id: dsql-in-test-name
+    languages:
+      - go
+    message: Include "DSQL" in test name
+    paths:
+      include:
+        - internal/service/dsql/*_test.go
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccDSQL"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: dsql-in-const-name
+    languages:
+      - go
+    message: Do not use "DSQL" in const name inside dsql package
+    paths:
+      include:
+        - internal/service/dsql
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)DSQL"
+    severity: WARNING
+  - id: dsql-in-var-name
+    languages:
+      - go
+    message: Do not use "DSQL" in var name inside dsql package
+    paths:
+      include:
+        - internal/service/dsql
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)DSQL"
+    severity: WARNING
   - id: dynamodb-in-func-name
     languages:
       - go
@@ -4152,6 +4213,67 @@ rules:
           patterns:
             - pattern-regex: "(?i)InternetMonitor"
     severity: WARNING
+  - id: invoicing-in-func-name
+    languages:
+      - go
+    message: Do not use "Invoicing" in func name inside invoicing package
+    paths:
+      include:
+        - internal/service/invoicing
+      exclude:
+        - internal/service/invoicing/list_pages_gen.go
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)Invoicing"
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
+    severity: WARNING
+  - id: invoicing-in-test-name
+    languages:
+      - go
+    message: Include "Invoicing" in test name
+    paths:
+      include:
+        - internal/service/invoicing/*_test.go
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccInvoicing"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: invoicing-in-const-name
+    languages:
+      - go
+    message: Do not use "Invoicing" in const name inside invoicing package
+    paths:
+      include:
+        - internal/service/invoicing
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)Invoicing"
+    severity: WARNING
+  - id: invoicing-in-var-name
+    languages:
+      - go
+    message: Do not use "Invoicing" in var name inside invoicing package
+    paths:
+      include:
+        - internal/service/invoicing
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)Invoicing"
+    severity: WARNING
   - id: iot-in-func-name
     languages:
       - go
@@ -4291,62 +4413,4 @@ rules:
             - pattern-regex: "(?i)IoTEvents"
       - focus-metavariable: $NAME
       - pattern-not: func $NAME($T *testing.T)
-    severity: WARNING
-  - id: iotevents-in-test-name
-    languages:
-      - go
-    message: Include "IoTEvents" in test name
-    paths:
-      include:
-        - internal/service/iotevents/*_test.go
-    patterns:
-      - pattern: func $NAME( ... )
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-not-regex: "^TestAccIoTEvents"
-            - pattern-regex: ^TestAcc.*
-    severity: WARNING
-  - id: iotevents-in-const-name
-    languages:
-      - go
-    message: Do not use "IoTEvents" in const name inside iotevents package
-    paths:
-      include:
-        - internal/service/iotevents
-    patterns:
-      - pattern: const $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)IoTEvents"
-    severity: WARNING
-  - id: iotevents-in-var-name
-    languages:
-      - go
-    message: Do not use "IoTEvents" in var name inside iotevents package
-    paths:
-      include:
-        - internal/service/iotevents
-    patterns:
-      - pattern: var $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)IoTEvents"
-    severity: WARNING
-  - id: ipam-in-test-name
-    languages:
-      - go
-    message: Include "IPAM" in test name
-    paths:
-      include:
-        - internal/service/ec2/ipam_*_test.go
-    patterns:
-      - pattern: func $NAME( ... )
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-not-regex: "^TestAccIPAM"
-            - pattern-regex: ^TestAcc.*
     severity: WARNING

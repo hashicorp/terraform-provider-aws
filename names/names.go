@@ -18,6 +18,7 @@ package names
 import (
 	"fmt"
 	"log"
+	"slices"
 
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-provider-aws/names/data"
@@ -223,10 +224,8 @@ func readHCLIntoServiceData() error {
 
 func ProviderPackageForAlias(serviceAlias string) (string, error) {
 	for k, v := range serviceData {
-		for _, hclKey := range v.aliases {
-			if serviceAlias == hclKey {
-				return k, nil
-			}
+		if slices.Contains(v.aliases, serviceAlias) {
+			return k, nil
 		}
 	}
 

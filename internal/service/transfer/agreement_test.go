@@ -41,7 +41,7 @@ func testAccAgreement_basic(t *testing.T) {
 				Config: testAccAgreementConfig_basic(rName, baseDirectory1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgreementExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "transfer", "agreement/{server_id}/{agreement_id}"),
 					resource.TestCheckResourceAttr(resourceName, "base_directory", baseDirectory1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),

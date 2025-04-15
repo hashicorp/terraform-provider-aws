@@ -15,7 +15,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -47,10 +46,7 @@ func resourceEBSVolume() *schema.Resource {
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
-		CustomizeDiff: customdiff.Sequence(
-			resourceEBSVolumeCustomizeDiff,
-			verify.SetTagsDiff,
-		),
+		CustomizeDiff: resourceEBSVolumeCustomizeDiff,
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -61,6 +57,10 @@ func resourceEBSVolume() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+			},
+			names.AttrCreateTime: {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			names.AttrEncrypted: {
 				Type:     schema.TypeBool,
@@ -126,11 +126,11 @@ func resourceEBSVolume() *schema.Resource {
 	}
 }
 
-func resourceEBSVolumeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEBSVolumeCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.CreateVolumeInput{
+	input := ec2.CreateVolumeInput{
 		AvailabilityZone:  aws.String(d.Get(names.AttrAvailabilityZone).(string)),
 		ClientToken:       aws.String(id.UniqueId()),
 		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeVolume),
@@ -172,7 +172,7 @@ func resourceEBSVolumeCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.VolumeType = awstypes.VolumeType(value.(string))
 	}
 
-	output, err := conn.CreateVolume(ctx, input)
+	output, err := conn.CreateVolume(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EBS Volume: %s", err)
@@ -187,7 +187,7 @@ func resourceEBSVolumeCreate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceEBSVolumeRead(ctx, d, meta)...)
 }
 
-func resourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -212,6 +212,7 @@ func resourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 	d.Set(names.AttrARN, arn.String())
 	d.Set(names.AttrAvailabilityZone, volume.AvailabilityZone)
+	d.Set(names.AttrCreateTime, volume.CreateTime.Format(time.RFC3339))
 	d.Set(names.AttrEncrypted, volume.Encrypted)
 	d.Set(names.AttrIOPS, volume.Iops)
 	d.Set(names.AttrKMSKeyID, volume.KmsKeyId)
@@ -227,12 +228,12 @@ func resourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func resourceEBSVolumeUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEBSVolumeUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		input := &ec2.ModifyVolumeInput{
+		input := ec2.ModifyVolumeInput{
 			VolumeId: aws.String(d.Id()),
 		}
 
@@ -263,7 +264,7 @@ func resourceEBSVolumeUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			}
 		}
 
-		_, err := conn.ModifyVolume(ctx, input)
+		_, err := conn.ModifyVolume(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "modifying EBS Volume (%s): %s", d.Id(), err)
@@ -277,19 +278,19 @@ func resourceEBSVolumeUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceEBSVolumeRead(ctx, d, meta)...)
 }
 
-func resourceEBSVolumeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEBSVolumeDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	if d.Get("final_snapshot").(bool) {
-		input := &ec2.CreateSnapshotInput{
-			TagSpecifications: tagSpecificationsFromMap(ctx, d.Get(names.AttrTagsAll).(map[string]interface{}), awstypes.ResourceTypeSnapshot),
+		input := ec2.CreateSnapshotInput{
+			TagSpecifications: tagSpecificationsFromMap(ctx, d.Get(names.AttrTagsAll).(map[string]any), awstypes.ResourceTypeSnapshot),
 			VolumeId:          aws.String(d.Id()),
 		}
 
 		outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, 1*time.Minute,
-			func() (interface{}, error) {
-				return conn.CreateSnapshot(ctx, input)
+			func() (any, error) {
+				return conn.CreateSnapshot(ctx, &input)
 			},
 			errCodeSnapshotCreationPerVolumeRateExceeded, "The maximum per volume CreateSnapshot request rate has been exceeded")
 
@@ -300,7 +301,7 @@ func resourceEBSVolumeDelete(ctx context.Context, d *schema.ResourceData, meta i
 		snapshotID := aws.ToString(outputRaw.(*ec2.CreateSnapshotOutput).SnapshotId)
 
 		_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete),
-			func() (interface{}, error) {
+			func() (any, error) {
 				waiter := ec2.NewSnapshotCompletedWaiter(conn)
 				return waiter.WaitForOutput(ctx, &ec2.DescribeSnapshotsInput{
 					SnapshotIds: []string{snapshotID},
@@ -315,7 +316,7 @@ func resourceEBSVolumeDelete(ctx context.Context, d *schema.ResourceData, meta i
 
 	log.Printf("[DEBUG] Deleting EBS Volume: %s", d.Id())
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete),
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.DeleteVolume(ctx, &ec2.DeleteVolumeInput{
 				VolumeId: aws.String(d.Id()),
 			})
@@ -337,7 +338,7 @@ func resourceEBSVolumeDelete(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceEBSVolumeCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+func resourceEBSVolumeCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta any) error {
 	iops := diff.Get(names.AttrIOPS).(int)
 	multiAttachEnabled := diff.Get("multi_attach_enabled").(bool)
 	throughput := diff.Get(names.AttrThroughput).(int)

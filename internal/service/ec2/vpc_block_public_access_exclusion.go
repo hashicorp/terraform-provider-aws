@@ -51,10 +51,6 @@ type vpcBlockPublicAccessExclusionResource struct {
 	framework.WithImportByID
 }
 
-func (*vpcBlockPublicAccessExclusionResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_vpc_block_public_access_exclusion"
-}
-
 func (r *vpcBlockPublicAccessExclusionResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -254,10 +250,6 @@ func (r *vpcBlockPublicAccessExclusionResource) Delete(ctx context.Context, requ
 
 		return
 	}
-}
-
-func (r *vpcBlockPublicAccessExclusionResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func (r *vpcBlockPublicAccessExclusionResource) ConfigValidators(context.Context) []resource.ConfigValidator {
