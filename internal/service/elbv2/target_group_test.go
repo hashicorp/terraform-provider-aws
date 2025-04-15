@@ -4195,7 +4195,7 @@ func TestAccELBV2TargetGroup_Lambda_HealthCheck_protocol_MigrateV0(t *testing.T)
 				// Lambda health checks don't take a protocol, but are effectively an HTTP check.
 				// So, they return a `matcher` on read. When Terraform validates the diff, the (incorrectly stored) protocol
 				// `TCP` is checked against the `matcher`, and returns an error.
-				step.ExpectError = regexache.MustCompile(`health_check.matcher is not supported for target_groups with TCP protocol`)
+				step.ExpectError = regexache.MustCompile(`Attribute "health_check\[0\]\.protocol" cannot have value "TCP" when "target_type" is "lambda"`)
 			} else if tc.warning {
 				step.Check = resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
