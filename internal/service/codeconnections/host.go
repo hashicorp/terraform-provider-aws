@@ -34,6 +34,7 @@ import (
 
 // @FrameworkResource("aws_codeconnections_host", name="Host")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func newHostResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &hostResource{}
 
