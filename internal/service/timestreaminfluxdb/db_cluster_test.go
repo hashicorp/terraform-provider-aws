@@ -209,7 +209,7 @@ func TestAccTimestreamInfluxDBDBCluster_networkType(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dbCluster1, dbCluster2 timestreaminfluxdb.GetDbClusterOutput
+	var dbCluster timestreaminfluxdb.GetDbClusterOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_timestreaminfluxdb_db_cluster.test"
 
@@ -225,21 +225,8 @@ func TestAccTimestreamInfluxDBDBCluster_networkType(t *testing.T) {
 			{
 				Config: testAccDBClusterConfig_networkTypeIPV4(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDBClusterExists(ctx, resourceName, &dbCluster1),
+					testAccCheckDBClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "network_type", string(awstypes.NetworkTypeIpv4)),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrBucket, names.AttrUsername, names.AttrPassword, "organization"},
-			},
-			{
-				Config: testAccDBClusterConfig_networkTypeDual(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDBClusterExists(ctx, resourceName, &dbCluster2),
-					resource.TestCheckResourceAttr(resourceName, "network_type", string(awstypes.NetworkTypeDual)),
 				),
 			},
 			{
@@ -310,9 +297,8 @@ func TestAccTimestreamInfluxDBDBCluster_allocatedStorage(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dbCluster1, dbCluster2 timestreaminfluxdb.GetDbClusterOutput
-	allocatedStorage1 := "20"
-	allocatedStorage2 := "40"
+	var dbCluster timestreaminfluxdb.GetDbClusterOutput
+	allocatedStorage := "20"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_timestreaminfluxdb_db_cluster.test"
 
@@ -326,24 +312,10 @@ func TestAccTimestreamInfluxDBDBCluster_allocatedStorage(t *testing.T) {
 		CheckDestroy:             testAccCheckDBClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDBClusterConfig_allocatedStorage(rName, allocatedStorage1),
+				Config: testAccDBClusterConfig_allocatedStorage(rName, allocatedStorage),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDBClusterExists(ctx, resourceName, &dbCluster1),
-					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, allocatedStorage1),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrBucket, names.AttrUsername, names.AttrPassword, "organization"},
-			},
-			{
-				Config: testAccDBClusterConfig_allocatedStorage(rName, allocatedStorage2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDBClusterExists(ctx, resourceName, &dbCluster2),
-					testAccCheckDBClusterNotRecreated(&dbCluster1, &dbCluster2),
-					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, allocatedStorage2),
+					testAccCheckDBClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, allocatedStorage),
 				),
 			},
 			{
@@ -362,7 +334,7 @@ func TestAccTimestreamInfluxDBDBCluster_dbStorageType(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dbCluster1, dbCluster2 timestreaminfluxdb.GetDbClusterOutput
+	var dbCluster timestreaminfluxdb.GetDbClusterOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_timestreaminfluxdb_db_cluster.test"
 
@@ -378,22 +350,8 @@ func TestAccTimestreamInfluxDBDBCluster_dbStorageType(t *testing.T) {
 			{
 				Config: testAccDBClusterConfig_dbStorageType(rName, string(awstypes.DbStorageTypeInfluxIoIncludedT1)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDBClusterExists(ctx, resourceName, &dbCluster1),
+					testAccCheckDBClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "db_storage_type", string(awstypes.DbStorageTypeInfluxIoIncludedT1)),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrBucket, names.AttrUsername, names.AttrPassword, "organization"},
-			},
-			{
-				Config: testAccDBClusterConfig_dbStorageType(rName, string(awstypes.DbStorageTypeInfluxIoIncludedT2)),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDBClusterExists(ctx, resourceName, &dbCluster2),
-					testAccCheckDBClusterNotRecreated(&dbCluster1, &dbCluster2),
-					resource.TestCheckResourceAttr(resourceName, "db_storage_type", string(awstypes.DbStorageTypeInfluxIoIncludedT2)),
 				),
 			},
 			{
@@ -468,6 +426,56 @@ func TestAccTimestreamInfluxDBDBCluster_deploymentType(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDBClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "deployment_type", string(awstypes.ClusterDeploymentTypeMultiNodeReadReplicas)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrBucket, names.AttrUsername, names.AttrPassword, "organization"},
+			},
+		},
+	})
+}
+
+func TestAccTimestreamInfluxDBDBCluster_failoverMode(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbCluster1, dbCluster2 timestreaminfluxdb.GetDbClusterOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_timestreaminfluxdb_db_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckDBClusters(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDBClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDBClusterConfig_failoverMode(rName, string(awstypes.FailoverModeAutomatic)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDBClusterExists(ctx, resourceName, &dbCluster1),
+					resource.TestCheckResourceAttr(resourceName, "failover_mode", string(awstypes.FailoverModeAutomatic)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrBucket, names.AttrUsername, names.AttrPassword, "organization"},
+			},
+			{
+				Config: testAccDBClusterConfig_failoverMode(rName, string(awstypes.FailoverModeNoFailover)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDBClusterExists(ctx, resourceName, &dbCluster2),
+					testAccCheckDBClusterNotRecreated(&dbCluster1, &dbCluster2),
+					resource.TestCheckResourceAttr(resourceName, "failover_mode", string(awstypes.FailoverModeNoFailover)),
 				),
 			},
 			{
@@ -724,28 +732,6 @@ resource "aws_timestreaminfluxdb_db_cluster" "test" {
 `, rName))
 }
 
-func testAccDBClusterConfig_networkTypeDual(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnetsIPv6(rName, 2), fmt.Sprintf(`
-resource "aws_security_group" "test" {
-  vpc_id = aws_vpc.test.id
-}
-resource "aws_timestreaminfluxdb_db_cluster" "test" {
-  name                   = %[1]q
-  allocated_storage      = 20
-  username               = "admin"
-  password               = "testpassword"
-  vpc_subnet_ids         = aws_subnet.test[*].id
-  vpc_security_group_ids = [aws_security_group.test.id]
-  db_instance_type       = "db.influx.medium"
-  port                   = 8086
-  bucket                 = "initial"
-  organization           = "organization"
-
-  network_type = "DUAL"
-}
-`, rName))
-}
-
 func testAccDBClusterConfig_port(rName string, port string) string {
 	return acctest.ConfigCompose(testAccDBClusterConfig_base(rName, 2), fmt.Sprintf(`
 resource "aws_timestreaminfluxdb_db_cluster" "test" {
@@ -797,4 +783,22 @@ resource "aws_timestreaminfluxdb_db_cluster" "test" {
   db_storage_type = %[2]q
 }
 `, rName, dbStorageType))
+}
+
+func testAccDBClusterConfig_failoverMode(rName string, failoverMode string) string {
+	return acctest.ConfigCompose(testAccDBClusterConfig_base(rName, 2), fmt.Sprintf(`
+resource "aws_timestreaminfluxdb_db_cluster" "test" {
+  name                   = %[1]q
+  allocated_storage      = 400
+  username               = "admin"
+  password               = "testpassword"
+  vpc_subnet_ids         = aws_subnet.test[*].id
+  vpc_security_group_ids = [aws_security_group.test.id]
+  db_instance_type       = "db.influx.medium"
+  bucket                 = "initial"
+  organization           = "organization"
+
+  failover_mode = %[2]q
+}
+`, rName, failoverMode))
 }

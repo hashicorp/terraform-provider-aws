@@ -122,6 +122,7 @@ func (r *resourceDBCluster) Schema(ctx context.Context, req resource.SchemaReque
 				Optional:   true,
 				Computed:   true,
 				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
 					stringplanmodifier.UseStateForUnknown(),
 				},
 				Description: `The Timestream for InfluxDB DB storage type to read and write InfluxDB data. 
@@ -135,6 +136,7 @@ func (r *resourceDBCluster) Schema(ctx context.Context, req resource.SchemaReque
 				Computed:   true,
 				Default:    stringdefault.StaticString(string(awstypes.ClusterDeploymentTypeMultiNodeReadReplicas)),
 				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
 					stringplanmodifier.UseStateForUnknown(),
 				},
 				Description: `Specifies the type of cluster to create.`,
