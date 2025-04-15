@@ -35,6 +35,7 @@ func newResourceAccount(context.Context) (resource.ResourceWithConfigure, error)
 
 type resourceAccount struct {
 	framework.ResourceWithConfigure
+	framework.WithImportByID
 }
 
 func (r *resourceAccount) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -232,10 +233,6 @@ func (r *resourceAccount) Delete(ctx context.Context, request resource.DeleteReq
 	if err != nil {
 		response.Diagnostics.AddError("resetting API Gateway Account", err.Error())
 	}
-}
-
-func (r *resourceAccount) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), request, response)
 }
 
 type resourceAccountModel struct {

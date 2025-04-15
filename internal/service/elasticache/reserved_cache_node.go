@@ -13,7 +13,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
@@ -47,6 +46,7 @@ type resourceReservedCacheNode struct {
 	framework.ResourceWithConfigure
 	framework.WithNoOpUpdate[resourceReservedCacheNodeModel]
 	framework.WithNoOpDelete
+	framework.WithImportByID
 	framework.WithTimeouts
 }
 
@@ -203,10 +203,6 @@ func (r *resourceReservedCacheNode) Read(ctx context.Context, request resource.R
 	data.Duration = fwtypes.RFC3339DurationTimeDurationValue(duration)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
-}
-
-func (r *resourceReservedCacheNode) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), request, response)
 }
 
 func (r *resourceReservedCacheNode) flexOpts() []flex.AutoFlexOptionsFunc {

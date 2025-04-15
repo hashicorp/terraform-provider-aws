@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/verifiedpermissions"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/verifiedpermissions/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -42,6 +41,7 @@ const (
 
 type resourcePolicyStore struct {
 	framework.ResourceWithConfigure
+	framework.WithImportByID
 }
 
 func (r *resourcePolicyStore) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -228,10 +228,6 @@ func (r *resourcePolicyStore) Delete(ctx context.Context, request resource.Delet
 		)
 		return
 	}
-}
-
-func (r *resourcePolicyStore) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), request, response)
 }
 
 type resourcePolicyStoreData struct {

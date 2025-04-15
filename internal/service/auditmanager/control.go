@@ -43,6 +43,7 @@ const (
 
 type resourceControl struct {
 	framework.ResourceWithConfigure
+	framework.WithImportByID
 }
 
 func (r *resourceControl) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -303,10 +304,6 @@ func (r *resourceControl) Delete(ctx context.Context, req resource.DeleteRequest
 			err.Error(),
 		)
 	}
-}
-
-func (r *resourceControl) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func (r *resourceControl) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
