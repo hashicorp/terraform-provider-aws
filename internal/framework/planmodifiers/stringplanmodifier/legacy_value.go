@@ -43,5 +43,4 @@ func (m legacyValueModifier) PlanModifyString(ctx context.Context, req planmodif
 	}
 
 	resp.PlanValue = types.StringValue("")
-	return
 }

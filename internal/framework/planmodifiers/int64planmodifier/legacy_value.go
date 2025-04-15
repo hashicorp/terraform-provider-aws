@@ -43,5 +43,4 @@ func (m legacyValueModifier) PlanModifyInt64(ctx context.Context, req planmodifi
 	}
 
 	resp.PlanValue = types.Int64Value(0)
-	return
 }

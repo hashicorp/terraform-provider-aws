@@ -43,5 +43,4 @@ func (m legacyValueModifier) PlanModifyBool(ctx context.Context, req planmodifie
 	}
 
 	resp.PlanValue = types.BoolValue(false)
-	return
 }
