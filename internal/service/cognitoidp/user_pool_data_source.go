@@ -29,10 +29,6 @@ type userPoolDataSource struct {
 	framework.DataSourceWithConfigure
 }
 
-func (*userPoolDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	response.TypeName = "aws_cognito_user_pool"
-}
-
 func (d *userPoolDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -166,7 +162,7 @@ func (d *userPoolDataSource) Read(ctx context.Context, request datasource.ReadRe
 
 	// Cannot use Transparent Tagging because of UserPoolTags
 	ignoreTagsConfig := d.Meta().IgnoreTagsConfig(ctx)
-	tags := KeyValueTags(ctx, output.UserPoolTags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := keyValueTags(ctx, output.UserPoolTags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 	data.Tags = tftags.FlattenStringValueMap(ctx, tags.Map())
 	data.UserPoolTags = data.Tags
 

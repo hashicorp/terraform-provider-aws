@@ -43,8 +43,6 @@ func resourceSnapshot() *schema.Resource {
 			Delete: schema.DefaultTimeout(120 * time.Minute),
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,
@@ -155,7 +153,7 @@ func resourceSnapshot() *schema.Resource {
 	}
 }
 
-func resourceSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).MemoryDBClient(ctx)
 
@@ -185,7 +183,7 @@ func resourceSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceSnapshotRead(ctx, d, meta)...)
 }
 
-func resourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).MemoryDBClient(ctx)
 
@@ -214,12 +212,12 @@ func resourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func resourceSnapshotUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSnapshotUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	// Tags only.
 	return resourceSnapshotRead(ctx, d, meta)
 }
 
-func resourceSnapshotDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSnapshotDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).MemoryDBClient(ctx)
 
@@ -286,7 +284,7 @@ func findSnapshots(ctx context.Context, conn *memorydb.Client, input *memorydb.D
 }
 
 func statusSnapshot(ctx context.Context, conn *memorydb.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findSnapshotByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
@@ -335,12 +333,12 @@ func waitSnapshotDeleted(ctx context.Context, conn *memorydb.Client, name string
 	return nil, err
 }
 
-func flattenClusterConfiguration(apiObject *awstypes.ClusterConfiguration) []interface{} {
+func flattenClusterConfiguration(apiObject *awstypes.ClusterConfiguration) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		names.AttrDescription:        aws.ToString(apiObject.Description),
 		names.AttrEngine:             aws.ToString(apiObject.Engine),
 		names.AttrEngineVersion:      aws.ToString(apiObject.EngineVersion),
@@ -357,5 +355,5 @@ func flattenClusterConfiguration(apiObject *awstypes.ClusterConfiguration) []int
 		names.AttrVPCID:              aws.ToString(apiObject.VpcId),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

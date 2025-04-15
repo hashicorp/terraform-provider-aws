@@ -10,8 +10,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func flattenIdentityProviderConfigResponse(c *worklink.DescribeIdentityProviderConfigurationOutput) []map[string]interface{} {
-	config := make(map[string]interface{})
+func flattenIdentityProviderConfigResponse(c *worklink.DescribeIdentityProviderConfigurationOutput) []map[string]any {
+	config := make(map[string]any)
 
 	if c.IdentityProviderSamlMetadata == nil {
 		return nil
@@ -23,11 +23,11 @@ func flattenIdentityProviderConfigResponse(c *worklink.DescribeIdentityProviderC
 		config["saml_metadata"] = aws.ToString(c.IdentityProviderSamlMetadata)
 	}
 
-	return []map[string]interface{}{config}
+	return []map[string]any{config}
 }
 
-func flattenNetworkConfigResponse(c *worklink.DescribeCompanyNetworkConfigurationOutput) []map[string]interface{} {
-	config := make(map[string]interface{})
+func flattenNetworkConfigResponse(c *worklink.DescribeCompanyNetworkConfigurationOutput) []map[string]any {
+	config := make(map[string]any)
 
 	if c == nil {
 		return nil
@@ -41,5 +41,5 @@ func flattenNetworkConfigResponse(c *worklink.DescribeCompanyNetworkConfiguratio
 	config[names.AttrSecurityGroupIDs] = flex.FlattenStringValueSet(c.SecurityGroupIds)
 	config[names.AttrVPCID] = aws.ToString(c.VpcId)
 
-	return []map[string]interface{}{config}
+	return []map[string]any{config}
 }

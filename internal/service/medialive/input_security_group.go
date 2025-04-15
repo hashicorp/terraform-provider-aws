@@ -73,8 +73,6 @@ func ResourceInputSecurityGroup() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -82,7 +80,7 @@ const (
 	ResNameInputSecurityGroup = "Input Security Group"
 )
 
-func resourceInputSecurityGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInputSecurityGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
@@ -110,7 +108,7 @@ func resourceInputSecurityGroupCreate(ctx context.Context, d *schema.ResourceDat
 	return append(diags, resourceInputSecurityGroupRead(ctx, d, meta)...)
 }
 
-func resourceInputSecurityGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInputSecurityGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
@@ -134,7 +132,7 @@ func resourceInputSecurityGroupRead(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func resourceInputSecurityGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInputSecurityGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
@@ -162,7 +160,7 @@ func resourceInputSecurityGroupUpdate(ctx context.Context, d *schema.ResourceDat
 	return append(diags, resourceInputSecurityGroupRead(ctx, d, meta)...)
 }
 
-func resourceInputSecurityGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInputSecurityGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
@@ -242,7 +240,7 @@ func waitInputSecurityGroupDeleted(ctx context.Context, conn *medialive.Client, 
 }
 
 func statusInputSecurityGroup(ctx context.Context, conn *medialive.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := FindInputSecurityGroupByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -280,12 +278,12 @@ func FindInputSecurityGroupByID(ctx context.Context, conn *medialive.Client, id 
 	return out, nil
 }
 
-func flattenInputWhitelistRule(apiObject types.InputWhitelistRule) map[string]interface{} {
+func flattenInputWhitelistRule(apiObject types.InputWhitelistRule) map[string]any {
 	if apiObject == (types.InputWhitelistRule{}) {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := apiObject.Cidr; v != nil {
 		m["cidr"] = aws.ToString(v)
@@ -294,12 +292,12 @@ func flattenInputWhitelistRule(apiObject types.InputWhitelistRule) map[string]in
 	return m
 }
 
-func flattenInputWhitelistRules(apiObjects []types.InputWhitelistRule) []interface{} {
+func flattenInputWhitelistRules(apiObjects []types.InputWhitelistRule) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var l []interface{}
+	var l []any
 
 	for _, apiObject := range apiObjects {
 		if apiObject == (types.InputWhitelistRule{}) {
@@ -312,7 +310,7 @@ func flattenInputWhitelistRules(apiObjects []types.InputWhitelistRule) []interfa
 	return l
 }
 
-func expandWhitelistRules(tfList []interface{}) []types.InputWhitelistRuleCidr {
+func expandWhitelistRules(tfList []any) []types.InputWhitelistRuleCidr {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -320,7 +318,7 @@ func expandWhitelistRules(tfList []interface{}) []types.InputWhitelistRuleCidr {
 	var s []types.InputWhitelistRuleCidr
 
 	for _, v := range tfList {
-		m, ok := v.(map[string]interface{})
+		m, ok := v.(map[string]any)
 
 		if !ok {
 			continue

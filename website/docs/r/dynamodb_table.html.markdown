@@ -257,9 +257,17 @@ Optional arguments:
 
 ### `replica`
 
-* `kms_key_arn` - (Optional, Forces new resource) ARN of the CMK that should be used for the AWS KMS encryption. This argument should only be used if the key is different from the default KMS-managed DynamoDB key, `alias/aws/dynamodb`. **Note:** This attribute will _not_ be populated with the ARN of _default_ keys.
+* `kms_key_arn` - (Optional) ARN of the CMK that should be used for the AWS KMS encryption.
+  This argument should only be used if the key is different from the default KMS-managed DynamoDB key, `alias/aws/dynamodb`.
+  **Note:** This attribute will _not_ be populated with the ARN of _default_ keys.
+  **Note:** Changing this value will recreate the replica.
 * `point_in_time_recovery` - (Optional) Whether to enable Point In Time Recovery for the replica. Default is `false`.
-* `propagate_tags` - (Optional) Whether to propagate the global table's tags to a replica. Default is `false`. Changes to tags only move in one direction: from global (source) to replica. In other words, tag drift on a replica will not trigger an update. Tag or replica changes on the global table, whether from drift or configuration changes, are propagated to replicas. Changing from `true` to `false` on a subsequent `apply` means replica tags are left as they were, unmanaged, not deleted.
+* `propagate_tags` - (Optional) Whether to propagate the global table's tags to a replica.
+  Default is `false`.
+  Changes to tags only move in one direction: from global (source) to replica.
+  Tag drift on a replica will not trigger an update.
+  Tag changes on the global table are propagated to replicas.
+  Changing from `true` to `false` on a subsequent `apply` leaves replica tags as-is and no longer manages them.
 * `region_name` - (Required) Region name of the replica.
 
 ### `server_side_encryption`

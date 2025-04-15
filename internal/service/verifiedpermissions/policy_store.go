@@ -29,7 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Policy Store")
+// @FrameworkResource("aws_verifiedpermissions_policy_store", name="Policy Store")
 func newResourcePolicyStore(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourcePolicyStore{}
 
@@ -42,10 +42,6 @@ const (
 
 type resourcePolicyStore struct {
 	framework.ResourceWithConfigure
-}
-
-func (r *resourcePolicyStore) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_verifiedpermissions_policy_store"
 }
 
 func (r *resourcePolicyStore) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -211,7 +207,7 @@ func (r *resourcePolicyStore) Delete(ctx context.Context, request resource.Delet
 		return
 	}
 
-	tflog.Debug(ctx, "deleting Verified Permissions Policy Store", map[string]interface{}{
+	tflog.Debug(ctx, "deleting Verified Permissions Policy Store", map[string]any{
 		names.AttrID: state.ID.ValueString(),
 	})
 

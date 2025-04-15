@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -149,7 +148,6 @@ func ResourceCollaboration() *schema.Resource {
 				Computed: true,
 			},
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -157,12 +155,12 @@ const (
 	ResNameCollaboration = "Collaboration"
 )
 
-func resourceCollaborationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCollaborationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).CleanRoomsClient(ctx)
 
-	creatorAbilities := d.Get("creator_member_abilities").([]interface{})
+	creatorAbilities := d.Get("creator_member_abilities").([]any)
 
 	input := &cleanrooms.CreateCollaborationInput{
 		Name:                   aws.String(d.Get(names.AttrName).(string)),
@@ -179,7 +177,7 @@ func resourceCollaborationCreate(ctx context.Context, d *schema.ResourceData, me
 	input.QueryLogStatus = queryLogStatus
 
 	if v, ok := d.GetOk("data_encryption_metadata"); ok {
-		input.DataEncryptionMetadata = expandDataEncryptionMetadata(v.([]interface{}))
+		input.DataEncryptionMetadata = expandDataEncryptionMetadata(v.([]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -199,7 +197,7 @@ func resourceCollaborationCreate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceCollaborationRead(ctx, d, meta)...)
 }
 
-func resourceCollaborationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCollaborationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).CleanRoomsClient(ctx)
@@ -243,7 +241,7 @@ func resourceCollaborationRead(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func resourceCollaborationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCollaborationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CleanRoomsClient(ctx)
 
@@ -269,15 +267,16 @@ func resourceCollaborationUpdate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceCollaborationRead(ctx, d, meta)...)
 }
 
-func resourceCollaborationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCollaborationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).CleanRoomsClient(ctx)
 
 	log.Printf("[INFO] Deleting CleanRooms Collaboration %s", d.Id())
-	_, err := conn.DeleteCollaboration(ctx, &cleanrooms.DeleteCollaborationInput{
+	input := cleanrooms.DeleteCollaborationInput{
 		CollaborationIdentifier: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteCollaboration(ctx, &input)
 
 	if errs.IsA[*types.AccessDeniedException](err) {
 		return diags
@@ -339,7 +338,7 @@ func findMembersByCollaborationId(ctx context.Context, conn *cleanrooms.Client, 
 	return out, nil
 }
 
-func expandMemberAbilities(data []interface{}) []types.MemberAbility {
+func expandMemberAbilities(data []any) []types.MemberAbility {
 	mappedAbilities := []types.MemberAbility{}
 	for _, v := range data {
 		switch v.(string) {
@@ -363,10 +362,10 @@ func expandQueryLogStatus(status string) (types.CollaborationQueryLogStatus, err
 	}
 }
 
-func expandDataEncryptionMetadata(data []interface{}) *types.DataEncryptionMetadata {
+func expandDataEncryptionMetadata(data []any) *types.DataEncryptionMetadata {
 	dataEncryptionMetadata := &types.DataEncryptionMetadata{}
 	if len(data) > 0 {
-		metadata := data[0].(map[string]interface{})
+		metadata := data[0].(map[string]any)
 		dataEncryptionMetadata.PreserveNulls = aws.Bool(metadata["preserve_nulls"].(bool))
 		dataEncryptionMetadata.AllowCleartext = aws.Bool(metadata["allow_clear_text"].(bool))
 		dataEncryptionMetadata.AllowJoinsOnColumnsWithDifferentNames = aws.Bool(metadata["allow_joins_on_columns_with_different_names"].(bool))
@@ -375,13 +374,13 @@ func expandDataEncryptionMetadata(data []interface{}) *types.DataEncryptionMetad
 	return dataEncryptionMetadata
 }
 
-func expandMembers(data []interface{}) *[]types.MemberSpecification {
+func expandMembers(data []any) *[]types.MemberSpecification {
 	members := []types.MemberSpecification{}
 	for _, member := range data {
-		memberMap := member.(map[string]interface{})
+		memberMap := member.(map[string]any)
 		member := &types.MemberSpecification{
 			AccountId:       aws.String(memberMap[names.AttrAccountID].(string)),
-			MemberAbilities: expandMemberAbilities(memberMap["member_abilities"].([]interface{})),
+			MemberAbilities: expandMemberAbilities(memberMap["member_abilities"].([]any)),
 			DisplayName:     aws.String(memberMap[names.AttrDisplayName].(string)),
 		}
 		members = append(members, *member)
@@ -389,23 +388,23 @@ func expandMembers(data []interface{}) *[]types.MemberSpecification {
 	return &members
 }
 
-func flattenDataEncryptionMetadata(dataEncryptionMetadata *types.DataEncryptionMetadata) []interface{} {
+func flattenDataEncryptionMetadata(dataEncryptionMetadata *types.DataEncryptionMetadata) []any {
 	if dataEncryptionMetadata == nil {
 		return nil
 	}
-	m := map[string]interface{}{}
+	m := map[string]any{}
 	m["preserve_nulls"] = aws.Bool(*dataEncryptionMetadata.PreserveNulls)
 	m["allow_clear_text"] = aws.Bool(*dataEncryptionMetadata.AllowCleartext)
 	m["allow_joins_on_columns_with_different_names"] = aws.Bool(*dataEncryptionMetadata.AllowJoinsOnColumnsWithDifferentNames)
 	m["allow_duplicates"] = aws.Bool(*dataEncryptionMetadata.AllowDuplicates)
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenMembers(members []types.MemberSummary, ownerAccount *string) []interface{} {
-	flattenedMembers := []interface{}{}
+func flattenMembers(members []types.MemberSummary, ownerAccount *string) []any {
+	flattenedMembers := []any{}
 	for _, member := range members {
 		if aws.ToString(member.AccountId) != aws.ToString(ownerAccount) {
-			memberMap := map[string]interface{}{}
+			memberMap := map[string]any{}
 			memberMap[names.AttrStatus] = member.Status
 			memberMap[names.AttrAccountID] = member.AccountId
 			memberMap[names.AttrDisplayName] = member.DisplayName

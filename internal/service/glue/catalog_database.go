@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/glue"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -24,22 +25,21 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_glue_catalog_database", name="Database")
 // @Tags(identifierAttribute="arn")
-func ResourceCatalogDatabase() *schema.Resource {
+func resourceCatalogDatabase() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCatalogDatabaseCreate,
 		ReadWithoutTimeout:   resourceCatalogDatabaseRead,
 		UpdateWithoutTimeout: resourceCatalogDatabaseUpdate,
 		DeleteWithoutTimeout: resourceCatalogDatabaseDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -152,7 +152,7 @@ func ResourceCatalogDatabase() *schema.Resource {
 	}
 }
 
-func resourceCatalogDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCatalogDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 	catalogID := createCatalogID(d, meta.(*conns.AWSClient).AccountID(ctx))
@@ -171,19 +171,19 @@ func resourceCatalogDatabaseCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if v, ok := d.GetOk(names.AttrParameters); ok {
-		dbInput.Parameters = flex.ExpandStringValueMap(v.(map[string]interface{}))
+		dbInput.Parameters = flex.ExpandStringValueMap(v.(map[string]any))
 	}
 
-	if v, ok := d.GetOk("federated_database"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		dbInput.FederatedDatabase = expandDatabaseFederatedDatabase(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("federated_database"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		dbInput.FederatedDatabase = expandDatabaseFederatedDatabase(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("target_database"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		dbInput.TargetDatabase = expandDatabaseTargetDatabase(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("target_database"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		dbInput.TargetDatabase = expandDatabaseTargetDatabase(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("create_table_default_permission"); ok && len(v.([]interface{})) > 0 {
-		dbInput.CreateTableDefaultPermissions = expandDatabasePrincipalPermissions(v.([]interface{}))
+	if v, ok := d.GetOk("create_table_default_permission"); ok && len(v.([]any)) > 0 {
+		dbInput.CreateTableDefaultPermissions = expandDatabasePrincipalPermissions(v.([]any))
 	}
 
 	input := &glue.CreateDatabaseInput{
@@ -202,7 +202,65 @@ func resourceCatalogDatabaseCreate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceCatalogDatabaseRead(ctx, d, meta)...)
 }
 
-func resourceCatalogDatabaseUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCatalogDatabaseRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlueClient(ctx)
+
+	catalogID, name, err := ReadCatalogID(d.Id())
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Glue Catalog Database (%s): %s", d.Id(), err)
+	}
+
+	out, err := findDatabaseByName(ctx, conn, catalogID, name)
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Glue Catalog Database (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Glue Catalog Database (%s): %s", d.Id(), err)
+	}
+
+	database := out.Database
+	databaseArn := arn.ARN{
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
+		Service:   "glue",
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
+		Resource:  fmt.Sprintf("database/%s", aws.ToString(database.Name)),
+	}.String()
+	d.Set(names.AttrARN, databaseArn)
+	d.Set(names.AttrName, database.Name)
+	d.Set(names.AttrCatalogID, database.CatalogId)
+	d.Set(names.AttrDescription, database.Description)
+	d.Set("location_uri", database.LocationUri)
+	d.Set(names.AttrParameters, database.Parameters)
+
+	if database.FederatedDatabase != nil {
+		if err := d.Set("federated_database", []any{flattenDatabaseFederatedDatabase(database.FederatedDatabase)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting federated_database: %s", err)
+		}
+	} else {
+		d.Set("federated_database", nil)
+	}
+
+	if database.TargetDatabase != nil {
+		if err := d.Set("target_database", []any{flattenDatabaseTargetDatabase(database.TargetDatabase)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting target_database: %s", err)
+		}
+	} else {
+		d.Set("target_database", nil)
+	}
+
+	if err := d.Set("create_table_default_permission", flattenDatabasePrincipalPermissions(database.CreateTableDefaultPermissions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting create_table_default_permission: %s", err)
+	}
+
+	return diags
+}
+
+func resourceCatalogDatabaseUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
@@ -230,15 +288,15 @@ func resourceCatalogDatabaseUpdate(ctx context.Context, d *schema.ResourceData, 
 		}
 
 		if v, ok := d.GetOk(names.AttrParameters); ok {
-			dbInput.Parameters = flex.ExpandStringValueMap(v.(map[string]interface{}))
+			dbInput.Parameters = flex.ExpandStringValueMap(v.(map[string]any))
 		}
 
-		if v, ok := d.GetOk("federated_database"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			dbInput.FederatedDatabase = expandDatabaseFederatedDatabase(v.([]interface{})[0].(map[string]interface{}))
+		if v, ok := d.GetOk("federated_database"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			dbInput.FederatedDatabase = expandDatabaseFederatedDatabase(v.([]any)[0].(map[string]any))
 		}
 
-		if v, ok := d.GetOk("create_table_default_permission"); ok && len(v.([]interface{})) > 0 {
-			dbInput.CreateTableDefaultPermissions = expandDatabasePrincipalPermissions(v.([]interface{}))
+		if v, ok := d.GetOk("create_table_default_permission"); ok && len(v.([]any)) > 0 {
+			dbInput.CreateTableDefaultPermissions = expandDatabasePrincipalPermissions(v.([]any))
 		}
 
 		dbUpdateInput.DatabaseInput = dbInput
@@ -251,73 +309,17 @@ func resourceCatalogDatabaseUpdate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceCatalogDatabaseRead(ctx, d, meta)...)
 }
 
-func resourceCatalogDatabaseRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCatalogDatabaseDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
-	catalogID, name, err := ReadCatalogID(d.Id())
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Glue Catalog Database (%s): %s", d.Id(), err)
-	}
-
-	out, err := FindDatabaseByName(ctx, conn, catalogID, name)
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] Glue Catalog Database (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
-	}
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Glue Catalog Database (%s): %s", d.Id(), err)
-	}
-
-	database := out.Database
-	databaseArn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   "glue",
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  fmt.Sprintf("database/%s", aws.ToString(database.Name)),
-	}.String()
-	d.Set(names.AttrARN, databaseArn)
-	d.Set(names.AttrName, database.Name)
-	d.Set(names.AttrCatalogID, database.CatalogId)
-	d.Set(names.AttrDescription, database.Description)
-	d.Set("location_uri", database.LocationUri)
-	d.Set(names.AttrParameters, database.Parameters)
-
-	if database.FederatedDatabase != nil {
-		if err := d.Set("federated_database", []interface{}{flattenDatabaseFederatedDatabase(database.FederatedDatabase)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting federated_database: %s", err)
-		}
-	} else {
-		d.Set("federated_database", nil)
-	}
-
-	if database.TargetDatabase != nil {
-		if err := d.Set("target_database", []interface{}{flattenDatabaseTargetDatabase(database.TargetDatabase)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting target_database: %s", err)
-		}
-	} else {
-		d.Set("target_database", nil)
-	}
-
-	if err := d.Set("create_table_default_permission", flattenDatabasePrincipalPermissions(database.CreateTableDefaultPermissions)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting create_table_default_permission: %s", err)
-	}
-
-	return diags
-}
-
-func resourceCatalogDatabaseDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueClient(ctx)
-
-	log.Printf("[DEBUG] Glue Catalog Database: %s", d.Id())
-	_, err := conn.DeleteDatabase(ctx, &glue.DeleteDatabaseInput{
+	log.Printf("[DEBUG] Deleting Glue Catalog Database: %s", d.Id())
+	input := glue.DeleteDatabaseInput{
 		Name:      aws.String(d.Get(names.AttrName).(string)),
 		CatalogId: aws.String(d.Get(names.AttrCatalogID).(string)),
-	})
+	}
+	_, err := conn.DeleteDatabase(ctx, &input)
+
 	if errs.IsA[*awstypes.EntityNotFoundException](err) {
 		return diags
 	}
@@ -345,7 +347,32 @@ func createCatalogID(d *schema.ResourceData, accountid string) (catalogID string
 	return
 }
 
-func expandDatabaseFederatedDatabase(tfMap map[string]interface{}) *awstypes.FederatedDatabase {
+func findDatabaseByName(ctx context.Context, conn *glue.Client, catalogID, name string) (*glue.GetDatabaseOutput, error) {
+	input := &glue.GetDatabaseInput{
+		CatalogId: aws.String(catalogID),
+		Name:      aws.String(name),
+	}
+
+	output, err := conn.GetDatabase(ctx, input)
+	if errs.IsA[*awstypes.EntityNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func expandDatabaseFederatedDatabase(tfMap map[string]any) *awstypes.FederatedDatabase {
 	if tfMap == nil {
 		return nil
 	}
@@ -363,7 +390,7 @@ func expandDatabaseFederatedDatabase(tfMap map[string]interface{}) *awstypes.Fed
 	return apiObject
 }
 
-func expandDatabaseTargetDatabase(tfMap map[string]interface{}) *awstypes.DatabaseIdentifier {
+func expandDatabaseTargetDatabase(tfMap map[string]any) *awstypes.DatabaseIdentifier {
 	if tfMap == nil {
 		return nil
 	}
@@ -385,12 +412,12 @@ func expandDatabaseTargetDatabase(tfMap map[string]interface{}) *awstypes.Databa
 	return apiObject
 }
 
-func flattenDatabaseFederatedDatabase(apiObject *awstypes.FederatedDatabase) map[string]interface{} {
+func flattenDatabaseFederatedDatabase(apiObject *awstypes.FederatedDatabase) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.ConnectionName; v != nil {
 		tfMap["connection_name"] = aws.ToString(v)
@@ -403,12 +430,12 @@ func flattenDatabaseFederatedDatabase(apiObject *awstypes.FederatedDatabase) map
 	return tfMap
 }
 
-func flattenDatabaseTargetDatabase(apiObject *awstypes.DatabaseIdentifier) map[string]interface{} {
+func flattenDatabaseTargetDatabase(apiObject *awstypes.DatabaseIdentifier) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.CatalogId; v != nil {
 		tfMap[names.AttrCatalogID] = aws.ToString(v)
@@ -425,7 +452,7 @@ func flattenDatabaseTargetDatabase(apiObject *awstypes.DatabaseIdentifier) map[s
 	return tfMap
 }
 
-func expandDatabasePrincipalPermissions(tfList []interface{}) []awstypes.PrincipalPermissions {
+func expandDatabasePrincipalPermissions(tfList []any) []awstypes.PrincipalPermissions {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -433,7 +460,7 @@ func expandDatabasePrincipalPermissions(tfList []interface{}) []awstypes.Princip
 	var apiObjects []awstypes.PrincipalPermissions
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -447,21 +474,21 @@ func expandDatabasePrincipalPermissions(tfList []interface{}) []awstypes.Princip
 	return apiObjects
 }
 
-func expandDatabasePrincipalPermission(tfMap map[string]interface{}) awstypes.PrincipalPermissions {
+func expandDatabasePrincipalPermission(tfMap map[string]any) awstypes.PrincipalPermissions {
 	apiObject := awstypes.PrincipalPermissions{}
 
 	if v, ok := tfMap[names.AttrPermissions].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.Permissions = flex.ExpandStringyValueSet[awstypes.Permission](v)
 	}
 
-	if v, ok := tfMap[names.AttrPrincipal].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.Principal = expandDatabasePrincipal(v[0].(map[string]interface{}))
+	if v, ok := tfMap[names.AttrPrincipal].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Principal = expandDatabasePrincipal(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandDatabasePrincipal(tfMap map[string]interface{}) *awstypes.DataLakePrincipal {
+func expandDatabasePrincipal(tfMap map[string]any) *awstypes.DataLakePrincipal {
 	if tfMap == nil {
 		return nil
 	}
@@ -475,12 +502,12 @@ func expandDatabasePrincipal(tfMap map[string]interface{}) *awstypes.DataLakePri
 	return apiObject
 }
 
-func flattenDatabasePrincipalPermissions(apiObjects []awstypes.PrincipalPermissions) []interface{} {
+func flattenDatabasePrincipalPermissions(apiObjects []awstypes.PrincipalPermissions) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenDatabasePrincipalPermission(apiObject))
@@ -489,26 +516,26 @@ func flattenDatabasePrincipalPermissions(apiObjects []awstypes.PrincipalPermissi
 	return tfList
 }
 
-func flattenDatabasePrincipalPermission(apiObject awstypes.PrincipalPermissions) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenDatabasePrincipalPermission(apiObject awstypes.PrincipalPermissions) map[string]any {
+	tfMap := map[string]any{}
 
 	if v := apiObject.Permissions; v != nil {
 		tfMap[names.AttrPermissions] = flex.FlattenStringyValueSet(v)
 	}
 
 	if v := apiObject.Principal; v != nil {
-		tfMap[names.AttrPrincipal] = []interface{}{flattenDatabasePrincipal(v)}
+		tfMap[names.AttrPrincipal] = []any{flattenDatabasePrincipal(v)}
 	}
 
 	return tfMap
 }
 
-func flattenDatabasePrincipal(apiObject *awstypes.DataLakePrincipal) map[string]interface{} {
+func flattenDatabasePrincipal(apiObject *awstypes.DataLakePrincipal) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.DataLakePrincipalIdentifier; v != nil {
 		tfMap["data_lake_principal_identifier"] = aws.ToString(v)

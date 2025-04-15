@@ -105,12 +105,10 @@ func resourceRepository() *schema.Resource {
 				},
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceRepositoryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRepositoryCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeArtifactClient(ctx)
 
@@ -129,7 +127,7 @@ func resourceRepositoryCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if v, ok := d.GetOk("upstream"); ok {
-		input.Upstreams = expandUpstreams(v.([]interface{}))
+		input.Upstreams = expandUpstreams(v.([]any))
 	}
 
 	output, err := conn.CreateRepository(ctx, input)
@@ -141,8 +139,8 @@ func resourceRepositoryCreate(ctx context.Context, d *schema.ResourceData, meta 
 	repository := output.Repository
 	d.SetId(aws.ToString(repository.Arn))
 
-	if v, ok := d.GetOk("external_connections"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		tfMap := v.([]interface{})[0].(map[string]interface{})
+	if v, ok := d.GetOk("external_connections"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		tfMap := v.([]any)[0].(map[string]any)
 		externalConnection := tfMap["external_connection_name"].(string)
 		input := &codeartifact.AssociateExternalConnectionInput{
 			Domain:             repository.DomainName,
@@ -161,7 +159,7 @@ func resourceRepositoryCreate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceRepositoryRead(ctx, d, meta)...)
 }
 
-func resourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeArtifactClient(ctx)
 
@@ -198,7 +196,7 @@ func resourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourceRepositoryUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRepositoryUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeArtifactClient(ctx)
 
@@ -219,8 +217,8 @@ func resourceRepositoryUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		}
 
 		if d.HasChange("upstream") {
-			if v, ok := d.GetOk("upstream"); ok && len(v.([]interface{})) > 0 {
-				input.Upstreams = expandUpstreams(v.([]interface{}))
+			if v, ok := d.GetOk("upstream"); ok && len(v.([]any)) > 0 {
+				input.Upstreams = expandUpstreams(v.([]any))
 			}
 		}
 
@@ -232,8 +230,8 @@ func resourceRepositoryUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if d.HasChange("external_connections") {
-		if v, ok := d.GetOk("external_connections"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			tfMap := v.([]interface{})[0].(map[string]interface{})
+		if v, ok := d.GetOk("external_connections"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			tfMap := v.([]any)[0].(map[string]any)
 			externalConnection := tfMap["external_connection_name"].(string)
 			input := &codeartifact.AssociateExternalConnectionInput{
 				Domain:             aws.String(domainName),
@@ -249,7 +247,7 @@ func resourceRepositoryUpdate(ctx context.Context, d *schema.ResourceData, meta 
 			}
 		} else {
 			o, _ := d.GetChange("external_connections")
-			tfMap := o.([]interface{})[0].(map[string]interface{})
+			tfMap := o.([]any)[0].(map[string]any)
 			externalConnection := tfMap["external_connection_name"].(string)
 			input := &codeartifact.DisassociateExternalConnectionInput{
 				Domain:             aws.String(domainName),
@@ -269,7 +267,7 @@ func resourceRepositoryUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceRepositoryRead(ctx, d, meta)...)
 }
 
-func resourceRepositoryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRepositoryDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeArtifactClient(ctx)
 
@@ -279,11 +277,12 @@ func resourceRepositoryDelete(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	log.Printf("[DEBUG] Deleting CodeArtifact Repository: %s", d.Id())
-	_, err = conn.DeleteRepository(ctx, &codeartifact.DeleteRepositoryInput{
+	input := codeartifact.DeleteRepositoryInput{
 		Domain:      aws.String(domainName),
 		DomainOwner: aws.String(owner),
 		Repository:  aws.String(repositoryName),
-	})
+	}
+	_, err = conn.DeleteRepository(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
@@ -338,7 +337,7 @@ func findRepositoryByThreePartKey(ctx context.Context, conn *codeartifact.Client
 	return output.Repository, nil
 }
 
-func expandUpstreams(tfList []interface{}) []types.UpstreamRepository {
+func expandUpstreams(tfList []any) []types.UpstreamRepository {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -346,7 +345,7 @@ func expandUpstreams(tfList []interface{}) []types.UpstreamRepository {
 	apiObjects := []types.UpstreamRepository{}
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -363,15 +362,15 @@ func expandUpstreams(tfList []interface{}) []types.UpstreamRepository {
 	return apiObjects
 }
 
-func flattenUpstreamRepositoryInfos(apiObjects []types.UpstreamRepositoryInfo) []interface{} {
+func flattenUpstreamRepositoryInfos(apiObjects []types.UpstreamRepositoryInfo) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{}
+		tfMap := map[string]any{}
 
 		if v := apiObject.RepositoryName; v != nil {
 			tfMap[names.AttrRepositoryName] = aws.ToString(v)
@@ -383,15 +382,15 @@ func flattenUpstreamRepositoryInfos(apiObjects []types.UpstreamRepositoryInfo) [
 	return tfList
 }
 
-func flattenRepositoryExternalConnectionInfos(apiObjects []types.RepositoryExternalConnectionInfo) []interface{} {
+func flattenRepositoryExternalConnectionInfos(apiObjects []types.RepositoryExternalConnectionInfo) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			"package_format": apiObject.PackageFormat,
 			names.AttrStatus: apiObject.Status,
 		}

@@ -42,8 +42,6 @@ func resourceBranch() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		Schema: map[string]*schema.Schema{
 			"app_id": {
 				Type:     schema.TypeString,
@@ -175,7 +173,7 @@ func resourceBranch() *schema.Resource {
 	}
 }
 
-func resourceBranchCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBranchCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AmplifyClient(ctx)
 
@@ -221,8 +219,8 @@ func resourceBranchCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.EnablePullRequestPreview = aws.Bool(v.(bool))
 	}
 
-	if v, ok := d.GetOk("environment_variables"); ok && len(v.(map[string]interface{})) > 0 {
-		input.EnvironmentVariables = flex.ExpandStringValueMap(v.(map[string]interface{}))
+	if v, ok := d.GetOk("environment_variables"); ok && len(v.(map[string]any)) > 0 {
+		input.EnvironmentVariables = flex.ExpandStringValueMap(v.(map[string]any))
 	}
 
 	if v, ok := d.GetOk("framework"); ok {
@@ -252,7 +250,7 @@ func resourceBranchCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceBranchRead(ctx, d, meta)...)
 }
 
-func resourceBranchRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBranchRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AmplifyClient(ctx)
 
@@ -300,7 +298,7 @@ func resourceBranchRead(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func resourceBranchUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBranchUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AmplifyClient(ctx)
 
@@ -352,7 +350,7 @@ func resourceBranchUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 
 		if d.HasChange("environment_variables") {
-			if v := d.Get("environment_variables").(map[string]interface{}); len(v) > 0 {
+			if v := d.Get("environment_variables").(map[string]any); len(v) > 0 {
 				input.EnvironmentVariables = flex.ExpandStringValueMap(v)
 			} else {
 				input.EnvironmentVariables = map[string]string{"": ""}
@@ -385,7 +383,7 @@ func resourceBranchUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceBranchRead(ctx, d, meta)...)
 }
 
-func resourceBranchDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBranchDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AmplifyClient(ctx)
 

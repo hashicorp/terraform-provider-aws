@@ -45,7 +45,7 @@ func ResourceFaq() *schema.Resource {
 			Create: schema.DefaultTimeout(30 * time.Minute),
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
-		CustomizeDiff: verify.SetTagsDiff,
+
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,
@@ -149,7 +149,7 @@ func ResourceFaq() *schema.Resource {
 	}
 }
 
-func resourceFaqCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFaqCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
@@ -160,7 +160,7 @@ func resourceFaqCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		IndexId:     aws.String(d.Get("index_id").(string)),
 		Name:        aws.String(name),
 		RoleArn:     aws.String(d.Get(names.AttrRoleARN).(string)),
-		S3Path:      expandS3Path(d.Get("s3_path").([]interface{})),
+		S3Path:      expandS3Path(d.Get("s3_path").([]any)),
 		Tags:        getTagsIn(ctx),
 	}
 
@@ -177,7 +177,7 @@ func resourceFaqCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.CreateFaq(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -213,7 +213,7 @@ func resourceFaqCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	return append(diags, resourceFaqRead(ctx, d, meta)...)
 }
 
-func resourceFaqRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFaqRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
@@ -263,12 +263,12 @@ func resourceFaqRead(ctx context.Context, d *schema.ResourceData, meta interface
 	return diags
 }
 
-func resourceFaqUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFaqUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	// Tags only.
 	return resourceFaqRead(ctx, d, meta)
 }
 
-func resourceFaqDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFaqDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
@@ -343,7 +343,7 @@ func waitFaqDeleted(ctx context.Context, conn *kendra.Client, id, indexId string
 }
 
 func statusFaq(ctx context.Context, conn *kendra.Client, id, indexId string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := FindFaqByID(ctx, conn, id, indexId)
 
 		if tfresource.NotFound(err) {
@@ -358,12 +358,12 @@ func statusFaq(ctx context.Context, conn *kendra.Client, id, indexId string) ret
 	}
 }
 
-func expandS3Path(tfList []interface{}) *types.S3Path {
+func expandS3Path(tfList []any) *types.S3Path {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -381,12 +381,12 @@ func expandS3Path(tfList []interface{}) *types.S3Path {
 	return result
 }
 
-func flattenS3Path(apiObject *types.S3Path) []interface{} {
+func flattenS3Path(apiObject *types.S3Path) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := apiObject.Bucket; v != nil {
 		m[names.AttrBucket] = aws.ToString(v)
@@ -396,5 +396,5 @@ func flattenS3Path(apiObject *types.S3Path) []interface{} {
 		m[names.AttrKey] = aws.ToString(v)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }

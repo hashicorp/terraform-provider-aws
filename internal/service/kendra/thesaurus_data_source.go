@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_kendra_thesaurus")
+// @SDKDataSource("aws_kendra_thesaurus", name="Thesaurus")
 func DataSourceThesaurus() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceThesaurusRead,
@@ -109,7 +109,7 @@ func DataSourceThesaurus() *schema.Resource {
 	}
 }
 
-func dataSourceThesaurusRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceThesaurusRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)

@@ -17,8 +17,9 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newDataSourceTemplates,
-			Name:    "Templates",
+			Factory:  newDataSourceTemplates,
+			TypeName: "aws_servicequotas_templates",
+			Name:     "Templates",
 		},
 	}
 }
@@ -26,12 +27,14 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newResourceTemplate,
-			Name:    "Template",
+			Factory:  newResourceTemplate,
+			TypeName: "aws_servicequotas_template",
+			Name:     "Template",
 		},
 		{
-			Factory: newResourceTemplateAssociation,
-			Name:    "Template Association",
+			Factory:  newResourceTemplateAssociation,
+			TypeName: "aws_servicequotas_template_association",
+			Name:     "Template Association",
 		},
 	}
 }
@@ -41,10 +44,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceService,
 			TypeName: "aws_servicequotas_service",
+			Name:     "Service",
 		},
 		{
 			Factory:  DataSourceServiceQuota,
 			TypeName: "aws_servicequotas_service_quota",
+			Name:     "Service Quota",
 		},
 	}
 }
@@ -66,11 +71,31 @@ func (p *servicePackage) ServicePackageName() string {
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*servicequotas.Client, error) {
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
-
-	return servicequotas.NewFromConfig(cfg,
+	optFns := []func(*servicequotas.Options){
 		servicequotas.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
-	), nil
+		withExtraOptions(ctx, p, config),
+	}
+
+	return servicequotas.NewFromConfig(cfg, optFns...), nil
+}
+
+// withExtraOptions returns a functional option that allows this service package to specify extra API client options.
+// This option is always called after any generated options.
+func withExtraOptions(ctx context.Context, sp conns.ServicePackage, config map[string]any) func(*servicequotas.Options) {
+	if v, ok := sp.(interface {
+		withExtraOptions(context.Context, map[string]any) []func(*servicequotas.Options)
+	}); ok {
+		optFns := v.withExtraOptions(ctx, config)
+
+		return func(o *servicequotas.Options) {
+			for _, optFn := range optFns {
+				optFn(o)
+			}
+		}
+	}
+
+	return func(*servicequotas.Options) {}
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

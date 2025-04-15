@@ -37,7 +37,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Cluster")
+// @FrameworkResource("aws_docdbelastic_cluster", name="Cluster")
 // @Tags(identifierAttribute="arn")
 func newResourceCluster(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceCluster{}
@@ -57,10 +57,6 @@ type resourceCluster struct {
 const (
 	ResNameCluster = "Cluster"
 )
-
-func (r *resourceCluster) Metadata(_ context.Context, _ resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_docdbelastic_cluster"
-}
 
 func (r *resourceCluster) Schema(ctx context.Context, _ resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{
@@ -282,7 +278,7 @@ func (r *resourceCluster) Update(ctx context.Context, request resource.UpdateReq
 		return
 	}
 
-	diff, d := fwflex.Calculate(ctx, plan, state)
+	diff, d := fwflex.Diff(ctx, plan, state)
 	response.Diagnostics.Append(d...)
 	if response.Diagnostics.HasError() {
 		return
@@ -340,7 +336,7 @@ func (r *resourceCluster) Delete(ctx context.Context, request resource.DeleteReq
 		return
 	}
 
-	tflog.Debug(ctx, "deleting DocDB Elastic Cluster", map[string]interface{}{
+	tflog.Debug(ctx, "deleting DocDB Elastic Cluster", map[string]any{
 		names.AttrID: state.ID.ValueString(),
 	})
 
@@ -372,10 +368,6 @@ func (r *resourceCluster) Delete(ctx context.Context, request resource.DeleteReq
 		)
 		return
 	}
-}
-
-func (r *resourceCluster) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 type resourceClusterData struct {
@@ -452,7 +444,7 @@ func waitClusterDeleted(ctx context.Context, conn *docdbelastic.Client, id strin
 }
 
 func statusCluster(ctx context.Context, conn *docdbelastic.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := findClusterByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil

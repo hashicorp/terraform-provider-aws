@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -33,37 +34,46 @@ type resourceModelInvocationLoggingConfiguration struct {
 	framework.WithImportByID
 }
 
-func (r *resourceModelInvocationLoggingConfiguration) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_bedrock_model_invocation_logging_configuration"
-}
-
 func (r *resourceModelInvocationLoggingConfiguration) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: framework.IDAttribute(),
 		},
 		Blocks: map[string]schema.Block{
-			"logging_config": schema.SingleNestedBlock{
+			"logging_config": schema.SingleNestedBlock{ // nosemgrep:ci.avoid-SingleNestedBlock pre-existing, will be converted
 				CustomType: fwtypes.NewObjectTypeOf[loggingConfigModel](ctx),
 				Validators: []validator.Object{
 					objectvalidator.IsRequired(),
 				},
 				Attributes: map[string]schema.Attribute{
 					"embedding_data_delivery_enabled": schema.BoolAttribute{
-						Required: true,
+						Optional: true,
+						Computed: true,
+						Default:  booldefault.StaticBool(true),
 					},
 					"image_data_delivery_enabled": schema.BoolAttribute{
-						Required: true,
+						Optional: true,
+						Computed: true,
+						Default:  booldefault.StaticBool(true),
 					},
 					"text_data_delivery_enabled": schema.BoolAttribute{
-						Required: true,
+						Optional: true,
+						Computed: true,
+						Default:  booldefault.StaticBool(true),
+					},
+					"video_data_delivery_enabled": schema.BoolAttribute{
+						Optional: true,
+						Computed: true,
+						Default:  booldefault.StaticBool(true),
 					},
 				},
 				Blocks: map[string]schema.Block{
-					"cloudwatch_config": schema.SingleNestedBlock{
+					"cloudwatch_config": schema.SingleNestedBlock{ // nosemgrep:ci.avoid-SingleNestedBlock pre-existing, will be converted
 						CustomType: fwtypes.NewObjectTypeOf[cloudWatchConfigModel](ctx),
 						Attributes: map[string]schema.Attribute{
 							names.AttrLogGroupName: schema.StringAttribute{
+								// Must set to optional to avoid validation error
+								// See: https://github.com/hashicorp/terraform-plugin-framework/issues/740
 								// Required: true,
 								Optional: true,
 							},
@@ -73,7 +83,7 @@ func (r *resourceModelInvocationLoggingConfiguration) Schema(ctx context.Context
 							},
 						},
 						Blocks: map[string]schema.Block{
-							"large_data_delivery_s3_config": schema.SingleNestedBlock{
+							"large_data_delivery_s3_config": schema.SingleNestedBlock{ // nosemgrep:ci.avoid-SingleNestedBlock pre-existing, will be converted
 								CustomType: fwtypes.NewObjectTypeOf[s3ConfigModel](ctx),
 								Attributes: map[string]schema.Attribute{
 									names.AttrBucketName: schema.StringAttribute{
@@ -87,7 +97,7 @@ func (r *resourceModelInvocationLoggingConfiguration) Schema(ctx context.Context
 							},
 						},
 					},
-					"s3_config": schema.SingleNestedBlock{
+					"s3_config": schema.SingleNestedBlock{ // nosemgrep:ci.avoid-SingleNestedBlock pre-existing, will be converted
 						CustomType: fwtypes.NewObjectTypeOf[s3ConfigModel](ctx),
 						Attributes: map[string]schema.Attribute{
 							names.AttrBucketName: schema.StringAttribute{
@@ -179,7 +189,8 @@ func (r *resourceModelInvocationLoggingConfiguration) Delete(ctx context.Context
 
 	conn := r.Meta().BedrockClient(ctx)
 
-	_, err := conn.DeleteModelInvocationLoggingConfiguration(ctx, &bedrock.DeleteModelInvocationLoggingConfigurationInput{})
+	input := bedrock.DeleteModelInvocationLoggingConfigurationInput{}
+	_, err := conn.DeleteModelInvocationLoggingConfiguration(ctx, &input)
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("deleting Bedrock Model Invocation Logging Configuration (%s)", data.ID.ValueString()), err.Error())
@@ -202,7 +213,7 @@ func (r *resourceModelInvocationLoggingConfiguration) putModelInvocationLoggingC
 	//   ValidationException: Failed to validate permissions for log group: <group>, with role: <role>. Verify
 	//   the IAM role permissions are correct.
 	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ValidationException](ctx, propagationTimeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.PutModelInvocationLoggingConfiguration(ctx, input)
 		},
 		"Failed to validate permissions for log group",
@@ -244,6 +255,7 @@ type loggingConfigModel struct {
 	ImageDataDeliveryEnabled     types.Bool                                   `tfsdk:"image_data_delivery_enabled"`
 	S3Config                     fwtypes.ObjectValueOf[s3ConfigModel]         `tfsdk:"s3_config"`
 	TextDataDeliveryEnabled      types.Bool                                   `tfsdk:"text_data_delivery_enabled"`
+	VideoDataDeliveryEnabled     types.Bool                                   `tfsdk:"video_data_delivery_enabled"`
 }
 
 type cloudWatchConfigModel struct {

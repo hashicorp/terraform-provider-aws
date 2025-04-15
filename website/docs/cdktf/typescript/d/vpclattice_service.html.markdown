@@ -52,9 +52,11 @@ This data source exports the following attributes in addition to the arguments a
 * `authType` - Type of IAM policy. Either `NONE` or `AWS_IAM`.
 * `certificateArn` - Amazon Resource Name (ARN) of the certificate.
 * `customDomainName` - Custom domain name of the service.
-* `dnsEntry` - DNS name of the service.
+* `dnsEntry` - List of objects with DNS names.
+    * `domainName` - DNS name for the service.
+    * `hostedZoneId` - Hosted zone ID where the DNS name is registered.
 * `id` - Unique identifier for the service.
 * `status` - Status of the service.
 * `tags` - List of tags associated with the service.
 
-<!-- cache-key: cdktf-0.20.8 input-7b6870621548d47b2268852ea64bf86123c019e6fafbc3bb70238634ddfbd625 -->
+<!-- cache-key: cdktf-0.20.8 input-68e1bd88b311a92f192e4d7d4dd976040fc3dfc123cef0756b78975644405561 -->

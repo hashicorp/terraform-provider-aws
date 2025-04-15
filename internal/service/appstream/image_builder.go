@@ -5,6 +5,7 @@ package appstream
 
 import (
 	"context"
+	"errors"
 	"log"
 	"time"
 
@@ -12,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/appstream"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appstream/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -27,7 +29,7 @@ import (
 
 // @SDKResource("aws_appstream_image_builder", name="Image Builder")
 // @Tags(identifierAttribute="arn")
-func ResourceImageBuilder() *schema.Resource {
+func resourceImageBuilder() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceImageBuilderCreate,
 		ReadWithoutTimeout:   resourceImageBuilderRead,
@@ -176,18 +178,15 @@ func ResourceImageBuilder() *schema.Resource {
 				},
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceImageBuilderCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceImageBuilderCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).AppStreamClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	input := &appstream.CreateImageBuilderInput{
+	input := appstream.CreateImageBuilderInput{
 		InstanceType: aws.String(d.Get(names.AttrInstanceType).(string)),
 		Name:         aws.String(name),
 		Tags:         getTagsIn(ctx),
@@ -209,8 +208,8 @@ func resourceImageBuilderCreate(ctx context.Context, d *schema.ResourceData, met
 		input.DisplayName = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("domain_join_info"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.DomainJoinInfo = expandDomainJoinInfo(v.([]interface{}))
+	if v, ok := d.GetOk("domain_join_info"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.DomainJoinInfo = expandDomainJoinInfo(v.([]any))
 	}
 
 	if v, ok := d.GetOk("enable_default_internet_access"); ok {
@@ -229,12 +228,12 @@ func resourceImageBuilderCreate(ctx context.Context, d *schema.ResourceData, met
 		input.ImageName = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrVPCConfig); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.VpcConfig = expandImageBuilderVPCConfig(v.([]interface{}))
+	if v, ok := d.GetOk(names.AttrVPCConfig); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.VpcConfig = expandImageBuilderVPCConfig(v.([]any))
 	}
 
-	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidRoleException](ctx, iamPropagationTimeout, func() (interface{}, error) {
-		return conn.CreateImageBuilder(ctx, input)
+	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidRoleException](ctx, propagationTimeout, func() (any, error) {
+		return conn.CreateImageBuilder(ctx, &input)
 	}, "encountered an error because your IAM role")
 
 	if err != nil {
@@ -243,19 +242,18 @@ func resourceImageBuilderCreate(ctx context.Context, d *schema.ResourceData, met
 
 	d.SetId(aws.ToString(outputRaw.(*appstream.CreateImageBuilderOutput).ImageBuilder.Name))
 
-	if _, err = waitImageBuilderStateRunning(ctx, conn, d.Id()); err != nil {
+	if _, err = waitImageBuilderRunning(ctx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for AppStream ImageBuilder (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceImageBuilderRead(ctx, d, meta)...)
 }
 
-func resourceImageBuilderRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceImageBuilderRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).AppStreamClient(ctx)
 
-	imageBuilder, err := FindImageBuilderByName(ctx, conn, d.Id())
+	imageBuilder, err := findImageBuilderByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] AppStream ImageBuilder (%s) not found, removing from state", d.Id())
@@ -277,7 +275,7 @@ func resourceImageBuilderRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set(names.AttrDescription, imageBuilder.Description)
 	d.Set(names.AttrDisplayName, imageBuilder.DisplayName)
 	if imageBuilder.DomainJoinInfo != nil {
-		if err = d.Set("domain_join_info", []interface{}{flattenDomainInfo(imageBuilder.DomainJoinInfo)}); err != nil {
+		if err = d.Set("domain_join_info", []any{flattenDomainInfo(imageBuilder.DomainJoinInfo)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting domain_join_info: %s", err)
 		}
 	} else {
@@ -290,7 +288,7 @@ func resourceImageBuilderRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set(names.AttrName, imageBuilder.Name)
 	d.Set(names.AttrState, imageBuilder.State)
 	if imageBuilder.VpcConfig != nil {
-		if err = d.Set(names.AttrVPCConfig, []interface{}{flattenVPCConfig(imageBuilder.VpcConfig)}); err != nil {
+		if err = d.Set(names.AttrVPCConfig, []any{flattenVPCConfig(imageBuilder.VpcConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting vpc_config: %s", err)
 		}
 	} else {
@@ -300,20 +298,20 @@ func resourceImageBuilderRead(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func resourceImageBuilderUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceImageBuilderUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	// Tags only.
 	return resourceImageBuilderRead(ctx, d, meta)
 }
 
-func resourceImageBuilderDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceImageBuilderDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).AppStreamClient(ctx)
 
 	log.Printf("[DEBUG] Deleting AppStream ImageBuilder: %s", d.Id())
-	_, err := conn.DeleteImageBuilder(ctx, &appstream.DeleteImageBuilderInput{
+	input := appstream.DeleteImageBuilderInput{
 		Name: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteImageBuilder(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
@@ -323,19 +321,145 @@ func resourceImageBuilderDelete(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "deleting AppStream ImageBuilder (%s): %s", d.Id(), err)
 	}
 
-	if _, err = waitImageBuilderStateDeleted(ctx, conn, d.Id()); err != nil {
+	if _, err = waitImageBuilderDeleted(ctx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for AppStream ImageBuilder (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func expandImageBuilderVPCConfig(tfList []interface{}) *awstypes.VpcConfig {
+func findImageBuilderByID(ctx context.Context, conn *appstream.Client, id string) (*awstypes.ImageBuilder, error) {
+	input := &appstream.DescribeImageBuildersInput{
+		Names: []string{id},
+	}
+
+	return findImageBuilder(ctx, conn, input)
+}
+
+func findImageBuilder(ctx context.Context, conn *appstream.Client, input *appstream.DescribeImageBuildersInput) (*awstypes.ImageBuilder, error) {
+	output, err := findImageBuilders(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findImageBuilders(ctx context.Context, conn *appstream.Client, input *appstream.DescribeImageBuildersInput) ([]awstypes.ImageBuilder, error) {
+	var output []awstypes.ImageBuilder
+
+	err := describeImageBuildersPages(ctx, conn, input, func(page *appstream.DescribeImageBuildersOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		output = append(output, page.ImageBuilders...)
+
+		return !lastPage
+	})
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func statusImageBuilder(ctx context.Context, conn *appstream.Client, id string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findImageBuilderByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.State), nil
+	}
+}
+
+func waitImageBuilderRunning(ctx context.Context, conn *appstream.Client, id string) (*awstypes.ImageBuilder, error) {
+	const (
+		timeout = 60 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.ImageBuilderStatePending),
+		Target:  enum.Slice(awstypes.ImageBuilderStateRunning),
+		Refresh: statusImageBuilder(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.ImageBuilder); ok {
+		tfresource.SetLastError(err, resourcesError(output.ImageBuilderErrors))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitImageBuilderDeleted(ctx context.Context, conn *appstream.Client, id string) (*awstypes.ImageBuilder, error) {
+	const (
+		timeout = 60 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.ImageBuilderStatePending, awstypes.ImageBuilderStateDeleting),
+		Target:  []string{},
+		Refresh: statusImageBuilder(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.ImageBuilder); ok {
+		tfresource.SetLastError(err, resourcesError(output.ImageBuilderErrors))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func resourceError(apiObject *awstypes.ResourceError) error {
+	if apiObject == nil {
+		return nil
+	}
+
+	return errs.APIError(apiObject.ErrorCode, aws.ToString(apiObject.ErrorMessage))
+}
+
+func resourcesError(apiObjects []awstypes.ResourceError) error {
+	var errs []error
+
+	for _, apiObject := range apiObjects {
+		if err := resourceError(&apiObject); err != nil {
+			errs = append(errs, err)
+		}
+	}
+
+	return errors.Join(errs...)
+}
+
+// Differs from expandVPCConfig due to use of TypeSet.
+func expandImageBuilderVPCConfig(tfList []any) *awstypes.VpcConfig {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 
 	if !ok {
 		return nil
@@ -346,6 +470,7 @@ func expandImageBuilderVPCConfig(tfList []interface{}) *awstypes.VpcConfig {
 	if v, ok := tfMap[names.AttrSecurityGroupIDs].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.SecurityGroupIds = flex.ExpandStringValueSet(v)
 	}
+
 	if v, ok := tfMap[names.AttrSubnetIDs].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.SubnetIds = flex.ExpandStringValueSet(v)
 	}

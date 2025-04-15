@@ -29,10 +29,6 @@ type dataSourceSpotDataFeedSubscription struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *dataSourceSpotDataFeedSubscription) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_spot_datafeed_subscription"
-}
-
 func (d *dataSourceSpotDataFeedSubscription) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -56,7 +52,8 @@ func (d *dataSourceSpotDataFeedSubscription) Read(ctx context.Context, req datas
 		return
 	}
 
-	out, err := conn.DescribeSpotDatafeedSubscription(ctx, &ec2.DescribeSpotDatafeedSubscriptionInput{})
+	input := ec2.DescribeSpotDatafeedSubscriptionInput{}
+	out, err := conn.DescribeSpotDatafeedSubscription(ctx, &input)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.EC2, create.ErrActionReading, DSNameSpotDataFeedSubscription, accountID, err),

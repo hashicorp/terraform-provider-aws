@@ -1243,24 +1243,22 @@ func resourceTopicRule() *schema.Resource {
 				},
 			}
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceTopicRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTopicRuleCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
 	ruleName := d.Get(names.AttrName).(string)
 	input := &iot.CreateTopicRuleInput{
 		RuleName:         aws.String(ruleName),
-		Tags:             aws.String(KeyValueTags(ctx, getTagsIn(ctx)).URLQueryString()),
+		Tags:             aws.String(keyValueTags(ctx, getTagsIn(ctx)).URLQueryString()),
 		TopicRulePayload: expandTopicRulePayload(d),
 	}
 
 	_, err := tfresource.RetryWhenIsA[*awstypes.InvalidRequestException](ctx, propagationTimeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.CreateTopicRule(ctx, input)
 		})
 
@@ -1273,7 +1271,7 @@ func resourceTopicRuleCreate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceTopicRuleRead(ctx, d, meta)...)
 }
 
-func resourceTopicRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTopicRuleRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
@@ -1379,7 +1377,7 @@ func resourceTopicRuleRead(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func resourceTopicRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTopicRuleUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
@@ -1390,7 +1388,7 @@ func resourceTopicRuleUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		}
 
 		_, err := tfresource.RetryWhenIsA[*awstypes.InvalidRequestException](ctx, propagationTimeout,
-			func() (interface{}, error) {
+			func() (any, error) {
 				return conn.ReplaceTopicRule(ctx, input)
 			})
 
@@ -1402,7 +1400,7 @@ func resourceTopicRuleUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceTopicRuleRead(ctx, d, meta)...)
 }
 
-func resourceTopicRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTopicRuleDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
@@ -1470,13 +1468,13 @@ pageLoop:
 	return output, nil
 }
 
-func expandPutItemInput(tfList []interface{}) *awstypes.PutItemInput {
+func expandPutItemInput(tfList []any) *awstypes.PutItemInput {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.PutItemInput{}
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
 	if v, ok := tfMap[names.AttrTableName].(string); ok && v != "" {
 		apiObject.TableName = aws.String(v)
@@ -1485,13 +1483,13 @@ func expandPutItemInput(tfList []interface{}) *awstypes.PutItemInput {
 	return apiObject
 }
 
-func expandCloudWatchAlarmAction(tfList []interface{}) *awstypes.CloudwatchAlarmAction {
+func expandCloudWatchAlarmAction(tfList []any) *awstypes.CloudwatchAlarmAction {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.CloudwatchAlarmAction{}
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
 	if v, ok := tfMap["alarm_name"].(string); ok && v != "" {
 		apiObject.AlarmName = aws.String(v)
@@ -1512,13 +1510,13 @@ func expandCloudWatchAlarmAction(tfList []interface{}) *awstypes.CloudwatchAlarm
 	return apiObject
 }
 
-func expandCloudWatchLogsAction(tfList []interface{}) *awstypes.CloudwatchLogsAction {
+func expandCloudWatchLogsAction(tfList []any) *awstypes.CloudwatchLogsAction {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.CloudwatchLogsAction{}
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
 	if v, ok := tfMap["batch_mode"].(bool); ok {
 		apiObject.BatchMode = aws.Bool(v)
@@ -1535,13 +1533,13 @@ func expandCloudWatchLogsAction(tfList []interface{}) *awstypes.CloudwatchLogsAc
 	return apiObject
 }
 
-func expandCloudWatchMetricAction(tfList []interface{}) *awstypes.CloudwatchMetricAction {
+func expandCloudWatchMetricAction(tfList []any) *awstypes.CloudwatchMetricAction {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.CloudwatchMetricAction{}
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
 	if v, ok := tfMap[names.AttrMetricName].(string); ok && v != "" {
 		apiObject.MetricName = aws.String(v)
@@ -1570,13 +1568,13 @@ func expandCloudWatchMetricAction(tfList []interface{}) *awstypes.CloudwatchMetr
 	return apiObject
 }
 
-func expandDynamoDBAction(tfList []interface{}) *awstypes.DynamoDBAction {
+func expandDynamoDBAction(tfList []any) *awstypes.DynamoDBAction {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.DynamoDBAction{}
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
 	if v, ok := tfMap["hash_key_field"].(string); ok && v != "" {
 		apiObject.HashKeyField = aws.String(v)
@@ -1621,15 +1619,15 @@ func expandDynamoDBAction(tfList []interface{}) *awstypes.DynamoDBAction {
 	return apiObject
 }
 
-func expandDynamoDBv2Action(tfList []interface{}) *awstypes.DynamoDBv2Action {
+func expandDynamoDBv2Action(tfList []any) *awstypes.DynamoDBv2Action {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.DynamoDBv2Action{}
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
-	if v, ok := tfMap["put_item"].([]interface{}); ok {
+	if v, ok := tfMap["put_item"].([]any); ok {
 		apiObject.PutItem = expandPutItemInput(v)
 	}
 
@@ -1640,13 +1638,13 @@ func expandDynamoDBv2Action(tfList []interface{}) *awstypes.DynamoDBv2Action {
 	return apiObject
 }
 
-func expandElasticsearchAction(tfList []interface{}) *awstypes.ElasticsearchAction {
+func expandElasticsearchAction(tfList []any) *awstypes.ElasticsearchAction {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.ElasticsearchAction{}
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
 	if v, ok := tfMap[names.AttrEndpoint].(string); ok && v != "" {
 		apiObject.Endpoint = aws.String(v)
@@ -1671,13 +1669,13 @@ func expandElasticsearchAction(tfList []interface{}) *awstypes.ElasticsearchActi
 	return apiObject
 }
 
-func expandFirehoseAction(tfList []interface{}) *awstypes.FirehoseAction {
+func expandFirehoseAction(tfList []any) *awstypes.FirehoseAction {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.FirehoseAction{}
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
 	if v, ok := tfMap["batch_mode"].(bool); ok {
 		apiObject.BatchMode = aws.Bool(v)
@@ -1698,13 +1696,13 @@ func expandFirehoseAction(tfList []interface{}) *awstypes.FirehoseAction {
 	return apiObject
 }
 
-func expandHTTPAction(tfList []interface{}) *awstypes.HttpAction {
+func expandHTTPAction(tfList []any) *awstypes.HttpAction {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.HttpAction{}
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
 	if v, ok := tfMap[names.AttrURL].(string); ok && v != "" {
 		apiObject.Url = aws.String(v)
@@ -1714,10 +1712,10 @@ func expandHTTPAction(tfList []interface{}) *awstypes.HttpAction {
 		apiObject.ConfirmationUrl = aws.String(v)
 	}
 
-	if v, ok := tfMap["http_header"].([]interface{}); ok {
+	if v, ok := tfMap["http_header"].([]any); ok {
 		headerObjs := []awstypes.HttpActionHeader{}
 		for _, val := range v {
-			if m, ok := val.(map[string]interface{}); ok {
+			if m, ok := val.(map[string]any); ok {
 				headerObj := awstypes.HttpActionHeader{}
 				if v, ok := m[names.AttrKey].(string); ok && v != "" {
 					headerObj.Key = aws.String(v)
@@ -1734,13 +1732,13 @@ func expandHTTPAction(tfList []interface{}) *awstypes.HttpAction {
 	return apiObject
 }
 
-func expandAnalyticsAction(tfList []interface{}) *awstypes.IotAnalyticsAction {
+func expandAnalyticsAction(tfList []any) *awstypes.IotAnalyticsAction {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.IotAnalyticsAction{}
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
 	if v, ok := tfMap["batch_mode"].(bool); ok {
 		apiObject.BatchMode = aws.Bool(v)
@@ -1757,13 +1755,13 @@ func expandAnalyticsAction(tfList []interface{}) *awstypes.IotAnalyticsAction {
 	return apiObject
 }
 
-func expandEventsAction(tfList []interface{}) *awstypes.IotEventsAction {
+func expandEventsAction(tfList []any) *awstypes.IotEventsAction {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.IotEventsAction{}
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
 	if v, ok := tfMap["batch_mode"].(bool); ok {
 		apiObject.BatchMode = aws.Bool(v)
@@ -1784,15 +1782,15 @@ func expandEventsAction(tfList []interface{}) *awstypes.IotEventsAction {
 	return apiObject
 }
 
-func expandKafkaAction(tfList []interface{}) *awstypes.KafkaAction {
+func expandKafkaAction(tfList []any) *awstypes.KafkaAction {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.KafkaAction{}
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
-	if v, ok := tfMap["client_properties"].(map[string]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["client_properties"].(map[string]any); ok && len(v) > 0 {
 		apiObject.ClientProperties = flex.ExpandStringValueMap(v)
 	}
 
@@ -1800,7 +1798,7 @@ func expandKafkaAction(tfList []interface{}) *awstypes.KafkaAction {
 		apiObject.DestinationArn = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrHeader].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrHeader].([]any); ok && len(v) > 0 {
 		apiObject.Headers = expandKafkaHeader(v)
 	}
 
@@ -1823,10 +1821,10 @@ func expandKafkaAction(tfList []interface{}) *awstypes.KafkaAction {
 	return apiObject
 }
 
-func expandKafkaHeader(tfList []interface{}) []awstypes.KafkaActionHeader {
+func expandKafkaHeader(tfList []any) []awstypes.KafkaActionHeader {
 	var apiObjects []awstypes.KafkaActionHeader
 	for _, elem := range tfList {
-		tfMap := elem.(map[string]interface{})
+		tfMap := elem.(map[string]any)
 
 		apiObject := awstypes.KafkaActionHeader{}
 		if v, ok := tfMap[names.AttrKey].(string); ok && v != "" {
@@ -1843,13 +1841,13 @@ func expandKafkaHeader(tfList []interface{}) []awstypes.KafkaActionHeader {
 	return apiObjects
 }
 
-func expandKinesisAction(tfList []interface{}) *awstypes.KinesisAction {
+func expandKinesisAction(tfList []any) *awstypes.KinesisAction {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.KinesisAction{}
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
 	if v, ok := tfMap["partition_key"].(string); ok && v != "" {
 		apiObject.PartitionKey = aws.String(v)
@@ -1866,13 +1864,13 @@ func expandKinesisAction(tfList []interface{}) *awstypes.KinesisAction {
 	return apiObject
 }
 
-func expandLambdaAction(tfList []interface{}) *awstypes.LambdaAction {
+func expandLambdaAction(tfList []any) *awstypes.LambdaAction {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.LambdaAction{}
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
 	if v, ok := tfMap[names.AttrFunctionARN].(string); ok && v != "" {
 		apiObject.FunctionArn = aws.String(v)
@@ -1881,13 +1879,13 @@ func expandLambdaAction(tfList []interface{}) *awstypes.LambdaAction {
 	return apiObject
 }
 
-func expandRepublishAction(tfList []interface{}) *awstypes.RepublishAction {
+func expandRepublishAction(tfList []any) *awstypes.RepublishAction {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.RepublishAction{}
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
 	if v, ok := tfMap["qos"].(int); ok {
 		apiObject.Qos = aws.Int32(int32(v))
@@ -1904,13 +1902,13 @@ func expandRepublishAction(tfList []interface{}) *awstypes.RepublishAction {
 	return apiObject
 }
 
-func expandS3Action(tfList []interface{}) *awstypes.S3Action {
+func expandS3Action(tfList []any) *awstypes.S3Action {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.S3Action{}
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
 	if v, ok := tfMap[names.AttrBucketName].(string); ok && v != "" {
 		apiObject.BucketName = aws.String(v)
@@ -1931,13 +1929,13 @@ func expandS3Action(tfList []interface{}) *awstypes.S3Action {
 	return apiObject
 }
 
-func expandSNSAction(tfList []interface{}) *awstypes.SnsAction {
+func expandSNSAction(tfList []any) *awstypes.SnsAction {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.SnsAction{}
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
 	if v, ok := tfMap["message_format"].(string); ok && v != "" {
 		apiObject.MessageFormat = awstypes.MessageFormat(v)
@@ -1954,13 +1952,13 @@ func expandSNSAction(tfList []interface{}) *awstypes.SnsAction {
 	return apiObject
 }
 
-func expandSQSAction(tfList []interface{}) *awstypes.SqsAction {
+func expandSQSAction(tfList []any) *awstypes.SqsAction {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.SqsAction{}
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
 	if v, ok := tfMap["queue_url"].(string); ok && v != "" {
 		apiObject.QueueUrl = aws.String(v)
@@ -1977,13 +1975,13 @@ func expandSQSAction(tfList []interface{}) *awstypes.SqsAction {
 	return apiObject
 }
 
-func expandStepFunctionsAction(tfList []interface{}) *awstypes.StepFunctionsAction {
+func expandStepFunctionsAction(tfList []any) *awstypes.StepFunctionsAction {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.StepFunctionsAction{}
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
 	if v, ok := tfMap["execution_name_prefix"].(string); ok && v != "" {
 		apiObject.ExecutionNamePrefix = aws.String(v)
@@ -2000,13 +1998,13 @@ func expandStepFunctionsAction(tfList []interface{}) *awstypes.StepFunctionsActi
 	return apiObject
 }
 
-func expandTimestreamAction(tfList []interface{}) *awstypes.TimestreamAction {
+func expandTimestreamAction(tfList []any) *awstypes.TimestreamAction {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.TimestreamAction{}
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
 	if v, ok := tfMap[names.AttrDatabaseName].(string); ok && v != "" {
 		apiObject.DatabaseName = aws.String(v)
@@ -2024,7 +2022,7 @@ func expandTimestreamAction(tfList []interface{}) *awstypes.TimestreamAction {
 		apiObject.TableName = aws.String(v)
 	}
 
-	if v, ok := tfMap["timestamp"].([]interface{}); ok {
+	if v, ok := tfMap["timestamp"].([]any); ok {
 		apiObject.Timestamp = expandTimestreamTimestamp(v)
 	}
 
@@ -2038,7 +2036,7 @@ func expandTimestreamDimensions(tfSet *schema.Set) []awstypes.TimestreamDimensio
 
 	apiObjects := make([]awstypes.TimestreamDimension, tfSet.Len())
 	for i, elem := range tfSet.List() {
-		if tfMap, ok := elem.(map[string]interface{}); ok {
+		if tfMap, ok := elem.(map[string]any); ok {
 			apiObject := awstypes.TimestreamDimension{}
 
 			if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
@@ -2056,13 +2054,13 @@ func expandTimestreamDimensions(tfSet *schema.Set) []awstypes.TimestreamDimensio
 	return apiObjects
 }
 
-func expandTimestreamTimestamp(tfList []interface{}) *awstypes.TimestreamTimestamp {
+func expandTimestreamTimestamp(tfList []any) *awstypes.TimestreamTimestamp {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.TimestreamTimestamp{}
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
 	if v, ok := tfMap[names.AttrUnit].(string); ok && v != "" {
 		apiObject.Unit = aws.String(v)
@@ -2080,7 +2078,7 @@ func expandTopicRulePayload(d *schema.ResourceData) *awstypes.TopicRulePayload {
 
 	// Legacy root attribute handling
 	for _, tfMapRaw := range d.Get("cloudwatch_alarm").(*schema.Set).List() {
-		action := expandCloudWatchAlarmAction([]interface{}{tfMapRaw})
+		action := expandCloudWatchAlarmAction([]any{tfMapRaw})
 
 		if action == nil {
 			continue
@@ -2091,7 +2089,7 @@ func expandTopicRulePayload(d *schema.ResourceData) *awstypes.TopicRulePayload {
 
 	// Legacy root attribute handling
 	for _, tfMapRaw := range d.Get(names.AttrCloudWatchLogs).(*schema.Set).List() {
-		action := expandCloudWatchLogsAction([]interface{}{tfMapRaw})
+		action := expandCloudWatchLogsAction([]any{tfMapRaw})
 
 		if action == nil {
 			continue
@@ -2102,7 +2100,7 @@ func expandTopicRulePayload(d *schema.ResourceData) *awstypes.TopicRulePayload {
 
 	// Legacy root attribute handling
 	for _, tfMapRaw := range d.Get("cloudwatch_metric").(*schema.Set).List() {
-		action := expandCloudWatchMetricAction([]interface{}{tfMapRaw})
+		action := expandCloudWatchMetricAction([]any{tfMapRaw})
 
 		if action == nil {
 			continue
@@ -2113,7 +2111,7 @@ func expandTopicRulePayload(d *schema.ResourceData) *awstypes.TopicRulePayload {
 
 	// Legacy root attribute handling
 	for _, tfMapRaw := range d.Get("dynamodb").(*schema.Set).List() {
-		action := expandDynamoDBAction([]interface{}{tfMapRaw})
+		action := expandDynamoDBAction([]any{tfMapRaw})
 
 		if action == nil {
 			continue
@@ -2124,7 +2122,7 @@ func expandTopicRulePayload(d *schema.ResourceData) *awstypes.TopicRulePayload {
 
 	// Legacy root attribute handling
 	for _, tfMapRaw := range d.Get("dynamodbv2").(*schema.Set).List() {
-		action := expandDynamoDBv2Action([]interface{}{tfMapRaw})
+		action := expandDynamoDBv2Action([]any{tfMapRaw})
 
 		if action == nil {
 			continue
@@ -2135,7 +2133,7 @@ func expandTopicRulePayload(d *schema.ResourceData) *awstypes.TopicRulePayload {
 
 	// Legacy root attribute handling
 	for _, tfMapRaw := range d.Get("elasticsearch").(*schema.Set).List() {
-		action := expandElasticsearchAction([]interface{}{tfMapRaw})
+		action := expandElasticsearchAction([]any{tfMapRaw})
 
 		if action == nil {
 			continue
@@ -2146,7 +2144,7 @@ func expandTopicRulePayload(d *schema.ResourceData) *awstypes.TopicRulePayload {
 
 	// Legacy root attribute handling
 	for _, tfMapRaw := range d.Get("firehose").(*schema.Set).List() {
-		action := expandFirehoseAction([]interface{}{tfMapRaw})
+		action := expandFirehoseAction([]any{tfMapRaw})
 
 		if action == nil {
 			continue
@@ -2157,7 +2155,7 @@ func expandTopicRulePayload(d *schema.ResourceData) *awstypes.TopicRulePayload {
 
 	// Legacy root attribute handling
 	for _, tfMapRaw := range d.Get("http").(*schema.Set).List() {
-		action := expandHTTPAction([]interface{}{tfMapRaw})
+		action := expandHTTPAction([]any{tfMapRaw})
 
 		if action == nil {
 			continue
@@ -2168,7 +2166,7 @@ func expandTopicRulePayload(d *schema.ResourceData) *awstypes.TopicRulePayload {
 
 	// Legacy root attribute handling
 	for _, tfMapRaw := range d.Get("iot_analytics").(*schema.Set).List() {
-		action := expandAnalyticsAction([]interface{}{tfMapRaw})
+		action := expandAnalyticsAction([]any{tfMapRaw})
 
 		if action == nil {
 			continue
@@ -2179,7 +2177,7 @@ func expandTopicRulePayload(d *schema.ResourceData) *awstypes.TopicRulePayload {
 
 	// Legacy root attribute handling
 	for _, tfMapRaw := range d.Get("iot_events").(*schema.Set).List() {
-		action := expandEventsAction([]interface{}{tfMapRaw})
+		action := expandEventsAction([]any{tfMapRaw})
 
 		if action == nil {
 			continue
@@ -2190,7 +2188,7 @@ func expandTopicRulePayload(d *schema.ResourceData) *awstypes.TopicRulePayload {
 
 	// Legacy root attribute handling
 	for _, tfMapRaw := range d.Get("kafka").(*schema.Set).List() {
-		action := expandKafkaAction([]interface{}{tfMapRaw})
+		action := expandKafkaAction([]any{tfMapRaw})
 
 		if action == nil {
 			continue
@@ -2201,7 +2199,7 @@ func expandTopicRulePayload(d *schema.ResourceData) *awstypes.TopicRulePayload {
 
 	// Legacy root attribute handling
 	for _, tfMapRaw := range d.Get("kinesis").(*schema.Set).List() {
-		action := expandKinesisAction([]interface{}{tfMapRaw})
+		action := expandKinesisAction([]any{tfMapRaw})
 
 		if action == nil {
 			continue
@@ -2212,7 +2210,7 @@ func expandTopicRulePayload(d *schema.ResourceData) *awstypes.TopicRulePayload {
 
 	// Legacy root attribute handling
 	for _, tfMapRaw := range d.Get("lambda").(*schema.Set).List() {
-		action := expandLambdaAction([]interface{}{tfMapRaw})
+		action := expandLambdaAction([]any{tfMapRaw})
 
 		if action == nil {
 			continue
@@ -2223,7 +2221,7 @@ func expandTopicRulePayload(d *schema.ResourceData) *awstypes.TopicRulePayload {
 
 	// Legacy root attribute handling
 	for _, tfMapRaw := range d.Get("republish").(*schema.Set).List() {
-		action := expandRepublishAction([]interface{}{tfMapRaw})
+		action := expandRepublishAction([]any{tfMapRaw})
 
 		if action == nil {
 			continue
@@ -2234,7 +2232,7 @@ func expandTopicRulePayload(d *schema.ResourceData) *awstypes.TopicRulePayload {
 
 	// Legacy root attribute handling
 	for _, tfMapRaw := range d.Get("s3").(*schema.Set).List() {
-		action := expandS3Action([]interface{}{tfMapRaw})
+		action := expandS3Action([]any{tfMapRaw})
 
 		if action == nil {
 			continue
@@ -2245,7 +2243,7 @@ func expandTopicRulePayload(d *schema.ResourceData) *awstypes.TopicRulePayload {
 
 	// Legacy root attribute handling
 	for _, tfMapRaw := range d.Get("sns").(*schema.Set).List() {
-		action := expandSNSAction([]interface{}{tfMapRaw})
+		action := expandSNSAction([]any{tfMapRaw})
 
 		if action == nil {
 			continue
@@ -2256,7 +2254,7 @@ func expandTopicRulePayload(d *schema.ResourceData) *awstypes.TopicRulePayload {
 
 	// Legacy root attribute handling
 	for _, tfMapRaw := range d.Get("sqs").(*schema.Set).List() {
-		action := expandSQSAction([]interface{}{tfMapRaw})
+		action := expandSQSAction([]any{tfMapRaw})
 
 		if action == nil {
 			continue
@@ -2267,7 +2265,7 @@ func expandTopicRulePayload(d *schema.ResourceData) *awstypes.TopicRulePayload {
 
 	// Legacy root attribute handling
 	for _, tfMapRaw := range d.Get("step_functions").(*schema.Set).List() {
-		action := expandStepFunctionsAction([]interface{}{tfMapRaw})
+		action := expandStepFunctionsAction([]any{tfMapRaw})
 
 		if action == nil {
 			continue
@@ -2278,7 +2276,7 @@ func expandTopicRulePayload(d *schema.ResourceData) *awstypes.TopicRulePayload {
 
 	// Legacy root attribute handling
 	for _, tfMapRaw := range d.Get("timestream").(*schema.Set).List() {
-		action := expandTimestreamAction([]interface{}{tfMapRaw})
+		action := expandTimestreamAction([]any{tfMapRaw})
 
 		if action == nil {
 			continue
@@ -2294,12 +2292,12 @@ func expandTopicRulePayload(d *schema.ResourceData) *awstypes.TopicRulePayload {
 	}
 
 	var iotErrorAction *awstypes.Action
-	if errorAction := d.Get("error_action").([]interface{}); len(errorAction) > 0 {
-		for k, v := range errorAction[0].(map[string]interface{}) {
+	if errorAction := d.Get("error_action").([]any); len(errorAction) > 0 {
+		for k, v := range errorAction[0].(map[string]any) {
 			switch k {
 			case "cloudwatch_alarm":
-				for _, tfMapRaw := range v.([]interface{}) {
-					action := expandCloudWatchAlarmAction([]interface{}{tfMapRaw})
+				for _, tfMapRaw := range v.([]any) {
+					action := expandCloudWatchAlarmAction([]any{tfMapRaw})
 
 					if action == nil {
 						continue
@@ -2308,8 +2306,8 @@ func expandTopicRulePayload(d *schema.ResourceData) *awstypes.TopicRulePayload {
 					iotErrorAction = &awstypes.Action{CloudwatchAlarm: action}
 				}
 			case "cloudwatch_logs":
-				for _, tfMapRaw := range v.([]interface{}) {
-					action := expandCloudWatchLogsAction([]interface{}{tfMapRaw})
+				for _, tfMapRaw := range v.([]any) {
+					action := expandCloudWatchLogsAction([]any{tfMapRaw})
 
 					if action == nil {
 						continue
@@ -2318,8 +2316,8 @@ func expandTopicRulePayload(d *schema.ResourceData) *awstypes.TopicRulePayload {
 					iotErrorAction = &awstypes.Action{CloudwatchLogs: action}
 				}
 			case "cloudwatch_metric":
-				for _, tfMapRaw := range v.([]interface{}) {
-					action := expandCloudWatchMetricAction([]interface{}{tfMapRaw})
+				for _, tfMapRaw := range v.([]any) {
+					action := expandCloudWatchMetricAction([]any{tfMapRaw})
 
 					if action == nil {
 						continue
@@ -2328,8 +2326,8 @@ func expandTopicRulePayload(d *schema.ResourceData) *awstypes.TopicRulePayload {
 					iotErrorAction = &awstypes.Action{CloudwatchMetric: action}
 				}
 			case "dynamodb":
-				for _, tfMapRaw := range v.([]interface{}) {
-					action := expandDynamoDBAction([]interface{}{tfMapRaw})
+				for _, tfMapRaw := range v.([]any) {
+					action := expandDynamoDBAction([]any{tfMapRaw})
 
 					if action == nil {
 						continue
@@ -2338,8 +2336,8 @@ func expandTopicRulePayload(d *schema.ResourceData) *awstypes.TopicRulePayload {
 					iotErrorAction = &awstypes.Action{DynamoDB: action}
 				}
 			case "dynamodbv2":
-				for _, tfMapRaw := range v.([]interface{}) {
-					action := expandDynamoDBv2Action([]interface{}{tfMapRaw})
+				for _, tfMapRaw := range v.([]any) {
+					action := expandDynamoDBv2Action([]any{tfMapRaw})
 
 					if action == nil {
 						continue
@@ -2348,8 +2346,8 @@ func expandTopicRulePayload(d *schema.ResourceData) *awstypes.TopicRulePayload {
 					iotErrorAction = &awstypes.Action{DynamoDBv2: action}
 				}
 			case "elasticsearch":
-				for _, tfMapRaw := range v.([]interface{}) {
-					action := expandElasticsearchAction([]interface{}{tfMapRaw})
+				for _, tfMapRaw := range v.([]any) {
+					action := expandElasticsearchAction([]any{tfMapRaw})
 
 					if action == nil {
 						continue
@@ -2358,8 +2356,8 @@ func expandTopicRulePayload(d *schema.ResourceData) *awstypes.TopicRulePayload {
 					iotErrorAction = &awstypes.Action{Elasticsearch: action}
 				}
 			case "firehose":
-				for _, tfMapRaw := range v.([]interface{}) {
-					action := expandFirehoseAction([]interface{}{tfMapRaw})
+				for _, tfMapRaw := range v.([]any) {
+					action := expandFirehoseAction([]any{tfMapRaw})
 
 					if action == nil {
 						continue
@@ -2368,8 +2366,8 @@ func expandTopicRulePayload(d *schema.ResourceData) *awstypes.TopicRulePayload {
 					iotErrorAction = &awstypes.Action{Firehose: action}
 				}
 			case "http":
-				for _, tfMapRaw := range v.([]interface{}) {
-					action := expandHTTPAction([]interface{}{tfMapRaw})
+				for _, tfMapRaw := range v.([]any) {
+					action := expandHTTPAction([]any{tfMapRaw})
 
 					if action == nil {
 						continue
@@ -2378,8 +2376,8 @@ func expandTopicRulePayload(d *schema.ResourceData) *awstypes.TopicRulePayload {
 					iotErrorAction = &awstypes.Action{Http: action}
 				}
 			case "iot_analytics":
-				for _, tfMapRaw := range v.([]interface{}) {
-					action := expandAnalyticsAction([]interface{}{tfMapRaw})
+				for _, tfMapRaw := range v.([]any) {
+					action := expandAnalyticsAction([]any{tfMapRaw})
 
 					if action == nil {
 						continue
@@ -2388,8 +2386,8 @@ func expandTopicRulePayload(d *schema.ResourceData) *awstypes.TopicRulePayload {
 					iotErrorAction = &awstypes.Action{IotAnalytics: action}
 				}
 			case "iot_events":
-				for _, tfMapRaw := range v.([]interface{}) {
-					action := expandEventsAction([]interface{}{tfMapRaw})
+				for _, tfMapRaw := range v.([]any) {
+					action := expandEventsAction([]any{tfMapRaw})
 
 					if action == nil {
 						continue
@@ -2398,8 +2396,8 @@ func expandTopicRulePayload(d *schema.ResourceData) *awstypes.TopicRulePayload {
 					iotErrorAction = &awstypes.Action{IotEvents: action}
 				}
 			case "kafka":
-				for _, tfMapRaw := range v.([]interface{}) {
-					action := expandKafkaAction([]interface{}{tfMapRaw})
+				for _, tfMapRaw := range v.([]any) {
+					action := expandKafkaAction([]any{tfMapRaw})
 
 					if action == nil {
 						continue
@@ -2408,8 +2406,8 @@ func expandTopicRulePayload(d *schema.ResourceData) *awstypes.TopicRulePayload {
 					iotErrorAction = &awstypes.Action{Kafka: action}
 				}
 			case "kinesis":
-				for _, tfMapRaw := range v.([]interface{}) {
-					action := expandKinesisAction([]interface{}{tfMapRaw})
+				for _, tfMapRaw := range v.([]any) {
+					action := expandKinesisAction([]any{tfMapRaw})
 
 					if action == nil {
 						continue
@@ -2418,8 +2416,8 @@ func expandTopicRulePayload(d *schema.ResourceData) *awstypes.TopicRulePayload {
 					iotErrorAction = &awstypes.Action{Kinesis: action}
 				}
 			case "lambda":
-				for _, tfMapRaw := range v.([]interface{}) {
-					action := expandLambdaAction([]interface{}{tfMapRaw})
+				for _, tfMapRaw := range v.([]any) {
+					action := expandLambdaAction([]any{tfMapRaw})
 
 					if action == nil {
 						continue
@@ -2428,8 +2426,8 @@ func expandTopicRulePayload(d *schema.ResourceData) *awstypes.TopicRulePayload {
 					iotErrorAction = &awstypes.Action{Lambda: action}
 				}
 			case "republish":
-				for _, tfMapRaw := range v.([]interface{}) {
-					action := expandRepublishAction([]interface{}{tfMapRaw})
+				for _, tfMapRaw := range v.([]any) {
+					action := expandRepublishAction([]any{tfMapRaw})
 
 					if action == nil {
 						continue
@@ -2438,8 +2436,8 @@ func expandTopicRulePayload(d *schema.ResourceData) *awstypes.TopicRulePayload {
 					iotErrorAction = &awstypes.Action{Republish: action}
 				}
 			case "s3":
-				for _, tfMapRaw := range v.([]interface{}) {
-					action := expandS3Action([]interface{}{tfMapRaw})
+				for _, tfMapRaw := range v.([]any) {
+					action := expandS3Action([]any{tfMapRaw})
 
 					if action == nil {
 						continue
@@ -2448,8 +2446,8 @@ func expandTopicRulePayload(d *schema.ResourceData) *awstypes.TopicRulePayload {
 					iotErrorAction = &awstypes.Action{S3: action}
 				}
 			case "sns":
-				for _, tfMapRaw := range v.([]interface{}) {
-					action := expandSNSAction([]interface{}{tfMapRaw})
+				for _, tfMapRaw := range v.([]any) {
+					action := expandSNSAction([]any{tfMapRaw})
 
 					if action == nil {
 						continue
@@ -2458,8 +2456,8 @@ func expandTopicRulePayload(d *schema.ResourceData) *awstypes.TopicRulePayload {
 					iotErrorAction = &awstypes.Action{Sns: action}
 				}
 			case "sqs":
-				for _, tfMapRaw := range v.([]interface{}) {
-					action := expandSQSAction([]interface{}{tfMapRaw})
+				for _, tfMapRaw := range v.([]any) {
+					action := expandSQSAction([]any{tfMapRaw})
 
 					if action == nil {
 						continue
@@ -2468,8 +2466,8 @@ func expandTopicRulePayload(d *schema.ResourceData) *awstypes.TopicRulePayload {
 					iotErrorAction = &awstypes.Action{Sqs: action}
 				}
 			case "step_functions":
-				for _, tfMapRaw := range v.([]interface{}) {
-					action := expandStepFunctionsAction([]interface{}{tfMapRaw})
+				for _, tfMapRaw := range v.([]any) {
+					action := expandStepFunctionsAction([]any{tfMapRaw})
 
 					if action == nil {
 						continue
@@ -2478,8 +2476,8 @@ func expandTopicRulePayload(d *schema.ResourceData) *awstypes.TopicRulePayload {
 					iotErrorAction = &awstypes.Action{StepFunctions: action}
 				}
 			case "timestream":
-				for _, tfMapRaw := range v.([]interface{}) {
-					action := expandTimestreamAction([]interface{}{tfMapRaw})
+				for _, tfMapRaw := range v.([]any) {
+					action := expandTimestreamAction([]any{tfMapRaw})
 
 					if action == nil {
 						continue
@@ -2501,12 +2499,12 @@ func expandTopicRulePayload(d *schema.ResourceData) *awstypes.TopicRulePayload {
 	}
 }
 
-func flattenCloudWatchAlarmAction(apiObject *awstypes.CloudwatchAlarmAction) []interface{} {
+func flattenCloudWatchAlarmAction(apiObject *awstypes.CloudwatchAlarmAction) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := make(map[string]interface{})
+	tfMap := make(map[string]any)
 
 	if v := apiObject.AlarmName; v != nil {
 		tfMap["alarm_name"] = aws.ToString(v)
@@ -2524,12 +2522,12 @@ func flattenCloudWatchAlarmAction(apiObject *awstypes.CloudwatchAlarmAction) []i
 		tfMap["state_value"] = aws.ToString(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
 // Legacy root attribute handling
-func flattenCloudWatchAlarmActions(apiObjects []awstypes.Action) []interface{} {
-	tfList := make([]interface{}, 0)
+func flattenCloudWatchAlarmActions(apiObjects []awstypes.Action) []any {
+	tfList := make([]any, 0)
 
 	for _, apiObject := range apiObjects {
 		if v := apiObject.CloudwatchAlarm; v != nil {
@@ -2540,12 +2538,12 @@ func flattenCloudWatchAlarmActions(apiObjects []awstypes.Action) []interface{} {
 	return tfList
 }
 
-func flattenCloudWatchLogsAction(apiObject *awstypes.CloudwatchLogsAction) []interface{} {
+func flattenCloudWatchLogsAction(apiObject *awstypes.CloudwatchLogsAction) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := make(map[string]interface{})
+	tfMap := make(map[string]any)
 
 	if v := apiObject.BatchMode; v != nil {
 		tfMap["batch_mode"] = aws.ToBool(v)
@@ -2559,12 +2557,12 @@ func flattenCloudWatchLogsAction(apiObject *awstypes.CloudwatchLogsAction) []int
 		tfMap[names.AttrRoleARN] = aws.ToString(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
 // Legacy root attribute handling
-func flattenCloudWatchLogsActions(apiObjects []awstypes.Action) []interface{} {
-	tfList := make([]interface{}, 0)
+func flattenCloudWatchLogsActions(apiObjects []awstypes.Action) []any {
+	tfList := make([]any, 0)
 
 	for _, apiObject := range apiObjects {
 		if v := apiObject.CloudwatchLogs; v != nil {
@@ -2576,8 +2574,8 @@ func flattenCloudWatchLogsActions(apiObjects []awstypes.Action) []interface{} {
 }
 
 // Legacy root attribute handling
-func flattenCloudWatchMetricActions(apiObjects []awstypes.Action) []interface{} {
-	tfList := make([]interface{}, 0)
+func flattenCloudWatchMetricActions(apiObjects []awstypes.Action) []any {
+	tfList := make([]any, 0)
 
 	for _, apiObject := range apiObjects {
 		if v := apiObject.CloudwatchMetric; v != nil {
@@ -2588,12 +2586,12 @@ func flattenCloudWatchMetricActions(apiObjects []awstypes.Action) []interface{} 
 	return tfList
 }
 
-func flattenCloudWatchMetricAction(apiObject *awstypes.CloudwatchMetricAction) []interface{} {
+func flattenCloudWatchMetricAction(apiObject *awstypes.CloudwatchMetricAction) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := make(map[string]interface{})
+	tfMap := make(map[string]any)
 
 	if v := apiObject.MetricName; v != nil {
 		tfMap[names.AttrMetricName] = aws.ToString(v)
@@ -2619,12 +2617,12 @@ func flattenCloudWatchMetricAction(apiObject *awstypes.CloudwatchMetricAction) [
 		tfMap[names.AttrRoleARN] = aws.ToString(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
 // Legacy root attribute handling
-func flattenDynamoDBActions(apiObjects []awstypes.Action) []interface{} {
-	tfList := make([]interface{}, 0)
+func flattenDynamoDBActions(apiObjects []awstypes.Action) []any {
+	tfList := make([]any, 0)
 
 	for _, apiObject := range apiObjects {
 		if v := apiObject.DynamoDB; v != nil {
@@ -2635,12 +2633,12 @@ func flattenDynamoDBActions(apiObjects []awstypes.Action) []interface{} {
 	return tfList
 }
 
-func flattenDynamoDBAction(apiObject *awstypes.DynamoDBAction) []interface{} {
+func flattenDynamoDBAction(apiObject *awstypes.DynamoDBAction) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := make(map[string]interface{})
+	tfMap := make(map[string]any)
 
 	if v := apiObject.HashKeyField; v != nil {
 		tfMap["hash_key_field"] = aws.ToString(v)
@@ -2678,12 +2676,12 @@ func flattenDynamoDBAction(apiObject *awstypes.DynamoDBAction) []interface{} {
 		tfMap[names.AttrTableName] = aws.ToString(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
 // Legacy root attribute handling
-func flattenDynamoDBv2Actions(apiObjects []awstypes.Action) []interface{} {
-	tfList := make([]interface{}, 0)
+func flattenDynamoDBv2Actions(apiObjects []awstypes.Action) []any {
+	tfList := make([]any, 0)
 
 	for _, apiObject := range apiObjects {
 		if v := apiObject.DynamoDBv2; v != nil {
@@ -2694,12 +2692,12 @@ func flattenDynamoDBv2Actions(apiObjects []awstypes.Action) []interface{} {
 	return tfList
 }
 
-func flattenDynamoDBv2Action(apiObject *awstypes.DynamoDBv2Action) []interface{} {
+func flattenDynamoDBv2Action(apiObject *awstypes.DynamoDBv2Action) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := make(map[string]interface{})
+	tfMap := make(map[string]any)
 
 	if v := apiObject.PutItem; v != nil {
 		tfMap["put_item"] = flattenPutItemInput(v)
@@ -2709,12 +2707,12 @@ func flattenDynamoDBv2Action(apiObject *awstypes.DynamoDBv2Action) []interface{}
 		tfMap[names.AttrRoleARN] = aws.ToString(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
 // Legacy root attribute handling
-func flattenElasticsearchActions(apiObjects []awstypes.Action) []interface{} {
-	tfList := make([]interface{}, 0)
+func flattenElasticsearchActions(apiObjects []awstypes.Action) []any {
+	tfList := make([]any, 0)
 
 	for _, apiObject := range apiObjects {
 		if v := apiObject.Elasticsearch; v != nil {
@@ -2725,12 +2723,12 @@ func flattenElasticsearchActions(apiObjects []awstypes.Action) []interface{} {
 	return tfList
 }
 
-func flattenElasticsearchAction(apiObject *awstypes.ElasticsearchAction) []interface{} {
+func flattenElasticsearchAction(apiObject *awstypes.ElasticsearchAction) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := make(map[string]interface{})
+	tfMap := make(map[string]any)
 
 	if v := apiObject.Endpoint; v != nil {
 		tfMap[names.AttrEndpoint] = aws.ToString(v)
@@ -2752,12 +2750,12 @@ func flattenElasticsearchAction(apiObject *awstypes.ElasticsearchAction) []inter
 		tfMap[names.AttrRoleARN] = aws.ToString(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
 // Legacy root attribute handling
-func flattenFirehoseActions(apiObjects []awstypes.Action) []interface{} {
-	tfList := make([]interface{}, 0)
+func flattenFirehoseActions(apiObjects []awstypes.Action) []any {
+	tfList := make([]any, 0)
 
 	for _, apiObject := range apiObjects {
 		if v := apiObject.Firehose; v != nil {
@@ -2768,12 +2766,12 @@ func flattenFirehoseActions(apiObjects []awstypes.Action) []interface{} {
 	return tfList
 }
 
-func flattenFirehoseAction(apiObject *awstypes.FirehoseAction) []interface{} {
+func flattenFirehoseAction(apiObject *awstypes.FirehoseAction) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := make(map[string]interface{})
+	tfMap := make(map[string]any)
 
 	if v := apiObject.BatchMode; v != nil {
 		tfMap["batch_mode"] = aws.ToBool(v)
@@ -2791,12 +2789,12 @@ func flattenFirehoseAction(apiObject *awstypes.FirehoseAction) []interface{} {
 		tfMap["separator"] = aws.ToString(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
 // Legacy root attribute handling
-func flattenHTTPActions(apiObjects []awstypes.Action) []interface{} {
-	tfList := make([]interface{}, 0)
+func flattenHTTPActions(apiObjects []awstypes.Action) []any {
+	tfList := make([]any, 0)
 
 	for _, apiObject := range apiObjects {
 		if v := apiObject.Http; v != nil {
@@ -2807,12 +2805,12 @@ func flattenHTTPActions(apiObjects []awstypes.Action) []interface{} {
 	return tfList
 }
 
-func flattenHTTPAction(apiObject *awstypes.HttpAction) []interface{} {
+func flattenHTTPAction(apiObject *awstypes.HttpAction) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := make(map[string]interface{})
+	tfMap := make(map[string]any)
 
 	if v := apiObject.Url; v != nil {
 		tfMap[names.AttrURL] = aws.ToString(v)
@@ -2835,12 +2833,12 @@ func flattenHTTPAction(apiObject *awstypes.HttpAction) []interface{} {
 		tfMap["http_header"] = headers
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
 // Legacy root attribute handling
-func flattenAnalyticsActions(apiObjects []awstypes.Action) []interface{} {
-	tfList := make([]interface{}, 0)
+func flattenAnalyticsActions(apiObjects []awstypes.Action) []any {
+	tfList := make([]any, 0)
 
 	for _, apiObject := range apiObjects {
 		if v := apiObject.IotAnalytics; v != nil {
@@ -2851,12 +2849,12 @@ func flattenAnalyticsActions(apiObjects []awstypes.Action) []interface{} {
 	return tfList
 }
 
-func flattenAnalyticsAction(apiObject *awstypes.IotAnalyticsAction) []interface{} {
+func flattenAnalyticsAction(apiObject *awstypes.IotAnalyticsAction) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := make(map[string]interface{})
+	tfMap := make(map[string]any)
 
 	if v := apiObject.BatchMode; v != nil {
 		tfMap["batch_mode"] = aws.ToBool(v)
@@ -2870,12 +2868,12 @@ func flattenAnalyticsAction(apiObject *awstypes.IotAnalyticsAction) []interface{
 		tfMap[names.AttrRoleARN] = aws.ToString(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
 // Legacy root attribute handling
-func flattenEventsActions(apiObjects []awstypes.Action) []interface{} {
-	tfList := make([]interface{}, 0)
+func flattenEventsActions(apiObjects []awstypes.Action) []any {
+	tfList := make([]any, 0)
 
 	for _, apiObject := range apiObjects {
 		if v := apiObject.IotEvents; v != nil {
@@ -2886,12 +2884,12 @@ func flattenEventsActions(apiObjects []awstypes.Action) []interface{} {
 	return tfList
 }
 
-func flattenEventsAction(apiObject *awstypes.IotEventsAction) []interface{} {
+func flattenEventsAction(apiObject *awstypes.IotEventsAction) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := make(map[string]interface{})
+	tfMap := make(map[string]any)
 
 	if v := apiObject.BatchMode; v != nil {
 		tfMap["batch_mode"] = aws.ToBool(v)
@@ -2909,12 +2907,12 @@ func flattenEventsAction(apiObject *awstypes.IotEventsAction) []interface{} {
 		tfMap[names.AttrRoleARN] = aws.ToString(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
 // Legacy root attribute handling
-func flattenKafkaActions(apiObjects []awstypes.Action) []interface{} {
-	tfList := make([]interface{}, 0)
+func flattenKafkaActions(apiObjects []awstypes.Action) []any {
+	tfList := make([]any, 0)
 
 	for _, apiObject := range apiObjects {
 		if v := apiObject.Kafka; v != nil {
@@ -2925,12 +2923,12 @@ func flattenKafkaActions(apiObjects []awstypes.Action) []interface{} {
 	return tfList
 }
 
-func flattenKafkaAction(apiObject *awstypes.KafkaAction) []interface{} {
+func flattenKafkaAction(apiObject *awstypes.KafkaAction) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := make(map[string]interface{})
+	tfMap := make(map[string]any)
 
 	if v := apiObject.ClientProperties; v != nil {
 		tfMap["client_properties"] = aws.StringMap(v)
@@ -2956,14 +2954,14 @@ func flattenKafkaAction(apiObject *awstypes.KafkaAction) []interface{} {
 		tfMap["topic"] = aws.ToString(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenKafkaHeaders(apiObjects []awstypes.KafkaActionHeader) []interface{} {
-	results := make([]interface{}, 0)
+func flattenKafkaHeaders(apiObjects []awstypes.KafkaActionHeader) []any {
+	results := make([]any, 0)
 
 	for _, apiObject := range apiObjects {
-		tfMap := make(map[string]interface{})
+		tfMap := make(map[string]any)
 
 		if v := apiObject.Key; v != nil {
 			tfMap[names.AttrKey] = aws.ToString(v)
@@ -2979,8 +2977,8 @@ func flattenKafkaHeaders(apiObjects []awstypes.KafkaActionHeader) []interface{} 
 }
 
 // Legacy root attribute handling
-func flattenKinesisActions(apiObjects []awstypes.Action) []interface{} {
-	tfList := make([]interface{}, 0)
+func flattenKinesisActions(apiObjects []awstypes.Action) []any {
+	tfList := make([]any, 0)
 
 	for _, apiObject := range apiObjects {
 		if v := apiObject.Kinesis; v != nil {
@@ -2991,12 +2989,12 @@ func flattenKinesisActions(apiObjects []awstypes.Action) []interface{} {
 	return tfList
 }
 
-func flattenKinesisAction(apiObject *awstypes.KinesisAction) []interface{} {
+func flattenKinesisAction(apiObject *awstypes.KinesisAction) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := make(map[string]interface{})
+	tfMap := make(map[string]any)
 
 	if v := apiObject.PartitionKey; v != nil {
 		tfMap["partition_key"] = aws.ToString(v)
@@ -3010,12 +3008,12 @@ func flattenKinesisAction(apiObject *awstypes.KinesisAction) []interface{} {
 		tfMap["stream_name"] = aws.ToString(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
 // Legacy root attribute handling
-func flattenLambdaActions(apiObjects []awstypes.Action) []interface{} {
-	tfList := make([]interface{}, 0)
+func flattenLambdaActions(apiObjects []awstypes.Action) []any {
+	tfList := make([]any, 0)
 
 	for _, apiObject := range apiObjects {
 		if v := apiObject.Lambda; v != nil {
@@ -3026,37 +3024,37 @@ func flattenLambdaActions(apiObjects []awstypes.Action) []interface{} {
 	return tfList
 }
 
-func flattenLambdaAction(apiObject *awstypes.LambdaAction) []interface{} {
+func flattenLambdaAction(apiObject *awstypes.LambdaAction) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := make(map[string]interface{})
+	tfMap := make(map[string]any)
 
 	if v := apiObject.FunctionArn; v != nil {
 		tfMap[names.AttrFunctionARN] = aws.ToString(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenPutItemInput(apiObject *awstypes.PutItemInput) []interface{} {
+func flattenPutItemInput(apiObject *awstypes.PutItemInput) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := make(map[string]interface{})
+	tfMap := make(map[string]any)
 
 	if v := apiObject.TableName; v != nil {
 		tfMap[names.AttrTableName] = aws.ToString(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
 // Legacy root attribute handling
-func flattenRepublishActions(apiObjects []awstypes.Action) []interface{} {
-	tfList := make([]interface{}, 0)
+func flattenRepublishActions(apiObjects []awstypes.Action) []any {
+	tfList := make([]any, 0)
 
 	for _, apiObject := range apiObjects {
 		if v := apiObject.Republish; v != nil {
@@ -3067,12 +3065,12 @@ func flattenRepublishActions(apiObjects []awstypes.Action) []interface{} {
 	return tfList
 }
 
-func flattenRepublishAction(apiObject *awstypes.RepublishAction) []interface{} {
+func flattenRepublishAction(apiObject *awstypes.RepublishAction) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := make(map[string]interface{})
+	tfMap := make(map[string]any)
 
 	if v := apiObject.Qos; v != nil {
 		tfMap["qos"] = aws.ToInt32(v)
@@ -3086,12 +3084,12 @@ func flattenRepublishAction(apiObject *awstypes.RepublishAction) []interface{} {
 		tfMap["topic"] = aws.ToString(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
 // Legacy root attribute handling
-func flattenS3Actions(apiObjects []awstypes.Action) []interface{} {
-	tfList := make([]interface{}, 0)
+func flattenS3Actions(apiObjects []awstypes.Action) []any {
+	tfList := make([]any, 0)
 
 	for _, apiObject := range apiObjects {
 		if v := apiObject.S3; v != nil {
@@ -3102,12 +3100,12 @@ func flattenS3Actions(apiObjects []awstypes.Action) []interface{} {
 	return tfList
 }
 
-func flattenS3Action(apiObject *awstypes.S3Action) []interface{} {
+func flattenS3Action(apiObject *awstypes.S3Action) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := make(map[string]interface{})
+	tfMap := make(map[string]any)
 
 	if v := apiObject.BucketName; v != nil {
 		tfMap[names.AttrBucketName] = aws.ToString(v)
@@ -3123,12 +3121,12 @@ func flattenS3Action(apiObject *awstypes.S3Action) []interface{} {
 		tfMap[names.AttrRoleARN] = aws.ToString(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
 // Legacy root attribute handling
-func flattenSNSActions(apiObjects []awstypes.Action) []interface{} {
-	tfList := make([]interface{}, 0)
+func flattenSNSActions(apiObjects []awstypes.Action) []any {
+	tfList := make([]any, 0)
 
 	for _, apiObject := range apiObjects {
 		if v := apiObject.Sns; v != nil {
@@ -3139,12 +3137,12 @@ func flattenSNSActions(apiObjects []awstypes.Action) []interface{} {
 	return tfList
 }
 
-func flattenSNSAction(apiObject *awstypes.SnsAction) []interface{} {
+func flattenSNSAction(apiObject *awstypes.SnsAction) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := make(map[string]interface{})
+	tfMap := make(map[string]any)
 
 	tfMap["message_format"] = apiObject.MessageFormat
 
@@ -3156,12 +3154,12 @@ func flattenSNSAction(apiObject *awstypes.SnsAction) []interface{} {
 		tfMap[names.AttrTargetARN] = aws.ToString(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
 // Legacy root attribute handling
-func flattenSQSActions(apiObjects []awstypes.Action) []interface{} {
-	tfList := make([]interface{}, 0)
+func flattenSQSActions(apiObjects []awstypes.Action) []any {
+	tfList := make([]any, 0)
 
 	for _, apiObject := range apiObjects {
 		if v := apiObject.Sqs; v != nil {
@@ -3172,12 +3170,12 @@ func flattenSQSActions(apiObjects []awstypes.Action) []interface{} {
 	return tfList
 }
 
-func flattenSQSAction(apiObject *awstypes.SqsAction) []interface{} {
+func flattenSQSAction(apiObject *awstypes.SqsAction) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := make(map[string]interface{})
+	tfMap := make(map[string]any)
 
 	if v := apiObject.QueueUrl; v != nil {
 		tfMap["queue_url"] = aws.ToString(v)
@@ -3191,12 +3189,12 @@ func flattenSQSAction(apiObject *awstypes.SqsAction) []interface{} {
 		tfMap["use_base64"] = aws.ToBool(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
 // Legacy root attribute handling
-func flattenStepFunctionsActions(apiObjects []awstypes.Action) []interface{} {
-	tfList := make([]interface{}, 0)
+func flattenStepFunctionsActions(apiObjects []awstypes.Action) []any {
+	tfList := make([]any, 0)
 
 	for _, apiObject := range apiObjects {
 		if v := apiObject.StepFunctions; v != nil {
@@ -3207,12 +3205,12 @@ func flattenStepFunctionsActions(apiObjects []awstypes.Action) []interface{} {
 	return tfList
 }
 
-func flattenStepFunctionsAction(apiObject *awstypes.StepFunctionsAction) []interface{} {
+func flattenStepFunctionsAction(apiObject *awstypes.StepFunctionsAction) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := make(map[string]interface{})
+	tfMap := make(map[string]any)
 
 	if v := apiObject.ExecutionNamePrefix; v != nil {
 		tfMap["execution_name_prefix"] = aws.ToString(v)
@@ -3226,12 +3224,12 @@ func flattenStepFunctionsAction(apiObject *awstypes.StepFunctionsAction) []inter
 		tfMap[names.AttrRoleARN] = aws.ToString(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
 // Legacy root attribute handling
-func flattenTimestreamActions(apiObjects []awstypes.Action) []interface{} {
-	tfList := make([]interface{}, 0)
+func flattenTimestreamActions(apiObjects []awstypes.Action) []any {
+	tfList := make([]any, 0)
 
 	for _, apiObject := range apiObjects {
 		if v := apiObject.Timestream; v != nil {
@@ -3242,12 +3240,12 @@ func flattenTimestreamActions(apiObjects []awstypes.Action) []interface{} {
 	return tfList
 }
 
-func flattenTimestreamAction(apiObject *awstypes.TimestreamAction) []interface{} {
+func flattenTimestreamAction(apiObject *awstypes.TimestreamAction) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := make(map[string]interface{})
+	tfMap := make(map[string]any)
 
 	if v := apiObject.DatabaseName; v != nil {
 		tfMap[names.AttrDatabaseName] = aws.ToString(v)
@@ -3269,18 +3267,18 @@ func flattenTimestreamAction(apiObject *awstypes.TimestreamAction) []interface{}
 		tfMap["timestamp"] = flattenTimestreamTimestamp(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenTimestreamDimensions(apiObjects []awstypes.TimestreamDimension) []interface{} {
+func flattenTimestreamDimensions(apiObjects []awstypes.TimestreamDimension) []any {
 	if apiObjects == nil {
 		return nil
 	}
 
-	tfList := make([]interface{}, 0)
+	tfList := make([]any, 0)
 
 	for _, apiObject := range apiObjects {
-		tfMap := make(map[string]interface{})
+		tfMap := make(map[string]any)
 
 		if v := apiObject.Name; v != nil {
 			tfMap[names.AttrName] = aws.ToString(v)
@@ -3296,12 +3294,12 @@ func flattenTimestreamDimensions(apiObjects []awstypes.TimestreamDimension) []in
 	return tfList
 }
 
-func flattenTimestreamTimestamp(apiObject *awstypes.TimestreamTimestamp) []interface{} {
+func flattenTimestreamTimestamp(apiObject *awstypes.TimestreamTimestamp) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := make(map[string]interface{})
+	tfMap := make(map[string]any)
 
 	if v := apiObject.Unit; v != nil {
 		tfMap[names.AttrUnit] = aws.ToString(v)
@@ -3311,11 +3309,11 @@ func flattenTimestreamTimestamp(apiObject *awstypes.TimestreamTimestamp) []inter
 		tfMap[names.AttrValue] = aws.ToString(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenErrorAction(apiObject *awstypes.Action) []interface{} {
-	tfList := make([]interface{}, 0)
+func flattenErrorAction(apiObject *awstypes.Action) []any {
+	tfList := make([]any, 0)
 
 	if apiObject == nil {
 		return nil
@@ -3323,79 +3321,79 @@ func flattenErrorAction(apiObject *awstypes.Action) []interface{} {
 
 	input := []awstypes.Action{*apiObject}
 	if apiObject.CloudwatchAlarm != nil {
-		tfList = append(tfList, map[string]interface{}{"cloudwatch_alarm": flattenCloudWatchAlarmActions(input)})
+		tfList = append(tfList, map[string]any{"cloudwatch_alarm": flattenCloudWatchAlarmActions(input)})
 		return tfList
 	}
 	if apiObject.CloudwatchLogs != nil {
-		tfList = append(tfList, map[string]interface{}{names.AttrCloudWatchLogs: flattenCloudWatchLogsActions(input)})
+		tfList = append(tfList, map[string]any{names.AttrCloudWatchLogs: flattenCloudWatchLogsActions(input)})
 		return tfList
 	}
 	if apiObject.CloudwatchMetric != nil {
-		tfList = append(tfList, map[string]interface{}{"cloudwatch_metric": flattenCloudWatchMetricActions(input)})
+		tfList = append(tfList, map[string]any{"cloudwatch_metric": flattenCloudWatchMetricActions(input)})
 		return tfList
 	}
 	if apiObject.DynamoDB != nil {
-		tfList = append(tfList, map[string]interface{}{"dynamodb": flattenDynamoDBActions(input)})
+		tfList = append(tfList, map[string]any{"dynamodb": flattenDynamoDBActions(input)})
 		return tfList
 	}
 	if apiObject.DynamoDBv2 != nil {
-		tfList = append(tfList, map[string]interface{}{"dynamodbv2": flattenDynamoDBv2Actions(input)})
+		tfList = append(tfList, map[string]any{"dynamodbv2": flattenDynamoDBv2Actions(input)})
 		return tfList
 	}
 	if apiObject.Elasticsearch != nil {
-		tfList = append(tfList, map[string]interface{}{"elasticsearch": flattenElasticsearchActions(input)})
+		tfList = append(tfList, map[string]any{"elasticsearch": flattenElasticsearchActions(input)})
 		return tfList
 	}
 	if apiObject.Firehose != nil {
-		tfList = append(tfList, map[string]interface{}{"firehose": flattenFirehoseActions(input)})
+		tfList = append(tfList, map[string]any{"firehose": flattenFirehoseActions(input)})
 		return tfList
 	}
 	if apiObject.Http != nil {
-		tfList = append(tfList, map[string]interface{}{"http": flattenHTTPActions(input)})
+		tfList = append(tfList, map[string]any{"http": flattenHTTPActions(input)})
 		return tfList
 	}
 	if apiObject.IotAnalytics != nil {
-		tfList = append(tfList, map[string]interface{}{"iot_analytics": flattenAnalyticsActions(input)})
+		tfList = append(tfList, map[string]any{"iot_analytics": flattenAnalyticsActions(input)})
 		return tfList
 	}
 	if apiObject.IotEvents != nil {
-		tfList = append(tfList, map[string]interface{}{"iot_events": flattenEventsActions(input)})
+		tfList = append(tfList, map[string]any{"iot_events": flattenEventsActions(input)})
 		return tfList
 	}
 	if apiObject.Kafka != nil {
-		tfList = append(tfList, map[string]interface{}{"kafka": flattenKafkaActions(input)})
+		tfList = append(tfList, map[string]any{"kafka": flattenKafkaActions(input)})
 		return tfList
 	}
 	if apiObject.Kinesis != nil {
-		tfList = append(tfList, map[string]interface{}{"kinesis": flattenKinesisActions(input)})
+		tfList = append(tfList, map[string]any{"kinesis": flattenKinesisActions(input)})
 		return tfList
 	}
 	if apiObject.Lambda != nil {
-		tfList = append(tfList, map[string]interface{}{"lambda": flattenLambdaActions(input)})
+		tfList = append(tfList, map[string]any{"lambda": flattenLambdaActions(input)})
 		return tfList
 	}
 	if apiObject.Republish != nil {
-		tfList = append(tfList, map[string]interface{}{"republish": flattenRepublishActions(input)})
+		tfList = append(tfList, map[string]any{"republish": flattenRepublishActions(input)})
 		return tfList
 	}
 	if apiObject.S3 != nil {
-		tfList = append(tfList, map[string]interface{}{"s3": flattenS3Actions(input)})
+		tfList = append(tfList, map[string]any{"s3": flattenS3Actions(input)})
 		return tfList
 	}
 	if apiObject.Sns != nil {
-		tfList = append(tfList, map[string]interface{}{"sns": flattenSNSActions(input)})
+		tfList = append(tfList, map[string]any{"sns": flattenSNSActions(input)})
 		return tfList
 	}
 	if apiObject.Sqs != nil {
-		tfList = append(tfList, map[string]interface{}{"sqs": flattenSQSActions(input)})
+		tfList = append(tfList, map[string]any{"sqs": flattenSQSActions(input)})
 		return tfList
 	}
 	if apiObject.StepFunctions != nil {
-		tfList = append(tfList, map[string]interface{}{"step_functions": flattenStepFunctionsActions(input)})
+		tfList = append(tfList, map[string]any{"step_functions": flattenStepFunctionsActions(input)})
 		return tfList
 	}
 	if apiObject.Timestream != nil {
-		tfList = append(tfList, map[string]interface{}{"timestream": flattenTimestreamActions(input)})
+		tfList = append(tfList, map[string]any{"timestream": flattenTimestreamActions(input)})
 		return tfList
 	}
 

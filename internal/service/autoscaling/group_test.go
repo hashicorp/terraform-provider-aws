@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -34,6 +35,7 @@ func init() {
 func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,
 		"gp3 is invalid",
+		"The Launch Configuration creation operation is not available in your account",
 	)
 }
 
@@ -4242,10 +4244,8 @@ func testAccCheckInstanceRefreshStatus(ctx context.Context, v *awstypes.AutoScal
 
 		status := output[index].Status
 
-		for _, v := range expected {
-			if status == v {
-				return nil
-			}
+		if slices.Contains(expected, status) {
+			return nil
 		}
 
 		return fmt.Errorf("Expected Instance Refresh at index %d to be in %q, got %q", index, expected, status)
@@ -4279,9 +4279,10 @@ func testAccCheckALBTargetGroupHealthy(ctx context.Context, v *elasticloadbalanc
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Client(ctx)
 
-		output, err := conn.DescribeTargetHealth(ctx, &elasticloadbalancingv2.DescribeTargetHealthInput{
+		input := elasticloadbalancingv2.DescribeTargetHealthInput{
 			TargetGroupArn: v.TargetGroupArn,
-		})
+		}
+		output, err := conn.DescribeTargetHealth(ctx, &input)
 
 		if err != nil {
 			return err

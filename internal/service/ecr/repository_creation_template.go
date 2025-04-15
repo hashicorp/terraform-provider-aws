@@ -94,7 +94,7 @@ func resourceRepositoryCreationTemplate() *schema.Resource {
 					return equal
 				},
 				DiffSuppressOnRefresh: true,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
@@ -120,7 +120,7 @@ func resourceRepositoryCreationTemplate() *schema.Resource {
 				ValidateFunc:          validation.StringIsJSON,
 				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
 				DiffSuppressOnRefresh: true,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
@@ -130,13 +130,13 @@ func resourceRepositoryCreationTemplate() *schema.Resource {
 	}
 }
 
-func resourceRepositoryCreationTemplateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRepositoryCreationTemplateCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRClient(ctx)
 
 	prefix := d.Get(names.AttrPrefix).(string)
 	input := &ecr.CreateRepositoryCreationTemplateInput{
-		EncryptionConfiguration: expandRepositoryEncryptionConfigurationForRepositoryCreationTemplate(d.Get(names.AttrEncryptionConfiguration).([]interface{})),
+		EncryptionConfiguration: expandRepositoryEncryptionConfigurationForRepositoryCreationTemplate(d.Get(names.AttrEncryptionConfiguration).([]any)),
 		ImageTagMutability:      types.ImageTagMutability((d.Get("image_tag_mutability").(string))),
 		Prefix:                  aws.String(prefix),
 	}
@@ -171,8 +171,8 @@ func resourceRepositoryCreationTemplateCreate(ctx context.Context, d *schema.Res
 		input.RepositoryPolicy = aws.String(policy)
 	}
 
-	if v, ok := d.GetOk(names.AttrResourceTags); ok && len(v.(map[string]interface{})) > 0 {
-		input.ResourceTags = Tags(tftags.New(ctx, v.(map[string]interface{})))
+	if v, ok := d.GetOk(names.AttrResourceTags); ok && len(v.(map[string]any)) > 0 {
+		input.ResourceTags = svcTags(tftags.New(ctx, v.(map[string]any)))
 	}
 
 	output, err := conn.CreateRepositoryCreationTemplate(ctx, input)
@@ -186,7 +186,7 @@ func resourceRepositoryCreationTemplateCreate(ctx context.Context, d *schema.Res
 	return append(diags, resourceRepositoryCreationTemplateRead(ctx, d, meta)...)
 }
 
-func resourceRepositoryCreationTemplateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRepositoryCreationTemplateRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRClient(ctx)
 
@@ -234,12 +234,12 @@ func resourceRepositoryCreationTemplateRead(ctx context.Context, d *schema.Resou
 	}
 
 	d.Set("repository_policy", policyToSet)
-	d.Set(names.AttrResourceTags, KeyValueTags(ctx, rct.ResourceTags).Map())
+	d.Set(names.AttrResourceTags, keyValueTags(ctx, rct.ResourceTags).Map())
 
 	return diags
 }
 
-func resourceRepositoryCreationTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRepositoryCreationTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRClient(ctx)
 
@@ -263,7 +263,7 @@ func resourceRepositoryCreationTemplateUpdate(ctx context.Context, d *schema.Res
 	}
 
 	if d.HasChange(names.AttrEncryptionConfiguration) {
-		input.EncryptionConfiguration = expandRepositoryEncryptionConfigurationForRepositoryCreationTemplate(d.Get(names.AttrEncryptionConfiguration).([]interface{}))
+		input.EncryptionConfiguration = expandRepositoryEncryptionConfigurationForRepositoryCreationTemplate(d.Get(names.AttrEncryptionConfiguration).([]any))
 	}
 
 	if d.HasChange("image_tag_mutability") {
@@ -289,7 +289,7 @@ func resourceRepositoryCreationTemplateUpdate(ctx context.Context, d *schema.Res
 	}
 
 	if d.HasChange(names.AttrResourceTags) {
-		input.ResourceTags = Tags(tftags.New(ctx, d.Get(names.AttrResourceTags).(map[string]interface{})))
+		input.ResourceTags = svcTags(tftags.New(ctx, d.Get(names.AttrResourceTags).(map[string]any)))
 	}
 
 	_, err := conn.UpdateRepositoryCreationTemplate(ctx, input)
@@ -301,7 +301,7 @@ func resourceRepositoryCreationTemplateUpdate(ctx context.Context, d *schema.Res
 	return append(diags, resourceRepositoryCreationTemplateRead(ctx, d, meta)...)
 }
 
-func resourceRepositoryCreationTemplateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRepositoryCreationTemplateDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRClient(ctx)
 
@@ -369,12 +369,12 @@ func findRepositoryCreationTemplates(ctx context.Context, conn *ecr.Client, inpu
 	return output, registryID, nil
 }
 
-func expandRepositoryEncryptionConfigurationForRepositoryCreationTemplate(data []interface{}) *types.EncryptionConfigurationForRepositoryCreationTemplate {
+func expandRepositoryEncryptionConfigurationForRepositoryCreationTemplate(data []any) *types.EncryptionConfigurationForRepositoryCreationTemplate {
 	if len(data) == 0 || data[0] == nil {
 		return nil
 	}
 
-	ec := data[0].(map[string]interface{})
+	ec := data[0].(map[string]any)
 	config := &types.EncryptionConfigurationForRepositoryCreationTemplate{
 		EncryptionType: types.EncryptionType((ec["encryption_type"].(string))),
 	}
@@ -386,17 +386,17 @@ func expandRepositoryEncryptionConfigurationForRepositoryCreationTemplate(data [
 	return config
 }
 
-func flattenRepositoryEncryptionConfigurationForRepositoryCreationTemplate(ec *types.EncryptionConfigurationForRepositoryCreationTemplate) []map[string]interface{} {
+func flattenRepositoryEncryptionConfigurationForRepositoryCreationTemplate(ec *types.EncryptionConfigurationForRepositoryCreationTemplate) []map[string]any {
 	if ec == nil {
 		return nil
 	}
 
-	config := map[string]interface{}{
+	config := map[string]any{
 		"encryption_type": ec.EncryptionType,
 		names.AttrKMSKey:  aws.ToString(ec.KmsKey),
 	}
 
-	return []map[string]interface{}{
+	return []map[string]any{
 		config,
 	}
 }

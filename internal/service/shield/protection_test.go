@@ -786,7 +786,7 @@ func testAccProtectionConfig_globalAccelerator(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_shield_protection" "test" {
   name         = %[1]q
-  resource_arn = aws_globalaccelerator_accelerator.test.id
+  resource_arn = aws_globalaccelerator_accelerator.test.arn
 }
 
 resource "aws_globalaccelerator_accelerator" "test" {

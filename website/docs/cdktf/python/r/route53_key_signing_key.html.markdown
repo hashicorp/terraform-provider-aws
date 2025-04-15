@@ -131,6 +131,14 @@ This resource exports the following attributes in addition to the arguments abov
 * `signing_algorithm_mnemonic` - A string used to represent the signing algorithm. This value must follow the guidelines provided by [RFC-8624 Section 3.1](https://tools.ietf.org/html/rfc8624#section-3.1).
 * `signing_algorithm_type` - An integer used to represent the signing algorithm. This value must follow the guidelines provided by [RFC-8624 Section 3.1](https://tools.ietf.org/html/rfc8624#section-3.1).
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
+* `delete` - (Default `30m`)
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_route53_key_signing_key` resources using the Route 53 Hosted Zone identifier and KMS Key identifier, separated by a comma (`,`). For example:
@@ -156,4 +164,4 @@ Using `terraform import`, import `aws_route53_key_signing_key` resources using t
 % terraform import aws_route53_key_signing_key.example Z1D633PJN98FT9,example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-eeafa23f3b2cf9c292211ba55ca229ed45cfe8d510a9b973ce0489a244999fd8 -->
+<!-- cache-key: cdktf-0.20.8 input-41cd29e64a349c0fcd44efc39234e18d8a5477ce186d36f6d5b0680e203d4201 -->

@@ -50,10 +50,6 @@ type replicationConfigurationTemplateResource struct {
 	framework.WithTimeouts
 }
 
-func (r *replicationConfigurationTemplateResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_drs_replication_configuration_template"
-}
-
 func (r *replicationConfigurationTemplateResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -278,7 +274,7 @@ func (r *replicationConfigurationTemplateResource) Delete(ctx context.Context, r
 
 	conn := r.Meta().DRSClient(ctx)
 
-	tflog.Debug(ctx, "deleting DRS Replication Configuration Template", map[string]interface{}{
+	tflog.Debug(ctx, "deleting DRS Replication Configuration Template", map[string]any{
 		names.AttrID: data.ID.ValueString(),
 	})
 
@@ -286,7 +282,7 @@ func (r *replicationConfigurationTemplateResource) Delete(ctx context.Context, r
 		ReplicationConfigurationTemplateID: data.ID.ValueStringPointer(),
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 5*time.Minute, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 5*time.Minute, func() (any, error) {
 		return conn.DeleteReplicationConfigurationTemplate(ctx, input)
 	}, "DependencyViolation")
 
@@ -305,10 +301,6 @@ func (r *replicationConfigurationTemplateResource) Delete(ctx context.Context, r
 
 		return
 	}
-}
-
-func (r *replicationConfigurationTemplateResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func findReplicationConfigurationTemplate(ctx context.Context, conn *drs.Client, input *drs.DescribeReplicationConfigurationTemplatesInput) (*awstypes.ReplicationConfigurationTemplate, error) {
@@ -358,7 +350,7 @@ const (
 )
 
 func statusReplicationConfigurationTemplate(ctx context.Context, conn *drs.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findReplicationConfigurationTemplateByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

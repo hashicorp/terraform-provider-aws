@@ -37,10 +37,6 @@ type dataSourceListenerRule struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *dataSourceListenerRule) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_lb_listener_rule"
-}
-
 func (d *dataSourceListenerRule) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -73,7 +69,7 @@ func (d *dataSourceListenerRule) Schema(ctx context.Context, req datasource.Sche
 						},
 					},
 					Blocks: map[string]schema.Block{
-						"authenticate_cognito": schema.SingleNestedBlock{
+						"authenticate_cognito": schema.SingleNestedBlock{ // nosemgrep:ci.avoid-SingleNestedBlock pre-existing, will be converted
 							CustomType: fwtypes.NewObjectTypeOf[authenticateCognitoActionConfigModel](ctx),
 							Attributes: map[string]schema.Attribute{
 								"authentication_request_extra_params": schema.MapAttribute{
@@ -103,7 +99,7 @@ func (d *dataSourceListenerRule) Schema(ctx context.Context, req datasource.Sche
 								},
 							},
 						},
-						"authenticate_oidc": schema.SingleNestedBlock{
+						"authenticate_oidc": schema.SingleNestedBlock{ // nosemgrep:ci.avoid-SingleNestedBlock pre-existing, will be converted
 							Attributes: map[string]schema.Attribute{
 								"authentication_request_extra_params": schema.MapAttribute{
 									ElementType: types.StringType,
@@ -138,7 +134,7 @@ func (d *dataSourceListenerRule) Schema(ctx context.Context, req datasource.Sche
 								},
 							},
 						},
-						"fixed_response": schema.SingleNestedBlock{
+						"fixed_response": schema.SingleNestedBlock{ // nosemgrep:ci.avoid-SingleNestedBlock pre-existing, will be converted
 							Attributes: map[string]schema.Attribute{
 								names.AttrContentType: schema.StringAttribute{
 									Computed: true,
@@ -151,9 +147,9 @@ func (d *dataSourceListenerRule) Schema(ctx context.Context, req datasource.Sche
 								},
 							},
 						},
-						"forward": schema.SingleNestedBlock{
+						"forward": schema.SingleNestedBlock{ // nosemgrep:ci.avoid-SingleNestedBlock pre-existing, will be converted
 							Blocks: map[string]schema.Block{
-								"stickiness": schema.SingleNestedBlock{
+								"stickiness": schema.SingleNestedBlock{ // nosemgrep:ci.avoid-SingleNestedBlock pre-existing, will be converted
 									Attributes: map[string]schema.Attribute{
 										names.AttrDuration: schema.Int32Attribute{
 											Computed: true,
@@ -177,7 +173,7 @@ func (d *dataSourceListenerRule) Schema(ctx context.Context, req datasource.Sche
 								},
 							},
 						},
-						"redirect": schema.SingleNestedBlock{
+						"redirect": schema.SingleNestedBlock{ // nosemgrep:ci.avoid-SingleNestedBlock pre-existing, will be converted
 							Attributes: map[string]schema.Attribute{
 								"host": schema.StringAttribute{
 									Computed: true,
@@ -206,7 +202,7 @@ func (d *dataSourceListenerRule) Schema(ctx context.Context, req datasource.Sche
 				CustomType: fwtypes.NewSetNestedObjectTypeOf[ruleConditionModel](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
-						"host_header": schema.SingleNestedBlock{
+						"host_header": schema.SingleNestedBlock{ // nosemgrep:ci.avoid-SingleNestedBlock pre-existing, will be converted
 							CustomType: fwtypes.NewObjectTypeOf[hostHeaderConfigModel](ctx),
 							Attributes: map[string]schema.Attribute{
 								names.AttrValues: schema.SetAttribute{
@@ -215,7 +211,7 @@ func (d *dataSourceListenerRule) Schema(ctx context.Context, req datasource.Sche
 								},
 							},
 						},
-						"http_header": schema.SingleNestedBlock{
+						"http_header": schema.SingleNestedBlock{ // nosemgrep:ci.avoid-SingleNestedBlock pre-existing, will be converted
 							CustomType: fwtypes.NewObjectTypeOf[httpHeaderConfigModel](ctx),
 							Attributes: map[string]schema.Attribute{
 								"http_header_name": schema.StringAttribute{
@@ -227,7 +223,7 @@ func (d *dataSourceListenerRule) Schema(ctx context.Context, req datasource.Sche
 								},
 							},
 						},
-						"http_request_method": schema.SingleNestedBlock{
+						"http_request_method": schema.SingleNestedBlock{ // nosemgrep:ci.avoid-SingleNestedBlock pre-existing, will be converted
 							CustomType: fwtypes.NewObjectTypeOf[httpRquestMethodConfigModel](ctx),
 							Attributes: map[string]schema.Attribute{
 								names.AttrValues: schema.SetAttribute{
@@ -236,7 +232,7 @@ func (d *dataSourceListenerRule) Schema(ctx context.Context, req datasource.Sche
 								},
 							},
 						},
-						"path_pattern": schema.SingleNestedBlock{
+						"path_pattern": schema.SingleNestedBlock{ // nosemgrep:ci.avoid-SingleNestedBlock pre-existing, will be converted
 							CustomType: fwtypes.NewObjectTypeOf[pathPatternConfigModel](ctx),
 							Attributes: map[string]schema.Attribute{
 								names.AttrValues: schema.SetAttribute{
@@ -245,7 +241,7 @@ func (d *dataSourceListenerRule) Schema(ctx context.Context, req datasource.Sche
 								},
 							},
 						},
-						"query_string": schema.SingleNestedBlock{
+						"query_string": schema.SingleNestedBlock{ // nosemgrep:ci.avoid-SingleNestedBlock pre-existing, will be converted
 							CustomType: fwtypes.NewObjectTypeOf[queryStringConfigModel](ctx),
 							Blocks: map[string]schema.Block{
 								names.AttrValues: schema.SetNestedBlock{
@@ -263,7 +259,7 @@ func (d *dataSourceListenerRule) Schema(ctx context.Context, req datasource.Sche
 								},
 							},
 						},
-						"source_ip": schema.SingleNestedBlock{
+						"source_ip": schema.SingleNestedBlock{ // nosemgrep:ci.avoid-SingleNestedBlock pre-existing, will be converted
 							CustomType: fwtypes.NewObjectTypeOf[pathPatternConfigModel](ctx),
 							Attributes: map[string]schema.Attribute{
 								names.AttrValues: schema.SetAttribute{

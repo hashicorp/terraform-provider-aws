@@ -111,6 +111,7 @@ provider "aws" {
 |BCM Data Exports|`bcmdataexports`|`AWS_ENDPOINT_URL_BCM_DATA_EXPORTS`|`bcm_data_exports`|
 |Bedrock|`bedrock`|`AWS_ENDPOINT_URL_BEDROCK`|`bedrock`|
 |Bedrock Agents|`bedrockagent`|`AWS_ENDPOINT_URL_BEDROCK_AGENT`|`bedrock_agent`|
+|Billing|`billing`|`AWS_ENDPOINT_URL_BILLING`|`billing`|
 |Web Services Budgets|`budgets`|`AWS_ENDPOINT_URL_BUDGETS`|`budgets`|
 |CE (Cost Explorer)|`ce`(or `costexplorer`)|`AWS_ENDPOINT_URL_COST_EXPLORER`|`cost_explorer`|
 |Chatbot|`chatbot`|`AWS_ENDPOINT_URL_CHATBOT`|`chatbot`|
@@ -165,6 +166,7 @@ provider "aws" {
 |DocumentDB Elastic|`docdbelastic`|`AWS_ENDPOINT_URL_DOCDB_ELASTIC`|`docdb_elastic`|
 |DRS (Elastic Disaster Recovery)|`drs`|`AWS_ENDPOINT_URL_DRS`|`drs`|
 |Directory Service|`ds`(or `directoryservice`)|`AWS_ENDPOINT_URL_DIRECTORY_SERVICE`|`directory_service`|
+|DSQL|`dsql`|`AWS_ENDPOINT_URL_DSQL`|`dsql`|
 |DynamoDB|`dynamodb`|`AWS_ENDPOINT_URL_DYNAMODB`|`dynamodb`|
 |EC2 (Elastic Compute Cloud)|`ec2`|`AWS_ENDPOINT_URL_EC2`|`ec2`|
 |ECR (Elastic Container Registry)|`ecr`|`AWS_ENDPOINT_URL_ECR`|`ecr`|
@@ -235,6 +237,7 @@ provider "aws" {
 |Elemental MediaLive|`medialive`|`AWS_ENDPOINT_URL_MEDIALIVE`|`medialive`|
 |Elemental MediaPackage|`mediapackage`|`AWS_ENDPOINT_URL_MEDIAPACKAGE`|`mediapackage`|
 |Elemental MediaPackage Version 2|`mediapackagev2`|`AWS_ENDPOINT_URL_MEDIAPACKAGEV2`|`mediapackagev2`|
+|Elemental MediaPackage VOD|`mediapackagevod`|`AWS_ENDPOINT_URL_MEDIAPACKAGE_VOD`|`mediapackage_vod`|
 |Elemental MediaStore|`mediastore`|`AWS_ENDPOINT_URL_MEDIASTORE`|`mediastore`|
 |MemoryDB|`memorydb`|`AWS_ENDPOINT_URL_MEMORYDB`|`memorydb`|
 |Application Migration (Mgn)|`mgn`|`AWS_ENDPOINT_URL_MGN`|`mgn`|
@@ -286,7 +289,7 @@ provider "aws" {
 |S3 Control|`s3control`|`AWS_ENDPOINT_URL_S3_CONTROL`|`s3_control`|
 |S3 on Outposts|`s3outposts`|`AWS_ENDPOINT_URL_S3OUTPOSTS`|`s3outposts`|
 |S3 Tables|`s3tables`|`AWS_ENDPOINT_URL_S3TABLES`|`s3tables`|
-|SageMaker|`sagemaker`|`AWS_ENDPOINT_URL_SAGEMAKER`|`sagemaker`|
+|SageMaker AI|`sagemaker`|`AWS_ENDPOINT_URL_SAGEMAKER`|`sagemaker`|
 |EventBridge Scheduler|`scheduler`|`AWS_ENDPOINT_URL_SCHEDULER`|`scheduler`|
 |EventBridge Schemas|`schemas`|`AWS_ENDPOINT_URL_SCHEMAS`|`schemas`|
 |Secrets Manager|`secretsmanager`|`AWS_ENDPOINT_URL_SECRETS_MANAGER`|`secrets_manager`|
