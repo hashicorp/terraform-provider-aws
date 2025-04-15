@@ -599,7 +599,7 @@ func TestAccCodeBuildWebhook_manualCreation(t *testing.T) {
 				Config: testAccWebhookConfig_manualCreation(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebhookExists(ctx, resourceName, &webhook),
-					resource.TestCheckResourceAttr(resourceName, "manual_creation", "true"),
+					resource.TestCheckResourceAttr(resourceName, "manual_creation", acctest.CtTrue),
 				),
 			},
 			{
