@@ -14,3 +14,18 @@ rules:
         resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), $REQ, $RESP)
       }
     severity: WARNING
+
+  - id: redundant-import-state
+    languages: [go]
+    message: Don't declare `ImportState` when embedding `framework.WithImportByID`
+    patterns:
+      - pattern: |
+          type $TYPE struct {
+            ...
+            framework.WithImportByID
+            ...
+          }
+      - pattern-inside: |
+          ...
+          func ($R *$TYPE) ImportState( ... ) { ... }
+    severity: ERROR
