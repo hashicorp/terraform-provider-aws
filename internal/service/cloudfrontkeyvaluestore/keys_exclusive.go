@@ -138,11 +138,9 @@ func (r *resourceKeysExclusive) syncKeyValuePairs(ctx context.Context, plan *res
 		}
 
 		plan.TotalSizeInBytes = flex.Int64ToFramework(ctx, out.TotalSizeInBytes)
-
 	} else {
 		plan.TotalSizeInBytes = flex.Int64ToFramework(ctx, kvs.TotalSizeInBytes)
 	}
-
 	return diags
 }
 
