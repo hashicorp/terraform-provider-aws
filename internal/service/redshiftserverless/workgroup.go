@@ -405,7 +405,7 @@ func resourceWorkgroupUpdate(ctx context.Context, d *schema.ResourceData, meta a
 
 	if d.HasChange("price_performance_target") {
 		input := &redshiftserverless.UpdateWorkgroupInput{
-			PricePerformanceTarget: expandPerformanceTarget(d.Get("price_performance_target").([]interface{})),
+			PricePerformanceTarget: expandPerformanceTarget(d.Get("price_performance_target").([]any)),
 			WorkgroupName:          aws.String(d.Id()),
 		}
 
