@@ -80,7 +80,7 @@ func resourceSubscriptionFilter() *schema.Resource {
 	}
 }
 
-func resourceSubscriptionFilterPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSubscriptionFilterPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
@@ -105,7 +105,7 @@ func resourceSubscriptionFilterPut(ctx context.Context, d *schema.ResourceData, 
 		timeout = 5 * time.Minute
 	)
 	_, err := tfresource.RetryWhen(ctx, timeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.PutSubscriptionFilter(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -135,7 +135,7 @@ func resourceSubscriptionFilterPut(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func resourceSubscriptionFilterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSubscriptionFilterRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
@@ -161,7 +161,7 @@ func resourceSubscriptionFilterRead(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func resourceSubscriptionFilterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSubscriptionFilterDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
@@ -182,7 +182,7 @@ func resourceSubscriptionFilterDelete(ctx context.Context, d *schema.ResourceDat
 	return diags
 }
 
-func resourceSubscriptionFilterImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceSubscriptionFilterImport(d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	idParts := strings.Split(d.Id(), "|")
 	if len(idParts) < 2 {
 		return nil, fmt.Errorf("unexpected format of ID (%q), expected <log-group-name>|<filter-name>", d.Id())

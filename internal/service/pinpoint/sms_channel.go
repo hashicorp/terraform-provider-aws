@@ -62,7 +62,7 @@ func resourceSMSChannel() *schema.Resource {
 	}
 }
 
-func resourceSMSChannelUpsert(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSMSChannelUpsert(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointClient(ctx)
 
@@ -95,7 +95,7 @@ func resourceSMSChannelUpsert(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceSMSChannelRead(ctx, d, meta)...)
 }
 
-func resourceSMSChannelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSMSChannelRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointClient(ctx)
 
@@ -122,7 +122,7 @@ func resourceSMSChannelRead(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourceSMSChannelDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSMSChannelDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointClient(ctx)
 

@@ -151,7 +151,7 @@ func resourceReplicationInstance() *schema.Resource {
 	}
 }
 
-func resourceReplicationInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReplicationInstanceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
@@ -209,7 +209,7 @@ func resourceReplicationInstanceCreate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceReplicationInstanceRead(ctx, d, meta)...)
 }
 
-func resourceReplicationInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReplicationInstanceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
@@ -248,7 +248,7 @@ func resourceReplicationInstanceRead(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func resourceReplicationInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReplicationInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
@@ -307,7 +307,7 @@ func resourceReplicationInstanceUpdate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceReplicationInstanceRead(ctx, d, meta)...)
 }
 
-func resourceReplicationInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReplicationInstanceDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
@@ -380,7 +380,7 @@ func findReplicationInstances(ctx context.Context, conn *dms.Client, input *dms.
 }
 
 func statusReplicationInstance(ctx context.Context, conn *dms.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findReplicationInstanceByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

@@ -68,7 +68,7 @@ func dataSourcePublicKey() *schema.Resource {
 	}
 }
 
-func dataSourcePublicKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourcePublicKeyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
@@ -77,8 +77,8 @@ func dataSourcePublicKeyRead(ctx context.Context, d *schema.ResourceData, meta i
 		KeyId: aws.String(keyID),
 	}
 
-	if v, ok := d.GetOk("grant_tokens"); ok && len(v.([]interface{})) > 0 {
-		input.GrantTokens = flex.ExpandStringValueList(v.([]interface{}))
+	if v, ok := d.GetOk("grant_tokens"); ok && len(v.([]any)) > 0 {
+		input.GrantTokens = flex.ExpandStringValueList(v.([]any))
 	}
 
 	output, err := conn.GetPublicKey(ctx, input)

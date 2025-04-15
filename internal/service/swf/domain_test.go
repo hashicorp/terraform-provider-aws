@@ -240,7 +240,7 @@ func testAccCheckDomainDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			// Retrying as Read after Delete is not always consistent.
-			_, err := tfresource.RetryUntilNotFound(ctx, 2*time.Minute, func() (interface{}, error) {
+			_, err := tfresource.RetryUntilNotFound(ctx, 2*time.Minute, func() (any, error) {
 				return tfswf.FindDomainByName(ctx, conn, rs.Primary.ID)
 			})
 

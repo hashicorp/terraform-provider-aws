@@ -12,6 +12,8 @@ description: |-
 
 Provides an OpsWorks permission resource.
 
+!> **ALERT:** AWS no longer supports OpsWorks Stacks. All related resources will be removed from the Terraform AWS Provider in the next major version.
+
 ## Example Usage
 
 ```python
@@ -51,4 +53,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The computed id of the permission. Please note that this is only used internally to identify the permission. This value is not used in aws.
 
-<!-- cache-key: cdktf-0.20.8 input-97b4069bc5171903caa09804dda516e141af05be716dec07a132aa54f9470e02 -->
+<!-- cache-key: cdktf-0.20.8 input-4e571e74c318256ce97e53d28b27626741b1e695b2fc9faf172f1256c151971b -->

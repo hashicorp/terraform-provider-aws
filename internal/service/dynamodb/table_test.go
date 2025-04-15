@@ -53,13 +53,13 @@ func TestUpdateDiffGSI(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
-		Old             []interface{}
-		New             []interface{}
+		Old             []any
+		New             []any
 		ExpectedUpdates []awstypes.GlobalSecondaryIndexUpdate
 	}{
 		{ // No-op => no changes
-			Old: []interface{}{
-				map[string]interface{}{
+			Old: []any{
+				map[string]any{
 					names.AttrName:    "att1-index",
 					"hash_key":        "att1",
 					"write_capacity":  10,
@@ -67,8 +67,8 @@ func TestUpdateDiffGSI(t *testing.T) {
 					"projection_type": "ALL",
 				},
 			},
-			New: []interface{}{
-				map[string]interface{}{
+			New: []any{
+				map[string]any{
 					names.AttrName:    "att1-index",
 					"hash_key":        "att1",
 					"write_capacity":  10,
@@ -79,32 +79,32 @@ func TestUpdateDiffGSI(t *testing.T) {
 			ExpectedUpdates: nil,
 		},
 		{ // No-op => ignore ordering of non_key_attributes
-			Old: []interface{}{
-				map[string]interface{}{
+			Old: []any{
+				map[string]any{
 					names.AttrName:       "att1-index",
 					"hash_key":           "att1",
 					"write_capacity":     10,
 					"read_capacity":      10,
 					"projection_type":    "INCLUDE",
-					"non_key_attributes": schema.NewSet(schema.HashString, []interface{}{"attr3", "attr1", "attr2"}),
+					"non_key_attributes": schema.NewSet(schema.HashString, []any{"attr3", "attr1", "attr2"}),
 				},
 			},
-			New: []interface{}{
-				map[string]interface{}{
+			New: []any{
+				map[string]any{
 					names.AttrName:       "att1-index",
 					"hash_key":           "att1",
 					"write_capacity":     10,
 					"read_capacity":      10,
 					"projection_type":    "INCLUDE",
-					"non_key_attributes": schema.NewSet(schema.HashString, []interface{}{"attr1", "attr2", "attr3"}),
+					"non_key_attributes": schema.NewSet(schema.HashString, []any{"attr1", "attr2", "attr3"}),
 				},
 			},
 			ExpectedUpdates: nil,
 		},
 
 		{ // Creation
-			Old: []interface{}{
-				map[string]interface{}{
+			Old: []any{
+				map[string]any{
 					names.AttrName:    "att1-index",
 					"hash_key":        "att1",
 					"write_capacity":  10,
@@ -112,15 +112,15 @@ func TestUpdateDiffGSI(t *testing.T) {
 					"projection_type": "ALL",
 				},
 			},
-			New: []interface{}{
-				map[string]interface{}{
+			New: []any{
+				map[string]any{
 					names.AttrName:    "att1-index",
 					"hash_key":        "att1",
 					"write_capacity":  10,
 					"read_capacity":   10,
 					"projection_type": "ALL",
 				},
-				map[string]interface{}{
+				map[string]any{
 					names.AttrName:    "att2-index",
 					"hash_key":        "att2",
 					"write_capacity":  12,
@@ -151,15 +151,15 @@ func TestUpdateDiffGSI(t *testing.T) {
 		},
 
 		{ // Deletion
-			Old: []interface{}{
-				map[string]interface{}{
+			Old: []any{
+				map[string]any{
 					names.AttrName:    "att1-index",
 					"hash_key":        "att1",
 					"write_capacity":  10,
 					"read_capacity":   10,
 					"projection_type": "ALL",
 				},
-				map[string]interface{}{
+				map[string]any{
 					names.AttrName:    "att2-index",
 					"hash_key":        "att2",
 					"write_capacity":  12,
@@ -167,8 +167,8 @@ func TestUpdateDiffGSI(t *testing.T) {
 					"projection_type": "ALL",
 				},
 			},
-			New: []interface{}{
-				map[string]interface{}{
+			New: []any{
+				map[string]any{
 					names.AttrName:    "att1-index",
 					"hash_key":        "att1",
 					"write_capacity":  10,
@@ -186,8 +186,8 @@ func TestUpdateDiffGSI(t *testing.T) {
 		},
 
 		{ // Update
-			Old: []interface{}{
-				map[string]interface{}{
+			Old: []any{
+				map[string]any{
 					names.AttrName:    "att1-index",
 					"hash_key":        "att1",
 					"write_capacity":  10,
@@ -195,8 +195,8 @@ func TestUpdateDiffGSI(t *testing.T) {
 					"projection_type": "ALL",
 				},
 			},
-			New: []interface{}{
-				map[string]interface{}{
+			New: []any{
+				map[string]any{
 					names.AttrName:    "att1-index",
 					"hash_key":        "att1",
 					"write_capacity":  20,
@@ -218,8 +218,8 @@ func TestUpdateDiffGSI(t *testing.T) {
 		},
 
 		{ // Update of non-capacity attributes
-			Old: []interface{}{
-				map[string]interface{}{
+			Old: []any{
+				map[string]any{
 					names.AttrName:    "att1-index",
 					"hash_key":        "att1",
 					"write_capacity":  10,
@@ -227,15 +227,15 @@ func TestUpdateDiffGSI(t *testing.T) {
 					"projection_type": "ALL",
 				},
 			},
-			New: []interface{}{
-				map[string]interface{}{
+			New: []any{
+				map[string]any{
 					names.AttrName:       "att1-index",
 					"hash_key":           "att-new",
 					"range_key":          "new-range-key",
 					"write_capacity":     10,
 					"read_capacity":      10,
 					"projection_type":    "KEYS_ONLY",
-					"non_key_attributes": schema.NewSet(schema.HashString, []interface{}{"RandomAttribute"}),
+					"non_key_attributes": schema.NewSet(schema.HashString, []any{"RandomAttribute"}),
 				},
 			},
 			ExpectedUpdates: []awstypes.GlobalSecondaryIndexUpdate{
@@ -271,8 +271,8 @@ func TestUpdateDiffGSI(t *testing.T) {
 		},
 
 		{ // Update of all attributes
-			Old: []interface{}{
-				map[string]interface{}{
+			Old: []any{
+				map[string]any{
 					names.AttrName:    "att1-index",
 					"hash_key":        "att1",
 					"write_capacity":  10,
@@ -280,15 +280,15 @@ func TestUpdateDiffGSI(t *testing.T) {
 					"projection_type": "ALL",
 				},
 			},
-			New: []interface{}{
-				map[string]interface{}{
+			New: []any{
+				map[string]any{
 					names.AttrName:       "att1-index",
 					"hash_key":           "att-new",
 					"range_key":          "new-range-key",
 					"write_capacity":     12,
 					"read_capacity":      12,
 					"projection_type":    "INCLUDE",
-					"non_key_attributes": schema.NewSet(schema.HashString, []interface{}{"RandomAttribute"}),
+					"non_key_attributes": schema.NewSet(schema.HashString, []any{"RandomAttribute"}),
 				},
 			},
 			ExpectedUpdates: []awstypes.GlobalSecondaryIndexUpdate{

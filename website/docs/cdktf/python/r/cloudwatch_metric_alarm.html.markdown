@@ -157,8 +157,7 @@ class MyConvertedCode(TerraformStack):
             metric_query=[CloudwatchMetricAlarmMetricQuery(
                 expression="ANOMALY_DETECTION_BAND(m1)",
                 id="e1",
-                label="CPUUtilization (Expected)",
-                return_data=Token.as_boolean("true")
+                label="CPUUtilization (Expected)"
             ), CloudwatchMetricAlarmMetricQuery(
                 id="m1",
                 metric=CloudwatchMetricAlarmMetricQueryMetric(
@@ -317,4 +316,4 @@ Using `terraform import`, import CloudWatch Metric Alarm using the `alarm_name`.
 % terraform import aws_cloudwatch_metric_alarm.test alarm-12345
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-0b340ec933b98038675ae29782c793a97864dde77b03ac56cb0fdf0a426ba0fa -->
+<!-- cache-key: cdktf-0.20.8 input-d26aea504020bf2696bc8f8a69ec2b6b9b4c63d680a723fc19ef72c58f8b073e -->

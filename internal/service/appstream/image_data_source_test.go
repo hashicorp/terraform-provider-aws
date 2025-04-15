@@ -14,9 +14,6 @@ import (
 
 func TestAccAppStreamImageDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 	dataSourceName := "data.aws_appstream_image.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -49,7 +46,6 @@ func TestAccAppStreamImageDataSource_basic(t *testing.T) {
 	})
 }
 
-// name        = "AppStream-WinServer2019-06-17-2024"
 func testAccImageDataSourceConfig_basic() string {
 	return `
 data "aws_appstream_image" "test" {

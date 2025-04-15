@@ -60,7 +60,7 @@ func resourceTableItem() *schema.Resource {
 	}
 }
 
-func validateTableItem(v interface{}, k string) (ws []string, errors []error) {
+func validateTableItem(v any, k string) (ws []string, errors []error) {
 	_, err := expandTableItemAttributes(v.(string))
 	if err != nil {
 		errors = append(errors, fmt.Errorf("Invalid format of %q: %s", k, err))
@@ -68,7 +68,7 @@ func validateTableItem(v interface{}, k string) (ws []string, errors []error) {
 	return
 }
 
-func resourceTableItemCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTableItemCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
@@ -98,7 +98,7 @@ func resourceTableItemCreate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceTableItemRead(ctx, d, meta)...)
 }
 
-func resourceTableItemRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTableItemRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
@@ -135,7 +135,7 @@ func resourceTableItemRead(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func resourceTableItemUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTableItemUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
@@ -215,7 +215,7 @@ func resourceTableItemUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceTableItemRead(ctx, d, meta)...)
 }
 
-func resourceTableItemDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTableItemDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 

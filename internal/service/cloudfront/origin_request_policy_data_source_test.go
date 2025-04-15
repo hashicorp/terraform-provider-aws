@@ -27,7 +27,8 @@ func TestAccCloudFrontOriginRequestPolicyDataSource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOriginRequestPolicyDataSourceConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSource1Name, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSource1Name, names.AttrComment, resourceName, names.AttrComment),
 					resource.TestCheckResourceAttrPair(dataSource1Name, "cookies_config.#", resourceName, "cookies_config.#"),
 					resource.TestCheckResourceAttrPair(dataSource1Name, "cookies_config.0.cookie_behavior", resourceName, "cookies_config.0.cookie_behavior"),

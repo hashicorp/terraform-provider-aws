@@ -79,7 +79,7 @@ func resourceClusterCapacityProviders() *schema.Resource {
 	}
 }
 
-func resourceClusterCapacityProvidersPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterCapacityProvidersPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
@@ -108,7 +108,7 @@ func resourceClusterCapacityProvidersPut(ctx context.Context, d *schema.Resource
 	return append(diags, resourceClusterCapacityProvidersRead(ctx, d, meta)...)
 }
 
-func resourceClusterCapacityProvidersRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterCapacityProvidersRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 
@@ -135,7 +135,7 @@ func resourceClusterCapacityProvidersRead(ctx context.Context, d *schema.Resourc
 	return diags
 }
 
-func resourceClusterCapacityProvidersDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterCapacityProvidersDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 
@@ -168,7 +168,7 @@ func retryClusterCapacityProvidersPut(ctx context.Context, conn *ecs.Client, inp
 		timeout = 10 * time.Minute
 	)
 	_, err := tfresource.RetryWhen(ctx, timeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.PutClusterCapacityProviders(ctx, input)
 		},
 		func(err error) (bool, error) {

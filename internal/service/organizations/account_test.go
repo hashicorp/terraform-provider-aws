@@ -9,6 +9,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -57,7 +58,7 @@ func testAccAccount_basic(t *testing.T) {
 				Config: testAccAccountConfig_basic(name, email),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAccountExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "organizations", regexache.MustCompile("account/o-.+")),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEmail, email),
 					resource.TestCheckResourceAttrSet(resourceName, "joined_method"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "joined_timestamp"),
@@ -96,7 +97,7 @@ func testAccAccount_CloseOnDeletion(t *testing.T) {
 				Config: testAccAccountConfig_closeOnDeletion(name, email),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAccountExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "organizations", regexache.MustCompile("account/o-.+")),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEmail, email),
 					resource.TestCheckResourceAttr(resourceName, "govcloud_id", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "joined_method"),

@@ -186,7 +186,7 @@ func (r *resourceFormType) Create(ctx context.Context, req resource.CreateReques
 	}
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	outputRaws, err := tfresource.RetryWhenNotFound(ctx, createTimeout, func() (interface{}, error) {
+	outputRaws, err := tfresource.RetryWhenNotFound(ctx, createTimeout, func() (any, error) {
 		return findFormTypeByID(ctx, conn, *out.DomainId, *out.Name, *out.Revision)
 	})
 	if err != nil {

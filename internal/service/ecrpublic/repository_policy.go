@@ -42,7 +42,7 @@ func ResourceRepositoryPolicy() *schema.Resource {
 				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
 				DiffSuppressOnRefresh: true,
 				ValidateFunc:          validation.StringIsJSON,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
@@ -64,7 +64,7 @@ const (
 	policyPutTimeout = 2 * time.Minute
 )
 
-func resourceRepositoryPolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRepositoryPolicyPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRPublicClient(ctx)
 
@@ -81,7 +81,7 @@ func resourceRepositoryPolicyPut(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, policyPutTimeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.SetRepositoryPolicy(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -104,7 +104,7 @@ func resourceRepositoryPolicyPut(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceRepositoryPolicyRead(ctx, d, meta)...)
 }
 
-func resourceRepositoryPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRepositoryPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRPublicClient(ctx)
 
@@ -139,7 +139,7 @@ func resourceRepositoryPolicyRead(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func resourceRepositoryPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRepositoryPolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRPublicClient(ctx)
 

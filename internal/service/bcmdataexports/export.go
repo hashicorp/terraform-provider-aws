@@ -414,7 +414,7 @@ func waitExportUpdated(ctx context.Context, conn *bcmdataexports.Client, id stri
 }
 
 func statusExport(ctx context.Context, conn *bcmdataexports.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := findExportByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil

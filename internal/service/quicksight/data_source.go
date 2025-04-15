@@ -97,7 +97,7 @@ func resourceDataSource() *schema.Resource {
 	}
 }
 
-func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
@@ -110,30 +110,30 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 	input := &quicksight.CreateDataSourceInput{
 		AwsAccountId:         aws.String(awsAccountID),
 		DataSourceId:         aws.String(dataSourceID),
-		DataSourceParameters: quicksightschema.ExpandDataSourceParameters(d.Get(names.AttrParameters).([]interface{})),
+		DataSourceParameters: quicksightschema.ExpandDataSourceParameters(d.Get(names.AttrParameters).([]any)),
 		Name:                 aws.String(d.Get(names.AttrName).(string)),
 		Tags:                 getTagsIn(ctx),
 		Type:                 awstypes.DataSourceType(d.Get(names.AttrType).(string)),
 	}
 
-	if v, ok := d.GetOk("credentials"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Credentials = quicksightschema.ExpandDataSourceCredentials(v.([]interface{}))
+	if v, ok := d.GetOk("credentials"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.Credentials = quicksightschema.ExpandDataSourceCredentials(v.([]any))
 	}
 
 	if v, ok := d.GetOk("permission"); ok && v.(*schema.Set).Len() != 0 {
 		input.Permissions = quicksightschema.ExpandResourcePermissions(v.(*schema.Set).List())
 	}
 
-	if v, ok := d.GetOk("ssl_properties"); ok && len(v.([]interface{})) != 0 && v.([]interface{})[0] != nil {
-		input.SslProperties = quicksightschema.ExpandSSLProperties(v.([]interface{}))
+	if v, ok := d.GetOk("ssl_properties"); ok && len(v.([]any)) != 0 && v.([]any)[0] != nil {
+		input.SslProperties = quicksightschema.ExpandSSLProperties(v.([]any))
 	}
 
-	if v, ok := d.GetOk("vpc_connection_properties"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.VpcConnectionProperties = quicksightschema.ExpandVPCConnectionProperties(v.([]interface{}))
+	if v, ok := d.GetOk("vpc_connection_properties"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.VpcConnectionProperties = quicksightschema.ExpandVPCConnectionProperties(v.([]any))
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.CreateDataSource(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -164,7 +164,7 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceDataSourceRead(ctx, d, meta)...)
 }
 
-func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
@@ -213,7 +213,7 @@ func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
@@ -229,24 +229,24 @@ func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 			Name:         aws.String(d.Get(names.AttrName).(string)),
 		}
 
-		if v, ok := d.GetOk("credentials"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.Credentials = quicksightschema.ExpandDataSourceCredentials(v.([]interface{}))
+		if v, ok := d.GetOk("credentials"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.Credentials = quicksightschema.ExpandDataSourceCredentials(v.([]any))
 		}
 
-		if v, ok := d.GetOk(names.AttrParameters); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.DataSourceParameters = quicksightschema.ExpandDataSourceParameters(v.([]interface{}))
+		if v, ok := d.GetOk(names.AttrParameters); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.DataSourceParameters = quicksightschema.ExpandDataSourceParameters(v.([]any))
 		}
 
-		if v, ok := d.GetOk("ssl_properties"); ok && len(v.([]interface{})) != 0 && v.([]interface{})[0] != nil {
-			input.SslProperties = quicksightschema.ExpandSSLProperties(v.([]interface{}))
+		if v, ok := d.GetOk("ssl_properties"); ok && len(v.([]any)) != 0 && v.([]any)[0] != nil {
+			input.SslProperties = quicksightschema.ExpandSSLProperties(v.([]any))
 		}
 
-		if v, ok := d.GetOk("vpc_connection_properties"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.VpcConnectionProperties = quicksightschema.ExpandVPCConnectionProperties(v.([]interface{}))
+		if v, ok := d.GetOk("vpc_connection_properties"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.VpcConnectionProperties = quicksightschema.ExpandVPCConnectionProperties(v.([]any))
 		}
 
 		outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-			func() (interface{}, error) {
+			func() (any, error) {
 				return conn.UpdateDataSource(ctx, input)
 			},
 			func(err error) (bool, error) {
@@ -301,7 +301,7 @@ func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceDataSourceRead(ctx, d, meta)...)
 }
 
-func resourceDataSourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataSourceDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
@@ -407,7 +407,7 @@ func findDataSourcePermissions(ctx context.Context, conn *quicksight.Client, inp
 }
 
 func statusDataSource(ctx context.Context, conn *quicksight.Client, awsAccountID, dataSourceID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findDataSourceByTwoPartKey(ctx, conn, awsAccountID, dataSourceID)
 
 		if tfresource.NotFound(err) {

@@ -57,7 +57,7 @@ func resourceAPIMapping() *schema.Resource {
 	}
 }
 
-func resourceAPIMappingCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAPIMappingCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
@@ -82,7 +82,7 @@ func resourceAPIMappingCreate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceAPIMappingRead(ctx, d, meta)...)
 }
 
-func resourceAPIMappingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAPIMappingRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
@@ -105,7 +105,7 @@ func resourceAPIMappingRead(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourceAPIMappingUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAPIMappingUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
@@ -132,7 +132,7 @@ func resourceAPIMappingUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceAPIMappingRead(ctx, d, meta)...)
 }
 
-func resourceAPIMappingDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAPIMappingDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
@@ -154,7 +154,7 @@ func resourceAPIMappingDelete(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func resourceAPIMappingImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceAPIMappingImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 2 {
 		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'api-mapping-id/domain-name'", d.Id())

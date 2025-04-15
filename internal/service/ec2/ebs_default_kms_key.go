@@ -36,7 +36,7 @@ func resourceEBSDefaultKMSKey() *schema.Resource {
 	}
 }
 
-func resourceEBSDefaultKMSKeyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEBSDefaultKMSKeyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -53,7 +53,7 @@ func resourceEBSDefaultKMSKeyCreate(ctx context.Context, d *schema.ResourceData,
 	return append(diags, resourceEBSDefaultKMSKeyRead(ctx, d, meta)...)
 }
 
-func resourceEBSDefaultKMSKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEBSDefaultKMSKeyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -68,7 +68,7 @@ func resourceEBSDefaultKMSKeyRead(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func resourceEBSDefaultKMSKeyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEBSDefaultKMSKeyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 

@@ -121,7 +121,7 @@ func resourceCluster() *schema.Resource {
 	}
 }
 
-func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudHSMV2Client(ctx)
 
@@ -159,7 +159,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceClusterRead(ctx, d, meta)...)
 }
 
-func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudHSMV2Client(ctx)
 
@@ -192,7 +192,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Tags only.
@@ -200,7 +200,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceClusterRead(ctx, d, meta)...)
 }
 
-func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudHSMV2Client(ctx)
 
@@ -283,7 +283,7 @@ func findClusters(ctx context.Context, conn *cloudhsmv2.Client, input *cloudhsmv
 }
 
 func statusCluster(ctx context.Context, conn *cloudhsmv2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findClusterByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
@@ -361,8 +361,8 @@ func waitClusterUninitialized(ctx context.Context, conn *cloudhsmv2.Client, id s
 	return nil, err
 }
 
-func flattenCertificates(apiObject *types.Cluster) []map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenCertificates(apiObject *types.Cluster) []map[string]any {
+	tfMap := map[string]any{}
 
 	if apiObject, clusterState := apiObject.Certificates, apiObject.State; apiObject != nil {
 		if clusterState == types.ClusterStateUninitialized {
@@ -376,8 +376,8 @@ func flattenCertificates(apiObject *types.Cluster) []map[string]interface{} {
 	}
 
 	if len(tfMap) > 0 {
-		return []map[string]interface{}{tfMap}
+		return []map[string]any{tfMap}
 	}
 
-	return []map[string]interface{}{}
+	return []map[string]any{}
 }

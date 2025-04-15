@@ -73,7 +73,7 @@ func resourceAMILaunchPermission() *schema.Resource {
 	}
 }
 
-func resourceAMILaunchPermissionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAMILaunchPermissionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
@@ -103,7 +103,7 @@ func resourceAMILaunchPermissionCreate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceAMILaunchPermissionRead(ctx, d, meta)...)
 }
 
-func resourceAMILaunchPermissionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAMILaunchPermissionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -133,7 +133,7 @@ func resourceAMILaunchPermissionRead(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func resourceAMILaunchPermissionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAMILaunchPermissionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -164,7 +164,7 @@ func resourceAMILaunchPermissionDelete(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func resourceAMILaunchPermissionImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceAMILaunchPermissionImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	const importIDSeparator = "/"
 	parts := strings.Split(d.Id(), importIDSeparator)
 

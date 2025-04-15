@@ -60,7 +60,7 @@ func dataSourceBucket() *schema.Resource {
 	}
 }
 
-func dataSourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	awsClient := meta.(*conns.AWSClient)
 	conn := awsClient.S3Client(ctx)

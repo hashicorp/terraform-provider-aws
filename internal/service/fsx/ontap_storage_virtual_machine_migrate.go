@@ -71,7 +71,7 @@ func resourceONTAPStorageVirtualMachineV0() *schema.Resource {
 										Optional:      true,
 										ForceNew:      true,
 										ValidateFunc:  validation.StringLenBetween(1, 2000),
-										Deprecated:    "use 'organizational_unit_distinguished_name' instead",
+										Deprecated:    "organizational_unit_distinguidshed_name is deprecated. Use organizational_unit_distinguished_name instead.",
 										ConflictsWith: []string{"active_directory_configuration.0.self_managed_active_directory_configuration.0.organizational_unit_distinguished_name"},
 									},
 									"organizational_unit_distinguished_name": {
@@ -211,7 +211,7 @@ func resourceONTAPStorageVirtualMachineV0() *schema.Resource {
 	}
 }
 
-func resourceONTAPStorageVirtualMachineStateUpgradeV0(_ context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+func resourceONTAPStorageVirtualMachineStateUpgradeV0(_ context.Context, rawState map[string]any, meta any) (map[string]any, error) {
 	log.Printf("[DEBUG] Attributes before migration: %#v", rawState)
 
 	rawState["active_directory_configuration.0.self_managed_active_directory_configuration.0.organizational_unit_distinguished_name"] = rawState["active_directory_configuration.0.self_managed_active_directory_configuration.0.organizational_unit_distinguidshed_name"]

@@ -76,7 +76,7 @@ func resourceApplicationVersion() *schema.Resource {
 	}
 }
 
-func resourceApplicationVersionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceApplicationVersionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticBeanstalkClient(ctx)
 
@@ -104,7 +104,7 @@ func resourceApplicationVersionCreate(ctx context.Context, d *schema.ResourceDat
 	return append(diags, resourceApplicationVersionRead(ctx, d, meta)...)
 }
 
-func resourceApplicationVersionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceApplicationVersionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticBeanstalkClient(ctx)
 
@@ -126,7 +126,7 @@ func resourceApplicationVersionRead(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func resourceApplicationVersionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceApplicationVersionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticBeanstalkClient(ctx)
 
@@ -147,7 +147,7 @@ func resourceApplicationVersionUpdate(ctx context.Context, d *schema.ResourceDat
 	return append(diags, resourceApplicationVersionRead(ctx, d, meta)...)
 }
 
-func resourceApplicationVersionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceApplicationVersionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticBeanstalkClient(ctx)
 

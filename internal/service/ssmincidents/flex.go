@@ -11,14 +11,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func expandRegions(regions []interface{}) map[string]types.RegionMapInputValue {
+func expandRegions(regions []any) map[string]types.RegionMapInputValue {
 	if len(regions) == 0 {
 		return nil
 	}
 
 	regionMap := make(map[string]types.RegionMapInputValue)
 	for _, region := range regions {
-		regionData := region.(map[string]interface{})
+		regionData := region.(map[string]any)
 
 		input := types.RegionMapInputValue{}
 
@@ -32,14 +32,14 @@ func expandRegions(regions []interface{}) map[string]types.RegionMapInputValue {
 	return regionMap
 }
 
-func flattenRegions(regions map[string]types.RegionInfo) []map[string]interface{} {
+func flattenRegions(regions map[string]types.RegionInfo) []map[string]any {
 	if len(regions) == 0 {
 		return nil
 	}
 
-	tfRegionData := make([]map[string]interface{}, 0)
+	tfRegionData := make([]map[string]any, 0)
 	for regionName, regionData := range regions {
-		region := make(map[string]interface{})
+		region := make(map[string]any)
 
 		region[names.AttrName] = regionName
 		region[names.AttrStatus] = regionData.Status
@@ -55,9 +55,9 @@ func flattenRegions(regions map[string]types.RegionInfo) []map[string]interface{
 	return tfRegionData
 }
 
-func expandIncidentTemplate(config []interface{}) *types.IncidentTemplate {
+func expandIncidentTemplate(config []any) *types.IncidentTemplate {
 	// we require exactly one item so we grab first in list
-	templateConfig := config[0].(map[string]interface{})
+	templateConfig := config[0].(map[string]any)
 
 	template := &types.IncidentTemplate{}
 
@@ -74,7 +74,7 @@ func expandIncidentTemplate(config []interface{}) *types.IncidentTemplate {
 		template.DedupeString = aws.String(v)
 	}
 
-	if v, ok := templateConfig["incident_tags"].(map[string]interface{}); ok && len(v) > 0 {
+	if v, ok := templateConfig["incident_tags"].(map[string]any); ok && len(v) > 0 {
 		template.IncidentTags = flex.ExpandStringValueMap(v)
 	}
 
@@ -90,9 +90,9 @@ func expandIncidentTemplate(config []interface{}) *types.IncidentTemplate {
 	return template
 }
 
-func flattenIncidentTemplate(template *types.IncidentTemplate) []map[string]interface{} {
-	result := make([]map[string]interface{}, 0)
-	tfTemplate := make(map[string]interface{})
+func flattenIncidentTemplate(template *types.IncidentTemplate) []map[string]any {
+	result := make([]map[string]any, 0)
+	tfTemplate := make(map[string]any)
 
 	tfTemplate["impact"] = aws.ToInt32(template.Impact)
 	tfTemplate["title"] = aws.ToString(template.Title)
@@ -117,7 +117,7 @@ func flattenIncidentTemplate(template *types.IncidentTemplate) []map[string]inte
 	return result
 }
 
-func expandNotificationTargets(targets []interface{}) []types.NotificationTargetItem {
+func expandNotificationTargets(targets []any) []types.NotificationTargetItem {
 	if len(targets) == 0 {
 		return nil
 	}
@@ -125,7 +125,7 @@ func expandNotificationTargets(targets []interface{}) []types.NotificationTarget
 	notificationTargets := make([]types.NotificationTargetItem, len(targets))
 
 	for i, target := range targets {
-		targetData := target.(map[string]interface{})
+		targetData := target.(map[string]any)
 
 		targetItem := &types.NotificationTargetItemMemberSnsTopicArn{
 			Value: targetData[names.AttrSNSTopicARN].(string),
@@ -137,15 +137,15 @@ func expandNotificationTargets(targets []interface{}) []types.NotificationTarget
 	return notificationTargets
 }
 
-func flattenNotificationTargets(targets []types.NotificationTargetItem) []map[string]interface{} {
+func flattenNotificationTargets(targets []types.NotificationTargetItem) []map[string]any {
 	if len(targets) == 0 {
 		return nil
 	}
 
-	notificationTargets := make([]map[string]interface{}, len(targets))
+	notificationTargets := make([]map[string]any, len(targets))
 
 	for i, target := range targets {
-		targetItem := make(map[string]interface{})
+		targetItem := make(map[string]any)
 
 		targetItem[names.AttrSNSTopicARN] = target.(*types.NotificationTargetItemMemberSnsTopicArn).Value
 
@@ -180,40 +180,40 @@ func flattenChatChannel(chatChannel types.ChatChannel) *schema.Set {
 	return nil
 }
 
-func expandAction(actions []interface{}) []types.Action {
+func expandAction(actions []any) []types.Action {
 	if len(actions) == 0 {
 		return nil
 	}
 
 	result := make([]types.Action, 0)
 
-	actionConfig := actions[0].(map[string]interface{})
-	if v, ok := actionConfig["ssm_automation"].([]interface{}); ok {
+	actionConfig := actions[0].(map[string]any)
+	if v, ok := actionConfig["ssm_automation"].([]any); ok {
 		result = append(result, expandSSMAutomations(v)...)
 	}
 
 	return result
 }
 
-func flattenAction(actions []types.Action) []interface{} {
+func flattenAction(actions []types.Action) []any {
 	if len(actions) == 0 {
 		return nil
 	}
 
-	result := make([]interface{}, 0)
+	result := make([]any, 0)
 
-	action := make(map[string]interface{})
+	action := make(map[string]any)
 	action["ssm_automation"] = flattenSSMAutomations(actions)
 	result = append(result, action)
 
 	return result
 }
 
-func expandSSMAutomations(automations []interface{}) []types.Action {
+func expandSSMAutomations(automations []any) []types.Action {
 	var result []types.Action
 	for _, automation := range automations {
 		ssmAutomation := types.SsmAutomation{}
-		automationData := automation.(map[string]interface{})
+		automationData := automation.(map[string]any)
 
 		if v, ok := automationData["document_name"].(string); ok {
 			ssmAutomation.DocumentName = aws.String(v)
@@ -235,7 +235,7 @@ func expandSSMAutomations(automations []interface{}) []types.Action {
 			ssmAutomation.Parameters = expandParameters(v)
 		}
 
-		if v, ok := automationData["dynamic_parameters"].(map[string]interface{}); ok {
+		if v, ok := automationData["dynamic_parameters"].(map[string]any); ok {
 			ssmAutomation.DynamicParameters = expandDynamicParameters(v)
 		}
 
@@ -247,14 +247,14 @@ func expandSSMAutomations(automations []interface{}) []types.Action {
 	return result
 }
 
-func flattenSSMAutomations(actions []types.Action) []interface{} {
-	var result []interface{}
+func flattenSSMAutomations(actions []types.Action) []any {
+	var result []any
 
 	for _, action := range actions {
 		if ssmAutomationAction, ok := action.(*types.ActionMemberSsmAutomation); ok {
 			ssmAutomation := ssmAutomationAction.Value
 
-			a := map[string]interface{}{}
+			a := map[string]any{}
 
 			if v := ssmAutomation.DocumentName; v != nil {
 				a["document_name"] = aws.ToString(v)
@@ -289,7 +289,7 @@ func flattenSSMAutomations(actions []types.Action) []interface{} {
 func expandParameters(parameters *schema.Set) map[string][]string {
 	parameterMap := make(map[string][]string)
 	for _, parameter := range parameters.List() {
-		parameterData := parameter.(map[string]interface{})
+		parameterData := parameter.(map[string]any)
 		name := parameterData[names.AttrName].(string)
 		values := flex.ExpandStringValueSet(parameterData[names.AttrValues].(*schema.Set))
 		parameterMap[name] = values
@@ -297,10 +297,10 @@ func expandParameters(parameters *schema.Set) map[string][]string {
 	return parameterMap
 }
 
-func flattenParameters(parameterMap map[string][]string) []map[string]interface{} {
-	result := make([]map[string]interface{}, 0)
+func flattenParameters(parameterMap map[string][]string) []map[string]any {
+	result := make([]map[string]any, 0)
 	for name, values := range parameterMap {
-		data := make(map[string]interface{})
+		data := make(map[string]any)
 		data[names.AttrName] = name
 		data[names.AttrValues] = flex.FlattenStringValueList(values)
 		result = append(result, data)
@@ -308,7 +308,7 @@ func flattenParameters(parameterMap map[string][]string) []map[string]interface{
 	return result
 }
 
-func expandDynamicParameters(parameterMap map[string]interface{}) map[string]types.DynamicSsmParameterValue {
+func expandDynamicParameters(parameterMap map[string]any) map[string]types.DynamicSsmParameterValue {
 	result := make(map[string]types.DynamicSsmParameterValue)
 	for key, value := range parameterMap {
 		parameterValue := &types.DynamicSsmParameterValueMemberVariable{
@@ -319,8 +319,8 @@ func expandDynamicParameters(parameterMap map[string]interface{}) map[string]typ
 	return result
 }
 
-func flattenDynamicParameters(parameterMap map[string]types.DynamicSsmParameterValue) map[string]interface{} {
-	result := make(map[string]interface{})
+func flattenDynamicParameters(parameterMap map[string]types.DynamicSsmParameterValue) map[string]any {
+	result := make(map[string]any)
 	for key, value := range parameterMap {
 		parameterValue := value.(*types.DynamicSsmParameterValueMemberVariable)
 		result[key] = parameterValue.Value
@@ -329,44 +329,44 @@ func flattenDynamicParameters(parameterMap map[string]types.DynamicSsmParameterV
 	return result
 }
 
-func expandIntegration(integrations []interface{}) []types.Integration {
+func expandIntegration(integrations []any) []types.Integration {
 	if len(integrations) == 0 {
 		return nil
 	}
 
 	// we require exactly one integration item
-	integrationData := integrations[0].(map[string]interface{})
+	integrationData := integrations[0].(map[string]any)
 	result := make([]types.Integration, 0)
 
-	if v, ok := integrationData["pagerduty"].([]interface{}); ok {
+	if v, ok := integrationData["pagerduty"].([]any); ok {
 		result = append(result, expandPagerDutyIntegration(v)...)
 	}
 
 	return result
 }
 
-func flattenIntegration(integrations []types.Integration) []interface{} {
+func flattenIntegration(integrations []types.Integration) []any {
 	if len(integrations) == 0 {
 		return nil
 	}
 
-	result := make([]interface{}, 0)
+	result := make([]any, 0)
 
-	integration := make(map[string]interface{})
+	integration := make(map[string]any)
 	integration["pagerduty"] = flattenPagerDutyIntegration(integrations)
 	result = append(result, integration)
 
 	return result
 }
 
-func expandPagerDutyIntegration(integrations []interface{}) []types.Integration {
+func expandPagerDutyIntegration(integrations []any) []types.Integration {
 	result := make([]types.Integration, 0)
 
 	for _, integration := range integrations {
 		if integration == nil {
 			continue
 		}
-		integrationData := integration.(map[string]interface{})
+		integrationData := integration.(map[string]any)
 
 		pagerDutyIntegration := types.PagerDutyConfiguration{}
 
@@ -391,13 +391,13 @@ func expandPagerDutyIntegration(integrations []interface{}) []types.Integration 
 	return result
 }
 
-func flattenPagerDutyIntegration(integrations []types.Integration) []interface{} {
-	result := make([]interface{}, 0)
+func flattenPagerDutyIntegration(integrations []types.Integration) []any {
+	result := make([]any, 0)
 
 	for _, integration := range integrations {
 		if v, ok := integration.(*types.IntegrationMemberPagerDutyConfiguration); ok {
 			pagerDutyConfiguration := v.Value
-			pagerDutyData := map[string]interface{}{}
+			pagerDutyData := map[string]any{}
 
 			if v := pagerDutyConfiguration.Name; v != nil {
 				pagerDutyData[names.AttrName] = v

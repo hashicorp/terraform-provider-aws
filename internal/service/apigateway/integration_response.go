@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"maps"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -32,7 +33,7 @@ func resourceIntegrationResponse() *schema.Resource {
 		DeleteWithoutTimeout: resourceIntegrationResponseDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")
 				if len(idParts) != 4 || idParts[0] == "" || idParts[1] == "" || idParts[2] == "" || idParts[3] == "" {
 					return nil, fmt.Errorf("Unexpected format of ID (%q), expected REST-API-ID/RESOURCE-ID/HTTP-METHOD/STATUS-CODE", d.Id())
@@ -94,7 +95,7 @@ func resourceIntegrationResponse() *schema.Resource {
 	}
 }
 
-func resourceIntegrationResponsePut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIntegrationResponsePut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -109,12 +110,12 @@ func resourceIntegrationResponsePut(ctx context.Context, d *schema.ResourceData,
 		input.ContentHandling = types.ContentHandlingStrategy(v.(string))
 	}
 
-	if v, ok := d.GetOk("response_parameters"); ok && len(v.(map[string]interface{})) > 0 {
-		input.ResponseParameters = flex.ExpandStringValueMap(v.(map[string]interface{}))
+	if v, ok := d.GetOk("response_parameters"); ok && len(v.(map[string]any)) > 0 {
+		input.ResponseParameters = flex.ExpandStringValueMap(v.(map[string]any))
 	}
 
-	if v, ok := d.GetOk("response_templates"); ok && len(v.(map[string]interface{})) > 0 {
-		input.ResponseTemplates = flex.ExpandStringValueMap(v.(map[string]interface{}))
+	if v, ok := d.GetOk("response_templates"); ok && len(v.(map[string]any)) > 0 {
+		input.ResponseTemplates = flex.ExpandStringValueMap(v.(map[string]any))
 	}
 
 	if v, ok := d.GetOk("selection_pattern"); ok {
@@ -134,7 +135,7 @@ func resourceIntegrationResponsePut(ctx context.Context, d *schema.ResourceData,
 	return append(diags, resourceIntegrationResponseRead(ctx, d, meta)...)
 }
 
-func resourceIntegrationResponseRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIntegrationResponseRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -154,16 +155,14 @@ func resourceIntegrationResponseRead(ctx context.Context, d *schema.ResourceData
 	d.Set("response_parameters", integrationResponse.ResponseParameters)
 	// We need to explicitly convert key = nil values into key = "", which aws.StringValueMap() removes.
 	responseTemplates := make(map[string]string)
-	for k, v := range integrationResponse.ResponseTemplates {
-		responseTemplates[k] = v
-	}
+	maps.Copy(responseTemplates, integrationResponse.ResponseTemplates)
 	d.Set("response_templates", responseTemplates)
 	d.Set("selection_pattern", integrationResponse.SelectionPattern)
 
 	return diags
 }
 
-func resourceIntegrationResponseDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIntegrationResponseDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 

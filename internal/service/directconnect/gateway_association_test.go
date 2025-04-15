@@ -438,7 +438,7 @@ func testAccCheckGatewayAssociationStateUpgradeV0(ctx context.Context, name stri
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		rawState := map[string]interface{}{
+		rawState := map[string]any{
 			"dx_gateway_id":  rs.Primary.Attributes["dx_gateway_id"],
 			"vpn_gateway_id": rs.Primary.Attributes["associated_gateway_id"], // vpn_gateway_id was removed in 3.0, but older state still has it
 		}

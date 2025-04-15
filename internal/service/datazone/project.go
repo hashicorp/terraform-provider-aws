@@ -356,7 +356,7 @@ func waitProjectDeleted(ctx context.Context, conn *datazone.Client, domain strin
 }
 
 func statusProject(ctx context.Context, conn *datazone.Client, domain string, identifier string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := findProjectByID(ctx, conn, domain, identifier)
 		if tfresource.NotFound(err) {
 			return nil, "", nil

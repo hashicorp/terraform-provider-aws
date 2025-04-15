@@ -52,7 +52,7 @@ func testAccDRTAccessLogBucketAssociation_multiBucket(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	var buckets = []string{}
-	for i := 0; i < 2; i++ {
+	for range 2 {
 		buckets = append(buckets, sdkacctest.RandomWithPrefix(acctest.ResourcePrefix))
 	}
 	resourceName1 := "aws_shield_drt_access_log_bucket_association.test1"

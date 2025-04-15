@@ -37,6 +37,7 @@ TF_ACC=1 go test \
     ./internal/attrmap/... \
     ./internal/conns/... \
     ./internal/create/... \
+    ./internal/dns/... \
     ./internal/enum/... \
     ./internal/envvar/... \
     ./internal/errs/... \
@@ -51,6 +52,7 @@ TF_ACC=1 go test \
     ./internal/maps/... \
     ./internal/namevaluesfilters/... \
     ./internal/provider/... \
+    ./internal/reflect/... \
     ./internal/retry/... \
     ./internal/sdkv2/... \
     ./internal/semver/... \

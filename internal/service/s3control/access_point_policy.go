@@ -52,7 +52,7 @@ func resourceAccessPointPolicy() *schema.Resource {
 				ValidateFunc:          validation.StringIsJSON,
 				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
 				DiffSuppressOnRefresh: true,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
@@ -61,7 +61,7 @@ func resourceAccessPointPolicy() *schema.Resource {
 	}
 }
 
-func resourceAccessPointPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccessPointPolicyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
@@ -97,7 +97,7 @@ func resourceAccessPointPolicyCreate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceAccessPointPolicyRead(ctx, d, meta)...)
 }
 
-func resourceAccessPointPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccessPointPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
@@ -134,7 +134,7 @@ func resourceAccessPointPolicyRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func resourceAccessPointPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccessPointPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
@@ -163,7 +163,7 @@ func resourceAccessPointPolicyUpdate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceAccessPointPolicyRead(ctx, d, meta)...)
 }
 
-func resourceAccessPointPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccessPointPolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
@@ -189,7 +189,7 @@ func resourceAccessPointPolicyDelete(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func resourceAccessPointPolicyImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceAccessPointPolicyImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	resourceID, err := AccessPointCreateResourceID(d.Id())
 
 	if err != nil {

@@ -91,7 +91,7 @@ func resourceFleet() *schema.Resource {
 			"device_ca_certificate": {
 				Type:     schema.TypeString,
 				Optional: true,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					s, ok := v.(string)
 					if !ok {
 						return ""
@@ -140,7 +140,7 @@ func resourceFleet() *schema.Resource {
 	}
 }
 
-func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WorkLinkClient(ctx)
 
@@ -179,7 +179,7 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceFleetRead(ctx, d, meta)...)
 }
 
-func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WorkLinkClient(ctx)
 
@@ -247,7 +247,7 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	return diags
 }
 
-func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WorkLinkClient(ctx)
 
@@ -294,7 +294,7 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceFleetRead(ctx, d, meta)...)
 }
 
-func resourceFleetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFleetDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WorkLinkClient(ctx)
 
@@ -350,7 +350,7 @@ func findFleetByARN(ctx context.Context, conn *worklink.Client, arn string) (*wo
 }
 
 func fleetStateRefresh(ctx context.Context, conn *worklink.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		emptyResp := &worklink.DescribeFleetMetadataOutput{}
 
 		input := worklink.DescribeFleetMetadataInput{
@@ -386,13 +386,13 @@ func updateAuditStreamConfiguration(ctx context.Context, conn *worklink.Client, 
 
 func updateCompanyNetworkConfiguration(ctx context.Context, conn *worklink.Client, d *schema.ResourceData) error {
 	oldNetwork, newNetwork := d.GetChange("network")
-	if len(oldNetwork.([]interface{})) > 0 && len(newNetwork.([]interface{})) == 0 {
+	if len(oldNetwork.([]any)) > 0 && len(newNetwork.([]any)) == 0 {
 		return fmt.Errorf("Company Network Configuration cannot be removed from WorkLink Fleet(%s),"+
 			" use 'terraform taint' to recreate the resource if you wish.", d.Id())
 	}
 
-	if v, ok := d.GetOk("network"); ok && len(v.([]interface{})) > 0 {
-		config := v.([]interface{})[0].(map[string]interface{})
+	if v, ok := d.GetOk("network"); ok && len(v.([]any)) > 0 {
+		config := v.([]any)[0].(map[string]any)
 		input := &worklink.UpdateCompanyNetworkConfigurationInput{
 			FleetArn:         aws.String(d.Id()),
 			SecurityGroupIds: flex.ExpandStringValueSet(config[names.AttrSecurityGroupIDs].(*schema.Set)),
@@ -425,13 +425,13 @@ func updateDevicePolicyConfiguration(ctx context.Context, conn *worklink.Client,
 func updateIdentityProviderConfiguration(ctx context.Context, conn *worklink.Client, d *schema.ResourceData) error {
 	oldIdentityProvider, newIdentityProvider := d.GetChange("identity_provider")
 
-	if len(oldIdentityProvider.([]interface{})) > 0 && len(newIdentityProvider.([]interface{})) == 0 {
+	if len(oldIdentityProvider.([]any)) > 0 && len(newIdentityProvider.([]any)) == 0 {
 		return fmt.Errorf("Identity Provider Configuration cannot be removed from WorkLink Fleet(%s),"+
 			" use 'terraform taint' to recreate the resource if you wish.", d.Id())
 	}
 
-	if v, ok := d.GetOk("identity_provider"); ok && len(v.([]interface{})) > 0 {
-		config := v.([]interface{})[0].(map[string]interface{})
+	if v, ok := d.GetOk("identity_provider"); ok && len(v.([]any)) > 0 {
+		config := v.([]any)[0].(map[string]any)
 		input := &worklink.UpdateIdentityProviderConfigurationInput{
 			FleetArn:                     aws.String(d.Id()),
 			IdentityProviderType:         awstypes.IdentityProviderType(config[names.AttrType].(string)),

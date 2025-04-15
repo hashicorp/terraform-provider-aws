@@ -349,7 +349,7 @@ func findVPCOrigin(ctx context.Context, conn *cloudfront.Client, input *cloudfro
 }
 
 func vpcOriginStatus(ctx context.Context, conn *cloudfront.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findVPCOriginByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

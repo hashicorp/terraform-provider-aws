@@ -47,7 +47,7 @@ func ResourcePermissionSetInlinePolicy() *schema.Resource {
 				ValidateFunc:          verify.ValidIAMPolicyJSON,
 				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
 				DiffSuppressOnRefresh: true,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
@@ -68,7 +68,7 @@ func ResourcePermissionSetInlinePolicy() *schema.Resource {
 	}
 }
 
-func resourcePermissionSetInlinePolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePermissionSetInlinePolicyPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
 
@@ -101,7 +101,7 @@ func resourcePermissionSetInlinePolicyPut(ctx context.Context, d *schema.Resourc
 	return append(diags, resourcePermissionSetInlinePolicyRead(ctx, d, meta)...)
 }
 
-func resourcePermissionSetInlinePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePermissionSetInlinePolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
 
@@ -134,7 +134,7 @@ func resourcePermissionSetInlinePolicyRead(ctx context.Context, d *schema.Resour
 	return diags
 }
 
-func resourcePermissionSetInlinePolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePermissionSetInlinePolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
 

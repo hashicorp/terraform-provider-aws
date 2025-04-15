@@ -302,7 +302,7 @@ func findResourceGatewayByID(ctx context.Context, conn *vpclattice.Client, id st
 }
 
 func statusResourceGateway(ctx context.Context, conn *vpclattice.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findResourceGatewayByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

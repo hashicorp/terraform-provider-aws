@@ -182,7 +182,7 @@ func dataSourceClientVPNEndpoint() *schema.Resource {
 	}
 }
 
-func dataSourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -193,7 +193,7 @@ func dataSourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData
 	}
 
 	input.Filters = append(input.Filters, newTagFilterList(
-		Tags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))),
+		svcTags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]any))),
 	)...)
 
 	input.Filters = append(input.Filters, newCustomFilterList(
@@ -224,14 +224,14 @@ func dataSourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData
 	}
 	d.Set("client_cidr_block", ep.ClientCidrBlock)
 	if ep.ClientConnectOptions != nil {
-		if err := d.Set("client_connect_options", []interface{}{flattenClientConnectResponseOptions(ep.ClientConnectOptions)}); err != nil {
+		if err := d.Set("client_connect_options", []any{flattenClientConnectResponseOptions(ep.ClientConnectOptions)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting client_connect_options: %s", err)
 		}
 	} else {
 		d.Set("client_connect_options", nil)
 	}
 	if ep.ClientLoginBannerOptions != nil {
-		if err := d.Set("client_login_banner_options", []interface{}{flattenClientLoginBannerResponseOptions(ep.ClientLoginBannerOptions)}); err != nil {
+		if err := d.Set("client_login_banner_options", []any{flattenClientLoginBannerResponseOptions(ep.ClientLoginBannerOptions)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting client_login_banner_options: %s", err)
 		}
 	} else {
@@ -239,7 +239,7 @@ func dataSourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData
 	}
 	d.Set("client_vpn_endpoint_id", ep.ClientVpnEndpointId)
 	if ep.ConnectionLogOptions != nil {
-		if err := d.Set("connection_log_options", []interface{}{flattenConnectionLogResponseOptions(ep.ConnectionLogOptions)}); err != nil {
+		if err := d.Set("connection_log_options", []any{flattenConnectionLogResponseOptions(ep.ConnectionLogOptions)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting connection_log_options: %s", err)
 		}
 	} else {

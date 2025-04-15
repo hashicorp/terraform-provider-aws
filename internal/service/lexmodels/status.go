@@ -21,7 +21,7 @@ const (
 )
 
 func statusBotVersion(ctx context.Context, conn *lexmodelbuildingservice.Client, name, version string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findBotVersionByName(ctx, conn, name, version)
 
 		if tfresource.NotFound(err) {
@@ -37,7 +37,7 @@ func statusBotVersion(ctx context.Context, conn *lexmodelbuildingservice.Client,
 }
 
 func statusSlotType(ctx context.Context, conn *lexmodelbuildingservice.Client, name, version string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findSlotTypeVersionByName(ctx, conn, name, version)
 
 		if tfresource.NotFound(err) {
@@ -53,7 +53,7 @@ func statusSlotType(ctx context.Context, conn *lexmodelbuildingservice.Client, n
 }
 
 func statusIntent(ctx context.Context, conn *lexmodelbuildingservice.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := conn.GetIntentVersions(ctx, &lexmodelbuildingservice.GetIntentVersionsInput{
 			Name: aws.String(id),
 		})
@@ -73,7 +73,7 @@ func statusIntent(ctx context.Context, conn *lexmodelbuildingservice.Client, id 
 }
 
 func statusBotAlias(ctx context.Context, conn *lexmodelbuildingservice.Client, botAliasName, botName string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := conn.GetBotAlias(ctx, &lexmodelbuildingservice.GetBotAliasInput{
 			BotName: aws.String(botName),
 			Name:    aws.String(botAliasName),

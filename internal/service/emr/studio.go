@@ -122,7 +122,7 @@ func resourceStudio() *schema.Resource {
 	}
 }
 
-func resourceStudioCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStudioCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
@@ -160,7 +160,7 @@ func resourceStudioCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.CreateStudio(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -183,7 +183,7 @@ func resourceStudioCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceStudioRead(ctx, d, meta)...)
 }
 
-func resourceStudioRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStudioRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
@@ -220,7 +220,7 @@ func resourceStudioRead(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func resourceStudioUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStudioUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
@@ -259,7 +259,7 @@ func resourceStudioUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceStudioRead(ctx, d, meta)...)
 }
 
-func resourceStudioDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStudioDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 

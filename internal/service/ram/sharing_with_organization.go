@@ -41,7 +41,7 @@ const (
 	servicePrincipalName            = "ram.amazonaws.com"
 )
 
-func resourceSharingWithOrganizationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSharingWithOrganizationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RAMClient(ctx)
 
@@ -60,7 +60,7 @@ func resourceSharingWithOrganizationCreate(ctx context.Context, d *schema.Resour
 	return append(diags, resourceSharingWithOrganizationRead(ctx, d, meta)...)
 }
 
-func resourceSharingWithOrganizationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSharingWithOrganizationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	err := findSharingWithOrganization(ctx, meta.(*conns.AWSClient))
@@ -78,7 +78,7 @@ func resourceSharingWithOrganizationRead(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func resourceSharingWithOrganizationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSharingWithOrganizationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// See https://docs.aws.amazon.com/ram/latest/userguide/security-disable-sharing-with-orgs.html.

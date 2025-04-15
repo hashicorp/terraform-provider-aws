@@ -14,6 +14,8 @@ Provides an EC2 instance resource. This allows instances to be created, updated,
 
 ### Basic example using AMI lookup
 
+Using a data source
+
 ```terraform
 data "aws_ami" "ubuntu" {
   most_recent = true
@@ -33,6 +35,19 @@ data "aws_ami" "ubuntu" {
 
 resource "aws_instance" "web" {
   ami           = data.aws_ami.ubuntu.id
+  instance_type = "t3.micro"
+
+  tags = {
+    Name = "HelloWorld"
+  }
+}
+```
+
+Using AWS Systems Manager Parameter Store
+
+```terraform
+resource "aws_instance" "web" {
+  ami           = "resolve:ssm:/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64"
   instance_type = "t3.micro"
 
   tags = {

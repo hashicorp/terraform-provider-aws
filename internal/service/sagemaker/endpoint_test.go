@@ -297,7 +297,7 @@ func testAccCheckEndpointDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			return fmt.Errorf("SageMaker Endpoint (%s) still exists", rs.Primary.ID)
+			return fmt.Errorf("SageMaker AI Endpoint (%s) still exists", rs.Primary.ID)
 		}
 		return nil
 	}
@@ -311,7 +311,7 @@ func testAccCheckEndpointExists(ctx context.Context, n string) resource.TestChec
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("no SageMaker Endpoint ID is set")
+			return fmt.Errorf("no SageMaker AI Endpoint ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)

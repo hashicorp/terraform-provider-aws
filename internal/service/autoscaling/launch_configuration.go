@@ -291,7 +291,7 @@ func resourceLaunchConfiguration() *schema.Resource {
 				Optional:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"user_data_base64"},
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					switch v := v.(type) {
 					case string:
 						return userDataHashSum(v)
@@ -312,7 +312,7 @@ func resourceLaunchConfiguration() *schema.Resource {
 	}
 }
 
-func resourceLaunchConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLaunchConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	autoscalingconn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 	ec2conn := meta.(*conns.AWSClient).EC2Client(ctx)
@@ -342,8 +342,8 @@ func resourceLaunchConfigurationCreate(ctx context.Context, d *schema.ResourceDa
 		input.KeyName = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("metadata_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.MetadataOptions = expandInstanceMetadataOptions(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("metadata_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.MetadataOptions = expandInstanceMetadataOptions(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("placement_tenancy"); ok {
@@ -391,8 +391,8 @@ func resourceLaunchConfigurationCreate(ctx context.Context, d *schema.ResourceDa
 		blockDeviceMappings = append(blockDeviceMappings, v...)
 	}
 
-	if v, ok := d.GetOk("root_block_device"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		v := expandBlockDeviceMappingForRootBlockDevice(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("root_block_device"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		v := expandBlockDeviceMappingForRootBlockDevice(v.([]any)[0].(map[string]any))
 		v.DeviceName = aws.String(rootDeviceName)
 
 		blockDeviceMappings = append(blockDeviceMappings, v)
@@ -405,7 +405,7 @@ func resourceLaunchConfigurationCreate(ctx context.Context, d *schema.ResourceDa
 	// IAM profiles can take ~10 seconds to propagate in AWS:
 	// http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html#launch-instance-with-role-console
 	_, err = tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return autoscalingconn.CreateLaunchConfiguration(ctx, &input)
 		},
 		func(err error) (bool, error) {
@@ -426,7 +426,7 @@ func resourceLaunchConfigurationCreate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceLaunchConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceLaunchConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLaunchConfigurationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	autoscalingconn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 	ec2conn := meta.(*conns.AWSClient).EC2Client(ctx)
@@ -456,7 +456,7 @@ func resourceLaunchConfigurationRead(ctx context.Context, d *schema.ResourceData
 	d.Set(names.AttrInstanceType, lc.InstanceType)
 	d.Set("key_name", lc.KeyName)
 	if lc.MetadataOptions != nil {
-		if err := d.Set("metadata_options", []interface{}{flattenInstanceMetadataOptions(lc.MetadataOptions)}); err != nil {
+		if err := d.Set("metadata_options", []any{flattenInstanceMetadataOptions(lc.MetadataOptions)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting metadata_options: %s", err)
 		}
 	} else {
@@ -484,11 +484,11 @@ func resourceLaunchConfigurationRead(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "reading Auto Scaling Launch Configuration (%s): %s", d.Id(), err)
 	}
 
-	configuredEBSBlockDevices := make(map[string]map[string]interface{})
+	configuredEBSBlockDevices := make(map[string]map[string]any)
 
 	if v, ok := d.GetOk("ebs_block_device"); ok && v.(*schema.Set).Len() > 0 {
 		for _, v := range v.(*schema.Set).List() {
-			tfMap, ok := v.(map[string]interface{})
+			tfMap, ok := v.(map[string]any)
 
 			if !ok {
 				continue
@@ -513,13 +513,13 @@ func resourceLaunchConfigurationRead(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func resourceLaunchConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLaunchConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Auto Scaling Launch Configuration: %s", d.Id())
 	_, err := tfresource.RetryWhenIsA[*awstypes.ResourceInUseFault](ctx, propagationTimeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.DeleteLaunchConfiguration(ctx, &autoscaling.DeleteLaunchConfigurationInput{
 				LaunchConfigurationName: aws.String(d.Id()),
 			})
@@ -536,7 +536,7 @@ func resourceLaunchConfigurationDelete(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func expandBlockDeviceMappingForEBSBlockDevice(tfMap map[string]interface{}) awstypes.BlockDeviceMapping {
+func expandBlockDeviceMappingForEBSBlockDevice(tfMap map[string]any) awstypes.BlockDeviceMapping {
 	apiObject := awstypes.BlockDeviceMapping{
 		Ebs: &awstypes.Ebs{},
 	}
@@ -578,7 +578,7 @@ func expandBlockDeviceMappingForEBSBlockDevice(tfMap map[string]interface{}) aws
 	return apiObject
 }
 
-func expandBlockDeviceMappingForEphemeralBlockDevice(tfMap map[string]interface{}) awstypes.BlockDeviceMapping {
+func expandBlockDeviceMappingForEphemeralBlockDevice(tfMap map[string]any) awstypes.BlockDeviceMapping {
 	apiObject := awstypes.BlockDeviceMapping{}
 
 	if v, ok := tfMap[names.AttrDeviceName].(string); ok && v != "" {
@@ -596,7 +596,7 @@ func expandBlockDeviceMappingForEphemeralBlockDevice(tfMap map[string]interface{
 	return apiObject
 }
 
-func expandBlockDeviceMappingForRootBlockDevice(tfMap map[string]interface{}) awstypes.BlockDeviceMapping {
+func expandBlockDeviceMappingForRootBlockDevice(tfMap map[string]any) awstypes.BlockDeviceMapping {
 	apiObject := awstypes.BlockDeviceMapping{
 		Ebs: &awstypes.Ebs{},
 	}
@@ -628,7 +628,7 @@ func expandBlockDeviceMappingForRootBlockDevice(tfMap map[string]interface{}) aw
 	return apiObject
 }
 
-func expandBlockDeviceMappings(tfList []interface{}, fn func(map[string]interface{}) awstypes.BlockDeviceMapping) []awstypes.BlockDeviceMapping {
+func expandBlockDeviceMappings(tfList []any, fn func(map[string]any) awstypes.BlockDeviceMapping) []awstypes.BlockDeviceMapping {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -636,7 +636,7 @@ func expandBlockDeviceMappings(tfList []interface{}, fn func(map[string]interfac
 	var apiObjects []awstypes.BlockDeviceMapping
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -649,15 +649,15 @@ func expandBlockDeviceMappings(tfList []interface{}, fn func(map[string]interfac
 	return apiObjects
 }
 
-func flattenBlockDeviceMappings(apiObjects []awstypes.BlockDeviceMapping, rootDeviceName string, configuredEBSBlockDevices map[string]map[string]interface{}) ([]interface{}, []interface{}, []interface{}) {
+func flattenBlockDeviceMappings(apiObjects []awstypes.BlockDeviceMapping, rootDeviceName string, configuredEBSBlockDevices map[string]map[string]any) ([]any, []any, []any) {
 	if len(apiObjects) == 0 {
 		return nil, nil, nil
 	}
 
-	var tfListEBSBlockDevice, tfListEphemeralBlockDevice, tfListRootBlockDevice []interface{}
+	var tfListEBSBlockDevice, tfListEphemeralBlockDevice, tfListRootBlockDevice []any
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{}
+		tfMap := map[string]any{}
 
 		if v := apiObject.NoDevice; v != nil {
 			if v, ok := configuredEBSBlockDevices[aws.ToString(apiObject.DeviceName)]; ok {
@@ -728,7 +728,7 @@ func flattenBlockDeviceMappings(apiObjects []awstypes.BlockDeviceMapping, rootDe
 	return tfListEBSBlockDevice, tfListEphemeralBlockDevice, tfListRootBlockDevice
 }
 
-func expandInstanceMetadataOptions(tfMap map[string]interface{}) *awstypes.InstanceMetadataOptions {
+func expandInstanceMetadataOptions(tfMap map[string]any) *awstypes.InstanceMetadataOptions {
 	if tfMap == nil {
 		return nil
 	}
@@ -752,12 +752,12 @@ func expandInstanceMetadataOptions(tfMap map[string]interface{}) *awstypes.Insta
 	return apiObject
 }
 
-func flattenInstanceMetadataOptions(apiObject *awstypes.InstanceMetadataOptions) map[string]interface{} {
+func flattenInstanceMetadataOptions(apiObject *awstypes.InstanceMetadataOptions) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	tfMap["http_endpoint"] = string(apiObject.HttpEndpoint)
 

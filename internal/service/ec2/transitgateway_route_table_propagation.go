@@ -57,7 +57,7 @@ func resourceTransitGatewayRouteTablePropagation() *schema.Resource {
 	}
 }
 
-func resourceTransitGatewayRouteTablePropagationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitGatewayRouteTablePropagationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -84,7 +84,7 @@ func resourceTransitGatewayRouteTablePropagationCreate(ctx context.Context, d *s
 	return append(diags, resourceTransitGatewayRouteTablePropagationRead(ctx, d, meta)...)
 }
 
-func resourceTransitGatewayRouteTablePropagationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitGatewayRouteTablePropagationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -113,7 +113,7 @@ func resourceTransitGatewayRouteTablePropagationRead(ctx context.Context, d *sch
 	return diags
 }
 
-func resourceTransitGatewayRouteTablePropagationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitGatewayRouteTablePropagationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 

@@ -64,7 +64,7 @@ func resourceActionTarget() *schema.Resource {
 	}
 }
 
-func resourceActionTargetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceActionTargetCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
@@ -86,7 +86,7 @@ func resourceActionTargetCreate(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceActionTargetRead(ctx, d, meta)...)
 }
 
-func resourceActionTargetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceActionTargetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
@@ -115,7 +115,7 @@ func resourceActionTargetRead(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func resourceActionTargetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceActionTargetUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
@@ -132,7 +132,7 @@ func resourceActionTargetUpdate(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceActionTargetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceActionTargetDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 

@@ -6,6 +6,7 @@ package tags
 import (
 	"context"
 	"fmt"
+	"maps"
 	"net/url"
 	"reflect"
 	"slices"
@@ -321,13 +322,9 @@ func (tags KeyValueTags) Map() map[string]string {
 func (tags KeyValueTags) Merge(mergeTags KeyValueTags) KeyValueTags {
 	result := make(KeyValueTags)
 
-	for k, v := range tags {
-		result[k] = v
-	}
+	maps.Copy(result, tags)
 
-	for k, v := range mergeTags {
-		result[k] = v
-	}
+	maps.Copy(result, mergeTags)
 
 	return result
 }
@@ -560,7 +557,7 @@ func (tags KeyValueTags) URLQueryString() string {
 // map[string]string, map[string]*string, map[string]interface{}, []interface{}, and types.Map.
 // When passed []interface{}, all elements are treated as keys and assigned nil values.
 // When passed KeyValueTags or its underlying type implementation, returns itself.
-func New(ctx context.Context, i interface{}) KeyValueTags {
+func New(ctx context.Context, i any) KeyValueTags {
 	switch value := i.(type) {
 	case KeyValueTags:
 		return make(KeyValueTags).Merge(value)
@@ -587,7 +584,7 @@ func New(ctx context.Context, i interface{}) KeyValueTags {
 		}
 
 		return kvtm
-	case map[string]interface{}:
+	case map[string]any:
 		kvtm := make(KeyValueTags, len(value))
 
 		for k, v := range value {
@@ -609,7 +606,7 @@ func New(ctx context.Context, i interface{}) KeyValueTags {
 		}
 
 		return kvtm
-	case []interface{}:
+	case []any:
 		kvtm := make(KeyValueTags, len(value))
 
 		for _, v := range value {

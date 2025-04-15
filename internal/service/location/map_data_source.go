@@ -61,7 +61,7 @@ func DataSourceMap() *schema.Resource {
 	}
 }
 
-func dataSourceMapRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceMapRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LocationClient(ctx)
 
@@ -84,7 +84,7 @@ func dataSourceMapRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.SetId(aws.ToString(output.MapName))
 
 	if output.Configuration != nil {
-		d.Set(names.AttrConfiguration, []interface{}{flattenConfiguration(output.Configuration)})
+		d.Set(names.AttrConfiguration, []any{flattenConfiguration(output.Configuration)})
 	} else {
 		d.Set(names.AttrConfiguration, nil)
 	}

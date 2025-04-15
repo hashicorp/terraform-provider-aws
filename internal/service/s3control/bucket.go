@@ -81,7 +81,7 @@ func resourceBucket() *schema.Resource {
 	}
 }
 
-func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
@@ -108,7 +108,7 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceBucketRead(ctx, d, meta)...)
 }
 
-func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
@@ -156,7 +156,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
@@ -171,7 +171,7 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceBucketRead(ctx, d, meta)...)
 }
 
-func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
@@ -190,7 +190,7 @@ func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	// can occur on deletion:
 	//   InvalidBucketState: Bucket is in an invalid state
 	log.Printf("[DEBUG] Deleting S3 Control Bucket: %s", d.Id())
-	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketStatePropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketStatePropagationTimeout, func() (any, error) {
 		return conn.DeleteBucket(ctx, input)
 	}, errCodeInvalidBucketState)
 

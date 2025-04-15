@@ -283,7 +283,7 @@ func waitAssociationDeleted(ctx context.Context, conn *route53profiles.Client, i
 }
 
 func statusAssociation(ctx context.Context, conn *route53profiles.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := findAssociationByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil

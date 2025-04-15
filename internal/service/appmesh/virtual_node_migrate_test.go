@@ -17,7 +17,7 @@ func TestVirtualNodeMigrateState(t *testing.T) {
 		StateVersion int
 		Attributes   map[string]string
 		Expected     map[string]string
-		Meta         interface{}
+		Meta         any
 	}{
 		"v0_1-noBackendsOrDns": {
 			StateVersion: 0,

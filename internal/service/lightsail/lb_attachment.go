@@ -53,7 +53,7 @@ func ResourceLoadBalancerAttachment() *schema.Resource {
 	}
 }
 
-func resourceLoadBalancerAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLoadBalancerAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
@@ -86,7 +86,7 @@ func resourceLoadBalancerAttachmentCreate(ctx context.Context, d *schema.Resourc
 	return append(diags, resourceLoadBalancerAttachmentRead(ctx, d, meta)...)
 }
 
-func resourceLoadBalancerAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLoadBalancerAttachmentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
@@ -109,7 +109,7 @@ func resourceLoadBalancerAttachmentRead(ctx context.Context, d *schema.ResourceD
 	return diags
 }
 
-func resourceLoadBalancerAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLoadBalancerAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)

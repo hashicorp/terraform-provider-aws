@@ -82,7 +82,7 @@ func dataSourceEngineVersion() *schema.Resource {
 	}
 }
 
-func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
 
@@ -104,7 +104,7 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 
 	var engineVersion *awstypes.DBEngineVersion
 	var err error
-	if preferredVersions := flex.ExpandStringValueList(d.Get("preferred_versions").([]interface{})); len(preferredVersions) > 0 {
+	if preferredVersions := flex.ExpandStringValueList(d.Get("preferred_versions").([]any)); len(preferredVersions) > 0 {
 		var engineVersions []awstypes.DBEngineVersion
 
 		engineVersions, err = findEngineVersions(ctx, conn, input)

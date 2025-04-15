@@ -80,7 +80,7 @@ func ResourceAccessControlAttributes() *schema.Resource {
 	}
 }
 
-func resourceAccessControlAttributesCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccessControlAttributesCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
 
@@ -103,7 +103,7 @@ func resourceAccessControlAttributesCreate(ctx context.Context, d *schema.Resour
 	return append(diags, resourceAccessControlAttributesRead(ctx, d, meta)...)
 }
 
-func resourceAccessControlAttributesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccessControlAttributesRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
 
@@ -129,7 +129,7 @@ func resourceAccessControlAttributesRead(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func resourceAccessControlAttributesUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccessControlAttributesUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
 
@@ -149,7 +149,7 @@ func resourceAccessControlAttributesUpdate(ctx context.Context, d *schema.Resour
 	return append(diags, resourceAccessControlAttributesRead(ctx, d, meta)...)
 }
 
-func resourceAccessControlAttributesDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccessControlAttributesDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
 
@@ -194,12 +194,12 @@ func expandAccessControlAttributes(d *schema.ResourceData) []awstypes.AccessCont
 
 	attInterface := d.Get("attribute").(*schema.Set).List()
 	for _, attrMap := range attInterface {
-		attr := attrMap.(map[string]interface{})
+		attr := attrMap.(map[string]any)
 		var attribute awstypes.AccessControlAttribute
 		if key, ok := attr[names.AttrKey].(string); ok {
 			attribute.Key = aws.String(key)
 		}
-		val := attr[names.AttrValue].(*schema.Set).List()[0].(map[string]interface{})
+		val := attr[names.AttrValue].(*schema.Set).List()[0].(map[string]any)
 		if v, ok := val[names.AttrSource].(*schema.Set); ok && len(v.List()) > 0 {
 			attribute.Value = &awstypes.AccessControlAttributeValue{
 				Source: flex.ExpandStringValueSet(v),
@@ -211,18 +211,18 @@ func expandAccessControlAttributes(d *schema.ResourceData) []awstypes.AccessCont
 	return attributes
 }
 
-func flattenAccessControlAttributes(attributes []awstypes.AccessControlAttribute) []interface{} {
-	var results []interface{}
+func flattenAccessControlAttributes(attributes []awstypes.AccessControlAttribute) []any {
+	var results []any
 	if len(attributes) == 0 {
-		return []interface{}{}
+		return []any{}
 	}
 
 	for _, attr := range attributes {
-		var val []interface{}
-		val = append(val, map[string]interface{}{
+		var val []any
+		val = append(val, map[string]any{
 			names.AttrSource: flex.FlattenStringValueSet(attr.Value.Source),
 		})
-		results = append(results, map[string]interface{}{
+		results = append(results, map[string]any{
 			names.AttrKey:   aws.ToString(attr.Key),
 			names.AttrValue: val,
 		})

@@ -58,7 +58,7 @@ func resourceContactFlowModule() *schema.Resource {
 				ValidateFunc:     validation.StringIsJSON,
 				ConflictsWith:    []string{"filename"},
 				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
@@ -92,7 +92,7 @@ func resourceContactFlowModule() *schema.Resource {
 	}
 }
 
-func resourceContactFlowModuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceContactFlowModuleCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
@@ -138,7 +138,7 @@ func resourceContactFlowModuleCreate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceContactFlowModuleRead(ctx, d, meta)...)
 }
 
-func resourceContactFlowModuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceContactFlowModuleRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
@@ -171,7 +171,7 @@ func resourceContactFlowModuleRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func resourceContactFlowModuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceContactFlowModuleUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
@@ -229,7 +229,7 @@ func resourceContactFlowModuleUpdate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceContactFlowModuleRead(ctx, d, meta)...)
 }
 
-func resourceContactFlowModuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceContactFlowModuleDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 

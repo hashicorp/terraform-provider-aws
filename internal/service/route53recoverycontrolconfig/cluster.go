@@ -65,7 +65,7 @@ func resourceCluster() *schema.Resource {
 	}
 }
 
-func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigClient(ctx)
 
@@ -94,7 +94,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceClusterRead(ctx, d, meta)...)
 }
 
-func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigClient(ctx)
 
@@ -121,7 +121,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigClient(ctx)
 
@@ -174,12 +174,12 @@ func findClusterByARN(ctx context.Context, conn *r53rcc.Client, arn string) (*aw
 	return output.Cluster, nil
 }
 
-func flattenClusterEndpoints(endpoints []awstypes.ClusterEndpoint) []interface{} {
+func flattenClusterEndpoints(endpoints []awstypes.ClusterEndpoint) []any {
 	if len(endpoints) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, endpoint := range endpoints {
 		tfList = append(tfList, flattenClusterEndpoint(endpoint))
@@ -188,8 +188,8 @@ func flattenClusterEndpoints(endpoints []awstypes.ClusterEndpoint) []interface{}
 	return tfList
 }
 
-func flattenClusterEndpoint(ce awstypes.ClusterEndpoint) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenClusterEndpoint(ce awstypes.ClusterEndpoint) map[string]any {
+	tfMap := map[string]any{}
 
 	if v := ce.Endpoint; v != nil {
 		tfMap[names.AttrEndpoint] = aws.ToString(v)

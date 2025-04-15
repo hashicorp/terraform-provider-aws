@@ -82,7 +82,7 @@ func resourceTransitGatewayMulticastDomain() *schema.Resource {
 	}
 }
 
-func resourceTransitGatewayMulticastDomainCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitGatewayMulticastDomainCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
@@ -113,7 +113,7 @@ func resourceTransitGatewayMulticastDomainCreate(ctx context.Context, d *schema.
 	return append(diags, resourceTransitGatewayMulticastDomainRead(ctx, d, meta)...)
 }
 
-func resourceTransitGatewayMulticastDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitGatewayMulticastDomainRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
@@ -142,12 +142,12 @@ func resourceTransitGatewayMulticastDomainRead(ctx context.Context, d *schema.Re
 	return diags
 }
 
-func resourceTransitGatewayMulticastDomainUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitGatewayMulticastDomainUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	// Tags only.
 	return resourceTransitGatewayMulticastDomainRead(ctx, d, meta)
 }
 
-func resourceTransitGatewayMulticastDomainDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitGatewayMulticastDomainDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)

@@ -15,6 +15,8 @@ Terraform resource for managing an AWS Backup Restore Testing Plan.
 
 ```terraform
 resource "aws_backup_restore_testing_plan" "example" {
+  name = "example_restore_testing_plan"
+
   recovery_point_selection {
     algorithm            = "LATEST_WITHIN_WINDOW"
     include_vaults       = ["*"]

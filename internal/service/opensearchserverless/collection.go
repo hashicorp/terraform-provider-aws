@@ -357,7 +357,7 @@ func waitCollectionDeleted(ctx context.Context, conn *opensearchserverless.Clien
 }
 
 func statusCollection(ctx context.Context, conn *opensearchserverless.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findCollectionByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

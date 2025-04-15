@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func validPrincipal(v interface{}, k string) (ws []string, errors []error) {
+func validPrincipal(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 
 	if value == "IAM_ALLOWED_PRINCIPALS" {

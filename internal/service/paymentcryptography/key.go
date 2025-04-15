@@ -116,7 +116,7 @@ func (r *resourceKey) Schema(ctx context.Context, request resource.SchemaRequest
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			"key_attributes": schema.SingleNestedBlock{
+			"key_attributes": schema.SingleNestedBlock{ // nosemgrep:ci.avoid-SingleNestedBlock pre-existing, will be converted
 				CustomType: fwtypes.NewObjectTypeOf[keyAttributesModel](ctx),
 				Attributes: map[string]schema.Attribute{
 					"key_algorithm": schema.StringAttribute{
@@ -142,7 +142,7 @@ func (r *resourceKey) Schema(ctx context.Context, request resource.SchemaRequest
 					},
 				},
 				Blocks: map[string]schema.Block{
-					"key_modes_of_use": schema.SingleNestedBlock{
+					"key_modes_of_use": schema.SingleNestedBlock{ // nosemgrep:ci.avoid-SingleNestedBlock pre-existing, will be converted
 						CustomType: fwtypes.NewObjectTypeOf[keyModesOfUseModel](ctx),
 						Attributes: map[string]schema.Attribute{
 							"decrypt": schema.BoolAttribute{
@@ -450,7 +450,7 @@ func waitKeyDeleted(ctx context.Context, conn *paymentcryptography.Client, id st
 }
 
 func statusKey(ctx context.Context, conn *paymentcryptography.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := findKeyByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil

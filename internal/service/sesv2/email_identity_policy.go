@@ -51,7 +51,7 @@ func resourceEmailIdentityPolicy() *schema.Resource {
 				ValidateFunc:          validation.StringIsJSON,
 				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
 				DiffSuppressOnRefresh: true,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
@@ -70,7 +70,7 @@ const (
 	resNameEmailIdentityPolicy = "Email Identity Policy"
 )
 
-func resourceEmailIdentityPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEmailIdentityPolicyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
@@ -103,7 +103,7 @@ func resourceEmailIdentityPolicyCreate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceEmailIdentityPolicyRead(ctx, d, meta)...)
 }
 
-func resourceEmailIdentityPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEmailIdentityPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
@@ -141,7 +141,7 @@ func resourceEmailIdentityPolicyRead(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func resourceEmailIdentityPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEmailIdentityPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
@@ -169,7 +169,7 @@ func resourceEmailIdentityPolicyUpdate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceEmailIdentityPolicyRead(ctx, d, meta)...)
 }
 
-func resourceEmailIdentityPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEmailIdentityPolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 

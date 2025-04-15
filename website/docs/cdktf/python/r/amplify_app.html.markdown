@@ -192,6 +192,7 @@ This resource supports the following arguments:
 * `basic_auth_credentials` - (Optional) Credentials for basic authorization for an Amplify app.
 * `build_spec` - (Optional) The [build specification](https://docs.aws.amazon.com/amplify/latest/userguide/build-settings.html) (build spec) for an Amplify app.
 * `cache_config` - (Optional) Cache configuration for the Amplify app. See [`cache_config` Block](#cache_config-block) for details.
+* `compute_role_arn` - (Optional) AWS Identity and Access Management (IAM) SSR compute role for an Amplify app.
 * `custom_headers` - (Optional) The [custom HTTP headers](https://docs.aws.amazon.com/amplify/latest/userguide/custom-headers.html) for an Amplify app.
 * `custom_rule` - (Optional) Custom rewrite and redirect rules for an Amplify app. See [`custom_rule` Block](#custom_rule-block) for details.
 * `description` - (Optional) Description for an Amplify app.
@@ -280,4 +281,4 @@ Using `terraform import`, import Amplify App using Amplify App ID (appId). For e
 
 App ID can be obtained from App ARN (e.g., `arn:aws:amplify:us-east-1:12345678:apps/d2ypk4k47z8u6`).
 
-<!-- cache-key: cdktf-0.20.8 input-c654202f4b2998abd6708efac5e85089c2fe4ff2ec3b84681ad72e031d2e94df -->
+<!-- cache-key: cdktf-0.20.8 input-df591263bb4e9a7553eb438d0eb8194b4f00505f9e389745cce1adcc4257b095 -->

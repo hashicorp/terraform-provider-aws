@@ -97,6 +97,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `arn` - The cache policy ARN.
 * `etag` - Current version of the cache policy.
 * `id` - Identifier for the cache policy.
 
@@ -125,4 +126,4 @@ Using `terraform import`, import CloudFront cache policies using the `id` of the
 % terraform import aws_cloudfront_cache_policy.policy 658327ea-f89d-4fab-a63d-7e88639e58f6
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-8fda72f4e7c4165f1b2aa65dbf0738cc394e0490f46a68016d550c5ffee31214 -->
+<!-- cache-key: cdktf-0.20.8 input-d628293a8cf9159b6006722003de3df5aaa79f1d4097a60509f5d851251e6373 -->

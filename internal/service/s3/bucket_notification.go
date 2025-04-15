@@ -142,7 +142,7 @@ func resourceBucketNotification() *schema.Resource {
 	}
 }
 
-func resourceBucketNotificationPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketNotificationPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	const (
 		filterRulesSliceStartLen = 2
 	)
@@ -159,12 +159,12 @@ func resourceBucketNotificationPut(ctx context.Context, d *schema.ResourceData, 
 		eventbridgeConfig = &types.EventBridgeConfiguration{}
 	}
 
-	lambdaFunctionNotifications := d.Get("lambda_function").([]interface{})
+	lambdaFunctionNotifications := d.Get("lambda_function").([]any)
 	lambdaConfigs := make([]types.LambdaFunctionConfiguration, 0, len(lambdaFunctionNotifications))
 	for i, c := range lambdaFunctionNotifications {
 		lc := types.LambdaFunctionConfiguration{}
 
-		c := c.(map[string]interface{})
+		c := c.(map[string]any)
 
 		if val, ok := c[names.AttrID].(string); ok && val != "" {
 			lc.Id = aws.String(val)
@@ -203,12 +203,12 @@ func resourceBucketNotificationPut(ctx context.Context, d *schema.ResourceData, 
 		lambdaConfigs = append(lambdaConfigs, lc)
 	}
 
-	queueNotifications := d.Get("queue").([]interface{})
+	queueNotifications := d.Get("queue").([]any)
 	queueConfigs := make([]types.QueueConfiguration, 0, len(queueNotifications))
 	for i, c := range queueNotifications {
 		qc := types.QueueConfiguration{}
 
-		c := c.(map[string]interface{})
+		c := c.(map[string]any)
 
 		if val, ok := c[names.AttrID].(string); ok && val != "" {
 			qc.Id = aws.String(val)
@@ -247,12 +247,12 @@ func resourceBucketNotificationPut(ctx context.Context, d *schema.ResourceData, 
 		queueConfigs = append(queueConfigs, qc)
 	}
 
-	topicNotifications := d.Get("topic").([]interface{})
+	topicNotifications := d.Get("topic").([]any)
 	topicConfigs := make([]types.TopicConfiguration, 0, len(topicNotifications))
 	for i, c := range topicNotifications {
 		tc := types.TopicConfiguration{}
 
-		c := c.(map[string]interface{})
+		c := c.(map[string]any)
 
 		if val, ok := c[names.AttrID].(string); ok && val != "" {
 			tc.Id = aws.String(val)
@@ -309,7 +309,7 @@ func resourceBucketNotificationPut(ctx context.Context, d *schema.ResourceData, 
 		NotificationConfiguration: notificationConfiguration,
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (any, error) {
 		return conn.PutBucketNotificationConfiguration(ctx, input)
 	}, errCodeNoSuchBucket)
 
@@ -324,7 +324,7 @@ func resourceBucketNotificationPut(ctx context.Context, d *schema.ResourceData, 
 	if d.IsNewResource() {
 		d.SetId(bucket)
 
-		_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
+		_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func() (any, error) {
 			return findBucketNotificationConfiguration(ctx, conn, bucket, "")
 		})
 
@@ -336,7 +336,7 @@ func resourceBucketNotificationPut(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceBucketNotificationRead(ctx, d, meta)...)
 }
 
-func resourceBucketNotificationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketNotificationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
@@ -372,7 +372,7 @@ func resourceBucketNotificationRead(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func resourceBucketNotificationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketNotificationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
@@ -430,8 +430,8 @@ func findBucketNotificationConfiguration(ctx context.Context, conn *s3.Client, b
 	return output, nil
 }
 
-func flattenNotificationConfigurationFilter(filter *types.NotificationConfigurationFilter) map[string]interface{} {
-	filterRules := map[string]interface{}{}
+func flattenNotificationConfigurationFilter(filter *types.NotificationConfigurationFilter) map[string]any {
+	filterRules := map[string]any{}
 	if filter.Key == nil || filter.Key.FilterRules == nil {
 		return filterRules
 	}
@@ -447,14 +447,14 @@ func flattenNotificationConfigurationFilter(filter *types.NotificationConfigurat
 	return filterRules
 }
 
-func flattenTopicConfigurations(configs []types.TopicConfiguration) []map[string]interface{} {
-	topicNotifications := make([]map[string]interface{}, 0, len(configs))
+func flattenTopicConfigurations(configs []types.TopicConfiguration) []map[string]any {
+	topicNotifications := make([]map[string]any, 0, len(configs))
 	for _, notification := range configs {
-		var conf map[string]interface{}
+		var conf map[string]any
 		if filter := notification.Filter; filter != nil {
 			conf = flattenNotificationConfigurationFilter(filter)
 		} else {
-			conf = map[string]interface{}{}
+			conf = map[string]any{}
 		}
 
 		conf[names.AttrID] = aws.ToString(notification.Id)
@@ -466,14 +466,14 @@ func flattenTopicConfigurations(configs []types.TopicConfiguration) []map[string
 	return topicNotifications
 }
 
-func flattenQueueConfigurations(configs []types.QueueConfiguration) []map[string]interface{} {
-	queueNotifications := make([]map[string]interface{}, 0, len(configs))
+func flattenQueueConfigurations(configs []types.QueueConfiguration) []map[string]any {
+	queueNotifications := make([]map[string]any, 0, len(configs))
 	for _, notification := range configs {
-		var conf map[string]interface{}
+		var conf map[string]any
 		if filter := notification.Filter; filter != nil {
 			conf = flattenNotificationConfigurationFilter(filter)
 		} else {
-			conf = map[string]interface{}{}
+			conf = map[string]any{}
 		}
 
 		conf[names.AttrID] = aws.ToString(notification.Id)
@@ -485,14 +485,14 @@ func flattenQueueConfigurations(configs []types.QueueConfiguration) []map[string
 	return queueNotifications
 }
 
-func flattenLambdaFunctionConfigurations(configs []types.LambdaFunctionConfiguration) []map[string]interface{} {
-	lambdaFunctionNotifications := make([]map[string]interface{}, 0, len(configs))
+func flattenLambdaFunctionConfigurations(configs []types.LambdaFunctionConfiguration) []map[string]any {
+	lambdaFunctionNotifications := make([]map[string]any, 0, len(configs))
 	for _, notification := range configs {
-		var conf map[string]interface{}
+		var conf map[string]any
 		if filter := notification.Filter; filter != nil {
 			conf = flattenNotificationConfigurationFilter(filter)
 		} else {
-			conf = map[string]interface{}{}
+			conf = map[string]any{}
 		}
 
 		conf[names.AttrID] = aws.ToString(notification.Id)

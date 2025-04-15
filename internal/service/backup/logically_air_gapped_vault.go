@@ -220,7 +220,7 @@ func findLogicallyAirGappedBackupVaultByName(ctx context.Context, conn *backup.C
 }
 
 func statusLogicallyAirGappedVault(ctx context.Context, conn *backup.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findLogicallyAirGappedBackupVaultByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {

@@ -16,6 +16,7 @@ var (
 	ResourceEventSubscription            = resourceEventSubscription
 	ResourceHSMClientCertificate         = resourceHSMClientCertificate
 	ResourceHSMConfiguration             = resourceHSMConfiguration
+	ResourceIntegration                  = newIntegrationResource
 	ResourceLogging                      = newResourceLogging
 	ResourceParameterGroup               = resourceParameterGroup
 	ResourcePartner                      = resourcePartner
@@ -38,6 +39,7 @@ var (
 	FindEventSubscriptionByName                 = findEventSubscriptionByName
 	FindHSMClientCertificateByID                = findHSMClientCertificateByID
 	FindHSMConfigurationByID                    = findHSMConfigurationByID
+	FindIntegrationByARN                        = findIntegrationByARN
 	FindLoggingByID                             = findLoggingByID
 	FindParameterGroupByName                    = findParameterGroupByName
 	FindPartnerByID                             = findPartnerByID

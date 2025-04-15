@@ -54,7 +54,7 @@ func resourceLocalGatewayRoute() *schema.Resource {
 	}
 }
 
-func resourceLocalGatewayRouteCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLocalGatewayRouteCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -78,7 +78,7 @@ func resourceLocalGatewayRouteCreate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceLocalGatewayRouteRead(ctx, d, meta)...)
 }
 
-func resourceLocalGatewayRouteRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLocalGatewayRouteRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -90,7 +90,7 @@ func resourceLocalGatewayRouteRead(ctx context.Context, d *schema.ResourceData, 
 	const (
 		timeout = 1 * time.Minute
 	)
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, timeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, timeout, func() (any, error) {
 		return findLocalGatewayRouteByTwoPartKey(ctx, conn, localGatewayRouteTableID, destination)
 	}, d.IsNewResource())
 
@@ -113,7 +113,7 @@ func resourceLocalGatewayRouteRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func resourceLocalGatewayRouteDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLocalGatewayRouteDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 

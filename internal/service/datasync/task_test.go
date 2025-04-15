@@ -15,6 +15,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/datasync/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -66,6 +67,7 @@ func TestAccDataSyncTask_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "schedule.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "source_location_arn", dataSyncSourceLocationResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, "task_mode", "BASIC"),
 				),
 			},
 			{
@@ -807,6 +809,56 @@ func TestAccDataSyncTask_DefaultSyncOptions_verifyMode(t *testing.T) {
 	})
 }
 
+func TestAccDataSyncTask_taskMode(t *testing.T) {
+	ctx := acctest.Context(t)
+	var task1, task2 datasync.DescribeTaskOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_datasync_task.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTaskDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTaskConfig_taskMode_enhanced(rName, rName2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTaskExists(ctx, resourceName, &task1),
+					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "options.0.verify_mode", "ONLY_FILES_TRANSFERRED"),
+					resource.TestCheckResourceAttr(resourceName, "task_mode", "ENHANCED"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccTaskConfig_taskMode_basic(rName, rName2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTaskExists(ctx, resourceName, &task2),
+					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "options.0.verify_mode", "POINT_IN_TIME_CONSISTENT"),
+					resource.TestCheckResourceAttr(resourceName, "task_mode", "BASIC"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+			},
+		},
+	})
+}
+
 func TestAccDataSyncTask_taskReportConfig(t *testing.T) {
 	ctx := acctest.Context(t)
 	var task1 datasync.DescribeTaskOutput
@@ -986,6 +1038,21 @@ resource "aws_datasync_location_s3" "test" {
   }
 
   depends_on = [aws_iam_role_policy.test]
+}
+`)
+}
+
+func testAccTaskConfig_baseLocationS3_2(rName string) string {
+	return acctest.ConfigCompose(testAccLocationS3Config_base2(rName), `
+resource "aws_datasync_location_s3" "test2" {
+  s3_bucket_arn = aws_s3_bucket.test2.arn
+  subdirectory  = "/test2"
+
+  s3_config {
+    bucket_access_role_arn = aws_iam_role.test2.arn
+  }
+
+  depends_on = [aws_iam_role_policy.test2]
 }
 `)
 }
@@ -1583,4 +1650,45 @@ resource "aws_datasync_task" "test" {
   }
 }
 `, rName))
+}
+
+func testAccTaskConfig_taskMode_basic(rName, rName2 string) string {
+	return acctest.ConfigCompose(
+		testAccTaskConfig_baseLocationS3(rName),
+		testAccTaskConfig_baseLocationS3_2(rName2),
+		fmt.Sprintf(`
+resource "aws_datasync_task" "test" {
+  destination_location_arn = aws_datasync_location_s3.test2.arn
+  name                     = %[1]q
+  source_location_arn      = aws_datasync_location_s3.test.arn
+  task_mode                = "BASIC"
+
+  options {
+    gid               = "NONE"
+    posix_permissions = "NONE"
+    uid               = "NONE"
+  }
+}
+`, rName, rName2))
+}
+
+func testAccTaskConfig_taskMode_enhanced(rName, rName2 string) string {
+	return acctest.ConfigCompose(
+		testAccTaskConfig_baseLocationS3(rName),
+		testAccTaskConfig_baseLocationS3_2(rName2),
+		fmt.Sprintf(`
+resource "aws_datasync_task" "test" {
+  destination_location_arn = aws_datasync_location_s3.test2.arn
+  name                     = %[1]q
+  source_location_arn      = aws_datasync_location_s3.test.arn
+  task_mode                = "ENHANCED"
+
+  options {
+    gid               = "NONE"
+    posix_permissions = "NONE"
+    uid               = "NONE"
+    verify_mode       = "ONLY_FILES_TRANSFERRED"
+  }
+}
+`, rName, rName2))
 }

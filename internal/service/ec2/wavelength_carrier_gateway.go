@@ -57,7 +57,7 @@ func resourceCarrierGateway() *schema.Resource {
 	}
 }
 
-func resourceCarrierGatewayCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCarrierGatewayCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -82,7 +82,7 @@ func resourceCarrierGatewayCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceCarrierGatewayRead(ctx, d, meta)...)
 }
 
-func resourceCarrierGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCarrierGatewayRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -115,7 +115,7 @@ func resourceCarrierGatewayRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceCarrierGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCarrierGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Tags only.
@@ -123,7 +123,7 @@ func resourceCarrierGatewayUpdate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceCarrierGatewayRead(ctx, d, meta)...)
 }
 
-func resourceCarrierGatewayDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCarrierGatewayDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 

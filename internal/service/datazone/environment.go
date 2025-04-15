@@ -435,7 +435,7 @@ func waitEnvironmentDeleted(ctx context.Context, conn *datazone.Client, domainId
 }
 
 func statusEnvironment(ctx context.Context, conn *datazone.Client, domainId, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := findEnvironmentByID(ctx, conn, domainId, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil

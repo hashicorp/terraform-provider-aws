@@ -83,7 +83,7 @@ func resourceAlternateContact() *schema.Resource {
 	}
 }
 
-func resourceAlternateContactCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAlternateContactCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AccountClient(ctx)
@@ -125,7 +125,7 @@ func resourceAlternateContactCreate(ctx context.Context, d *schema.ResourceData,
 	return append(diags, resourceAlternateContactRead(ctx, d, meta)...)
 }
 
-func resourceAlternateContactRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAlternateContactRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AccountClient(ctx)
@@ -158,7 +158,7 @@ func resourceAlternateContactRead(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func resourceAlternateContactUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAlternateContactUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AccountClient(ctx)
@@ -211,7 +211,7 @@ func resourceAlternateContactUpdate(ctx context.Context, d *schema.ResourceData,
 	return append(diags, resourceAlternateContactRead(ctx, d, meta)...)
 }
 
-func resourceAlternateContactDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAlternateContactDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AccountClient(ctx)

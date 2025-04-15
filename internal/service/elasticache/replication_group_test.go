@@ -2475,7 +2475,7 @@ func TestAccElastiCacheReplicationGroup_tags(t *testing.T) {
 	})
 }
 
-func TestAccElastiCacheReplicationGroup_tagWithOtherModification(t *testing.T) {
+func TestAccElastiCacheReplicationGroup_TagWithOtherModification_version(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -2493,7 +2493,7 @@ func TestAccElastiCacheReplicationGroup_tagWithOtherModification(t *testing.T) {
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationGroupConfig_versionAndTag(rName, "6.0", acctest.CtKey1, acctest.CtValue1),
+				Config: testAccReplicationGroupConfig_tagAndVersion(rName, "6.0", acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "6.0"),
@@ -2503,11 +2503,52 @@ func TestAccElastiCacheReplicationGroup_tagWithOtherModification(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccReplicationGroupConfig_versionAndTag(rName, "6.2", acctest.CtKey1, acctest.CtValue1Updated),
+				Config: testAccReplicationGroupConfig_tagAndVersion(rName, "6.2", acctest.CtKey1, acctest.CtValue1Updated),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "6.2"),
 					testAccReplicationGroupCheckMemberClusterTags(resourceName, clusterDataSourcePrefix, 2, []kvp{
+						{acctest.CtKey1, acctest.CtValue1Updated},
+					}),
+				),
+			},
+		},
+	})
+}
+
+func TestAccElastiCacheReplicationGroup_TagWithOtherModification_numCacheClusters(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var rg awstypes.ReplicationGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_replication_group.test"
+	clusterDataSourcePrefix := "data.aws_elasticache_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationGroupConfig_tagAndNumCacheClusters(rName, 2, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "num_cache_clusters", "2"),
+					testAccReplicationGroupCheckMemberClusterTags(resourceName, clusterDataSourcePrefix, 2, []kvp{
+						{acctest.CtKey1, acctest.CtValue1},
+					}),
+				),
+			},
+			{
+				Config: testAccReplicationGroupConfig_tagAndNumCacheClusters(rName, 3, acctest.CtKey1, acctest.CtValue1Updated),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "num_cache_clusters", "3"),
+					testAccReplicationGroupCheckMemberClusterTags(resourceName, clusterDataSourcePrefix, 3, []kvp{
 						{acctest.CtKey1, acctest.CtValue1Updated},
 					}),
 				),
@@ -3404,7 +3445,7 @@ func testAccReplicationGroupCheckMemberClusterTags(resourceName, dataSourceNameP
 	checks := testAccCheckResourceTags(resourceName, kvs)
 	checks = append(checks, resource.TestCheckResourceAttr(resourceName, "member_clusters.#", strconv.Itoa(memberCount))) // sanity check
 
-	for i := 0; i < memberCount; i++ {
+	for i := range memberCount {
 		dataSourceName := fmt.Sprintf("%s.%d", dataSourceNamePrefix, i)
 		checks = append(checks, testAccCheckResourceTags(dataSourceName, kvs)...)
 	}
@@ -4429,10 +4470,10 @@ resource "aws_elasticache_replication_group" "test" {
 	)
 }
 
-func testAccReplicationGroupConfig_versionAndTag(rName, version, tagKey1, tagValue1 string) string {
-	const clusterCount = 2
+func testAccReplicationGroupConfig_tagAndVersion(rName, version, tagKey1, tagValue1 string) string {
+	const numCacheClusters = 2
 	return acctest.ConfigCompose(
-		testAccReplicationGroupClusterData(clusterCount),
+		testAccReplicationGroupClusterData(numCacheClusters),
 		fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id = %[1]q
@@ -4446,7 +4487,27 @@ resource "aws_elasticache_replication_group" "test" {
     %[4]q = %[5]q
   }
 }
-`, rName, clusterCount, version, tagKey1, tagValue1),
+`, rName, numCacheClusters, version, tagKey1, tagValue1),
+	)
+}
+
+func testAccReplicationGroupConfig_tagAndNumCacheClusters(rName string, numCacheClusters int, tagKey1 string, tagValue1 string) string {
+	return acctest.ConfigCompose(
+		testAccReplicationGroupClusterData(numCacheClusters),
+		fmt.Sprintf(`
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id = %[1]q
+  description          = "test description"
+  node_type            = "cache.t3.small"
+  num_cache_clusters   = %[2]d
+  apply_immediately    = true
+  engine_version       = 6.2
+
+  tags = {
+    %[3]q = %[4]q
+  }
+}
+`, rName, numCacheClusters, tagKey1, tagValue1),
 	)
 }
 

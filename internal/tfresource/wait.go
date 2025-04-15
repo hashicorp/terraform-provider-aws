@@ -28,7 +28,7 @@ const (
 // If `timeout` is exceeded before `f` returns `true`, return an error.
 // Waits between calls to `f` using exponential backoff, except when waiting for the target state to reoccur.
 func WaitUntil(ctx context.Context, timeout time.Duration, f func() (bool, error), opts WaitOpts) error {
-	refresh := func() (interface{}, string, error) {
+	refresh := func() (any, string, error) {
 		done, err := f()
 
 		if err != nil {

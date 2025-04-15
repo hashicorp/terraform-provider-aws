@@ -417,7 +417,7 @@ func (r *resourceRotation) Delete(ctx context.Context, request resource.DeleteRe
 		return
 	}
 
-	tflog.Debug(ctx, "deleting TODO", map[string]interface{}{
+	tflog.Debug(ctx, "deleting TODO", map[string]any{
 		names.AttrID: state.ID.ValueString(),
 	})
 

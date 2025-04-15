@@ -68,7 +68,7 @@ func (o *blueGreenOrchestrator) Switchover(ctx context.Context, identifier strin
 		BlueGreenDeploymentIdentifier: aws.String(identifier),
 	}
 	_, err := tfresource.RetryWhen(ctx, 10*time.Minute,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return o.conn.SwitchoverBlueGreenDeployment(ctx, input)
 		},
 		func(err error) (bool, error) {

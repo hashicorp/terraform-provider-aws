@@ -26,7 +26,7 @@ const (
 
 // ExpandStringList the result of flatmap.Expand for an array of strings
 // and returns a []*string. Empty strings are skipped.
-func ExpandStringList(configured []interface{}) []*string {
+func ExpandStringList(configured []any) []*string {
 	vs := make([]*string, 0, len(configured))
 	for _, v := range configured {
 		if v, ok := v.(string); ok && v != "" { // v != "" may not do anything since in []interface{}, empty string will be nil so !ok
@@ -36,7 +36,7 @@ func ExpandStringList(configured []interface{}) []*string {
 	return vs
 }
 
-func ExpandStringTimeValueList(configured []interface{}, format string) []time.Time {
+func ExpandStringTimeValueList(configured []any, format string) []time.Time {
 	return tfslices.ApplyToAll(ExpandStringValueList(configured), func(v string) time.Time {
 		t, _ := time.Parse(format, v)
 		return t
@@ -45,7 +45,7 @@ func ExpandStringTimeValueList(configured []interface{}, format string) []time.T
 
 // ExpandStringValueList takes the result of flatmap.Expand for an array of strings
 // and returns a []string
-func ExpandStringValueList(configured []interface{}) []string {
+func ExpandStringValueList(configured []any) []string {
 	return ExpandStringyValueList[string](configured)
 }
 
@@ -61,7 +61,7 @@ func ExpandStringyValueList[E ~string](configured []any) []E {
 
 // ExpandStringValueList takes the result of flatmap.Expand for an array of strings
 // and returns a []string
-func ExpandStringValueListEmpty(configured []interface{}) []string {
+func ExpandStringValueListEmpty(configured []any) []string {
 	return ExpandStringyValueListEmpty[string](configured)
 }
 
@@ -80,8 +80,8 @@ func ExpandStringyValueListEmpty[E ~string](configured []any) []E {
 // Takes list of pointers to strings. Expand to an array
 // of raw strings and returns a []interface{}
 // to keep compatibility w/ schema.NewSetschema.NewSet
-func FlattenStringList(list []*string) []interface{} {
-	vs := make([]interface{}, 0, len(list))
+func FlattenStringList(list []*string) []any {
+	vs := make([]any, 0, len(list))
 	for _, v := range list {
 		if v != nil {
 			vs = append(vs, *v)
@@ -90,7 +90,7 @@ func FlattenStringList(list []*string) []interface{} {
 	return vs
 }
 
-func FlattenTimeStringValueList(list []time.Time, format string) []interface{} {
+func FlattenTimeStringValueList(list []time.Time, format string) []any {
 	return tfslices.ApplyToAll(list, func(v time.Time) any {
 		return v.Format(format)
 	})
@@ -99,8 +99,8 @@ func FlattenTimeStringValueList(list []time.Time, format string) []interface{} {
 // Takes list of strings. Expand to an array
 // of raw strings and returns a []interface{}
 // to keep compatibility w/ schema.NewSetschema.NewSet
-func FlattenStringValueList(list []string) []interface{} {
-	vs := make([]interface{}, 0, len(list))
+func FlattenStringValueList(list []string) []any {
+	vs := make([]any, 0, len(list))
 	for _, v := range list {
 		vs = append(vs, v)
 	}
@@ -108,7 +108,7 @@ func FlattenStringValueList(list []string) []interface{} {
 }
 
 func FlattenStringyValueList[E ~string](configured []E) []any {
-	vs := make([]interface{}, 0, len(configured))
+	vs := make([]any, 0, len(configured))
 	for _, v := range configured {
 		vs = append(vs, string(v))
 	}
@@ -116,28 +116,28 @@ func FlattenStringyValueList[E ~string](configured []E) []any {
 }
 
 // Expands a map of string to interface to a map of string to int32
-func ExpandInt32Map(m map[string]interface{}) map[string]int32 {
+func ExpandInt32Map(m map[string]any) map[string]int32 {
 	return tfmaps.ApplyToAllValues(m, func(v any) int32 {
 		return int32(v.(int))
 	})
 }
 
 // ExpandInt64ValueMap expands a map of string to interface to a map of string to int64
-func ExpandInt64ValueMap(m map[string]interface{}) map[string]int64 {
+func ExpandInt64ValueMap(m map[string]any) map[string]int64 {
 	return tfmaps.ApplyToAllValues(m, func(v any) int64 {
 		return int64(v.(int))
 	})
 }
 
 // ExpandFloat64ValueMap expands a map of string to interface to a map of string to float64
-func ExpandFloat64ValueMap(m map[string]interface{}) map[string]float64 {
+func ExpandFloat64ValueMap(m map[string]any) map[string]float64 {
 	return tfmaps.ApplyToAllValues(m, func(v any) float64 {
 		return v.(float64)
 	})
 }
 
 // Expands a map of string to interface to a map of string to *string
-func ExpandStringMap(m map[string]interface{}) map[string]*string {
+func ExpandStringMap(m map[string]any) map[string]*string {
 	return tfmaps.ApplyToAllValues(m, func(v any) *string {
 		return aws.String(v.(string))
 	})
@@ -154,14 +154,14 @@ func ExpandStringyValueMap[M ~map[K]V, K ~string, V ~string](m M) map[string]str
 }
 
 // ExpandStringValueMap expands a string map of interfaces to a string map of strings
-func ExpandStringValueMap(m map[string]interface{}) map[string]string {
+func ExpandStringValueMap(m map[string]any) map[string]string {
 	return tfmaps.ApplyToAllValues(m, func(v any) string {
 		return v.(string)
 	})
 }
 
 // Expands a map of string to interface to a map of string to *bool
-func ExpandBoolValueMap(m map[string]interface{}) map[string]bool {
+func ExpandBoolValueMap(m map[string]any) map[string]bool {
 	return tfmaps.ApplyToAllValues(m, func(v any) bool {
 		return v.(bool)
 	})
@@ -200,7 +200,7 @@ func FlattenStringyValueSet[E ~string](list []E) *schema.Set {
 	return schema.NewSet(schema.HashString, FlattenStringyValueList[E](list))
 }
 
-func FlattenStringValueMap(m map[string]string) map[string]interface{} {
+func FlattenStringValueMap(m map[string]string) map[string]any {
 	return tfmaps.ApplyToAllValues(m, func(v string) any {
 		return v
 	})
@@ -213,7 +213,7 @@ func ExpandInt64ValueSet(configured *schema.Set) []int64 {
 
 // Takes the result of flatmap.Expand for an array of int32
 // and returns a []int32
-func ExpandInt32ValueList(configured []interface{}) []int32 {
+func ExpandInt32ValueList(configured []any) []int32 {
 	return tfslices.ApplyToAll(configured, func(v any) int32 {
 		return int32(v.(int))
 	})
@@ -230,19 +230,19 @@ func FlattenInt32ValueSet(set []int32) *schema.Set {
 
 // Takes the result of flatmap.Expand for an array of int64
 // and returns a []int64
-func ExpandInt64ValueList(configured []interface{}) []int64 {
+func ExpandInt64ValueList(configured []any) []int64 {
 	return tfslices.ApplyToAll(configured, func(v any) int64 {
 		return int64(v.(int))
 	})
 }
 
-func ExpandFloat64ValueList(configured []interface{}) []float64 {
+func ExpandFloat64ValueList(configured []any) []float64 {
 	return tfslices.ApplyToAll(configured, func(v any) float64 {
 		return v.(float64)
 	})
 }
 
-func FlattenInt32ValueList(list []int32) []interface{} {
+func FlattenInt32ValueList(list []int32) []any {
 	return tfslices.ApplyToAll(list, func(v int32) any {
 		return int(v)
 	})
@@ -421,7 +421,7 @@ func ResourceIdPartCount(id string) int {
 
 // DiffStringValueMaps returns the set of keys and values that must be created, the set of keys
 // and values that must be destroyed, and the set of keys and values that are unchanged.
-func DiffStringValueMaps(oldMap, newMap map[string]interface{}) (map[string]string, map[string]string, map[string]string) {
+func DiffStringValueMaps(oldMap, newMap map[string]any) (map[string]string, map[string]string, map[string]string) {
 	// First, we're creating everything we have.
 	add := ExpandStringValueMap(newMap)
 
@@ -463,4 +463,38 @@ func DiffSlices[E any](old []E, new []E, eq func(E, E) bool) ([]E, []E, []E) {
 	}
 
 	return add, remove, unchanged
+}
+
+// DiffSlicesWithModify is a variant of DiffSlices which can account for
+// cases when a partially equal item should be modified, rather than
+// deleted and re-created
+func DiffSlicesWithModify[E any](old []E, new []E, eq func(E, E) bool, modifyEq func(E, E) bool) ([]E, []E, []E, []E) {
+	// First, we're creating everything we have.
+	add := new
+
+	// Build the slices of what to remove, modify, and what is unchanged.
+	remove := make([]E, 0)
+	modify := make([]E, 0)
+	unchanged := make([]E, 0)
+	for _, e := range old {
+		eq := func(v E) bool { return eq(v, e) }
+		modifyEq := func(v E) bool { return modifyEq(v, e) }
+
+		if slices.ContainsFunc(new, eq) {
+			// Unchanged, remove from add.
+			unchanged = append(unchanged, e)
+			add = slices.DeleteFunc(add, eq)
+		} else {
+			if i := slices.IndexFunc(new, modifyEq); i != -1 {
+				// Modify, grab the indexed item from new, remove from add.
+				modify = append(modify, new[i])
+				add = slices.DeleteFunc(add, modifyEq)
+			} else {
+				// Delete it!
+				remove = append(remove, e)
+			}
+		}
+	}
+
+	return add, remove, modify, unchanged
 }

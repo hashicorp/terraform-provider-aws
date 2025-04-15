@@ -74,7 +74,7 @@ const (
 	DSNameReplicationSet = "Replication Set Data Source"
 )
 
-func dataSourceReplicationSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceReplicationSetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	client := meta.(*conns.AWSClient).SSMIncidentsClient(ctx)
 

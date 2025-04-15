@@ -194,7 +194,7 @@ func dataSourceFunction() *schema.Resource {
 			"source_code_hash": {
 				Type:       schema.TypeString,
 				Computed:   true,
-				Deprecated: "This attribute is deprecated and will be removed in a future major version. Use `code_sha256` instead.",
+				Deprecated: "source_code_hash is deprecated. Use code_sha256 instead.",
 			},
 			"source_code_size": {
 				Type:     schema.TypeInt,
@@ -251,7 +251,7 @@ func dataSourceFunction() *schema.Resource {
 	}
 }
 
-func dataSourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
@@ -297,15 +297,15 @@ func dataSourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set(names.AttrARN, unqualifiedARN)
 	d.Set("code_sha256", function.CodeSha256)
 	if function.DeadLetterConfig != nil && function.DeadLetterConfig.TargetArn != nil {
-		if err := d.Set("dead_letter_config", []interface{}{
-			map[string]interface{}{
+		if err := d.Set("dead_letter_config", []any{
+			map[string]any{
 				names.AttrTargetARN: aws.ToString(function.DeadLetterConfig.TargetArn),
 			},
 		}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting dead_letter_config: %s", err)
 		}
 	} else {
-		d.Set("dead_letter_config", []interface{}{})
+		d.Set("dead_letter_config", []any{})
 	}
 	d.Set(names.AttrDescription, function.Description)
 	if err := d.Set(names.AttrEnvironment, flattenEnvironment(function.Environment)); err != nil {
@@ -349,8 +349,8 @@ func dataSourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta in
 	if function.TracingConfig != nil {
 		tracingConfigMode = function.TracingConfig.Mode
 	}
-	if err := d.Set("tracing_config", []interface{}{
-		map[string]interface{}{
+	if err := d.Set("tracing_config", []any{
+		map[string]any{
 			names.AttrMode: string(tracingConfigMode),
 		},
 	}); err != nil {

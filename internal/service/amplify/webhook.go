@@ -63,7 +63,7 @@ func resourceWebhook() *schema.Resource {
 	}
 }
 
-func resourceWebhookCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWebhookCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AmplifyClient(ctx)
 
@@ -87,7 +87,7 @@ func resourceWebhookCreate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceWebhookRead(ctx, d, meta)...)
 }
 
-func resourceWebhookRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWebhookRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AmplifyClient(ctx)
 
@@ -126,7 +126,7 @@ func resourceWebhookRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceWebhookUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWebhookUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AmplifyClient(ctx)
 
@@ -151,7 +151,7 @@ func resourceWebhookUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceWebhookRead(ctx, d, meta)...)
 }
 
-func resourceWebhookDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWebhookDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AmplifyClient(ctx)
 

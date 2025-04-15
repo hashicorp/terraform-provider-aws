@@ -30,7 +30,7 @@ func listTags(ctx context.Context, conn *pinpoint.Client, identifier string, opt
 		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(ctx, output.TagsModel.Tags), nil
+	return keyValueTags(ctx, output.TagsModel.Tags), nil
 }
 
 // ListTags lists pinpoint service tags and set them in Context.
@@ -51,13 +51,13 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier stri
 
 // map[string]string handling
 
-// Tags returns pinpoint service tags.
-func Tags(tags tftags.KeyValueTags) map[string]string {
+// svcTags returns pinpoint service tags.
+func svcTags(tags tftags.KeyValueTags) map[string]string {
 	return tags.Map()
 }
 
-// KeyValueTags creates tftags.KeyValueTags from pinpoint service tags.
-func KeyValueTags(ctx context.Context, tags map[string]string) tftags.KeyValueTags {
+// keyValueTags creates tftags.KeyValueTags from pinpoint service tags.
+func keyValueTags(ctx context.Context, tags map[string]string) tftags.KeyValueTags {
 	return tftags.New(ctx, tags)
 }
 
@@ -65,7 +65,7 @@ func KeyValueTags(ctx context.Context, tags map[string]string) tftags.KeyValueTa
 // nil is returned if there are no input tags.
 func getTagsIn(ctx context.Context) map[string]string {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
+		if tags := svcTags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
 		}
 	}
@@ -76,7 +76,7 @@ func getTagsIn(ctx context.Context) map[string]string {
 // setTagsOut sets pinpoint service tags in Context.
 func setTagsOut(ctx context.Context, tags map[string]string) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		inContext.TagsOut = option.Some(KeyValueTags(ctx, tags))
+		inContext.TagsOut = option.Some(keyValueTags(ctx, tags))
 	}
 }
 
@@ -109,7 +109,7 @@ func updateTags(ctx context.Context, conn *pinpoint.Client, identifier string, o
 	if len(updatedTags) > 0 {
 		input := pinpoint.TagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagsModel:   &awstypes.TagsModel{Tags: Tags(updatedTags.IgnoreAWS())},
+			TagsModel:   &awstypes.TagsModel{Tags: svcTags(updatedTags.IgnoreAWS())},
 		}
 
 		_, err := conn.TagResource(ctx, &input, optFns...)

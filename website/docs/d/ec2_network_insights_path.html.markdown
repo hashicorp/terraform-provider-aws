@@ -43,6 +43,8 @@ This data source exports the following attributes in addition to the arguments a
 * `destination_arn` - ARN of the destination.
 * `destination_ip` - IP address of the AWS resource that is the destination of the path.
 * `destination_port` - Destination port.
+* `filter_at_destination` - Filters of the network paths at the destination.
+* `filter_at_source` - Filters of the network paths at the source.
 * `protocol` - Protocol.
 * `source` - AWS resource that is the source of the path.
 * `source_arn` - ARN of the source.

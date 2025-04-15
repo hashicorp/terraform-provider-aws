@@ -70,7 +70,7 @@ func dataSourceSecrets() *schema.Resource {
 	}
 }
 
-func dataSourceSecretsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceSecretsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
@@ -78,7 +78,7 @@ func dataSourceSecretsRead(ctx context.Context, d *schema.ResourceData, meta int
 	plaintext := make(map[string]string, len(tfList))
 
 	for _, tfMapRaw := range tfList {
-		tfMap := tfMapRaw.(map[string]interface{})
+		tfMap := tfMapRaw.(map[string]any)
 		name := tfMap[names.AttrName].(string)
 
 		// base64 decode the payload
@@ -91,7 +91,7 @@ func dataSourceSecretsRead(ctx context.Context, d *schema.ResourceData, meta int
 			CiphertextBlob: payload,
 		}
 
-		if v, ok := tfMap["context"].(map[string]interface{}); ok && len(v) > 0 {
+		if v, ok := tfMap["context"].(map[string]any); ok && len(v) > 0 {
 			input.EncryptionContext = flex.ExpandStringValueMap(v)
 		}
 
@@ -99,7 +99,7 @@ func dataSourceSecretsRead(ctx context.Context, d *schema.ResourceData, meta int
 			input.EncryptionAlgorithm = awstypes.EncryptionAlgorithmSpec(v)
 		}
 
-		if v, ok := tfMap["grant_tokens"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := tfMap["grant_tokens"].([]any); ok && len(v) > 0 {
 			input.GrantTokens = flex.ExpandStringValueList(v)
 		}
 

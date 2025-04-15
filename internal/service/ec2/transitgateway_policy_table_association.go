@@ -58,7 +58,7 @@ func resourceTransitGatewayPolicyTableAssociation() *schema.Resource {
 	}
 }
 
-func resourceTransitGatewayPolicyTableAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitGatewayPolicyTableAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -111,7 +111,7 @@ func resourceTransitGatewayPolicyTableAssociationCreate(ctx context.Context, d *
 	return append(diags, resourceTransitGatewayPolicyTableAssociationRead(ctx, d, meta)...)
 }
 
-func resourceTransitGatewayPolicyTableAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitGatewayPolicyTableAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -140,7 +140,7 @@ func resourceTransitGatewayPolicyTableAssociationRead(ctx context.Context, d *sc
 	return diags
 }
 
-func resourceTransitGatewayPolicyTableAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitGatewayPolicyTableAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 

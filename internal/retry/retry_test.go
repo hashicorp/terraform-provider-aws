@@ -88,7 +88,7 @@ func TestRandomization(t *testing.T) {
 	const delay = time.Millisecond * 10
 	sumSquares := 0.0
 	var sum time.Duration
-	for i := 0; i < N; i++ {
+	for range N {
 		start := time.Now()
 		randomizedSleep(context.Background(), delay)
 		elapsed := time.Since(start)

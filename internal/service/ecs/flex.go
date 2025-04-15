@@ -15,7 +15,7 @@ func expandCapacityProviderStrategyItems(tfSet *schema.Set) []awstypes.CapacityP
 	apiObjects := make([]awstypes.CapacityProviderStrategyItem, 0)
 
 	for _, tfMapRaw := range tfList {
-		tfMap := tfMapRaw.(map[string]interface{})
+		tfMap := tfMapRaw.(map[string]any)
 		apiObject := awstypes.CapacityProviderStrategyItem{}
 
 		if v, ok := tfMap["base"]; ok {
@@ -36,15 +36,15 @@ func expandCapacityProviderStrategyItems(tfSet *schema.Set) []awstypes.CapacityP
 	return apiObjects
 }
 
-func flattenCapacityProviderStrategyItems(apiObjects []awstypes.CapacityProviderStrategyItem) []interface{} {
+func flattenCapacityProviderStrategyItems(apiObjects []awstypes.CapacityProviderStrategyItem) []any {
 	if apiObjects == nil {
 		return nil
 	}
 
-	tfList := make([]interface{}, 0)
+	tfList := make([]any, 0)
 
 	for _, apiObject := range apiObjects {
-		tfMap := make(map[string]interface{})
+		tfMap := make(map[string]any)
 
 		tfMap["base"] = apiObject.Base
 		tfMap["capacity_provider"] = aws.ToString(apiObject.CapacityProvider)
@@ -56,11 +56,11 @@ func flattenCapacityProviderStrategyItems(apiObjects []awstypes.CapacityProvider
 	return tfList
 }
 
-func expandLoadBalancers(tfList []interface{}) []awstypes.LoadBalancer {
+func expandLoadBalancers(tfList []any) []awstypes.LoadBalancer {
 	apiObjects := make([]awstypes.LoadBalancer, 0, len(tfList))
 
 	for _, tfMapRaw := range tfList {
-		tfMap := tfMapRaw.(map[string]interface{})
+		tfMap := tfMapRaw.(map[string]any)
 
 		apiObject := awstypes.LoadBalancer{
 			ContainerName: aws.String(tfMap["container_name"].(string)),
@@ -81,11 +81,11 @@ func expandLoadBalancers(tfList []interface{}) []awstypes.LoadBalancer {
 	return apiObjects
 }
 
-func flattenLoadBalancers(apiObjects []awstypes.LoadBalancer) []interface{} {
-	tfList := make([]interface{}, 0, len(apiObjects))
+func flattenLoadBalancers(apiObjects []awstypes.LoadBalancer) []any {
+	tfList := make([]any, 0, len(apiObjects))
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			"container_name": aws.ToString(apiObject.ContainerName),
 			"container_port": aws.ToInt32(apiObject.ContainerPort),
 		}
@@ -104,7 +104,7 @@ func flattenLoadBalancers(apiObjects []awstypes.LoadBalancer) []interface{} {
 	return tfList
 }
 
-func expandTaskSetLoadBalancers(tfList []interface{}) []awstypes.LoadBalancer {
+func expandTaskSetLoadBalancers(tfList []any) []awstypes.LoadBalancer {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -112,7 +112,7 @@ func expandTaskSetLoadBalancers(tfList []interface{}) []awstypes.LoadBalancer {
 	apiObjects := make([]awstypes.LoadBalancer, 0, len(tfList))
 
 	for _, tfMapRaw := range tfList {
-		tfMap := tfMapRaw.(map[string]interface{})
+		tfMap := tfMapRaw.(map[string]any)
 
 		apiObject := awstypes.LoadBalancer{}
 
@@ -138,11 +138,11 @@ func expandTaskSetLoadBalancers(tfList []interface{}) []awstypes.LoadBalancer {
 	return apiObjects
 }
 
-func flattenTaskSetLoadBalancers(apiObjects []awstypes.LoadBalancer) []interface{} {
-	tfList := make([]interface{}, 0, len(apiObjects))
+func flattenTaskSetLoadBalancers(apiObjects []awstypes.LoadBalancer) []any {
+	tfList := make([]any, 0, len(apiObjects))
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			"container_name": aws.ToString(apiObject.ContainerName),
 			"container_port": aws.ToInt32(apiObject.ContainerPort),
 		}
@@ -160,7 +160,7 @@ func flattenTaskSetLoadBalancers(apiObjects []awstypes.LoadBalancer) []interface
 	return tfList
 }
 
-func expandServiceRegistries(tfList []interface{}) []awstypes.ServiceRegistry {
+func expandServiceRegistries(tfList []any) []awstypes.ServiceRegistry {
 	apiObjects := make([]awstypes.ServiceRegistry, 0, len(tfList))
 
 	for _, tfMapRaw := range tfList {
@@ -168,7 +168,7 @@ func expandServiceRegistries(tfList []interface{}) []awstypes.ServiceRegistry {
 			continue
 		}
 
-		tfMap := tfMapRaw.(map[string]interface{})
+		tfMap := tfMapRaw.(map[string]any)
 		apiObject := awstypes.ServiceRegistry{
 			RegistryArn: aws.String(tfMap["registry_arn"].(string)),
 		}
@@ -191,12 +191,12 @@ func expandServiceRegistries(tfList []interface{}) []awstypes.ServiceRegistry {
 	return apiObjects
 }
 
-func expandScale(tfList []interface{}) *awstypes.Scale {
+func expandScale(tfList []any) *awstypes.Scale {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -214,14 +214,14 @@ func expandScale(tfList []interface{}) *awstypes.Scale {
 	return apiObject
 }
 
-func flattenScale(apiObject *awstypes.Scale) []interface{} {
+func flattenScale(apiObject *awstypes.Scale) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := make(map[string]interface{})
+	tfMap := make(map[string]any)
 	tfMap[names.AttrUnit] = string(apiObject.Unit)
 	tfMap[names.AttrValue] = apiObject.Value
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

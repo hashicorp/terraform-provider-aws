@@ -34,14 +34,14 @@ var _ provider.ProviderWithEphemeralResources = &fwprovider{}
 
 // New returns a new, initialized Terraform Plugin Framework-style provider instance.
 // The provider instance is fully configured once the `Configure` method has been called.
-func New(primary interface{ Meta() interface{} }) provider.Provider {
+func New(primary interface{ Meta() any }) provider.Provider {
 	return &fwprovider{
 		Primary: primary,
 	}
 }
 
 type fwprovider struct {
-	Primary interface{ Meta() interface{} }
+	Primary interface{ Meta() any }
 }
 
 func (*fwprovider) Metadata(ctx context.Context, request provider.MetadataRequest, response *provider.MetadataResponse) {
@@ -323,7 +323,7 @@ func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSo
 			inner, err := v.Factory(ctx)
 
 			if err != nil {
-				tflog.Warn(ctx, "creating data source", map[string]interface{}{
+				tflog.Warn(ctx, "creating data source", map[string]any{
 					"service_package_name": n,
 					"error":                err.Error(),
 				})
@@ -376,7 +376,7 @@ func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSo
 	}
 
 	if err := errors.Join(errs...); err != nil {
-		tflog.Warn(ctx, "registering data sources", map[string]interface{}{
+		tflog.Warn(ctx, "registering data sources", map[string]any{
 			"error": err.Error(),
 		})
 	}
@@ -404,6 +404,7 @@ func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 			}
 
 			typeName := v.TypeName
+			var modifyPlanFuncs []modifyPlanFunc
 			interceptors := resourceInterceptors{}
 			if v.Tags != nil {
 				// The resource has opted in to transparent tagging.
@@ -430,6 +431,7 @@ func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 					continue
 				}
 
+				modifyPlanFuncs = append(modifyPlanFuncs, setTagsAll)
 				interceptors = append(interceptors, newTagsResourceInterceptor(v.Tags))
 			}
 
@@ -447,9 +449,9 @@ func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 
 					return ctx, diags
 				},
-				interceptors:           interceptors,
-				typeName:               typeName,
-				usesTransparentTagging: v.Tags != nil,
+				interceptors:    interceptors,
+				modifyPlanFuncs: modifyPlanFuncs,
+				typeName:        typeName,
 			}
 			resources = append(resources, func() resource.Resource {
 				return newWrappedResource(inner, opts)
@@ -458,7 +460,7 @@ func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 	}
 
 	if err := errors.Join(errs...); err != nil {
-		tflog.Warn(ctx, "registering resources", map[string]interface{}{
+		tflog.Warn(ctx, "registering resources", map[string]any{
 			"error": err.Error(),
 		})
 	}
@@ -482,7 +484,7 @@ func (p *fwprovider) EphemeralResources(ctx context.Context) []func() ephemeral.
 				inner, err := v.Factory(ctx)
 
 				if err != nil {
-					tflog.Warn(ctx, "creating ephemeral resource", map[string]interface{}{
+					tflog.Warn(ctx, "creating ephemeral resource", map[string]any{
 						"service_package_name": n,
 						"error":                err.Error(),
 					})
@@ -515,7 +517,7 @@ func (p *fwprovider) EphemeralResources(ctx context.Context) []func() ephemeral.
 	}
 
 	if err := errors.Join(errs...); err != nil {
-		tflog.Warn(ctx, "registering ephemeral resources", map[string]interface{}{
+		tflog.Warn(ctx, "registering ephemeral resources", map[string]any{
 			"error": err.Error(),
 		})
 	}

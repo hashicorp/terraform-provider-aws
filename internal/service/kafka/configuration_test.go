@@ -181,6 +181,46 @@ func TestAccKafkaConfiguration_serverProperties(t *testing.T) {
 	})
 }
 
+// https://github.com/hashicorp/terraform-provider-aws/issues/34297.
+// https://github.com/hashicorp/terraform-provider-aws/issues/15405.
+func TestAccKafkaConfiguration_serverPropertiesWithCluster(t *testing.T) {
+	ctx := acctest.Context(t)
+	var configuration1, configuration2 kafka.DescribeConfigurationOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_msk_configuration.test"
+	serverProperty1 := "auto.create.topics.enable = false"
+	serverProperty2 := "auto.create.topics.enable = true"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConfigurationConfig_serverPropertiesWithCluster(rName, serverProperty1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigurationExists(ctx, resourceName, &configuration1),
+					resource.TestMatchResourceAttr(resourceName, "server_properties", regexache.MustCompile(serverProperty1)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccConfigurationConfig_serverPropertiesWithCluster(rName, serverProperty2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigurationExists(ctx, resourceName, &configuration2),
+					resource.TestCheckResourceAttr(resourceName, "latest_revision", "2"),
+					resource.TestMatchResourceAttr(resourceName, "server_properties", regexache.MustCompile(serverProperty2)),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaClient(ctx)
@@ -267,7 +307,7 @@ PROPERTIES
 `, rName)
 }
 
-func testAccConfigurationConfig_serverProperties(rName string, serverProperty string) string {
+func testAccConfigurationConfig_serverProperties(rName, serverProperty string) string {
 	return fmt.Sprintf(`
 resource "aws_msk_configuration" "test" {
   name = %[1]q
@@ -277,4 +317,39 @@ resource "aws_msk_configuration" "test" {
 PROPERTIES
 }
 `, rName, serverProperty)
+}
+
+func testAccConfigurationConfig_serverPropertiesWithCluster(rName, serverProperty string) string {
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
+resource "aws_msk_configuration" "test" {
+  name = %[1]q
+
+  server_properties = <<PROPERTIES
+%[2]s
+PROPERTIES
+}
+
+resource "aws_msk_cluster" "test" {
+  cluster_name           = %[1]q
+  kafka_version          = "3.3.2"
+  number_of_broker_nodes = 3
+
+  broker_node_group_info {
+    client_subnets  = aws_subnet.test[*].id
+    instance_type   = "kafka.t3.small"
+    security_groups = [aws_security_group.test.id]
+
+    storage_info {
+      ebs_storage_info {
+        volume_size = 10
+      }
+    }
+  }
+
+  configuration_info {
+    arn      = aws_msk_configuration.test.arn
+    revision = aws_msk_configuration.test.latest_revision
+  }
+}
+`, rName, serverProperty))
 }

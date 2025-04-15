@@ -1640,7 +1640,7 @@ func testAccSecurityGroupRuleImportGetAttrs(attrs map[string]string, key string)
 		if err != nil {
 			return nil, err
 		}
-		for i := 0; i < count; i++ {
+		for i := range count {
 			values = append(values, attrs[fmt.Sprintf("%s.%d", key, i)])
 		}
 	}

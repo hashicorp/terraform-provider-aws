@@ -97,7 +97,7 @@ func resourceEndpoint() *schema.Resource {
 	}
 }
 
-func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3OutpostsClient(ctx)
 
@@ -130,7 +130,7 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceEndpointRead(ctx, d, meta)...)
 }
 
-func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3OutpostsClient(ctx)
 
@@ -161,7 +161,7 @@ func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func resourceEndpointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEndpointDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3OutpostsClient(ctx)
 
@@ -191,7 +191,7 @@ func resourceEndpointDelete(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourceEndpointImportState(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceEndpointImportState(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	idParts := strings.Split(d.Id(), ",")
 
 	if len(idParts) != 3 || idParts[0] == "" || idParts[1] == "" || idParts[2] == "" {
@@ -252,7 +252,7 @@ func findEndpoints(ctx context.Context, conn *s3outposts.Client, input *s3outpos
 }
 
 func statusEndpoint(ctx context.Context, conn *s3outposts.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findEndpointByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
@@ -291,8 +291,8 @@ func waitEndpointStatusCreated(ctx context.Context, conn *s3outposts.Client, arn
 	return nil, err
 }
 
-func flattenNetworkInterfaces(apiObjects []awstypes.NetworkInterface) []interface{} {
-	var tfList []interface{}
+func flattenNetworkInterfaces(apiObjects []awstypes.NetworkInterface) []any {
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenNetworkInterface(apiObject))
@@ -301,8 +301,8 @@ func flattenNetworkInterfaces(apiObjects []awstypes.NetworkInterface) []interfac
 	return tfList
 }
 
-func flattenNetworkInterface(apiObject awstypes.NetworkInterface) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenNetworkInterface(apiObject awstypes.NetworkInterface) map[string]any {
+	tfMap := map[string]any{}
 
 	if v := apiObject.NetworkInterfaceId; v != nil {
 		tfMap[names.AttrNetworkInterfaceID] = aws.ToString(v)

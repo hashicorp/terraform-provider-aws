@@ -187,7 +187,7 @@ func dataSourceDataProtectionPolicyDocument() *schema.Resource {
 	}
 }
 
-func dataSourceDataProtectionPolicyDocumentRead(_ context.Context, d *schema.ResourceData, _ interface{}) diag.Diagnostics {
+func dataSourceDataProtectionPolicyDocumentRead(_ context.Context, d *schema.ResourceData, _ any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	document := dataProtectionPolicyDocument{
@@ -198,18 +198,18 @@ func dataSourceDataProtectionPolicyDocumentRead(_ context.Context, d *schema.Res
 
 	// unwrap expects v to be a configuration block -- a TypeList schema
 	// element with MaxItems: 1 and with a sub-schema.
-	unwrap := func(v interface{}) (map[string]interface{}, bool) {
+	unwrap := func(v any) (map[string]any, bool) {
 		if v == nil {
 			return nil, false
 		}
 
-		if tfList, ok := v.([]interface{}); ok && len(tfList) > 0 {
+		if tfList, ok := v.([]any); ok && len(tfList) > 0 {
 			if tfList[0] == nil {
 				// Configuration block was present, but the sub-schema is empty.
-				return map[string]interface{}{}, true
+				return map[string]any{}, true
 			}
 
-			if tfMap, ok := tfList[0].(map[string]interface{}); ok && tfMap != nil {
+			if tfMap, ok := tfList[0].(map[string]any); ok && tfMap != nil {
 				// This should be the most typical path.
 				return tfMap, true
 			}
@@ -221,9 +221,9 @@ func dataSourceDataProtectionPolicyDocumentRead(_ context.Context, d *schema.Res
 	if tfMap, ok := unwrap(d.Get(names.AttrConfiguration)); ok {
 		document.Configuration = &dataProtectionPolicyStatementConfiguration{}
 
-		if tfList, ok := tfMap["custom_data_identifier"].([]interface{}); ok && len(tfList) > 0 {
+		if tfList, ok := tfMap["custom_data_identifier"].([]any); ok && len(tfList) > 0 {
 			for _, tfMapRaw := range tfList {
-				tfMap, ok := tfMapRaw.(map[string]interface{})
+				tfMap, ok := tfMapRaw.(map[string]any)
 				if !ok {
 					continue
 				}
@@ -236,8 +236,8 @@ func dataSourceDataProtectionPolicyDocumentRead(_ context.Context, d *schema.Res
 		}
 	}
 
-	for _, tfMapRaw := range d.Get("statement").([]interface{}) {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+	for _, tfMapRaw := range d.Get("statement").([]any) {
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok || tfMap == nil {
 			continue
 		}

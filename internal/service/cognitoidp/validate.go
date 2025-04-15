@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 )
 
-func validIdentityProviderName(v interface{}, k string) (ws []string, es []error) {
+func validIdentityProviderName(v any, k string) (ws []string, es []error) {
 	value := v.(string)
 	count := utf8.RuneCountInString(value)
 	if count < 1 {
@@ -28,7 +28,7 @@ func validIdentityProviderName(v interface{}, k string) (ws []string, es []error
 	return
 }
 
-func validResourceServerScopeName(v interface{}, k string) (ws []string, errors []error) {
+func validResourceServerScopeName(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 
 	if len(value) < 1 {
@@ -43,7 +43,7 @@ func validResourceServerScopeName(v interface{}, k string) (ws []string, errors 
 	return
 }
 
-func validUserGroupName(v interface{}, k string) (ws []string, es []error) {
+func validUserGroupName(v any, k string) (ws []string, es []error) {
 	value := v.(string)
 	count := utf8.RuneCountInString(value)
 	if count < 1 {
@@ -60,7 +60,7 @@ func validUserGroupName(v interface{}, k string) (ws []string, es []error) {
 	return
 }
 
-func validUserPoolEmailVerificationMessage(v interface{}, k string) (ws []string, es []error) {
+func validUserPoolEmailVerificationMessage(v any, k string) (ws []string, es []error) {
 	value := v.(string)
 	count := utf8.RuneCountInString(value)
 	if count < 6 {
@@ -77,7 +77,7 @@ func validUserPoolEmailVerificationMessage(v interface{}, k string) (ws []string
 	return
 }
 
-func validUserPoolEmailVerificationSubject(v interface{}, k string) (ws []string, es []error) {
+func validUserPoolEmailVerificationSubject(v any, k string) (ws []string, es []error) {
 	value := v.(string)
 	count := utf8.RuneCountInString(value)
 	if count < 1 {
@@ -94,7 +94,7 @@ func validUserPoolEmailVerificationSubject(v interface{}, k string) (ws []string
 	return
 }
 
-func validUserPoolID(v interface{}, k string) (ws []string, es []error) {
+func validUserPoolID(v any, k string) (ws []string, es []error) {
 	value := v.(string)
 	if !regexache.MustCompile(`^[\w-]+_[0-9A-Za-z]+$`).MatchString(value) {
 		es = append(es, fmt.Errorf("%q must be the region name followed by an underscore and then alphanumeric pattern", k))
@@ -102,7 +102,7 @@ func validUserPoolID(v interface{}, k string) (ws []string, es []error) {
 	return
 }
 
-func validUserPoolInviteTemplateEmailMessage(v interface{}, k string) (ws []string, es []error) {
+func validUserPoolInviteTemplateEmailMessage(v any, k string) (ws []string, es []error) {
 	value := v.(string)
 	count := utf8.RuneCountInString(value)
 	if count < 6 {
@@ -123,7 +123,7 @@ func validUserPoolInviteTemplateEmailMessage(v interface{}, k string) (ws []stri
 	return
 }
 
-func validUserPoolInviteTemplateSMSMessage(v interface{}, k string) (ws []string, es []error) {
+func validUserPoolInviteTemplateSMSMessage(v any, k string) (ws []string, es []error) {
 	value := v.(string)
 	count := utf8.RuneCountInString(value)
 	if count < 6 {
@@ -144,7 +144,7 @@ func validUserPoolInviteTemplateSMSMessage(v interface{}, k string) (ws []string
 	return
 }
 
-func validUserPoolSchemaName(v interface{}, k string) (ws []string, es []error) {
+func validUserPoolSchemaName(v any, k string) (ws []string, es []error) {
 	value := v.(string)
 	if len(value) < 1 {
 		es = append(es, fmt.Errorf("%q cannot be less than 1 character", k))
@@ -160,7 +160,7 @@ func validUserPoolSchemaName(v interface{}, k string) (ws []string, es []error) 
 	return
 }
 
-func validUserPoolSMSAuthenticationMessage(v interface{}, k string) (ws []string, es []error) {
+func validUserPoolSMSAuthenticationMessage(v any, k string) (ws []string, es []error) {
 	value := v.(string)
 	count := utf8.RuneCountInString(value)
 	if count < 6 {
@@ -177,7 +177,7 @@ func validUserPoolSMSAuthenticationMessage(v interface{}, k string) (ws []string
 	return
 }
 
-func validUserPoolSMSVerificationMessage(v interface{}, k string) (ws []string, es []error) {
+func validUserPoolSMSVerificationMessage(v any, k string) (ws []string, es []error) {
 	value := v.(string)
 	count := utf8.RuneCountInString(value)
 	if count < 6 {
@@ -194,7 +194,7 @@ func validUserPoolSMSVerificationMessage(v interface{}, k string) (ws []string, 
 	return
 }
 
-func validUserPoolTemplateEmailMessage(v interface{}, k string) (ws []string, es []error) {
+func validUserPoolTemplateEmailMessage(v any, k string) (ws []string, es []error) {
 	value := v.(string)
 	count := utf8.RuneCountInString(value)
 	if count < 6 {
@@ -211,7 +211,7 @@ func validUserPoolTemplateEmailMessage(v interface{}, k string) (ws []string, es
 	return
 }
 
-func validUserPoolTemplateEmailMessageByLink(v interface{}, k string) (ws []string, es []error) {
+func validUserPoolTemplateEmailMessageByLink(v any, k string) (ws []string, es []error) {
 	value := v.(string)
 	count := utf8.RuneCountInString(value)
 	if count < 6 {
@@ -228,7 +228,7 @@ func validUserPoolTemplateEmailMessageByLink(v interface{}, k string) (ws []stri
 	return
 }
 
-func validUserPoolTemplateEmailSubject(v interface{}, k string) (ws []string, es []error) {
+func validUserPoolTemplateEmailSubject(v any, k string) (ws []string, es []error) {
 	value := v.(string)
 	count := utf8.RuneCountInString(value)
 	if count < 1 {
@@ -245,7 +245,7 @@ func validUserPoolTemplateEmailSubject(v interface{}, k string) (ws []string, es
 	return
 }
 
-func validUserPoolTemplateEmailSubjectByLink(v interface{}, k string) (ws []string, es []error) {
+func validUserPoolTemplateEmailSubjectByLink(v any, k string) (ws []string, es []error) {
 	value := v.(string)
 	count := utf8.RuneCountInString(value)
 	if count < 1 {
@@ -262,7 +262,7 @@ func validUserPoolTemplateEmailSubjectByLink(v interface{}, k string) (ws []stri
 	return
 }
 
-func validUserPoolTemplateSMSMessage(v interface{}, k string) (ws []string, es []error) {
+func validUserPoolTemplateSMSMessage(v any, k string) (ws []string, es []error) {
 	value := v.(string)
 	count := utf8.RuneCountInString(value)
 	if count < 6 {

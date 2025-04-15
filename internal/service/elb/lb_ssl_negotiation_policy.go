@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"strconv"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -17,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -71,17 +71,17 @@ func resourceSSLNegotiationPolicy() *schema.Resource {
 	}
 }
 
-func resourceSSLNegotiationPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSSLNegotiationPolicyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBClient(ctx)
 
 	lbName := d.Get("load_balancer").(string)
-	lbPort := d.Get("lb_port").(int)
+	lbPort := int32(d.Get("lb_port").(int))
 	policyName := d.Get(names.AttrName).(string)
 	id := sslNegotiationPolicyCreateResourceID(lbName, lbPort, policyName)
 
 	{
-		input := &elasticloadbalancing.CreateLoadBalancerPolicyInput{
+		input := elasticloadbalancing.CreateLoadBalancerPolicyInput{
 			LoadBalancerName: aws.String(lbName),
 			PolicyName:       aws.String(policyName),
 			PolicyTypeName:   aws.String("SSLNegotiationPolicyType"),
@@ -91,7 +91,7 @@ func resourceSSLNegotiationPolicyCreate(ctx context.Context, d *schema.ResourceD
 			input.PolicyAttributes = expandPolicyAttributes(v.(*schema.Set).List())
 		}
 
-		_, err := conn.CreateLoadBalancerPolicy(ctx, input)
+		_, err := conn.CreateLoadBalancerPolicy(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating ELB Classic SSL Negotiation Policy (%s): %s", id, err)
@@ -99,13 +99,13 @@ func resourceSSLNegotiationPolicyCreate(ctx context.Context, d *schema.ResourceD
 	}
 
 	{
-		input := &elasticloadbalancing.SetLoadBalancerPoliciesOfListenerInput{
+		input := elasticloadbalancing.SetLoadBalancerPoliciesOfListenerInput{
 			LoadBalancerName: aws.String(lbName),
-			LoadBalancerPort: int32(lbPort),
+			LoadBalancerPort: lbPort,
 			PolicyNames:      []string{policyName},
 		}
 
-		_, err := conn.SetLoadBalancerPoliciesOfListener(ctx, input)
+		_, err := conn.SetLoadBalancerPoliciesOfListener(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting ELB Classic SSL Negotiation Policy (%s): %s", id, err)
@@ -117,7 +117,7 @@ func resourceSSLNegotiationPolicyCreate(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourceSSLNegotiationPolicyRead(ctx, d, meta)...)
 }
 
-func resourceSSLNegotiationPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSSLNegotiationPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBClient(ctx)
 
@@ -160,7 +160,7 @@ func resourceSSLNegotiationPolicyRead(ctx context.Context, d *schema.ResourceDat
 	return diags
 }
 
-func resourceSSLNegotiationPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSSLNegotiationPolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBClient(ctx)
 
@@ -169,36 +169,42 @@ func resourceSSLNegotiationPolicyDelete(ctx context.Context, d *schema.ResourceD
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	// Perversely, if we Set an empty list of PolicyNames, we detach the
-	// policies attached to a listener, which is required to delete the
-	// policy itself.
-	input := &elasticloadbalancing.SetLoadBalancerPoliciesOfListenerInput{
-		LoadBalancerName: aws.String(lbName),
-		LoadBalancerPort: int32(lbPort),
-		PolicyNames:      []string{},
+	{
+		// Perversely, if we Set an empty list of PolicyNames, we detach the
+		// policies attached to a listener, which is required to delete the
+		// policy itself.
+		input := elasticloadbalancing.SetLoadBalancerPoliciesOfListenerInput{
+			LoadBalancerName: aws.String(lbName),
+			LoadBalancerPort: lbPort,
+			PolicyNames:      []string{},
+		}
+
+		_, err = conn.SetLoadBalancerPoliciesOfListener(ctx, &input)
+
+		if tfawserr.ErrCodeEquals(err, errCodeLoadBalancerNotFound) {
+			return diags
+		}
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting ELB Classic SSL Negotiation Policy (%s): %s", d.Id(), err)
+		}
 	}
 
-	_, err = conn.SetLoadBalancerPoliciesOfListener(ctx, input)
+	{
+		log.Printf("[DEBUG] Deleting ELB Classic SSL Negotiation Policy: %s", d.Id())
+		input := elasticloadbalancing.DeleteLoadBalancerPolicyInput{
+			LoadBalancerName: aws.String(lbName),
+			PolicyName:       aws.String(policyName),
+		}
+		_, err = conn.DeleteLoadBalancerPolicy(ctx, &input)
 
-	if tfawserr.ErrCodeEquals(err, errCodeLoadBalancerNotFound) {
-		return diags
-	}
+		if tfawserr.ErrCodeEquals(err, errCodeLoadBalancerNotFound) {
+			return diags
+		}
 
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting ELB Classic SSL Negotiation Policy (%s): %s", d.Id(), err)
-	}
-
-	_, err = conn.DeleteLoadBalancerPolicy(ctx, &elasticloadbalancing.DeleteLoadBalancerPolicyInput{
-		LoadBalancerName: aws.String(lbName),
-		PolicyName:       aws.String(policyName),
-	})
-
-	if tfawserr.ErrCodeEquals(err, errCodeLoadBalancerNotFound) {
-		return diags
-	}
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting ELB Classic SSL Negotiation Policy (%s): %s", d.Id(), err)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "deleting ELB Classic SSL Negotiation Policy (%s): %s", d.Id(), err)
+		}
 	}
 
 	return diags
@@ -206,24 +212,18 @@ func resourceSSLNegotiationPolicyDelete(ctx context.Context, d *schema.ResourceD
 
 const sslNegotiationPolicyResourceIDSeparator = ":"
 
-func sslNegotiationPolicyCreateResourceID(lbName string, lbPort int, policyName string) string {
-	parts := []string{lbName, strconv.Itoa(lbPort), policyName}
+func sslNegotiationPolicyCreateResourceID(lbName string, lbPort int32, policyName string) string {
+	parts := []string{lbName, flex.Int32ValueToStringValue(lbPort), policyName}
 	id := strings.Join(parts, sslNegotiationPolicyResourceIDSeparator)
 
 	return id
 }
 
-func sslNegotiationPolicyParseResourceID(id string) (string, int, string, error) {
+func sslNegotiationPolicyParseResourceID(id string) (string, int32, string, error) {
 	parts := strings.Split(id, sslNegotiationPolicyResourceIDSeparator)
 
 	if len(parts) == 3 && parts[0] != "" && parts[1] != "" && parts[2] != "" {
-		v, err := strconv.Atoi(parts[1])
-
-		if err != nil {
-			return "", 0, "", err
-		}
-
-		return parts[0], v, parts[2], nil
+		return parts[0], flex.StringValueToInt32Value(parts[1]), parts[2], nil
 	}
 
 	return "", 0, "", fmt.Errorf("unexpected format for ID (%[1]s), expected LBNAME%[2]sLBPORT%[2]sPOLICYNAME", id, sslNegotiationPolicyResourceIDSeparator)

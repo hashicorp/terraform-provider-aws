@@ -56,7 +56,7 @@ func ResourceLoadBalancerStickinessPolicy() *schema.Resource {
 	}
 }
 
-func resourceLoadBalancerStickinessPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLoadBalancerStickinessPolicyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
@@ -94,7 +94,7 @@ func resourceLoadBalancerStickinessPolicyCreate(ctx context.Context, d *schema.R
 	return append(diags, resourceLoadBalancerStickinessPolicyRead(ctx, d, meta)...)
 }
 
-func resourceLoadBalancerStickinessPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLoadBalancerStickinessPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
@@ -128,7 +128,7 @@ func resourceLoadBalancerStickinessPolicyRead(ctx context.Context, d *schema.Res
 	return diags
 }
 
-func resourceLoadBalancerStickinessPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLoadBalancerStickinessPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
@@ -176,7 +176,7 @@ func resourceLoadBalancerStickinessPolicyUpdate(ctx context.Context, d *schema.R
 	return append(diags, resourceLoadBalancerStickinessPolicyRead(ctx, d, meta)...)
 }
 
-func resourceLoadBalancerStickinessPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLoadBalancerStickinessPolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)

@@ -391,7 +391,7 @@ func findVPCEndpoints(ctx context.Context, conn *opensearchserverless.Client, in
 }
 
 func statusVPCEndpoint(ctx context.Context, conn *opensearchserverless.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findVPCEndpointByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

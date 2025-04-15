@@ -6,6 +6,7 @@ package quicksight
 import (
 	"context"
 	"fmt"
+	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/quicksight"
@@ -198,10 +199,8 @@ func findRoleMembershipByMultiPartKey(ctx context.Context, conn *quicksight.Clie
 		return err
 	}
 
-	for _, m := range out {
-		if m == member {
-			return nil
-		}
+	if slices.Contains(out, member) {
+		return nil
 	}
 
 	return &retry.NotFoundError{

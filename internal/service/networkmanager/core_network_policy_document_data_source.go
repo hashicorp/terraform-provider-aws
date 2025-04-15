@@ -271,7 +271,7 @@ func dataSourceCoreNetworkPolicyDocument() *schema.Resource {
 												"use_edge": {
 													Type:       schema.TypeString,
 													Optional:   true,
-													Deprecated: "Use use_edge_location",
+													Deprecated: "use_edge is deprecated. Use use_edge_location instead.",
 												},
 											},
 										},
@@ -391,7 +391,7 @@ func dataSourceCoreNetworkPolicyDocument() *schema.Resource {
 	}
 }
 
-func dataSourceCoreNetworkPolicyDocumentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceCoreNetworkPolicyDocumentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	mergedDoc := &coreNetworkPolicyDocument{
@@ -399,35 +399,35 @@ func dataSourceCoreNetworkPolicyDocumentRead(ctx context.Context, d *schema.Reso
 	}
 
 	// CoreNetworkConfiguration
-	networkConfiguration, err := expandCoreNetworkPolicyCoreNetworkConfiguration(d.Get("core_network_configuration").([]interface{}))
+	networkConfiguration, err := expandCoreNetworkPolicyCoreNetworkConfiguration(d.Get("core_network_configuration").([]any))
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 	mergedDoc.CoreNetworkConfiguration = networkConfiguration
 
 	// Segments
-	segments, err := expandCoreNetworkPolicySegments(d.Get("segments").([]interface{}))
+	segments, err := expandCoreNetworkPolicySegments(d.Get("segments").([]any))
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 	mergedDoc.Segments = segments
 
 	// NetworkFunctionGroups
-	networkFunctionGroups, err := expandCoreNetworkPolicyNetworkFunctionGroups(d.Get("network_function_groups").([]interface{}))
+	networkFunctionGroups, err := expandCoreNetworkPolicyNetworkFunctionGroups(d.Get("network_function_groups").([]any))
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 	mergedDoc.NetworkFunctionGroups = networkFunctionGroups
 
 	// SegmentActions
-	segment_actions, err := expandCoreNetworkPolicySegmentActions(d.Get("segment_actions").([]interface{}))
+	segment_actions, err := expandCoreNetworkPolicySegmentActions(d.Get("segment_actions").([]any))
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 	mergedDoc.SegmentActions = segment_actions
 
 	// AttachmentPolicies
-	attachmentPolicies, err := expandCoreNetworkPolicyAttachmentPolicies(d.Get("attachment_policies").([]interface{}))
+	attachmentPolicies, err := expandCoreNetworkPolicyAttachmentPolicies(d.Get("attachment_policies").([]any))
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -445,11 +445,11 @@ func dataSourceCoreNetworkPolicyDocumentRead(ctx context.Context, d *schema.Reso
 	return diags
 }
 
-func expandCoreNetworkPolicySegmentActions(tfList []interface{}) ([]*coreNetworkPolicySegmentAction, error) {
+func expandCoreNetworkPolicySegmentActions(tfList []any) ([]*coreNetworkPolicySegmentAction, error) {
 	apiObjects := make([]*coreNetworkPolicySegmentAction, 0)
 
 	for i, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -468,7 +468,7 @@ func expandCoreNetworkPolicySegmentActions(tfList []interface{}) ([]*coreNetwork
 				apiObject.Mode = v.(string)
 			}
 
-			var shareWith, shareWithExcept interface{}
+			var shareWith, shareWithExcept any
 
 			if v := tfMap["share_with"].(*schema.Set).List(); len(v) > 0 {
 				shareWith = coreNetworkPolicyExpandStringList(v)
@@ -514,30 +514,30 @@ func expandCoreNetworkPolicySegmentActions(tfList []interface{}) ([]*coreNetwork
 				apiObject.Mode = v.(string)
 			}
 
-			if v, ok := tfMap["when_sent_to"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+			if v, ok := tfMap["when_sent_to"].([]any); ok && len(v) > 0 && v[0] != nil {
 				apiObject.WhenSentTo = &coreNetworkPolicySegmentActionWhenSentTo{}
 
-				tfMap := v[0].(map[string]interface{})
+				tfMap := v[0].(map[string]any)
 
 				if v := tfMap["segments"].(*schema.Set).List(); len(v) > 0 {
 					apiObject.WhenSentTo.Segments = coreNetworkPolicyExpandStringList(v)
 				}
 			}
 
-			if v, ok := tfMap["via"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+			if v, ok := tfMap["via"].([]any); ok && len(v) > 0 && v[0] != nil {
 				apiObject.Via = &coreNetworkPolicySegmentActionVia{}
 
-				tfMap := v[0].(map[string]interface{})
+				tfMap := v[0].(map[string]any)
 
 				if v := tfMap["network_function_groups"].(*schema.Set).List(); len(v) > 0 {
 					apiObject.Via.NetworkFunctionGroups = coreNetworkPolicyExpandStringList(v)
 				}
 
-				if v, ok := tfMap["with_edge_override"].([]interface{}); ok && len(v) > 0 {
+				if v, ok := tfMap["with_edge_override"].([]any); ok && len(v) > 0 {
 					apiObjects := []*coreNetworkPolicySegmentActionViaEdgeOverride{}
 
 					for _, tfMapRaw := range v {
-						tfMap := tfMapRaw.(map[string]interface{})
+						tfMap := tfMapRaw.(map[string]any)
 						apiObject := &coreNetworkPolicySegmentActionViaEdgeOverride{}
 
 						if v := tfMap["edge_sets"].(*schema.Set).List(); len(v) > 0 {
@@ -569,12 +569,12 @@ func expandCoreNetworkPolicySegmentActions(tfList []interface{}) ([]*coreNetwork
 	return apiObjects, nil
 }
 
-func expandCoreNetworkPolicyAttachmentPolicies(tfList []interface{}) ([]*coreNetworkPolicyAttachmentPolicy, error) {
+func expandCoreNetworkPolicyAttachmentPolicies(tfList []any) ([]*coreNetworkPolicyAttachmentPolicy, error) {
 	apiObjects := make([]*coreNetworkPolicyAttachmentPolicy, 0)
 	ruleMap := make(map[int]struct{})
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -597,13 +597,13 @@ func expandCoreNetworkPolicyAttachmentPolicies(tfList []interface{}) ([]*coreNet
 			apiObject.ConditionLogic = v
 		}
 
-		action, err := expandDataCoreNetworkPolicyAttachmentPoliciesAction(tfMap[names.AttrAction].([]interface{}))
+		action, err := expandDataCoreNetworkPolicyAttachmentPoliciesAction(tfMap[names.AttrAction].([]any))
 		if err != nil {
 			return nil, err
 		}
 		apiObject.Action = action
 
-		conditions, err := expandDataCoreNetworkPolicyAttachmentPoliciesConditions(tfMap["conditions"].([]interface{}))
+		conditions, err := expandDataCoreNetworkPolicyAttachmentPoliciesConditions(tfMap["conditions"].([]any))
 		if err != nil {
 			return nil, err
 		}
@@ -615,11 +615,11 @@ func expandCoreNetworkPolicyAttachmentPolicies(tfList []interface{}) ([]*coreNet
 	return apiObjects, nil
 }
 
-func expandDataCoreNetworkPolicyAttachmentPoliciesConditions(tfList []interface{}) ([]*coreNetworkPolicyAttachmentPolicyCondition, error) {
+func expandDataCoreNetworkPolicyAttachmentPoliciesConditions(tfList []any) ([]*coreNetworkPolicyAttachmentPolicyCondition, error) {
 	apiObjects := make([]*coreNetworkPolicyAttachmentPolicyCondition, 0)
 
 	for i, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -684,8 +684,8 @@ func expandDataCoreNetworkPolicyAttachmentPoliciesConditions(tfList []interface{
 	return apiObjects, nil
 }
 
-func expandDataCoreNetworkPolicyAttachmentPoliciesAction(tfList []interface{}) (*coreNetworkPolicyAttachmentPolicyAction, error) {
-	tfMap := tfList[0].(map[string]interface{})
+func expandDataCoreNetworkPolicyAttachmentPoliciesAction(tfList []any) (*coreNetworkPolicyAttachmentPolicyAction, error) {
+	tfMap := tfList[0].(map[string]any)
 
 	associationMethod := tfMap["association_method"].(string)
 	apiObject := &coreNetworkPolicyAttachmentPolicyAction{
@@ -717,12 +717,12 @@ func expandDataCoreNetworkPolicyAttachmentPoliciesAction(tfList []interface{}) (
 	return apiObject, nil
 }
 
-func expandCoreNetworkPolicySegments(tfList []interface{}) ([]*coreNetworkPolicySegment, error) {
+func expandCoreNetworkPolicySegments(tfList []any) ([]*coreNetworkPolicySegment, error) {
 	apiObjects := make([]*coreNetworkPolicySegment, 0)
 	nameMap := make(map[string]struct{})
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -769,8 +769,8 @@ func expandCoreNetworkPolicySegments(tfList []interface{}) ([]*coreNetworkPolicy
 	return apiObjects, nil
 }
 
-func expandCoreNetworkPolicyCoreNetworkConfiguration(tfList []interface{}) (*coreNetworkPolicyCoreNetworkConfiguration, error) {
-	tfMap := tfList[0].(map[string]interface{})
+func expandCoreNetworkPolicyCoreNetworkConfiguration(tfList []any) (*coreNetworkPolicyCoreNetworkConfiguration, error) {
+	tfMap := tfList[0].(map[string]any)
 	apiObject := &coreNetworkPolicyCoreNetworkConfiguration{}
 
 	apiObject.AsnRanges = coreNetworkPolicyExpandStringList(tfMap["asn_ranges"].(*schema.Set).List())
@@ -781,7 +781,7 @@ func expandCoreNetworkPolicyCoreNetworkConfiguration(tfList []interface{}) (*cor
 
 	apiObject.VpnEcmpSupport = tfMap["vpn_ecmp_support"].(bool)
 
-	el, err := expandDataCoreNetworkPolicyNetworkConfigurationEdgeLocations(tfMap["edge_locations"].([]interface{}))
+	el, err := expandDataCoreNetworkPolicyNetworkConfigurationEdgeLocations(tfMap["edge_locations"].([]any))
 	if err != nil {
 		return nil, err
 	}
@@ -790,12 +790,12 @@ func expandCoreNetworkPolicyCoreNetworkConfiguration(tfList []interface{}) (*cor
 	return apiObject, nil
 }
 
-func expandDataCoreNetworkPolicyNetworkConfigurationEdgeLocations(tfList []interface{}) ([]*coreNetworkPolicyCoreNetworkEdgeLocation, error) {
+func expandDataCoreNetworkPolicyNetworkConfigurationEdgeLocations(tfList []any) ([]*coreNetworkPolicyCoreNetworkEdgeLocation, error) {
 	apiObjects := make([]*coreNetworkPolicyCoreNetworkEdgeLocation, 0)
 	locationMap := make(map[string]struct{})
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -820,7 +820,7 @@ func expandDataCoreNetworkPolicyNetworkConfigurationEdgeLocations(tfList []inter
 			apiObject.Asn = v
 		}
 
-		if v := tfMap["inside_cidr_blocks"].([]interface{}); len(v) > 0 {
+		if v := tfMap["inside_cidr_blocks"].([]any); len(v) > 0 {
 			apiObject.InsideCidrBlocks = coreNetworkPolicyExpandStringList(v)
 		}
 
@@ -830,12 +830,12 @@ func expandDataCoreNetworkPolicyNetworkConfigurationEdgeLocations(tfList []inter
 	return apiObjects, nil
 }
 
-func expandCoreNetworkPolicyNetworkFunctionGroups(tfList []interface{}) ([]*coreNetworkPolicyNetworkFunctionGroup, error) {
+func expandCoreNetworkPolicyNetworkFunctionGroups(tfList []any) ([]*coreNetworkPolicyNetworkFunctionGroup, error) {
 	apiObjects := make([]*coreNetworkPolicyNetworkFunctionGroup, 0)
 	nameMap := make(map[string]struct{})
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}

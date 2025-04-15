@@ -124,6 +124,14 @@ This resource exports the following attributes in addition to the arguments abov
 * `primary_name_server` - The Route 53 name server that created the SOA record.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
+* `delete` - (Default `30m`)
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Route53 Zones using the zone `id`. For example:
@@ -149,4 +157,4 @@ Using `terraform import`, import Route53 Zones using the zone `id`. For example:
 % terraform import aws_route53_zone.myzone Z1D633PJN98FT9
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-8a7477da45196901e3ea8ac68ebc92bd2954c60b50b24acf390c93289191b92e -->
+<!-- cache-key: cdktf-0.20.8 input-9c75d13012d076c4e45ee2eed2fab48617563530adc7f1351bafd11b5bd43f70 -->

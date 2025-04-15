@@ -177,7 +177,7 @@ func ResourceDataLakeSettings() *schema.Resource {
 	}
 }
 
-func resourceDataLakeSettingsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataLakeSettingsCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LakeFormationClient(ctx)
 
@@ -202,15 +202,15 @@ func resourceDataLakeSettingsCreate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if v, ok := d.GetOk("authorized_session_tag_value_list"); ok {
-		settings.AuthorizedSessionTagValueList = flex.ExpandStringValueList(v.([]interface{}))
+		settings.AuthorizedSessionTagValueList = flex.ExpandStringValueList(v.([]any))
 	}
 
 	if v, ok := d.GetOk("create_database_default_permissions"); ok {
-		settings.CreateDatabaseDefaultPermissions = expandDataLakeSettingsCreateDefaultPermissions(v.([]interface{}))
+		settings.CreateDatabaseDefaultPermissions = expandDataLakeSettingsCreateDefaultPermissions(v.([]any))
 	}
 
 	if v, ok := d.GetOk("create_table_default_permissions"); ok {
-		settings.CreateTableDefaultPermissions = expandDataLakeSettingsCreateDefaultPermissions(v.([]interface{}))
+		settings.CreateTableDefaultPermissions = expandDataLakeSettingsCreateDefaultPermissions(v.([]any))
 	}
 
 	if v, ok := d.GetOk("external_data_filtering_allow_list"); ok {
@@ -218,7 +218,7 @@ func resourceDataLakeSettingsCreate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if v, ok := d.GetOk(names.AttrParameters); ok {
-		settings.Parameters = flex.ExpandStringValueMap(v.(map[string]interface{}))
+		settings.Parameters = flex.ExpandStringValueMap(v.(map[string]any))
 	}
 
 	if v, ok := d.GetOk("read_only_admins"); ok {
@@ -226,7 +226,7 @@ func resourceDataLakeSettingsCreate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if v, ok := d.GetOk("trusted_resource_owners"); ok {
-		settings.TrustedResourceOwners = flex.ExpandStringValueList(v.([]interface{}))
+		settings.TrustedResourceOwners = flex.ExpandStringValueList(v.([]any))
 	}
 
 	input.DataLakeSettings = settings
@@ -266,7 +266,7 @@ func resourceDataLakeSettingsCreate(ctx context.Context, d *schema.ResourceData,
 	return append(diags, resourceDataLakeSettingsRead(ctx, d, meta)...)
 }
 
-func resourceDataLakeSettingsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataLakeSettingsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LakeFormationClient(ctx)
 
@@ -308,7 +308,7 @@ func resourceDataLakeSettingsRead(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func resourceDataLakeSettingsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataLakeSettingsDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LakeFormationClient(ctx)
 
@@ -344,17 +344,17 @@ func resourceDataLakeSettingsDelete(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func expandDataLakeSettingsCreateDefaultPermissions(tfMaps []interface{}) []awstypes.PrincipalPermissions {
+func expandDataLakeSettingsCreateDefaultPermissions(tfMaps []any) []awstypes.PrincipalPermissions {
 	apiObjects := make([]awstypes.PrincipalPermissions, 0, len(tfMaps))
 
 	for _, tfMap := range tfMaps {
-		apiObjects = append(apiObjects, expandDataLakeSettingsCreateDefaultPermission(tfMap.(map[string]interface{})))
+		apiObjects = append(apiObjects, expandDataLakeSettingsCreateDefaultPermission(tfMap.(map[string]any)))
 	}
 
 	return apiObjects
 }
 
-func expandDataLakeSettingsCreateDefaultPermission(tfMap map[string]interface{}) awstypes.PrincipalPermissions {
+func expandDataLakeSettingsCreateDefaultPermission(tfMap map[string]any) awstypes.PrincipalPermissions {
 	apiObject := awstypes.PrincipalPermissions{
 		Permissions: flex.ExpandStringyValueList[awstypes.Permission](tfMap[names.AttrPermissions].(*schema.Set).List()),
 		Principal: &awstypes.DataLakePrincipal{
@@ -365,12 +365,12 @@ func expandDataLakeSettingsCreateDefaultPermission(tfMap map[string]interface{})
 	return apiObject
 }
 
-func flattenDataLakeSettingsCreateDefaultPermissions(apiObjects []awstypes.PrincipalPermissions) []map[string]interface{} {
+func flattenDataLakeSettingsCreateDefaultPermissions(apiObjects []awstypes.PrincipalPermissions) []map[string]any {
 	if apiObjects == nil {
 		return nil
 	}
 
-	tfMaps := make([]map[string]interface{}, len(apiObjects))
+	tfMaps := make([]map[string]any, len(apiObjects))
 	for i, v := range apiObjects {
 		tfMaps[i] = flattenDataLakeSettingsCreateDefaultPermission(v)
 	}
@@ -378,8 +378,8 @@ func flattenDataLakeSettingsCreateDefaultPermissions(apiObjects []awstypes.Princ
 	return tfMaps
 }
 
-func flattenDataLakeSettingsCreateDefaultPermission(apiObject awstypes.PrincipalPermissions) map[string]interface{} {
-	tfMap := make(map[string]interface{})
+func flattenDataLakeSettingsCreateDefaultPermission(apiObject awstypes.PrincipalPermissions) map[string]any {
+	tfMap := make(map[string]any)
 
 	if reflect.ValueOf(apiObject).IsZero() {
 		return tfMap
@@ -413,12 +413,12 @@ func expandDataLakeSettingsAdmins(tfSet *schema.Set) []awstypes.DataLakePrincipa
 	return apiObjects
 }
 
-func flattenDataLakeSettingsAdmins(apiObjects []awstypes.DataLakePrincipal) []interface{} {
+func flattenDataLakeSettingsAdmins(apiObjects []awstypes.DataLakePrincipal) []any {
 	if apiObjects == nil {
 		return nil
 	}
 
-	tfSlice := make([]interface{}, 0, len(apiObjects))
+	tfSlice := make([]any, 0, len(apiObjects))
 
 	for _, apiObject := range apiObjects {
 		tfSlice = append(tfSlice, aws.ToString(apiObject.DataLakePrincipalIdentifier))
@@ -443,12 +443,12 @@ func expandDataLakeSettingsDataFilteringAllowList(tfSet *schema.Set) []awstypes.
 	return apiObjects
 }
 
-func flattenDataLakeSettingsDataFilteringAllowList(apiObjects []awstypes.DataLakePrincipal) []interface{} {
+func flattenDataLakeSettingsDataFilteringAllowList(apiObjects []awstypes.DataLakePrincipal) []any {
 	if apiObjects == nil {
 		return nil
 	}
 
-	tfSlice := make([]interface{}, 0, len(apiObjects))
+	tfSlice := make([]any, 0, len(apiObjects))
 
 	for _, apiObject := range apiObjects {
 		tfSlice = append(tfSlice, aws.ToString(apiObject.DataLakePrincipalIdentifier))

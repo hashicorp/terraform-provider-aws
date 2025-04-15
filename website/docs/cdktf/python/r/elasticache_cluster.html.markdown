@@ -205,7 +205,7 @@ class MyConvertedCode(TerraformStack):
 The following arguments are required:
 
 * `cluster_id` – (Required) Group identifier. ElastiCache converts this name to lowercase. Changing this value will re-create the resource.
-* `engine` – (Optional, Required if `replication_group_id` is not specified) Name of the cache engine to be used for this cache cluster. Valid values are `memcached` and `redis`.
+* `engine` – (Optional, Required if `replication_group_id` is not specified) Name of the cache engine to be used for this cache cluster. Valid values are `memcached`, `redis` and `valkey`.
 * `node_type` – (Required unless `replication_group_id` is provided) The instance class used.
   See AWS documentation for information on [supported node types for Redis](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/CacheNodes.SupportedTypes.html) and [guidance on selecting node types for Redis](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/nodes-select-size.html).
   See AWS documentation for information on [supported node types for Memcached](https://docs.aws.amazon.com/AmazonElastiCache/latest/mem-ug/CacheNodes.SupportedTypes.html) and [guidance on selecting node types for Memcached](https://docs.aws.amazon.com/AmazonElastiCache/latest/mem-ug/nodes-select-size.html).
@@ -249,7 +249,7 @@ The minimum maintenance window is a 60 minute period. Example: `sun:05:00-sun:09
 * `snapshot_window` - (Optional, Redis only) Daily time range (in UTC) during which ElastiCache will begin taking a daily snapshot of your cache cluster. Example: 05:00-09:00
 * `subnet_group_name` – (Optional, VPC only) Name of the subnet group to be used for the cache cluster. Changing this value will re-create the resource. Cannot be provided with `replication_group_id.`
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `transit_encryption_enabled` - (Optional) Enable encryption in-transit. Supported only with Memcached versions `1.6.12` and later, running in a VPC. See the [ElastiCache in-transit encryption](https://docs.aws.amazon.com/AmazonElastiCache/latest/mem-ug/in-transit-encryption-mc.html) documentation for more details.
+* `transit_encryption_enabled` - (Optional) Enable encryption in-transit. Supported with Memcached versions `1.6.12` and later, Valkey `7.2` and later, Redis OSS versions `3.2.6`, `4.0.10` and later, running in a VPC. See the [ElastiCache in-transit encryption (https://docs.aws.amazon.com/AmazonElastiCache/latest/mem-ug/in-transit-encryption-mc.html) and (https://docs.aws.amazon.com/AmazonElastiCache/latest/dg/in-transit-encryption.html#in-transit-encryption-constraints) documentation for more details.
 
 ### Log Delivery Configuration
 
@@ -304,4 +304,4 @@ Using `terraform import`, import ElastiCache Clusters using the `cluster_id`. Fo
 % terraform import aws_elasticache_cluster.my_cluster my_cluster
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-47a1c9bb51a185d4b5c70f1aefe2e98acad45a013bd7962330ddd3a88456287a -->
+<!-- cache-key: cdktf-0.20.8 input-86fb4ca16447f1d945dd174a26a9b1bd213d484df157813aac36ae55ad7367e3 -->

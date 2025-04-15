@@ -82,11 +82,11 @@ func ResourceCustomerManagedPolicyAttachment() *schema.Resource {
 	}
 }
 
-func resourceCustomerManagedPolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCustomerManagedPolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
 
-	tfMap := d.Get("customer_managed_policy_reference").([]interface{})[0].(map[string]interface{})
+	tfMap := d.Get("customer_managed_policy_reference").([]any)[0].(map[string]any)
 	policyName := tfMap[names.AttrName].(string)
 	policyPath := tfMap[names.AttrPath].(string)
 	instanceARN := d.Get("instance_arn").(string)
@@ -114,7 +114,7 @@ func resourceCustomerManagedPolicyAttachmentCreate(ctx context.Context, d *schem
 	return append(diags, resourceCustomerManagedPolicyAttachmentRead(ctx, d, meta)...)
 }
 
-func resourceCustomerManagedPolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCustomerManagedPolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
 
@@ -135,7 +135,7 @@ func resourceCustomerManagedPolicyAttachmentRead(ctx context.Context, d *schema.
 		return sdkdiag.AppendErrorf(diags, "reading SSO Customer Managed Policy Attachment (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("customer_managed_policy_reference", []interface{}{flattenCustomerManagedPolicyReference(policy)}); err != nil {
+	if err := d.Set("customer_managed_policy_reference", []any{flattenCustomerManagedPolicyReference(policy)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting customer_managed_policy_reference: %s", err)
 	}
 	d.Set("instance_arn", instanceARN)
@@ -144,7 +144,7 @@ func resourceCustomerManagedPolicyAttachmentRead(ctx context.Context, d *schema.
 	return diags
 }
 
-func resourceCustomerManagedPolicyAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCustomerManagedPolicyAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
 
@@ -259,7 +259,7 @@ func findCustomerManagedPolicyReferences(
 	return output, nil
 }
 
-func expandCustomerManagedPolicyReference(tfMap map[string]interface{}) *awstypes.CustomerManagedPolicyReference {
+func expandCustomerManagedPolicyReference(tfMap map[string]any) *awstypes.CustomerManagedPolicyReference {
 	if tfMap == nil {
 		return nil
 	}
@@ -277,12 +277,12 @@ func expandCustomerManagedPolicyReference(tfMap map[string]interface{}) *awstype
 	return apiObject
 }
 
-func flattenCustomerManagedPolicyReference(apiObject *awstypes.CustomerManagedPolicyReference) map[string]interface{} {
+func flattenCustomerManagedPolicyReference(apiObject *awstypes.CustomerManagedPolicyReference) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Name; v != nil {
 		tfMap[names.AttrName] = aws.ToString(v)

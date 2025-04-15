@@ -15,16 +15,16 @@ import (
 
 // StringCaseInsensitiveSetFunc hashes strings in a case insensitive manner.
 // If you want a Set of strings and are case insensitive, this is the SchemaSetFunc you want.
-func StringCaseInsensitiveSetFunc(v interface{}) int {
+func StringCaseInsensitiveSetFunc(v any) int {
 	return create.StringHashcode(strings.ToLower(v.(string)))
 }
 
 // SimpleSchemaSetFunc returns a schema.SchemaSetFunc that hashes the given keys values.
 func SimpleSchemaSetFunc(keys ...string) schema.SchemaSetFunc {
-	return func(v interface{}) int {
+	return func(v any) int {
 		var str strings.Builder
 
-		if m, ok := v.(map[string]interface{}); ok {
+		if m, ok := v.(map[string]any); ok {
 			for _, key := range keys {
 				if v, ok := m[key]; ok {
 					switch v := v.(type) {

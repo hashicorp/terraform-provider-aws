@@ -106,19 +106,19 @@ func resourcePoolRolesAttachment() *schema.Resource {
 	}
 }
 
-func resourcePoolRolesAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePoolRolesAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIdentityClient(ctx)
 
 	// Validates role keys to be either authenticated or unauthenticated,
 	// since ValidateFunc validates only the value not the key.
-	if errors := validRoles(d.Get("roles").(map[string]interface{})); len(errors) > 0 {
+	if errors := validRoles(d.Get("roles").(map[string]any)); len(errors) > 0 {
 		return sdkdiag.AppendErrorf(diags, "validating Roles: %v", errors)
 	}
 
 	params := &cognitoidentity.SetIdentityPoolRolesInput{
 		IdentityPoolId: aws.String(d.Get("identity_pool_id").(string)),
-		Roles:          expandIdentityPoolRoles(d.Get("roles").(map[string]interface{})),
+		Roles:          expandIdentityPoolRoles(d.Get("roles").(map[string]any)),
 	}
 
 	if v, ok := d.GetOk("role_mapping"); ok {
@@ -142,7 +142,7 @@ func resourcePoolRolesAttachmentCreate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourcePoolRolesAttachmentRead(ctx, d, meta)...)
 }
 
-func resourcePoolRolesAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePoolRolesAttachmentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIdentityClient(ctx)
 	log.Printf("[DEBUG] Reading Cognito Identity Pool Roles Association: %s", d.Id())
@@ -174,24 +174,24 @@ func resourcePoolRolesAttachmentRead(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func resourcePoolRolesAttachmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePoolRolesAttachmentUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIdentityClient(ctx)
 
 	// Validates role keys to be either authenticated or unauthenticated,
 	// since ValidateFunc validates only the value not the key.
-	if errors := validRoles(d.Get("roles").(map[string]interface{})); len(errors) > 0 {
+	if errors := validRoles(d.Get("roles").(map[string]any)); len(errors) > 0 {
 		return sdkdiag.AppendErrorf(diags, "validating Roles: %v", errors)
 	}
 
 	params := &cognitoidentity.SetIdentityPoolRolesInput{
 		IdentityPoolId: aws.String(d.Get("identity_pool_id").(string)),
-		Roles:          expandIdentityPoolRoles(d.Get("roles").(map[string]interface{})),
+		Roles:          expandIdentityPoolRoles(d.Get("roles").(map[string]any)),
 	}
 
 	if d.HasChange("role_mapping") {
 		v, ok := d.GetOk("role_mapping")
-		var mappings []interface{}
+		var mappings []any
 
 		if ok {
 			errors := validateRoleMappings(v.(*schema.Set).List())
@@ -201,7 +201,7 @@ func resourcePoolRolesAttachmentUpdate(ctx context.Context, d *schema.ResourceDa
 			}
 			mappings = v.(*schema.Set).List()
 		} else {
-			mappings = []interface{}{}
+			mappings = []any{}
 		}
 
 		params.RoleMappings = expandIdentityPoolRoleMappingsAttachment(mappings)
@@ -218,15 +218,15 @@ func resourcePoolRolesAttachmentUpdate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourcePoolRolesAttachmentRead(ctx, d, meta)...)
 }
 
-func resourcePoolRolesAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePoolRolesAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIdentityClient(ctx)
 	log.Printf("[DEBUG] Deleting Cognito Identity Pool Roles Association: %s", d.Id())
 
 	input := cognitoidentity.SetIdentityPoolRolesInput{
 		IdentityPoolId: aws.String(d.Id()),
-		Roles:          expandIdentityPoolRoles(make(map[string]interface{})),
-		RoleMappings:   expandIdentityPoolRoleMappingsAttachment([]interface{}{}),
+		Roles:          expandIdentityPoolRoles(make(map[string]any)),
+		RoleMappings:   expandIdentityPoolRoleMappingsAttachment([]any{}),
 	}
 	_, err := conn.SetIdentityPoolRoles(ctx, &input)
 
@@ -239,11 +239,11 @@ func resourcePoolRolesAttachmentDelete(ctx context.Context, d *schema.ResourceDa
 
 // Validating that each role_mapping ambiguous_role_resolution
 // is defined when "type" equals Token or Rules.
-func validateRoleMappings(roleMappings []interface{}) []error {
+func validateRoleMappings(roleMappings []any) []error {
 	errors := make([]error, 0)
 
 	for _, r := range roleMappings {
-		rm := r.(map[string]interface{})
+		rm := r.(map[string]any)
 
 		// If Type equals "Token" or "Rules", ambiguous_role_resolution must be defined.
 		// This should be removed as soon as we can have a ValidateFuncAgainst callable on the schema.

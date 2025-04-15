@@ -11,12 +11,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func flattenManagedMasterUserSecret(apiObject *types.MasterUserSecret) map[string]interface{} {
+func flattenManagedMasterUserSecret(apiObject *types.MasterUserSecret) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.KmsKeyId; v != nil {
 		tfMap[names.AttrKMSKeyID] = aws.ToString(v)
@@ -33,11 +33,11 @@ func flattenManagedMasterUserSecret(apiObject *types.MasterUserSecret) map[strin
 	return tfMap
 }
 
-func expandParameters(tfList []interface{}) []types.Parameter {
+func expandParameters(tfList []any) []types.Parameter {
 	var apiObjects []types.Parameter
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -61,15 +61,15 @@ func expandParameters(tfList []interface{}) []types.Parameter {
 	return apiObjects
 }
 
-func flattenParameters(apiObject []types.Parameter) []interface{} {
-	apiObjects := make([]interface{}, 0)
+func flattenParameters(apiObject []types.Parameter) []any {
+	apiObjects := make([]any, 0)
 
 	for _, apiObject := range apiObject {
 		if apiObject.ParameterName == nil {
 			continue
 		}
 
-		tfMap := make(map[string]interface{})
+		tfMap := make(map[string]any)
 
 		tfMap["apply_method"] = strings.ToLower(string(apiObject.ApplyMethod))
 		tfMap[names.AttrName] = strings.ToLower(aws.ToString(apiObject.ParameterName))

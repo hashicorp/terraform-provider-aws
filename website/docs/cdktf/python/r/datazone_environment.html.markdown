@@ -54,7 +54,6 @@ class MyConvertedCode(TerraformStack):
 
 The following arguments are required:
 
-* `account_identifier` - (Required) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
 * `domain_identifier` - (Required) The ID of the domain where the environment exists.
 * `name` - (Required) The name of the environment.
 * `profile_identifier` - (Required) The ID of the profile with which the environment is created.
@@ -65,7 +64,7 @@ The following arguments are optional:
 * `account_identifier` - (Optional) The ID of the Amazon Web Services account where the environment exists
 * `account_region` - (Optional) The Amazon Web Services region where the environment exists.
 * `blueprint_identifier` - (Optional) The blueprint with which the environment is created.
-* `descrioption` - (Optional) The description of the environment.
+* `description` - (Optional) The description of the environment.
 * `glossary_terms` - (Optional) The business glossary terms that can be used in this environment.
 * `user_parameters` - (Optional) The user parameters that are used in the environment. See [User Parameters](#user-parameters) for more information.
 
@@ -118,4 +117,4 @@ Using `terraform import`, import DataZone Environment using the `domain_idntifie
 % terraform import aws_datazone_environment.example dzd_d2i7tzk3tnjjf4,5vpywijpwryec0
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-04e9b61234e0ad2508dc8e16bc5b836df5b1adc614563949effd6d5bb2afc43e -->
+<!-- cache-key: cdktf-0.20.8 input-6d234e40b71b60f3006b55d70d5bbb4904dafbad0d406de977e43b53f5247046 -->

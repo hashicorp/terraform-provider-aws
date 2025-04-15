@@ -151,7 +151,7 @@ func resourceInsight() *schema.Resource {
 	}
 }
 
-func resourceInsightCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInsightCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
@@ -162,7 +162,7 @@ func resourceInsightCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if v, ok := d.GetOk("filters"); ok {
-		input.Filters = expandSecurityFindingFilters(v.([]interface{}))
+		input.Filters = expandSecurityFindingFilters(v.([]any))
 	}
 
 	output, err := conn.CreateInsight(ctx, input)
@@ -176,7 +176,7 @@ func resourceInsightCreate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceInsightRead(ctx, d, meta)...)
 }
 
-func resourceInsightRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInsightRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
@@ -202,7 +202,7 @@ func resourceInsightRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceInsightUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInsightUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
@@ -211,7 +211,7 @@ func resourceInsightUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if d.HasChange("filters") {
-		input.Filters = expandSecurityFindingFilters(d.Get("filters").([]interface{}))
+		input.Filters = expandSecurityFindingFilters(d.Get("filters").([]any))
 	}
 
 	if d.HasChange("group_by_attribute") {
@@ -231,7 +231,7 @@ func resourceInsightUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceInsightRead(ctx, d, meta)...)
 }
 
-func resourceInsightDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInsightDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
@@ -445,12 +445,12 @@ func workflowStatusSchema() *schema.Schema {
 	return s
 }
 
-func expandDateFilterDateRange(l []interface{}) *types.DateRange {
+func expandDateFilterDateRange(l []any) *types.DateRange {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := l[0].(map[string]interface{})
+	tfMap, ok := l[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -468,7 +468,7 @@ func expandDateFilterDateRange(l []interface{}) *types.DateRange {
 	return dr
 }
 
-func expandDateFilters(l []interface{}) []types.DateFilter {
+func expandDateFilters(l []any) []types.DateFilter {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -476,14 +476,14 @@ func expandDateFilters(l []interface{}) []types.DateFilter {
 	var dateFilters []types.DateFilter
 
 	for _, item := range l {
-		tfMap, ok := item.(map[string]interface{})
+		tfMap, ok := item.(map[string]any)
 		if !ok {
 			continue
 		}
 
 		df := types.DateFilter{}
 
-		if v, ok := tfMap["date_range"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		if v, ok := tfMap["date_range"].([]any); ok && len(v) > 0 && v[0] != nil {
 			df.DateRange = expandDateFilterDateRange(v)
 		}
 
@@ -501,12 +501,12 @@ func expandDateFilters(l []interface{}) []types.DateFilter {
 	return dateFilters
 }
 
-func expandSecurityFindingFilters(l []interface{}) *types.AwsSecurityFindingFilters {
+func expandSecurityFindingFilters(l []any) *types.AwsSecurityFindingFilters {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := l[0].(map[string]interface{})
+	tfMap, ok := l[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -868,7 +868,7 @@ func expandSecurityFindingFilters(l []interface{}) *types.AwsSecurityFindingFilt
 	return filters
 }
 
-func expandIPFilters(l []interface{}) []types.IpFilter {
+func expandIPFilters(l []any) []types.IpFilter {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -876,7 +876,7 @@ func expandIPFilters(l []interface{}) []types.IpFilter {
 	var ipFilters []types.IpFilter
 
 	for _, item := range l {
-		tfMap, ok := item.(map[string]interface{})
+		tfMap, ok := item.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -893,7 +893,7 @@ func expandIPFilters(l []interface{}) []types.IpFilter {
 	return ipFilters
 }
 
-func expandKeywordFilters(l []interface{}) []types.KeywordFilter {
+func expandKeywordFilters(l []any) []types.KeywordFilter {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -901,7 +901,7 @@ func expandKeywordFilters(l []interface{}) []types.KeywordFilter {
 	var keywordFilters []types.KeywordFilter
 
 	for _, item := range l {
-		tfMap, ok := item.(map[string]interface{})
+		tfMap, ok := item.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -918,7 +918,7 @@ func expandKeywordFilters(l []interface{}) []types.KeywordFilter {
 	return keywordFilters
 }
 
-func expandMapFilters(l []interface{}) []types.MapFilter {
+func expandMapFilters(l []any) []types.MapFilter {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -926,7 +926,7 @@ func expandMapFilters(l []interface{}) []types.MapFilter {
 	var mapFilters []types.MapFilter
 
 	for _, item := range l {
-		tfMap, ok := item.(map[string]interface{})
+		tfMap, ok := item.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -951,7 +951,7 @@ func expandMapFilters(l []interface{}) []types.MapFilter {
 	return mapFilters
 }
 
-func expandNumberFilters(l []interface{}) []types.NumberFilter {
+func expandNumberFilters(l []any) []types.NumberFilter {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -959,7 +959,7 @@ func expandNumberFilters(l []interface{}) []types.NumberFilter {
 	var numFilters []types.NumberFilter
 
 	for _, item := range l {
-		tfMap, ok := item.(map[string]interface{})
+		tfMap, ok := item.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -993,7 +993,7 @@ func expandNumberFilters(l []interface{}) []types.NumberFilter {
 	return numFilters
 }
 
-func expandStringFilters(l []interface{}) []types.StringFilter {
+func expandStringFilters(l []any) []types.StringFilter {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -1001,7 +1001,7 @@ func expandStringFilters(l []interface{}) []types.StringFilter {
 	var stringFilters []types.StringFilter
 
 	for _, item := range l {
-		tfMap, ok := item.(map[string]interface{})
+		tfMap, ok := item.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -1022,28 +1022,28 @@ func expandStringFilters(l []interface{}) []types.StringFilter {
 	return stringFilters
 }
 
-func flattenDateFilterDateRange(dateRange *types.DateRange) []interface{} {
+func flattenDateFilterDateRange(dateRange *types.DateRange) []any {
 	if dateRange == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		names.AttrUnit:  string(dateRange.Unit),
 		names.AttrValue: aws.ToInt32((dateRange.Value)),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenDateFilters(filters []types.DateFilter) []interface{} {
+func flattenDateFilters(filters []types.DateFilter) []any {
 	if len(filters) == 0 {
 		return nil
 	}
 
-	var dateFilters []interface{}
+	var dateFilters []any
 
 	for _, filter := range filters {
-		m := map[string]interface{}{
+		m := map[string]any{
 			"date_range": flattenDateFilterDateRange(filter.DateRange),
 			"end":        aws.ToString(filter.End),
 			"start":      aws.ToString(filter.Start),
@@ -1055,15 +1055,15 @@ func flattenDateFilters(filters []types.DateFilter) []interface{} {
 	return dateFilters
 }
 
-func flattenIPFilters(filters []types.IpFilter) []interface{} {
+func flattenIPFilters(filters []types.IpFilter) []any {
 	if len(filters) == 0 {
 		return nil
 	}
 
-	var ipFilters []interface{}
+	var ipFilters []any
 
 	for _, filter := range filters {
-		m := map[string]interface{}{
+		m := map[string]any{
 			"cidr": aws.ToString(filter.Cidr),
 		}
 
@@ -1073,15 +1073,15 @@ func flattenIPFilters(filters []types.IpFilter) []interface{} {
 	return ipFilters
 }
 
-func flattenKeywordFilters(filters []types.KeywordFilter) []interface{} {
+func flattenKeywordFilters(filters []types.KeywordFilter) []any {
 	if len(filters) == 0 {
 		return nil
 	}
 
-	var keywordFilters []interface{}
+	var keywordFilters []any
 
 	for _, filter := range filters {
-		m := map[string]interface{}{
+		m := map[string]any{
 			names.AttrValue: aws.ToString(filter.Value),
 		}
 
@@ -1091,15 +1091,15 @@ func flattenKeywordFilters(filters []types.KeywordFilter) []interface{} {
 	return keywordFilters
 }
 
-func flattenMapFilters(filters []types.MapFilter) []interface{} {
+func flattenMapFilters(filters []types.MapFilter) []any {
 	if len(filters) == 0 {
 		return nil
 	}
 
-	var mapFilters []interface{}
+	var mapFilters []any
 
 	for _, filter := range filters {
-		m := map[string]interface{}{
+		m := map[string]any{
 			"comparison":    string(filter.Comparison),
 			names.AttrKey:   aws.ToString(filter.Key),
 			names.AttrValue: aws.ToString(filter.Value),
@@ -1111,15 +1111,15 @@ func flattenMapFilters(filters []types.MapFilter) []interface{} {
 	return mapFilters
 }
 
-func flattenNumberFilters(filters []types.NumberFilter) []interface{} {
+func flattenNumberFilters(filters []types.NumberFilter) []any {
 	if len(filters) == 0 {
 		return nil
 	}
 
-	var numFilters []interface{}
+	var numFilters []any
 
 	for _, filter := range filters {
-		m := map[string]interface{}{}
+		m := map[string]any{}
 
 		if filter.Eq != nil {
 			m["eq"] = strconv.FormatFloat(aws.ToFloat64(filter.Eq), 'f', -1, 64)
@@ -1139,12 +1139,12 @@ func flattenNumberFilters(filters []types.NumberFilter) []interface{} {
 	return numFilters
 }
 
-func flattenSecurityFindingFilters(filters *types.AwsSecurityFindingFilters) []interface{} {
+func flattenSecurityFindingFilters(filters *types.AwsSecurityFindingFilters) []any {
 	if filters == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		names.AttrAWSAccountID:                        flattenStringFilters(filters.AwsAccountId),
 		"company_name":                                flattenStringFilters(filters.CompanyName),
 		"compliance_status":                           flattenStringFilters(filters.ComplianceStatus),
@@ -1235,18 +1235,18 @@ func flattenSecurityFindingFilters(filters *types.AwsSecurityFindingFilters) []i
 		"workflow_status":                                    flattenStringFilters(filters.WorkflowStatus),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenStringFilters(filters []types.StringFilter) []interface{} {
+func flattenStringFilters(filters []types.StringFilter) []any {
 	if len(filters) == 0 {
 		return nil
 	}
 
-	var stringFilters []interface{}
+	var stringFilters []any
 
 	for _, filter := range filters {
-		m := map[string]interface{}{
+		m := map[string]any{
 			"comparison":    string(filter.Comparison),
 			names.AttrValue: aws.ToString(filter.Value),
 		}

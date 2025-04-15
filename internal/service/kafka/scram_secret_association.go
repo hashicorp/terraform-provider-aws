@@ -59,7 +59,7 @@ func resourceSCRAMSecretAssociation() *schema.Resource {
 	}
 }
 
-func resourceSCRAMSecretAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSCRAMSecretAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
@@ -74,7 +74,7 @@ func resourceSCRAMSecretAssociationCreate(ctx context.Context, d *schema.Resourc
 	return append(diags, resourceSCRAMSecretAssociationRead(ctx, d, meta)...)
 }
 
-func resourceSCRAMSecretAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSCRAMSecretAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
@@ -96,7 +96,7 @@ func resourceSCRAMSecretAssociationRead(ctx context.Context, d *schema.ResourceD
 	return diags
 }
 
-func resourceSCRAMSecretAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSCRAMSecretAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
@@ -118,7 +118,7 @@ func resourceSCRAMSecretAssociationUpdate(ctx context.Context, d *schema.Resourc
 	return append(diags, resourceSCRAMSecretAssociationRead(ctx, d, meta)...)
 }
 
-func resourceSCRAMSecretAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSCRAMSecretAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 

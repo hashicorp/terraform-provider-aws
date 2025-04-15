@@ -51,7 +51,7 @@ func resourceBudgetResourceAssociation() *schema.Resource {
 	}
 }
 
-func resourceBudgetResourceAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBudgetResourceAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
@@ -94,7 +94,7 @@ func resourceBudgetResourceAssociationCreate(ctx context.Context, d *schema.Reso
 	return append(diags, resourceBudgetResourceAssociationRead(ctx, d, meta)...)
 }
 
-func resourceBudgetResourceAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBudgetResourceAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
@@ -126,7 +126,7 @@ func resourceBudgetResourceAssociationRead(ctx context.Context, d *schema.Resour
 	return diags
 }
 
-func resourceBudgetResourceAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBudgetResourceAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 

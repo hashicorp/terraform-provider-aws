@@ -52,7 +52,7 @@ func resourceFileSystemPolicy() *schema.Resource {
 				ValidateFunc:          validation.StringIsJSON,
 				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
 				DiffSuppressOnRefresh: true,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
@@ -61,7 +61,7 @@ func resourceFileSystemPolicy() *schema.Resource {
 	}
 }
 
-func resourceFileSystemPolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFileSystemPolicyPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EFSClient(ctx)
 
@@ -77,7 +77,7 @@ func resourceFileSystemPolicyPut(ctx context.Context, d *schema.ResourceData, me
 		Policy:                         aws.String(policy),
 	}
 
-	_, err = tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidPolicyException](ctx, propagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidPolicyException](ctx, propagationTimeout, func() (any, error) {
 		return conn.PutFileSystemPolicy(ctx, input)
 	}, "Policy contains invalid Principal block")
 
@@ -92,7 +92,7 @@ func resourceFileSystemPolicyPut(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceFileSystemPolicyRead(ctx, d, meta)...)
 }
 
-func resourceFileSystemPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFileSystemPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EFSClient(ctx)
 
@@ -125,7 +125,7 @@ func resourceFileSystemPolicyRead(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func resourceFileSystemPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFileSystemPolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EFSClient(ctx)
 

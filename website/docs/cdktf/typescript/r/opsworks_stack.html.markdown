@@ -12,6 +12,8 @@ description: |-
 
 Provides an OpsWorks stack resource.
 
+!> **ALERT:** AWS no longer supports OpsWorks Stacks. All related resources will be removed from the Terraform AWS Provider in the next major version.
+
 ## Example Usage
 
 ```typescript
@@ -121,4 +123,4 @@ Using `terraform import`, import OpsWorks stacks using the `id`. For example:
 % terraform import aws_opsworks_stack.bar 00000000-0000-0000-0000-000000000000
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-cbf03513c58946c4bc846b656ee35719904926d5e3f1cfba67219305564f8a4f -->
+<!-- cache-key: cdktf-0.20.8 input-6af1072741f186fcddc321c71a350298ac67484fcba6100a3bc7dffe500e612b -->

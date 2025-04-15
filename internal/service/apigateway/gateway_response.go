@@ -32,7 +32,7 @@ func resourceGatewayResponse() *schema.Resource {
 		DeleteWithoutTimeout: resourceGatewayResponseDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")
 				if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
 					return nil, fmt.Errorf("Unexpected format of ID (%q), expected REST-API-ID/RESPONSE-TYPE", d.Id())
@@ -75,7 +75,7 @@ func resourceGatewayResponse() *schema.Resource {
 	}
 }
 
-func resourceGatewayResponsePut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGatewayResponsePut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -84,12 +84,12 @@ func resourceGatewayResponsePut(ctx context.Context, d *schema.ResourceData, met
 		RestApiId:    aws.String(d.Get("rest_api_id").(string)),
 	}
 
-	if v, ok := d.GetOk("response_parameters"); ok && len(v.(map[string]interface{})) > 0 {
-		input.ResponseParameters = flex.ExpandStringValueMap(v.(map[string]interface{}))
+	if v, ok := d.GetOk("response_parameters"); ok && len(v.(map[string]any)) > 0 {
+		input.ResponseParameters = flex.ExpandStringValueMap(v.(map[string]any))
 	}
 
-	if v, ok := d.GetOk("response_templates"); ok && len(v.(map[string]interface{})) > 0 {
-		input.ResponseTemplates = flex.ExpandStringValueMap(v.(map[string]interface{}))
+	if v, ok := d.GetOk("response_templates"); ok && len(v.(map[string]any)) > 0 {
+		input.ResponseTemplates = flex.ExpandStringValueMap(v.(map[string]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrStatusCode); ok {
@@ -109,7 +109,7 @@ func resourceGatewayResponsePut(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceGatewayResponseRead(ctx, d, meta)...)
 }
 
-func resourceGatewayResponseRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGatewayResponseRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -133,7 +133,7 @@ func resourceGatewayResponseRead(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func resourceGatewayResponseDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGatewayResponseDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 

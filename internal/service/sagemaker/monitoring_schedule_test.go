@@ -184,7 +184,7 @@ func testAccCheckMonitoringScheduleDestroy(ctx context.Context) resource.TestChe
 				return err
 			}
 
-			return fmt.Errorf("SageMaker Monitoring Schedule (%s) still exists", rs.Primary.ID)
+			return fmt.Errorf("SageMaker AI Monitoring Schedule (%s) still exists", rs.Primary.ID)
 		}
 		return nil
 	}
@@ -198,7 +198,7 @@ func testAccCheckMonitoringScheduleExists(ctx context.Context, n string) resourc
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("no SageMaker Monitoring Schedule ID is set")
+			return fmt.Errorf("no SageMaker AI Monitoring Schedule ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)

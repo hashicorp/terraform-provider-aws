@@ -44,18 +44,18 @@ func resourceRegionSettings() *schema.Resource {
 	}
 }
 
-func resourceRegionSettingsUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRegionSettingsUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
 	input := &backup.UpdateRegionSettingsInput{}
 
-	if v, ok := d.GetOk("resource_type_management_preference"); ok && len(v.(map[string]interface{})) > 0 {
-		input.ResourceTypeManagementPreference = flex.ExpandBoolValueMap(v.(map[string]interface{}))
+	if v, ok := d.GetOk("resource_type_management_preference"); ok && len(v.(map[string]any)) > 0 {
+		input.ResourceTypeManagementPreference = flex.ExpandBoolValueMap(v.(map[string]any))
 	}
 
-	if v, ok := d.GetOk("resource_type_opt_in_preference"); ok && len(v.(map[string]interface{})) > 0 {
-		input.ResourceTypeOptInPreference = flex.ExpandBoolValueMap(v.(map[string]interface{}))
+	if v, ok := d.GetOk("resource_type_opt_in_preference"); ok && len(v.(map[string]any)) > 0 {
+		input.ResourceTypeOptInPreference = flex.ExpandBoolValueMap(v.(map[string]any))
 	}
 
 	_, err := conn.UpdateRegionSettings(ctx, input)
@@ -71,7 +71,7 @@ func resourceRegionSettingsUpdate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceRegionSettingsRead(ctx, d, meta)...)
 }
 
-func resourceRegionSettingsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRegionSettingsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 

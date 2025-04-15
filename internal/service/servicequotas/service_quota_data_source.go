@@ -111,26 +111,26 @@ func DataSourceServiceQuota() *schema.Resource {
 	}
 }
 
-func flattenUsageMetric(usageMetric *types.MetricInfo) []interface{} {
+func flattenUsageMetric(usageMetric *types.MetricInfo) []any {
 	if usageMetric == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	var usageMetrics []interface{}
-	var metricDimensions []interface{}
+	var usageMetrics []any
+	var metricDimensions []any
 
 	if usageMetric.MetricDimensions != nil && usageMetric.MetricDimensions["Service"] != "" {
-		metricDimensions = append(metricDimensions, map[string]interface{}{
+		metricDimensions = append(metricDimensions, map[string]any{
 			"service":      usageMetric.MetricDimensions["Service"],
 			"class":        usageMetric.MetricDimensions["Class"],
 			names.AttrType: usageMetric.MetricDimensions["Type"],
 			"resource":     usageMetric.MetricDimensions["Resource"],
 		})
 	} else {
-		metricDimensions = append(metricDimensions, map[string]interface{}{})
+		metricDimensions = append(metricDimensions, map[string]any{})
 	}
 
-	usageMetrics = append(usageMetrics, map[string]interface{}{
+	usageMetrics = append(usageMetrics, map[string]any{
 		names.AttrMetricName:              usageMetric.MetricName,
 		"metric_namespace":                usageMetric.MetricNamespace,
 		"metric_statistic_recommendation": usageMetric.MetricStatisticRecommendation,
@@ -140,7 +140,7 @@ func flattenUsageMetric(usageMetric *types.MetricInfo) []interface{} {
 	return usageMetrics
 }
 
-func dataSourceServiceQuotaRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceServiceQuotaRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceQuotasClient(ctx)
 

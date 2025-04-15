@@ -219,6 +219,39 @@ func testAccVerifiedAccessInstance_tags(t *testing.T, semaphore tfsync.Semaphore
 	})
 }
 
+func testAccVerifiedAccessInstance_cidrEndpointsCustomSubDomain(t *testing.T, semaphore tfsync.Semaphore) {
+	ctx := acctest.Context(t)
+	var v1 types.VerifiedAccessInstance
+	resourceName := "aws_verifiedaccess_instance.test"
+	subDomainName := "test.demo.com"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckVerifiedAccessSynchronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckVerifiedAccessInstance(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVerifiedAccessInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVerifiedAccessInstanceConfig_cidrEndpointsCustomSubDomain(rName, subDomainName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVerifiedAccessInstanceExists(ctx, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "cidr_endpoints_custom_subdomain", subDomainName),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckVerifiedAccessInstanceNotRecreated(before, after *types.VerifiedAccessInstance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if before, after := aws.ToString(before.VerifiedAccessInstanceId), aws.ToString(after.VerifiedAccessInstanceId); before != after {
@@ -341,4 +374,17 @@ resource "aws_verifiedaccess_instance" "test" {
   }
 }
 `, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccVerifiedAccessInstanceConfig_cidrEndpointsCustomSubDomain(rName, cidrEndpointsCustomSubDomain string) string {
+	return fmt.Sprintf(`
+resource "aws_verifiedaccess_instance" "test" {
+
+  cidr_endpoints_custom_subdomain = %[2]q
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, cidrEndpointsCustomSubDomain)
 }

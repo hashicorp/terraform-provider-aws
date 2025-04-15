@@ -24,7 +24,7 @@ from cdktf import VariableType, TerraformVariable, TerraformStack
 #
 from imports.aws.data_aws_cloudfront_function import DataAwsCloudfrontFunction
 class MyConvertedCode(TerraformStack):
-    def __init__(self, scope, name, *, stage):
+    def __init__(self, scope, name):
         super().__init__(scope, name)
         # Terraform Variables are not always the best fit for getting inputs in the context of Terraform CDK.
         #     You can read more about this at https://cdk.tf/variables
@@ -33,7 +33,7 @@ class MyConvertedCode(TerraformStack):
         )
         DataAwsCloudfrontFunction(self, "existing",
             name=function_name.string_value,
-            stage=stage
+            stage="LIVE"
         )
 ```
 
@@ -57,4 +57,4 @@ This data source exports the following attributes in addition to the arguments a
 * `runtime` - Identifier of the function's runtime.
 * `status` - Status of the function. Can be `UNPUBLISHED`, `UNASSOCIATED` or `ASSOCIATED`.
 
-<!-- cache-key: cdktf-0.20.8 input-b6e2e1659c76c964ed286497ed56bc0112bcfd7040e471fe9ab9da87416a183b -->
+<!-- cache-key: cdktf-0.20.8 input-e243755039396ad4a438296553bbd09c9a11c9bfbc0baf940be4b89ce282750c -->

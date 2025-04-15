@@ -52,7 +52,7 @@ func resourceVPCEndpointSubnetAssociation() *schema.Resource {
 	}
 }
 
-func resourceVPCEndpointSubnetAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCEndpointSubnetAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -78,7 +78,7 @@ func resourceVPCEndpointSubnetAssociationCreate(ctx context.Context, d *schema.R
 		Delay:   1 * time.Minute,
 		Timeout: 3 * time.Minute,
 		Target:  []string{"ok"},
-		Refresh: func() (interface{}, string, error) {
+		Refresh: func() (any, string, error) {
 			output, err := conn.ModifyVpcEndpoint(ctx, input)
 
 			return output, "ok", err
@@ -101,7 +101,7 @@ func resourceVPCEndpointSubnetAssociationCreate(ctx context.Context, d *schema.R
 	return append(diags, resourceVPCEndpointSubnetAssociationRead(ctx, d, meta)...)
 }
 
-func resourceVPCEndpointSubnetAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCEndpointSubnetAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -125,7 +125,7 @@ func resourceVPCEndpointSubnetAssociationRead(ctx context.Context, d *schema.Res
 	return diags
 }
 
-func resourceVPCEndpointSubnetAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCEndpointSubnetAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -159,7 +159,7 @@ func resourceVPCEndpointSubnetAssociationDelete(ctx context.Context, d *schema.R
 	return diags
 }
 
-func resourceVPCEndpointSubnetAssociationImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceVPCEndpointSubnetAssociationImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 2 {
 		return nil, fmt.Errorf("wrong format of import ID (%s), use: 'vpc-endpoint-id/subnet-id'", d.Id())

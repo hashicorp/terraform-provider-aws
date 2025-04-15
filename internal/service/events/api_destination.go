@@ -79,7 +79,7 @@ func resourceAPIDestination() *schema.Resource {
 	}
 }
 
-func resourceAPIDestinationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAPIDestinationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
@@ -113,7 +113,7 @@ func resourceAPIDestinationCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceAPIDestinationRead(ctx, d, meta)...)
 }
 
-func resourceAPIDestinationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAPIDestinationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
@@ -140,7 +140,7 @@ func resourceAPIDestinationRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceAPIDestinationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAPIDestinationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
@@ -171,7 +171,7 @@ func resourceAPIDestinationUpdate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceAPIDestinationRead(ctx, d, meta)...)
 }
 
-func resourceAPIDestinationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAPIDestinationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 

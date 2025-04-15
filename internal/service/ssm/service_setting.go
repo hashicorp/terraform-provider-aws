@@ -54,7 +54,7 @@ func resourceServiceSetting() *schema.Resource {
 	}
 }
 
-func resourceServiceSettingUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceSettingUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
@@ -79,7 +79,7 @@ func resourceServiceSettingUpdate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceServiceSettingRead(ctx, d, meta)...)
 }
 
-func resourceServiceSettingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceSettingRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
@@ -105,7 +105,7 @@ func resourceServiceSettingRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceServiceSettingDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceSettingDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
@@ -151,7 +151,7 @@ func findServiceSettingByID(ctx context.Context, conn *ssm.Client, id string) (*
 }
 
 func statusServiceSetting(ctx context.Context, conn *ssm.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findServiceSettingByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

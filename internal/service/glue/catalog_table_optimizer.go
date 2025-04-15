@@ -308,7 +308,7 @@ func (r *resourceCatalogTableOptimizer) Delete(ctx context.Context, request reso
 		return
 	}
 
-	tflog.Debug(ctx, "deleting Glue Catalog Table Optimizer", map[string]interface{}{
+	tflog.Debug(ctx, "deleting Glue Catalog Table Optimizer", map[string]any{
 		names.AttrCatalogID:    data.CatalogID.ValueString(),
 		names.AttrDatabaseName: data.DatabaseName.ValueString(),
 		names.AttrTableName:    data.TableName.ValueString(),

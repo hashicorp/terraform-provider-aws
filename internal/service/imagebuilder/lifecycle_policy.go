@@ -309,7 +309,7 @@ func (r *lifecyclePolicyResource) Create(ctx context.Context, request resource.C
 	input.ClientToken = aws.String(sdkid.UniqueId())
 	input.Tags = getTagsIn(ctx)
 
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (any, error) {
 		return conn.CreateLifecyclePolicy(ctx, input)
 	}, errCodeInvalidParameterValueException, "The provided role does not exist or does not have sufficient permissions")
 
@@ -411,7 +411,7 @@ func (r *lifecyclePolicyResource) Update(ctx context.Context, request resource.U
 		// Additional fields.
 		input.ClientToken = aws.String(sdkid.UniqueId())
 
-		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (any, error) {
 			return conn.UpdateLifecyclePolicy(ctx, input)
 		}, errCodeInvalidParameterValueException, "The provided role does not exist or does not have sufficient permissions")
 

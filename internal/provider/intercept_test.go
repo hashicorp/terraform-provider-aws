@@ -86,7 +86,7 @@ func TestInterceptedHandler(t *testing.T) {
 		}),
 	})
 
-	var read schema.ReadContextFunc = func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var read schema.ReadContextFunc = func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 		var diags diag.Diagnostics
 		return sdkdiag.AppendErrorf(diags, "read error")
 	}

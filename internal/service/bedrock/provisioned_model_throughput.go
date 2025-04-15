@@ -223,7 +223,7 @@ func findProvisionedModelThroughputByID(ctx context.Context, conn *bedrock.Clien
 }
 
 func statusProvisionedModelThroughput(ctx context.Context, conn *bedrock.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findProvisionedModelThroughputByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

@@ -1452,6 +1452,46 @@ func waitNetworkInterfaceDetached(ctx context.Context, conn *ec2.Client, id stri
 	return nil, err
 }
 
+func waitNetworkInterfacePermissionCreated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.NetworkInterfacePermission, error) {
+	stateConf := &retry.StateChangeConf{
+		// For some reason, the API returns all caps statuses (e.g. "PENDING" instead of "pending")
+		Pending:                   []string{"PENDING"},
+		Target:                    []string{"GRANTED"},
+		Refresh:                   statusNetworkInterfacePermission(ctx, conn, id),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.NetworkInterfacePermission); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.PermissionState.StatusMessage)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitNetworkInterfacePermissionDeleted(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.NetworkInterfacePermission, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{"PENDING", "GRANTED", "REVOKING"},
+		Target:  []string{},
+		Refresh: statusNetworkInterfacePermission(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.NetworkInterfacePermission); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.PermissionState.StatusMessage)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
 func waitPlacementGroupCreated(ctx context.Context, conn *ec2.Client, name string) (*awstypes.PlacementGroup, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.PlacementGroupStatePending),
@@ -2523,8 +2563,26 @@ func waitVerifiedAccessEndpointCreated(ctx context.Context, conn *ec2.Client, id
 		Target:                    enum.Slice(awstypes.VerifiedAccessEndpointStatusCodeActive),
 		Refresh:                   statusVerifiedAccessEndpoint(ctx, conn, id),
 		Timeout:                   timeout,
-		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.VerifiedAccessEndpoint); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.Status.Message)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitVerifiedAccessEndpointUpdated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.VerifiedAccessEndpoint, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.VerifiedAccessEndpointStatusCodeUpdating),
+		Target:  enum.Slice(awstypes.VerifiedAccessEndpointStatusCodeActive),
+		Refresh: statusVerifiedAccessEndpoint(ctx, conn, id),
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -2544,27 +2602,6 @@ func waitVerifiedAccessEndpointDeleted(ctx context.Context, conn *ec2.Client, id
 		Target:  []string{},
 		Refresh: statusVerifiedAccessEndpoint(ctx, conn, id),
 		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.VerifiedAccessEndpoint); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.Status.Message)))
-
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitVerifiedAccessEndpointUpdated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.VerifiedAccessEndpoint, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(awstypes.VerifiedAccessEndpointStatusCodeUpdating),
-		Target:                    enum.Slice(awstypes.VerifiedAccessEndpointStatusCodeActive),
-		Refresh:                   statusVerifiedAccessEndpoint(ctx, conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)

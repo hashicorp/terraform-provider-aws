@@ -156,7 +156,7 @@ func resourceCluster() *schema.Resource {
 			names.AttrFinalSnapshotIdentifier: {
 				Type:     schema.TypeString,
 				Optional: true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, es []error) {
+				ValidateFunc: func(v any, k string) (ws []string, es []error) {
 					value := v.(string)
 					if !regexache.MustCompile(`^[0-9A-Za-z-]+$`).MatchString(value) {
 						es = append(es, fmt.Errorf(
@@ -230,7 +230,7 @@ func resourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
-				StateFunc: func(val interface{}) string {
+				StateFunc: func(val any) string {
 					if val == nil {
 						return ""
 					}
@@ -317,7 +317,7 @@ func resourceCluster() *schema.Resource {
 	}
 }
 
-func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
 
@@ -335,7 +335,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		restoreDBClusterFromSnapshot = true
 	}
 
-	serverlessConfiguration := expandServerlessConfiguration(d.Get("serverless_v2_scaling_configuration").([]interface{}))
+	serverlessConfiguration := expandServerlessConfiguration(d.Get("serverless_v2_scaling_configuration").([]any))
 	inputC := &neptune.CreateDBClusterInput{
 		CopyTagsToSnapshot:               aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 		DBClusterIdentifier:              aws.String(clusterID),
@@ -465,7 +465,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 	}
 
-	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (any, error) {
 		if restoreDBClusterFromSnapshot {
 			return conn.RestoreDBClusterFromSnapshot(ctx, inputR)
 		}
@@ -508,7 +508,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceClusterRead(ctx, d, meta)...)
 }
 
-func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
 
@@ -581,7 +581,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
 
@@ -654,7 +654,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		if d.HasChange("serverless_v2_scaling_configuration") {
-			input.ServerlessV2ScalingConfiguration = expandServerlessConfiguration(d.Get("serverless_v2_scaling_configuration").([]interface{}))
+			input.ServerlessV2ScalingConfiguration = expandServerlessConfiguration(d.Get("serverless_v2_scaling_configuration").([]any))
 		}
 
 		if d.HasChange(names.AttrStorageType) {
@@ -670,7 +670,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		_, err := tfresource.RetryWhen(ctx, 5*time.Minute,
-			func() (interface{}, error) {
+			func() (any, error) {
 				return conn.ModifyDBCluster(ctx, input)
 			},
 			func(err error) (bool, error) {
@@ -747,7 +747,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceClusterRead(ctx, d, meta)...)
 }
 
-func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
 
@@ -772,7 +772,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	log.Printf("[DEBUG] Deleting Neptune Cluster: %s", d.Id())
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidDBClusterStateFault](ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidDBClusterStateFault](ctx, d.Timeout(schema.TimeoutDelete), func() (any, error) {
 		return conn.DeleteDBCluster(ctx, input)
 	}, "is not currently in the available state")
 
@@ -825,7 +825,7 @@ func removeClusterFromGlobalCluster(ctx context.Context, conn *neptune.Client, c
 		return fmt.Errorf("removing Neptune Cluster (%s) from Neptune Global Cluster (%s): %w", clusterARN, globalClusterID, err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, timeout, func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, timeout, func() (any, error) {
 		return findGlobalClusterByClusterARN(ctx, conn, clusterARN)
 	})
 
@@ -903,7 +903,7 @@ func findDBClusters(ctx context.Context, conn *neptune.Client, input *neptune.De
 }
 
 func statusDBCluster(ctx context.Context, conn *neptune.Client, id string, waitNoPendingModifiedValues bool) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findDBClusterByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
@@ -980,27 +980,27 @@ func waitDBClusterDeleted(ctx context.Context, conn *neptune.Client, id string, 
 	return nil, err
 }
 
-func expandServerlessConfiguration(l []interface{}) *awstypes.ServerlessV2ScalingConfiguration {
+func expandServerlessConfiguration(l []any) *awstypes.ServerlessV2ScalingConfiguration {
 	if len(l) == 0 {
 		return nil
 	}
 
-	tfMap := l[0].(map[string]interface{})
+	tfMap := l[0].(map[string]any)
 	return &awstypes.ServerlessV2ScalingConfiguration{
 		MinCapacity: aws.Float64(tfMap["min_capacity"].(float64)),
 		MaxCapacity: aws.Float64(tfMap[names.AttrMaxCapacity].(float64)),
 	}
 }
 
-func flattenServerlessV2ScalingConfigurationInfo(serverlessConfig *awstypes.ServerlessV2ScalingConfigurationInfo) []map[string]interface{} {
+func flattenServerlessV2ScalingConfigurationInfo(serverlessConfig *awstypes.ServerlessV2ScalingConfigurationInfo) []map[string]any {
 	if serverlessConfig == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"min_capacity":        aws.ToFloat64(serverlessConfig.MinCapacity),
 		names.AttrMaxCapacity: aws.ToFloat64(serverlessConfig.MaxCapacity),
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }

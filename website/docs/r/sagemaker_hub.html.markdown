@@ -1,14 +1,14 @@
 ---
-subcategory: "SageMaker"
+subcategory: "SageMaker AI"
 layout: "aws"
 page_title: "AWS: aws_sagemaker_hub"
 description: |-
-  Provides a SageMaker Hub resource.
+  Provides a SageMaker AI Hub resource.
 ---
 
 # Resource: aws_sagemaker_hub
 
-Provides a SageMaker Hub resource.
+Provides a SageMaker AI Hub resource.
 
 ## Example Usage
 
@@ -46,7 +46,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker Hubs using the `name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker AI Hubs using the `name`. For example:
 
 ```terraform
 import {
@@ -55,7 +55,7 @@ import {
 }
 ```
 
-Using `terraform import`, import SageMaker Hubs using the `name`. For example:
+Using `terraform import`, import SageMaker AI Hubs using the `name`. For example:
 
 ```console
 % terraform import aws_sagemaker_hub.test_hub my-code-repo

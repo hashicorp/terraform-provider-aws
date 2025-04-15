@@ -88,7 +88,7 @@ func ResourceAccountAssignment() *schema.Resource {
 	}
 }
 
-func resourceAccountAssignmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccountAssignmentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
 
@@ -132,7 +132,7 @@ func resourceAccountAssignmentCreate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceAccountAssignmentRead(ctx, d, meta)...)
 }
 
-func resourceAccountAssignmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccountAssignmentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
 
@@ -170,7 +170,7 @@ func resourceAccountAssignmentRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func resourceAccountAssignmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccountAssignmentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
 
@@ -313,7 +313,7 @@ func findAccountAssignmentCreationStatus(
 }
 
 func statusAccountAssignmentCreation(ctx context.Context, conn *ssoadmin.Client, instanceARN, requestID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findAccountAssignmentCreationStatus(ctx, conn, instanceARN, requestID)
 
 		if tfresource.NotFound(err) {
@@ -355,7 +355,7 @@ func findAccountAssignmentDeletionStatus(ctx context.Context, conn *ssoadmin.Cli
 }
 
 func statusAccountAssignmentDeletion(ctx context.Context, conn *ssoadmin.Client, instanceARN, requestID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findAccountAssignmentDeletionStatus(ctx, conn, instanceARN, requestID)
 
 		if tfresource.NotFound(err) {

@@ -51,7 +51,7 @@ func dataSourceTableItem() *schema.Resource {
 	}
 }
 
-func dataSourceTableItemRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceTableItemRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
@@ -68,8 +68,8 @@ func dataSourceTableItemRead(ctx context.Context, d *schema.ResourceData, meta i
 		TableName:      aws.String(tableName),
 	}
 
-	if v, ok := d.GetOk("expression_attribute_names"); ok && len(v.(map[string]interface{})) > 0 {
-		input.ExpressionAttributeNames = flex.ExpandStringValueMap(v.(map[string]interface{}))
+	if v, ok := d.GetOk("expression_attribute_names"); ok && len(v.(map[string]any)) > 0 {
+		input.ExpressionAttributeNames = flex.ExpandStringValueMap(v.(map[string]any))
 	}
 
 	if v, ok := d.GetOk("projection_expression"); ok {

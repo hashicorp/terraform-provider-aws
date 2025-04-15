@@ -30,7 +30,7 @@ func listTags(ctx context.Context, conn *cloudfront.Client, identifier string, o
 		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(ctx, output.Tags.Items), nil
+	return keyValueTags(ctx, output.Tags.Items), nil
 }
 
 // ListTags lists cloudfront service tags and set them in Context.
@@ -51,8 +51,8 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier stri
 
 // []*SERVICE.Tag handling
 
-// Tags returns cloudfront service tags.
-func Tags(tags tftags.KeyValueTags) []awstypes.Tag {
+// svcTags returns cloudfront service tags.
+func svcTags(tags tftags.KeyValueTags) []awstypes.Tag {
 	result := make([]awstypes.Tag, 0, len(tags))
 
 	for k, v := range tags.Map() {
@@ -67,8 +67,8 @@ func Tags(tags tftags.KeyValueTags) []awstypes.Tag {
 	return result
 }
 
-// KeyValueTags creates tftags.KeyValueTags from cloudfront service tags.
-func KeyValueTags(ctx context.Context, tags []awstypes.Tag) tftags.KeyValueTags {
+// keyValueTags creates tftags.KeyValueTags from cloudfront service tags.
+func keyValueTags(ctx context.Context, tags []awstypes.Tag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
@@ -82,7 +82,7 @@ func KeyValueTags(ctx context.Context, tags []awstypes.Tag) tftags.KeyValueTags 
 // nil is returned if there are no input tags.
 func getTagsIn(ctx context.Context) []awstypes.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
+		if tags := svcTags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
 		}
 	}
@@ -93,7 +93,7 @@ func getTagsIn(ctx context.Context) []awstypes.Tag {
 // setTagsOut sets cloudfront service tags in Context.
 func setTagsOut(ctx context.Context, tags []awstypes.Tag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		inContext.TagsOut = option.Some(KeyValueTags(ctx, tags))
+		inContext.TagsOut = option.Some(keyValueTags(ctx, tags))
 	}
 }
 
@@ -126,7 +126,7 @@ func updateTags(ctx context.Context, conn *cloudfront.Client, identifier string,
 	if len(updatedTags) > 0 {
 		input := cloudfront.TagResourceInput{
 			Resource: aws.String(identifier),
-			Tags:     &awstypes.Tags{Items: Tags(updatedTags)},
+			Tags:     &awstypes.Tags{Items: svcTags(updatedTags)},
 		}
 
 		_, err := conn.TagResource(ctx, &input, optFns...)

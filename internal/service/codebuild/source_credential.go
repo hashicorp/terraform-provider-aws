@@ -64,7 +64,7 @@ func resourceSourceCredential() *schema.Resource {
 	}
 }
 
-func resourceSourceCredentialCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSourceCredentialCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeBuildClient(ctx)
 
@@ -90,7 +90,7 @@ func resourceSourceCredentialCreate(ctx context.Context, d *schema.ResourceData,
 	return append(diags, resourceSourceCredentialRead(ctx, d, meta)...)
 }
 
-func resourceSourceCredentialRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSourceCredentialRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeBuildClient(ctx)
 
@@ -113,7 +113,7 @@ func resourceSourceCredentialRead(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func resourceSourceCredentialDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSourceCredentialDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeBuildClient(ctx)
 

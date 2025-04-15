@@ -14,9 +14,9 @@ import (
 // Matches the public part of helper/schema/resourceDiffer:
 // https://github.com/hashicorp/terraform-plugin-sdk/blob/28e631776d97f0a5a5942b3524814addbef90875/helper/schema/schema.go#L1104-L1112
 type ResourceDiffer interface {
-	Get(string) interface{}
-	GetChange(string) (interface{}, interface{})
-	GetOk(string) (interface{}, bool)
+	Get(string) any
+	GetChange(string) (any, any)
+	GetOk(string) (any, bool)
 	GetRawConfig() cty.Value
 	GetRawPlan() cty.Value
 	GetRawState() cty.Value

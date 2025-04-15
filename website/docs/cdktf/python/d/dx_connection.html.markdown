@@ -47,7 +47,8 @@ This data source exports the following attributes in addition to the arguments a
 * `owner_account_id` - ID of the AWS account that owns the connection.
 * `partner_name` - The name of the AWS Direct Connect service provider associated with the connection.
 * `provider_name` - Name of the service provider associated with the connection.
+* `state` - State of the connection.
 * `tags` - Map of tags for the resource.
 * `vlan_id` - The VLAN ID.
 
-<!-- cache-key: cdktf-0.20.8 input-192e94cc169312d4fa902eb3bcc5d1de027e5be4fe92fdaf9fdbeefc124a32a8 -->
+<!-- cache-key: cdktf-0.20.8 input-ee7442e2c312c4de1313a67206127c5d5a68b5ee77b2867d9bd5f4579bfd851e -->

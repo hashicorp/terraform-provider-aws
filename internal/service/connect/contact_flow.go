@@ -59,7 +59,7 @@ func resourceContactFlow() *schema.Resource {
 				ValidateFunc:     validation.StringIsJSON,
 				ConflictsWith:    []string{"filename"},
 				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
@@ -98,7 +98,7 @@ func resourceContactFlow() *schema.Resource {
 	}
 }
 
-func resourceContactFlowCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceContactFlowCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
@@ -145,7 +145,7 @@ func resourceContactFlowCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceContactFlowRead(ctx, d, meta)...)
 }
 
-func resourceContactFlowRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceContactFlowRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
@@ -179,7 +179,7 @@ func resourceContactFlowRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceContactFlowUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceContactFlowUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
@@ -237,7 +237,7 @@ func resourceContactFlowUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceContactFlowRead(ctx, d, meta)...)
 }
 
-func resourceContactFlowDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceContactFlowDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 

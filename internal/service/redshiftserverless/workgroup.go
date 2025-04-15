@@ -204,7 +204,7 @@ func resourceWorkgroup() *schema.Resource {
 	}
 }
 
-func resourceWorkgroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWorkgroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftServerlessClient(ctx)
 
@@ -262,7 +262,7 @@ func resourceWorkgroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceWorkgroupRead(ctx, d, meta)...)
 }
 
-func resourceWorkgroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWorkgroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftServerlessClient(ctx)
 
@@ -283,7 +283,7 @@ func resourceWorkgroupRead(ctx context.Context, d *schema.ResourceData, meta int
 	if err := d.Set("config_parameter", flattenConfigParameters(out.ConfigParameters)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting config_parameter: %s", err)
 	}
-	if err := d.Set(names.AttrEndpoint, []interface{}{flattenEndpoint(out.Endpoint)}); err != nil {
+	if err := d.Set(names.AttrEndpoint, []any{flattenEndpoint(out.Endpoint)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting endpoint: %s", err)
 	}
 	d.Set("enhanced_vpc_routing", out.EnhancedVpcRouting)
@@ -299,7 +299,7 @@ func resourceWorkgroupRead(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func resourceWorkgroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWorkgroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftServerlessClient(ctx)
 
@@ -442,13 +442,13 @@ func resourceWorkgroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceWorkgroupRead(ctx, d, meta)...)
 }
 
-func resourceWorkgroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWorkgroupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftServerlessClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Redshift Serverless Workgroup: %s", d.Id())
 	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ConflictException](ctx, workgroupDeletedTimeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.DeleteWorkgroup(ctx, &redshiftserverless.DeleteWorkgroupInput{
 				WorkgroupName: aws.String(d.Id()),
 			})
@@ -473,7 +473,7 @@ func resourceWorkgroupDelete(ctx context.Context, d *schema.ResourceData, meta i
 
 func updateWorkgroup(ctx context.Context, conn *redshiftserverless.Client, input *redshiftserverless.UpdateWorkgroupInput, timeout time.Duration) error {
 	_, err := tfresource.RetryWhen(ctx, workgroupUpdatedTimeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.UpdateWorkgroup(ctx, input)
 		}, func(err error) (bool, error) {
 			if errs.IsAErrorMessageContains[*awstypes.ConflictException](err, "operation running") {
@@ -530,7 +530,7 @@ func findWorkgroupByName(ctx context.Context, conn *redshiftserverless.Client, n
 }
 
 func statusWorkgroup(ctx context.Context, conn *redshiftserverless.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findWorkgroupByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
@@ -579,7 +579,7 @@ func waitWorkgroupDeleted(ctx context.Context, conn *redshiftserverless.Client, 
 	return nil, err
 }
 
-func expandConfigParameter(tfMap map[string]interface{}) awstypes.ConfigParameter {
+func expandConfigParameter(tfMap map[string]any) awstypes.ConfigParameter {
 	apiObject := awstypes.ConfigParameter{}
 
 	if v, ok := tfMap["parameter_key"].(string); ok {
@@ -593,7 +593,7 @@ func expandConfigParameter(tfMap map[string]interface{}) awstypes.ConfigParamete
 	return apiObject
 }
 
-func expandConfigParameters(tfList []interface{}) []awstypes.ConfigParameter {
+func expandConfigParameters(tfList []any) []awstypes.ConfigParameter {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -601,7 +601,7 @@ func expandConfigParameters(tfList []interface{}) []awstypes.ConfigParameter {
 	var apiObjects []awstypes.ConfigParameter
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -613,8 +613,8 @@ func expandConfigParameters(tfList []interface{}) []awstypes.ConfigParameter {
 	return apiObjects
 }
 
-func flattenConfigParameter(apiObject awstypes.ConfigParameter) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenConfigParameter(apiObject awstypes.ConfigParameter) map[string]any {
+	tfMap := map[string]any{}
 
 	if v := apiObject.ParameterKey; v != nil {
 		tfMap["parameter_key"] = aws.ToString(v)
@@ -626,12 +626,12 @@ func flattenConfigParameter(apiObject awstypes.ConfigParameter) map[string]inter
 	return tfMap
 }
 
-func flattenConfigParameters(apiObjects []awstypes.ConfigParameter) []interface{} {
+func flattenConfigParameters(apiObjects []awstypes.ConfigParameter) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenConfigParameter(apiObject))
@@ -640,12 +640,12 @@ func flattenConfigParameters(apiObjects []awstypes.ConfigParameter) []interface{
 	return tfList
 }
 
-func flattenEndpoint(apiObject *awstypes.Endpoint) map[string]interface{} {
+func flattenEndpoint(apiObject *awstypes.Endpoint) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 	if v := apiObject.Address; v != nil {
 		tfMap[names.AttrAddress] = aws.ToString(v)
 	}
@@ -661,12 +661,12 @@ func flattenEndpoint(apiObject *awstypes.Endpoint) map[string]interface{} {
 	return tfMap
 }
 
-func flattenVPCEndpoints(apiObjects []awstypes.VpcEndpoint) []interface{} {
+func flattenVPCEndpoints(apiObjects []awstypes.VpcEndpoint) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenVPCEndpoint(&apiObject))
@@ -675,8 +675,8 @@ func flattenVPCEndpoints(apiObjects []awstypes.VpcEndpoint) []interface{} {
 	return tfList
 }
 
-func flattenVPCEndpoint(apiObject *awstypes.VpcEndpoint) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenVPCEndpoint(apiObject *awstypes.VpcEndpoint) map[string]any {
+	tfMap := map[string]any{}
 
 	if v := apiObject.VpcEndpointId; v != nil {
 		tfMap[names.AttrVPCEndpointID] = aws.ToString(v)
@@ -692,12 +692,12 @@ func flattenVPCEndpoint(apiObject *awstypes.VpcEndpoint) map[string]interface{} 
 	return tfMap
 }
 
-func flattenNetworkInterfaces(apiObjects []awstypes.NetworkInterface) []interface{} {
+func flattenNetworkInterfaces(apiObjects []awstypes.NetworkInterface) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenNetworkInterface(apiObject))
@@ -706,8 +706,8 @@ func flattenNetworkInterfaces(apiObjects []awstypes.NetworkInterface) []interfac
 	return tfList
 }
 
-func flattenNetworkInterface(apiObject awstypes.NetworkInterface) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenNetworkInterface(apiObject awstypes.NetworkInterface) map[string]any {
+	tfMap := map[string]any{}
 
 	if v := apiObject.AvailabilityZone; v != nil {
 		tfMap[names.AttrAvailabilityZone] = aws.ToString(v)

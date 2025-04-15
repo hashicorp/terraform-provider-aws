@@ -970,7 +970,7 @@ func testAccCheckEndpointConfigurationDestroy(ctx context.Context) resource.Test
 				return err
 			}
 
-			return fmt.Errorf("SageMaker Endpoint Configuration %s still exists", rs.Primary.ID)
+			return fmt.Errorf("SageMaker AI Endpoint Configuration %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -981,11 +981,11 @@ func testAccCheckEndpointConfigurationExists(ctx context.Context, n string) reso
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("SageMaker endpoint config not found: %s", n)
+			return fmt.Errorf("SageMaker AI endpoint config not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("no SageMaker endpoint config ID is set")
+			return fmt.Errorf("no SageMaker AI endpoint config ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
@@ -1746,7 +1746,7 @@ data "aws_iam_policy_document" "managed_instance_scaling_test_policy" {
 
 resource "aws_iam_policy" "managed_instance_scaling_test" {
   name        = %[1]q
-  description = "Allow SageMaker to create model"
+  description = "Allow SageMaker AI to create model"
   policy      = data.aws_iam_policy_document.managed_instance_scaling_test_policy.json
 }
 

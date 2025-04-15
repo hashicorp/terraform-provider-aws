@@ -230,6 +230,7 @@ func TestAccOpenSearchIngestionPipeline_vpc(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "vpc_options.0.security_group_ids.0"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_options.0.subnet_ids.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "vpc_options.0.subnet_ids.0"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_options.0.vpc_endpoint_management", "SERVICE"),
 				),
 			},
 			{
@@ -282,6 +283,42 @@ func TestAccOpenSearchIngestionPipeline_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
+			},
+		},
+	})
+}
+
+func TestAccOpenSearchIngestionPipeline_upgradeV5_90_0(t *testing.T) {
+	ctx := acctest.Context(t)
+	var pipeline types.Pipeline
+	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, sdkacctest.RandString(10))
+	resourceName := "aws_osis_pipeline.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.OpenSearchIngestionEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:   acctest.ErrorCheck(t, names.OpenSearchIngestionServiceID),
+		CheckDestroy: testAccCheckPipelineDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.89.0",
+					},
+				},
+				Config: testAccPipelineConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPipelineExists(ctx, resourceName, &pipeline),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccPipelineConfig_basic(rName),
+				PlanOnly:                 true,
 			},
 		},
 	})
@@ -723,8 +760,9 @@ resource "aws_osis_pipeline" "test" {
   min_units                   = 1
 
   vpc_options {
-    security_group_ids = [aws_security_group.test.id]
-    subnet_ids         = [aws_subnet.test.id]
+    security_group_ids      = [aws_security_group.test.id]
+    subnet_ids              = [aws_subnet.test.id]
+    vpc_endpoint_management = "SERVICE"
   }
 }
 `, rName)

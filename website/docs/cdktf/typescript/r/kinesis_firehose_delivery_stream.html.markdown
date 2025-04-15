@@ -903,6 +903,7 @@ The `mskSourceConfiguration` configuration block supports the following argument
 * `authenticationConfiguration` - (Required) The authentication configuration of the Amazon MSK cluster. See [`authenticationConfiguration` block](#authentication_configuration-block) below for details.
 * `mskClusterArn` - (Required) The ARN of the Amazon MSK cluster.
 * `topicName` - (Required) The topic name within the Amazon MSK cluster.
+* `readFromTimestamp` - (Optional) The start date and time in UTC for the offset position within your MSK topic from where Firehose begins to read. By default, this is set to timestamp when Firehose becomes Active. If you want to create a Firehose stream with Earliest start position set the `readFromTimestamp` parameter to Epoch (1970-01-01T00:00:00Z).
 
 ### `authenticationConfiguration` block
 
@@ -1380,4 +1381,4 @@ Using `terraform import`, import Kinesis Firehose Delivery streams using the str
 
 Note: Import does not work for stream destination `s3`. Consider using `extended_s3` since `s3` destination is deprecated.
 
-<!-- cache-key: cdktf-0.20.8 input-e837d26f9629ec46e365d7b5e926c33056c691ccac2216e3820f311166e99d0d -->
+<!-- cache-key: cdktf-0.20.8 input-93fe85c9a2b482fe347de63d819ea239d52c5a03c78dcba587001839a889ed2b -->

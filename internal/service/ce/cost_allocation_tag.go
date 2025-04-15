@@ -50,7 +50,7 @@ func resourceCostAllocationTag() *schema.Resource {
 	}
 }
 
-func resourceCostAllocationTagRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCostAllocationTagRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CEClient(ctx)
 
@@ -73,7 +73,7 @@ func resourceCostAllocationTagRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func resourceCostAllocationTagUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCostAllocationTagUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CEClient(ctx)
 
@@ -88,7 +88,7 @@ func resourceCostAllocationTagUpdate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceCostAllocationTagRead(ctx, d, meta)...)
 }
 
-func resourceCostAllocationTagDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCostAllocationTagDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CEClient(ctx)
 

@@ -201,7 +201,7 @@ func dataSourceLoadBalancer() *schema.Resource {
 	}
 }
 
-func dataSourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBClient(ctx)
 	ec2conn := meta.(*conns.AWSClient).EC2Client(ctx)
@@ -291,7 +291,7 @@ func dataSourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, met
 		// See https://github.com/hashicorp/terraform/issues/10138
 		_, n := d.GetChange("access_logs")
 		elbal := lbAttrs.AccessLog
-		nl := n.([]interface{})
+		nl := n.([]any)
 		if len(nl) == 0 && !elbal.Enabled {
 			elbal = nil
 		}

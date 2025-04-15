@@ -131,7 +131,7 @@ func testSchemaAttributes(n string) resource.TestCheckFunc {
 		checksCompleted := map[string]bool{
 			names.AttrEmail: false,
 		}
-		for i := 0; i < numAttributes; i++ {
+		for i := range numAttributes {
 			// Get the attribute
 			attribute := fmt.Sprintf("schema_attributes.%d.name", i)
 			name, ok := rs.Primary.Attributes[attribute]

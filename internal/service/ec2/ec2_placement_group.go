@@ -81,7 +81,7 @@ func resourcePlacementGroup() *schema.Resource {
 	}
 }
 
-func resourcePlacementGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePlacementGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -117,7 +117,7 @@ func resourcePlacementGroupCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourcePlacementGroupRead(ctx, d, meta)...)
 }
 
-func resourcePlacementGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePlacementGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -152,7 +152,7 @@ func resourcePlacementGroupRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourcePlacementGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePlacementGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Tags only.
@@ -160,7 +160,7 @@ func resourcePlacementGroupUpdate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourcePlacementGroupRead(ctx, d, meta)...)
 }
 
-func resourcePlacementGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePlacementGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -187,7 +187,7 @@ func resourcePlacementGroupDelete(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func resourcePlacementGroupCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+func resourcePlacementGroupCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v any) error {
 	if diff.Id() == "" {
 		if partitionCount, strategy := diff.Get("partition_count").(int), diff.Get("strategy").(string); partitionCount > 0 && strategy != string(awstypes.PlacementGroupStrategyPartition) {
 			return fmt.Errorf("partition_count must not be set when strategy = %q", strategy)

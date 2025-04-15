@@ -438,3 +438,45 @@ func findResourcePolicyByARN(ctx context.Context, conn *redshift.Client, arn str
 
 	return output.ResourcePolicy, nil
 }
+
+func findIntegrations(ctx context.Context, conn *redshift.Client, input *redshift.DescribeIntegrationsInput) ([]awstypes.Integration, error) {
+	var output []awstypes.Integration
+
+	pages := redshift.NewDescribeIntegrationsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.IntegrationNotFoundFault](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.Integrations...)
+	}
+
+	return output, nil
+}
+
+func findIntegration(ctx context.Context, conn *redshift.Client, input *redshift.DescribeIntegrationsInput) (*awstypes.Integration, error) {
+	output, err := findIntegrations(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findIntegrationByARN(ctx context.Context, conn *redshift.Client, arn string) (*awstypes.Integration, error) {
+	input := redshift.DescribeIntegrationsInput{
+		IntegrationArn: aws.String(arn),
+	}
+
+	return findIntegration(ctx, conn, &input)
+}

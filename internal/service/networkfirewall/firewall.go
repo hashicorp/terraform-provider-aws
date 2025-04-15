@@ -46,7 +46,7 @@ func resourceFirewall() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			customdiff.ComputedIf("firewall_status", func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+			customdiff.ComputedIf("firewall_status", func(ctx context.Context, diff *schema.ResourceDiff, meta any) bool {
 				return diff.HasChange("subnet_mapping")
 			}),
 		),
@@ -155,7 +155,7 @@ func resourceFirewall() *schema.Resource {
 	}
 }
 
-func resourceFirewallCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFirewallCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NetworkFirewallClient(ctx)
 
@@ -177,7 +177,7 @@ func resourceFirewallCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if v, ok := d.GetOk(names.AttrEncryptionConfiguration); ok {
-		input.EncryptionConfiguration = expandEncryptionConfiguration(v.([]interface{}))
+		input.EncryptionConfiguration = expandEncryptionConfiguration(v.([]any))
 	}
 
 	if v, ok := d.GetOk("firewall_policy_change_protection"); ok {
@@ -203,7 +203,7 @@ func resourceFirewallCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceFirewallRead(ctx, d, meta)...)
 }
 
-func resourceFirewallRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFirewallRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NetworkFirewallClient(ctx)
 
@@ -244,7 +244,7 @@ func resourceFirewallRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func resourceFirewallUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFirewallUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NetworkFirewallClient(ctx)
 
@@ -284,7 +284,7 @@ func resourceFirewallUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 	if d.HasChange(names.AttrEncryptionConfiguration) {
 		input := &networkfirewall.UpdateFirewallEncryptionConfigurationInput{
-			EncryptionConfiguration: expandEncryptionConfiguration(d.Get(names.AttrEncryptionConfiguration).([]interface{})),
+			EncryptionConfiguration: expandEncryptionConfiguration(d.Get(names.AttrEncryptionConfiguration).([]any)),
 			FirewallArn:             aws.String(d.Id()),
 			UpdateToken:             aws.String(updateToken),
 		}
@@ -401,7 +401,7 @@ func resourceFirewallUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceFirewallRead(ctx, d, meta)...)
 }
 
-func resourceFirewallDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFirewallDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NetworkFirewallClient(ctx)
 
@@ -455,7 +455,7 @@ func findFirewallByARN(ctx context.Context, conn *networkfirewall.Client, arn st
 }
 
 func statusFirewall(ctx context.Context, conn *networkfirewall.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findFirewallByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
@@ -525,11 +525,11 @@ func waitFirewallDeleted(ctx context.Context, conn *networkfirewall.Client, time
 	return nil, err
 }
 
-func expandSubnetMappings(tfList []interface{}) []awstypes.SubnetMapping {
+func expandSubnetMappings(tfList []any) []awstypes.SubnetMapping {
 	apiObjects := make([]awstypes.SubnetMapping, 0, len(tfList))
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -548,11 +548,11 @@ func expandSubnetMappings(tfList []interface{}) []awstypes.SubnetMapping {
 	return apiObjects
 }
 
-func expandSubnetMappingIDs(tfList []interface{}) []string {
+func expandSubnetMappingIDs(tfList []any) []string {
 	var ids []string
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -565,27 +565,27 @@ func expandSubnetMappingIDs(tfList []interface{}) []string {
 	return ids
 }
 
-func flattenFirewallStatus(apiObject *awstypes.FirewallStatus) []interface{} {
+func flattenFirewallStatus(apiObject *awstypes.FirewallStatus) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"sync_states": flattenSyncStates(apiObject.SyncStates),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenSyncStates(apiObject map[string]awstypes.SyncState) []interface{} {
+func flattenSyncStates(apiObject map[string]awstypes.SyncState) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfList := make([]interface{}, 0, len(apiObject))
+	tfList := make([]any, 0, len(apiObject))
 
 	for k, v := range apiObject {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			"attachment":               flattenAttachment(v.Attachment),
 			names.AttrAvailabilityZone: k,
 		}
@@ -596,24 +596,24 @@ func flattenSyncStates(apiObject map[string]awstypes.SyncState) []interface{} {
 	return tfList
 }
 
-func flattenAttachment(apiObject *awstypes.Attachment) []interface{} {
+func flattenAttachment(apiObject *awstypes.Attachment) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"endpoint_id":      aws.ToString(apiObject.EndpointId),
 		names.AttrSubnetID: aws.ToString(apiObject.SubnetId),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenSubnetMappings(apiObjects []awstypes.SubnetMapping) []interface{} {
-	tfList := make([]interface{}, 0, len(apiObjects))
+func flattenSubnetMappings(apiObjects []awstypes.SubnetMapping) []any {
+	tfList := make([]any, 0, len(apiObjects))
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			names.AttrIPAddressType: apiObject.IPAddressType,
 			names.AttrSubnetID:      aws.ToString(apiObject.SubnetId),
 		}

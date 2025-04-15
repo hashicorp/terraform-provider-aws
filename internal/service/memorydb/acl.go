@@ -78,7 +78,7 @@ func resourceACL() *schema.Resource {
 	}
 }
 
-func resourceACLCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceACLCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).MemoryDBClient(ctx)
 
@@ -107,7 +107,7 @@ func resourceACLCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	return append(diags, resourceACLRead(ctx, d, meta)...)
 }
 
-func resourceACLRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceACLRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).MemoryDBClient(ctx)
 
@@ -132,7 +132,7 @@ func resourceACLRead(ctx context.Context, d *schema.ResourceData, meta interface
 	return diags
 }
 
-func resourceACLUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceACLUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).MemoryDBClient(ctx)
 
@@ -191,7 +191,7 @@ func resourceACLUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 	return append(diags, resourceACLRead(ctx, d, meta)...)
 }
 
-func resourceACLDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceACLDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).MemoryDBClient(ctx)
 
@@ -258,7 +258,7 @@ func findACLs(ctx context.Context, conn *memorydb.Client, input *memorydb.Descri
 }
 
 func statusACL(ctx context.Context, conn *memorydb.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findACLByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {

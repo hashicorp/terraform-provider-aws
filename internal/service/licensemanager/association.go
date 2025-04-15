@@ -50,7 +50,7 @@ func resourceAssociation() *schema.Resource {
 	}
 }
 
-func resourceAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LicenseManagerClient(ctx)
 
@@ -75,7 +75,7 @@ func resourceAssociationCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceAssociationRead(ctx, d, meta)...)
 }
 
-func resourceAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LicenseManagerClient(ctx)
 
@@ -102,7 +102,7 @@ func resourceAssociationRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LicenseManagerClient(ctx)
 

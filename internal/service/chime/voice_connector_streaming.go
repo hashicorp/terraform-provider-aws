@@ -81,7 +81,7 @@ func ResourceVoiceConnectorStreaming() *schema.Resource {
 	}
 }
 
-func resourceVoiceConnectorStreamingCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVoiceConnectorStreamingCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
@@ -100,8 +100,8 @@ func resourceVoiceConnectorStreamingCreate(ctx context.Context, d *schema.Resour
 		config.StreamingNotificationTargets = expandStreamingNotificationTargets(v.(*schema.Set).List())
 	}
 
-	if v, ok := d.GetOk("media_insights_configuration"); ok && len(v.([]interface{})) > 0 {
-		config.MediaInsightsConfiguration = expandMediaInsightsConfiguration(v.([]interface{}))
+	if v, ok := d.GetOk("media_insights_configuration"); ok && len(v.([]any)) > 0 {
+		config.MediaInsightsConfiguration = expandMediaInsightsConfiguration(v.([]any))
 	}
 
 	input.StreamingConfiguration = config
@@ -115,7 +115,7 @@ func resourceVoiceConnectorStreamingCreate(ctx context.Context, d *schema.Resour
 	return append(diags, resourceVoiceConnectorStreamingRead(ctx, d, meta)...)
 }
 
-func resourceVoiceConnectorStreamingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVoiceConnectorStreamingRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
@@ -154,7 +154,7 @@ func resourceVoiceConnectorStreamingRead(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func resourceVoiceConnectorStreamingUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVoiceConnectorStreamingUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
@@ -175,8 +175,8 @@ func resourceVoiceConnectorStreamingUpdate(ctx context.Context, d *schema.Resour
 			config.StreamingNotificationTargets = expandStreamingNotificationTargets(v.(*schema.Set).List())
 		}
 
-		if v, ok := d.GetOk("media_insights_configuration"); ok && len(v.([]interface{})) > 0 {
-			config.MediaInsightsConfiguration = expandMediaInsightsConfiguration(v.([]interface{}))
+		if v, ok := d.GetOk("media_insights_configuration"); ok && len(v.([]any)) > 0 {
+			config.MediaInsightsConfiguration = expandMediaInsightsConfiguration(v.([]any))
 		}
 
 		input.StreamingConfiguration = config
@@ -189,7 +189,7 @@ func resourceVoiceConnectorStreamingUpdate(ctx context.Context, d *schema.Resour
 	return append(diags, resourceVoiceConnectorStreamingRead(ctx, d, meta)...)
 }
 
-func resourceVoiceConnectorStreamingDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVoiceConnectorStreamingDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
@@ -211,7 +211,7 @@ func resourceVoiceConnectorStreamingDelete(ctx context.Context, d *schema.Resour
 	return diags
 }
 
-func expandStreamingNotificationTargets(data []interface{}) []awstypes.StreamingNotificationTarget {
+func expandStreamingNotificationTargets(data []any) []awstypes.StreamingNotificationTarget {
 	var streamingTargets []awstypes.StreamingNotificationTarget
 
 	for _, item := range data {
@@ -223,11 +223,11 @@ func expandStreamingNotificationTargets(data []interface{}) []awstypes.Streaming
 	return streamingTargets
 }
 
-func expandMediaInsightsConfiguration(tfList []interface{}) *awstypes.MediaInsightsConfiguration {
+func expandMediaInsightsConfiguration(tfList []any) *awstypes.MediaInsightsConfiguration {
 	if len(tfList) == 0 {
 		return nil
 	}
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
 	mediaInsightsConfiguration := &awstypes.MediaInsightsConfiguration{}
 	if v, ok := tfMap["disabled"]; ok {
@@ -249,15 +249,15 @@ func flattenStreamingNotificationTargets(targets []awstypes.StreamingNotificatio
 	return rawTargets
 }
 
-func flattenMediaInsightsConfiguration(mediaInsightsConfiguration *awstypes.MediaInsightsConfiguration) []interface{} {
+func flattenMediaInsightsConfiguration(mediaInsightsConfiguration *awstypes.MediaInsightsConfiguration) []any {
 	if mediaInsightsConfiguration == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"disabled":          mediaInsightsConfiguration.Disabled,
 		"configuration_arn": mediaInsightsConfiguration.ConfigurationArn,
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

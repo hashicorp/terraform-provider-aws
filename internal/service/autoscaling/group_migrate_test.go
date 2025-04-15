@@ -17,24 +17,24 @@ func TestGroupStateUpgradeV0(t *testing.T) {
 
 	testCases := []struct {
 		testName string
-		rawState map[string]interface{}
-		want     map[string]interface{}
+		rawState map[string]any
+		want     map[string]any
 	}{
 		{
 			testName: "empty state",
-			rawState: map[string]interface{}{},
-			want: map[string]interface{}{
+			rawState: map[string]any{},
+			want: map[string]any{
 				"ignore_failed_scaling_activities": acctest.CtFalse,
 			},
 		},
 		{
 			testName: "non-empty state",
-			rawState: map[string]interface{}{
+			rawState: map[string]any{
 				"capacity_rebalance":        acctest.CtTrue,
 				"health_check_grace_period": "600",
 				"max_instance_lifetime":     "3600",
 			},
-			want: map[string]interface{}{
+			want: map[string]any{
 				"capacity_rebalance":               acctest.CtTrue,
 				"health_check_grace_period":        "600",
 				"ignore_failed_scaling_activities": acctest.CtFalse,
@@ -43,13 +43,13 @@ func TestGroupStateUpgradeV0(t *testing.T) {
 		},
 		{
 			testName: "ignore_failed_scaling_activities set",
-			rawState: map[string]interface{}{
+			rawState: map[string]any{
 				"capacity_rebalance":               acctest.CtFalse,
 				"health_check_grace_period":        "400",
 				"ignore_failed_scaling_activities": acctest.CtTrue,
 				"max_instance_lifetime":            "36000",
 			},
-			want: map[string]interface{}{
+			want: map[string]any{
 				"capacity_rebalance":               acctest.CtFalse,
 				"health_check_grace_period":        "400",
 				"ignore_failed_scaling_activities": acctest.CtTrue,

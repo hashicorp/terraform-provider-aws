@@ -58,7 +58,7 @@ func (r *resourceSchema) Schema(ctx context.Context, request resource.SchemaRequ
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"definition": schema.SingleNestedBlock{
+			"definition": schema.SingleNestedBlock{ // nosemgrep:ci.avoid-SingleNestedBlock pre-existing, will be converted
 				Validators: []validator.Object{
 					objectvalidator.IsRequired(),
 				},
@@ -211,7 +211,7 @@ func (r *resourceSchema) Delete(ctx context.Context, request resource.DeleteRequ
 		return
 	}
 
-	tflog.Debug(ctx, "deleting Verified Permissions Policy Store Schema", map[string]interface{}{
+	tflog.Debug(ctx, "deleting Verified Permissions Policy Store Schema", map[string]any{
 		names.AttrID: state.ID.ValueString(),
 	})
 

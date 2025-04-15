@@ -34,14 +34,14 @@ func (w WithTaggingMethods) ListTags(ctx context.Context, sp conns.ServicePackag
 		err = v.ListTags(ctx, c, identifier) // Sets tags in Context
 	} else if v, ok := sp.(tftags.ResourceTypeTagLister); ok {
 		if w.ServicePackageResourceTags.ResourceType == "" {
-			tflog.Error(ctx, "ListTags method requires ResourceType but none set", map[string]interface{}{
+			tflog.Error(ctx, "ListTags method requires ResourceType but none set", map[string]any{
 				"ServicePackage": sp.ServicePackageName(),
 			})
 		} else {
 			err = v.ListTags(ctx, c, identifier, w.ServicePackageResourceTags.ResourceType) // Sets tags in Context
 		}
 	} else {
-		tflog.Warn(ctx, "No ListTags method found", map[string]interface{}{
+		tflog.Warn(ctx, "No ListTags method found", map[string]any{
 			"ServicePackage": sp.ServicePackageName(),
 			"ResourceType":   w.ServicePackageResourceTags.ResourceType,
 		})
@@ -69,14 +69,14 @@ func (w WithTaggingMethods) UpdateTags(ctx context.Context, sp conns.ServicePack
 		err = v.UpdateTags(ctx, c, identifier, oldTags, newTags)
 	} else if v, ok := sp.(tftags.ResourceTypeTagUpdater); ok {
 		if w.ServicePackageResourceTags.ResourceType == "" {
-			tflog.Error(ctx, "UpdateTags method requires ResourceType but none set", map[string]interface{}{
+			tflog.Error(ctx, "UpdateTags method requires ResourceType but none set", map[string]any{
 				"ServicePackage": sp.ServicePackageName(),
 			})
 		} else {
 			err = v.UpdateTags(ctx, c, identifier, w.ServicePackageResourceTags.ResourceType, oldTags, newTags)
 		}
 	} else {
-		tflog.Warn(ctx, "No UpdateTags method found", map[string]interface{}{
+		tflog.Warn(ctx, "No UpdateTags method found", map[string]any{
 			"ServicePackage": sp.ServicePackageName(),
 			"ResourceType":   w.ServicePackageResourceTags.ResourceType,
 		})

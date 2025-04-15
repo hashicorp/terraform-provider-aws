@@ -322,7 +322,7 @@ func testAccSubscriptionFilterImportStateIDFunc(resourceName string) resource.Im
 
 func testAccCheckSubscriptionFilterManyExists(ctx context.Context, basename string, n int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		for i := 0; i < n; i++ {
+		for i := range n {
 			n := fmt.Sprintf("%s.%d", basename, i)
 			var v types.SubscriptionFilter
 

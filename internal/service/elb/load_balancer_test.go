@@ -27,18 +27,18 @@ func TestLoadBalancerListenerHash(t *testing.T) {
 	t.Parallel()
 
 	cases := map[string]struct {
-		Left  map[string]interface{}
-		Right map[string]interface{}
+		Left  map[string]any
+		Right map[string]any
 		Match bool
 	}{
 		"protocols are case insensitive": {
-			map[string]interface{}{
+			map[string]any{
 				"instance_port":     80,
 				"instance_protocol": "TCP",
 				"lb_port":           80,
 				"lb_protocol":       "TCP",
 			},
-			map[string]interface{}{
+			map[string]any{
 				"instance_port":     80,
 				"instance_protocol": "Tcp",
 				"lb_port":           80,

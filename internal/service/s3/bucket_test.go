@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"log"
 	"reflect"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -2504,7 +2505,7 @@ func testAccCheckBucketDestroyWithProvider(ctx context.Context) acctest.TestChec
 
 			// S3 seems to be highly eventually consistent. Even if one connection reports that the queue is gone,
 			// another connection may still report it as present.
-			_, err := tfresource.RetryUntilNotFound(ctx, tfs3.BucketPropagationTimeout, func() (interface{}, error) {
+			_, err := tfresource.RetryUntilNotFound(ctx, tfs3.BucketPropagationTimeout, func() (any, error) {
 				return tfs3.FindBucket(ctx, conn, rs.Primary.ID)
 			})
 
@@ -2687,13 +2688,7 @@ func testAccCheckBucketTagKeys(ctx context.Context, n string, keys ...string) re
 		}
 
 		for _, want := range keys {
-			ok := false
-			for _, key := range got.Keys() {
-				if want == key {
-					ok = true
-					break
-				}
-			}
+			ok := slices.Contains(got.Keys(), want)
 			if !ok {
 				return fmt.Errorf("key %s not found in S3 Bucket (%s) tag set", bucket, want)
 			}

@@ -48,6 +48,7 @@ The following arguments are optional:
 * `description` - (Optional) A description for the AWS Verified Access trust provider.
 * `deviceOptions` - (Optional) A block of options for device identity based trust providers.
 * `deviceTrustProviderType` (Optional) The type of device-based trust provider.
+* `nativeApplicationOidcOptions` - (Optional) The OpenID Connect details for an Native Application OIDC, user-identity based trust provider.
 * `oidcOptions` - (Optional) The OpenID Connect details for an oidc-type, user-identity based trust provider.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `userTrustProviderType` - (Optional) The type of user-based trust provider.
@@ -98,4 +99,4 @@ Using `terraform import`, import Transfer Workflows using the  `id`. For example
 % terraform import aws_verifiedaccess_trust_provider.example vatp-8012925589
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-2750aebf3d558cbde0da2f4c4cdd13becc482ee01d0d3f03dd896dff73393961 -->
+<!-- cache-key: cdktf-0.20.8 input-3d78e91d79922e9b71045067e7db379f00bd4858e9705cbf72a67d473de679e8 -->

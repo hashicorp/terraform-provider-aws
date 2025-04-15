@@ -1780,6 +1780,36 @@ func TestAccKendraDataSource_CustomDocumentEnrichmentConfiguration_ExtractionHoo
 		},
 	})
 }
+func TestAccKendraDataSource_Configuration_templateConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName4 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName5 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	resourceName := "aws_kendra_data_source.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceConfig_template(rName, rName2, rName3, rName4, rName5),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataSourceExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.template_configuration.#", "1"),
+				),
+			},
+		},
+	})
+}
 
 func testAccCheckDataSourceDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -1844,9 +1874,11 @@ func testAccDataSourceConfigBase(rName, rName2, rName3 string) string {
 data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
+
 data "aws_kms_key" "this" {
   key_id = "alias/aws/kendra"
 }
+
 data "aws_iam_policy_document" "test" {
   statement {
     actions = ["sts:AssumeRole"]
@@ -1857,6 +1889,7 @@ data "aws_iam_policy_document" "test" {
     }
   }
 }
+
 data "aws_iam_policy_document" "test_index" {
   statement {
     effect = "Allow"
@@ -2240,6 +2273,65 @@ resource "aws_kendra_data_source" "test" {
   }
 }
 `, rName6, schedule))
+}
+
+func testAccDataSourceConfig_template(rName, rName2, rName3, rName4, dataSourceName string) string {
+	return acctest.ConfigCompose(
+		testAccDataSourceConfigBase(rName, rName2, rName3),
+		testAccDataSourceConfigWebCrawlerBase(rName4),
+		fmt.Sprintf(`
+resource "aws_kendra_data_source" "test" {
+  index_id = aws_kendra_index.test.id
+  name     = %[1]q
+  type     = "TEMPLATE"
+  role_arn = aws_iam_role.test_data_source.arn
+
+  configuration {
+    template_configuration {
+      template = jsonencode({
+        connectionConfiguration = {
+          repositoryEndpointMetadata = {
+            authentication = "NoAuthentication"
+            s3SeedUrl      = null
+            s3SiteMapUrl   = null
+            siteMapUrls    = null
+            seedUrlConnections = [
+              {
+                "seedUrl" : "https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kendra_index"
+              },
+            ]
+          }
+        }
+        additionalProperties = {
+          crawlSubDomain            = false
+          crawlAllDomain            = false
+          crawlDomainsOnly          = true
+          honorRobots               = true
+          crawlAttachments          = false
+          rateLimit                 = "10"
+          maxFileSize               = "10"
+          crawlDepth                = "1"
+          maxLinksPerUrl            = "1"
+          inclusionURLCrawlPatterns = []
+          exclusionURLCrawlPatterns = []
+          inclusionURLIndexPatterns = [
+            "https:\\/\\/registry[.]terraform[.]io\\/providers\\/hashicorp\\/aws\\/latest\\/docs\\/resources\\/kendra_index",
+          ]
+          exclusionURLIndexPatterns  = []
+          inclusionFileIndexPatterns = []
+          exclusionFileIndexPatterns = []
+          proxy                      = {}
+        }
+        enableIdentityCrawler    = false
+        version                  = "1.0.0"
+        syncMode                 = "FULL_CRAWL"
+        type                     = "WEBCRAWLERV2"
+        repositoryConfigurations = {}
+      })
+    }
+  }
+}
+`, dataSourceName))
 }
 
 func testAccDataSourceConfig_tags1(rName, rName2, rName3, rName4, tag, value string) string {

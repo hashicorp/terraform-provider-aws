@@ -8,7 +8,6 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/route53"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -85,7 +84,7 @@ func dataSourceZone() *schema.Resource {
 	}
 }
 
-func dataSourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceZoneRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
@@ -93,7 +92,7 @@ func dataSourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interf
 	name := d.Get(names.AttrName).(string)
 	zoneID, zoneIDExists := d.GetOk("zone_id")
 	vpcID, vpcIDExists := d.GetOk(names.AttrVPCID)
-	tags := tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{})).IgnoreAWS()
+	tags := tftags.New(ctx, d.Get(names.AttrTags).(map[string]any)).IgnoreAWS()
 
 	input := &route53.ListHostedZonesInput{}
 	var hostedZones []awstypes.HostedZone
@@ -155,12 +154,7 @@ func dataSourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	hostedZoneID := cleanZoneID(aws.ToString(hostedZone.Id))
 	d.SetId(hostedZoneID)
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   "route53",
-		Resource:  "hostedzone/" + d.Id(),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, zoneARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	d.Set("caller_reference", hostedZone.CallerReference)
 	d.Set(names.AttrComment, hostedZone.Config.Comment)
 	if hostedZone.LinkedService != nil {

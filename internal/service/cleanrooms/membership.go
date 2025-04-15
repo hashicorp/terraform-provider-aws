@@ -327,7 +327,7 @@ func (r *resourceMembership) Delete(ctx context.Context, request resource.Delete
 		return
 	}
 
-	tflog.Debug(ctx, "deleting CleanRooms Membership", map[string]interface{}{
+	tflog.Debug(ctx, "deleting CleanRooms Membership", map[string]any{
 		names.AttrID: data.ID.ValueString(),
 	})
 

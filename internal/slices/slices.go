@@ -12,7 +12,7 @@ func Reverse[S ~[]E, E any](s S) S {
 	n := len(s)
 	v := S(make([]E, 0, n))
 
-	for i := 0; i < n; i++ {
+	for i := range n {
 		v = append(v, s[n-(i+1)])
 	}
 
@@ -92,12 +92,7 @@ func All[S ~[]E, E any](s S, f Predicate[E]) bool {
 
 // Any returns `true` if the filter function `f` returns `true` for any item in slice `s`.
 func Any[S ~[]E, E any](s S, f Predicate[E]) bool {
-	for _, e := range s {
-		if f(e) {
-			return true
-		}
-	}
-	return false
+	return slices.ContainsFunc(s, f)
 }
 
 // AppendUnique appends unique (not already in the slice) values to a slice.
@@ -105,11 +100,8 @@ func AppendUnique[S ~[]E, E comparable](s S, vs ...E) S {
 	for _, v := range vs {
 		var exists bool
 
-		for _, e := range s {
-			if e == v {
-				exists = true
-				break
-			}
+		if slices.Contains(s, v) {
+			exists = true
 		}
 
 		if !exists {

@@ -29,11 +29,11 @@ func TestExpandEC2ConfigurationsUpdate(t *testing.T) {
 
 	//lintignore:AWSAT002
 	testCases := []struct {
-		flattened []interface{}
+		flattened []any
 		expected  []awstypes.Ec2Configuration
 	}{
 		{
-			flattened: []interface{}{},
+			flattened: []any{},
 			expected: []awstypes.Ec2Configuration{
 				{
 					ImageType: aws.String("default"),
@@ -41,8 +41,8 @@ func TestExpandEC2ConfigurationsUpdate(t *testing.T) {
 			},
 		},
 		{
-			flattened: []interface{}{
-				map[string]interface{}{
+			flattened: []any{
+				map[string]any{
 					"image_type": "ECS_AL1",
 				},
 			},
@@ -53,8 +53,8 @@ func TestExpandEC2ConfigurationsUpdate(t *testing.T) {
 			},
 		},
 		{
-			flattened: []interface{}{
-				map[string]interface{}{
+			flattened: []any{
+				map[string]any{
 					"image_id_override": "ami-deadbeef",
 				},
 			},
@@ -65,8 +65,8 @@ func TestExpandEC2ConfigurationsUpdate(t *testing.T) {
 			},
 		},
 		{
-			flattened: []interface{}{
-				map[string]interface{}{
+			flattened: []any{
+				map[string]any{
 					"image_id_override": "ami-deadbeef",
 					"image_type":        "ECS_AL1",
 				},
@@ -96,18 +96,18 @@ func TestExpandLaunchTemplateSpecificationUpdate(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
-		flattened []interface{}
+		flattened []any
 		expected  *awstypes.LaunchTemplateSpecification
 	}{
 		{
-			flattened: []interface{}{},
+			flattened: []any{},
 			expected: &awstypes.LaunchTemplateSpecification{
 				LaunchTemplateId: aws.String(""),
 			},
 		},
 		{
-			flattened: []interface{}{
-				map[string]interface{}{
+			flattened: []any{
+				map[string]any{
 					"launch_template_id": "lt-123456",
 				},
 			},
@@ -117,8 +117,8 @@ func TestExpandLaunchTemplateSpecificationUpdate(t *testing.T) {
 			},
 		},
 		{
-			flattened: []interface{}{
-				map[string]interface{}{
+			flattened: []any{
+				map[string]any{
 					"launch_template_name": "my-launch-template",
 				},
 			},
@@ -128,8 +128,8 @@ func TestExpandLaunchTemplateSpecificationUpdate(t *testing.T) {
 			},
 		},
 		{
-			flattened: []interface{}{
-				map[string]interface{}{
+			flattened: []any{
+				map[string]any{
 					"launch_template_id": "lt-123456",
 					names.AttrVersion:    "$LATEST",
 				},
@@ -140,8 +140,8 @@ func TestExpandLaunchTemplateSpecificationUpdate(t *testing.T) {
 			},
 		},
 		{
-			flattened: []interface{}{
-				map[string]interface{}{
+			flattened: []any{
+				map[string]any{
 					"launch_template_name": "my-launch-template",
 					names.AttrVersion:      "$LATEST",
 				},

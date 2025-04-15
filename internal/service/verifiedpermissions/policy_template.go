@@ -214,7 +214,7 @@ func (r *resourcePolicyTemplate) Delete(ctx context.Context, request resource.De
 		return
 	}
 
-	tflog.Debug(ctx, "deleting Verified Permissions Policy Template", map[string]interface{}{
+	tflog.Debug(ctx, "deleting Verified Permissions Policy Template", map[string]any{
 		names.AttrID: state.ID.ValueString(),
 	})
 

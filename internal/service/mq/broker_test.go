@@ -114,21 +114,21 @@ func TestDiffUsers(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
-		OldUsers []interface{}
-		NewUsers []interface{}
+		OldUsers []any
+		NewUsers []any
 
 		Creations []*mq.CreateUserInput
 		Deletions []*mq.DeleteUserInput
 		Updates   []*mq.UpdateUserInput
 	}{
 		{
-			OldUsers: []interface{}{},
-			NewUsers: []interface{}{
-				map[string]interface{}{
+			OldUsers: []any{},
+			NewUsers: []any{
+				map[string]any{
 					"console_access":   false,
 					names.AttrUsername: "second",
 					names.AttrPassword: "TestTest2222",
-					"groups":           schema.NewSet(schema.HashString, []interface{}{"admin"}),
+					"groups":           schema.NewSet(schema.HashString, []any{"admin"}),
 					"replication_user": false,
 				},
 			},
@@ -146,16 +146,16 @@ func TestDiffUsers(t *testing.T) {
 			Updates:   nil,
 		},
 		{
-			OldUsers: []interface{}{
-				map[string]interface{}{
+			OldUsers: []any{
+				map[string]any{
 					"console_access":   true,
 					names.AttrUsername: "first",
 					names.AttrPassword: "TestTest1111",
 					"replication_user": false,
 				},
 			},
-			NewUsers: []interface{}{
-				map[string]interface{}{
+			NewUsers: []any{
+				map[string]any{
 					"console_access":   false,
 					names.AttrUsername: "second",
 					names.AttrPassword: "TestTest2222",
@@ -177,26 +177,26 @@ func TestDiffUsers(t *testing.T) {
 			Updates: nil,
 		},
 		{
-			OldUsers: []interface{}{
-				map[string]interface{}{
+			OldUsers: []any{
+				map[string]any{
 					"console_access":   true,
 					names.AttrUsername: "first",
 					names.AttrPassword: "TestTest1111updated",
 					"replication_user": false,
 				},
-				map[string]interface{}{
+				map[string]any{
 					"console_access":   false,
 					names.AttrUsername: "second",
 					names.AttrPassword: "TestTest2222",
 					"replication_user": false,
 				},
 			},
-			NewUsers: []interface{}{
-				map[string]interface{}{
+			NewUsers: []any{
+				map[string]any{
 					"console_access":   false,
 					names.AttrUsername: "second",
 					names.AttrPassword: "TestTest2222",
-					"groups":           schema.NewSet(schema.HashString, []interface{}{"admin"}),
+					"groups":           schema.NewSet(schema.HashString, []any{"admin"}),
 					"replication_user": false,
 				},
 			},

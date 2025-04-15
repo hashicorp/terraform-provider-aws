@@ -74,6 +74,7 @@ The following arguments are required:
 * `service_execution_role_arn` - (Required) The ARN of the IAM role used by the replicator to access resources in the customer's account (e.g source and target clusters).
 * `replication_info_list` - (Required) A list of replication configurations, where each configuration targets a given source cluster to target cluster replication flow.
 * `description` - (Optional) A summary description of the replicator.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### kafka_cluster Argument Reference
 
@@ -126,7 +127,8 @@ The following arguments are required:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the Replicator. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `arn` - ARN of the Replicator.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
@@ -138,7 +140,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import MSK relicators using the replicator ARN. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import MSK replicators using the replicator ARN. For example:
 
 ```terraform
 import {

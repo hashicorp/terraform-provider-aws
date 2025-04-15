@@ -12,6 +12,8 @@ Use this data source to get the ARN and URL of queue in AWS Simple Queue Service
 By using this data source, you can reference SQS queues without having to hardcode
 the ARNs as input.
 
+~> **NOTE:** To use this data source, you must have the `sqs:GetQueueAttributes` and `sqs:GetQueueURL` permissions.
+
 ## Example Usage
 
 ```terraform

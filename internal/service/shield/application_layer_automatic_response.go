@@ -269,7 +269,7 @@ func findApplicationLayerAutomaticResponseByResourceARN(ctx context.Context, con
 }
 
 func statusApplicationLayerAutomaticResponse(ctx context.Context, conn *shield.Client, resourceARN string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findApplicationLayerAutomaticResponseByResourceARN(ctx, conn, resourceARN)
 
 		if tfresource.NotFound(err) {

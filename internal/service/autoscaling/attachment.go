@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/autoscaling"
@@ -49,7 +50,7 @@ func resourceAttachment() *schema.Resource {
 	}
 }
 
-func resourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 	asgName := d.Get("autoscaling_group_name").(string)
@@ -62,7 +63,7 @@ func resourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta 
 		}
 
 		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, d.Timeout(schema.TimeoutCreate),
-			func() (interface{}, error) {
+			func() (any, error) {
 				return conn.AttachLoadBalancers(ctx, input)
 			},
 			// ValidationError: Trying to update too many Load Balancers/Target Groups at once. The limit is 10
@@ -79,7 +80,7 @@ func resourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta 
 		}
 
 		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, d.Timeout(schema.TimeoutCreate),
-			func() (interface{}, error) {
+			func() (any, error) {
 				return conn.AttachLoadBalancerTargetGroups(ctx, input)
 			},
 			errCodeValidationError, "update too many")
@@ -95,7 +96,7 @@ func resourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceAttachmentRead(ctx, d, meta)...)
 }
 
-func resourceAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAttachmentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 	asgName := d.Get("autoscaling_group_name").(string)
@@ -121,7 +122,7 @@ func resourceAttachmentRead(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourceAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 	asgName := d.Get("autoscaling_group_name").(string)
@@ -134,7 +135,7 @@ func resourceAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta 
 		}
 
 		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, d.Timeout(schema.TimeoutCreate),
-			func() (interface{}, error) {
+			func() (any, error) {
 				return conn.DetachLoadBalancers(ctx, input)
 			},
 			errCodeValidationError, "update too many")
@@ -154,7 +155,7 @@ func resourceAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta 
 		}
 
 		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, d.Timeout(schema.TimeoutCreate),
-			func() (interface{}, error) {
+			func() (any, error) {
 				return conn.DetachLoadBalancerTargetGroups(ctx, input)
 			},
 			errCodeValidationError, "update too many")
@@ -174,10 +175,8 @@ func findAttachmentByLoadBalancerName(ctx context.Context, conn *autoscaling.Cli
 		return err
 	}
 
-	for _, v := range asg.LoadBalancerNames {
-		if v == loadBalancerName {
-			return nil
-		}
+	if slices.Contains(asg.LoadBalancerNames, loadBalancerName) {
+		return nil
 	}
 
 	return &retry.NotFoundError{
@@ -192,10 +191,8 @@ func findAttachmentByTargetGroupARN(ctx context.Context, conn *autoscaling.Clien
 		return err
 	}
 
-	for _, v := range asg.TargetGroupARNs {
-		if v == targetGroupARN {
-			return nil
-		}
+	if slices.Contains(asg.TargetGroupARNs, targetGroupARN) {
+		return nil
 	}
 
 	return &retry.NotFoundError{

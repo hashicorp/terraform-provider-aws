@@ -64,7 +64,7 @@ func resourceSharedDirectoryAccepter() *schema.Resource {
 	}
 }
 
-func resourceSharedDirectoryAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSharedDirectoryAccepterCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DSClient(ctx)
 
@@ -89,7 +89,7 @@ func resourceSharedDirectoryAccepterCreate(ctx context.Context, d *schema.Resour
 	return append(diags, resourceSharedDirectoryAccepterRead(ctx, d, meta)...)
 }
 
-func resourceSharedDirectoryAccepterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSharedDirectoryAccepterRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DSClient(ctx)
 
@@ -113,12 +113,12 @@ func resourceSharedDirectoryAccepterRead(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func resourceSharedDirectoryAccepterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSharedDirectoryAccepterDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DSClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Directory Service Shared Directory Accepter: %s", d.Id())
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ClientException](ctx, directoryApplicationDeauthorizedPropagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ClientException](ctx, directoryApplicationDeauthorizedPropagationTimeout, func() (any, error) {
 		return conn.DeleteDirectory(ctx, &directoryservice.DeleteDirectoryInput{
 			DirectoryId: aws.String(d.Id()),
 		})
@@ -154,7 +154,7 @@ func findSharedDirectoryAccepterByID(ctx context.Context, conn *directoryservice
 }
 
 func statusDirectoryShareStatus(ctx context.Context, conn *directoryservice.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findDirectoryByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

@@ -1,14 +1,14 @@
 ---
-subcategory: "SageMaker"
+subcategory: "SageMaker AI"
 layout: "aws"
 page_title: "AWS: aws_sagemaker_prebuilt_ecr_image"
 description: |-
-  Get information about prebuilt Amazon SageMaker Docker images.
+  Get information about prebuilt Amazon SageMaker AI  Docker images.
 ---
 
 # Data Source: aws_sagemaker_prebuilt_ecr_image
 
-Get information about prebuilt Amazon SageMaker Docker images.
+Get information about prebuilt Amazon SageMaker AI  Docker images.
 
 ~> **NOTE:** The AWS provider creates a validly constructed `registry_path` but does not verify that the `registry_path` corresponds to an existing image. For example, using a `registry_path` containing an `image_tag` that does not correspond to a Docker image in the ECR repository, will result in an error.
 

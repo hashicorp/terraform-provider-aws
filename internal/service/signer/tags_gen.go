@@ -50,8 +50,8 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier stri
 
 // map[string]string handling
 
-// Tags returns signer service tags.
-func Tags(tags tftags.KeyValueTags) map[string]string {
+// svcTags returns signer service tags.
+func svcTags(tags tftags.KeyValueTags) map[string]string {
 	return tags.Map()
 }
 
@@ -64,7 +64,7 @@ func KeyValueTags(ctx context.Context, tags map[string]string) tftags.KeyValueTa
 // nil is returned if there are no input tags.
 func getTagsIn(ctx context.Context) map[string]string {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
+		if tags := svcTags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
 		}
 	}
@@ -108,7 +108,7 @@ func updateTags(ctx context.Context, conn *signer.Client, identifier string, old
 	if len(updatedTags) > 0 {
 		input := signer.TagResourceInput{
 			ResourceArn: aws.String(identifier),
-			Tags:        Tags(updatedTags),
+			Tags:        svcTags(updatedTags),
 		}
 
 		_, err := conn.TagResource(ctx, &input, optFns...)

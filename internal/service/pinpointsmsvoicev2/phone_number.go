@@ -412,7 +412,7 @@ func findPhoneNumbers(ctx context.Context, conn *pinpointsmsvoicev2.Client, inpu
 }
 
 func statusPhoneNumber(ctx context.Context, conn *pinpointsmsvoicev2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findPhoneNumberByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

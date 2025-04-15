@@ -346,7 +346,7 @@ func findDBShardGroups(ctx context.Context, conn *rds.Client, input *rds.Describ
 }
 
 func statusShardGroup(ctx context.Context, conn *rds.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findDBShardGroupByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

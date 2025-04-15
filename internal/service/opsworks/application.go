@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"slices"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -29,6 +30,7 @@ import (
 // @SDKResource("aws_opsworks_application", name="Application")
 func resourceApplication() *schema.Resource {
 	return &schema.Resource{
+		DeprecationMessage: "This resource is deprecated and will be removed in the next major version of the AWS Provider. Consider the AWS Systems Manager service for managing applications.",
 
 		CreateWithoutTimeout: resourceApplicationCreate,
 		ReadWithoutTimeout:   resourceApplicationRead,
@@ -184,7 +186,7 @@ func resourceApplication() *schema.Resource {
 						names.AttrCertificate: {
 							Type:     schema.TypeString,
 							Required: true,
-							StateFunc: func(v interface{}) string {
+							StateFunc: func(v any) string {
 								switch v := v.(type) {
 								case string:
 									return strings.TrimSpace(v)
@@ -197,7 +199,7 @@ func resourceApplication() *schema.Resource {
 							Type:      schema.TypeString,
 							Required:  true,
 							Sensitive: true,
-							StateFunc: func(v interface{}) string {
+							StateFunc: func(v any) string {
 								switch v := v.(type) {
 								case string:
 									return strings.TrimSpace(v)
@@ -209,7 +211,7 @@ func resourceApplication() *schema.Resource {
 						"chain": {
 							Type:     schema.TypeString,
 							Optional: true,
-							StateFunc: func(v interface{}) string {
+							StateFunc: func(v any) string {
 								switch v := v.(type) {
 								case string:
 									return strings.TrimSpace(v)
@@ -268,7 +270,7 @@ func resourceApplicationValidate(d *schema.ResourceData) error {
 	return nil
 }
 
-func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpsWorksClient(ctx)
 
@@ -307,7 +309,7 @@ func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpsWorksClient(ctx)
 
@@ -322,7 +324,7 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 		StackId:          aws.String(d.Get("stack_id").(string)),
 		Type:             awstypes.AppType(d.Get(names.AttrType).(string)),
 		Description:      aws.String(d.Get(names.AttrDescription).(string)),
-		Domains:          flex.ExpandStringValueList(d.Get("domains").([]interface{})),
+		Domains:          flex.ExpandStringValueList(d.Get("domains").([]any)),
 		EnableSsl:        aws.Bool(d.Get("enable_ssl").(bool)),
 		SslConfiguration: resourceApplicationSSL(d),
 		AppSource:        resourceApplicationSource(d),
@@ -341,7 +343,7 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceApplicationRead(ctx, d, meta)...)
 }
 
-func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpsWorksClient(ctx)
 
@@ -355,7 +357,7 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 		Name:             aws.String(d.Get(names.AttrName).(string)),
 		Type:             awstypes.AppType(d.Get(names.AttrType).(string)),
 		Description:      aws.String(d.Get(names.AttrDescription).(string)),
-		Domains:          flex.ExpandStringValueList(d.Get("domains").([]interface{})),
+		Domains:          flex.ExpandStringValueList(d.Get("domains").([]any)),
 		EnableSsl:        aws.Bool(d.Get("enable_ssl").(bool)),
 		SslConfiguration: resourceApplicationSSL(d),
 		AppSource:        resourceApplicationSource(d),
@@ -374,7 +376,7 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceApplicationRead(ctx, d, meta)...)
 }
 
-func resourceApplicationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceApplicationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpsWorksClient(ctx)
 
@@ -438,8 +440,8 @@ func resourceSetApplicationEnvironmentVariable(d *schema.ResourceData, vs []awst
 	// start with the existing state so it can passthrough when the key is secure
 	values := d.Get(names.AttrEnvironment).(*schema.Set).List()
 
-	for i := 0; i < len(values); i++ {
-		value := values[i].(map[string]interface{})
+	for i := range values {
+		value := values[i].(map[string]any)
 		if v := resourceFindEnvironmentVariable(value[names.AttrKey].(string), vs); v != nil {
 			if !aws.ToBool(v.Secure) {
 				value["secure"] = aws.ToBool(v.Secure)
@@ -449,7 +451,7 @@ func resourceSetApplicationEnvironmentVariable(d *schema.ResourceData, vs []awst
 			}
 		} else {
 			// delete if not found in API response
-			values = append(values[:i], values[i+1:]...)
+			values = slices.Delete(values, i, i+1)
 		}
 	}
 
@@ -460,8 +462,8 @@ func resourceApplicationEnvironmentVariable(d *schema.ResourceData) []awstypes.E
 	environmentVariables := d.Get(names.AttrEnvironment).(*schema.Set).List()
 	result := make([]awstypes.EnvironmentVariable, len(environmentVariables))
 
-	for i := 0; i < len(environmentVariables); i++ {
-		env := environmentVariables[i].(map[string]interface{})
+	for i := range environmentVariables {
+		env := environmentVariables[i].(map[string]any)
 
 		result[i] = awstypes.EnvironmentVariable{
 			Key:    aws.String(env[names.AttrKey].(string)),
@@ -489,9 +491,9 @@ func resourceApplicationSource(d *schema.ResourceData) *awstypes.Source {
 }
 
 func resourceSetApplicationSource(d *schema.ResourceData, v *awstypes.Source) error {
-	nv := make([]interface{}, 0, 1)
+	nv := make([]any, 0, 1)
 	if v != nil {
-		m := make(map[string]interface{})
+		m := make(map[string]any)
 
 		m[names.AttrType] = v.Type
 
@@ -562,10 +564,10 @@ func resourceApplicationSSL(d *schema.ResourceData) *awstypes.SslConfiguration {
 }
 
 func resourceSetApplicationSSL(d *schema.ResourceData, v *awstypes.SslConfiguration) error {
-	nv := make([]interface{}, 0, 1)
+	nv := make([]any, 0, 1)
 	set := false
 	if v != nil {
-		m := make(map[string]interface{})
+		m := make(map[string]any)
 		if v.PrivateKey != nil {
 			m[names.AttrPrivateKey] = aws.ToString(v.PrivateKey)
 			set = true

@@ -21,6 +21,10 @@ func dataSourceResponseHeadersPolicy() *schema.Resource {
 		ReadWithoutTimeout: dataSourceResponseHeadersPolicyRead,
 
 		Schema: map[string]*schema.Schema{
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrComment: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -296,7 +300,7 @@ func dataSourceResponseHeadersPolicy() *schema.Resource {
 	}
 }
 
-func dataSourceResponseHeadersPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceResponseHeadersPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
@@ -340,18 +344,18 @@ func dataSourceResponseHeadersPolicyRead(ctx context.Context, d *schema.Resource
 	}
 
 	d.SetId(responseHeadersPolicyID)
-
+	d.Set(names.AttrARN, responseHeadersPolicyARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	apiObject := output.ResponseHeadersPolicy.ResponseHeadersPolicyConfig
 	d.Set(names.AttrComment, apiObject.Comment)
 	if apiObject.CorsConfig != nil {
-		if err := d.Set("cors_config", []interface{}{flattenResponseHeadersPolicyCorsConfig(apiObject.CorsConfig)}); err != nil {
+		if err := d.Set("cors_config", []any{flattenResponseHeadersPolicyCorsConfig(apiObject.CorsConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting cors_config: %s", err)
 		}
 	} else {
 		d.Set("cors_config", nil)
 	}
 	if apiObject.CustomHeadersConfig != nil {
-		if err := d.Set("custom_headers_config", []interface{}{flattenResponseHeadersPolicyCustomHeadersConfig(apiObject.CustomHeadersConfig)}); err != nil {
+		if err := d.Set("custom_headers_config", []any{flattenResponseHeadersPolicyCustomHeadersConfig(apiObject.CustomHeadersConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting custom_headers_config: %s", err)
 		}
 	} else {
@@ -360,21 +364,21 @@ func dataSourceResponseHeadersPolicyRead(ctx context.Context, d *schema.Resource
 	d.Set("etag", output.ETag)
 	d.Set(names.AttrName, apiObject.Name)
 	if apiObject.RemoveHeadersConfig != nil {
-		if err := d.Set("remove_headers_config", []interface{}{flattenResponseHeadersPolicyRemoveHeadersConfig(apiObject.RemoveHeadersConfig)}); err != nil {
+		if err := d.Set("remove_headers_config", []any{flattenResponseHeadersPolicyRemoveHeadersConfig(apiObject.RemoveHeadersConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting remove_headers_config: %s", err)
 		}
 	} else {
 		d.Set("remove_headers_config", nil)
 	}
 	if apiObject.SecurityHeadersConfig != nil {
-		if err := d.Set("security_headers_config", []interface{}{flattenResponseHeadersPolicySecurityHeadersConfig(apiObject.SecurityHeadersConfig)}); err != nil {
+		if err := d.Set("security_headers_config", []any{flattenResponseHeadersPolicySecurityHeadersConfig(apiObject.SecurityHeadersConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting security_headers_config: %s", err)
 		}
 	} else {
 		d.Set("security_headers_config", nil)
 	}
 	if apiObject.ServerTimingHeadersConfig != nil {
-		if err := d.Set("server_timing_headers_config", []interface{}{flattenResponseHeadersPolicyServerTimingHeadersConfig(apiObject.ServerTimingHeadersConfig)}); err != nil {
+		if err := d.Set("server_timing_headers_config", []any{flattenResponseHeadersPolicyServerTimingHeadersConfig(apiObject.ServerTimingHeadersConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting server_timing_headers_config: %s", err)
 		}
 	} else {

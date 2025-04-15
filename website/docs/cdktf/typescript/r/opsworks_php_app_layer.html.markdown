@@ -12,6 +12,8 @@ description: |-
 
 Provides an OpsWorks PHP application layer resource.
 
+!> **ALERT:** AWS no longer supports OpsWorks Stacks. All related resources will be removed from the Terraform AWS Provider in the next major version.
+
 ## Example Usage
 
 ```typescript
@@ -114,4 +116,4 @@ Using `terraform import`, import OpsWorks PHP Application Layers using the `id`.
 % terraform import aws_opsworks_php_app_layer.bar 00000000-0000-0000-0000-000000000000
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-ac5e291147ea7833ab078073c4e098f41fa5009ff6f6cd79bf2e60602b07f542 -->
+<!-- cache-key: cdktf-0.20.8 input-f486d3b5bb39dbfbe30655f84755d85cb670ec9d080dba55133fc41ec2fe58a3 -->

@@ -77,7 +77,7 @@ func resourceEndpointAuthorization() *schema.Resource {
 	}
 }
 
-func resourceEndpointAuthorizationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEndpointAuthorizationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
@@ -102,7 +102,7 @@ func resourceEndpointAuthorizationCreate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceEndpointAuthorizationRead(ctx, d, meta)...)
 }
 
-func resourceEndpointAuthorizationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEndpointAuthorizationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
@@ -129,7 +129,7 @@ func resourceEndpointAuthorizationRead(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func resourceEndpointAuthorizationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEndpointAuthorizationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
@@ -173,7 +173,7 @@ func resourceEndpointAuthorizationUpdate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceEndpointAuthorizationRead(ctx, d, meta)...)
 }
 
-func resourceEndpointAuthorizationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEndpointAuthorizationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 

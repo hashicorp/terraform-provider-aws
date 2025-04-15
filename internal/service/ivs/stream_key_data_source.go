@@ -41,7 +41,7 @@ const (
 	DSNameStreamKey = "Stream Key Data Source"
 )
 
-func dataSourceStreamKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceStreamKeyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).IVSClient(ctx)

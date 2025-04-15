@@ -51,7 +51,7 @@ const (
 func subscriptionProtocol_Values() []string {
 	return []string{
 		subscriptionProtocolApplication,
-		names.AttrEmail,
+		subscriptionProtocolEmail,
 		subscriptionProtocolEmailJSON,
 		subscriptionProtocolFirehose,
 		subscriptionProtocolHTTP,

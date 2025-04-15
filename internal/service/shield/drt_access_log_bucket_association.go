@@ -100,7 +100,7 @@ func (r *drtAccessLogBucketAssociationResource) Create(ctx context.Context, requ
 	// Set values for unknowns.
 	data.setID()
 
-	_, err = tfresource.RetryWhenNotFound(ctx, r.CreateTimeout(ctx, data.Timeouts), func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, r.CreateTimeout(ctx, data.Timeouts), func() (any, error) {
 		return findDRTLogBucketAssociation(ctx, conn, logBucket)
 	})
 
@@ -173,7 +173,7 @@ func (r *drtAccessLogBucketAssociationResource) Delete(ctx context.Context, requ
 		return
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, r.DeleteTimeout(ctx, data.Timeouts), func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, r.DeleteTimeout(ctx, data.Timeouts), func() (any, error) {
 		return findDRTLogBucketAssociation(ctx, conn, logBucket)
 	})
 

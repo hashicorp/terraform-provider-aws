@@ -207,7 +207,7 @@ func (r *resourcePolicyStore) Delete(ctx context.Context, request resource.Delet
 		return
 	}
 
-	tflog.Debug(ctx, "deleting Verified Permissions Policy Store", map[string]interface{}{
+	tflog.Debug(ctx, "deleting Verified Permissions Policy Store", map[string]any{
 		names.AttrID: state.ID.ValueString(),
 	})
 

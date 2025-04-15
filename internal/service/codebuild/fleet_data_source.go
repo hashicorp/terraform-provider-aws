@@ -179,7 +179,7 @@ const (
 	dsNameFleet = "Fleet Data Source"
 )
 
-func dataSourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceFleetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).CodeBuildClient(ctx)
@@ -196,7 +196,7 @@ func dataSourceFleetRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("base_capacity", fleet.BaseCapacity)
 
 	if fleet.ComputeConfiguration != nil {
-		if err := d.Set("compute_configuration", []interface{}{flattenComputeConfiguration(fleet.ComputeConfiguration)}); err != nil {
+		if err := d.Set("compute_configuration", []any{flattenComputeConfiguration(fleet.ComputeConfiguration)}); err != nil {
 			return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionSetting, dsNameFleet, d.Id(), err)
 		}
 	}
@@ -217,7 +217,7 @@ func dataSourceFleetRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if fleet.Status != nil {
-		if err := d.Set(names.AttrStatus, []interface{}{flattenStatus(fleet.Status)}); err != nil {
+		if err := d.Set(names.AttrStatus, []any{flattenStatus(fleet.Status)}); err != nil {
 			return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionSetting, dsNameFleet, d.Id(), err)
 		}
 	}

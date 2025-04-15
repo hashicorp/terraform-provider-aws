@@ -548,7 +548,7 @@ func testAccCheckConnectionExists(ctx context.Context, resourceName string, conn
 			return err
 		}
 
-		output, err := tfglue.FindConnectionByName(ctx, conn, connectionName, catalogID)
+		output, err := tfglue.FindConnectionByTwoPartKey(ctx, conn, connectionName, catalogID)
 
 		if err != nil {
 			return err
@@ -573,7 +573,7 @@ func testAccCheckConnectionDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			_, err = tfglue.FindConnectionByName(ctx, conn, connectionName, catalogID)
+			_, err = tfglue.FindConnectionByTwoPartKey(ctx, conn, connectionName, catalogID)
 
 			if tfresource.NotFound(err) {
 				continue

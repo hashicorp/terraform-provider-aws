@@ -73,17 +73,17 @@ func dataSourceAMIIDs() *schema.Resource {
 	}
 }
 
-func dataSourceAMIIDsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceAMIIDsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := ec2.DescribeImagesInput{
 		IncludeDeprecated: aws.Bool(d.Get("include_deprecated").(bool)),
-		Owners:            flex.ExpandStringValueList(d.Get("owners").([]interface{})),
+		Owners:            flex.ExpandStringValueList(d.Get("owners").([]any)),
 	}
 
 	if v, ok := d.GetOk("executable_users"); ok {
-		input.ExecutableUsers = flex.ExpandStringValueList(v.([]interface{}))
+		input.ExecutableUsers = flex.ExpandStringValueList(v.([]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrFilter); ok {

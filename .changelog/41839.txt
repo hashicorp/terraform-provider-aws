@@ -1,0 +1,6 @@
+```release-note:enhancement
+resource/aws_ebs_volume: Add `create_time` attribute
+```
+```release-note:enhancement
+data-source/aws_ebs_volume: Add `create_time` attribute
+```

@@ -159,7 +159,7 @@ func resourceVPCEndpointService() *schema.Resource {
 	}
 }
 
-func resourceVPCEndpointServiceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCEndpointServiceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -215,7 +215,7 @@ func resourceVPCEndpointServiceCreate(ctx context.Context, d *schema.ResourceDat
 	return append(diags, resourceVPCEndpointServiceRead(ctx, d, meta)...)
 }
 
-func resourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -248,7 +248,7 @@ func resourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("private_dns_name", svcCfg.PrivateDnsName)
 	// The EC2 API can return a XML structure with no elements.
 	if tfMap := flattenPrivateDNSNameConfiguration(svcCfg.PrivateDnsNameConfiguration); len(tfMap) > 0 {
-		if err := d.Set("private_dns_name_configuration", []interface{}{tfMap}); err != nil {
+		if err := d.Set("private_dns_name_configuration", []any{tfMap}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting private_dns_name_configuration: %s", err)
 		}
 	} else {
@@ -277,7 +277,7 @@ func resourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func resourceVPCEndpointServiceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCEndpointServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -326,7 +326,7 @@ func resourceVPCEndpointServiceUpdate(ctx context.Context, d *schema.ResourceDat
 	return append(diags, resourceVPCEndpointServiceRead(ctx, d, meta)...)
 }
 
-func resourceVPCEndpointServiceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCEndpointServiceDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -365,12 +365,12 @@ func flattenAllowedPrincipals(apiObjects []awstypes.AllowedPrincipal) []string {
 	})
 }
 
-func flattenPrivateDNSNameConfiguration(apiObject *awstypes.PrivateDnsNameConfiguration) map[string]interface{} {
+func flattenPrivateDNSNameConfiguration(apiObject *awstypes.PrivateDnsNameConfiguration) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Name; v != nil {
 		tfMap[names.AttrName] = aws.ToString(v)

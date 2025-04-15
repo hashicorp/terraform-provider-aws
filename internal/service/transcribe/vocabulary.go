@@ -89,7 +89,7 @@ const (
 	ResNameVocabulary = "transcribe"
 )
 
-func resourceVocabularyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVocabularyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TranscribeClient(ctx)
 
@@ -104,7 +104,7 @@ func resourceVocabularyCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if v, ok := d.GetOk("phrases"); ok {
-		in.Phrases = expandPhrases(v.([]interface{}))
+		in.Phrases = expandPhrases(v.([]any))
 	}
 
 	out, err := conn.CreateVocabulary(ctx, in)
@@ -125,7 +125,7 @@ func resourceVocabularyCreate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceVocabularyRead(ctx, d, meta)...)
 }
 
-func resourceVocabularyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVocabularyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TranscribeClient(ctx)
 
@@ -157,7 +157,7 @@ func resourceVocabularyRead(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourceVocabularyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVocabularyUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TranscribeClient(ctx)
 
@@ -171,7 +171,7 @@ func resourceVocabularyUpdate(ctx context.Context, d *schema.ResourceData, meta 
 			if d.Get("vocabulary_file_uri").(string) != "" {
 				in.VocabularyFileUri = aws.String(d.Get("vocabulary_file_uri").(string))
 			} else {
-				in.Phrases = expandPhrases(d.Get("phrases").([]interface{}))
+				in.Phrases = expandPhrases(d.Get("phrases").([]any))
 			}
 		}
 
@@ -189,7 +189,7 @@ func resourceVocabularyUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceVocabularyRead(ctx, d, meta)...)
 }
 
-func resourceVocabularyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVocabularyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TranscribeClient(ctx)
 
@@ -281,7 +281,7 @@ func waitVocabularyDeleted(ctx context.Context, conn *transcribe.Client, id stri
 }
 
 func statusVocabulary(ctx context.Context, conn *transcribe.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := FindVocabularyByName(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -331,7 +331,7 @@ func vocabularyStatus(in ...types.VocabularyState) []string {
 	return s
 }
 
-func expandPhrases(in []interface{}) []string {
+func expandPhrases(in []any) []string {
 	var out []string
 
 	for _, val := range in {

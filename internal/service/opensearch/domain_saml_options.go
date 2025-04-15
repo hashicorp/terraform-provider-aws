@@ -29,7 +29,7 @@ func resourceDomainSAMLOptions() *schema.Resource {
 		UpdateWithoutTimeout: resourceDomainSAMLOptionsPut,
 		DeleteWithoutTimeout: resourceDomainSAMLOptionsDelete,
 		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 				d.Set(names.AttrDomainName, d.Id())
 				return []*schema.ResourceData{d}, nil
 			},
@@ -110,15 +110,15 @@ func resourceDomainSAMLOptions() *schema.Resource {
 	}
 }
 func domainSamlOptionsDiffSupress(k, old, new string, d *schema.ResourceData) bool {
-	if v, ok := d.Get("saml_options").([]interface{}); ok && len(v) > 0 {
-		if enabled, ok := v[0].(map[string]interface{})[names.AttrEnabled].(bool); ok && !enabled {
+	if v, ok := d.Get("saml_options").([]any); ok && len(v) > 0 {
+		if enabled, ok := v[0].(map[string]any)[names.AttrEnabled].(bool); ok && !enabled {
 			return true
 		}
 	}
 	return false
 }
 
-func resourceDomainSAMLOptionsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainSAMLOptionsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpenSearchClient(ctx)
 
@@ -145,13 +145,13 @@ func resourceDomainSAMLOptionsRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func resourceDomainSAMLOptionsPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainSAMLOptionsPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpenSearchClient(ctx)
 
 	domainName := d.Get(names.AttrDomainName).(string)
 	config := awstypes.AdvancedSecurityOptionsInput{}
-	config.SAMLOptions = expandESSAMLOptions(d.Get("saml_options").([]interface{}))
+	config.SAMLOptions = expandESSAMLOptions(d.Get("saml_options").([]any))
 
 	log.Printf("[DEBUG] Updating OpenSearch domain SAML Options %#v", config)
 
@@ -175,7 +175,7 @@ func resourceDomainSAMLOptionsPut(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceDomainSAMLOptionsRead(ctx, d, meta)...)
 }
 
-func resourceDomainSAMLOptionsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainSAMLOptionsDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpenSearchClient(ctx)
 

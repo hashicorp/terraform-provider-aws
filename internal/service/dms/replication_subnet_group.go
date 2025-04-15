@@ -69,7 +69,7 @@ func resourceReplicationSubnetGroup() *schema.Resource {
 	}
 }
 
-func resourceReplicationSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReplicationSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
@@ -81,7 +81,7 @@ func resourceReplicationSubnetGroupCreate(ctx context.Context, d *schema.Resourc
 		Tags:                              getTagsIn(ctx),
 	}
 
-	_, err := tfresource.RetryWhenIsA[*awstypes.AccessDeniedFault](ctx, propagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsA[*awstypes.AccessDeniedFault](ctx, propagationTimeout, func() (any, error) {
 		return conn.CreateReplicationSubnetGroup(ctx, input)
 	})
 	if err != nil {
@@ -93,7 +93,7 @@ func resourceReplicationSubnetGroupCreate(ctx context.Context, d *schema.Resourc
 	return append(diags, resourceReplicationSubnetGroupRead(ctx, d, meta)...)
 }
 
-func resourceReplicationSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReplicationSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
@@ -130,7 +130,7 @@ func resourceReplicationSubnetGroupRead(ctx context.Context, d *schema.ResourceD
 	return diags
 }
 
-func resourceReplicationSubnetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReplicationSubnetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
@@ -156,7 +156,7 @@ func resourceReplicationSubnetGroupUpdate(ctx context.Context, d *schema.Resourc
 	return append(diags, resourceReplicationSubnetGroupRead(ctx, d, meta)...)
 }
 
-func resourceReplicationSubnetGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReplicationSubnetGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 

@@ -67,7 +67,12 @@ resource "aws_instance" "web" {
   # this should be on port 80
   user_data = file("userdata.sh")
 
-  #Instance tags
+  # Force IMDSv2.
+  metadata_options {
+    http_tokens = "required"
+  }
+
+  # Instance tags.
   tags = {
     Name = "eip-example"
   }

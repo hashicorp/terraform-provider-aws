@@ -37,7 +37,7 @@ func resourceConfiguration() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			customdiff.ComputedIf("latest_revision", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+			customdiff.ComputedIf("latest_revision", func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
 				return diff.HasChange("server_properties")
 			}),
 		),
@@ -76,7 +76,7 @@ func resourceConfiguration() *schema.Resource {
 	}
 }
 
-func resourceConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
@@ -104,7 +104,7 @@ func resourceConfigurationCreate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConfigurationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
@@ -137,7 +137,7 @@ func resourceConfigurationRead(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func resourceConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
@@ -159,7 +159,7 @@ func resourceConfigurationUpdate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
@@ -228,7 +228,7 @@ func findConfigurationRevisionByTwoPartKey(ctx context.Context, conn *kafka.Clie
 }
 
 func statusConfigurationState(ctx context.Context, conn *kafka.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findConfigurationByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {

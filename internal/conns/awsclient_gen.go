@@ -88,6 +88,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/docdb"
 	"github.com/aws/aws-sdk-go-v2/service/docdbelastic"
 	"github.com/aws/aws-sdk-go-v2/service/drs"
+	"github.com/aws/aws-sdk-go-v2/service/dsql"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
@@ -540,6 +541,10 @@ func (c *AWSClient) DRSClient(ctx context.Context) *drs.Client {
 
 func (c *AWSClient) DSClient(ctx context.Context) *directoryservice.Client {
 	return errs.Must(client[*directoryservice.Client](ctx, c, names.DS, make(map[string]any)))
+}
+
+func (c *AWSClient) DSQLClient(ctx context.Context) *dsql.Client {
+	return errs.Must(client[*dsql.Client](ctx, c, names.DSQL, make(map[string]any)))
 }
 
 func (c *AWSClient) DataBrewClient(ctx context.Context) *databrew.Client {

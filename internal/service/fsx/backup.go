@@ -76,7 +76,7 @@ func resourceBackup() *schema.Resource {
 	}
 }
 
-func resourceBackupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBackupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
@@ -116,7 +116,7 @@ func resourceBackupCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceBackupRead(ctx, d, meta)...)
 }
 
-func resourceBackupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBackupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
@@ -148,7 +148,7 @@ func resourceBackupRead(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func resourceBackupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBackupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Tags only.
@@ -156,7 +156,7 @@ func resourceBackupUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceBackupRead(ctx, d, meta)...)
 }
 
-func resourceBackupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBackupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
@@ -227,7 +227,7 @@ func findBackups(ctx context.Context, conn *fsx.Client, input *fsx.DescribeBacku
 }
 
 func statusBackup(ctx context.Context, conn *fsx.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findBackupByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

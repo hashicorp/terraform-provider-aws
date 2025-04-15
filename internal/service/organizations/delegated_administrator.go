@@ -81,7 +81,7 @@ func resourceDelegatedAdministrator() *schema.Resource {
 	}
 }
 
-func resourceDelegatedAdministratorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDelegatedAdministratorCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
@@ -104,7 +104,7 @@ func resourceDelegatedAdministratorCreate(ctx context.Context, d *schema.Resourc
 	return append(diags, resourceDelegatedAdministratorRead(ctx, d, meta)...)
 }
 
-func resourceDelegatedAdministratorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDelegatedAdministratorRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
@@ -138,7 +138,7 @@ func resourceDelegatedAdministratorRead(ctx context.Context, d *schema.ResourceD
 	return diags
 }
 
-func resourceDelegatedAdministratorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDelegatedAdministratorDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 

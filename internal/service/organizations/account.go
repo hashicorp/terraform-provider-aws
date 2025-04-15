@@ -116,7 +116,7 @@ func resourceAccount() *schema.Resource {
 	}
 }
 
-func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
@@ -139,7 +139,7 @@ func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		outputRaw, err := tfresource.RetryWhenIsA[*awstypes.FinalizingOrganizationException](ctx, organizationFinalizationTimeout,
-			func() (interface{}, error) {
+			func() (any, error) {
 				return conn.CreateGovCloudAccount(ctx, input)
 			})
 
@@ -164,7 +164,7 @@ func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		outputRaw, err := tfresource.RetryWhenIsA[*awstypes.FinalizingOrganizationException](ctx, organizationFinalizationTimeout,
-			func() (interface{}, error) {
+			func() (any, error) {
 				return conn.CreateAccount(ctx, input)
 			})
 
@@ -209,7 +209,7 @@ func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceAccountRead(ctx, d, meta)...)
 }
 
-func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
@@ -242,7 +242,7 @@ func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
@@ -265,7 +265,7 @@ func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceAccountRead(ctx, d, meta)...)
 }
 
-func resourceAccountDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccountDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
@@ -301,7 +301,7 @@ func resourceAccountDelete(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func resourceAccountImportState(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceAccountImportState(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	if strings.Contains(d.Id(), "_") {
 		parts := strings.Split(d.Id(), "_")
 		if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
@@ -418,7 +418,7 @@ func findCreateAccountStatusByID(ctx context.Context, conn *organizations.Client
 }
 
 func statusCreateAccountState(ctx context.Context, conn *organizations.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findCreateAccountStatusByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
@@ -456,7 +456,7 @@ func waitAccountCreated(ctx context.Context, conn *organizations.Client, id stri
 }
 
 func statusAccountStatus(ctx context.Context, conn *organizations.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findAccountByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

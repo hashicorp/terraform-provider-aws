@@ -77,7 +77,7 @@ func resourceHSMConfiguration() *schema.Resource {
 	}
 }
 
-func resourceHSMConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHSMConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
@@ -103,7 +103,7 @@ func resourceHSMConfigurationCreate(ctx context.Context, d *schema.ResourceData,
 	return append(diags, resourceHSMConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceHSMConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHSMConfigurationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
@@ -139,7 +139,7 @@ func resourceHSMConfigurationRead(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func resourceHSMConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHSMConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Tags only.
@@ -147,7 +147,7 @@ func resourceHSMConfigurationUpdate(ctx context.Context, d *schema.ResourceData,
 	return append(diags, resourceHSMConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceHSMConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHSMConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 

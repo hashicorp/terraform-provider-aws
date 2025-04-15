@@ -22,6 +22,8 @@ func TestAccVerifiedAccess_serial(t *testing.T) {
 			acctest.CtDisappears: testAccVerifiedAccessEndpoint_disappears,
 			"policyDocument":     testAccVerifiedAccessEndpoint_policyDocument,
 			"subnetIDs":          testAccVerifiedAccessEndpoint_subnetIDs,
+			"cidr":               testAccVerifiedAccessEndpoint_cidr,
+			"rds":                testAccVerifiedAccessEndpoint_rds,
 		},
 		"Group": {
 			acctest.CtBasic:      testAccVerifiedAccessGroup_basic,
@@ -34,11 +36,12 @@ func TestAccVerifiedAccess_serial(t *testing.T) {
 			"setPolicy":          testAccVerifiedAccessGroup_setPolicy,
 		},
 		"Instance": {
-			acctest.CtBasic:      testAccVerifiedAccessInstance_basic,
-			"description":        testAccVerifiedAccessInstance_description,
-			"fipsEnabled":        testAccVerifiedAccessInstance_fipsEnabled,
-			acctest.CtDisappears: testAccVerifiedAccessInstance_disappears,
-			"tags":               testAccVerifiedAccessInstance_tags,
+			acctest.CtBasic:                testAccVerifiedAccessInstance_basic,
+			"description":                  testAccVerifiedAccessInstance_description,
+			"fipsEnabled":                  testAccVerifiedAccessInstance_fipsEnabled,
+			acctest.CtDisappears:           testAccVerifiedAccessInstance_disappears,
+			"tags":                         testAccVerifiedAccessInstance_tags,
+			"cidrEndpointsCustomSubDomain": testAccVerifiedAccessInstance_cidrEndpointsCustomSubDomain,
 		},
 		"InstanceLoggingConfiguration": {
 			"accessLogsIncludeTrustContext":                 testAccVerifiedAccessInstanceLoggingConfiguration_accessLogsIncludeTrustContext,

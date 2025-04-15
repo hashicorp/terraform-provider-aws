@@ -52,7 +52,7 @@ const (
 	productSubscriptionResourceIDPartCount = 2
 )
 
-func resourceProductSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProductSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
@@ -76,7 +76,7 @@ func resourceProductSubscriptionCreate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceProductSubscriptionRead(ctx, d, meta)...)
 }
 
-func resourceProductSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProductSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
@@ -105,7 +105,7 @@ func resourceProductSubscriptionRead(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func resourceProductSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProductSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 

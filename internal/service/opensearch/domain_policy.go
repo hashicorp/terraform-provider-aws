@@ -45,7 +45,7 @@ func resourceDomainPolicy() *schema.Resource {
 				Required:         true,
 				ValidateFunc:     validation.StringIsJSON,
 				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
@@ -54,7 +54,7 @@ func resourceDomainPolicy() *schema.Resource {
 	}
 }
 
-func resourceDomainPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpenSearchClient(ctx)
 
@@ -81,7 +81,7 @@ func resourceDomainPolicyRead(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func resourceDomainPolicyUpsert(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainPolicyUpsert(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpenSearchClient(ctx)
 	domainName := d.Get(names.AttrDomainName).(string)
@@ -93,7 +93,7 @@ func resourceDomainPolicyUpsert(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	_, err = tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ValidationException](ctx, propagationTimeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.UpdateDomainConfig(ctx, &opensearch.UpdateDomainConfigInput{
 				DomainName:     aws.String(domainName),
 				AccessPolicies: aws.String(policy),
@@ -113,7 +113,7 @@ func resourceDomainPolicyUpsert(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceDomainPolicyRead(ctx, d, meta)...)
 }
 
-func resourceDomainPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainPolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpenSearchClient(ctx)
 

@@ -64,7 +64,7 @@ func resourceFindingAggregator() *schema.Resource {
 	}
 }
 
-func resourceFindingAggregatorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFindingAggregatorCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
@@ -88,7 +88,7 @@ func resourceFindingAggregatorCreate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceFindingAggregatorRead(ctx, d, meta)...)
 }
 
-func resourceFindingAggregatorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFindingAggregatorRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
@@ -112,7 +112,7 @@ func resourceFindingAggregatorRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func resourceFindingAggregatorUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFindingAggregatorUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
@@ -135,7 +135,7 @@ func resourceFindingAggregatorUpdate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceFindingAggregatorRead(ctx, d, meta)...)
 }
 
-func resourceFindingAggregatorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFindingAggregatorDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 

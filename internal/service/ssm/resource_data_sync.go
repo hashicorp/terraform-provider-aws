@@ -83,7 +83,7 @@ func resourceResourceDataSync() *schema.Resource {
 	}
 }
 
-func resourceResourceDataSyncCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourceDataSyncCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
@@ -96,7 +96,7 @@ func resourceResourceDataSyncCreate(ctx context.Context, d *schema.ResourceData,
 	const (
 		timeout = 1 * time.Minute
 	)
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ResourceDataSyncInvalidConfigurationException](ctx, timeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ResourceDataSyncInvalidConfigurationException](ctx, timeout, func() (any, error) {
 		return conn.CreateResourceDataSync(ctx, input)
 	}, "S3 write failed for bucket")
 
@@ -109,7 +109,7 @@ func resourceResourceDataSyncCreate(ctx context.Context, d *schema.ResourceData,
 	return append(diags, resourceResourceDataSyncRead(ctx, d, meta)...)
 }
 
-func resourceResourceDataSyncRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourceDataSyncRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
@@ -133,7 +133,7 @@ func resourceResourceDataSyncRead(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func resourceResourceDataSyncDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourceDataSyncDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
@@ -191,8 +191,8 @@ func findResourceDataSyncs(ctx context.Context, conn *ssm.Client, input *ssm.Lis
 	return output, nil
 }
 
-func flattenResourceDataSyncS3Destination(apiObject *awstypes.ResourceDataSyncS3Destination) []interface{} {
-	tfMap := make(map[string]interface{})
+func flattenResourceDataSyncS3Destination(apiObject *awstypes.ResourceDataSyncS3Destination) []any {
+	tfMap := make(map[string]any)
 
 	tfMap[names.AttrBucketName] = aws.ToString(apiObject.BucketName)
 	tfMap[names.AttrRegion] = aws.ToString(apiObject.Region)
@@ -204,11 +204,11 @@ func flattenResourceDataSyncS3Destination(apiObject *awstypes.ResourceDataSyncS3
 		tfMap[names.AttrPrefix] = aws.ToString(apiObject.Prefix)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
 func expandResourceDataSyncS3Destination(d *schema.ResourceData) *awstypes.ResourceDataSyncS3Destination {
-	tfMap := d.Get("s3_destination").([]interface{})[0].(map[string]interface{})
+	tfMap := d.Get("s3_destination").([]any)[0].(map[string]any)
 	apiObject := &awstypes.ResourceDataSyncS3Destination{
 		BucketName: aws.String(tfMap[names.AttrBucketName].(string)),
 		Region:     aws.String(tfMap[names.AttrRegion].(string)),

@@ -336,7 +336,7 @@ func (r *resourceCluster) Delete(ctx context.Context, request resource.DeleteReq
 		return
 	}
 
-	tflog.Debug(ctx, "deleting DocDB Elastic Cluster", map[string]interface{}{
+	tflog.Debug(ctx, "deleting DocDB Elastic Cluster", map[string]any{
 		names.AttrID: state.ID.ValueString(),
 	})
 
@@ -444,7 +444,7 @@ func waitClusterDeleted(ctx context.Context, conn *docdbelastic.Client, id strin
 }
 
 func statusCluster(ctx context.Context, conn *docdbelastic.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := findClusterByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil

@@ -90,7 +90,7 @@ func resourceMaintenanceWindow() *schema.Resource {
 	}
 }
 
-func resourceMaintenanceWindowCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMaintenanceWindowCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
@@ -148,7 +148,7 @@ func resourceMaintenanceWindowCreate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceMaintenanceWindowRead(ctx, d, meta)...)
 }
 
-func resourceMaintenanceWindowRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMaintenanceWindowRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
@@ -179,7 +179,7 @@ func resourceMaintenanceWindowRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func resourceMaintenanceWindowUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMaintenanceWindowUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
@@ -227,7 +227,7 @@ func resourceMaintenanceWindowUpdate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceMaintenanceWindowRead(ctx, d, meta)...)
 }
 
-func resourceMaintenanceWindowDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMaintenanceWindowDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 

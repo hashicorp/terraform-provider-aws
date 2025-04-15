@@ -131,6 +131,7 @@ The following arguments are required:
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `arn` - The continuous deployment policy ARN.
 * `etag` - Current version of the continuous distribution policy.
 * `id` - Identifier of the continuous deployment policy.
 * `last_modified_time` - Date and time the continuous deployment policy was last modified.

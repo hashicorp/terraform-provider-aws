@@ -322,7 +322,7 @@ func findProjectByName(ctx context.Context, conn *rekognition.Client, name strin
 }
 
 func statusProject(ctx context.Context, conn *rekognition.Client, name string, feature awstypes.CustomizationFeature) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := findProjectByName(ctx, conn, name, feature)
 		if tfresource.NotFound(err) {
 			return nil, "", nil

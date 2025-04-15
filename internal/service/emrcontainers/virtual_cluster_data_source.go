@@ -83,7 +83,7 @@ func dataSourceVirtualCluster() *schema.Resource {
 	}
 }
 
-func dataSourceVirtualClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceVirtualClusterRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRContainersClient(ctx)
 
@@ -97,7 +97,7 @@ func dataSourceVirtualClusterRead(ctx context.Context, d *schema.ResourceData, m
 	d.SetId(aws.ToString(vc.Id))
 	d.Set(names.AttrARN, vc.Arn)
 	if vc.ContainerProvider != nil {
-		if err := d.Set("container_provider", []interface{}{flattenContainerProvider(vc.ContainerProvider)}); err != nil {
+		if err := d.Set("container_provider", []any{flattenContainerProvider(vc.ContainerProvider)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting container_provider: %s", err)
 		}
 	} else {

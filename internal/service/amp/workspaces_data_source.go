@@ -45,7 +45,7 @@ func dataSourceWorkspaces() *schema.Resource { // nosemgrep:ci.caps0-in-func-nam
 	}
 }
 
-func dataSourceWorkspacesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { // nosemgrep:ci.caps0-in-func-name
+func dataSourceWorkspacesRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics { // nosemgrep:ci.caps0-in-func-name
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AMPClient(ctx)
 

@@ -32,7 +32,7 @@ func TestProtocolStateFunc(t *testing.T) {
 	t.Parallel()
 
 	cases := []struct {
-		input    interface{}
+		input    any
 		expected string
 	}{
 		{
@@ -169,7 +169,7 @@ func TestProtocolForValue(t *testing.T) {
 	}
 }
 
-func calcSecurityGroupChecksum(rules []interface{}) int {
+func calcSecurityGroupChecksum(rules []any) int {
 	sum := 0
 	for _, rule := range rules {
 		sum += tfec2.SecurityGroupRuleHash(rule)
@@ -180,184 +180,184 @@ func calcSecurityGroupChecksum(rules []interface{}) int {
 func TestSecurityGroupExpandCollapseRules(t *testing.T) {
 	t.Parallel()
 
-	expected_compact_list := []interface{}{
-		map[string]interface{}{
+	expected_compact_list := []any{
+		map[string]any{
 			names.AttrProtocol:    "tcp",
 			"from_port":           int(443),
 			"to_port":             int(443),
 			names.AttrDescription: "block with description",
 			"self":                true,
-			"cidr_blocks": []interface{}{
+			"cidr_blocks": []any{
 				"10.0.0.1/32",
 				"10.0.0.2/32",
 				"10.0.0.3/32",
 			},
 		},
-		map[string]interface{}{
+		map[string]any{
 			names.AttrProtocol:    "tcp",
 			"from_port":           int(443),
 			"to_port":             int(443),
 			names.AttrDescription: "block with another description",
 			"self":                false,
-			"cidr_blocks": []interface{}{
+			"cidr_blocks": []any{
 				"192.168.0.1/32",
 				"192.168.0.2/32",
 			},
 		},
-		map[string]interface{}{
+		map[string]any{
 			names.AttrProtocol:    "-1",
 			"from_port":           int(8000),
 			"to_port":             int(8080),
 			names.AttrDescription: "",
 			"self":                false,
-			"ipv6_cidr_blocks": []interface{}{
+			"ipv6_cidr_blocks": []any{
 				"fd00::1/128",
 				"fd00::2/128",
 			},
-			names.AttrSecurityGroups: schema.NewSet(schema.HashString, []interface{}{
+			names.AttrSecurityGroups: schema.NewSet(schema.HashString, []any{
 				"sg-11111",
 				"sg-22222",
 				"sg-33333",
 			}),
 		},
-		map[string]interface{}{
+		map[string]any{
 			names.AttrProtocol:    "udp",
 			"from_port":           int(10000),
 			"to_port":             int(10000),
 			names.AttrDescription: "",
 			"self":                false,
-			"prefix_list_ids": []interface{}{
+			"prefix_list_ids": []any{
 				"pl-111111",
 				"pl-222222",
 			},
 		},
 	}
 
-	expected_expanded_list := []interface{}{
-		map[string]interface{}{
+	expected_expanded_list := []any{
+		map[string]any{
 			names.AttrProtocol:    "tcp",
 			"from_port":           int(443),
 			"to_port":             int(443),
 			names.AttrDescription: "block with description",
 			"self":                true,
 		},
-		map[string]interface{}{
+		map[string]any{
 			names.AttrProtocol:    "tcp",
 			"from_port":           int(443),
 			"to_port":             int(443),
 			names.AttrDescription: "block with description",
 			"self":                false,
-			"cidr_blocks": []interface{}{
+			"cidr_blocks": []any{
 				"10.0.0.1/32",
 			},
 		},
-		map[string]interface{}{
+		map[string]any{
 			names.AttrProtocol:    "tcp",
 			"from_port":           int(443),
 			"to_port":             int(443),
 			names.AttrDescription: "block with description",
 			"self":                false,
-			"cidr_blocks": []interface{}{
+			"cidr_blocks": []any{
 				"10.0.0.2/32",
 			},
 		},
-		map[string]interface{}{
+		map[string]any{
 			names.AttrProtocol:    "tcp",
 			"from_port":           int(443),
 			"to_port":             int(443),
 			names.AttrDescription: "block with description",
 			"self":                false,
-			"cidr_blocks": []interface{}{
+			"cidr_blocks": []any{
 				"10.0.0.3/32",
 			},
 		},
-		map[string]interface{}{
+		map[string]any{
 			names.AttrProtocol:    "tcp",
 			"from_port":           int(443),
 			"to_port":             int(443),
 			names.AttrDescription: "block with another description",
 			"self":                false,
-			"cidr_blocks": []interface{}{
+			"cidr_blocks": []any{
 				"192.168.0.1/32",
 			},
 		},
-		map[string]interface{}{
+		map[string]any{
 			names.AttrProtocol:    "tcp",
 			"from_port":           int(443),
 			"to_port":             int(443),
 			names.AttrDescription: "block with another description",
 			"self":                false,
-			"cidr_blocks": []interface{}{
+			"cidr_blocks": []any{
 				"192.168.0.2/32",
 			},
 		},
-		map[string]interface{}{
+		map[string]any{
 			names.AttrProtocol:    "-1",
 			"from_port":           int(8000),
 			"to_port":             int(8080),
 			names.AttrDescription: "",
 			"self":                false,
-			"ipv6_cidr_blocks": []interface{}{
+			"ipv6_cidr_blocks": []any{
 				"fd00::1/128",
 			},
 		},
-		map[string]interface{}{
+		map[string]any{
 			names.AttrProtocol:    "-1",
 			"from_port":           int(8000),
 			"to_port":             int(8080),
 			names.AttrDescription: "",
 			"self":                false,
-			"ipv6_cidr_blocks": []interface{}{
+			"ipv6_cidr_blocks": []any{
 				"fd00::2/128",
 			},
 		},
-		map[string]interface{}{
+		map[string]any{
 			names.AttrProtocol:    "-1",
 			"from_port":           int(8000),
 			"to_port":             int(8080),
 			names.AttrDescription: "",
 			"self":                false,
-			names.AttrSecurityGroups: schema.NewSet(schema.HashString, []interface{}{
+			names.AttrSecurityGroups: schema.NewSet(schema.HashString, []any{
 				"sg-11111",
 			}),
 		},
-		map[string]interface{}{
+		map[string]any{
 			names.AttrProtocol:    "-1",
 			"from_port":           int(8000),
 			"to_port":             int(8080),
 			names.AttrDescription: "",
 			"self":                false,
-			names.AttrSecurityGroups: schema.NewSet(schema.HashString, []interface{}{
+			names.AttrSecurityGroups: schema.NewSet(schema.HashString, []any{
 				"sg-22222",
 			}),
 		},
-		map[string]interface{}{
+		map[string]any{
 			names.AttrProtocol:    "-1",
 			"from_port":           int(8000),
 			"to_port":             int(8080),
 			names.AttrDescription: "",
 			"self":                false,
-			names.AttrSecurityGroups: schema.NewSet(schema.HashString, []interface{}{
+			names.AttrSecurityGroups: schema.NewSet(schema.HashString, []any{
 				"sg-33333",
 			}),
 		},
-		map[string]interface{}{
+		map[string]any{
 			names.AttrProtocol:    "udp",
 			"from_port":           int(10000),
 			"to_port":             int(10000),
 			names.AttrDescription: "",
 			"self":                false,
-			"prefix_list_ids": []interface{}{
+			"prefix_list_ids": []any{
 				"pl-111111",
 			},
 		},
-		map[string]interface{}{
+		map[string]any{
 			names.AttrProtocol:    "udp",
 			"from_port":           int(10000),
 			"to_port":             int(10000),
 			names.AttrDescription: "",
 			"self":                false,
-			"prefix_list_ids": []interface{}{
+			"prefix_list_ids": []any{
 				"pl-222222",
 			},
 		},
@@ -435,7 +435,7 @@ func TestSecurityGroupIPPermGather(t *testing.T) {
 		},
 	}
 
-	local := []map[string]interface{}{
+	local := []map[string]any{
 		{
 			names.AttrProtocol:    "tcp",
 			"from_port":           int64(1),
@@ -448,7 +448,7 @@ func TestSecurityGroupIPPermGather(t *testing.T) {
 			names.AttrProtocol: "tcp",
 			"from_port":        int64(80),
 			"to_port":          int64(80),
-			names.AttrSecurityGroups: schema.NewSet(schema.HashString, []interface{}{
+			names.AttrSecurityGroups: schema.NewSet(schema.HashString, []any{
 				"sg-22222",
 			}),
 		},
@@ -457,7 +457,7 @@ func TestSecurityGroupIPPermGather(t *testing.T) {
 			"from_port":        int64(0),
 			"to_port":          int64(0),
 			"prefix_list_ids":  []string{"pl-12345678"},
-			names.AttrSecurityGroups: schema.NewSet(schema.HashString, []interface{}{
+			names.AttrSecurityGroups: schema.NewSet(schema.HashString, []any{
 				"sg-22222",
 			}),
 			names.AttrDescription: "desc",
@@ -497,19 +497,19 @@ func TestExpandIPPerms(t *testing.T) {
 
 	hash := schema.HashString
 
-	expanded := []interface{}{
-		map[string]interface{}{
+	expanded := []any{
+		map[string]any{
 			names.AttrProtocol: "icmp",
 			"from_port":        1,
 			"to_port":          -1,
-			"cidr_blocks":      []interface{}{"0.0.0.0/0"},
-			names.AttrSecurityGroups: schema.NewSet(hash, []interface{}{
+			"cidr_blocks":      []any{"0.0.0.0/0"},
+			names.AttrSecurityGroups: schema.NewSet(hash, []any{
 				"sg-11111",
 				"foo/sg-22222",
 			}),
 			names.AttrDescription: "desc",
 		},
-		map[string]interface{}{
+		map[string]any{
 			names.AttrProtocol: "icmp",
 			"from_port":        1,
 			"to_port":          -1,
@@ -614,13 +614,13 @@ func TestExpandIPPerms_NegOneProtocol(t *testing.T) {
 
 	hash := schema.HashString
 
-	expanded := []interface{}{
-		map[string]interface{}{
+	expanded := []any{
+		map[string]any{
 			names.AttrProtocol: "-1",
 			"from_port":        0,
 			"to_port":          0,
-			"cidr_blocks":      []interface{}{"0.0.0.0/0"},
-			names.AttrSecurityGroups: schema.NewSet(hash, []interface{}{
+			"cidr_blocks":      []any{"0.0.0.0/0"},
+			names.AttrSecurityGroups: schema.NewSet(hash, []any{
 				"sg-11111",
 				"foo/sg-22222",
 			}),
@@ -680,13 +680,13 @@ func TestExpandIPPerms_NegOneProtocol(t *testing.T) {
 
 	// Now test the error case. This *should* error when either from_port
 	// or to_port is not zero, but protocol is "-1".
-	errorCase := []interface{}{
-		map[string]interface{}{
+	errorCase := []any{
+		map[string]any{
 			names.AttrProtocol: "-1",
 			"from_port":        0,
 			"to_port":          65535,
-			"cidr_blocks":      []interface{}{"0.0.0.0/0"},
-			names.AttrSecurityGroups: schema.NewSet(hash, []interface{}{
+			"cidr_blocks":      []any{"0.0.0.0/0"},
+			names.AttrSecurityGroups: schema.NewSet(hash, []any{
 				"sg-11111",
 				"foo/sg-22222",
 			}),
@@ -708,13 +708,13 @@ func TestExpandIPPerms_AllProtocol(t *testing.T) {
 
 	hash := schema.HashString
 
-	expanded := []interface{}{
-		map[string]interface{}{
+	expanded := []any{
+		map[string]any{
 			names.AttrProtocol: "all",
 			"from_port":        0,
 			"to_port":          0,
-			"cidr_blocks":      []interface{}{"0.0.0.0/0"},
-			names.AttrSecurityGroups: schema.NewSet(hash, []interface{}{
+			"cidr_blocks":      []any{"0.0.0.0/0"},
+			names.AttrSecurityGroups: schema.NewSet(hash, []any{
 				"sg-11111",
 				"foo/sg-22222",
 			}),
@@ -774,13 +774,13 @@ func TestExpandIPPerms_AllProtocol(t *testing.T) {
 
 	// Now test the error case. This *should* error when either from_port
 	// or to_port is not zero, but protocol is "all".
-	errorCase := []interface{}{
-		map[string]interface{}{
+	errorCase := []any{
+		map[string]any{
 			names.AttrProtocol: "all",
 			"from_port":        0,
 			"to_port":          65535,
-			"cidr_blocks":      []interface{}{"0.0.0.0/0"},
-			names.AttrSecurityGroups: schema.NewSet(hash, []interface{}{
+			"cidr_blocks":      []any{"0.0.0.0/0"},
+			names.AttrSecurityGroups: schema.NewSet(hash, []any{
 				"sg-11111",
 				"foo/sg-22222",
 			}),

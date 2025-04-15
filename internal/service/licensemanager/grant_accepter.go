@@ -88,7 +88,7 @@ func resourceGrantAccepter() *schema.Resource {
 	}
 }
 
-func resourceGrantAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGrantAccepterCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LicenseManagerClient(ctx)
 
@@ -108,7 +108,7 @@ func resourceGrantAccepterCreate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceGrantAccepterRead(ctx, d, meta)...)
 }
 
-func resourceGrantAccepterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGrantAccepterRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LicenseManagerClient(ctx)
 
@@ -137,7 +137,7 @@ func resourceGrantAccepterRead(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func resourceGrantAccepterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGrantAccepterDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LicenseManagerClient(ctx)
 

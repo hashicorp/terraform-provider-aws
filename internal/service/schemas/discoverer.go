@@ -58,7 +58,7 @@ func resourceDiscoverer() *schema.Resource {
 	}
 }
 
-func resourceDiscovererCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDiscovererCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SchemasClient(ctx)
 
@@ -83,7 +83,7 @@ func resourceDiscovererCreate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceDiscovererRead(ctx, d, meta)...)
 }
 
-func resourceDiscovererRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDiscovererRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SchemasClient(ctx)
 
@@ -106,7 +106,7 @@ func resourceDiscovererRead(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourceDiscovererUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDiscovererUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SchemasClient(ctx)
 
@@ -126,7 +126,7 @@ func resourceDiscovererUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceDiscovererRead(ctx, d, meta)...)
 }
 
-func resourceDiscovererDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDiscovererDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SchemasClient(ctx)
 

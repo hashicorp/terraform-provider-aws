@@ -35,13 +35,13 @@ func encryptionConfigurationSchema() *schema.Schema {
 	}
 }
 
-func expandEncryptionConfiguration(tfList []interface{}) *awstypes.EncryptionConfiguration {
+func expandEncryptionConfiguration(tfList []any) *awstypes.EncryptionConfiguration {
 	apiObject := &awstypes.EncryptionConfiguration{
 		Type: awstypes.EncryptionTypeAwsOwnedKmsKey,
 	}
 
 	if len(tfList) == 1 && tfList[0] != nil {
-		tfMap := tfList[0].(map[string]interface{})
+		tfMap := tfList[0].(map[string]any)
 
 		if v, ok := tfMap[names.AttrKeyID].(string); ok {
 			apiObject.KeyId = aws.String(v)
@@ -54,7 +54,7 @@ func expandEncryptionConfiguration(tfList []interface{}) *awstypes.EncryptionCon
 	return apiObject
 }
 
-func flattenEncryptionConfiguration(apiObject *awstypes.EncryptionConfiguration) []interface{} {
+func flattenEncryptionConfiguration(apiObject *awstypes.EncryptionConfiguration) []any {
 	if apiObject == nil || apiObject.Type == "" {
 		return nil
 	}
@@ -63,12 +63,12 @@ func flattenEncryptionConfiguration(apiObject *awstypes.EncryptionConfiguration)
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		names.AttrKeyID: aws.ToString(apiObject.KeyId),
 		names.AttrType:  apiObject.Type,
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
 func customActionSchema() *schema.Schema {
@@ -118,7 +118,7 @@ func customActionSchema() *schema.Schema {
 	}
 }
 
-func expandCustomActions(tfList []interface{}) []awstypes.CustomAction {
+func expandCustomActions(tfList []any) []awstypes.CustomAction {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -126,14 +126,14 @@ func expandCustomActions(tfList []interface{}) []awstypes.CustomAction {
 	apiObjects := make([]awstypes.CustomAction, 0, len(tfList))
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
 
 		apiObject := awstypes.CustomAction{}
 
-		if v, ok := tfMap["action_definition"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		if v, ok := tfMap["action_definition"].([]any); ok && len(v) > 0 && v[0] != nil {
 			apiObject.ActionDefinition = expandActionDefinition(v)
 		}
 		if v, ok := tfMap["action_name"].(string); ok && v != "" {
@@ -146,31 +146,31 @@ func expandCustomActions(tfList []interface{}) []awstypes.CustomAction {
 	return apiObjects
 }
 
-func expandActionDefinition(tfList []interface{}) *awstypes.ActionDefinition {
+func expandActionDefinition(tfList []any) *awstypes.ActionDefinition {
 	if tfList == nil || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.ActionDefinition{}
 
-	if v, ok := tfMap["publish_metric_action"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap["publish_metric_action"].([]any); ok && len(v) > 0 && v[0] != nil {
 		apiObject.PublishMetricAction = expandPublishMetricAction(v)
 	}
 
 	return apiObject
 }
 
-func expandPublishMetricAction(tfList []interface{}) *awstypes.PublishMetricAction {
+func expandPublishMetricAction(tfList []any) *awstypes.PublishMetricAction {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -182,7 +182,7 @@ func expandPublishMetricAction(tfList []interface{}) *awstypes.PublishMetricActi
 		dimensions := make([]awstypes.Dimension, 0, len(tfList))
 
 		for _, tfMapRaw := range tfList {
-			tfMap, ok := tfMapRaw.(map[string]interface{})
+			tfMap, ok := tfMapRaw.(map[string]any)
 			if !ok {
 				continue
 			}
@@ -198,15 +198,15 @@ func expandPublishMetricAction(tfList []interface{}) *awstypes.PublishMetricActi
 	return apiObject
 }
 
-func flattenCustomActions(apiObjects []awstypes.CustomAction) []interface{} {
+func flattenCustomActions(apiObjects []awstypes.CustomAction) []any {
 	if apiObjects == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfList := make([]interface{}, 0, len(apiObjects))
+	tfList := make([]any, 0, len(apiObjects))
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			"action_definition": flattenActionDefinition(apiObject.ActionDefinition),
 			"action_name":       aws.ToString(apiObject.ActionName),
 		}
@@ -217,35 +217,35 @@ func flattenCustomActions(apiObjects []awstypes.CustomAction) []interface{} {
 	return tfList
 }
 
-func flattenActionDefinition(apiObject *awstypes.ActionDefinition) []interface{} {
+func flattenActionDefinition(apiObject *awstypes.ActionDefinition) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"publish_metric_action": flattenPublishMetricAction(apiObject.PublishMetricAction),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenPublishMetricAction(apiObject *awstypes.PublishMetricAction) []interface{} {
+func flattenPublishMetricAction(apiObject *awstypes.PublishMetricAction) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"dimension": flattenDimensions(apiObject.Dimensions),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenDimensions(apiObjects []awstypes.Dimension) []interface{} {
-	tfList := make([]interface{}, 0, len(apiObjects))
+func flattenDimensions(apiObjects []awstypes.Dimension) []any {
+	tfList := make([]any, 0, len(apiObjects))
 
 	for _, apiObject := range apiObjects {
-		tfList = append(tfList, map[string]interface{}{
+		tfList = append(tfList, map[string]any{
 			names.AttrValue: aws.ToString(apiObject.Value),
 		})
 	}
@@ -267,7 +267,7 @@ func forceNewIfNotRuleOrderDefault(key string, d *schema.ResourceDiff) error {
 	return nil
 }
 
-func expandIPSets(tfList []interface{}) map[string]awstypes.IPSet {
+func expandIPSets(tfList []any) map[string]awstypes.IPSet {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -275,14 +275,14 @@ func expandIPSets(tfList []interface{}) map[string]awstypes.IPSet {
 	apiObject := make(map[string]awstypes.IPSet)
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
 
 		if k, ok := tfMap[names.AttrKey].(string); ok && k != "" {
-			if tfList, ok := tfMap["ip_set"].([]interface{}); ok && len(tfList) > 0 && tfList[0] != nil {
-				tfMap, ok := tfList[0].(map[string]interface{})
+			if tfList, ok := tfMap["ip_set"].([]any); ok && len(tfList) > 0 && tfList[0] != nil {
+				tfMap, ok := tfList[0].(map[string]any)
 				if !ok {
 					continue
 				}
@@ -299,15 +299,15 @@ func expandIPSets(tfList []interface{}) map[string]awstypes.IPSet {
 	return apiObject
 }
 
-func flattenIPSets(tfMap map[string]awstypes.IPSet) []interface{} {
+func flattenIPSets(tfMap map[string]awstypes.IPSet) []any {
 	if tfMap == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfList := make([]interface{}, 0, len(tfMap))
+	tfList := make([]any, 0, len(tfMap))
 
 	for k, v := range tfMap {
-		tfList = append(tfList, map[string]interface{}{
+		tfList = append(tfList, map[string]any{
 			names.AttrKey: k,
 			"ip_set":      flattenIPSet(&v),
 		})
@@ -316,14 +316,14 @@ func flattenIPSets(tfMap map[string]awstypes.IPSet) []interface{} {
 	return tfList
 }
 
-func flattenIPSet(apiObject *awstypes.IPSet) []interface{} {
+func flattenIPSet(apiObject *awstypes.IPSet) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"definition": apiObject.Definition,
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

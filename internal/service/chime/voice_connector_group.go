@@ -62,7 +62,7 @@ func ResourceVoiceConnectorGroup() *schema.Resource {
 	}
 }
 
-func resourceVoiceConnectorGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVoiceConnectorGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
@@ -85,7 +85,7 @@ func resourceVoiceConnectorGroupCreate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceVoiceConnectorGroupRead(ctx, d, meta)...)
 }
 
-func resourceVoiceConnectorGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVoiceConnectorGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
@@ -116,7 +116,7 @@ func resourceVoiceConnectorGroupRead(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func resourceVoiceConnectorGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVoiceConnectorGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
@@ -141,7 +141,7 @@ func resourceVoiceConnectorGroupUpdate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceVoiceConnectorGroupRead(ctx, d, meta)...)
 }
 
-func resourceVoiceConnectorGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVoiceConnectorGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
@@ -173,11 +173,11 @@ func resourceVoiceConnectorGroupDelete(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func expandVoiceConnectorItems(data []interface{}) []awstypes.VoiceConnectorItem {
+func expandVoiceConnectorItems(data []any) []awstypes.VoiceConnectorItem {
 	var connectorsItems []awstypes.VoiceConnectorItem
 
 	for _, rItem := range data {
-		item := rItem.(map[string]interface{})
+		item := rItem.(map[string]any)
 		connectorsItems = append(connectorsItems, awstypes.VoiceConnectorItem{
 			VoiceConnectorId: aws.String(item["voice_connector_id"].(string)),
 			Priority:         aws.Int32(int32(item[names.AttrPriority].(int))),
@@ -187,11 +187,11 @@ func expandVoiceConnectorItems(data []interface{}) []awstypes.VoiceConnectorItem
 	return connectorsItems
 }
 
-func flattenVoiceConnectorItems(connectors []awstypes.VoiceConnectorItem) []interface{} {
-	var rawConnectors []interface{}
+func flattenVoiceConnectorItems(connectors []awstypes.VoiceConnectorItem) []any {
+	var rawConnectors []any
 
 	for _, c := range connectors {
-		rawC := map[string]interface{}{
+		rawC := map[string]any{
 			names.AttrPriority:   c.Priority,
 			"voice_connector_id": aws.ToString(c.VoiceConnectorId),
 		}

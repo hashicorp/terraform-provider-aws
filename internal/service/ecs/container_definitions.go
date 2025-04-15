@@ -239,11 +239,5 @@ func isValidVersionConsistency(cd awstypes.ContainerDefinition) bool {
 		return true
 	}
 
-	for _, v := range enum.EnumValues[awstypes.VersionConsistency]() {
-		if cd.VersionConsistency == v {
-			return true
-		}
-	}
-
-	return false
+	return slices.Contains(enum.EnumValues[awstypes.VersionConsistency](), cd.VersionConsistency)
 }

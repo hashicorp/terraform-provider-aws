@@ -18,7 +18,7 @@ func TestAssociationRuleMigrateState(t *testing.T) {
 		ID           string
 		Attributes   map[string]string
 		Expected     string
-		Meta         interface{}
+		Meta         any
 	}{
 		"v0_1": {
 			StateVersion: 0,

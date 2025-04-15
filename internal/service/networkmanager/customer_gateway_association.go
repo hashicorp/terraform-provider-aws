@@ -66,7 +66,7 @@ func resourceCustomerGatewayAssociation() *schema.Resource {
 	}
 }
 
-func resourceCustomerGatewayAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCustomerGatewayAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
@@ -86,7 +86,7 @@ func resourceCustomerGatewayAssociationCreate(ctx context.Context, d *schema.Res
 
 	log.Printf("[DEBUG] Creating Network Manager Customer Gateway Association: %#v", input)
 	_, err := tfresource.RetryWhen(ctx, customerGatewayAssociationResourceNotFoundExceptionTimeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.AssociateCustomerGateway(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -123,7 +123,7 @@ func resourceCustomerGatewayAssociationCreate(ctx context.Context, d *schema.Res
 	return append(diags, resourceCustomerGatewayAssociationRead(ctx, d, meta)...)
 }
 
-func resourceCustomerGatewayAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCustomerGatewayAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
@@ -154,7 +154,7 @@ func resourceCustomerGatewayAssociationRead(ctx context.Context, d *schema.Resou
 	return diags
 }
 
-func resourceCustomerGatewayAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCustomerGatewayAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
@@ -270,7 +270,7 @@ func findCustomerGatewayAssociationByTwoPartKey(ctx context.Context, conn *netwo
 }
 
 func statusCustomerGatewayAssociationState(ctx context.Context, conn *networkmanager.Client, globalNetworkID, customerGatewayARN string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findCustomerGatewayAssociationByTwoPartKey(ctx, conn, globalNetworkID, customerGatewayARN)
 
 		if tfresource.NotFound(err) {

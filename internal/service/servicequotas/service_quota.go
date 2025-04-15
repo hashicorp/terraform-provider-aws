@@ -138,7 +138,7 @@ func ResourceServiceQuota() *schema.Resource {
 	}
 }
 
-func resourceServiceQuotaCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceQuotaCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceQuotasClient(ctx)
 
@@ -187,7 +187,7 @@ func resourceServiceQuotaCreate(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceServiceQuotaRead(ctx, d, meta)...)
 }
 
-func resourceServiceQuotaRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceQuotaRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceQuotasClient(ctx)
 
@@ -275,7 +275,7 @@ func resourceServiceQuotaRead(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func resourceServiceQuotaUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceQuotaUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceQuotasClient(ctx)
 

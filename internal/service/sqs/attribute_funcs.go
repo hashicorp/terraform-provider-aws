@@ -28,7 +28,7 @@ type queueAttributeHandler struct {
 	ToSet         func(string, string) (string, error)
 }
 
-func (h *queueAttributeHandler) Upsert(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func (h *queueAttributeHandler) Upsert(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SQSClient(ctx)
 
@@ -48,7 +48,7 @@ func (h *queueAttributeHandler) Upsert(ctx context.Context, d *schema.ResourceDa
 
 	deadline := tfresource.NewDeadline(d.Timeout(schema.TimeoutCreate))
 
-	_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, d.Timeout(schema.TimeoutCreate)/2, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, d.Timeout(schema.TimeoutCreate)/2, func() (any, error) {
 		return conn.SetQueueAttributes(ctx, input)
 	}, errCodeInvalidAttributeValue, "Invalid value for the parameter Policy")
 
@@ -65,11 +65,11 @@ func (h *queueAttributeHandler) Upsert(ctx context.Context, d *schema.ResourceDa
 	return append(diags, h.Read(ctx, d, meta)...)
 }
 
-func (h *queueAttributeHandler) Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func (h *queueAttributeHandler) Read(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SQSClient(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNotFound(ctx, queueAttributeReadTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNotFound(ctx, queueAttributeReadTimeout, func() (any, error) {
 		return findQueueAttributeByTwoPartKey(ctx, conn, d.Id(), h.AttributeName)
 	})
 
@@ -101,7 +101,7 @@ func (h *queueAttributeHandler) Read(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func (h *queueAttributeHandler) Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func (h *queueAttributeHandler) Delete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SQSClient(ctx)
 

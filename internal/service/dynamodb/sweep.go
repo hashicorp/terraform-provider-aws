@@ -149,11 +149,14 @@ type backupSweeper struct {
 	arn  string
 }
 
-func (bs backupSweeper) Delete(ctx context.Context, timeout time.Duration, optFns ...tfresource.OptionsFunc) error {
+func (bs backupSweeper) Delete(ctx context.Context, optFns ...tfresource.OptionsFunc) error {
 	input := &dynamodb.DeleteBackupInput{
 		BackupArn: aws.String(bs.arn),
 	}
 
+	const (
+		timeout = 10 * time.Minute
+	)
 	err := tfresource.Retry(ctx, timeout, func() *retry.RetryError {
 		log.Printf("[DEBUG] Deleting DynamoDB Backup: %s", bs.arn)
 		_, err := bs.conn.DeleteBackup(ctx, input)

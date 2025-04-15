@@ -80,14 +80,14 @@ func resourceUserPoolDomain() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: customdiff.ForceNewIfChange(names.AttrCertificateARN, func(_ context.Context, old, new, meta interface{}) bool {
+		CustomizeDiff: customdiff.ForceNewIfChange(names.AttrCertificateARN, func(_ context.Context, old, new, meta any) bool {
 			// If the cert arn is being changed to a new arn, don't force new.
 			return !(old.(string) != "" && new.(string) != "")
 		}),
 	}
 }
 
-func resourceUserPoolDomainCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserPoolDomainCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 
@@ -120,7 +120,7 @@ func resourceUserPoolDomainCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceUserPoolDomainRead(ctx, d, meta)...)
 }
 
-func resourceUserPoolDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserPoolDomainRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 
@@ -152,7 +152,7 @@ func resourceUserPoolDomainRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceUserPoolDomainUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserPoolDomainUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 
@@ -180,7 +180,7 @@ func resourceUserPoolDomainUpdate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceUserPoolDomainRead(ctx, d, meta)...)
 }
 
-func resourceUserPoolDomainDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserPoolDomainDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 
@@ -239,7 +239,7 @@ func findUserPoolDomain(ctx context.Context, conn *cognitoidentityprovider.Clien
 }
 
 func statusUserPoolDomain(ctx context.Context, conn *cognitoidentityprovider.Client, domain string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findUserPoolDomain(ctx, conn, domain)
 
 		if tfresource.NotFound(err) {

@@ -670,3 +670,31 @@ rules:
       - pattern-either:
           - pattern: errs.Must(...)
     severity: WARNING
+
+  - id: avoid-SingleNestedBlock
+    languages: [go]
+    message: Avoid use of `SingleNestedBlock` in schema definitions. Use `ListNestedBlock` with a size validator instead.
+    paths:
+      include:
+        - internal/service
+    patterns:
+      - pattern: schema.SingleNestedBlock{ ... }
+    severity: ERROR
+
+  - id: include-argument-name-in-deprecation-message
+    languages: [go]
+    message: Deprecation messages should begin with `argument_name is deprecated`.
+    paths:
+      include:
+        - internal/service
+    patterns:
+      - pattern-inside: "Schema: map[string]*schema.Schema{ ... }"
+      - pattern: |
+          {
+            ..., Deprecated: $MESSAGE, ...
+          }
+      - metavariable-pattern:
+          metavariable: $MESSAGE
+          patterns:
+            - pattern-not-regex: ([a-zA-Z0-9_]+ is deprecated\.)
+    severity: WARNING

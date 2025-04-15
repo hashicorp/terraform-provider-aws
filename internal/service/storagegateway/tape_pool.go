@@ -72,7 +72,7 @@ func resourceTapePool() *schema.Resource {
 	}
 }
 
-func resourceTapePoolCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTapePoolCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).StorageGatewayClient(ctx)
 
@@ -96,7 +96,7 @@ func resourceTapePoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceTapePoolRead(ctx, d, meta)...)
 }
 
-func resourceTapePoolRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTapePoolRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).StorageGatewayClient(ctx)
 
@@ -121,7 +121,7 @@ func resourceTapePoolRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func resourceTapePoolUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTapePoolUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Tags only.
@@ -129,7 +129,7 @@ func resourceTapePoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceTapePoolRead(ctx, d, meta)...)
 }
 
-func resourceTapePoolDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTapePoolDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).StorageGatewayClient(ctx)
 

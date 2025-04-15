@@ -18,7 +18,8 @@ variable "function_name" {
 }
 
 data "aws_cloudfront_function" "existing" {
-  name = var.function_name
+  name  = var.function_name
+  stage = "LIVE"
 }
 ```
 

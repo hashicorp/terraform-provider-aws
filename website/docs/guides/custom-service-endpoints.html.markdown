@@ -166,6 +166,7 @@ provider "aws" {
 |DocumentDB Elastic|`docdbelastic`|`AWS_ENDPOINT_URL_DOCDB_ELASTIC`|`docdb_elastic`|
 |DRS (Elastic Disaster Recovery)|`drs`|`AWS_ENDPOINT_URL_DRS`|`drs`|
 |Directory Service|`ds`(or `directoryservice`)|`AWS_ENDPOINT_URL_DIRECTORY_SERVICE`|`directory_service`|
+|DSQL|`dsql`|`AWS_ENDPOINT_URL_DSQL`|`dsql`|
 |DynamoDB|`dynamodb`|`AWS_ENDPOINT_URL_DYNAMODB`|`dynamodb`|
 |EC2 (Elastic Compute Cloud)|`ec2`|`AWS_ENDPOINT_URL_EC2`|`ec2`|
 |ECR (Elastic Container Registry)|`ecr`|`AWS_ENDPOINT_URL_ECR`|`ecr`|
@@ -288,7 +289,7 @@ provider "aws" {
 |S3 Control|`s3control`|`AWS_ENDPOINT_URL_S3_CONTROL`|`s3_control`|
 |S3 on Outposts|`s3outposts`|`AWS_ENDPOINT_URL_S3OUTPOSTS`|`s3outposts`|
 |S3 Tables|`s3tables`|`AWS_ENDPOINT_URL_S3TABLES`|`s3tables`|
-|SageMaker|`sagemaker`|`AWS_ENDPOINT_URL_SAGEMAKER`|`sagemaker`|
+|SageMaker AI|`sagemaker`|`AWS_ENDPOINT_URL_SAGEMAKER`|`sagemaker`|
 |EventBridge Scheduler|`scheduler`|`AWS_ENDPOINT_URL_SCHEDULER`|`scheduler`|
 |EventBridge Schemas|`schemas`|`AWS_ENDPOINT_URL_SCHEMAS`|`schemas`|
 |Secrets Manager|`secretsmanager`|`AWS_ENDPOINT_URL_SECRETS_MANAGER`|`secrets_manager`|

@@ -424,7 +424,7 @@ func findVPCConnection(ctx context.Context, conn *quicksight.Client, input *quic
 func retryVPCConnectionCreate(ctx context.Context, conn *quicksight.Client, in *quicksight.CreateVPCConnectionInput) (*quicksight.CreateVPCConnectionOutput, error) {
 	outputRaw, err := tfresource.RetryWhen(ctx,
 		iamPropagationTimeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.CreateVPCConnection(ctx, in)
 		},
 		func(err error) (bool, error) {
@@ -495,7 +495,7 @@ func waitVPCConnectionDeleted(ctx context.Context, conn *quicksight.Client, awsA
 }
 
 func statusVPCConnection(ctx context.Context, conn *quicksight.Client, awsAccountID, vpcConnectionID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findVPCConnectionByTwoPartKey(ctx, conn, awsAccountID, vpcConnectionID)
 
 		if tfresource.NotFound(err) {

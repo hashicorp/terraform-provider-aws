@@ -29,7 +29,7 @@ func listTags(ctx context.Context, conn *sqs.Client, identifier string, optFns .
 		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(ctx, output.Tags), nil
+	return keyValueTags(ctx, output.Tags), nil
 }
 
 // ListTags lists sqs service tags and set them in Context.
@@ -50,13 +50,13 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier stri
 
 // map[string]string handling
 
-// Tags returns sqs service tags.
-func Tags(tags tftags.KeyValueTags) map[string]string {
+// svcTags returns sqs service tags.
+func svcTags(tags tftags.KeyValueTags) map[string]string {
 	return tags.Map()
 }
 
-// KeyValueTags creates tftags.KeyValueTags from sqs service tags.
-func KeyValueTags(ctx context.Context, tags map[string]string) tftags.KeyValueTags {
+// keyValueTags creates tftags.KeyValueTags from sqs service tags.
+func keyValueTags(ctx context.Context, tags map[string]string) tftags.KeyValueTags {
 	return tftags.New(ctx, tags)
 }
 
@@ -64,7 +64,7 @@ func KeyValueTags(ctx context.Context, tags map[string]string) tftags.KeyValueTa
 // nil is returned if there are no input tags.
 func getTagsIn(ctx context.Context) map[string]string {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
+		if tags := svcTags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
 		}
 	}
@@ -75,7 +75,7 @@ func getTagsIn(ctx context.Context) map[string]string {
 // setTagsOut sets sqs service tags in Context.
 func setTagsOut(ctx context.Context, tags map[string]string) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		inContext.TagsOut = option.Some(KeyValueTags(ctx, tags))
+		inContext.TagsOut = option.Some(keyValueTags(ctx, tags))
 	}
 }
 
@@ -117,7 +117,7 @@ func updateTags(ctx context.Context, conn *sqs.Client, identifier string, oldTag
 	if len(updatedTags) > 0 {
 		input := sqs.TagQueueInput{
 			QueueUrl: aws.String(identifier),
-			Tags:     Tags(updatedTags),
+			Tags:     svcTags(updatedTags),
 		}
 
 		_, err := conn.TagQueue(ctx, &input, optFns...)

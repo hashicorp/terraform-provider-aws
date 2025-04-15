@@ -34,7 +34,7 @@ func resourceSecurityTokenServicePreferences() *schema.Resource {
 	}
 }
 
-func resourceSecurityTokenServicePreferencesUpsert(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSecurityTokenServicePreferencesUpsert(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
@@ -55,7 +55,7 @@ func resourceSecurityTokenServicePreferencesUpsert(ctx context.Context, d *schem
 	return append(diags, resourceSecurityTokenServicePreferencesRead(ctx, d, meta)...)
 }
 
-func resourceSecurityTokenServicePreferencesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSecurityTokenServicePreferencesRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 

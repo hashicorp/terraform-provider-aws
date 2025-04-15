@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 )
 
-func validSecretName(v interface{}, k string) (ws []string, errors []error) {
+func validSecretName(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if !regexache.MustCompile(`^[0-9A-Za-z/_+=.@-]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
@@ -23,7 +23,7 @@ func validSecretName(v interface{}, k string) (ws []string, errors []error) {
 	return
 }
 
-func validSecretNamePrefix(v interface{}, k string) (ws []string, errors []error) {
+func validSecretNamePrefix(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if !regexache.MustCompile(`^[0-9A-Za-z/_+=.@-]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(

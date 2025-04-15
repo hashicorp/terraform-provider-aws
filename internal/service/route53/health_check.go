@@ -11,7 +11,6 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/route53"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -176,7 +175,7 @@ func resourceHealthCheck() *schema.Resource {
 				Required:         true,
 				ForceNew:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.HealthCheckType](),
-				StateFunc: func(val interface{}) string {
+				StateFunc: func(val any) string {
 					return strings.ToUpper(val.(string))
 				},
 			},
@@ -186,7 +185,7 @@ func resourceHealthCheck() *schema.Resource {
 	}
 }
 
-func resourceHealthCheckCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHealthCheckCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
@@ -299,7 +298,7 @@ func resourceHealthCheckCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceHealthCheckRead(ctx, d, meta)...)
 }
 
-func resourceHealthCheckRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHealthCheckRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
@@ -315,12 +314,7 @@ func resourceHealthCheckRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading Route53 Health Check (%s): %s", d.Id(), err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   "route53",
-		Resource:  "healthcheck/" + d.Id(),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, healthCheckARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	healthCheckConfig := output.HealthCheckConfig
 	d.Set("child_health_threshold", healthCheckConfig.HealthThreshold)
 	d.Set("child_healthchecks", healthCheckConfig.ChildHealthChecks)
@@ -348,7 +342,7 @@ func resourceHealthCheckRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceHealthCheckUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHealthCheckUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
@@ -429,7 +423,7 @@ func resourceHealthCheckUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceHealthCheckRead(ctx, d, meta)...)
 }
 
-func resourceHealthCheckDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHealthCheckDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
@@ -474,14 +468,19 @@ func findHealthCheckByID(ctx context.Context, conn *route53.Client, id string) (
 	return output.HealthCheck, nil
 }
 
-func triggersCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+func triggersCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta any) error {
 	// Removal of the triggers argument should _not_ trigger an update
 	if d.HasChange(names.AttrTriggers) {
 		o, n := d.GetChange(names.AttrTriggers)
-		if len(o.(map[string]interface{})) > 0 && len(n.(map[string]interface{})) == 0 {
+		if len(o.(map[string]any)) > 0 && len(n.(map[string]any)) == 0 {
 			return d.Clear(names.AttrTriggers)
 		}
 	}
 
 	return nil
+}
+
+// See https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazonroute53.html#amazonroute53-resources-for-iam-policies.
+func healthCheckARN(ctx context.Context, c *conns.AWSClient, id string) string {
+	return c.GlobalARNNoAccount(ctx, "route53", "healthcheck/"+id)
 }

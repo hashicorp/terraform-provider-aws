@@ -32,7 +32,7 @@ import (
 )
 
 // @FrameworkResource("aws_dataexchange_event_action", name="Event Action")
-func ResourceEventAction(_ context.Context) (resource.ResourceWithConfigure, error) {
+func newEventActionResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceEventAction{}, nil
 }
 
@@ -66,6 +66,7 @@ func (r *resourceEventAction) Schema(ctx context.Context, req resource.SchemaReq
 			names.AttrAction: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[actionModel](ctx),
 				Validators: []validator.List{
+					listvalidator.IsRequired(),
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
@@ -73,6 +74,7 @@ func (r *resourceEventAction) Schema(ctx context.Context, req resource.SchemaReq
 						"export_revision_to_s3": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[autoExportRevisionToS3RequestDetailsModel](ctx),
 							Validators: []validator.List{
+								listvalidator.IsRequired(),
 								listvalidator.SizeAtMost(1),
 							},
 							NestedObject: schema.NestedBlockObject{
@@ -101,6 +103,7 @@ func (r *resourceEventAction) Schema(ctx context.Context, req resource.SchemaReq
 									"revision_destination": schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[autoExportRevisionDestinationEntryModel](ctx),
 										Validators: []validator.List{
+											listvalidator.IsRequired(),
 											listvalidator.SizeAtMost(1),
 										},
 										NestedObject: schema.NestedBlockObject{
@@ -125,6 +128,7 @@ func (r *resourceEventAction) Schema(ctx context.Context, req resource.SchemaReq
 			"event": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[eventModel](ctx),
 				Validators: []validator.List{
+					listvalidator.IsRequired(),
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
@@ -132,6 +136,7 @@ func (r *resourceEventAction) Schema(ctx context.Context, req resource.SchemaReq
 						"revision_published": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[revisionPublishedModel](ctx),
 							Validators: []validator.List{
+								listvalidator.IsRequired(),
 								listvalidator.SizeAtMost(1),
 							},
 							NestedObject: schema.NestedBlockObject{

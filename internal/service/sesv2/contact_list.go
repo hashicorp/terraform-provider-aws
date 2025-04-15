@@ -97,7 +97,7 @@ const (
 	resNameContactList = "Contact List"
 )
 
-func resourceContactListCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceContactListCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
@@ -128,7 +128,7 @@ func resourceContactListCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceContactListRead(ctx, d, meta)...)
 }
 
-func resourceContactListRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceContactListRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
@@ -165,7 +165,7 @@ func resourceContactListRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceContactListUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceContactListUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
@@ -186,7 +186,7 @@ func resourceContactListUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceContactListRead(ctx, d, meta)...)
 }
 
-func resourceContactListDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceContactListDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
@@ -236,7 +236,7 @@ func findContactList(ctx context.Context, conn *sesv2.Client, input *sesv2.GetCo
 	return output, nil
 }
 
-func expandTopics(tfList []interface{}) []types.Topic {
+func expandTopics(tfList []any) []types.Topic {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -244,7 +244,7 @@ func expandTopics(tfList []interface{}) []types.Topic {
 	var apiObjects []types.Topic
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -262,7 +262,7 @@ func expandTopics(tfList []interface{}) []types.Topic {
 	return apiObjects
 }
 
-func expandTopic(tfMap map[string]interface{}) *types.Topic {
+func expandTopic(tfMap map[string]any) *types.Topic {
 	if tfMap == nil {
 		return nil
 	}
@@ -288,12 +288,12 @@ func expandTopic(tfMap map[string]interface{}) *types.Topic {
 	return apiObject
 }
 
-func flattenTopics(apiObjects []types.Topic) []interface{} {
+func flattenTopics(apiObjects []types.Topic) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenTopic(&apiObject))
@@ -302,12 +302,12 @@ func flattenTopics(apiObjects []types.Topic) []interface{} {
 	return tfList
 }
 
-func flattenTopic(apiObject *types.Topic) map[string]interface{} {
+func flattenTopic(apiObject *types.Topic) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"default_subscription_status": string(apiObject.DefaultSubscriptionStatus),
 	}
 

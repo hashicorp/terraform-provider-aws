@@ -33,7 +33,7 @@ class MyConvertedCode(TerraformStack):
             name="example-bucket"
         )
         aws_s3_tables_namespace_example = S3TablesNamespace(self, "example_1",
-            namespace="example-namespace",
+            namespace="example_namespace",
             table_bucket_arn=example.arn
         )
         # This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.
@@ -82,4 +82,4 @@ Using `terraform import`, import S3 Tables Namespace using the `table_bucket_arn
 % terraform import aws_s3tables_namespace.example 'arn:aws:s3tables:us-west-2:123456789012:bucket/example-bucket;example-namespace'
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-23fbca81594192465f6491ea4ab2110f75a60e3dac8626c1df32b18174d62609 -->
+<!-- cache-key: cdktf-0.20.8 input-8424ddd7d2c77e387a37808b8771add1c1aa5487452321926c21af3047936fc3 -->

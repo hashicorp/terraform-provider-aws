@@ -8,7 +8,6 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/route53"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -53,7 +52,7 @@ func resourceQueryLog() *schema.Resource {
 	}
 }
 
-func resourceQueryLogCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceQueryLogCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
@@ -73,7 +72,7 @@ func resourceQueryLogCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceQueryLogRead(ctx, d, meta)...)
 }
 
-func resourceQueryLogRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceQueryLogRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
@@ -89,19 +88,14 @@ func resourceQueryLogRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "reading Route53 Query Logging Config (%s): %s", d.Id(), err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   "route53",
-		Resource:  "queryloggingconfig/" + d.Id(),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, queryLogARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	d.Set(names.AttrCloudWatchLogGroupARN, output.CloudWatchLogsLogGroupArn)
 	d.Set("zone_id", output.HostedZoneId)
 
 	return diags
 }
 
-func resourceQueryLogDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceQueryLogDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
@@ -144,4 +138,9 @@ func findQueryLoggingConfigByID(ctx context.Context, conn *route53.Client, id st
 	}
 
 	return output.QueryLoggingConfig, nil
+}
+
+// See https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazonroute53.html#amazonroute53-resources-for-iam-policies.
+func queryLogARN(ctx context.Context, c *conns.AWSClient, id string) string {
+	return c.GlobalARNNoAccount(ctx, "route53", "queryloggingconfig/"+id)
 }

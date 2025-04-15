@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 )
 
-func validClusterIdentifier(v interface{}, k string) (ws []string, errors []error) {
+func validClusterIdentifier(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if !regexache.MustCompile(`^[0-9a-z-]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
@@ -31,7 +31,7 @@ func validClusterIdentifier(v interface{}, k string) (ws []string, errors []erro
 	return
 }
 
-func validClusterSnapshotIdentifier(v interface{}, k string) (ws []string, errors []error) {
+func validClusterSnapshotIdentifier(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if !regexache.MustCompile(`^[0-9a-z-]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
@@ -52,7 +52,7 @@ func validClusterSnapshotIdentifier(v interface{}, k string) (ws []string, error
 	return
 }
 
-func validIdentifier(v interface{}, k string) (ws []string, errors []error) {
+func validIdentifier(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if !regexache.MustCompile(`^[0-9a-z-]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
@@ -77,7 +77,7 @@ func validIdentifier(v interface{}, k string) (ws []string, errors []error) {
 	return
 }
 
-func validIdentifierPrefix(v interface{}, k string) (ws []string, errors []error) {
+func validIdentifierPrefix(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if !regexache.MustCompile(`^[0-9a-z-]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
@@ -94,7 +94,7 @@ func validIdentifierPrefix(v interface{}, k string) (ws []string, errors []error
 	return
 }
 
-func validParamGroupName(v interface{}, k string) (ws []string, errors []error) {
+func validParamGroupName(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if !regexache.MustCompile(`^[0-9a-z-]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
@@ -119,7 +119,7 @@ func validParamGroupName(v interface{}, k string) (ws []string, errors []error) 
 	return
 }
 
-func validGlobalCusterIdentifier(v interface{}, k string) (ws []string, errors []error) {
+func validGlobalCusterIdentifier(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if !regexache.MustCompile(`^[0-9A-Za-z-]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
@@ -140,7 +140,7 @@ func validGlobalCusterIdentifier(v interface{}, k string) (ws []string, errors [
 	return
 }
 
-func validParamGroupNamePrefix(v interface{}, k string) (ws []string, errors []error) {
+func validParamGroupNamePrefix(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if !regexache.MustCompile(`^[0-9a-z-]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
@@ -161,7 +161,7 @@ func validParamGroupNamePrefix(v interface{}, k string) (ws []string, errors []e
 	return
 }
 
-func validSubnetGroupName(v interface{}, k string) (ws []string, errors []error) {
+func validSubnetGroupName(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if !regexache.MustCompile(`^[0-9a-z_ .-]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
@@ -178,7 +178,7 @@ func validSubnetGroupName(v interface{}, k string) (ws []string, errors []error)
 	return
 }
 
-func validSubnetGroupNamePrefix(v interface{}, k string) (ws []string, errors []error) {
+func validSubnetGroupNamePrefix(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if !regexache.MustCompile(`^[0-9a-z_ .-]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(

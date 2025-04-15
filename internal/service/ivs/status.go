@@ -19,7 +19,7 @@ const (
 )
 
 func statusPlaybackKeyPair(ctx context.Context, conn *ivs.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := FindPlaybackKeyPairByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -34,7 +34,7 @@ func statusPlaybackKeyPair(ctx context.Context, conn *ivs.Client, id string) ret
 }
 
 func statusRecordingConfiguration(ctx context.Context, conn *ivs.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := FindRecordingConfigurationByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -49,7 +49,7 @@ func statusRecordingConfiguration(ctx context.Context, conn *ivs.Client, id stri
 }
 
 func statusChannel(ctx context.Context, conn *ivs.Client, arn string, updateDetails *ivs.UpdateChannelInput) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := FindChannelByID(ctx, conn, arn)
 		if tfresource.NotFound(err) {
 			return nil, "", nil

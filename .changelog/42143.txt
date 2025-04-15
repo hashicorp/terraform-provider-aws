@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_sagemaker_image_version: Add `horovod`, `job_type`, `ml_framework`, `processor`, `programming_lang`, `release_notes`, and `vendor_guidance` arguments
+```

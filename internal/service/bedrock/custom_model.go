@@ -282,7 +282,7 @@ func (r *customModelResource) Create(ctx context.Context, request resource.Creat
 	input.CustomModelTags = getTagsIn(ctx)
 	input.JobTags = getTagsIn(ctx)
 
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (any, error) {
 		return conn.CreateModelCustomizationJob(ctx, input)
 	}, errCodeValidationException, "Could not assume provided IAM role")
 
@@ -540,7 +540,7 @@ func findModelCustomizationJob(ctx context.Context, conn *bedrock.Client, input 
 }
 
 func statusModelCustomizationJob(ctx context.Context, conn *bedrock.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		input := &bedrock.GetModelCustomizationJobInput{
 			JobIdentifier: aws.String(id),
 		}

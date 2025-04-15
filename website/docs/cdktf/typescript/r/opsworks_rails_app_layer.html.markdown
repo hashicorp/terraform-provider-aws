@@ -12,6 +12,8 @@ description: |-
 
 Provides an OpsWorks Ruby on Rails application layer resource.
 
+!> **ALERT:** AWS no longer supports OpsWorks Stacks. All related resources will be removed from the Terraform AWS Provider in the next major version.
+
 ## Example Usage
 
 ```typescript
@@ -88,4 +90,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - The Amazon Resource Name(ARN) of the layer.
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
-<!-- cache-key: cdktf-0.20.8 input-0f3775b22189f8a94dca97cbbedc1243db234478a6e520629d72fc3e43b825a7 -->
+<!-- cache-key: cdktf-0.20.8 input-2b8ca2c922adef654bad165253b24ad7a6840f806ba93c91e3be54e922e9aaee -->

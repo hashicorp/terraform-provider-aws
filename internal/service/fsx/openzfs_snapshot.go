@@ -73,7 +73,7 @@ func resourceOpenZFSSnapshot() *schema.Resource {
 	}
 }
 
-func resourceOpenZFSSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOpenZFSSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
@@ -99,7 +99,7 @@ func resourceOpenZFSSnapshotCreate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceOpenZFSSnapshotRead(ctx, d, meta)...)
 }
 
-func resourceOpenZFSSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOpenZFSSnapshotRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
@@ -126,7 +126,7 @@ func resourceOpenZFSSnapshotRead(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func resourceOpenZFSSnapshotUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOpenZFSSnapshotUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
@@ -154,7 +154,7 @@ func resourceOpenZFSSnapshotUpdate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceOpenZFSSnapshotRead(ctx, d, meta)...)
 }
 
-func resourceOpenZFSSnapshotDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOpenZFSSnapshotDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
@@ -225,7 +225,7 @@ func findSnapshots(ctx context.Context, conn *fsx.Client, input *fsx.DescribeSna
 }
 
 func statusSnapshot(ctx context.Context, conn *fsx.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findSnapshotByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

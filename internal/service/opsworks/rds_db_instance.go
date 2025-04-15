@@ -22,6 +22,7 @@ import (
 // @SDKResource("aws_opsworks_rds_db_instance", name="RDS DB Instance")
 func resourceRDSDBInstance() *schema.Resource {
 	return &schema.Resource{
+		DeprecationMessage:   "This resource is deprecated and will be removed in the next major version of the AWS Provider. Consider the AWS Systems Manager service instead.",
 		CreateWithoutTimeout: resourceRDSDBInstanceCreate,
 		UpdateWithoutTimeout: resourceRDSDBInstanceUpdate,
 		DeleteWithoutTimeout: resourceRDSDBInstanceDelete,
@@ -51,7 +52,7 @@ func resourceRDSDBInstance() *schema.Resource {
 	}
 }
 
-func resourceRDSDBInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRDSDBInstanceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	client := meta.(*conns.AWSClient).OpsWorksClient(ctx)
 
@@ -76,7 +77,7 @@ func resourceRDSDBInstanceCreate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceRDSDBInstanceRead(ctx, d, meta)...)
 }
 
-func resourceRDSDBInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRDSDBInstanceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpsWorksClient(ctx)
 
@@ -99,7 +100,7 @@ func resourceRDSDBInstanceRead(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func resourceRDSDBInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRDSDBInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	client := meta.(*conns.AWSClient).OpsWorksClient(ctx)
 
@@ -124,7 +125,7 @@ func resourceRDSDBInstanceUpdate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceRDSDBInstanceRead(ctx, d, meta)...)
 }
 
-func resourceRDSDBInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRDSDBInstanceDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	client := meta.(*conns.AWSClient).OpsWorksClient(ctx)
 

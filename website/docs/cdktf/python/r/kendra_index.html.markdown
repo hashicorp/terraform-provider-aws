@@ -616,7 +616,7 @@ This resource supports the following arguments:
 * `capacity_units` - (Optional) A block that sets the number of additional document storage and query capacity units that should be used by the index. [Detailed below](#capacity_units).
 * `description` - (Optional) The description of the Index.
 * `document_metadata_configuration_updates` - (Optional) One or more blocks that specify the configuration settings for any metadata applied to the documents in the index. Minimum number of 0 items. Maximum number of 500 items. If specified, you must define all elements, including those that are provided by default. These index fields are documented at [Amazon Kendra Index documentation](https://docs.aws.amazon.com/kendra/latest/dg/hiw-index.html). For an example resource that defines these default index fields, refer to the [default example above](#specifying-the-predefined-elements). For an example resource that appends additional index fields, refer to the [append example above](#appending-additional-elements). All arguments for each block must be specified. Note that blocks cannot be removed since index fields cannot be deleted. This argument is [detailed below](#document_metadata_configuration_updates).
-* `edition` - (Optional) The Amazon Kendra edition to use for the index. Choose `DEVELOPER_EDITION` for indexes intended for development, testing, or proof of concept. Use `ENTERPRISE_EDITION` for your production databases. Once you set the edition for an index, it can't be changed. Defaults to `ENTERPRISE_EDITION`
+* `edition` - (Optional) The Amazon Kendra edition to use for the index. Choose `DEVELOPER_EDITION` for indexes intended for development, testing, or proof of concept. Use `ENTERPRISE_EDITION` for your production databases. Use `GEN_AI_ENTERPRISE_EDITION` for creating generative AI applications. Once you set the edition for an index, it can't be changed. Defaults to `ENTERPRISE_EDITION`.
 * `name` - (Required) Specifies the name of the Index.
 * `role_arn` - (Required) An AWS Identity and Access Management (IAM) role that gives Amazon Kendra permissions to access your Amazon CloudWatch logs and metrics. This is also the role you use when you call the `BatchPutDocument` API to index documents from an Amazon S3 bucket.
 * `server_side_encryption_configuration` - (Optional) A block that specifies the identifier of the AWS KMS customer managed key (CMK) that's used to encrypt data indexed by Amazon Kendra. Amazon Kendra doesn't support asymmetric CMKs. [Detailed below](#server_side_encryption_configuration).
@@ -765,4 +765,4 @@ Using `terraform import`, import Amazon Kendra Indexes using its `id`. For examp
 % terraform import aws_kendra_index.example 12345678-1234-5678-9123-123456789123
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-00f20f85239aecb494058ad449f9a2170d10a5017c988607e2f0d4556b31b4f2 -->
+<!-- cache-key: cdktf-0.20.8 input-6cc698419e860f9ea07f4071ddb08285b934ea5d155e90fd45036dc562040080 -->

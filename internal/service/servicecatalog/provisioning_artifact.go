@@ -116,11 +116,11 @@ func resourceProvisioningArtifact() *schema.Resource {
 	}
 }
 
-func resourceProvisioningArtifactCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProvisioningArtifactCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
-	parameters := make(map[string]interface{})
+	parameters := make(map[string]any)
 	parameters[names.AttrDescription] = d.Get(names.AttrDescription)
 	parameters["disable_template_validation"] = d.Get("disable_template_validation")
 	parameters[names.AttrName] = d.Get(names.AttrName)
@@ -175,7 +175,7 @@ func resourceProvisioningArtifactCreate(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourceProvisioningArtifactUpdate(ctx, d, meta)...)
 }
 
-func resourceProvisioningArtifactRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProvisioningArtifactRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
@@ -225,7 +225,7 @@ func resourceProvisioningArtifactRead(ctx context.Context, d *schema.ResourceDat
 	return diags
 }
 
-func resourceProvisioningArtifactUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProvisioningArtifactUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
@@ -284,7 +284,7 @@ func resourceProvisioningArtifactUpdate(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourceProvisioningArtifactRead(ctx, d, meta)...)
 }
 
-func resourceProvisioningArtifactDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProvisioningArtifactDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 

@@ -9,30 +9,30 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func expandProtocol(l []interface{}) *awstypes.FsxProtocol {
+func expandProtocol(l []any) *awstypes.FsxProtocol {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 	protocol := &awstypes.FsxProtocol{}
 
-	if v, ok := m["nfs"].([]interface{}); ok {
+	if v, ok := m["nfs"].([]any); ok {
 		protocol.NFS = expandNFS(v)
 	}
-	if v, ok := m["smb"].([]interface{}); ok {
+	if v, ok := m["smb"].([]any); ok {
 		protocol.SMB = expandSMB(v)
 	}
 
 	return protocol
 }
 
-func flattenProtocol(protocol *awstypes.FsxProtocol) []interface{} {
+func flattenProtocol(protocol *awstypes.FsxProtocol) []any {
 	if protocol == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if protocol.NFS != nil {
 		m["nfs"] = flattenNFS(protocol.NFS)
@@ -41,32 +41,32 @@ func flattenProtocol(protocol *awstypes.FsxProtocol) []interface{} {
 		m["smb"] = flattenSMB(protocol.SMB)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func expandNFS(l []interface{}) *awstypes.FsxProtocolNfs {
+func expandNFS(l []any) *awstypes.FsxProtocolNfs {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	protocol := &awstypes.FsxProtocolNfs{
-		MountOptions: expandNFSMountOptions(m["mount_options"].([]interface{})),
+		MountOptions: expandNFSMountOptions(m["mount_options"].([]any)),
 	}
 
 	return protocol
 }
 
-func expandSMB(l []interface{}) *awstypes.FsxProtocolSmb {
+func expandSMB(l []any) *awstypes.FsxProtocolSmb {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	protocol := &awstypes.FsxProtocolSmb{
-		MountOptions: expandSMBMountOptions(m["mount_options"].([]interface{})),
+		MountOptions: expandSMBMountOptions(m["mount_options"].([]any)),
 	}
 	if v, ok := m[names.AttrDomain].(string); ok && v != "" {
 		protocol.Domain = aws.String(v)
@@ -82,24 +82,24 @@ func expandSMB(l []interface{}) *awstypes.FsxProtocolSmb {
 }
 
 // todo: go another level down?
-func flattenNFS(nfs *awstypes.FsxProtocolNfs) []interface{} {
+func flattenNFS(nfs *awstypes.FsxProtocolNfs) []any {
 	if nfs == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"mount_options": flattenNFSMountOptions(nfs.MountOptions),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenSMB(smb *awstypes.FsxProtocolSmb) []interface{} {
+func flattenSMB(smb *awstypes.FsxProtocolSmb) []any {
 	if smb == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"mount_options": flattenSMBMountOptions(smb.MountOptions),
 	}
 	if v := smb.Domain; v != nil {
@@ -112,5 +112,5 @@ func flattenSMB(smb *awstypes.FsxProtocolSmb) []interface{} {
 		m["user"] = aws.ToString(v)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }

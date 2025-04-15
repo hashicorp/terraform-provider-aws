@@ -102,7 +102,7 @@ func resourceClusterParameterGroup() *schema.Resource {
 	}
 }
 
-func resourceClusterParameterGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterParameterGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -128,7 +128,7 @@ func resourceClusterParameterGroupCreate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceClusterParameterGroupUpdate(ctx, d, meta)...)
 }
 
-func resourceClusterParameterGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterParameterGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -194,7 +194,7 @@ func resourceClusterParameterGroupRead(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func resourceClusterParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	const (
 		maxParamModifyChunk = 20
 	)
@@ -243,7 +243,7 @@ func resourceClusterParameterGroupUpdate(ctx context.Context, d *schema.Resource
 			const (
 				timeout = 3 * time.Minute
 			)
-			_, err := tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidDBParameterGroupStateFault](ctx, timeout, func() (interface{}, error) {
+			_, err := tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidDBParameterGroupStateFault](ctx, timeout, func() (any, error) {
 				return conn.ResetDBClusterParameterGroup(ctx, input)
 			}, "has pending changes")
 
@@ -256,7 +256,7 @@ func resourceClusterParameterGroupUpdate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceClusterParameterGroupRead(ctx, d, meta)...)
 }
 
-func resourceClusterParameterGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterParameterGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -264,7 +264,7 @@ func resourceClusterParameterGroupDelete(ctx context.Context, d *schema.Resource
 	const (
 		timeout = 3 * time.Minute
 	)
-	_, err := tfresource.RetryWhenIsA[*types.InvalidDBParameterGroupStateFault](ctx, timeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsA[*types.InvalidDBParameterGroupStateFault](ctx, timeout, func() (any, error) {
 		return conn.DeleteDBClusterParameterGroup(ctx, &rds.DeleteDBClusterParameterGroupInput{
 			DBClusterParameterGroupName: aws.String(d.Id()),
 		})

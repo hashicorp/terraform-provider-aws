@@ -362,7 +362,7 @@ func (r *securityGroupRuleResource) Delete(ctx context.Context, request resource
 		return
 	}
 
-	tflog.Debug(ctx, "deleting VPC Security Group Rule", map[string]interface{}{
+	tflog.Debug(ctx, "deleting VPC Security Group Rule", map[string]any{
 		names.AttrID: data.ID.ValueString(),
 	})
 	err := r.securityGroupRule.delete(ctx, &data)

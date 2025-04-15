@@ -63,9 +63,9 @@ func resourceInvocationConfigV0() *schema.Resource {
 // reasonably go back and patch the schemas for all versions in between,
 // we instead handle both pre-v5.1.0 and v5.1.0-v5.83.0 versions of the
 // previous state.
-func invocationStateUpgradeV0(ctx context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+func invocationStateUpgradeV0(ctx context.Context, rawState map[string]any, meta any) (map[string]any, error) {
 	if rawState == nil {
-		rawState = map[string]interface{}{}
+		rawState = map[string]any{}
 	}
 
 	// If upgrading from a version < v5.1.0, these values will be unset and

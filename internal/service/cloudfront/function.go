@@ -87,7 +87,7 @@ func resourceFunction() *schema.Resource {
 	}
 }
 
-func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
@@ -129,7 +129,7 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceFunctionRead(ctx, d, meta)...)
 }
 
-func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
@@ -180,7 +180,7 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 	etag := d.Get("etag").(string)
@@ -225,7 +225,7 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceFunctionRead(ctx, d, meta)...)
 }
 
-func resourceFunctionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFunctionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
@@ -273,12 +273,12 @@ func findFunctionByTwoPartKey(ctx context.Context, conn *cloudfront.Client, name
 	return output, nil
 }
 
-func expandKeyValueStoreAssociations(tfList []interface{}) *awstypes.KeyValueStoreAssociations {
+func expandKeyValueStoreAssociations(tfList []any) *awstypes.KeyValueStoreAssociations {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	items := tfslices.ApplyToAll(tfList, func(v interface{}) awstypes.KeyValueStoreAssociation {
+	items := tfslices.ApplyToAll(tfList, func(v any) awstypes.KeyValueStoreAssociation {
 		return awstypes.KeyValueStoreAssociation{
 			KeyValueStoreARN: aws.String(v.(string)),
 		}

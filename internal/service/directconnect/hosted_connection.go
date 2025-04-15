@@ -105,7 +105,7 @@ func resourceHostedConnection() *schema.Resource {
 	}
 }
 
-func resourceHostedConnectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHostedConnectionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
@@ -129,7 +129,7 @@ func resourceHostedConnectionCreate(ctx context.Context, d *schema.ResourceData,
 	return append(diags, resourceHostedConnectionRead(ctx, d, meta)...)
 }
 
-func resourceHostedConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHostedConnectionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
@@ -165,7 +165,7 @@ func resourceHostedConnectionRead(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func resourceHostedConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHostedConnectionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
@@ -228,7 +228,7 @@ func findHostedConnections(ctx context.Context, conn *directconnect.Client, inpu
 }
 
 func statusHostedConnection(ctx context.Context, conn *directconnect.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findHostedConnectionByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

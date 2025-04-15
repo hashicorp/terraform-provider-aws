@@ -38,7 +38,7 @@ func resourceEBSSnapshotBlockPublicAccess() *schema.Resource {
 	}
 }
 
-func resourceEBSSnapshotBlockPublicAccessPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEBSSnapshotBlockPublicAccessPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -60,7 +60,7 @@ func resourceEBSSnapshotBlockPublicAccessPut(ctx context.Context, d *schema.Reso
 	return append(diags, resourceEBSSnapshotBlockPublicAccessRead(ctx, d, meta)...)
 }
 
-func resourceEBSSnapshotBlockPublicAccessRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEBSSnapshotBlockPublicAccessRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -76,7 +76,7 @@ func resourceEBSSnapshotBlockPublicAccessRead(ctx context.Context, d *schema.Res
 	return diags
 }
 
-func resourceEBSSnapshotBlockPublicAccessDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEBSSnapshotBlockPublicAccessDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 

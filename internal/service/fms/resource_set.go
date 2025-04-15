@@ -339,7 +339,7 @@ func waitResourceSetDeleted(ctx context.Context, conn *fms.Client, id string, ti
 }
 
 func statusResourceSet(ctx context.Context, conn *fms.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := findResourceSetByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil

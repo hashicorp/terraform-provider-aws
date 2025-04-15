@@ -66,7 +66,7 @@ func resourceAccountPolicy() *schema.Resource {
 	}
 }
 
-func resourceAccountPolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccountPolicyPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
@@ -98,7 +98,7 @@ func resourceAccountPolicyPut(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceAccountPolicyRead(ctx, d, meta)...)
 }
 
-func resourceAccountPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccountPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
@@ -133,7 +133,7 @@ func resourceAccountPolicyRead(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func resourceAccountPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccountPolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
@@ -154,7 +154,7 @@ func resourceAccountPolicyDelete(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func resourceAccountPolicyImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceAccountPolicyImport(d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), ":")
 	if len(parts) != 2 {
 		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: '<policy-name>:<policy-type>'", d.Id())

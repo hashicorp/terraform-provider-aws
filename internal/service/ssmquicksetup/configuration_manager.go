@@ -363,7 +363,7 @@ func waitConfigurationManagerDeleted(ctx context.Context, conn *ssmquicksetup.Cl
 }
 
 func statusConfigurationManager(ctx context.Context, conn *ssmquicksetup.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := findConfigurationManagerByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil

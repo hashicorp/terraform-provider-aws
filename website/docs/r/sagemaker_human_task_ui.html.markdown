@@ -1,14 +1,14 @@
 ---
-subcategory: "SageMaker"
+subcategory: "SageMaker AI"
 layout: "aws"
 page_title: "AWS: aws_sagemaker_human_task_ui"
 description: |-
-  Provides a SageMaker Human Task UI resource.
+  Provides a SageMaker AI Human Task UI resource.
 ---
 
 # Resource: aws_sagemaker_human_task_ui
 
-Provides a SageMaker Human Task UI resource.
+Provides a SageMaker AI Human Task UI resource.
 
 ## Example Usage
 
@@ -50,7 +50,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker Human Task UIs using the `human_task_ui_name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker AI Human Task UIs using the `human_task_ui_name`. For example:
 
 ```terraform
 import {
@@ -59,7 +59,7 @@ import {
 }
 ```
 
-Using `terraform import`, import SageMaker Human Task UIs using the `human_task_ui_name`. For example:
+Using `terraform import`, import SageMaker AI Human Task UIs using the `human_task_ui_name`. For example:
 
 ```console
 % terraform import aws_sagemaker_human_task_ui.example example

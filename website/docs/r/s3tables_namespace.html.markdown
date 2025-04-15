@@ -16,7 +16,7 @@ Terraform resource for managing an Amazon S3 Tables Namespace.
 
 ```terraform
 resource "aws_s3tables_namespace" "example" {
-  namespace        = "example-namespace"
+  namespace        = "example_namespace"
   table_bucket_arn = aws_s3tables_table_bucket.example.arn
 }
 

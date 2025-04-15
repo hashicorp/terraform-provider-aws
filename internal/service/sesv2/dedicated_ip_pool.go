@@ -64,7 +64,7 @@ const (
 	resNameDedicatedIPPool = "Dedicated IP Pool"
 )
 
-func resourceDedicatedIPPoolCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDedicatedIPPoolCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
@@ -88,7 +88,7 @@ func resourceDedicatedIPPoolCreate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceDedicatedIPPoolRead(ctx, d, meta)...)
 }
 
-func resourceDedicatedIPPoolRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDedicatedIPPoolRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
@@ -112,12 +112,12 @@ func resourceDedicatedIPPoolRead(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func resourceDedicatedIPPoolUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDedicatedIPPoolUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	// Tags only.
 	return resourceDedicatedIPPoolRead(ctx, d, meta)
 }
 
-func resourceDedicatedIPPoolDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDedicatedIPPoolDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 

@@ -59,7 +59,7 @@ var fieldSortSchema = sync.OnceValue(func() *schema.Schema {
 	}
 })
 
-func expandFieldSortOptionsList(tfList []interface{}) []awstypes.FieldSortOptions {
+func expandFieldSortOptionsList(tfList []any) []awstypes.FieldSortOptions {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -67,7 +67,7 @@ func expandFieldSortOptionsList(tfList []interface{}) []awstypes.FieldSortOption
 	var apiObjects []awstypes.FieldSortOptions
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -83,29 +83,29 @@ func expandFieldSortOptionsList(tfList []interface{}) []awstypes.FieldSortOption
 	return apiObjects
 }
 
-func expandFieldSortOptions(tfMap map[string]interface{}) *awstypes.FieldSortOptions {
+func expandFieldSortOptions(tfMap map[string]any) *awstypes.FieldSortOptions {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.FieldSortOptions{}
 
-	if v, ok := tfMap["column_sort"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["column_sort"].([]any); ok && len(v) > 0 {
 		apiObject.ColumnSort = expandColumnSort(v)
 	}
-	if v, ok := tfMap["field_sort"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["field_sort"].([]any); ok && len(v) > 0 {
 		apiObject.FieldSort = expandFieldSort(v)
 	}
 
 	return apiObject
 }
 
-func expandColumnSort(tfList []interface{}) *awstypes.ColumnSort {
+func expandColumnSort(tfList []any) *awstypes.ColumnSort {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -115,22 +115,22 @@ func expandColumnSort(tfList []interface{}) *awstypes.ColumnSort {
 	if v, ok := tfMap["direction"].(string); ok && v != "" {
 		apiObject.Direction = awstypes.SortDirection(v)
 	}
-	if v, ok := tfMap["sort_by"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["sort_by"].([]any); ok && len(v) > 0 {
 		apiObject.SortBy = expandColumnIdentifier(v)
 	}
-	if v, ok := tfMap["aggregation_function"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["aggregation_function"].([]any); ok && len(v) > 0 {
 		apiObject.AggregationFunction = expandAggregationFunction(v)
 	}
 
 	return apiObject
 }
 
-func expandFieldSort(tfList []interface{}) *awstypes.FieldSort {
+func expandFieldSort(tfList []any) *awstypes.FieldSort {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}

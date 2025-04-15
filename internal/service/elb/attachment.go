@@ -44,21 +44,21 @@ func resourceAttachment() *schema.Resource {
 	}
 }
 
-func resourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBClient(ctx)
 
 	lbName := d.Get("elb").(string)
 	instance := d.Get("instance").(string)
 	input := &elasticloadbalancing.RegisterInstancesWithLoadBalancerInput{
-		Instances:        expandInstances([]interface{}{instance}),
+		Instances:        expandInstances([]any{instance}),
 		LoadBalancerName: aws.String(lbName),
 	}
 
 	const (
 		timeout = 10 * time.Minute
 	)
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout, func() (any, error) {
 		return conn.RegisterInstancesWithLoadBalancer(ctx, input)
 	}, errCodeInvalidTarget)
 
@@ -72,7 +72,7 @@ func resourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func resourceAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAttachmentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBClient(ctx)
 
@@ -93,14 +93,14 @@ func resourceAttachmentRead(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourceAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBClient(ctx)
 
 	lbName := d.Get("elb").(string)
 	instance := d.Get("instance").(string)
 	input := &elasticloadbalancing.DeregisterInstancesFromLoadBalancerInput{
-		Instances:        expandInstances([]interface{}{instance}),
+		Instances:        expandInstances([]any{instance}),
 		LoadBalancerName: aws.String(lbName),
 	}
 

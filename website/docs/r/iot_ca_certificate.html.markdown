@@ -70,11 +70,11 @@ data "aws_iot_registration_code" "example" {}
 * `active` - (Required)  Boolean flag to indicate if the certificate should be active for device authentication.
 * `allow_auto_registration` - (Required)  Boolean flag to indicate if the certificate should be active for device regisration.
 * `ca_certificate_pem` - (Required)  PEM encoded CA certificate.
-* `certificate_mode` - (Optional)  The certificate mode in which the CA will be registered. Valida values: `DEFAULT` and `SNI_ONLY`. Default: `DEFAULT`.
+* `certificate_mode` - (Optional)  The certificate mode in which the CA will be registered. Valid values: `DEFAULT` and `SNI_ONLY`. Default: `DEFAULT`.
 * `registration_config` - (Optional) Information about the registration configuration. See below.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `verification_certificate_pem` - (Optional) PEM encoded verification certificate containing the common name of a registration code. Review
-  [CreateVerificationCSR](https://docs.aws.amazon.com/iot/latest/developerguide/register-CA-cert.html). Reuired if `certificate_mode` is `DEFAULT`.
+  [CreateVerificationCSR](https://docs.aws.amazon.com/iot/latest/developerguide/register-CA-cert.html). Required if `certificate_mode` is `DEFAULT`.
 
 ### registration_config
 

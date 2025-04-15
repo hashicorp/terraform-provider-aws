@@ -191,7 +191,7 @@ func dataSourceCluster() *schema.Resource {
 	}
 }
 
-func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -237,7 +237,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	}))
 	d.Set(names.AttrKMSKeyID, dbc.KmsKeyId)
 	if dbc.MasterUserSecret != nil {
-		if err := d.Set("master_user_secret", []interface{}{flattenManagedMasterUserSecret(dbc.MasterUserSecret)}); err != nil {
+		if err := d.Set("master_user_secret", []any{flattenManagedMasterUserSecret(dbc.MasterUserSecret)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting master_user_secret: %s", err)
 		}
 	}

@@ -197,7 +197,7 @@ func resourceWorkforce() *schema.Resource {
 	}
 }
 
-func resourceWorkforceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWorkforceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -207,50 +207,50 @@ func resourceWorkforceCreate(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	if v, ok := d.GetOk("cognito_config"); ok {
-		input.CognitoConfig = expandWorkforceCognitoConfig(v.([]interface{}))
+		input.CognitoConfig = expandWorkforceCognitoConfig(v.([]any))
 	}
 
 	if v, ok := d.GetOk("oidc_config"); ok {
-		input.OidcConfig = expandWorkforceOIDCConfig(v.([]interface{}))
+		input.OidcConfig = expandWorkforceOIDCConfig(v.([]any))
 	}
 
 	if v, ok := d.GetOk("source_ip_config"); ok {
-		input.SourceIpConfig = expandWorkforceSourceIPConfig(v.([]interface{}))
+		input.SourceIpConfig = expandWorkforceSourceIPConfig(v.([]any))
 	}
 
 	if v, ok := d.GetOk("workforce_vpc_config"); ok {
-		input.WorkforceVpcConfig = expandWorkforceVPCConfig(v.([]interface{}))
+		input.WorkforceVpcConfig = expandWorkforceVPCConfig(v.([]any))
 	}
 
 	_, err := conn.CreateWorkforce(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker Workforce (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Workforce (%s): %s", name, err)
 	}
 
 	d.SetId(name)
 
 	if err := waitWorkforceActive(ctx, conn, name); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Workforce (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Workforce (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceWorkforceRead(ctx, d, meta)...)
 }
 
-func resourceWorkforceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWorkforceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
 	workforce, err := findWorkforceByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] SageMaker Workforce (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] SageMaker AI Workforce (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SageMaker Workforce (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI Workforce (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrARN, workforce.WorkforceArn)
@@ -278,7 +278,7 @@ func resourceWorkforceRead(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func resourceWorkforceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWorkforceUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -287,35 +287,35 @@ func resourceWorkforceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	if d.HasChange("source_ip_config") {
-		input.SourceIpConfig = expandWorkforceSourceIPConfig(d.Get("source_ip_config").([]interface{}))
+		input.SourceIpConfig = expandWorkforceSourceIPConfig(d.Get("source_ip_config").([]any))
 	}
 
 	if d.HasChange("oidc_config") {
-		input.OidcConfig = expandWorkforceOIDCConfig(d.Get("oidc_config").([]interface{}))
+		input.OidcConfig = expandWorkforceOIDCConfig(d.Get("oidc_config").([]any))
 	}
 
 	if d.HasChange("workforce_vpc_config") {
-		input.WorkforceVpcConfig = expandWorkforceVPCConfig(d.Get("workforce_vpc_config").([]interface{}))
+		input.WorkforceVpcConfig = expandWorkforceVPCConfig(d.Get("workforce_vpc_config").([]any))
 	}
 
 	_, err := conn.UpdateWorkforce(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating SageMaker Workforce (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating SageMaker AI Workforce (%s): %s", d.Id(), err)
 	}
 
 	if err := waitWorkforceActive(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Workforce (%s) update: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Workforce (%s) update: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceWorkforceRead(ctx, d, meta)...)
 }
 
-func resourceWorkforceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWorkforceDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
-	log.Printf("[DEBUG] Deleting SageMaker Workforce: %s", d.Id())
+	log.Printf("[DEBUG] Deleting SageMaker AI Workforce: %s", d.Id())
 	_, err := conn.DeleteWorkforce(ctx, &sagemaker.DeleteWorkforceInput{
 		WorkforceName: aws.String(d.Id()),
 	})
@@ -325,11 +325,11 @@ func resourceWorkforceDelete(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting SageMaker Workforce (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SageMaker AI Workforce (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitWorkforceDeleted(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Workforce (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Workforce (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
@@ -360,12 +360,12 @@ func findWorkforceByName(ctx context.Context, conn *sagemaker.Client, name strin
 	return output.Workforce, nil
 }
 
-func expandWorkforceSourceIPConfig(l []interface{}) *awstypes.SourceIpConfig {
+func expandWorkforceSourceIPConfig(l []any) *awstypes.SourceIpConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.SourceIpConfig{
 		Cidrs: flex.ExpandStringValueSet(m["cidrs"].(*schema.Set)),
@@ -374,24 +374,24 @@ func expandWorkforceSourceIPConfig(l []interface{}) *awstypes.SourceIpConfig {
 	return config
 }
 
-func flattenWorkforceSourceIPConfig(config *awstypes.SourceIpConfig) []map[string]interface{} {
+func flattenWorkforceSourceIPConfig(config *awstypes.SourceIpConfig) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"cidrs": flex.FlattenStringValueSet(config.Cidrs),
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func expandWorkforceCognitoConfig(l []interface{}) *awstypes.CognitoConfig {
+func expandWorkforceCognitoConfig(l []any) *awstypes.CognitoConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.CognitoConfig{
 		ClientId: aws.String(m[names.AttrClientID].(string)),
@@ -401,25 +401,25 @@ func expandWorkforceCognitoConfig(l []interface{}) *awstypes.CognitoConfig {
 	return config
 }
 
-func flattenWorkforceCognitoConfig(config *awstypes.CognitoConfig) []map[string]interface{} {
+func flattenWorkforceCognitoConfig(config *awstypes.CognitoConfig) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		names.AttrClientID: aws.ToString(config.ClientId),
 		"user_pool":        aws.ToString(config.UserPool),
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func expandWorkforceOIDCConfig(l []interface{}) *awstypes.OidcConfig {
+func expandWorkforceOIDCConfig(l []any) *awstypes.OidcConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.OidcConfig{
 		AuthorizationEndpoint: aws.String(m["authorization_endpoint"].(string)),
@@ -432,7 +432,7 @@ func expandWorkforceOIDCConfig(l []interface{}) *awstypes.OidcConfig {
 		UserInfoEndpoint:      aws.String(m["user_info_endpoint"].(string)),
 	}
 
-	if v, ok := m["authentication_request_extra_params"].(map[string]interface{}); ok && v != nil {
+	if v, ok := m["authentication_request_extra_params"].(map[string]any); ok && v != nil {
 		config.AuthenticationRequestExtraParams = flex.ExpandStringValueMap(v)
 	}
 
@@ -443,12 +443,12 @@ func expandWorkforceOIDCConfig(l []interface{}) *awstypes.OidcConfig {
 	return config
 }
 
-func flattenWorkforceOIDCConfig(config *awstypes.OidcConfigForResponse, clientSecret string) []map[string]interface{} {
+func flattenWorkforceOIDCConfig(config *awstypes.OidcConfigForResponse, clientSecret string) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"authentication_request_extra_params": aws.StringMap(config.AuthenticationRequestExtraParams),
 		"authorization_endpoint":              aws.ToString(config.AuthorizationEndpoint),
 		names.AttrClientID:                    aws.ToString(config.ClientId),
@@ -461,15 +461,15 @@ func flattenWorkforceOIDCConfig(config *awstypes.OidcConfigForResponse, clientSe
 		"user_info_endpoint":                  aws.ToString(config.UserInfoEndpoint),
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func expandWorkforceVPCConfig(l []interface{}) *awstypes.WorkforceVpcConfigRequest {
+func expandWorkforceVPCConfig(l []any) *awstypes.WorkforceVpcConfigRequest {
 	if len(l) == 0 || l[0] == nil {
 		return &awstypes.WorkforceVpcConfigRequest{}
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.WorkforceVpcConfigRequest{
 		SecurityGroupIds: flex.ExpandStringValueSet(m[names.AttrSecurityGroupIDs].(*schema.Set)),
@@ -480,17 +480,17 @@ func expandWorkforceVPCConfig(l []interface{}) *awstypes.WorkforceVpcConfigReque
 	return config
 }
 
-func flattenWorkforceVPCConfig(config *awstypes.WorkforceVpcConfigResponse) []map[string]interface{} {
+func flattenWorkforceVPCConfig(config *awstypes.WorkforceVpcConfigResponse) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		names.AttrSecurityGroupIDs: flex.FlattenStringValueSet(config.SecurityGroupIds),
 		names.AttrSubnets:          flex.FlattenStringValueSet(config.Subnets),
 		names.AttrVPCEndpointID:    aws.ToString(config.VpcEndpointId),
 		names.AttrVPCID:            aws.ToString(config.VpcId),
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }

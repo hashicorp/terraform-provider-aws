@@ -165,7 +165,7 @@ func (r *resourceAssetType) Create(ctx context.Context, req resource.CreateReque
 	}
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	outputRaw, err := tfresource.RetryWhenNotFound(ctx, createTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNotFound(ctx, createTimeout, func() (any, error) {
 		return findAssetTypeByID(ctx, conn, plan.DomainIdentifier.ValueString(), plan.Name.ValueString())
 	})
 	if err != nil {

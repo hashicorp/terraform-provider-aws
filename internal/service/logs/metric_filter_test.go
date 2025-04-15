@@ -244,7 +244,7 @@ func testAccCheckMetricFilterDestroy(ctx context.Context) resource.TestCheckFunc
 
 func testAccCheckMetricFilterManyExists(ctx context.Context, basename string, n int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		for i := 0; i < n; i++ {
+		for i := range n {
 			n := fmt.Sprintf("%s.%d", basename, i)
 			var v types.MetricFilter
 

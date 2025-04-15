@@ -135,7 +135,7 @@ func resourceNamespace() *schema.Resource {
 	}
 }
 
-func resourceNamespaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNamespaceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftServerlessClient(ctx)
 
@@ -202,7 +202,7 @@ func resourceNamespaceCreate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceNamespaceRead(ctx, d, meta)...)
 }
 
-func resourceNamespaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNamespaceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftServerlessClient(ctx)
 
@@ -233,7 +233,7 @@ func resourceNamespaceRead(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func resourceNamespaceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNamespaceUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftServerlessClient(ctx)
 
@@ -298,13 +298,13 @@ func resourceNamespaceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceNamespaceRead(ctx, d, meta)...)
 }
 
-func resourceNamespaceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNamespaceDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftServerlessClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Redshift Serverless Namespace: %s", d.Id())
 	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ConflictException](ctx, namespaceDeletedTimeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.DeleteNamespace(ctx, &redshiftserverless.DeleteNamespaceInput{
 				NamespaceName: aws.String(d.Id()),
 			})
@@ -358,7 +358,7 @@ func findNamespaceByName(ctx context.Context, conn *redshiftserverless.Client, n
 }
 
 func statusNamespace(ctx context.Context, conn *redshiftserverless.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findNamespaceByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {

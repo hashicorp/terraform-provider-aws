@@ -27,13 +27,13 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 			Name:     "Spot Data Feed Subscription Data Source",
 		},
 		{
-			Factory:  newVPCIPAMDataSource,
+			Factory:  newIPAMDataSource,
 			TypeName: "aws_vpc_ipam",
 			Name:     "IPAM",
 			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  newVPCIPAMsDataSource,
+			Factory:  newIPAMsDataSource,
 			TypeName: "aws_vpc_ipams",
 			Name:     "IPAMs",
 		},
@@ -92,6 +92,11 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Factory:  newEIPDomainNameResource,
 			TypeName: "aws_eip_domain_name",
 			Name:     "EIP Domain Name",
+		},
+		{
+			Factory:  newNetworkInterfacePermissionResource,
+			TypeName: "aws_network_interface_permission",
+			Name:     "Network Interface Permission",
 		},
 		{
 			Factory:  newVPCBlockPublicAccessExclusionResource,

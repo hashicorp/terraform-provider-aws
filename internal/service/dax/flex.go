@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func expandEncryptAtRestOptions(m map[string]interface{}) *awstypes.SSESpecification {
+func expandEncryptAtRestOptions(m map[string]any) *awstypes.SSESpecification {
 	options := awstypes.SSESpecification{}
 
 	if v, ok := m[names.AttrEnabled]; ok {
@@ -19,13 +19,13 @@ func expandEncryptAtRestOptions(m map[string]interface{}) *awstypes.SSESpecifica
 	return &options
 }
 
-func expandParameterGroupParameterNameValue(config []interface{}) []awstypes.ParameterNameValue {
+func expandParameterGroupParameterNameValue(config []any) []awstypes.ParameterNameValue {
 	if len(config) == 0 {
 		return nil
 	}
 	results := make([]awstypes.ParameterNameValue, 0, len(config))
 	for _, raw := range config {
-		m := raw.(map[string]interface{})
+		m := raw.(map[string]any)
 		pnv := awstypes.ParameterNameValue{
 			ParameterName:  aws.String(m[names.AttrName].(string)),
 			ParameterValue: aws.String(m[names.AttrValue].(string)),
@@ -35,27 +35,27 @@ func expandParameterGroupParameterNameValue(config []interface{}) []awstypes.Par
 	return results
 }
 
-func flattenEncryptAtRestOptions(options *awstypes.SSEDescription) []map[string]interface{} {
-	m := map[string]interface{}{
+func flattenEncryptAtRestOptions(options *awstypes.SSEDescription) []map[string]any {
+	m := map[string]any{
 		names.AttrEnabled: false,
 	}
 
 	if options == nil {
-		return []map[string]interface{}{m}
+		return []map[string]any{m}
 	}
 
 	m[names.AttrEnabled] = options.Status == awstypes.SSEStatusEnabled
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenParameterGroupParameters(params []awstypes.Parameter) []map[string]interface{} {
+func flattenParameterGroupParameters(params []awstypes.Parameter) []map[string]any {
 	if len(params) == 0 {
 		return nil
 	}
-	results := make([]map[string]interface{}, 0)
+	results := make([]map[string]any, 0)
 	for _, p := range params {
-		m := map[string]interface{}{
+		m := map[string]any{
 			names.AttrName:  aws.ToString(p.ParameterName),
 			names.AttrValue: aws.ToString(p.ParameterValue),
 		}

@@ -14,6 +14,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -1147,7 +1148,7 @@ func TestAccCognitoIDPUserPool_withPasswordPolicy(t *testing.T) {
 	})
 }
 
-func TestAccCognitoIDPUserPool_withUsername(t *testing.T) {
+func TestAccCognitoIDPUserPool_usernameConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pool awstypes.UserPoolType
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1160,12 +1161,17 @@ func TestAccCognitoIDPUserPool_withUsername(t *testing.T) {
 		CheckDestroy:             testAccCheckUserPoolDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserPoolConfig_nameConfiguration(rName),
+				Config: testAccUserPoolConfig_usernameConfiguration(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolExists(ctx, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "username_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "username_configuration.0.case_sensitive", acctest.CtTrue),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -1173,12 +1179,17 @@ func TestAccCognitoIDPUserPool_withUsername(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccUserPoolConfig_nameConfigurationUpdated(rName),
+				Config: testAccUserPoolConfig_usernameConfiguration(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolExists(ctx, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "username_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "username_configuration.0.case_sensitive", acctest.CtFalse),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
 			},
 		},
 	})
@@ -2582,28 +2593,16 @@ resource "aws_cognito_user_pool" "test" {
 `, name)
 }
 
-func testAccUserPoolConfig_nameConfiguration(name string) string {
+func testAccUserPoolConfig_usernameConfiguration(name string, caseSensitive bool) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
   name = %[1]q
 
   username_configuration {
-    case_sensitive = true
+    case_sensitive = %[2]t
   }
 }
-`, name)
-}
-
-func testAccUserPoolConfig_nameConfigurationUpdated(name string) string {
-	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "test" {
-  name = %[1]q
-
-  username_configuration {
-    case_sensitive = false
-  }
-}
-`, name)
+`, name, caseSensitive)
 }
 
 func testAccUserPoolLambdaConfig_base(name string) string {

@@ -99,7 +99,7 @@ func resourceHost() *schema.Resource {
 	}
 }
 
-func resourceHostCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHostCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -143,7 +143,7 @@ func resourceHostCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	return append(diags, resourceHostRead(ctx, d, meta)...)
 }
 
-func resourceHostRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHostRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -181,7 +181,7 @@ func resourceHostRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	return diags
 }
 
-func resourceHostUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHostUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -224,7 +224,7 @@ func resourceHostUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	return append(diags, resourceHostRead(ctx, d, meta)...)
 }
 
-func resourceHostDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHostDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 

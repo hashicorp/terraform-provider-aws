@@ -263,7 +263,7 @@ func (r *resourceApplication) Read(ctx context.Context, req resource.ReadRequest
 		)
 		return
 	}
-	setTagsOut(ctx, Tags(tags))
+	setTagsOut(ctx, svcTags(tags))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }

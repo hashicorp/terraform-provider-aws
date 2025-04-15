@@ -188,7 +188,7 @@ func dataSourceLaunchConfiguration() *schema.Resource {
 	}
 }
 
-func dataSourceLaunchConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceLaunchConfigurationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	autoscalingconn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 	ec2conn := meta.(*conns.AWSClient).EC2Client(ctx)
@@ -215,7 +215,7 @@ func dataSourceLaunchConfigurationRead(ctx context.Context, d *schema.ResourceDa
 	d.Set(names.AttrInstanceType, lc.InstanceType)
 	d.Set("key_name", lc.KeyName)
 	if lc.MetadataOptions != nil {
-		if err := d.Set("metadata_options", []interface{}{flattenInstanceMetadataOptions(lc.MetadataOptions)}); err != nil {
+		if err := d.Set("metadata_options", []any{flattenInstanceMetadataOptions(lc.MetadataOptions)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting metadata_options: %s", err)
 		}
 	} else {
@@ -233,7 +233,7 @@ func dataSourceLaunchConfigurationRead(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "reading Auto Scaling Launch Configuration (%s): %s", name, err)
 	}
 
-	tfListEBSBlockDevice, tfListEphemeralBlockDevice, tfListRootBlockDevice := flattenBlockDeviceMappings(lc.BlockDeviceMappings, rootDeviceName, map[string]map[string]interface{}{})
+	tfListEBSBlockDevice, tfListEphemeralBlockDevice, tfListRootBlockDevice := flattenBlockDeviceMappings(lc.BlockDeviceMappings, rootDeviceName, map[string]map[string]any{})
 
 	if err := d.Set("ebs_block_device", tfListEBSBlockDevice); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ebs_block_device: %s", err)

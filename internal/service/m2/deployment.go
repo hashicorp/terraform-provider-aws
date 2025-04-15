@@ -367,7 +367,7 @@ func findDeploymentByTwoPartKey(ctx context.Context, conn *m2.Client, applicatio
 }
 
 func statusDeployment(ctx context.Context, conn *m2.Client, applicationID, deploymentID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findDeploymentByTwoPartKey(ctx, conn, applicationID, deploymentID)
 
 		if tfresource.NotFound(err) {

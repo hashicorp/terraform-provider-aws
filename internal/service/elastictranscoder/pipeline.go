@@ -235,7 +235,7 @@ func ResourcePipeline() *schema.Resource {
 	}
 }
 
-func resourcePipelineCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePipelineCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticTranscoderClient(ctx)
 
@@ -286,7 +286,7 @@ func expandETNotifications(d *schema.ResourceData) *awstypes.Notifications {
 		return nil
 	}
 
-	l := list.([]interface{})
+	l := list.([]any)
 	if len(l) == 0 {
 		return nil
 	}
@@ -296,7 +296,7 @@ func expandETNotifications(d *schema.ResourceData) *awstypes.Notifications {
 		return nil
 	}
 
-	rN := l[0].(map[string]interface{})
+	rN := l[0].(map[string]any)
 
 	return &awstypes.Notifications{
 		Completed:   aws.String(rN["completed"].(string)),
@@ -306,7 +306,7 @@ func expandETNotifications(d *schema.ResourceData) *awstypes.Notifications {
 	}
 }
 
-func flattenETNotifications(n *awstypes.Notifications) []map[string]interface{} {
+func flattenETNotifications(n *awstypes.Notifications) []map[string]any {
 	if n == nil {
 		return nil
 	}
@@ -325,14 +325,14 @@ func flattenETNotifications(n *awstypes.Notifications) []map[string]interface{} 
 		return nil
 	}
 
-	result := map[string]interface{}{
+	result := map[string]any{
 		"completed":   aws.ToString(n.Completed),
 		"error":       aws.ToString(n.Error),
 		"progressing": aws.ToString(n.Progressing),
 		"warning":     aws.ToString(n.Warning),
 	}
 
-	return []map[string]interface{}{result}
+	return []map[string]any{result}
 }
 
 func expandETPiplineOutputConfig(d *schema.ResourceData, key string) *awstypes.PipelineOutputConfig {
@@ -341,12 +341,12 @@ func expandETPiplineOutputConfig(d *schema.ResourceData, key string) *awstypes.P
 		return nil
 	}
 
-	l := list.([]interface{})
+	l := list.([]any)
 	if len(l) == 0 {
 		return nil
 	}
 
-	cc := l[0].(map[string]interface{})
+	cc := l[0].(map[string]any)
 
 	cfg := &awstypes.PipelineOutputConfig{
 		Bucket:       aws.String(cc[names.AttrBucket].(string)),
@@ -363,17 +363,17 @@ func expandETPiplineOutputConfig(d *schema.ResourceData, key string) *awstypes.P
 	return cfg
 }
 
-func flattenETPipelineOutputConfig(cfg *awstypes.PipelineOutputConfig) []map[string]interface{} {
+func flattenETPipelineOutputConfig(cfg *awstypes.PipelineOutputConfig) []map[string]any {
 	if cfg == nil {
 		return nil
 	}
 
-	result := map[string]interface{}{
+	result := map[string]any{
 		names.AttrBucket:       aws.ToString(cfg.Bucket),
 		names.AttrStorageClass: aws.ToString(cfg.StorageClass),
 	}
 
-	return []map[string]interface{}{result}
+	return []map[string]any{result}
 }
 
 func expandETPermList(permissions *schema.Set) []awstypes.Permission {
@@ -384,10 +384,10 @@ func expandETPermList(permissions *schema.Set) []awstypes.Permission {
 			continue
 		}
 
-		m := p.(map[string]interface{})
+		m := p.(map[string]any)
 
 		perm := awstypes.Permission{
-			Access:      flex.ExpandStringValueList(m["access"].([]interface{})),
+			Access:      flex.ExpandStringValueList(m["access"].([]any)),
 			Grantee:     aws.String(m["grantee"].(string)),
 			GranteeType: aws.String(m["grantee_type"].(string)),
 		}
@@ -397,11 +397,11 @@ func expandETPermList(permissions *schema.Set) []awstypes.Permission {
 	return perms
 }
 
-func flattenETPermList(perms []awstypes.Permission) []map[string]interface{} {
-	var set []map[string]interface{}
+func flattenETPermList(perms []awstypes.Permission) []map[string]any {
+	var set []map[string]any
 
 	for _, p := range perms {
-		result := map[string]interface{}{
+		result := map[string]any{
 			"access":       flex.FlattenStringValueList(p.Access),
 			"grantee":      aws.ToString(p.Grantee),
 			"grantee_type": aws.ToString(p.GranteeType),
@@ -412,7 +412,7 @@ func flattenETPermList(perms []awstypes.Permission) []map[string]interface{} {
 	return set
 }
 
-func resourcePipelineUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePipelineUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticTranscoderClient(ctx)
 
@@ -462,7 +462,7 @@ func resourcePipelineUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourcePipelineRead(ctx, d, meta)...)
 }
 
-func resourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticTranscoderClient(ctx)
 
@@ -528,7 +528,7 @@ func resourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func resourcePipelineDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePipelineDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticTranscoderClient(ctx)
 

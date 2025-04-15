@@ -78,7 +78,7 @@ func resourceInstanceAutomatedBackupsReplication() *schema.Resource {
 	}
 }
 
-func resourceInstanceAutomatedBackupsReplicationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInstanceAutomatedBackupsReplicationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -111,7 +111,7 @@ func resourceInstanceAutomatedBackupsReplicationCreate(ctx context.Context, d *s
 	return append(diags, resourceInstanceAutomatedBackupsReplicationRead(ctx, d, meta)...)
 }
 
-func resourceInstanceAutomatedBackupsReplicationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInstanceAutomatedBackupsReplicationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -134,7 +134,7 @@ func resourceInstanceAutomatedBackupsReplicationRead(ctx context.Context, d *sch
 	return diags
 }
 
-func resourceInstanceAutomatedBackupsReplicationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInstanceAutomatedBackupsReplicationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -251,7 +251,7 @@ func findDBInstanceAutomatedBackups(ctx context.Context, conn *rds.Client, input
 }
 
 func statusDBInstanceAutomatedBackup(ctx context.Context, conn *rds.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findDBInstanceAutomatedBackupByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {

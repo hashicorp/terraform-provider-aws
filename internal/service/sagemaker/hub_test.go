@@ -231,7 +231,7 @@ func testAccCheckHubDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			if err != nil {
-				return fmt.Errorf("reading SageMaker Hub (%s): %w", rs.Primary.ID, err)
+				return fmt.Errorf("reading SageMaker AI Hub (%s): %w", rs.Primary.ID, err)
 			}
 
 			return fmt.Errorf("sagemaker Hub %s still exists", rs.Primary.ID)

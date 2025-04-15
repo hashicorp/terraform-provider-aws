@@ -47,7 +47,7 @@ func resourceCertificate() *schema.Resource {
 		// Expects ACM PCA ARN format, e.g:
 		// arn:aws:acm-pca:eu-west-1:555885746124:certificate-authority/08322ede-92f9-4200-8f21-c7d12b2b6edb/certificate/a4e9c2aa2ccfab625b1b9136464cd3a6
 		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 				re := regexache.MustCompile(`arn:.+:certificate-authority/[^/]+`)
 				authorityARN := re.FindString(d.Id())
 				if authorityARN == "" {
@@ -67,7 +67,7 @@ func resourceCertificate() *schema.Resource {
 				ForceNew:         true,
 				ValidateFunc:     validation.StringIsJSON,
 				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
@@ -134,7 +134,7 @@ func resourceCertificate() *schema.Resource {
 	}
 }
 
-func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	const certificateIssueTimeout = 5 * time.Minute
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ACMPCAClient(ctx)
@@ -159,13 +159,13 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 		inputI.TemplateArn = aws.String(v)
 	}
 
-	if validity, err := expandValidity(d.Get("validity").([]interface{})); err != nil {
+	if validity, err := expandValidity(d.Get("validity").([]any)); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	} else {
 		inputI.Validity = validity
 	}
 
-	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidStateException](ctx, certificateAuthorityActiveTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidStateException](ctx, certificateAuthorityActiveTimeout, func() (any, error) {
 		return conn.IssueCertificate(ctx, &inputI)
 	}, "The certificate authority is not in a valid state for issuing certificates")
 
@@ -189,7 +189,7 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceCertificateRead(ctx, d, meta)...)
 }
 
-func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ACMPCAClient(ctx)
 
@@ -213,7 +213,7 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceCertificateRevoke(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCertificateRevoke(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ACMPCAClient(ctx)
 
@@ -317,7 +317,7 @@ func getCertificateSerial(der []byte) (*big.Int, error) {
 	return serial, nil
 }
 
-func validTemplateARN(v interface{}, k string) (ws []string, errors []error) {
+func validTemplateARN(v any, k string) (ws []string, errors []error) {
 	wsARN, errorsARN := verify.ValidARN(v, k)
 	ws = append(ws, wsARN...)
 	errors = append(errors, errorsARN...)
@@ -346,12 +346,12 @@ func validTemplateARN(v interface{}, k string) (ws []string, errors []error) {
 	return ws, errors
 }
 
-func expandValidity(l []interface{}) (*types.Validity, error) {
+func expandValidity(l []any) (*types.Validity, error) {
 	if len(l) == 0 {
 		return nil, nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	valueType := m[names.AttrType].(string)
 	result := &types.Validity{

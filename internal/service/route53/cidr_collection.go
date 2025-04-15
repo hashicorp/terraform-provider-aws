@@ -83,7 +83,7 @@ func (r *cidrCollectionResource) Create(ctx context.Context, request resource.Cr
 	const (
 		timeout = 2 * time.Minute
 	)
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.ConcurrentModification](ctx, timeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.ConcurrentModification](ctx, timeout, func() (any, error) {
 		return conn.CreateCidrCollection(ctx, input)
 	})
 
@@ -141,7 +141,7 @@ func (r *cidrCollectionResource) Delete(ctx context.Context, request resource.De
 
 	conn := r.Meta().Route53Client(ctx)
 
-	tflog.Debug(ctx, "deleting Route 53 CIDR Collection", map[string]interface{}{
+	tflog.Debug(ctx, "deleting Route 53 CIDR Collection", map[string]any{
 		names.AttrID: data.ID.ValueString(),
 	})
 

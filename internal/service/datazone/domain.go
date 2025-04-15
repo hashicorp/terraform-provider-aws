@@ -170,7 +170,7 @@ func (r *resourceDomain) Create(ctx context.Context, req resource.CreateRequest,
 		in.SingleSignOn = expandSingleSignOn(tfList)
 	}
 
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeContains(ctx, CreateDomainRetryTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeContains(ctx, CreateDomainRetryTimeout, func() (any, error) {
 		return conn.CreateDomain(ctx, in)
 	}, ErrorCodeAccessDenied)
 
@@ -393,7 +393,7 @@ func waitDomainDeleted(ctx context.Context, conn *datazone.Client, id string, ti
 }
 
 func statusDomain(ctx context.Context, conn *datazone.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := findDomainByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil

@@ -53,12 +53,18 @@ This data source exports the following attributes in addition to the arguments a
     * `dedicated_master_type` - Instance type of the dedicated master nodes in the cluster.
     * `dedicated_master_count` - Number of dedicated master nodes in the cluster.
     * `multi_az_with_standby_enabled` - Whether a multi-AZ domain is turned on with a standby AZ.
-    * `zone_awareness_enabled` - Indicates whether zone awareness is enabled.
-    * `zone_awareness_config` - Configuration block containing zone awareness settings.
-        * `availability_zone_count` - Number of availability zones used.
+    * `node_options` - List of node options for the domain.
+        * `node_config` - Sizing of a node type.
+            * `count` - Number of nodes of a particular node type in the cluster.
+            * `enabled` - Whether a particular node type is enabled.
+            * `type` - The instance type of a particular node type in the cluster.
+        * `node_type` - Type of node this configuration describes.
     * `warm_enabled` - Warm storage is enabled.
     * `warm_count` - Number of warm nodes in the cluster.
     * `warm_type` - Instance type for the OpenSearch cluster's warm nodes.
+    * `zone_awareness_enabled` - Indicates whether zone awareness is enabled.
+    * `zone_awareness_config` - Configuration block containing zone awareness settings.
+        * `availability_zone_count` - Number of availability zones used.
 * `cognito_options` - Domain Amazon Cognito Authentication options for Dashboard.
     * `enabled` - Whether Amazon Cognito Authentication is enabled.
     * `user_pool_id` - Cognito User pool used by the domain.

@@ -286,7 +286,7 @@ func (r *subscriberResource) Read(ctx context.Context, request resource.ReadRequ
 	}
 
 	if tags, err := listTags(ctx, conn, data.ID.ValueString()); err == nil {
-		setTagsOut(ctx, Tags(tags))
+		setTagsOut(ctx, svcTags(tags))
 	}
 
 	response.Diagnostics.Append(data.refreshFromOutput(ctx, subscriberIdentity, output)...)
@@ -433,7 +433,7 @@ func findSubscriberByID(ctx context.Context, conn *securitylake.Client, id strin
 }
 
 func statusSubscriber(ctx context.Context, conn *securitylake.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findSubscriberByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

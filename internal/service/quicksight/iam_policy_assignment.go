@@ -163,7 +163,7 @@ func (r *iamPolicyAssignmentResource) Create(ctx context.Context, req resource.C
 	plan.AssignmentID = flex.StringToFramework(ctx, out.AssignmentId)
 
 	// wait for IAM to propagate before returning
-	_, err = tfresource.RetryWhenNotFound(ctx, iamPropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, iamPropagationTimeout, func() (any, error) {
 		return findIAMPolicyAssignmentByThreePartKey(ctx, conn, awsAccountID, namespace, assignmentName)
 	})
 	if err != nil {
@@ -308,7 +308,7 @@ func (r *iamPolicyAssignmentResource) Delete(ctx context.Context, req resource.D
 	}
 
 	// wait for IAM to propagate before returning
-	_, err = tfresource.RetryUntilNotFound(ctx, iamPropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, iamPropagationTimeout, func() (any, error) {
 		return findIAMPolicyAssignmentByThreePartKey(ctx, conn, awsAccountID, namespace, assignmentName)
 	})
 	if err != nil {

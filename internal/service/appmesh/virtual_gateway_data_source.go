@@ -55,14 +55,14 @@ func dataSourceVirtualGateway() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"spec":         sdkv2.DataSourcePropertyFromResourceProperty(resourceVirtualGatewaySpecSchema()),
+				"spec":         sdkv2.ComputedOnlyFromSchema(resourceVirtualGatewaySpecSchema()),
 				names.AttrTags: tftags.TagsSchemaComputed(),
 			}
 		},
 	}
 }
 
-func dataSourceVirtualGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceVirtualGatewayRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 

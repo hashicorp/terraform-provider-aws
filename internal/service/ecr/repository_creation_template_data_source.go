@@ -87,7 +87,7 @@ func dataSourceRepositoryCreationTemplate() *schema.Resource {
 	}
 }
 
-func dataSourceRepositoryCreationTemplateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceRepositoryCreationTemplateRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRClient(ctx)
 
@@ -122,7 +122,7 @@ func dataSourceRepositoryCreationTemplateRead(ctx context.Context, d *schema.Res
 	}
 
 	d.Set("repository_policy", policy)
-	d.Set(names.AttrResourceTags, KeyValueTags(ctx, rct.ResourceTags).Map())
+	d.Set(names.AttrResourceTags, keyValueTags(ctx, rct.ResourceTags).Map())
 
 	return diags
 }

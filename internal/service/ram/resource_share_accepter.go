@@ -90,7 +90,7 @@ func resourceResourceShareAccepter() *schema.Resource {
 	}
 }
 
-func resourceResourceShareAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourceShareAccepterCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RAMClient(ctx)
 
@@ -132,7 +132,7 @@ func resourceResourceShareAccepterCreate(ctx context.Context, d *schema.Resource
 		return sdkdiag.AppendErrorf(diags, "waiting for RAM Resource Share (%s) invitation (%s) accept: %s", shareARN, invitationARN, err)
 	}
 
-	_, err = tfresource.RetryWhenNotFound(ctx, resourceSharePropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, resourceSharePropagationTimeout, func() (any, error) {
 		return findResourceShareOwnerOtherAccountsByARN(ctx, conn, d.Id())
 	})
 
@@ -143,7 +143,7 @@ func resourceResourceShareAccepterCreate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceResourceShareAccepterRead(ctx, d, meta)...)
 }
 
-func resourceResourceShareAccepterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourceShareAccepterRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	accountID := meta.(*conns.AWSClient).AccountID(ctx)
 	conn := meta.(*conns.AWSClient).RAMClient(ctx)
@@ -199,7 +199,7 @@ func resourceResourceShareAccepterRead(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func resourceResourceShareAccepterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourceShareAccepterDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RAMClient(ctx)
 
@@ -359,7 +359,7 @@ func findResourceShareInvitations(ctx context.Context, conn *ram.Client, input *
 }
 
 func statusResourceShareInvitation(ctx context.Context, conn *ram.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		maybeInvitation, err := findMaybeResourceShareInvitationByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) || maybeInvitation.IsNone() {

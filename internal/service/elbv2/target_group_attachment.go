@@ -56,7 +56,7 @@ func resourceTargetGroupAttachment() *schema.Resource {
 	}
 }
 
-func resourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 
@@ -79,7 +79,7 @@ func resourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta 
 	const (
 		timeout = 10 * time.Minute
 	)
-	_, err := tfresource.RetryWhenIsA[*awstypes.InvalidTargetException](ctx, timeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsA[*awstypes.InvalidTargetException](ctx, timeout, func() (any, error) {
 		return conn.RegisterTargets(ctx, input)
 	})
 
@@ -95,7 +95,7 @@ func resourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 // resourceAttachmentRead requires all of the fields in order to describe the correct
 // target, so there is no work to do beyond ensuring that the target and group still exist.
-func resourceAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAttachmentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 
@@ -130,7 +130,7 @@ func resourceAttachmentRead(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourceAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 

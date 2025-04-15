@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"slices"
 	"strings"
 	"time"
 
@@ -63,7 +64,7 @@ const (
 	ResNameTrackerAssociation = "Tracker Association"
 )
 
-func resourceTrackerAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTrackerAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LocationClient(ctx)
@@ -90,7 +91,7 @@ func resourceTrackerAssociationCreate(ctx context.Context, d *schema.ResourceDat
 	return append(diags, resourceTrackerAssociationRead(ctx, d, meta)...)
 }
 
-func resourceTrackerAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTrackerAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LocationClient(ctx)
@@ -118,7 +119,7 @@ func resourceTrackerAssociationRead(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func resourceTrackerAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTrackerAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LocationClient(ctx)
@@ -163,11 +164,8 @@ func FindTrackerAssociationByTrackerNameAndConsumerARN(ctx context.Context, conn
 			return err
 		}
 
-		for _, arn := range page.ConsumerArns {
-			if arn == consumerARN {
-				found = true
-				break
-			}
+		if slices.Contains(page.ConsumerArns, consumerARN) {
+			found = true
 		}
 	}
 

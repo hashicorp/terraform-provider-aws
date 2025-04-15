@@ -39,12 +39,12 @@ func ResourceResourceGroup() *schema.Resource {
 	}
 }
 
-func resourceResourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).InspectorClient(ctx)
 
 	req := &inspector.CreateResourceGroupInput{
-		ResourceGroupTags: expandResourceGroupTags(d.Get(names.AttrTags).(map[string]interface{})),
+		ResourceGroupTags: expandResourceGroupTags(d.Get(names.AttrTags).(map[string]any)),
 	}
 	log.Printf("[DEBUG] Creating Inspector Classic Resource Group: %#v", req)
 	resp, err := conn.CreateResourceGroup(ctx, req)
@@ -58,7 +58,7 @@ func resourceResourceGroupCreate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceResourceGroupRead(ctx, d, meta)...)
 }
 
-func resourceResourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourceGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).InspectorClient(ctx)
 
@@ -94,12 +94,12 @@ func resourceResourceGroupRead(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func resourceResourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	return diags
 }
 
-func expandResourceGroupTags(m map[string]interface{}) []awstypes.ResourceGroupTag {
+func expandResourceGroupTags(m map[string]any) []awstypes.ResourceGroupTag {
 	var result []awstypes.ResourceGroupTag
 
 	for k, v := range m {
@@ -112,8 +112,8 @@ func expandResourceGroupTags(m map[string]interface{}) []awstypes.ResourceGroupT
 	return result
 }
 
-func flattenResourceGroupTags(tags []awstypes.ResourceGroupTag) map[string]interface{} {
-	m := map[string]interface{}{}
+func flattenResourceGroupTags(tags []awstypes.ResourceGroupTag) map[string]any {
+	m := map[string]any{}
 
 	for _, tag := range tags {
 		m[aws.ToString(tag.Key)] = aws.ToString(tag.Value)

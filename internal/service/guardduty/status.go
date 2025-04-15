@@ -26,7 +26,7 @@ const (
 
 // statusAdminAccountAdmin fetches the AdminAccount and its AdminStatus
 func statusAdminAccountAdmin(ctx context.Context, conn *guardduty.Client, adminAccountID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		adminAccount, err := getOrganizationAdminAccount(ctx, conn, adminAccountID)
 
 		if err != nil {
@@ -43,7 +43,7 @@ func statusAdminAccountAdmin(ctx context.Context, conn *guardduty.Client, adminA
 
 // statusPublishingDestination fetches the PublishingDestination and its Status
 func statusPublishingDestination(ctx context.Context, conn *guardduty.Client, destinationID, detectorID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		input := &guardduty.DescribePublishingDestinationInput{
 			DetectorId:    aws.String(detectorID),
 			DestinationId: aws.String(destinationID),

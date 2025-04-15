@@ -126,7 +126,7 @@ var validBotAliasName = validation.All(
 	validation.StringMatch(regexache.MustCompile(`^([A-Za-z]_?)+$`), ""),
 )
 
-func resourceBotAliasCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBotAliasCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LexModelsClient(ctx)
 
@@ -181,7 +181,7 @@ func resourceBotAliasCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceBotAliasRead(ctx, d, meta)...)
 }
 
-func resourceBotAliasRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBotAliasRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LexModelsClient(ctx)
 
@@ -222,7 +222,7 @@ func resourceBotAliasRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func resourceBotAliasUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBotAliasUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LexModelsClient(ctx)
 
@@ -273,14 +273,14 @@ func resourceBotAliasUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceBotAliasRead(ctx, d, meta)...)
 }
 
-func resourceBotAliasDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBotAliasDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LexModelsClient(ctx)
 
 	botAliasName, botName := d.Get(names.AttrName).(string), d.Get("bot_name").(string)
 
 	log.Printf("[DEBUG] Deleting Lex Model Bot Alias: %s", d.Id())
-	_, err := tfresource.RetryWhenIsA[*awstypes.ConflictException](ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsA[*awstypes.ConflictException](ctx, d.Timeout(schema.TimeoutDelete), func() (any, error) {
 		return conn.DeleteBotAlias(ctx, &lexmodelbuildingservice.DeleteBotAliasInput{
 			BotName: aws.String(botName),
 			Name:    aws.String(botAliasName),
@@ -302,7 +302,7 @@ func resourceBotAliasDelete(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourceBotAliasImport(ctx context.Context, d *schema.ResourceData, _ interface{}) ([]*schema.ResourceData, error) {
+func resourceBotAliasImport(ctx context.Context, d *schema.ResourceData, _ any) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), ":")
 	if len(parts) != 2 {
 		return nil, fmt.Errorf("invalid Lex Bot Alias resource id '%s', expected BOT_NAME:BOT_ALIAS_NAME", d.Id())
@@ -349,8 +349,8 @@ var logSettings = &schema.Resource{
 	},
 }
 
-func flattenConversationLogs(response *awstypes.ConversationLogsResponse) (flattened []map[string]interface{}) {
-	return []map[string]interface{}{
+func flattenConversationLogs(response *awstypes.ConversationLogsResponse) (flattened []map[string]any) {
+	return []map[string]any{
 		{
 			names.AttrIAMRoleARN: aws.ToString(response.IamRoleArn),
 			"log_settings":       flattenLogSettings(response.LogSettings),
@@ -358,8 +358,8 @@ func flattenConversationLogs(response *awstypes.ConversationLogsResponse) (flatt
 	}
 }
 
-func expandConversationLogs(rawObject interface{}) (*awstypes.ConversationLogsRequest, error) {
-	request := rawObject.([]interface{})[0].(map[string]interface{})
+func expandConversationLogs(rawObject any) (*awstypes.ConversationLogsRequest, error) {
+	request := rawObject.([]any)[0].(map[string]any)
 
 	logSettings, err := expandLogSettings(request["log_settings"].(*schema.Set).List())
 	if err != nil {
@@ -371,9 +371,9 @@ func expandConversationLogs(rawObject interface{}) (*awstypes.ConversationLogsRe
 	}, nil
 }
 
-func flattenLogSettings(responses []awstypes.LogSettingsResponse) (flattened []map[string]interface{}) {
+func flattenLogSettings(responses []awstypes.LogSettingsResponse) (flattened []map[string]any) {
 	for _, response := range responses {
-		flattened = append(flattened, map[string]interface{}{
+		flattened = append(flattened, map[string]any{
 			names.AttrDestination: response.Destination,
 			names.AttrKMSKeyARN:   response.KmsKeyArn,
 			"log_type":            response.LogType,
@@ -384,11 +384,11 @@ func flattenLogSettings(responses []awstypes.LogSettingsResponse) (flattened []m
 	return
 }
 
-func expandLogSettings(rawValues []interface{}) ([]awstypes.LogSettingsRequest, error) {
+func expandLogSettings(rawValues []any) ([]awstypes.LogSettingsRequest, error) {
 	requests := make([]awstypes.LogSettingsRequest, 0, len(rawValues))
 
 	for _, rawValue := range rawValues {
-		value, ok := rawValue.(map[string]interface{})
+		value, ok := rawValue.(map[string]any)
 		if !ok {
 			continue
 		}

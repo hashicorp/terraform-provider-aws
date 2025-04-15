@@ -71,7 +71,7 @@ func resourceInstanceProfile() *schema.Resource {
 	}
 }
 
-func resourceInstanceProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInstanceProfileCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
@@ -111,7 +111,7 @@ func resourceInstanceProfileCreate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceInstanceProfileRead(ctx, d, meta)...)
 }
 
-func resourceInstanceProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInstanceProfileRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
@@ -138,7 +138,7 @@ func resourceInstanceProfileRead(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func resourceInstanceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInstanceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
@@ -177,7 +177,7 @@ func resourceInstanceProfileUpdate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceInstanceProfileRead(ctx, d, meta)...)
 }
 
-func resourceInstanceProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInstanceProfileDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 

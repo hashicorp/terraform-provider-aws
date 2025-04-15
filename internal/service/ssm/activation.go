@@ -84,7 +84,7 @@ func resourceActivation() *schema.Resource {
 	}
 }
 
-func resourceActivationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceActivationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
@@ -108,7 +108,7 @@ func resourceActivationCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.RegistrationLimit = aws.Int32(int32(v.(int)))
 	}
 
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (any, error) {
 		return conn.CreateActivation(ctx, input)
 	}, errCodeValidationException, "Nonexistent role")
 
@@ -124,7 +124,7 @@ func resourceActivationCreate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceActivationRead(ctx, d, meta)...)
 }
 
-func resourceActivationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceActivationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
@@ -153,7 +153,7 @@ func resourceActivationRead(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourceActivationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceActivationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 

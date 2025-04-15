@@ -21,7 +21,7 @@ const (
 )
 
 func statusUpgradeStatus(ctx context.Context, conn *opensearch.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := conn.GetUpgradeStatus(ctx, &opensearch.GetUpgradeStatusInput{
 			DomainName: aws.String(name),
 		})
@@ -41,7 +41,7 @@ func statusUpgradeStatus(ctx context.Context, conn *opensearch.Client, name stri
 }
 
 func domainConfigStatus(ctx context.Context, conn *opensearch.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := conn.DescribeDomainConfig(ctx, &opensearch.DescribeDomainConfigInput{
 			DomainName: aws.String(name),
 		})

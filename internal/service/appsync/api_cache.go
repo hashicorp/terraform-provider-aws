@@ -67,7 +67,7 @@ func resourceAPICache() *schema.Resource {
 	}
 }
 
-func resourceAPICacheCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAPICacheCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
 
@@ -102,7 +102,7 @@ func resourceAPICacheCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceAPICacheRead(ctx, d, meta)...)
 }
 
-func resourceAPICacheRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAPICacheRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
 
@@ -128,7 +128,7 @@ func resourceAPICacheRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func resourceAPICacheUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAPICacheUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
 
@@ -161,7 +161,7 @@ func resourceAPICacheUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceAPICacheRead(ctx, d, meta)...)
 }
 
-func resourceAPICacheDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAPICacheDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
 
@@ -212,7 +212,7 @@ func findAPICacheByID(ctx context.Context, conn *appsync.Client, id string) (*aw
 }
 
 func statusAPICache(ctx context.Context, conn *appsync.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findAPICacheByID(ctx, conn, name)
 
 		if tfresource.NotFound(err) {

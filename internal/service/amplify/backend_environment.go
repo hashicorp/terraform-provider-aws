@@ -69,7 +69,7 @@ func resourceBackendEnvironment() *schema.Resource {
 	}
 }
 
-func resourceBackendEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBackendEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AmplifyClient(ctx)
 
@@ -101,7 +101,7 @@ func resourceBackendEnvironmentCreate(ctx context.Context, d *schema.ResourceDat
 	return append(diags, resourceBackendEnvironmentRead(ctx, d, meta)...)
 }
 
-func resourceBackendEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBackendEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AmplifyClient(ctx)
 
@@ -131,7 +131,7 @@ func resourceBackendEnvironmentRead(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func resourceBackendEnvironmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBackendEnvironmentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AmplifyClient(ctx)
 

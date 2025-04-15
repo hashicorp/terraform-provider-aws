@@ -77,7 +77,7 @@ func dataSourceProvisioningArtifacts() *schema.Resource {
 	}
 }
 
-func dataSourceProvisioningArtifactsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceProvisioningArtifactsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
@@ -101,12 +101,12 @@ func dataSourceProvisioningArtifactsRead(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func flattenProvisioningArtifactDetails(apiObjects []awstypes.ProvisioningArtifactDetail) []interface{} {
+func flattenProvisioningArtifactDetails(apiObjects []awstypes.ProvisioningArtifactDetail) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenProvisioningArtifactDetail(apiObject))
@@ -115,8 +115,8 @@ func flattenProvisioningArtifactDetails(apiObjects []awstypes.ProvisioningArtifa
 	return tfList
 }
 
-func flattenProvisioningArtifactDetail(apiObject awstypes.ProvisioningArtifactDetail) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenProvisioningArtifactDetail(apiObject awstypes.ProvisioningArtifactDetail) map[string]any {
+	tfMap := map[string]any{}
 
 	if apiObject.Active != nil {
 		tfMap["active"] = aws.ToBool(apiObject.Active)

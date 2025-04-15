@@ -50,7 +50,7 @@ func dataSourceInstances() *schema.Resource {
 	}
 }
 
-func dataSourceInstancesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceInstancesRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
@@ -81,7 +81,7 @@ func dataSourceInstancesRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func expandInstanceInformationStringFilters(tfList []interface{}) []awstypes.InstanceInformationStringFilter {
+func expandInstanceInformationStringFilters(tfList []any) []awstypes.InstanceInformationStringFilter {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -89,7 +89,7 @@ func expandInstanceInformationStringFilters(tfList []interface{}) []awstypes.Ins
 	var apiObjects []awstypes.InstanceInformationStringFilter
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -107,7 +107,7 @@ func expandInstanceInformationStringFilters(tfList []interface{}) []awstypes.Ins
 	return apiObjects
 }
 
-func expandInstanceInformationStringFilter(tfMap map[string]interface{}) *awstypes.InstanceInformationStringFilter {
+func expandInstanceInformationStringFilter(tfMap map[string]any) *awstypes.InstanceInformationStringFilter {
 	if tfMap == nil {
 		return nil
 	}
@@ -118,7 +118,7 @@ func expandInstanceInformationStringFilter(tfMap map[string]interface{}) *awstyp
 		apiObject.Key = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrValues].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrValues].([]any); ok && len(v) > 0 {
 		apiObject.Values = flex.ExpandStringValueList(v)
 	}
 

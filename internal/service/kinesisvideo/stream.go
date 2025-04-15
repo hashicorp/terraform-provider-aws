@@ -92,7 +92,7 @@ func resourceStream() *schema.Resource {
 	}
 }
 
-func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KinesisVideoClient(ctx)
 
@@ -130,7 +130,7 @@ func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceStreamRead(ctx, d, meta)...)
 }
 
-func resourceStreamRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStreamRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KinesisVideoClient(ctx)
 
@@ -158,7 +158,7 @@ func resourceStreamRead(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func resourceStreamUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStreamUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KinesisVideoClient(ctx)
 
@@ -190,7 +190,7 @@ func resourceStreamUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceStreamRead(ctx, d, meta)...)
 }
 
-func resourceStreamDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStreamDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KinesisVideoClient(ctx)
 
@@ -245,7 +245,7 @@ func findStream(ctx context.Context, conn *kinesisvideo.Client, input *kinesisvi
 }
 
 func statusStream(ctx context.Context, conn *kinesisvideo.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findStreamByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {

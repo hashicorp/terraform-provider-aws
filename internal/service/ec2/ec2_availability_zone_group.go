@@ -49,7 +49,7 @@ func resourceAvailabilityZoneGroup() *schema.Resource {
 	}
 }
 
-func resourceAvailabilityZoneGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAvailabilityZoneGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -71,7 +71,7 @@ func resourceAvailabilityZoneGroupCreate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceAvailabilityZoneGroupRead(ctx, d, meta)...)
 }
 
-func resourceAvailabilityZoneGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAvailabilityZoneGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -91,7 +91,7 @@ func resourceAvailabilityZoneGroupRead(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func resourceAvailabilityZoneGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAvailabilityZoneGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 

@@ -27,6 +27,8 @@ Changes to an RDS Cluster can occur when you manually change a parameter, such a
 
 ~> **NOTE on RDS Clusters and RDS Cluster Role Associations:** Terraform provides both a standalone [RDS Cluster Role Association](rds_cluster_role_association.html) - (an association between an RDS Cluster and a single IAM Role) and an RDS Cluster resource with `iamRoles` attributes. Use one resource or the other to associate IAM Roles and RDS Clusters. Not doing so will cause a conflict of associations and will result in the association being overwritten.
 
+-> **Note:** Write-Only argument `masterPasswordWo` is available to use in place of `masterPassword`. Write-Only arguments are supported in HashiCorp Terraform 1.11.0 and later. [Learn more](https://developer.hashicorp.com/terraform/language/v1.11.x/resources/ephemeral#write-only-arguments).
+
 ## Example Usage
 
 ### Aurora MySQL 2.x (MySQL 5.7)
@@ -344,9 +346,9 @@ This resource supports the following arguments:
 * `caCertificateIdentifier` - (Optional) The CA certificate identifier to use for the DB cluster's server certificate.
 * `clusterIdentifier` - (Optional, Forces new resources) The cluster identifier. If omitted, Terraform will assign a random, unique identifier.
 * `clusterIdentifierPrefix` - (Optional, Forces new resource) Creates a unique cluster identifier beginning with the specified prefix. Conflicts with `clusterIdentifier`.
-* `cluster_scalability_type` - (Optional, Forces new resources) Specifies the scalability mode of the Aurora DB cluster. When set to `limitless`, the cluster operates as an Aurora Limitless Database. When set to `standard` (the default), the cluster uses normal DB instance creation. Valid values: `limitless`, `standard`.
+* `clusterScalabilityType` - (Optional, Forces new resources) Specifies the scalability mode of the Aurora DB cluster. When set to `limitless`, the cluster operates as an Aurora Limitless Database. When set to `standard` (the default), the cluster uses normal DB instance creation. Valid values: `limitless`, `standard`.
 * `copyTagsToSnapshot` – (Optional, boolean) Copy all Cluster `tags` to snapshots. Default is `false`.
-* `database_insights_mode` - (Optional) The mode of Database Insights to enable for the DB cluster. Valid values: `standard`, `advanced`.
+* `databaseInsightsMode` - (Optional) The mode of Database Insights to enable for the DB cluster. Valid values: `standard`, `advanced`.
 * `databaseName` - (Optional) Name for an automatically created database on cluster creation. There are different naming restrictions per database engine: [RDS Naming Constraints][5]
 * `dbClusterInstanceClass` - (Optional, Required for Multi-AZ DB cluster) The compute and memory capacity of each DB instance in the Multi-AZ DB cluster, for example `db.m6g.xlarge`. Not all DB instance classes are available in all AWS Regions, or for all database engines. For the full list of DB instance classes and availability for your engine, see [DB instance class](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.DBInstanceClass.html) in the Amazon RDS User Guide.
 * `dbClusterParameterGroupName` - (Optional) A cluster parameter group to associate with the cluster.
@@ -656,4 +658,4 @@ Using `terraform import`, import RDS Clusters using the `clusterIdentifier`. For
 % terraform import aws_rds_cluster.aurora_cluster aurora-prod-cluster
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-96f33ce0d84119b786baa4f9600f27bc330d3275a5ad65de5365eee90ade5751 -->
+<!-- cache-key: cdktf-0.20.8 input-591add295fda0896fd7d3caa0bdfe9d409a727a307cce12b12246d41c1e755ac -->

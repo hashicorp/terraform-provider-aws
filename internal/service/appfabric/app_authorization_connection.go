@@ -226,7 +226,7 @@ func findAppAuthorizationConnectionByTwoPartKey(ctx context.Context, conn *appfa
 }
 
 func statusConnectAppAuthorization(ctx context.Context, conn *appfabric.Client, appAuthorizationARN, appBundleArn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findAppAuthorizationConnectionByTwoPartKey(ctx, conn, appAuthorizationARN, appBundleArn)
 
 		if tfresource.NotFound(err) {

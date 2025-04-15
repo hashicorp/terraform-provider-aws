@@ -40,7 +40,7 @@ func ResourceOrganizationConfiguration() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ExactlyOneOf: []string{"auto_enable", "auto_enable_organization_members"},
-				Deprecated:   "Use auto_enable_organization_members instead",
+				Deprecated:   "auto_enable is deprecated. Use auto_enable_organization_members instead.",
 			},
 			"auto_enable_organization_members": {
 				Type:             schema.TypeString,
@@ -137,7 +137,7 @@ func ResourceOrganizationConfiguration() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			func(_ context.Context, d *schema.ResourceDiff, _ interface{}) error {
+			func(_ context.Context, d *schema.ResourceDiff, _ any) error {
 				// When creating an organization configuration with AutoEnable=true,
 				// AWS will automatically set AutoEnableOrganizationMembers=NEW.
 				//
@@ -167,7 +167,7 @@ func ResourceOrganizationConfiguration() *schema.Resource {
 	}
 }
 
-func resourceOrganizationConfigurationPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOrganizationConfigurationPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
@@ -177,8 +177,8 @@ func resourceOrganizationConfigurationPut(ctx context.Context, d *schema.Resourc
 		DetectorId:                    aws.String(detectorID),
 	}
 
-	if v, ok := d.GetOk("datasources"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.DataSources = expandOrganizationDataSourceConfigurations(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("datasources"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.DataSources = expandOrganizationDataSourceConfigurations(v.([]any)[0].(map[string]any))
 	}
 
 	// We have seen occasional acceptance test failures when updating multiple features on the same detector concurrently,
@@ -199,7 +199,7 @@ func resourceOrganizationConfigurationPut(ctx context.Context, d *schema.Resourc
 	return append(diags, resourceOrganizationConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceOrganizationConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOrganizationConfigurationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
@@ -222,7 +222,7 @@ func resourceOrganizationConfigurationRead(ctx context.Context, d *schema.Resour
 	d.Set("auto_enable", output.AutoEnable)
 	d.Set("auto_enable_organization_members", output.AutoEnableOrganizationMembers)
 	if output.DataSources != nil {
-		if err := d.Set("datasources", []interface{}{flattenOrganizationDataSourceConfigurationsResult(output.DataSources)}); err != nil {
+		if err := d.Set("datasources", []any{flattenOrganizationDataSourceConfigurationsResult(output.DataSources)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting datasources: %s", err)
 		}
 	} else {
@@ -233,29 +233,29 @@ func resourceOrganizationConfigurationRead(ctx context.Context, d *schema.Resour
 	return diags
 }
 
-func expandOrganizationDataSourceConfigurations(tfMap map[string]interface{}) *awstypes.OrganizationDataSourceConfigurations {
+func expandOrganizationDataSourceConfigurations(tfMap map[string]any) *awstypes.OrganizationDataSourceConfigurations {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.OrganizationDataSourceConfigurations{}
 
-	if v, ok := tfMap["kubernetes"].([]interface{}); ok && len(v) > 0 {
-		apiObject.Kubernetes = expandOrganizationKubernetesConfiguration(v[0].(map[string]interface{}))
+	if v, ok := tfMap["kubernetes"].([]any); ok && len(v) > 0 {
+		apiObject.Kubernetes = expandOrganizationKubernetesConfiguration(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["malware_protection"].([]interface{}); ok && len(v) > 0 {
-		apiObject.MalwareProtection = expandOrganizationMalwareProtectionConfiguration(v[0].(map[string]interface{}))
+	if v, ok := tfMap["malware_protection"].([]any); ok && len(v) > 0 {
+		apiObject.MalwareProtection = expandOrganizationMalwareProtectionConfiguration(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["s3_logs"].([]interface{}); ok && len(v) > 0 {
-		apiObject.S3Logs = expandOrganizationS3LogsConfiguration(v[0].(map[string]interface{}))
+	if v, ok := tfMap["s3_logs"].([]any); ok && len(v) > 0 {
+		apiObject.S3Logs = expandOrganizationS3LogsConfiguration(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandOrganizationS3LogsConfiguration(tfMap map[string]interface{}) *awstypes.OrganizationS3LogsConfiguration {
+func expandOrganizationS3LogsConfiguration(tfMap map[string]any) *awstypes.OrganizationS3LogsConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -269,17 +269,17 @@ func expandOrganizationS3LogsConfiguration(tfMap map[string]interface{}) *awstyp
 	return apiObject
 }
 
-func expandOrganizationKubernetesConfiguration(tfMap map[string]interface{}) *awstypes.OrganizationKubernetesConfiguration {
+func expandOrganizationKubernetesConfiguration(tfMap map[string]any) *awstypes.OrganizationKubernetesConfiguration {
 	if tfMap == nil {
 		return nil
 	}
 
-	l, ok := tfMap["audit_logs"].([]interface{})
+	l, ok := tfMap["audit_logs"].([]any)
 	if !ok || len(l) == 0 {
 		return nil
 	}
 
-	m, ok := l[0].(map[string]interface{})
+	m, ok := l[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -289,17 +289,17 @@ func expandOrganizationKubernetesConfiguration(tfMap map[string]interface{}) *aw
 	}
 }
 
-func expandOrganizationMalwareProtectionConfiguration(tfMap map[string]interface{}) *awstypes.OrganizationMalwareProtectionConfiguration {
+func expandOrganizationMalwareProtectionConfiguration(tfMap map[string]any) *awstypes.OrganizationMalwareProtectionConfiguration {
 	if tfMap == nil {
 		return nil
 	}
 
-	l, ok := tfMap["scan_ec2_instance_with_findings"].([]interface{})
+	l, ok := tfMap["scan_ec2_instance_with_findings"].([]any)
 	if !ok || len(l) == 0 {
 		return nil
 	}
 
-	m, ok := l[0].(map[string]interface{})
+	m, ok := l[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -309,17 +309,17 @@ func expandOrganizationMalwareProtectionConfiguration(tfMap map[string]interface
 	}
 }
 
-func expandOrganizationScanEc2InstanceWithFindings(tfMap map[string]interface{}) *awstypes.OrganizationScanEc2InstanceWithFindings { // nosemgrep:ci.caps3-in-func-name
+func expandOrganizationScanEc2InstanceWithFindings(tfMap map[string]any) *awstypes.OrganizationScanEc2InstanceWithFindings { // nosemgrep:ci.caps3-in-func-name
 	if tfMap == nil {
 		return nil
 	}
 
-	l, ok := tfMap["ebs_volumes"].([]interface{})
+	l, ok := tfMap["ebs_volumes"].([]any)
 	if !ok || len(l) == 0 {
 		return nil
 	}
 
-	m, ok := l[0].(map[string]interface{})
+	m, ok := l[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -329,7 +329,7 @@ func expandOrganizationScanEc2InstanceWithFindings(tfMap map[string]interface{})
 	}
 }
 
-func expandOrganizationEbsVolumes(tfMap map[string]interface{}) *awstypes.OrganizationEbsVolumes { // nosemgrep:ci.caps3-in-func-name
+func expandOrganizationEbsVolumes(tfMap map[string]any) *awstypes.OrganizationEbsVolumes { // nosemgrep:ci.caps3-in-func-name
 	if tfMap == nil {
 		return nil
 	}
@@ -343,7 +343,7 @@ func expandOrganizationEbsVolumes(tfMap map[string]interface{}) *awstypes.Organi
 	return apiObject
 }
 
-func expandOrganizationKubernetesAuditLogsConfiguration(tfMap map[string]interface{}) *awstypes.OrganizationKubernetesAuditLogsConfiguration {
+func expandOrganizationKubernetesAuditLogsConfiguration(tfMap map[string]any) *awstypes.OrganizationKubernetesAuditLogsConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -357,31 +357,31 @@ func expandOrganizationKubernetesAuditLogsConfiguration(tfMap map[string]interfa
 	return apiObject
 }
 
-func flattenOrganizationDataSourceConfigurationsResult(apiObject *awstypes.OrganizationDataSourceConfigurationsResult) map[string]interface{} {
+func flattenOrganizationDataSourceConfigurationsResult(apiObject *awstypes.OrganizationDataSourceConfigurationsResult) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.S3Logs; v != nil {
-		tfMap["s3_logs"] = []interface{}{flattenOrganizationS3LogsConfigurationResult(v)}
+		tfMap["s3_logs"] = []any{flattenOrganizationS3LogsConfigurationResult(v)}
 	}
 	if v := apiObject.Kubernetes; v != nil {
-		tfMap["kubernetes"] = []interface{}{flattenOrganizationKubernetesConfigurationResult(v)}
+		tfMap["kubernetes"] = []any{flattenOrganizationKubernetesConfigurationResult(v)}
 	}
 	if v := apiObject.MalwareProtection; v != nil {
-		tfMap["malware_protection"] = []interface{}{flattenOrganizationMalwareProtectionConfigurationResult(v)}
+		tfMap["malware_protection"] = []any{flattenOrganizationMalwareProtectionConfigurationResult(v)}
 	}
 	return tfMap
 }
 
-func flattenOrganizationS3LogsConfigurationResult(apiObject *awstypes.OrganizationS3LogsConfigurationResult) map[string]interface{} {
+func flattenOrganizationS3LogsConfigurationResult(apiObject *awstypes.OrganizationS3LogsConfigurationResult) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.AutoEnable; v != nil {
 		tfMap["auto_enable"] = aws.ToBool(v)
@@ -390,26 +390,26 @@ func flattenOrganizationS3LogsConfigurationResult(apiObject *awstypes.Organizati
 	return tfMap
 }
 
-func flattenOrganizationKubernetesConfigurationResult(apiObject *awstypes.OrganizationKubernetesConfigurationResult) map[string]interface{} {
+func flattenOrganizationKubernetesConfigurationResult(apiObject *awstypes.OrganizationKubernetesConfigurationResult) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.AuditLogs; v != nil {
-		tfMap["audit_logs"] = []interface{}{flattenOrganizationKubernetesAuditLogsConfigurationResult(v)}
+		tfMap["audit_logs"] = []any{flattenOrganizationKubernetesAuditLogsConfigurationResult(v)}
 	}
 
 	return tfMap
 }
 
-func flattenOrganizationKubernetesAuditLogsConfigurationResult(apiObject *awstypes.OrganizationKubernetesAuditLogsConfigurationResult) map[string]interface{} {
+func flattenOrganizationKubernetesAuditLogsConfigurationResult(apiObject *awstypes.OrganizationKubernetesAuditLogsConfigurationResult) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.AutoEnable; v != nil {
 		tfMap["enable"] = aws.ToBool(v)
@@ -418,40 +418,40 @@ func flattenOrganizationKubernetesAuditLogsConfigurationResult(apiObject *awstyp
 	return tfMap
 }
 
-func flattenOrganizationMalwareProtectionConfigurationResult(apiObject *awstypes.OrganizationMalwareProtectionConfigurationResult) map[string]interface{} {
+func flattenOrganizationMalwareProtectionConfigurationResult(apiObject *awstypes.OrganizationMalwareProtectionConfigurationResult) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.ScanEc2InstanceWithFindings; v != nil {
-		tfMap["scan_ec2_instance_with_findings"] = []interface{}{flattenOrganizationScanEc2InstanceWithFindingsResult(v)}
+		tfMap["scan_ec2_instance_with_findings"] = []any{flattenOrganizationScanEc2InstanceWithFindingsResult(v)}
 	}
 
 	return tfMap
 }
 
-func flattenOrganizationScanEc2InstanceWithFindingsResult(apiObject *awstypes.OrganizationScanEc2InstanceWithFindingsResult) map[string]interface{} { // nosemgrep:ci.caps3-in-func-name
+func flattenOrganizationScanEc2InstanceWithFindingsResult(apiObject *awstypes.OrganizationScanEc2InstanceWithFindingsResult) map[string]any { // nosemgrep:ci.caps3-in-func-name
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.EbsVolumes; v != nil {
-		tfMap["ebs_volumes"] = []interface{}{flattenOrganizationEbsVolumesResult(v)}
+		tfMap["ebs_volumes"] = []any{flattenOrganizationEbsVolumesResult(v)}
 	}
 
 	return tfMap
 }
 
-func flattenOrganizationEbsVolumesResult(apiObject *awstypes.OrganizationEbsVolumesResult) map[string]interface{} { // nosemgrep:ci.caps3-in-func-name
+func flattenOrganizationEbsVolumesResult(apiObject *awstypes.OrganizationEbsVolumesResult) map[string]any { // nosemgrep:ci.caps3-in-func-name
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.AutoEnable; v != nil {
 		tfMap["auto_enable"] = aws.ToBool(v)

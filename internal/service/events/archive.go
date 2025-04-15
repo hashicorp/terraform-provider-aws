@@ -49,7 +49,7 @@ func resourceArchive() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validateEventPatternValue(),
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v.(string))
 					return json
 				},
@@ -74,7 +74,7 @@ func resourceArchive() *schema.Resource {
 	}
 }
 
-func resourceArchiveCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceArchiveCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
@@ -112,7 +112,7 @@ func resourceArchiveCreate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceArchiveRead(ctx, d, meta)...)
 }
 
-func resourceArchiveRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceArchiveRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
@@ -138,7 +138,7 @@ func resourceArchiveRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceArchiveUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceArchiveUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
@@ -172,7 +172,7 @@ func resourceArchiveUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceArchiveRead(ctx, d, meta)...)
 }
 
-func resourceArchiveDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceArchiveDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 

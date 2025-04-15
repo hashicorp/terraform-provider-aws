@@ -6,7 +6,6 @@ package vpclattice_test
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"testing"
 
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -14,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfvpclattice "github.com/hashicorp/terraform-provider-aws/internal/service/vpclattice"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -33,12 +33,12 @@ func TestAccVPCLatticeTargetGroupAttachment_instance(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRegisterTargetsDestroy(ctx),
+		CheckDestroy:             testAccCheckTargetGroupAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupAttachmentConfig_instance(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetsExists(ctx, resourceName),
+					testAccCheckTargetGroupAttachmentExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "target.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "target.0.id", instanceResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "target.0.port", "80"),
@@ -62,12 +62,12 @@ func TestAccVPCLatticeTargetGroupAttachment_ip(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRegisterTargetsDestroy(ctx),
+		CheckDestroy:             testAccCheckTargetGroupAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupAttachmentConfig_ip(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetsExists(ctx, resourceName),
+					testAccCheckTargetGroupAttachmentExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "target.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "target.0.id", instanceResourceName, "private_ip"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.port", "8080"),
@@ -91,12 +91,12 @@ func TestAccVPCLatticeTargetGroupAttachment_lambda(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRegisterTargetsDestroy(ctx),
+		CheckDestroy:             testAccCheckTargetGroupAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupAttachmentConfig_lambda(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetsExists(ctx, resourceName),
+					testAccCheckTargetGroupAttachmentExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "target.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "target.0.id", lambdaResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "target.0.port", "0"),
@@ -120,12 +120,12 @@ func TestAccVPCLatticeTargetGroupAttachment_alb(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRegisterTargetsDestroy(ctx),
+		CheckDestroy:             testAccCheckTargetGroupAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupAttachmentConfig_alb(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetsExists(ctx, resourceName),
+					testAccCheckTargetGroupAttachmentExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "target.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "target.0.id", albResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "target.0.port", "80"),
@@ -147,18 +147,59 @@ func TestAccVPCLatticeTargetGroupAttachment_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRegisterTargetsDestroy(ctx),
+		CheckDestroy:             testAccCheckTargetGroupAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupAttachmentConfig_instance(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTargetsExists(ctx, resourceName),
+					testAccCheckTargetGroupAttachmentExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfvpclattice.ResourceTargetGroupAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
+}
+
+func testAccCheckTargetGroupAttachmentDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_vpclattice_target_group_attachment" {
+				continue
+			}
+
+			_, err := tfvpclattice.FindTargetByThreePartKey(ctx, conn, rs.Primary.Attributes["target_group_identifier"], rs.Primary.Attributes["target.0.id"], flex.StringValueToInt32Value(rs.Primary.Attributes["target.0.port"]))
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("VPC Lattice Target Group Attachment %s still exists", rs.Primary.ID)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckTargetGroupAttachmentExists(ctx context.Context, n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient(ctx)
+
+		_, err := tfvpclattice.FindTargetByThreePartKey(ctx, conn, rs.Primary.Attributes["target_group_identifier"], rs.Primary.Attributes["target.0.id"], flex.StringValueToInt32Value(rs.Primary.Attributes["target.0.port"]))
+
+		return err
+	}
 }
 
 func testAccTargetGroupAttachmentConfig_baseInstance(rName string) string {
@@ -314,69 +355,4 @@ resource "aws_vpclattice_target_group_attachment" "test" {
   }
 }
 `, rName))
-}
-
-func testAccCheckTargetsExists(ctx context.Context, n string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No VPC Lattice Target Group Attachment ID is set")
-		}
-
-		var err error
-		var port int
-		if v, ok := rs.Primary.Attributes["target.0.port"]; ok {
-			port, err = strconv.Atoi(v)
-
-			if err != nil {
-				return err
-			}
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient(ctx)
-
-		_, err = tfvpclattice.FindTargetByThreePartKey(ctx, conn, rs.Primary.Attributes["target_group_identifier"], rs.Primary.Attributes["target.0.id"], port)
-
-		return err
-	}
-}
-
-func testAccCheckRegisterTargetsDestroy(ctx context.Context) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient(ctx)
-
-		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_vpclattice_register_targets" {
-				continue
-			}
-
-			var err error
-			var port int
-			if v, ok := rs.Primary.Attributes["target.0.port"]; ok {
-				port, err = strconv.Atoi(v)
-
-				if err != nil {
-					return err
-				}
-			}
-
-			_, err = tfvpclattice.FindTargetByThreePartKey(ctx, conn, rs.Primary.Attributes["target_group_identifier"], rs.Primary.Attributes["target.0.id"], port)
-
-			if tfresource.NotFound(err) {
-				continue
-			}
-
-			if err != nil {
-				return err
-			}
-
-			return fmt.Errorf("VPC Lattice Target Group Attachment %s still exists", rs.Primary.ID)
-		}
-
-		return nil
-	}
 }

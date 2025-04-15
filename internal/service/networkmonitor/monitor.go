@@ -257,7 +257,7 @@ func findMonitorByName(ctx context.Context, conn *networkmonitor.Client, name st
 }
 
 func statusMonitor(ctx context.Context, conn *networkmonitor.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findMonitorByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {

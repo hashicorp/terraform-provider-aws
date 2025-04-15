@@ -49,7 +49,7 @@ func resourceEncryptionConfig() *schema.Resource {
 	}
 }
 
-func resourceEncryptionPutConfig(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEncryptionPutConfig(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).XRayClient(ctx)
 
@@ -76,7 +76,7 @@ func resourceEncryptionPutConfig(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceEncryptionConfigRead(ctx, d, meta)...)
 }
 
-func resourceEncryptionConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEncryptionConfigRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).XRayClient(ctx)
 
@@ -115,7 +115,7 @@ func findEncryptionConfig(ctx context.Context, conn *xray.Client) (*types.Encryp
 }
 
 func statusEncryptionConfig(ctx context.Context, conn *xray.Client) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findEncryptionConfig(ctx, conn)
 
 		if tfresource.NotFound(err) {

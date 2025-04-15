@@ -39,7 +39,7 @@ func resourceManagedPrefixList() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			customdiff.ComputedIf(names.AttrVersion, func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+			customdiff.ComputedIf(names.AttrVersion, func(ctx context.Context, diff *schema.ResourceDiff, meta any) bool {
 				return diff.HasChange("entry")
 			}),
 		),
@@ -98,7 +98,7 @@ func resourceManagedPrefixList() *schema.Resource {
 	}
 }
 
-func resourceManagedPrefixListCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceManagedPrefixListCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
@@ -131,7 +131,7 @@ func resourceManagedPrefixListCreate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceManagedPrefixListRead(ctx, d, meta)...)
 }
 
-func resourceManagedPrefixListRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceManagedPrefixListRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
@@ -169,7 +169,7 @@ func resourceManagedPrefixListRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func resourceManagedPrefixListUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceManagedPrefixListUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
@@ -301,7 +301,7 @@ func resourceManagedPrefixListUpdate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceManagedPrefixListRead(ctx, d, meta)...)
 }
 
-func resourceManagedPrefixListDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceManagedPrefixListDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
@@ -347,7 +347,7 @@ func updateMaxEntry(ctx context.Context, conn *ec2.Client, id string, maxEntries
 	return nil
 }
 
-func expandAddPrefixListEntry(tfMap map[string]interface{}) awstypes.AddPrefixListEntry {
+func expandAddPrefixListEntry(tfMap map[string]any) awstypes.AddPrefixListEntry {
 	apiObject := awstypes.AddPrefixListEntry{}
 
 	if v, ok := tfMap["cidr"].(string); ok && v != "" {
@@ -361,7 +361,7 @@ func expandAddPrefixListEntry(tfMap map[string]interface{}) awstypes.AddPrefixLi
 	return apiObject
 }
 
-func expandAddPrefixListEntries(tfList []interface{}) []awstypes.AddPrefixListEntry {
+func expandAddPrefixListEntries(tfList []any) []awstypes.AddPrefixListEntry {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -369,7 +369,7 @@ func expandAddPrefixListEntries(tfList []interface{}) []awstypes.AddPrefixListEn
 	var apiObjects []awstypes.AddPrefixListEntry
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -381,7 +381,7 @@ func expandAddPrefixListEntries(tfList []interface{}) []awstypes.AddPrefixListEn
 	return apiObjects
 }
 
-func expandRemovePrefixListEntry(tfMap map[string]interface{}) awstypes.RemovePrefixListEntry {
+func expandRemovePrefixListEntry(tfMap map[string]any) awstypes.RemovePrefixListEntry {
 	apiObject := awstypes.RemovePrefixListEntry{}
 
 	if v, ok := tfMap["cidr"].(string); ok && v != "" {
@@ -391,7 +391,7 @@ func expandRemovePrefixListEntry(tfMap map[string]interface{}) awstypes.RemovePr
 	return apiObject
 }
 
-func expandRemovePrefixListEntries(tfList []interface{}) []awstypes.RemovePrefixListEntry {
+func expandRemovePrefixListEntries(tfList []any) []awstypes.RemovePrefixListEntry {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -399,7 +399,7 @@ func expandRemovePrefixListEntries(tfList []interface{}) []awstypes.RemovePrefix
 	var apiObjects []awstypes.RemovePrefixListEntry
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -411,8 +411,8 @@ func expandRemovePrefixListEntries(tfList []interface{}) []awstypes.RemovePrefix
 	return apiObjects
 }
 
-func flattenPrefixListEntry(apiObject awstypes.PrefixListEntry) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenPrefixListEntry(apiObject awstypes.PrefixListEntry) map[string]any {
+	tfMap := map[string]any{}
 
 	if v := apiObject.Cidr; v != nil {
 		tfMap["cidr"] = aws.ToString(v)
@@ -425,12 +425,12 @@ func flattenPrefixListEntry(apiObject awstypes.PrefixListEntry) map[string]inter
 	return tfMap
 }
 
-func flattenPrefixListEntries(apiObjects []awstypes.PrefixListEntry) []interface{} {
+func flattenPrefixListEntries(apiObjects []awstypes.PrefixListEntry) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenPrefixListEntry(apiObject))

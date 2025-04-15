@@ -89,7 +89,7 @@ The following arguments are optional:
 * `annotations` - (Optional) Specifies location of the document annotation data.
   See the [`annotations` Configuration Block](#annotations-configuration-block) section below.
   One of `annotations` or `entity_list` is required.
-* `augmented_manifests` - (Optional) List of training datasets produced by Amazon SageMaker Ground Truth.
+* `augmented_manifests` - (Optional) List of training datasets produced by Amazon SageMaker AI Ground Truth.
   Used if `data_format` is `AUGMENTED_MANIFEST`.
   See the [`augmented_manifests` Configuration Block](#augmented_manifests-configuration-block) section below.
 * `data_format` - (Optional, Default: `COMPREHEND_CSV`) The format for the training data.

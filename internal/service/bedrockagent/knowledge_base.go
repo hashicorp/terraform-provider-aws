@@ -628,7 +628,7 @@ func (r *knowledgeBaseResource) Update(ctx context.Context, request resource.Upd
 			return
 		}
 
-		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (any, error) {
 			return conn.UpdateKnowledgeBase(ctx, input)
 		}, errCodeValidationException, "cannot assume role")
 
@@ -747,7 +747,7 @@ func waitKnowledgeBaseDeleted(ctx context.Context, conn *bedrockagent.Client, id
 }
 
 func statusKnowledgeBase(ctx context.Context, conn *bedrockagent.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findKnowledgeBaseByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

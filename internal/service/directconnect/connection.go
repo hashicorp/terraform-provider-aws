@@ -126,7 +126,7 @@ func resourceConnection() *schema.Resource {
 		StateUpgraders: []schema.StateUpgrader{
 			{
 				Type: resourceV0.CoreConfigSchema().ImpliedType(),
-				Upgrade: func(ctx context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+				Upgrade: func(ctx context.Context, rawState map[string]any, meta any) (map[string]any, error) {
 					// Convert vlan_id from string to int.
 					if v, ok := rawState["vlan_id"]; ok {
 						if v, ok := v.(string); ok {
@@ -233,7 +233,7 @@ func resourceConnection() *schema.Resource {
 	}
 }
 
-func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
@@ -261,7 +261,7 @@ func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceConnectionRead(ctx, d, meta)...)
 }
 
-func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
@@ -305,7 +305,7 @@ func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourceConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
@@ -329,7 +329,7 @@ func resourceConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceConnectionRead(ctx, d, meta)...)
 }
 
-func resourceConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConnectionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
@@ -418,7 +418,7 @@ func findConnections(ctx context.Context, conn *directconnect.Client, input *dir
 }
 
 func statusConnection(ctx context.Context, conn *directconnect.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findConnectionByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

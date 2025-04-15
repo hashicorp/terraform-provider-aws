@@ -48,7 +48,7 @@ func resourceDomainIdentityVerification() *schema.Resource {
 	}
 }
 
-func resourceDomainIdentityVerificationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainIdentityVerificationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
@@ -72,7 +72,7 @@ func resourceDomainIdentityVerificationCreate(ctx context.Context, d *schema.Res
 	return append(diags, resourceDomainIdentityVerificationRead(ctx, d, meta)...)
 }
 
-func resourceDomainIdentityVerificationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainIdentityVerificationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 

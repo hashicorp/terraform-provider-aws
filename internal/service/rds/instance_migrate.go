@@ -377,7 +377,7 @@ func resourceInstanceResourceV0() *schema.Resource {
 	}
 }
 
-func instanceStateUpgradeV0(_ context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+func instanceStateUpgradeV0(_ context.Context, rawState map[string]any, meta any) (map[string]any, error) {
 	if rawState == nil {
 		return nil, nil
 	}
@@ -834,7 +834,7 @@ func resourceInstanceResourceV1() *schema.Resource {
 	}
 }
 
-func instanceStateUpgradeV1(_ context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+func instanceStateUpgradeV1(_ context.Context, rawState map[string]any, meta any) (map[string]any, error) {
 	if rawState == nil {
 		return nil, nil
 	}

@@ -113,7 +113,7 @@ func (r *resourceCollection) Create(ctx context.Context, req resource.CreateRequ
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
 
-	out, err := tfresource.RetryWhenNotFound(ctx, createTimeout, func() (interface{}, error) {
+	out, err := tfresource.RetryWhenNotFound(ctx, createTimeout, func() (any, error) {
 		return findCollectionByID(ctx, conn, plan.CollectionID.ValueString())
 	})
 

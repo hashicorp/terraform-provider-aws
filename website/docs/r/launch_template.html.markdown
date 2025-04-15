@@ -123,9 +123,9 @@ This resource supports the following arguments:
 * `disable_api_termination` - (Optional) If `true`, enables [EC2 Instance
   Termination Protection](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Using_ChangingDisableAPITermination.html)
 * `ebs_optimized` - (Optional) If `true`, the launched EC2 instance will be EBS-optimized.
-* `elastic_gpu_specifications` - (Optional) The elastic GPU to attach to the instance. See [Elastic GPU](#elastic-gpu)
+* `elastic_gpu_specifications` - (Optional) **DEPRECATED** The elastic GPU to attach to the instance. See [Elastic GPU](#elastic-gpu)
   below for more details.
-* `elastic_inference_accelerator` - (Optional) Configuration block containing an Elastic Inference Accelerator to attach to the instance. See [Elastic Inference Accelerator](#elastic-inference-accelerator) below for more details.
+* `elastic_inference_accelerator` - (Optional) **DEPRECATED** Configuration block containing an Elastic Inference Accelerator to attach to the instance. See [Elastic Inference Accelerator](#elastic-inference-accelerator) below for more details.
 * `enclave_options` - (Optional) Enable Nitro Enclaves on launched instances. See [Enclave Options](#enclave-options) below for more details.
 * `hibernation_options` - (Optional) The hibernation options for the instance. See [Hibernation Options](#hibernation-options) below for more details.
 * `iam_instance_profile` - (Optional) The IAM Instance Profile to launch the instance with. See [Instance Profile](#instance-profile)
@@ -236,7 +236,7 @@ The `elastic_gpu_specifications` block supports the following:
 
 ### Elastic Inference Accelerator
 
-Attach an Elastic Inference Accelerator to the instance. Additional information about Elastic Inference in EC2 can be found in the [EC2 User Guide](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/elastic-inference.html).
+**DEPRECATED** Attach an Elastic Inference Accelerator to the instance. Additional information about Elastic Inference in EC2 can be found in the [EC2 User Guide](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/elastic-inference.html).
 
 The `elastic_inference_accelerator` configuration block supports the following:
 

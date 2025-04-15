@@ -56,7 +56,7 @@ func resourceDelegatedAdminAccount() *schema.Resource {
 	}
 }
 
-func resourceDelegatedAdminAccountCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDelegatedAdminAccountCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Inspector2Client(ctx)
 
@@ -81,7 +81,7 @@ func resourceDelegatedAdminAccountCreate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceDelegatedAdminAccountRead(ctx, d, meta)...)
 }
 
-func resourceDelegatedAdminAccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDelegatedAdminAccountRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Inspector2Client(ctx)
 
@@ -103,7 +103,7 @@ func resourceDelegatedAdminAccountRead(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func resourceDelegatedAdminAccountDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDelegatedAdminAccountDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Inspector2Client(ctx)
 
@@ -187,7 +187,7 @@ func findDelegatedAdminAccounts(ctx context.Context, conn *inspector2.Client, in
 }
 
 func statusDelegatedAdminAccount(ctx context.Context, conn *inspector2.Client, accountID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findDelegatedAdminAccountByID(ctx, conn, accountID)
 
 		if tfresource.NotFound(err) {

@@ -66,8 +66,8 @@ This resource supports the following arguments:
 * `availability_zone` - (Optional) The Availability Zone where the DMS Serverless replication using this configuration will run. The default value is a random.
 * `dns_name_servers` - (Optional) A list of custom DNS name servers supported for the DMS Serverless replication to access your source or target database.
 * `kms_key_id` - (Optional) An Key Management Service (KMS) key Amazon Resource Name (ARN) that is used to encrypt the data during DMS Serverless replication. If you don't specify a value for the KmsKeyId parameter, DMS uses your default encryption key.
-* `max_capacity_units` - (Required) Specifies the maximum value of the DMS capacity units (DCUs) for which a given DMS Serverless replication can be provisioned. A single DCU is 2GB of RAM, with 2 DCUs as the minimum value allowed. The list of valid DCU values includes 2, 4, 8, 16, 32, 64, 128, 192, 256, and 384.
-* `min_capacity_units` - (Optional) Specifies the minimum value of the DMS capacity units (DCUs) for which a given DMS Serverless replication can be provisioned. The list of valid DCU values includes 2, 4, 8, 16, 32, 64, 128, 192, 256, and 384. If this value isn't set DMS scans the current activity of available source tables to identify an optimum setting for this parameter.
+* `max_capacity_units` - (Required) Specifies the maximum value of the DMS capacity units (DCUs) for which a given DMS Serverless replication can be provisioned. A single DCU is 2GB of RAM, with 1 DCUs as the minimum value allowed. The list of valid DCU values includes 1, 2, 4, 8, 16, 32, 64, 128, 192, 256, and 384.
+* `min_capacity_units` - (Optional) Specifies the minimum value of the DMS capacity units (DCUs) for which a given DMS Serverless replication can be provisioned. The list of valid DCU values includes 1, 2, 4, 8, 16, 32, 64, 128, 192, 256, and 384. If this value isn't set DMS sets the lowest allowed value, 1.
 * `multi_az` - (Optional) Specifies if the replication instance is a multi-az deployment. You cannot set the `availability_zone` parameter if the `multi_az` parameter is set to `true`.
 * `preferred_maintenance_window` - (Optional) The weekly time range during which system maintenance can occur, in Universal Coordinated Time (UTC).
 
@@ -119,4 +119,4 @@ Using `terraform import`, import a replication config using the `arn`. For examp
 % terraform import aws_dms_replication_config.example arn:aws:dms:us-east-1:123456789012:replication-config:UX6OL6MHMMJKFFOXE3H7LLJCMEKBDUG4ZV7DRSI
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-86e6d3f65d28d35f34f5f46f6277a3024fd2ee92daeca5d7b43d0b122aa9b265 -->
+<!-- cache-key: cdktf-0.20.8 input-b7a7a8ff3d90aeafeeed28a3176b3d1eca746bb4d693423c343ad7af62c8898e -->

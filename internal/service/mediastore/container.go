@@ -57,7 +57,7 @@ func ResourceContainer() *schema.Resource {
 	}
 }
 
-func resourceContainerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceContainerCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).MediaStoreClient(ctx)
 
@@ -82,7 +82,7 @@ func resourceContainerCreate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceContainerRead(ctx, d, meta)...)
 }
 
-func resourceContainerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceContainerRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).MediaStoreClient(ctx)
 
@@ -106,7 +106,7 @@ func resourceContainerRead(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func resourceContainerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceContainerUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Tags only.
@@ -114,7 +114,7 @@ func resourceContainerUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceContainerRead(ctx, d, meta)...)
 }
 
-func resourceContainerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceContainerDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).MediaStoreClient(ctx)
 
@@ -141,7 +141,7 @@ func resourceContainerDelete(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func containerRefreshStatusFunc(ctx context.Context, conn *mediastore.Client, cn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		resp, err := findContainerByName(ctx, conn, cn)
 
 		if tfresource.NotFound(err) {

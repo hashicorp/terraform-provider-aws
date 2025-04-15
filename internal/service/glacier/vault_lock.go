@@ -54,7 +54,7 @@ func resourceVaultLock() *schema.Resource {
 				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
 				DiffSuppressOnRefresh: true,
 				ValidateFunc:          verify.ValidIAMPolicyJSON,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
@@ -74,7 +74,7 @@ const (
 	lockStateLocked     = "Locked"
 )
 
-func resourceVaultLockCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVaultLockCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlacierClient(ctx)
 
@@ -121,7 +121,7 @@ func resourceVaultLockCreate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceVaultLockRead(ctx, d, meta)...)
 }
 
-func resourceVaultLockRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVaultLockRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlacierClient(ctx)
 
@@ -151,7 +151,7 @@ func resourceVaultLockRead(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func resourceVaultLockDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVaultLockDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlacierClient(ctx)
 
@@ -198,7 +198,7 @@ func findVaultLockByName(ctx context.Context, conn *glacier.Client, name string)
 }
 
 func statusLockState(ctx context.Context, conn *glacier.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findVaultLockByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {

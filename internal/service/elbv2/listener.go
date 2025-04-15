@@ -385,7 +385,7 @@ func resourceListener() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					return strings.ToUpper(v.(string))
 				},
 				ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.ProtocolEnum](),
@@ -567,7 +567,7 @@ func suppressIfListenerProtocolNot(protocols ...awstypes.ProtocolEnum) schema.Sc
 	}
 }
 
-func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 
@@ -587,7 +587,7 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}}
 	}
 
-	if v, ok := d.GetOk(names.AttrDefaultAction); ok && len(v.([]interface{})) > 0 {
+	if v, ok := d.GetOk(names.AttrDefaultAction); ok && len(v.([]any)) > 0 {
 		input.DefaultActions = expandListenerActions(cty.GetAttrPath(names.AttrDefaultAction), v.([]any), &diags)
 		if diags.HasError() {
 			return diags
@@ -595,7 +595,7 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if v, ok := d.GetOk("mutual_authentication"); ok {
-		input.MutualAuthentication = expandMutualAuthenticationAttributes(v.([]interface{}))
+		input.MutualAuthentication = expandMutualAuthenticationAttributes(v.([]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrPort); ok {
@@ -641,7 +641,7 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.SetId(aws.ToString(output.Listeners[0].ListenerArn))
 
-	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
 		return findListenerByARN(ctx, conn, d.Id())
 	})
 
@@ -654,7 +654,7 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta in
 		err := createTags(ctx, conn, d.Id(), tags)
 
 		// If default tags only, continue. Otherwise, error.
-		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]any)) == 0) && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
 			return append(diags, resourceListenerRead(ctx, d, meta)...)
 		}
 
@@ -673,7 +673,7 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceListenerRead(ctx, d, meta)...)
 }
 
-func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 
@@ -724,7 +724,7 @@ func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 
@@ -752,7 +752,7 @@ func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		if d.HasChange("mutual_authentication") {
-			input.MutualAuthentication = expandMutualAuthenticationAttributes(d.Get("mutual_authentication").([]interface{}))
+			input.MutualAuthentication = expandMutualAuthenticationAttributes(d.Get("mutual_authentication").([]any))
 		}
 
 		if v, ok := d.GetOk(names.AttrPort); ok {
@@ -767,7 +767,7 @@ func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			input.SslPolicy = aws.String(v.(string))
 		}
 
-		_, err := tfresource.RetryWhenIsA[*awstypes.CertificateNotFoundException](ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
+		_, err := tfresource.RetryWhenIsA[*awstypes.CertificateNotFoundException](ctx, d.Timeout(schema.TimeoutUpdate), func() (any, error) {
 			return conn.ModifyListener(ctx, input)
 		})
 
@@ -787,7 +787,7 @@ func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceListenerRead(ctx, d, meta)...)
 }
 
-func resourceListenerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceListenerDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 
@@ -1031,7 +1031,7 @@ func (m listenerAttributeMap) flatten(d *schema.ResourceData, apiObjects []awsty
 }
 
 func retryListenerCreate(ctx context.Context, conn *elasticloadbalancingv2.Client, input *elasticloadbalancingv2.CreateListenerInput, timeout time.Duration) (*elasticloadbalancingv2.CreateListenerOutput, error) {
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.CertificateNotFoundException](ctx, timeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.CertificateNotFoundException](ctx, timeout, func() (any, error) {
 		return conn.CreateListener(ctx, input)
 	})
 
@@ -1108,7 +1108,7 @@ func expandListenerActions(actionsPath cty.Path, l []any, diags *diag.Diagnostic
 	var actions []awstypes.Action
 
 	for i, tfMapRaw := range l {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -1131,7 +1131,7 @@ func expandListenerAction(actionPath cty.Path, i int, tfMap map[string]any, diag
 
 	switch awstypes.ActionTypeEnum(tfMap[names.AttrType].(string)) {
 	case awstypes.ActionTypeEnumForward:
-		if v, ok := tfMap["forward"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := tfMap["forward"].([]any); ok && len(v) > 0 {
 			action.ForwardConfig = expandListenerActionForwardConfig(v)
 		}
 		if v, ok := tfMap["target_group_arn"].(string); ok && v != "" {
@@ -1139,22 +1139,22 @@ func expandListenerAction(actionPath cty.Path, i int, tfMap map[string]any, diag
 		}
 
 	case awstypes.ActionTypeEnumRedirect:
-		if v, ok := tfMap["redirect"].([]interface{}); ok {
+		if v, ok := tfMap["redirect"].([]any); ok {
 			action.RedirectConfig = expandListenerRedirectActionConfig(v)
 		}
 
 	case awstypes.ActionTypeEnumFixedResponse:
-		if v, ok := tfMap["fixed_response"].([]interface{}); ok {
+		if v, ok := tfMap["fixed_response"].([]any); ok {
 			action.FixedResponseConfig = expandListenerFixedResponseConfig(v)
 		}
 
 	case awstypes.ActionTypeEnumAuthenticateCognito:
-		if v, ok := tfMap["authenticate_cognito"].([]interface{}); ok {
+		if v, ok := tfMap["authenticate_cognito"].([]any); ok {
 			action.AuthenticateCognitoConfig = expandListenerAuthenticateCognitoConfig(v)
 		}
 
 	case awstypes.ActionTypeEnumAuthenticateOidc:
-		if v, ok := tfMap["authenticate_oidc"].([]interface{}); ok {
+		if v, ok := tfMap["authenticate_oidc"].([]any); ok {
 			action.AuthenticateOidcConfig = expandAuthenticateOIDCConfig(v)
 		}
 	}
@@ -1164,19 +1164,19 @@ func expandListenerAction(actionPath cty.Path, i int, tfMap map[string]any, diag
 	return action
 }
 
-func expandListenerAuthenticateCognitoConfig(l []interface{}) *awstypes.AuthenticateCognitoActionConfig {
+func expandListenerAuthenticateCognitoConfig(l []any) *awstypes.AuthenticateCognitoActionConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := l[0].(map[string]interface{})
+	tfMap, ok := l[0].(map[string]any)
 
 	if !ok {
 		return nil
 	}
 
 	config := &awstypes.AuthenticateCognitoActionConfig{
-		AuthenticationRequestExtraParams: flex.ExpandStringValueMap(tfMap["authentication_request_extra_params"].(map[string]interface{})),
+		AuthenticationRequestExtraParams: flex.ExpandStringValueMap(tfMap["authentication_request_extra_params"].(map[string]any)),
 		UserPoolArn:                      aws.String(tfMap["user_pool_arn"].(string)),
 		UserPoolClientId:                 aws.String(tfMap["user_pool_client_id"].(string)),
 		UserPoolDomain:                   aws.String(tfMap["user_pool_domain"].(string)),
@@ -1201,19 +1201,19 @@ func expandListenerAuthenticateCognitoConfig(l []interface{}) *awstypes.Authenti
 	return config
 }
 
-func expandAuthenticateOIDCConfig(l []interface{}) *awstypes.AuthenticateOidcActionConfig {
+func expandAuthenticateOIDCConfig(l []any) *awstypes.AuthenticateOidcActionConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := l[0].(map[string]interface{})
+	tfMap, ok := l[0].(map[string]any)
 
 	if !ok {
 		return nil
 	}
 
 	config := &awstypes.AuthenticateOidcActionConfig{
-		AuthenticationRequestExtraParams: flex.ExpandStringValueMap(tfMap["authentication_request_extra_params"].(map[string]interface{})),
+		AuthenticationRequestExtraParams: flex.ExpandStringValueMap(tfMap["authentication_request_extra_params"].(map[string]any)),
 		AuthorizationEndpoint:            aws.String(tfMap["authorization_endpoint"].(string)),
 		ClientId:                         aws.String(tfMap[names.AttrClientID].(string)),
 		ClientSecret:                     aws.String(tfMap[names.AttrClientSecret].(string)),
@@ -1241,12 +1241,12 @@ func expandAuthenticateOIDCConfig(l []interface{}) *awstypes.AuthenticateOidcAct
 	return config
 }
 
-func expandListenerFixedResponseConfig(l []interface{}) *awstypes.FixedResponseActionConfig {
+func expandListenerFixedResponseConfig(l []any) *awstypes.FixedResponseActionConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := l[0].(map[string]interface{})
+	tfMap, ok := l[0].(map[string]any)
 
 	if !ok {
 		return nil
@@ -1266,12 +1266,12 @@ func expandListenerFixedResponseConfig(l []interface{}) *awstypes.FixedResponseA
 	return fr
 }
 
-func expandListenerRedirectActionConfig(l []interface{}) *awstypes.RedirectActionConfig {
+func expandListenerRedirectActionConfig(l []any) *awstypes.RedirectActionConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := l[0].(map[string]interface{})
+	tfMap, ok := l[0].(map[string]any)
 
 	if !ok {
 		return nil
@@ -1300,12 +1300,12 @@ func expandListenerRedirectActionConfig(l []interface{}) *awstypes.RedirectActio
 	return rac
 }
 
-func expandListenerActionForwardConfig(l []interface{}) *awstypes.ForwardActionConfig {
+func expandListenerActionForwardConfig(l []any) *awstypes.ForwardActionConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := l[0].(map[string]interface{})
+	tfMap, ok := l[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -1316,19 +1316,19 @@ func expandListenerActionForwardConfig(l []interface{}) *awstypes.ForwardActionC
 		config.TargetGroups = expandListenerActionForwardConfigTargetGroups(v.List())
 	}
 
-	if v, ok := tfMap["stickiness"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["stickiness"].([]any); ok && len(v) > 0 {
 		config.TargetGroupStickinessConfig = expandListenerActionForwardConfigTargetGroupStickinessConfig(v)
 	}
 
 	return config
 }
 
-func expandMutualAuthenticationAttributes(tfList []interface{}) *awstypes.MutualAuthenticationAttributes {
+func expandMutualAuthenticationAttributes(tfList []any) *awstypes.MutualAuthenticationAttributes {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -1357,7 +1357,7 @@ func expandMutualAuthenticationAttributes(tfList []interface{}) *awstypes.Mutual
 	}
 }
 
-func expandListenerActionForwardConfigTargetGroups(l []interface{}) []awstypes.TargetGroupTuple {
+func expandListenerActionForwardConfigTargetGroups(l []any) []awstypes.TargetGroupTuple {
 	if len(l) == 0 {
 		return nil
 	}
@@ -1365,7 +1365,7 @@ func expandListenerActionForwardConfigTargetGroups(l []interface{}) []awstypes.T
 	var groups []awstypes.TargetGroupTuple
 
 	for _, tfMapRaw := range l {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -1384,12 +1384,12 @@ func expandListenerActionForwardConfigTargetGroups(l []interface{}) []awstypes.T
 	return groups
 }
 
-func expandListenerActionForwardConfigTargetGroupStickinessConfig(l []interface{}) *awstypes.TargetGroupStickinessConfig {
+func expandListenerActionForwardConfigTargetGroupStickinessConfig(l []any) *awstypes.TargetGroupStickinessConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := l[0].(map[string]interface{})
+	tfMap, ok := l[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -1407,15 +1407,15 @@ func expandListenerActionForwardConfigTargetGroupStickinessConfig(l []interface{
 	return tgs
 }
 
-func flattenListenerActions(d *schema.ResourceData, attrName string, apiObjects []awstypes.Action) []interface{} {
+func flattenListenerActions(d *schema.ResourceData, attrName string, apiObjects []awstypes.Action) []any {
 	if len(apiObjects) == 0 {
-		return []interface{}{}
+		return []any{}
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for i, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			names.AttrType: apiObject.Type,
 			"order":        aws.ToInt32(apiObject.Order),
 		}
@@ -1509,20 +1509,20 @@ func flattenForwardActionBoth(awsAction awstypes.Action, actionMap map[string]an
 	actionMap["forward"] = flattenListenerActionForwardConfig(awsAction.ForwardConfig)
 }
 
-func flattenMutualAuthenticationAttributes(apiObject *awstypes.MutualAuthenticationAttributes) []interface{} {
+func flattenMutualAuthenticationAttributes(apiObject *awstypes.MutualAuthenticationAttributes) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
 	if mode := aws.ToString(apiObject.Mode); mode == mutualAuthenticationOff {
-		return []interface{}{
-			map[string]interface{}{
+		return []any{
+			map[string]any{
 				names.AttrMode: mode,
 			},
 		}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"advertise_trust_store_ca_names": apiObject.AdvertiseTrustStoreCaNames,
 	}
 	if apiObject.IgnoreClientCertificateExpiry != nil {
@@ -1535,15 +1535,15 @@ func flattenMutualAuthenticationAttributes(apiObject *awstypes.MutualAuthenticat
 		tfMap["trust_store_arn"] = aws.ToString(apiObject.TrustStoreArn)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenAuthenticateOIDCActionConfig(apiObject *awstypes.AuthenticateOidcActionConfig, clientSecret string) []interface{} {
+func flattenAuthenticateOIDCActionConfig(apiObject *awstypes.AuthenticateOidcActionConfig, clientSecret string) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.AuthenticationRequestExtraParams != nil {
 		tfMap["authentication_request_extra_params"] = apiObject.AuthenticationRequestExtraParams
@@ -1579,15 +1579,15 @@ func flattenAuthenticateOIDCActionConfig(apiObject *awstypes.AuthenticateOidcAct
 		tfMap["user_info_endpoint"] = aws.ToString(apiObject.UserInfoEndpoint)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenListenerActionAuthenticateCognitoConfig(apiObject *awstypes.AuthenticateCognitoActionConfig) []interface{} {
+func flattenListenerActionAuthenticateCognitoConfig(apiObject *awstypes.AuthenticateCognitoActionConfig) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.AuthenticationRequestExtraParams != nil {
 		tfMap["authentication_request_extra_params"] = apiObject.AuthenticationRequestExtraParams
@@ -1614,15 +1614,15 @@ func flattenListenerActionAuthenticateCognitoConfig(apiObject *awstypes.Authenti
 		tfMap["user_pool_domain"] = aws.ToString(apiObject.UserPoolDomain)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenListenerActionFixedResponseConfig(config *awstypes.FixedResponseActionConfig) []interface{} {
+func flattenListenerActionFixedResponseConfig(config *awstypes.FixedResponseActionConfig) []any {
 	if config == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 	if config.ContentType != nil {
 		m[names.AttrContentType] = aws.ToString(config.ContentType)
 	}
@@ -1633,31 +1633,31 @@ func flattenListenerActionFixedResponseConfig(config *awstypes.FixedResponseActi
 		m[names.AttrStatusCode] = aws.ToString(config.StatusCode)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenListenerActionForwardConfig(config *awstypes.ForwardActionConfig) []interface{} {
+func flattenListenerActionForwardConfig(config *awstypes.ForwardActionConfig) []any {
 	if config == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"target_group": flattenListenerActionForwardConfigTargetGroups(config.TargetGroups),
 		"stickiness":   flattenListenerActionForwardConfigTargetGroupStickinessConfig(config.TargetGroupStickinessConfig),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenListenerActionForwardConfigTargetGroups(groups []awstypes.TargetGroupTuple) []interface{} {
+func flattenListenerActionForwardConfigTargetGroups(groups []awstypes.TargetGroupTuple) []any {
 	if len(groups) == 0 {
-		return []interface{}{}
+		return []any{}
 	}
 
-	var vGroups []interface{}
+	var vGroups []any
 
 	for _, group := range groups {
-		m := map[string]interface{}{}
+		m := map[string]any{}
 		if group.TargetGroupArn != nil {
 			m[names.AttrARN] = aws.ToString(group.TargetGroupArn)
 		}
@@ -1671,12 +1671,12 @@ func flattenListenerActionForwardConfigTargetGroups(groups []awstypes.TargetGrou
 	return vGroups
 }
 
-func flattenListenerActionForwardConfigTargetGroupStickinessConfig(config *awstypes.TargetGroupStickinessConfig) []interface{} {
+func flattenListenerActionForwardConfigTargetGroupStickinessConfig(config *awstypes.TargetGroupStickinessConfig) []any {
 	if config == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 	if config.Enabled != nil {
 		m[names.AttrEnabled] = aws.ToBool(config.Enabled)
 	}
@@ -1684,15 +1684,15 @@ func flattenListenerActionForwardConfigTargetGroupStickinessConfig(config *awsty
 		m[names.AttrDuration] = aws.ToInt32(config.DurationSeconds)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenListenerActionRedirectConfig(apiObject *awstypes.RedirectActionConfig) []interface{} {
+func flattenListenerActionRedirectConfig(apiObject *awstypes.RedirectActionConfig) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 	if apiObject.Host != nil {
 		tfMap["host"] = aws.ToString(apiObject.Host)
 	}
@@ -1712,7 +1712,7 @@ func flattenListenerActionRedirectConfig(apiObject *awstypes.RedirectActionConfi
 		tfMap[names.AttrStatusCode] = apiObject.StatusCode
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
 const (
@@ -1886,7 +1886,7 @@ func listenerActionRuntimeValidate(actionPath cty.Path, action map[string]any, d
 		}
 	}
 
-	if v, ok := action["forward"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := action["forward"].([]any); ok && len(v) > 0 {
 		if actionType != awstypes.ActionTypeEnumForward {
 			*diags = append(*diags, errs.NewAttributeConflictsWhenWillBeError(
 				actionPath.GetAttr("forward"),
@@ -1896,7 +1896,7 @@ func listenerActionRuntimeValidate(actionPath cty.Path, action map[string]any, d
 		}
 	}
 
-	if v, ok := action["authenticate_cognito"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := action["authenticate_cognito"].([]any); ok && len(v) > 0 {
 		if actionType != awstypes.ActionTypeEnumAuthenticateCognito {
 			*diags = append(*diags, errs.NewAttributeConflictsWhenWillBeError(
 				actionPath.GetAttr("authenticate_cognito"),
@@ -1906,7 +1906,7 @@ func listenerActionRuntimeValidate(actionPath cty.Path, action map[string]any, d
 		}
 	}
 
-	if v, ok := action["authenticate_oidc"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := action["authenticate_oidc"].([]any); ok && len(v) > 0 {
 		if actionType != awstypes.ActionTypeEnumAuthenticateOidc {
 			*diags = append(*diags, errs.NewAttributeConflictsWhenWillBeError(
 				actionPath.GetAttr("authenticate_oidc"),
@@ -1916,7 +1916,7 @@ func listenerActionRuntimeValidate(actionPath cty.Path, action map[string]any, d
 		}
 	}
 
-	if v, ok := action["fixed_response"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := action["fixed_response"].([]any); ok && len(v) > 0 {
 		if actionType != awstypes.ActionTypeEnumFixedResponse {
 			*diags = append(*diags, errs.NewAttributeConflictsWhenWillBeError(
 				actionPath.GetAttr("fixed_response"),
@@ -1926,7 +1926,7 @@ func listenerActionRuntimeValidate(actionPath cty.Path, action map[string]any, d
 		}
 	}
 
-	if v, ok := action["redirect"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := action["redirect"].([]any); ok && len(v) > 0 {
 		if actionType != awstypes.ActionTypeEnumRedirect {
 			*diags = append(*diags, errs.NewAttributeConflictsWhenWillBeError(
 				actionPath.GetAttr("redirect"),

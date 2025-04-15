@@ -343,7 +343,7 @@ func waitNamespaceDeleted(ctx context.Context, conn *quicksight.Client, awsAccou
 }
 
 func statusNamespace(ctx context.Context, conn *quicksight.Client, awsAccountID, namespace string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findNamespaceByTwoPartKey(ctx, conn, awsAccountID, namespace)
 
 		if tfresource.NotFound(err) {

@@ -63,7 +63,7 @@ func resourceGroupPolicy() *schema.Resource {
 				ValidateFunc:          verify.ValidIAMPolicyJSON,
 				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
 				DiffSuppressOnRefresh: true,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := verify.LegacyPolicyNormalize(v)
 					return json
 				},
@@ -72,7 +72,7 @@ func resourceGroupPolicy() *schema.Resource {
 	}
 }
 
-func resourceGroupPolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGroupPolicyPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
@@ -98,7 +98,7 @@ func resourceGroupPolicyPut(ctx context.Context, d *schema.ResourceData, meta in
 	if d.IsNewResource() {
 		d.SetId(fmt.Sprintf("%s:%s", groupName, policyName))
 
-		_, err := tfresource.RetryWhenNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+		_, err := tfresource.RetryWhenNotFound(ctx, propagationTimeout, func() (any, error) {
 			return FindGroupPolicyByTwoPartKey(ctx, conn, groupName, policyName)
 		})
 
@@ -110,7 +110,7 @@ func resourceGroupPolicyPut(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceGroupPolicyRead(ctx, d, meta)...)
 }
 
-func resourceGroupPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGroupPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
@@ -149,7 +149,7 @@ func resourceGroupPolicyRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceGroupPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGroupPolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 

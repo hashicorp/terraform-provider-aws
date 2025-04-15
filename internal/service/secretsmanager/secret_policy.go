@@ -46,7 +46,7 @@ func resourceSecretPolicy() *schema.Resource {
 				ValidateFunc:          validation.StringIsJSON,
 				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
 				DiffSuppressOnRefresh: true,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
@@ -61,7 +61,7 @@ func resourceSecretPolicy() *schema.Resource {
 	}
 }
 
-func resourceSecretPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSecretPolicyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
 
@@ -87,7 +87,7 @@ func resourceSecretPolicyCreate(ctx context.Context, d *schema.ResourceData, met
 
 	d.SetId(aws.ToString(output.ARN))
 
-	_, err = tfresource.RetryWhenNotFound(ctx, PropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, PropagationTimeout, func() (any, error) {
 		return findSecretPolicyByID(ctx, conn, d.Id())
 	})
 
@@ -98,7 +98,7 @@ func resourceSecretPolicyCreate(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceSecretPolicyRead(ctx, d, meta)...)
 }
 
-func resourceSecretPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSecretPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
 
@@ -132,7 +132,7 @@ func resourceSecretPolicyRead(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func resourceSecretPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSecretPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
 
@@ -154,7 +154,7 @@ func resourceSecretPolicyUpdate(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceSecretPolicyRead(ctx, d, meta)...)
 }
 
-func resourceSecretPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSecretPolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
 
@@ -169,7 +169,7 @@ func resourceSecretPolicyDelete(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, PropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, PropagationTimeout, func() (any, error) {
 		output, err := findSecretPolicyByID(ctx, conn, d.Id())
 
 		if err != nil {
