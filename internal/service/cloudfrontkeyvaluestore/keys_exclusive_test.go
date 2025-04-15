@@ -276,8 +276,8 @@ resource "aws_cloudfrontkeyvaluestore_key" "test" {
 
 resource "aws_cloudfrontkeyvaluestore_keys_exclusive" "test" {
   key_value_store_arn = aws_cloudfront_key_value_store.test.arn
-  depends_on =[
-  aws_cloudfrontkeyvaluestore_key.test
+  depends_on = [
+    aws_cloudfrontkeyvaluestore_key.test
   ]
 }
 `, rName)
