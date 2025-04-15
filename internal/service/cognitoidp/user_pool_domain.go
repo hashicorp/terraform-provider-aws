@@ -66,9 +66,10 @@ func resourceUserPoolDomain() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 63),
 			},
 			"managed_login_version": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.IntInSlice([]int{1, 2}),
 			},
 			names.AttrS3Bucket: {
 				Type:     schema.TypeString,
