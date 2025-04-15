@@ -27,6 +27,7 @@ const (
 )
 
 // @SDKResource("aws_chimesdkvoice_global_settings", name="Global Settings")
+// @Region(overrideEnabled=false)
 func ResourceGlobalSettings() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGlobalSettingsUpdate,
