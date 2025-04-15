@@ -25,6 +25,8 @@ BUG FIXES:
 
 * resource/aws_elasticache_serverless_cache: Fix to allow in-place updates when `engine` is changed from `redis` to `valkey` ([#42208](https://github.com/hashicorp/terraform-provider-aws/issues/42208))
 * resource/aws_s3_bucket_lifecycle_configuration: Fix errors when removing `rule` from top of list ([#42228](https://github.com/hashicorp/terraform-provider-aws/issues/42228))
+* resource/aws_s3_bucket_lifecycle_configuration: Fix potential eventual consistency errors in some regions ([#41764](https://github.com/hashicorp/terraform-provider-aws/issues/41764))
+* resource/aws_s3_bucket_lifecycle_configuration: No longer allows empty `rule.filter.and.tags` ([#42041](https://github.com/hashicorp/terraform-provider-aws/issues/42041))
 * resource/aws_sagemaker_domain: Allow `default_user_settings.custom_file_system_config` and `default_space_settings.custom_file_system_config` to be removed on Update ([#42144](https://github.com/hashicorp/terraform-provider-aws/issues/42144))
 * resource/aws_sagemaker_user_profile: Allow `user_settings.custom_file_system_config` to be removed on Update ([#42144](https://github.com/hashicorp/terraform-provider-aws/issues/42144))
 
