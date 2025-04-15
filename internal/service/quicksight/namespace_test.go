@@ -37,7 +37,7 @@ func TestAccQuickSightNamespace_basic(t *testing.T) {
 					testAccCheckNamespaceExists(ctx, resourceName, &namespace),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamespace, rName),
 					resource.TestCheckResourceAttr(resourceName, "identity_store", string(awstypes.IdentityStoreQuicksight)),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "quicksight", fmt.Sprintf("namespace/%[1]s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "quicksight", fmt.Sprintf("namespace/%[1]s", rName)),
 				),
 			},
 			{

@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"slices"
 	"strings"
 	"time"
 
@@ -52,7 +53,7 @@ func resourceDomain() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			customdiff.ForceNewIf(names.AttrEngineVersion, func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) bool {
+			customdiff.ForceNewIf(names.AttrEngineVersion, func(ctx context.Context, d *schema.ResourceDiff, meta any) bool {
 				newVersion := d.Get(names.AttrEngineVersion).(string)
 				domainName := d.Get(names.AttrDomainName).(string)
 
@@ -67,14 +68,9 @@ func resourceDomain() *schema.Resource {
 				if len(resp.CompatibleVersions) != 1 {
 					return true
 				}
-				for _, targetVersion := range resp.CompatibleVersions[0].TargetVersions {
-					if targetVersion == newVersion {
-						return false
-					}
-				}
-				return true
+				return !slices.Contains(resp.CompatibleVersions[0].TargetVersions, newVersion)
 			}),
-			customdiff.ForceNewIf("encrypt_at_rest.0.enabled", func(_ context.Context, d *schema.ResourceDiff, meta interface{}) bool {
+			customdiff.ForceNewIf("encrypt_at_rest.0.enabled", func(_ context.Context, d *schema.ResourceDiff, meta any) bool {
 				o, n := d.GetChange("encrypt_at_rest.0.enabled")
 				if o.(bool) && !n.(bool) {
 					return true
@@ -82,7 +78,7 @@ func resourceDomain() *schema.Resource {
 
 				return !inPlaceEncryptionEnableVersion(d.Get(names.AttrEngineVersion).(string))
 			}),
-			customdiff.ForceNewIf("node_to_node_encryption.0.enabled", func(_ context.Context, d *schema.ResourceDiff, meta interface{}) bool {
+			customdiff.ForceNewIf("node_to_node_encryption.0.enabled", func(_ context.Context, d *schema.ResourceDiff, meta any) bool {
 				o, n := d.GetChange("node_to_node_encryption.0.enabled")
 				if o.(bool) && !n.(bool) {
 					return true
@@ -90,7 +86,7 @@ func resourceDomain() *schema.Resource {
 
 				return !inPlaceEncryptionEnableVersion(d.Get(names.AttrEngineVersion).(string))
 			}),
-			customdiff.ForceNewIf("advanced_security_options.0.enabled", func(_ context.Context, d *schema.ResourceDiff, meta interface{}) bool {
+			customdiff.ForceNewIf("advanced_security_options.0.enabled", func(_ context.Context, d *schema.ResourceDiff, meta any) bool {
 				o, n := d.GetChange("advanced_security_options.0.enabled")
 				if o.(bool) && !n.(bool) {
 					return true
@@ -98,10 +94,9 @@ func resourceDomain() *schema.Resource {
 
 				return false
 			}),
-			customdiff.ForceNewIfChange(names.AttrIPAddressType, func(_ context.Context, old, new, meta interface{}) bool {
+			customdiff.ForceNewIfChange(names.AttrIPAddressType, func(_ context.Context, old, new, meta any) bool {
 				return (old.(string) == string(awstypes.IPAddressTypeDualstack)) && old.(string) != new.(string)
 			}),
-			verify.SetTagsDiff,
 		),
 
 		Schema: map[string]*schema.Schema{
@@ -111,7 +106,7 @@ func resourceDomain() *schema.Resource {
 				Computed:         true,
 				ValidateFunc:     validation.StringIsJSON,
 				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
@@ -284,6 +279,47 @@ func resourceDomain() *schema.Resource {
 						"multi_az_with_standby_enabled": {
 							Type:     schema.TypeBool,
 							Optional: true,
+						},
+						"node_options": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"node_config": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Computed: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"count": {
+													Type:         schema.TypeInt,
+													Optional:     true,
+													Computed:     true,
+													ValidateFunc: validation.IntAtLeast(1),
+												},
+												names.AttrEnabled: {
+													Type:     schema.TypeBool,
+													Optional: true,
+													Computed: true,
+												},
+												names.AttrType: {
+													Type:     schema.TypeString,
+													Optional: true,
+													Computed: true,
+												},
+											},
+										},
+									},
+									"node_type": {
+										Type:             schema.TypeString,
+										Optional:         true,
+										Computed:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.NodeOptionsNodeType](),
+									},
+								},
+							},
 						},
 						"warm_count": {
 							Type:         schema.TypeInt,
@@ -489,7 +525,7 @@ func resourceDomain() *schema.Resource {
 			"kibana_endpoint": {
 				Type:       schema.TypeString,
 				Computed:   true,
-				Deprecated: "use 'dashboard_endpoint' attribute instead",
+				Deprecated: "kibana_endpoint is deprecated. Use dashboard_endpoint instead.",
 			},
 			"log_publishing_options": {
 				Type:     schema.TypeSet,
@@ -642,12 +678,12 @@ func resourceDomain() *schema.Resource {
 }
 
 func resourceDomainImport(ctx context.Context,
-	d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	d.Set(names.AttrDomainName, d.Id())
 	return []*schema.ResourceData{d}, nil
 }
 
-func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpenSearchClient(ctx)
 
@@ -683,68 +719,68 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if v, ok := d.GetOk("advanced_options"); ok {
-		input.AdvancedOptions = flex.ExpandStringValueMap(v.(map[string]interface{}))
+		input.AdvancedOptions = flex.ExpandStringValueMap(v.(map[string]any))
 	}
 
 	if v, ok := d.GetOk("advanced_security_options"); ok {
-		input.AdvancedSecurityOptions = expandAdvancedSecurityOptions(v.([]interface{}))
+		input.AdvancedSecurityOptions = expandAdvancedSecurityOptions(v.([]any))
 	}
 
-	if v, ok := d.GetOk("auto_tune_options"); ok && len(v.([]interface{})) > 0 {
-		input.AutoTuneOptions = expandAutoTuneOptionsInput(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("auto_tune_options"); ok && len(v.([]any)) > 0 {
+		input.AutoTuneOptions = expandAutoTuneOptionsInput(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("ebs_options"); ok {
-		options := v.([]interface{})
+		options := v.([]any)
 
 		if len(options) == 1 {
 			if options[0] == nil {
 				return sdkdiag.AppendErrorf(diags, "At least one field is expected inside ebs_options")
 			}
 
-			s := options[0].(map[string]interface{})
+			s := options[0].(map[string]any)
 			input.EBSOptions = expandEBSOptions(s)
 		}
 	}
 
 	if v, ok := d.GetOk("encrypt_at_rest"); ok {
-		options := v.([]interface{})
+		options := v.([]any)
 		if options[0] == nil {
 			return sdkdiag.AppendErrorf(diags, "At least one field is expected inside encrypt_at_rest")
 		}
 
-		s := options[0].(map[string]interface{})
+		s := options[0].(map[string]any)
 		input.EncryptionAtRestOptions = expandEncryptAtRestOptions(s)
 	}
 
 	if v, ok := d.GetOk("cluster_config"); ok {
-		config := v.([]interface{})
+		config := v.([]any)
 
 		if len(config) == 1 {
 			if config[0] == nil {
 				return sdkdiag.AppendErrorf(diags, "At least one field is expected inside cluster_config")
 			}
-			m := config[0].(map[string]interface{})
+			m := config[0].(map[string]any)
 			input.ClusterConfig = expandClusterConfig(m)
 		}
 	}
 
 	if v, ok := d.GetOk("node_to_node_encryption"); ok {
-		options := v.([]interface{})
+		options := v.([]any)
 
-		s := options[0].(map[string]interface{})
+		s := options[0].(map[string]any)
 		input.NodeToNodeEncryptionOptions = expandNodeToNodeEncryptionOptions(s)
 	}
 
 	if v, ok := d.GetOk("snapshot_options"); ok {
-		options := v.([]interface{})
+		options := v.([]any)
 
 		if len(options) == 1 {
 			if options[0] == nil {
 				return sdkdiag.AppendErrorf(diags, "At least one field is expected inside snapshot_options")
 			}
 
-			o := options[0].(map[string]interface{})
+			o := options[0].(map[string]any)
 
 			snapshotOptions := awstypes.SnapshotOptions{
 				AutomatedSnapshotStartHour: aws.Int32(int32(o["automated_snapshot_start_hour"].(int))),
@@ -755,16 +791,16 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if v, ok := d.GetOk("software_update_options"); ok {
-		input.SoftwareUpdateOptions = expandSoftwareUpdateOptions(v.([]interface{}))
+		input.SoftwareUpdateOptions = expandSoftwareUpdateOptions(v.([]any))
 	}
 
 	if v, ok := d.GetOk("vpc_options"); ok {
-		options := v.([]interface{})
+		options := v.([]any)
 		if options[0] == nil {
 			return sdkdiag.AppendErrorf(diags, "At least one field is expected inside vpc_options")
 		}
 
-		s := options[0].(map[string]interface{})
+		s := options[0].(map[string]any)
 		input.VPCOptions = expandVPCOptions(s)
 	}
 
@@ -773,15 +809,15 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if v, ok := d.GetOk("domain_endpoint_options"); ok {
-		input.DomainEndpointOptions = expandDomainEndpointOptions(v.([]interface{}))
+		input.DomainEndpointOptions = expandDomainEndpointOptions(v.([]any))
 	}
 
 	if v, ok := d.GetOk("cognito_options"); ok {
-		input.CognitoOptions = expandCognitoOptions(v.([]interface{}))
+		input.CognitoOptions = expandCognitoOptions(v.([]any))
 	}
 
-	if v, ok := d.GetOk("off_peak_window_options"); ok && len(v.([]interface{})) > 0 {
-		input.OffPeakWindowOptions = expandOffPeakWindowOptions(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("off_peak_window_options"); ok && len(v.([]any)) > 0 {
+		input.OffPeakWindowOptions = expandOffPeakWindowOptions(v.([]any)[0].(map[string]any))
 
 		// This option is only available when modifying a domain created prior to February 16, 2023, not when creating a new domain.
 		// An off-peak window is required for a domain and cannot be disabled.
@@ -809,10 +845,10 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	log.Printf("[DEBUG] OpenSearch Domain %q created", d.Id())
 
-	if v, ok := d.GetOk("auto_tune_options"); ok && len(v.([]interface{})) > 0 {
+	if v, ok := d.GetOk("auto_tune_options"); ok && len(v.([]any)) > 0 {
 		input := &opensearch.UpdateDomainConfigInput{
 			DomainName:      aws.String(d.Get(names.AttrDomainName).(string)),
-			AutoTuneOptions: expandAutoTuneOptions(v.([]interface{})[0].(map[string]interface{})),
+			AutoTuneOptions: expandAutoTuneOptions(v.([]any)[0].(map[string]any)),
 		}
 
 		log.Printf("[DEBUG] Updating OpenSearch Domain config: %#v", input)
@@ -832,7 +868,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceDomainRead(ctx, d, meta)...)
 }
 
-func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpenSearchClient(ctx)
 
@@ -868,7 +904,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 		d.Set("access_policies", policies)
 	}
 
-	options := advancedOptionsIgnoreDefault(d.Get("advanced_options").(map[string]interface{}), flex.FlattenStringValueMap(ds.AdvancedOptions))
+	options := advancedOptionsIgnoreDefault(d.Get("advanced_options").(map[string]any), flex.FlattenStringValueMap(ds.AdvancedOptions))
 	if err = d.Set("advanced_options", options); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting advanced_options %v: %s", options, err)
 	}
@@ -914,7 +950,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if v := dc.AutoTuneOptions; v != nil {
-		err = d.Set("auto_tune_options", []interface{}{flattenAutoTuneOptions(v.Options)})
+		err = d.Set("auto_tune_options", []any{flattenAutoTuneOptions(v.Options)})
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading OpenSearch Domain (%s): setting auto_tune_options: %s", d.Id(), err)
 		}
@@ -929,7 +965,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if ds.VPCOptions != nil {
-		if err := d.Set("vpc_options", []interface{}{flattenVPCDerivedInfo(ds.VPCOptions)}); err != nil {
+		if err := d.Set("vpc_options", []any{flattenVPCDerivedInfo(ds.VPCOptions)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting vpc_options: %s", err)
 		}
 
@@ -971,7 +1007,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if ds.OffPeakWindowOptions != nil {
-		if err := d.Set("off_peak_window_options", []interface{}{flattenOffPeakWindowOptions(ds.OffPeakWindowOptions)}); err != nil {
+		if err := d.Set("off_peak_window_options", []any{flattenOffPeakWindowOptions(ds.OffPeakWindowOptions)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting off_peak_window_options: %s", err)
 		}
 	} else {
@@ -981,7 +1017,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpenSearchClient(ctx)
 
@@ -1003,23 +1039,23 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 
 		if d.HasChange("advanced_options") {
-			input.AdvancedOptions = flex.ExpandStringValueMap(d.Get("advanced_options").(map[string]interface{}))
+			input.AdvancedOptions = flex.ExpandStringValueMap(d.Get("advanced_options").(map[string]any))
 		}
 
 		if d.HasChange("advanced_security_options") {
-			input.AdvancedSecurityOptions = expandAdvancedSecurityOptions(d.Get("advanced_security_options").([]interface{}))
+			input.AdvancedSecurityOptions = expandAdvancedSecurityOptions(d.Get("advanced_security_options").([]any))
 		}
 
 		if d.HasChange("auto_tune_options") {
-			input.AutoTuneOptions = expandAutoTuneOptions(d.Get("auto_tune_options").([]interface{})[0].(map[string]interface{}))
+			input.AutoTuneOptions = expandAutoTuneOptions(d.Get("auto_tune_options").([]any)[0].(map[string]any))
 		}
 
 		if d.HasChange("cognito_options") {
-			input.CognitoOptions = expandCognitoOptions(d.Get("cognito_options").([]interface{}))
+			input.CognitoOptions = expandCognitoOptions(d.Get("cognito_options").([]any))
 		}
 
 		if d.HasChange("domain_endpoint_options") {
-			input.DomainEndpointOptions = expandDomainEndpointOptions(d.Get("domain_endpoint_options").([]interface{}))
+			input.DomainEndpointOptions = expandDomainEndpointOptions(d.Get("domain_endpoint_options").([]any))
 		}
 
 		if d.HasChange(names.AttrIPAddressType) {
@@ -1027,18 +1063,18 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 
 		if d.HasChanges("ebs_options", "cluster_config") {
-			options := d.Get("ebs_options").([]interface{})
+			options := d.Get("ebs_options").([]any)
 
 			if len(options) == 1 {
-				s := options[0].(map[string]interface{})
+				s := options[0].(map[string]any)
 				input.EBSOptions = expandEBSOptions(s)
 			}
 
 			if d.HasChange("cluster_config") {
-				config := d.Get("cluster_config").([]interface{})
+				config := d.Get("cluster_config").([]any)
 
 				if len(config) == 1 {
-					m := config[0].(map[string]interface{})
+					m := config[0].(map[string]any)
 					input.ClusterConfig = expandClusterConfig(m)
 
 					// Work around "ValidationException: Your domain's Elasticsearch version does not support cold storage options. Upgrade to Elasticsearch 7.9 or later.".
@@ -1063,12 +1099,12 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		if d.HasChange("encrypt_at_rest") {
 			input.EncryptionAtRestOptions = nil
 			if v, ok := d.GetOk("encrypt_at_rest"); ok {
-				options := v.([]interface{})
+				options := v.([]any)
 				if options[0] == nil {
 					return sdkdiag.AppendErrorf(diags, "at least one field is expected inside encrypt_at_rest")
 				}
 
-				s := options[0].(map[string]interface{})
+				s := options[0].(map[string]any)
 				input.EncryptionAtRestOptions = expandEncryptAtRestOptions(s)
 			}
 		}
@@ -1080,22 +1116,22 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		if d.HasChange("node_to_node_encryption") {
 			input.NodeToNodeEncryptionOptions = nil
 			if v, ok := d.GetOk("node_to_node_encryption"); ok {
-				options := v.([]interface{})
+				options := v.([]any)
 
-				s := options[0].(map[string]interface{})
+				s := options[0].(map[string]any)
 				input.NodeToNodeEncryptionOptions = expandNodeToNodeEncryptionOptions(s)
 			}
 		}
 
 		if d.HasChange("off_peak_window_options") {
-			input.OffPeakWindowOptions = expandOffPeakWindowOptions(d.Get("off_peak_window_options").([]interface{})[0].(map[string]interface{}))
+			input.OffPeakWindowOptions = expandOffPeakWindowOptions(d.Get("off_peak_window_options").([]any)[0].(map[string]any))
 		}
 
 		if d.HasChange("snapshot_options") {
-			options := d.Get("snapshot_options").([]interface{})
+			options := d.Get("snapshot_options").([]any)
 
 			if len(options) == 1 {
-				o := options[0].(map[string]interface{})
+				o := options[0].(map[string]any)
 
 				snapshotOptions := awstypes.SnapshotOptions{
 					AutomatedSnapshotStartHour: aws.Int32(int32(o["automated_snapshot_start_hour"].(int))),
@@ -1106,12 +1142,12 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 
 		if d.HasChange("software_update_options") {
-			input.SoftwareUpdateOptions = expandSoftwareUpdateOptions(d.Get("software_update_options").([]interface{}))
+			input.SoftwareUpdateOptions = expandSoftwareUpdateOptions(d.Get("software_update_options").([]any))
 		}
 
 		if d.HasChange("vpc_options") {
-			options := d.Get("vpc_options").([]interface{})
-			s := options[0].(map[string]interface{})
+			options := d.Get("vpc_options").([]any)
+			s := options[0].(map[string]any)
 			input.VPCOptions = expandVPCOptions(s)
 		}
 
@@ -1147,7 +1183,7 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceDomainRead(ctx, d, meta)...)
 }
 
-func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpenSearchClient(ctx)
 	domainName := d.Get(names.AttrDomainName).(string)
@@ -1232,7 +1268,7 @@ func getKibanaEndpoint(endpoint string) string {
 func suppressComputedDedicatedMaster(k, old, new string, d *schema.ResourceData) bool {
 	v, ok := d.GetOk("cluster_config")
 	if ok {
-		clusterConfig := v.([]interface{})[0].(map[string]interface{})
+		clusterConfig := v.([]any)[0].(map[string]any)
 		return !clusterConfig["dedicated_master_enabled"].(bool)
 	}
 	return false
@@ -1241,13 +1277,13 @@ func suppressComputedDedicatedMaster(k, old, new string, d *schema.ResourceData)
 func isCustomEndpointDisabled(k, old, new string, d *schema.ResourceData) bool {
 	v, ok := d.GetOk("domain_endpoint_options")
 	if ok {
-		domainEndpointOptions := v.([]interface{})[0].(map[string]interface{})
+		domainEndpointOptions := v.([]any)[0].(map[string]any)
 		return !domainEndpointOptions["custom_endpoint_enabled"].(bool)
 	}
 	return false
 }
 
-func expandNodeToNodeEncryptionOptions(s map[string]interface{}) *awstypes.NodeToNodeEncryptionOptions {
+func expandNodeToNodeEncryptionOptions(s map[string]any) *awstypes.NodeToNodeEncryptionOptions {
 	options := awstypes.NodeToNodeEncryptionOptions{}
 
 	if v, ok := s[names.AttrEnabled]; ok {
@@ -1256,24 +1292,24 @@ func expandNodeToNodeEncryptionOptions(s map[string]interface{}) *awstypes.NodeT
 	return &options
 }
 
-func flattenNodeToNodeEncryptionOptions(o *awstypes.NodeToNodeEncryptionOptions) []map[string]interface{} {
+func flattenNodeToNodeEncryptionOptions(o *awstypes.NodeToNodeEncryptionOptions) []map[string]any {
 	if o == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 	if o.Enabled != nil {
 		m[names.AttrEnabled] = aws.ToBool(o.Enabled)
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func expandClusterConfig(m map[string]interface{}) *awstypes.ClusterConfig {
+func expandClusterConfig(m map[string]any) *awstypes.ClusterConfig {
 	config := awstypes.ClusterConfig{}
 
 	if v, ok := m["cold_storage_options"]; ok {
-		config.ColdStorageOptions = expandColdStorageOptions(v.([]interface{}))
+		config.ColdStorageOptions = expandColdStorageOptions(v.([]any))
 	}
 
 	if v, ok := m["dedicated_master_enabled"]; ok {
@@ -1302,6 +1338,10 @@ func expandClusterConfig(m map[string]interface{}) *awstypes.ClusterConfig {
 		config.MultiAZWithStandbyEnabled = aws.Bool(v.(bool))
 	}
 
+	if v, ok := m["node_options"]; ok {
+		config.NodeOptions = expandNodeOptions(v.([]any))
+	}
+
 	if v, ok := m["warm_enabled"]; ok {
 		isEnabled := v.(bool)
 		config.WarmEnabled = aws.Bool(isEnabled)
@@ -1323,7 +1363,7 @@ func expandClusterConfig(m map[string]interface{}) *awstypes.ClusterConfig {
 
 		if isEnabled {
 			if v, ok := m["zone_awareness_config"]; ok {
-				config.ZoneAwarenessConfig = expandZoneAwarenessConfig(v.([]interface{}))
+				config.ZoneAwarenessConfig = expandZoneAwarenessConfig(v.([]any))
 			}
 		}
 	}
@@ -1331,12 +1371,12 @@ func expandClusterConfig(m map[string]interface{}) *awstypes.ClusterConfig {
 	return &config
 }
 
-func expandZoneAwarenessConfig(l []interface{}) *awstypes.ZoneAwarenessConfig {
+func expandZoneAwarenessConfig(l []any) *awstypes.ZoneAwarenessConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	zoneAwarenessConfig := &awstypes.ZoneAwarenessConfig{}
 
@@ -1347,12 +1387,12 @@ func expandZoneAwarenessConfig(l []interface{}) *awstypes.ZoneAwarenessConfig {
 	return zoneAwarenessConfig
 }
 
-func expandColdStorageOptions(l []interface{}) *awstypes.ColdStorageOptions {
+func expandColdStorageOptions(l []any) *awstypes.ColdStorageOptions {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	ColdStorageOptions := &awstypes.ColdStorageOptions{}
 
@@ -1363,8 +1403,52 @@ func expandColdStorageOptions(l []interface{}) *awstypes.ColdStorageOptions {
 	return ColdStorageOptions
 }
 
-func flattenClusterConfig(c *awstypes.ClusterConfig) []map[string]interface{} {
-	m := map[string]interface{}{
+func expandNodeOptions(tfList []any) []awstypes.NodeOption {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	apiObjects := make([]awstypes.NodeOption, 0)
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		apiObject := awstypes.NodeOption{
+			NodeType: awstypes.NodeOptionsNodeType(tfMap["node_type"].(string)),
+		}
+
+		if v, ok := tfMap["node_config"].([]any); ok && len(v) > 0 && v[0] != nil {
+			apiObject.NodeConfig = expandNodeConfig(v[0].(map[string]any))
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func expandNodeConfig(tfMap map[string]any) *awstypes.NodeConfig {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.NodeConfig{}
+
+	isEnabled := tfMap[names.AttrEnabled].(bool)
+	apiObject.Enabled = aws.Bool(isEnabled)
+
+	if isEnabled {
+		apiObject.Count = aws.Int32(int32(tfMap["count"].(int)))
+		apiObject.Type = awstypes.OpenSearchPartitionInstanceType(tfMap[names.AttrType].(string))
+	}
+
+	return apiObject
+}
+
+func flattenClusterConfig(c *awstypes.ClusterConfig) []map[string]any {
+	m := map[string]any{
 		"zone_awareness_config":  flattenZoneAwarenessConfig(c.ZoneAwarenessConfig),
 		"zone_awareness_enabled": aws.ToBool(c.ZoneAwarenessEnabled),
 	}
@@ -1390,6 +1474,11 @@ func flattenClusterConfig(c *awstypes.ClusterConfig) []map[string]interface{} {
 	if c.MultiAZWithStandbyEnabled != nil {
 		m["multi_az_with_standby_enabled"] = aws.ToBool(c.MultiAZWithStandbyEnabled)
 	}
+
+	if len(c.NodeOptions) > 0 {
+		m["node_options"] = flattenNodeOptions(c.NodeOptions)
+	}
+
 	if c.WarmEnabled != nil {
 		m["warm_enabled"] = aws.ToBool(c.WarmEnabled)
 	}
@@ -1399,37 +1488,70 @@ func flattenClusterConfig(c *awstypes.ClusterConfig) []map[string]interface{} {
 
 	m["warm_type"] = c.WarmType
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenZoneAwarenessConfig(zoneAwarenessConfig *awstypes.ZoneAwarenessConfig) []interface{} {
+func flattenZoneAwarenessConfig(zoneAwarenessConfig *awstypes.ZoneAwarenessConfig) []any {
 	if zoneAwarenessConfig == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"availability_zone_count": aws.ToInt32(zoneAwarenessConfig.AvailabilityZoneCount),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenColdStorageOptions(coldStorageOptions *awstypes.ColdStorageOptions) []interface{} {
+func flattenColdStorageOptions(coldStorageOptions *awstypes.ColdStorageOptions) []any {
 	if coldStorageOptions == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		names.AttrEnabled: aws.ToBool(coldStorageOptions.Enabled),
 	}
 
-	return []interface{}{m}
+	return []any{m}
+}
+
+func flattenNodeOptions(apiObjects []awstypes.NodeOption) []any {
+	if len(apiObjects) == 0 {
+		return []any{}
+	}
+
+	var tfList []any
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{}
+		tfMap["node_config"] = flattenNodeConfig(apiObject.NodeConfig)
+		tfMap["node_type"] = apiObject.NodeType
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenNodeConfig(apiObject *awstypes.NodeConfig) []any {
+	tfMap := map[string]any{
+		names.AttrEnabled: aws.ToBool(apiObject.Enabled),
+	}
+
+	if apiObject.Count != nil {
+		tfMap["count"] = aws.ToInt32(apiObject.Count)
+	}
+
+	if apiObject.Type != "" {
+		tfMap[names.AttrType] = apiObject.Type
+	}
+
+	return []any{tfMap}
 }
 
 // advancedOptionsIgnoreDefault checks for defaults in the n map and, if
 // they don't exist in the o map, it deletes them. AWS returns default advanced
 // options that cause perpetual diffs.
-func advancedOptionsIgnoreDefault(o map[string]interface{}, n map[string]interface{}) map[string]interface{} {
+func advancedOptionsIgnoreDefault(o map[string]any, n map[string]any) map[string]any {
 	for k, v := range n {
 		switch fmt.Sprintf("%s=%s", k, v) {
 		case "override_main_response_version=false":
@@ -1464,12 +1586,7 @@ func parseEngineVersion(engineVersion string) (string, string, error) {
 // that supports IOPS (ex. gp3) to one that doesn't (ex. gp2).
 func ebsVolumeTypePermitsIopsInput(volumeType awstypes.VolumeType) bool {
 	permittedTypes := enum.Slice(awstypes.VolumeTypeGp3, awstypes.VolumeTypeIo1)
-	for _, t := range permittedTypes {
-		if string(volumeType) == t {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(permittedTypes, string(volumeType))
 }
 
 // EBSVolumeTypePermitsThroughputInput returns true if the volume type supports the Throughput input
@@ -1478,12 +1595,7 @@ func ebsVolumeTypePermitsIopsInput(volumeType awstypes.VolumeType) bool {
 // that supports Throughput (ex. gp3) to one that doesn't (ex. gp2).
 func ebsVolumeTypePermitsThroughputInput(volumeType awstypes.VolumeType) bool {
 	permittedTypes := enum.Slice(awstypes.VolumeTypeGp3)
-	for _, t := range permittedTypes {
-		if string(volumeType) == t {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(permittedTypes, string(volumeType))
 }
 
 func domainErrorRetryable(err error) (bool, error) {

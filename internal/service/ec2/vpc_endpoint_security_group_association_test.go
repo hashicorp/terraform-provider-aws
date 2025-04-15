@@ -38,6 +38,13 @@ func TestAccVPCEndpointSecurityGroupAssociation_basic(t *testing.T) {
 					testAccCheckVPCEndpointSecurityGroupAssociationNumAssociations(&v, 2),
 				),
 			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccVPCEndpointSecurityGroupAssociationImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"replace_default_association"},
+			},
 		},
 	})
 }
@@ -112,6 +119,13 @@ func TestAccVPCEndpointSecurityGroupAssociation_replaceDefaultAssociation(t *tes
 					testAccCheckVPCEndpointSecurityGroupAssociationNumAssociations(&v, 1),
 				),
 			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccVPCEndpointSecurityGroupAssociationImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"replace_default_association"},
+			},
 		},
 	})
 }
@@ -170,6 +184,18 @@ func testAccCheckVPCEndpointSecurityGroupAssociationExists(ctx context.Context, 
 		*v = *output
 
 		return nil
+	}
+}
+
+func testAccVPCEndpointSecurityGroupAssociationImportStateIdFunc(n string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", n)
+		}
+
+		id := fmt.Sprintf("%s/%s", rs.Primary.Attributes[names.AttrVPCEndpointID], rs.Primary.Attributes["security_group_id"])
+		return id, nil
 	}
 }
 

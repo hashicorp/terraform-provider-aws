@@ -1,0 +1,16 @@
+rules:
+  - id: metadata-method-in-wrapper
+    languages: [go]
+    message: Don't implement a Metadata method
+    paths:
+      include:
+        - "internal/service/*/*.go"
+      exclude:
+        - "internal/service/*/*_test.go"
+    patterns:
+      - pattern: func $FUNC(...) { ... }
+      - metavariable-regex:
+          metavariable: "$FUNC"
+          regex: "^Metadata$"
+    fix: ""
+    severity: WARNING

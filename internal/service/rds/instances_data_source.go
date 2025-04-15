@@ -41,7 +41,7 @@ func dataSourceInstances() *schema.Resource {
 	}
 }
 
-func dataSourceInstancesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceInstancesRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -54,7 +54,7 @@ func dataSourceInstancesRead(ctx context.Context, d *schema.ResourceData, meta i
 	filter := tfslices.PredicateTrue[*types.DBInstance]()
 	if v, ok := d.GetOk(names.AttrTags); ok {
 		filter = func(x *types.DBInstance) bool {
-			return KeyValueTags(ctx, x.TagList).ContainsAll(tftags.New(ctx, v.(map[string]interface{})))
+			return keyValueTags(ctx, x.TagList).ContainsAll(tftags.New(ctx, v.(map[string]any)))
 		}
 	}
 
@@ -72,7 +72,7 @@ func dataSourceInstancesRead(ctx context.Context, d *schema.ResourceData, meta i
 		instanceIdentifiers = append(instanceIdentifiers, aws.ToString(instance.DBInstanceIdentifier))
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set("instance_arns", instanceARNS)
 	d.Set("instance_identifiers", instanceIdentifiers)
 

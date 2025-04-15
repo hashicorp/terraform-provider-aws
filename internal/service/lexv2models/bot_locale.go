@@ -33,7 +33,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Bot Locale")
+// @FrameworkResource("aws_lexv2models_bot_locale", name="Bot Locale")
 func newResourceBotLocale(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceBotLocale{}
 
@@ -51,10 +51,6 @@ const (
 type resourceBotLocale struct {
 	framework.ResourceWithConfigure
 	framework.WithTimeouts
-}
-
-func (r *resourceBotLocale) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_lexv2models_bot_locale"
 }
 
 func (r *resourceBotLocale) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -81,12 +77,7 @@ func (r *resourceBotLocale) Schema(ctx context.Context, req resource.SchemaReque
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			names.AttrID: schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
+			names.AttrID: framework.IDAttribute(),
 			"n_lu_intent_confidence_threshold": schema.Float64Attribute{
 				Required: true,
 			},
@@ -423,7 +414,7 @@ func waitBotLocaleDeleted(ctx context.Context, conn *lexmodelsv2.Client, id stri
 }
 
 func statusBotLocale(ctx context.Context, conn *lexmodelsv2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := FindBotLocaleByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil

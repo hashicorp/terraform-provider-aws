@@ -93,11 +93,10 @@ func resourceDevicePool() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceDevicePoolCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDevicePoolCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
@@ -131,7 +130,7 @@ func resourceDevicePoolCreate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceDevicePoolRead(ctx, d, meta)...)
 }
 
-func resourceDevicePoolRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDevicePoolRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
@@ -167,7 +166,7 @@ func resourceDevicePoolRead(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourceDevicePoolUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDevicePoolUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
@@ -206,14 +205,15 @@ func resourceDevicePoolUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceDevicePoolRead(ctx, d, meta)...)
 }
 
-func resourceDevicePoolDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDevicePoolDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
 	log.Printf("[DEBUG] Deleting DeviceFarm Device Pool: %s", d.Id())
-	_, err := conn.DeleteDevicePool(ctx, &devicefarm.DeleteDevicePoolInput{
+	input := devicefarm.DeleteDevicePoolInput{
 		Arn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteDevicePool(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags
@@ -255,7 +255,7 @@ func expandDevicePoolRules(s *schema.Set) []awstypes.Rule {
 
 	for _, r := range s.List() {
 		rule := awstypes.Rule{}
-		tfMap := r.(map[string]interface{})
+		tfMap := r.(map[string]any)
 
 		if v, ok := tfMap["attribute"].(string); ok && v != "" {
 			rule.Attribute = awstypes.DeviceAttribute(v)
@@ -274,14 +274,14 @@ func expandDevicePoolRules(s *schema.Set) []awstypes.Rule {
 	return rules
 }
 
-func flattenDevicePoolRules(list []awstypes.Rule) []map[string]interface{} {
+func flattenDevicePoolRules(list []awstypes.Rule) []map[string]any {
 	if len(list) == 0 {
 		return nil
 	}
 
-	result := make([]map[string]interface{}, 0, len(list))
+	result := make([]map[string]any, 0, len(list))
 	for _, setting := range list {
-		l := map[string]interface{}{}
+		l := map[string]any{}
 
 		l["attribute"] = string(setting.Attribute)
 		l["operator"] = string(setting.Operator)

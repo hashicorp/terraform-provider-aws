@@ -20,17 +20,17 @@ import (
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
 func listTags(ctx context.Context, conn *elasticsearchservice.Client, identifier string, optFns ...func(*elasticsearchservice.Options)) (tftags.KeyValueTags, error) {
-	input := &elasticsearchservice.ListTagsInput{
+	input := elasticsearchservice.ListTagsInput{
 		ARN: aws.String(identifier),
 	}
 
-	output, err := conn.ListTags(ctx, input, optFns...)
+	output, err := conn.ListTags(ctx, &input, optFns...)
 
 	if err != nil {
 		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(ctx, output.TagList), nil
+	return keyValueTags(ctx, output.TagList), nil
 }
 
 // ListTags lists elasticsearch service tags and set them in Context.
@@ -51,8 +51,8 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier stri
 
 // []*SERVICE.Tag handling
 
-// Tags returns elasticsearch service tags.
-func Tags(tags tftags.KeyValueTags) []awstypes.Tag {
+// svcTags returns elasticsearch service tags.
+func svcTags(tags tftags.KeyValueTags) []awstypes.Tag {
 	result := make([]awstypes.Tag, 0, len(tags))
 
 	for k, v := range tags.Map() {
@@ -67,8 +67,8 @@ func Tags(tags tftags.KeyValueTags) []awstypes.Tag {
 	return result
 }
 
-// KeyValueTags creates tftags.KeyValueTags from elasticsearchservice service tags.
-func KeyValueTags(ctx context.Context, tags []awstypes.Tag) tftags.KeyValueTags {
+// keyValueTags creates tftags.KeyValueTags from elasticsearchservice service tags.
+func keyValueTags(ctx context.Context, tags []awstypes.Tag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
@@ -82,7 +82,7 @@ func KeyValueTags(ctx context.Context, tags []awstypes.Tag) tftags.KeyValueTags 
 // nil is returned if there are no input tags.
 func getTagsIn(ctx context.Context) []awstypes.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
+		if tags := svcTags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
 		}
 	}
@@ -93,7 +93,7 @@ func getTagsIn(ctx context.Context) []awstypes.Tag {
 // setTagsOut sets elasticsearch service tags in Context.
 func setTagsOut(ctx context.Context, tags []awstypes.Tag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		inContext.TagsOut = option.Some(KeyValueTags(ctx, tags))
+		inContext.TagsOut = option.Some(keyValueTags(ctx, tags))
 	}
 }
 
@@ -109,12 +109,12 @@ func updateTags(ctx context.Context, conn *elasticsearchservice.Client, identifi
 	removedTags := oldTags.Removed(newTags)
 	removedTags = removedTags.IgnoreSystem(names.Elasticsearch)
 	if len(removedTags) > 0 {
-		input := &elasticsearchservice.RemoveTagsInput{
+		input := elasticsearchservice.RemoveTagsInput{
 			ARN:     aws.String(identifier),
 			TagKeys: removedTags.Keys(),
 		}
 
-		_, err := conn.RemoveTags(ctx, input, optFns...)
+		_, err := conn.RemoveTags(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -124,12 +124,12 @@ func updateTags(ctx context.Context, conn *elasticsearchservice.Client, identifi
 	updatedTags := oldTags.Updated(newTags)
 	updatedTags = updatedTags.IgnoreSystem(names.Elasticsearch)
 	if len(updatedTags) > 0 {
-		input := &elasticsearchservice.AddTagsInput{
+		input := elasticsearchservice.AddTagsInput{
 			ARN:     aws.String(identifier),
-			TagList: Tags(updatedTags),
+			TagList: svcTags(updatedTags),
 		}
 
-		_, err := conn.AddTags(ctx, input, optFns...)
+		_, err := conn.AddTags(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)

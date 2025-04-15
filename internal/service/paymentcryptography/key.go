@@ -57,10 +57,6 @@ type resourceKey struct {
 	framework.WithTimeouts
 }
 
-func (r *resourceKey) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_paymentcryptography_key"
-}
-
 func (r *resourceKey) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -120,7 +116,7 @@ func (r *resourceKey) Schema(ctx context.Context, request resource.SchemaRequest
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			"key_attributes": schema.SingleNestedBlock{
+			"key_attributes": schema.SingleNestedBlock{ // nosemgrep:ci.avoid-SingleNestedBlock pre-existing, will be converted
 				CustomType: fwtypes.NewObjectTypeOf[keyAttributesModel](ctx),
 				Attributes: map[string]schema.Attribute{
 					"key_algorithm": schema.StringAttribute{
@@ -146,7 +142,7 @@ func (r *resourceKey) Schema(ctx context.Context, request resource.SchemaRequest
 					},
 				},
 				Blocks: map[string]schema.Block{
-					"key_modes_of_use": schema.SingleNestedBlock{
+					"key_modes_of_use": schema.SingleNestedBlock{ // nosemgrep:ci.avoid-SingleNestedBlock pre-existing, will be converted
 						CustomType: fwtypes.NewObjectTypeOf[keyModesOfUseModel](ctx),
 						Attributes: map[string]schema.Attribute{
 							"decrypt": schema.BoolAttribute{
@@ -418,9 +414,6 @@ func (r *resourceKey) Delete(ctx context.Context, request resource.DeleteRequest
 func (r *resourceKey) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), request, response)
 }
-func (r *resourceKey) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
 
 func waitKeyCreated(ctx context.Context, conn *paymentcryptography.Client, id string, timeout time.Duration) (*awstypes.Key, error) {
 	stateConf := &retry.StateChangeConf{
@@ -457,7 +450,7 @@ func waitKeyDeleted(ctx context.Context, conn *paymentcryptography.Client, id st
 }
 
 func statusKey(ctx context.Context, conn *paymentcryptography.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := findKeyByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil

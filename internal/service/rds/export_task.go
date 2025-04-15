@@ -29,7 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource("aws_rds_export_task")
+// @FrameworkResource("aws_rds_export_task", name="Export Task")
 func newResourceExportTask(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceExportTask{}
 	r.SetDefaultCreateTimeout(60 * time.Minute)
@@ -53,10 +53,6 @@ const (
 type resourceExportTask struct {
 	framework.ResourceWithConfigure
 	framework.WithTimeouts
-}
-
-func (r *resourceExportTask) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_rds_export_task"
 }
 
 func (r *resourceExportTask) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -292,7 +288,7 @@ func FindExportTaskByID(ctx context.Context, conn *rds.Client, id string) (*awst
 }
 
 func statusExportTask(ctx context.Context, conn *rds.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := FindExportTaskByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil

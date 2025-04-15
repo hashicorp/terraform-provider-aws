@@ -9,7 +9,7 @@ func {{ .GetTagFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier{{
 func {{ .GetTagFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}, key string, optFns ...func(*{{ .AWSService }}.Options)) (*string, error) {
 {{- end }}
 	{{- if .ListTagsInFiltIDName }}
-	input := &{{ .AWSService  }}.{{ .ListTagsOp }}Input{
+	input := {{ .AWSService  }}.{{ .ListTagsOp }}Input{
 		Filters: []awstypes.Filter{
 			{
 				Name:   aws.String("{{ .ListTagsInFiltIDName }}"),
@@ -22,7 +22,16 @@ func {{ .GetTagFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier{{
 		},
 	}
 
-	output, err := conn.{{ .ListTagsOp }}(ctx, input, optFns...)
+	{{ if .RetryTagOps }}
+	output, err := tfresource.RetryGWhenIsAErrorMessageContains[*{{ .TagPackage  }}.{{ .RetryTagsListTagsType }}, *{{ .RetryErrorCode }}](ctx, {{ .RetryTimeout }},
+		func() (*{{ .TagPackage  }}.{{ .RetryTagsListTagsType }}, error) {
+			return conn.{{ .ListTagsOp }}(ctx, &input, optFns...)
+		},
+		"{{ .RetryErrorMessage }}",
+	)
+	{{ else }}
+	output, err := conn.{{ .ListTagsOp }}(ctx, &input, optFns...)
+	{{- end }}
 
 	if err != nil {
 		return nil, err

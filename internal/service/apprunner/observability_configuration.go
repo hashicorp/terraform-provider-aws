@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -76,12 +75,10 @@ func resourceObservabilityConfiguration() *schema.Resource {
 				},
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceObservabilityConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceObservabilityConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
@@ -92,8 +89,8 @@ func resourceObservabilityConfigurationCreate(ctx context.Context, d *schema.Res
 		Tags:                           getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("trace_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.TraceConfiguration = expandTraceConfiguration(v.([]interface{}))
+	if v, ok := d.GetOk("trace_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.TraceConfiguration = expandTraceConfiguration(v.([]any))
 	}
 
 	output, err := conn.CreateObservabilityConfiguration(ctx, input)
@@ -111,7 +108,7 @@ func resourceObservabilityConfigurationCreate(ctx context.Context, d *schema.Res
 	return append(diags, resourceObservabilityConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceObservabilityConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceObservabilityConfigurationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
@@ -140,20 +137,21 @@ func resourceObservabilityConfigurationRead(ctx context.Context, d *schema.Resou
 	return diags
 }
 
-func resourceObservabilityConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceObservabilityConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	// Tags only.
 	return resourceObservabilityConfigurationRead(ctx, d, meta)
 }
 
-func resourceObservabilityConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceObservabilityConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
 
 	log.Printf("[INFO] Deleting App Runner Observability Configuration: %s", d.Id())
-	_, err := conn.DeleteObservabilityConfiguration(ctx, &apprunner.DeleteObservabilityConfigurationInput{
+	input := apprunner.DeleteObservabilityConfigurationInput{
 		ObservabilityConfigurationArn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteObservabilityConfiguration(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
@@ -203,7 +201,7 @@ func findObservabilityConfigurationByARN(ctx context.Context, conn *apprunner.Cl
 }
 
 func statusObservabilityConfiguration(ctx context.Context, conn *apprunner.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findObservabilityConfigurationByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
@@ -258,12 +256,12 @@ func waitObservabilityConfigurationDeleted(ctx context.Context, conn *apprunner.
 	return nil, err
 }
 
-func expandTraceConfiguration(l []interface{}) *types.TraceConfiguration {
+func expandTraceConfiguration(l []any) *types.TraceConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	configuration := &types.TraceConfiguration{}
 
@@ -274,14 +272,14 @@ func expandTraceConfiguration(l []interface{}) *types.TraceConfiguration {
 	return configuration
 }
 
-func flattenTraceConfiguration(traceConfiguration *types.TraceConfiguration) []interface{} {
+func flattenTraceConfiguration(traceConfiguration *types.TraceConfiguration) []any {
 	if traceConfiguration == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"vendor": string(traceConfiguration.Vendor),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }

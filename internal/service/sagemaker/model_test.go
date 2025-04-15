@@ -39,7 +39,7 @@ func TestAccSageMakerModel_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "primary_container.0.mode", "SingleModel"),
 					resource.TestCheckResourceAttr(resourceName, "primary_container.0.environment.%", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrExecutionRoleARN, "aws_iam_role.test", names.AttrARN),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("model/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("model/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "enable_network_isolation", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, "inference_execution_config.#", "0"),
@@ -725,7 +725,7 @@ resource "aws_sagemaker_model" "test" {
 
 resource "aws_iam_policy" "test" {
   name        = %[1]q
-  description = "Allow SageMaker to create model"
+  description = "Allow SageMaker AI to create model"
   policy      = data.aws_iam_policy_document.policy.json
 }
 
@@ -908,7 +908,7 @@ resource "aws_sagemaker_model" "test" {
 
 resource "aws_iam_policy" "test" {
   name        = %[1]q
-  description = "Allow SageMaker to create model"
+  description = "Allow SageMaker AI to create model"
   policy      = data.aws_iam_policy_document.policy.json
 }
 

@@ -51,7 +51,7 @@ func TestAccSSMQuickSetupConfigurationManager_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "configuration_definition.*", map[string]string{
 						names.AttrType: "AWSQuickSetupType-PatchPolicy",
 					}),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "manager_arn", "ssm-quicksetup", regexache.MustCompile(`configuration-manager/+.`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "manager_arn", "ssm-quicksetup", regexache.MustCompile(`configuration-manager/+.`)),
 				),
 			},
 			{

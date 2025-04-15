@@ -48,6 +48,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/{{ .SDKPackage }}/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -176,7 +177,7 @@ func TestAcc{{ .Service }}{{ .Resource }}_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAcc{{ .Resource }}Config_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheck{{ .Resource }}Exists(ctx, resourceName, &{{ .ResourceLower }}),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
 					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.day_of_week"),
@@ -186,7 +187,11 @@ func TestAcc{{ .Service }}{{ .Resource }}_basic(t *testing.T) {
 						"username":       "Test",
 						"password":       "TestTest1234",
 					}),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "{{ .ServicePackage }}", regexache.MustCompile(`{{ .ResourceLower }}:+.`)),
+					{{- if .IncludeComments }}
+					// TIP: If the ARN can be partially or completely determined by the parameters passed, e.g. it contains the
+					// value of `rName`, either include the values in the regex or check for an exact match using `acctest.CheckResourceAttrRegionalARN`
+					{{- end }}
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "{{ .ServicePackage }}", regexache.MustCompile(`{{ .ResourceLower }}:.+$`)),
 				),
 			},
 			{
@@ -213,7 +218,7 @@ func TestAcc{{ .Service }}{{ .Resource }}_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.{{ .Service }}EndpointID)
-			testAccPreCheck(t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.{{ .Service }}ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -221,7 +226,7 @@ func TestAcc{{ .Service }}{{ .Resource }}_disappears(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAcc{{ .Resource }}Config_basic(rName, testAcc{{ .Resource }}VersionNewer),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheck{{ .Resource }}Exists(ctx, resourceName, &{{ .ResourceLower }}),
 					{{- if .PluginFramework }}
 					{{- if .IncludeComments }}
@@ -238,6 +243,11 @@ func TestAcc{{ .Service }}{{ .Resource }}_disappears(t *testing.T) {
 					{{- end }}
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -252,18 +262,15 @@ func testAccCheck{{ .Resource }}Destroy(ctx context.Context) resource.TestCheckF
 				continue
 			}
 
-			input := &{{ .SDKPackage }}.Describe{{ .Resource }}Input{
-				{{ .Resource }}Id: aws.String(rs.Primary.ID),
-			}
-
-			_, err := conn.Describe{{ .Resource }}(ctx, &{{ .SDKPackage }}.Describe{{ .Resource }}Input{
-				{{ .Resource }}Id: aws.String(rs.Primary.ID),
-			})
-
-			if errs.IsA[*types.ResourceNotFoundException](err){
+			{{ if .IncludeComments }}
+			// TIP: ==== FINDERS ====
+			// The find function should be exported. Since it won't be used outside of the package, it can be exported
+			// in the `exports_test.go` file.
+			{{- end }}
+			_, err := tf{{ .ServicePackage }}.Find{{ .Resource }}ByID(ctx, conn, rs.Primary.ID)
+			if tfresource.NotFound(err) {
 				return nil
 			}
-
 			if err != nil {
 			        return create.Error(names.{{ .Service }}, create.ErrActionCheckingDestroyed, tf{{ .ServicePackage }}.ResName{{ .Resource }}, rs.Primary.ID, err)
 			}
@@ -288,10 +295,7 @@ func testAccCheck{{ .Resource }}Exists(ctx context.Context, name string, {{ .Res
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).{{ .Service }}Client(ctx)
 
-		resp, err := conn.Describe{{ .Resource }}(ctx, &{{ .SDKPackage }}.Describe{{ .Resource }}Input{
-			{{ .Resource }}Id: aws.String(rs.Primary.ID),
-		})
-
+		resp, err := tf{{ .ServicePackage }}.Find{{ .Resource }}ByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return create.Error(names.{{ .Service }}, create.ErrActionCheckingExistence, tf{{ .ServicePackage }}.ResName{{ .Resource }}, rs.Primary.ID, err)
 		}

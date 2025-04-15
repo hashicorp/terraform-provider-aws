@@ -265,16 +265,20 @@ func dataSourceListener() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"advertise_trust_store_ca_names": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"ignore_client_certificate_expiry": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
 						names.AttrMode: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 						"trust_store_arn": {
 							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"ignore_client_certificate_expiry": {
-							Type:     schema.TypeBool,
 							Computed: true,
 						},
 					},
@@ -300,7 +304,7 @@ func dataSourceListener() *schema.Resource {
 	}
 }
 
-func dataSourceListenerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceListenerRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 

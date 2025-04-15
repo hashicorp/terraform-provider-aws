@@ -178,7 +178,7 @@ func testAccResourcePolicy(ctx context.Context, n string, action string) resourc
 
 		actualPolicyText := aws.ToString(policy.PolicyInJson)
 
-		expectedPolicy := CreateTablePolicy(action)
+		expectedPolicy := CreateTablePolicy(ctx, action)
 		equivalent, err := awspolicy.PoliciesAreEquivalent(actualPolicyText, expectedPolicy)
 		if err != nil {
 			return fmt.Errorf("Error testing policy equivalence: %s", err)
@@ -212,7 +212,7 @@ func testAccCheckResourcePolicyDestroy(ctx context.Context) resource.TestCheckFu
 	}
 }
 
-func CreateTablePolicy(action string) string {
+func CreateTablePolicy(ctx context.Context, action string) string {
 	return fmt.Sprintf(`{
   "Version" : "2012-10-17",
   "Statement" : [
@@ -227,7 +227,7 @@ func CreateTablePolicy(action string) string {
       "Resource" : "arn:%s:glue:%s:%s:*"
     }
   ]
-}`, action, acctest.Partition(), acctest.Region(), acctest.AccountID())
+}`, action, acctest.Partition(), acctest.Region(), acctest.AccountID(ctx))
 }
 
 func testAccResourcePolicyConfig_required(action string) string {

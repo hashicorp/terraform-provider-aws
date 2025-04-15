@@ -29,7 +29,7 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 		return nil
 	}
 
-	input := &{{ .AWSService }}.{{ .TagOp }}Input{
+	input := {{ .AWSService }}.{{ .TagOp }}Input{
 		{{- if not ( .TagTypeIDElem ) }}
 		{{- if .TagInIDNeedValueSlice }}
 		{{ .TagInIDElem }}: []string{identifier},
@@ -61,8 +61,16 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 		input.{{ .UntagInTagsElem }} = removedTags.Keys()
 		{{- end }}
 	}
-
-	_, err := conn.{{ .TagOp }}(ctx, input, optFns...)
+	{{ if .RetryTagOps }}
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[*{{ .RetryErrorCode }}](ctx, {{ .RetryTimeout }},
+		func() (any, error) {
+			return conn.{{ .TagOp }}(ctx, &input, optFns...)
+		},
+		"{{ .RetryErrorMessage }}",
+	)
+	{{ else }}
+	_, err := conn.{{ .TagOp }}(ctx, &input, optFns...)
+	{{- end }}
 
 	if err != nil {
 		return fmt.Errorf("tagging resource (%s): %w", identifier, err)
@@ -78,7 +86,7 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 		{{- if .TagOpBatchSize }}
 		for _, removedTags := range removedTags.Chunks({{ .TagOpBatchSize }}) {
 		{{- end }}
-		input := &{{ .TagPackage }}.{{ .UntagOp }}Input{
+		input := {{ .TagPackage }}.{{ .UntagOp }}Input{
 			{{- if not ( .TagTypeIDElem ) }}
 			{{- if .TagInIDNeedValueSlice }}
 			{{ .TagInIDElem }}: []string{identifier},
@@ -103,8 +111,16 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 			{{ .UntagInTagsElem }}:       removedTags.Keys(),
 			{{- end }}
 		}
-
-		_, err := conn.{{ .UntagOp }}(ctx, input, optFns...)
+		{{ if .RetryTagOps }}
+		_, err := tfresource.RetryWhenIsAErrorMessageContains[*{{ .RetryErrorCode }}](ctx, {{ .RetryTimeout }},
+			func() (any, error) {
+				return conn.{{ .UntagOp }}(ctx, &input, optFns...)
+			},
+			"{{ .RetryErrorMessage }}",
+		)
+		{{ else }}
+		_, err := conn.{{ .UntagOp }}(ctx, &input, optFns...)
+		{{- end }}
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -122,7 +138,7 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 		{{- if .TagOpBatchSize }}
 		for _, updatedTags := range updatedTags.Chunks({{ .TagOpBatchSize }}) {
 		{{- end }}
-		input := &{{ .TagPackage }}.{{ .TagOp }}Input{
+		input := {{ .TagPackage }}.{{ .TagOp }}Input{
 			{{- if not ( .TagTypeIDElem ) }}
 			{{- if .TagInIDNeedValueSlice }}
 			{{ .TagInIDElem }}: []string{identifier},
@@ -144,7 +160,16 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 			{{- end }}
 		}
 
-		_, err := conn.{{ .TagOp }}(ctx, input, optFns...)
+		{{ if .RetryTagOps }}
+		_, err := tfresource.RetryWhenIsAErrorMessageContains[*{{ .RetryErrorCode }}](ctx, {{ .RetryTimeout }},
+			func() (any, error) {
+				return conn.{{ .TagOp }}(ctx, &input, optFns...)
+			},
+			"{{ .RetryErrorMessage }}",
+		)
+		{{ else }}
+		_, err := conn.{{ .TagOp }}(ctx, &input, optFns...)
+		{{- end }}
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)

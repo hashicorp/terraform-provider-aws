@@ -88,20 +88,21 @@ func dataSourceCertificate() *schema.Resource {
 	}
 }
 
-func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ACMClient(ctx)
 
-	input := &acm.ListCertificatesInput{}
+	input := acm.ListCertificatesInput{}
 
 	if v, ok := d.GetOk("key_types"); ok && v.(*schema.Set).Len() > 0 {
-		input.Includes = &awstypes.Filters{
+		filters := awstypes.Filters{
 			KeyTypes: flex.ExpandStringyValueSet[awstypes.KeyAlgorithm](v.(*schema.Set)),
 		}
+		input.Includes = &filters
 	}
 
-	if v, ok := d.GetOk("statuses"); ok && len(v.([]interface{})) > 0 {
-		input.CertificateStatuses = flex.ExpandStringyValueList[awstypes.CertificateStatus](v.([]interface{}))
+	if v, ok := d.GetOk("statuses"); ok && len(v.([]any)) > 0 {
+		input.CertificateStatuses = flex.ExpandStringyValueList[awstypes.CertificateStatus](v.([]any))
 	} else {
 		input.CertificateStatuses = []awstypes.CertificateStatus{awstypes.CertificateStatusIssued}
 	}
@@ -112,7 +113,7 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 			return aws.ToString(v.DomainName) == domain
 		}
 	}
-	if certificateTypes := flex.ExpandStringyValueList[awstypes.CertificateType](d.Get("types").([]interface{})); len(certificateTypes) > 0 {
+	if certificateTypes := flex.ExpandStringyValueList[awstypes.CertificateType](d.Get("types").([]any)); len(certificateTypes) > 0 {
 		f = tfslices.PredicateAnd(f, func(v *awstypes.CertificateSummary) bool {
 			return slices.Contains(certificateTypes, v.Type)
 		})
@@ -123,7 +124,7 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 	)
 	certificateSummaries, err := tfresource.RetryGWhenNotFound(ctx, timeout,
 		func() ([]awstypes.CertificateSummary, error) {
-			output, err := findCertificates(ctx, conn, input, f)
+			output, err := findCertificates(ctx, conn, &input, f)
 			switch {
 			case err != nil:
 				return nil, err
@@ -163,7 +164,7 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 				return sdkdiag.AppendErrorf(diags, "listing tags for ACM Certificate (%s): %s", certificateARN, err)
 			}
 
-			if !tags.ContainsAll(KeyValueTags(ctx, tagsToMatch)) {
+			if !tags.ContainsAll(keyValueTags(ctx, tagsToMatch)) {
 				continue
 			}
 		}
@@ -196,12 +197,12 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 	var output *acm.GetCertificateOutput
 	if matchedCertificate.Status == awstypes.CertificateStatusIssued {
 		arn := aws.ToString(matchedCertificate.CertificateArn)
-		input := &acm.GetCertificateInput{
+		input := acm.GetCertificateInput{
 			CertificateArn: aws.String(arn),
 		}
 		var err error
 
-		output, err = conn.GetCertificate(ctx, input)
+		output, err = conn.GetCertificate(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading ACM Certificate (%s): %s", arn, err)

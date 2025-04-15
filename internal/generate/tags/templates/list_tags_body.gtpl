@@ -2,7 +2,7 @@
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
 func {{ .ListTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }} string, optFns ...func(*{{ .AWSService }}.Options)) (tftags.KeyValueTags, error) {
-	input := &{{ .TagPackage  }}.{{ .ListTagsOp }}Input{
+	input := {{ .TagPackage  }}.{{ .ListTagsOp }}Input{
 		{{- if .ListTagsInFiltIDName }}
 		Filters: []awstypes.Filter{
 			{
@@ -26,9 +26,46 @@ func {{ .ListTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier
 		{{- end }}
 	}
 {{- if .ListTagsOpPaginated }}
+    {{- if .RetryTagOps }}
+	output, err := tfresource.RetryGWhenIsAErrorMessageContains[*{{ .TagPackage  }}.{{ .RetryTagsListTagsType }}, *{{ .RetryErrorCode }}](ctx, {{ .RetryTimeout }},
+		func() (*{{ .TagPackage  }}.{{ .RetryTagsListTagsType }}, error) {
+			var output []awstypes.{{ or .TagType2 .TagType }}
+
+			pages := {{ .TagPackage  }}.New{{ .ListTagsOp }}Paginator(conn, &input)
+			for pages.HasMorePages() {
+				page, err := pages.NextPage(ctx, optFns...)
+
+			{{ if and ( .ParentNotFoundErrCode ) ( .ParentNotFoundErrMsg ) }}
+					if tfawserr.ErrMessageContains(err, "{{ .ParentNotFoundErrCode }}", "{{ .ParentNotFoundErrMsg }}") {
+						return nil, &retry.NotFoundError{
+							LastError:   err,
+							LastRequest: &input,
+						}
+					}
+			{{- else if ( .ParentNotFoundErrCode ) }}
+					if tfawserr.ErrCodeEquals(err, "{{ .ParentNotFoundErrCode }}") {
+						return nil, &retry.NotFoundError{
+							LastError:   err,
+							LastRequest: &input,
+						}
+					}
+			{{- end }}
+
+				if err != nil {
+					return tftags.New(ctx, nil), err
+				}
+
+				for _, v := range page.{{ .ListTagsOutTagsElem }} {
+					output = append(output, v)
+				}
+			}
+		},
+		"{{ .RetryErrorMessage }}",
+	)
+	{{ else }}
 	var output []awstypes.{{ or .TagType2 .TagType }}
 
-	pages := {{ .TagPackage  }}.New{{ .ListTagsOp }}Paginator(conn, input)
+	pages := {{ .TagPackage  }}.New{{ .ListTagsOp }}Paginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx, optFns...)
 
@@ -36,14 +73,14 @@ func {{ .ListTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier
 			if tfawserr.ErrMessageContains(err, "{{ .ParentNotFoundErrCode }}", "{{ .ParentNotFoundErrMsg }}") {
 				return nil, &retry.NotFoundError{
 					LastError:   err,
-					LastRequest: input,
+					LastRequest: &input,
 				}
 			}
 	{{- else if ( .ParentNotFoundErrCode ) }}
 			if tfawserr.ErrCodeEquals(err, "{{ .ParentNotFoundErrCode }}") {
 				return nil, &retry.NotFoundError{
 					LastError:   err,
-					LastRequest: input,
+					LastRequest: &input,
 				}
 			}
 	{{- end }}
@@ -56,24 +93,34 @@ func {{ .ListTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier
 			output = append(output, v)
 		}
 	}
+	{{- end }}
 
 	return {{ .KeyValueTagsFunc }}(ctx, output{{ if .TagTypeIDElem }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}{{ end }}), nil
 {{- else }}
 
-	output, err := conn.{{ .ListTagsOp }}(ctx, input, optFns...)
+    {{ if .RetryTagOps }}
+	output, err := tfresource.RetryGWhenIsAErrorMessageContains[*{{ .TagPackage  }}.{{ .RetryTagsListTagsType }}, *{{ .RetryErrorCode }}](ctx, {{ .RetryTimeout }},
+		func() (*{{ .TagPackage  }}.{{ .RetryTagsListTagsType }}, error) {
+			return conn.{{ .ListTagsOp }}(ctx, &input, optFns...)
+		},
+		"{{ .RetryErrorMessage }}",
+	)
+	{{- else }}
+	output, err := conn.{{ .ListTagsOp }}(ctx, &input, optFns...)
+	{{- end }}
 
 	{{ if and ( .ParentNotFoundErrCode ) ( .ParentNotFoundErrMsg ) }}
 			if tfawserr.ErrMessageContains(err, "{{ .ParentNotFoundErrCode }}", "{{ .ParentNotFoundErrMsg }}") {
 				return nil, &retry.NotFoundError{
 					LastError:   err,
-					LastRequest: input,
+					LastRequest: &input,
 				}
 			}
 	{{- else if ( .ParentNotFoundErrCode ) }}
 			if tfawserr.ErrCodeEquals(err, "{{ .ParentNotFoundErrCode }}") {
 				return nil, &retry.NotFoundError{
 					LastError:   err,
-					LastRequest: input,
+					LastRequest: &input,
 				}
 			}
 	{{- end }}

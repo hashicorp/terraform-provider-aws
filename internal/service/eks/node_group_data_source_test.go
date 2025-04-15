@@ -25,7 +25,7 @@ func TestAccEKSNodeGroupDataSource_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNodeGroupConfig_dataSourceName(rName),
+				Config: testAccNodeGroupConfig_name(rName),
 				Check:  resource.ComposeTestCheckFunc(),
 			},
 			{
@@ -57,7 +57,7 @@ func TestAccEKSNodeGroupDataSource_basic(t *testing.T) {
 }
 
 func testAccNodeGroupDataSourceConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccNodeGroupConfig_dataSourceName(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccNodeGroupConfig_name(rName), fmt.Sprintf(`
 data "aws_eks_node_group" "test" {
   cluster_name    = aws_eks_cluster.test.name
   node_group_name = %[1]q

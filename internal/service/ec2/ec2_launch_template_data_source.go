@@ -178,8 +178,9 @@ func dataSourceLaunchTemplate() *schema.Resource {
 				Computed: true,
 			},
 			"elastic_gpu_specifications": {
-				Type:     schema.TypeList,
-				Computed: true,
+				Deprecated: "elastic_gpu_specifications is deprecated. AWS no longer supports the Elastic Graphics service.",
+				Type:       schema.TypeList,
+				Computed:   true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						names.AttrType: {
@@ -190,8 +191,9 @@ func dataSourceLaunchTemplate() *schema.Resource {
 				},
 			},
 			"elastic_inference_accelerator": {
-				Type:     schema.TypeList,
-				Computed: true,
+				Deprecated: "elastic_inference_accelerator is deprecated. AWS no longer supports the Elastic Inference service.",
+				Type:       schema.TypeList,
+				Computed:   true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						names.AttrType: {
@@ -613,6 +615,26 @@ func dataSourceLaunchTemplate() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"connection_tracking_specification": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"tcp_established_timeout": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+									"udp_stream_timeout": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+									"udp_timeout": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+								},
+							},
+						},
 						names.AttrDeleteOnTermination: {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -789,11 +811,11 @@ func dataSourceLaunchTemplate() *schema.Resource {
 	}
 }
 
-func dataSourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.DescribeLaunchTemplatesInput{}
+	input := ec2.DescribeLaunchTemplatesInput{}
 
 	if v, ok := d.GetOk(names.AttrID); ok {
 		input.LaunchTemplateIds = []string{v.(string)}
@@ -808,14 +830,14 @@ func dataSourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, m
 	)...)
 
 	input.Filters = append(input.Filters, newTagFilterList(
-		Tags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))),
+		svcTags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]any))),
 	)...)
 
 	if len(input.Filters) == 0 {
 		input.Filters = nil
 	}
 
-	lt, err := findLaunchTemplate(ctx, conn, input)
+	lt, err := findLaunchTemplate(ctx, conn, &input)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Launch Template", err))
@@ -833,8 +855,8 @@ func dataSourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, m
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("launch-template/%s", d.Id()),
 	}.String()
 	d.Set(names.AttrARN, arn)

@@ -106,16 +106,22 @@ class MyConvertedCode extends TerraformStack {
     );
     /*This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.*/
     awsSsoadminPermissionSetExample.overrideLogicalId("example");
-    new SsoadminAccountAssignment(this, "account_assignment", {
-      instanceArn: Token.asString(
-        Fn.lookupNested(Fn.tolist(example.arns), ["0"])
-      ),
-      permissionSetArn: Token.asString(awsSsoadminPermissionSetExample.arn),
-      principalId: Token.asString(awsIdentitystoreGroupExample.groupId),
-      principalType: "GROUP",
-      targetId: "123456789012",
-      targetType: "AWS_ACCOUNT",
-    });
+    const awsSsoadminAccountAssignmentExample = new SsoadminAccountAssignment(
+      this,
+      "example_3",
+      {
+        instanceArn: Token.asString(
+          Fn.lookupNested(Fn.tolist(example.arns), ["0"])
+        ),
+        permissionSetArn: Token.asString(awsSsoadminPermissionSetExample.arn),
+        principalId: Token.asString(awsIdentitystoreGroupExample.groupId),
+        principalType: "GROUP",
+        targetId: "123456789012",
+        targetType: "AWS_ACCOUNT",
+      }
+    );
+    /*This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.*/
+    awsSsoadminAccountAssignmentExample.overrideLogicalId("example");
     const awsSsoadminManagedPolicyAttachmentExample =
       new SsoadminManagedPolicyAttachment(this, "example_4", {
         dependsOn: [awsSsoadminAccountAssignmentExample],
@@ -186,4 +192,4 @@ Using `terraform import`, import SSO Managed Policy Attachments using the `manag
 % terraform import aws_ssoadmin_managed_policy_attachment.example arn:aws:iam::aws:policy/AlexaForBusinessDeviceSetup,arn:aws:sso:::permissionSet/ssoins-2938j0x8920sbj72/ps-80383020jr9302rk,arn:aws:sso:::instance/ssoins-2938j0x8920sbj72
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-73fefc01b46b4cf4489868580522a20327e26c603ae4140b5374affcfb50ca7b -->
+<!-- cache-key: cdktf-0.20.8 input-8a4fcc281822d93bd1147a646476817fcf4960f012d3151577f2009841e28302 -->

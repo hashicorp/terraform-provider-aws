@@ -196,7 +196,7 @@ func testAccUserGroupMembershipImportStateIdFunc(resourceName string) resource.I
 
 		groupCount, _ := strconv.Atoi(rs.Primary.Attributes["groups.#"])
 		stateId := rs.Primary.Attributes["user"]
-		for i := 0; i < groupCount; i++ {
+		for i := range groupCount {
 			groupName := rs.Primary.Attributes[fmt.Sprintf("group.%d", i)]
 			stateId = fmt.Sprintf("%s/%s", stateId, groupName)
 		}

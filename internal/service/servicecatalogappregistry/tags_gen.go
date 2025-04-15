@@ -19,11 +19,11 @@ import (
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
 func listTags(ctx context.Context, conn *servicecatalogappregistry.Client, identifier string, optFns ...func(*servicecatalogappregistry.Options)) (tftags.KeyValueTags, error) {
-	input := &servicecatalogappregistry.ListTagsForResourceInput{
+	input := servicecatalogappregistry.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsForResource(ctx, input, optFns...)
+	output, err := conn.ListTagsForResource(ctx, &input, optFns...)
 
 	if err != nil {
 		return tftags.New(ctx, nil), err
@@ -50,8 +50,8 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier stri
 
 // map[string]string handling
 
-// Tags returns servicecatalogappregistry service tags.
-func Tags(tags tftags.KeyValueTags) map[string]string {
+// svcTags returns servicecatalogappregistry service tags.
+func svcTags(tags tftags.KeyValueTags) map[string]string {
 	return tags.Map()
 }
 
@@ -64,7 +64,7 @@ func KeyValueTags(ctx context.Context, tags map[string]string) tftags.KeyValueTa
 // nil is returned if there are no input tags.
 func getTagsIn(ctx context.Context) map[string]string {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
+		if tags := svcTags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
 		}
 	}
@@ -91,12 +91,12 @@ func updateTags(ctx context.Context, conn *servicecatalogappregistry.Client, ide
 	removedTags := oldTags.Removed(newTags)
 	removedTags = removedTags.IgnoreSystem(names.ServiceCatalogAppRegistry)
 	if len(removedTags) > 0 {
-		input := &servicecatalogappregistry.UntagResourceInput{
+		input := servicecatalogappregistry.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
 			TagKeys:     removedTags.Keys(),
 		}
 
-		_, err := conn.UntagResource(ctx, input, optFns...)
+		_, err := conn.UntagResource(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -106,12 +106,12 @@ func updateTags(ctx context.Context, conn *servicecatalogappregistry.Client, ide
 	updatedTags := oldTags.Updated(newTags)
 	updatedTags = updatedTags.IgnoreSystem(names.ServiceCatalogAppRegistry)
 	if len(updatedTags) > 0 {
-		input := &servicecatalogappregistry.TagResourceInput{
+		input := servicecatalogappregistry.TagResourceInput{
 			ResourceArn: aws.String(identifier),
-			Tags:        Tags(updatedTags),
+			Tags:        svcTags(updatedTags),
 		}
 
-		_, err := conn.TagResource(ctx, input, optFns...)
+		_, err := conn.TagResource(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)

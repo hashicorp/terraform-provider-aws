@@ -92,7 +92,7 @@ func dataSourceFirewallPolicy() *schema.Resource {
 									},
 								},
 							},
-							"stateless_custom_action": sdkv2.DataSourcePropertyFromResourceProperty(customActionSchema()),
+							"stateless_custom_action": sdkv2.ComputedOnlyFromSchema(customActionSchema()),
 							"stateless_default_actions": {
 								Type:     schema.TypeSet,
 								Computed: true,
@@ -142,7 +142,7 @@ func dataSourceFirewallPolicy() *schema.Resource {
 	}
 }
 
-func dataSourceFirewallPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceFirewallPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NetworkFirewallClient(ctx)
 

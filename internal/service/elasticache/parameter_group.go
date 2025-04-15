@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"slices"
 	"strings"
 	"time"
 
@@ -23,7 +24,6 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -60,7 +60,7 @@ func resourceParameterGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
-				StateFunc: func(val interface{}) string {
+				StateFunc: func(val any) string {
 					return strings.ToLower(val.(string))
 				},
 			},
@@ -84,12 +84,10 @@ func resourceParameterGroup() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheClient(ctx)
 	partition := meta.(*conns.AWSClient).Partition(ctx)
@@ -121,7 +119,7 @@ func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceParameterGroupUpdate(ctx, d, meta)...)
 }
 
-func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheClient(ctx)
 
@@ -159,7 +157,7 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheClient(ctx)
 
@@ -203,7 +201,7 @@ func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, m
 
 					// Always reset the top level error and remove the reset for reserved-memory
 					err = nil
-					paramsToModify = append(paramsToModify[:i], paramsToModify[i+1:]...)
+					paramsToModify = slices.Delete(paramsToModify, i, i+1)
 
 					// If we are only trying to remove reserved-memory and not perform
 					// an update to reserved-memory or reserved-memory-percent, we
@@ -278,7 +276,7 @@ func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceParameterGroupRead(ctx, d, meta)...)
 }
 
-func resourceParameterGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceParameterGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheClient(ctx)
 
@@ -294,7 +292,7 @@ func deleteParameterGroup(ctx context.Context, conn *elasticache.Client, name st
 	const (
 		timeout = 3 * time.Minute
 	)
-	_, err := tfresource.RetryWhenIsA[*awstypes.InvalidCacheParameterGroupStateFault](ctx, timeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsA[*awstypes.InvalidCacheParameterGroupStateFault](ctx, timeout, func() (any, error) {
 		return conn.DeleteCacheParameterGroup(ctx, &elasticache.DeleteCacheParameterGroupInput{
 			CacheParameterGroupName: aws.String(name),
 		})
@@ -315,7 +313,7 @@ var (
 	parameterHash = sdkv2.SimpleSchemaSetFunc(names.AttrName, names.AttrValue)
 )
 
-func parameterChanges(o, n interface{}) (remove, addOrUpdate []*awstypes.ParameterNameValue) {
+func parameterChanges(o, n any) (remove, addOrUpdate []*awstypes.ParameterNameValue) {
 	if o == nil {
 		o = new(schema.Set)
 	}
@@ -327,12 +325,12 @@ func parameterChanges(o, n interface{}) (remove, addOrUpdate []*awstypes.Paramet
 
 	om := make(map[string]*awstypes.ParameterNameValue, os.Len())
 	for _, raw := range os.List() {
-		param := raw.(map[string]interface{})
+		param := raw.(map[string]any)
 		om[param[names.AttrName].(string)] = expandParameter(param)
 	}
 	nm := make(map[string]*awstypes.ParameterNameValue, len(addOrUpdate))
 	for _, raw := range ns.List() {
-		param := raw.(map[string]interface{})
+		param := raw.(map[string]any)
 		nm[param[names.AttrName].(string)] = expandParameter(param)
 	}
 
@@ -429,19 +427,19 @@ func findCacheParameterGroups(ctx context.Context, conn *elasticache.Client, inp
 	return output, nil
 }
 
-func expandParameter(tfMap map[string]interface{}) *awstypes.ParameterNameValue {
+func expandParameter(tfMap map[string]any) *awstypes.ParameterNameValue {
 	return &awstypes.ParameterNameValue{
 		ParameterName:  aws.String(tfMap[names.AttrName].(string)),
 		ParameterValue: aws.String(tfMap[names.AttrValue].(string)),
 	}
 }
 
-func flattenParameters(apiObjects []awstypes.Parameter) []interface{} {
-	tfList := make([]interface{}, 0, len(apiObjects))
+func flattenParameters(apiObjects []awstypes.Parameter) []any {
+	tfList := make([]any, 0, len(apiObjects))
 
 	for _, apiObject := range apiObjects {
 		if apiObject.ParameterValue != nil {
-			tfList = append(tfList, map[string]interface{}{
+			tfList = append(tfList, map[string]any{
 				names.AttrName:  strings.ToLower(aws.ToString(apiObject.ParameterName)),
 				names.AttrValue: aws.ToString(apiObject.ParameterValue),
 			})

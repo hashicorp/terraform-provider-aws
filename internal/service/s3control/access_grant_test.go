@@ -37,7 +37,7 @@ func testAccAccessGrant_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "access_grant_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "access_grants_location_id"),
 					resource.TestCheckResourceAttr(resourceName, "access_grants_location_configuration.#", "0"),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAccountID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrAccountID),
 					resource.TestCheckResourceAttrSet(resourceName, "grant_scope"),
 					resource.TestCheckResourceAttr(resourceName, "permission", "READ"),
 					resource.TestCheckNoResourceAttr(resourceName, "s3_prefix_type"),

@@ -25,6 +25,9 @@ func listShardsPages(ctx context.Context, conn *kinesis.Client, input *kinesis.L
 		}
 
 		input.NextToken = output.NextToken
+		// "Don't specify StreamName or StreamCreationTimestamp if you specify NextToken because the latter unambiguously identifies the stream".
+		input.StreamCreationTimestamp = nil
+		input.StreamName = nil
 	}
 	return nil
 }

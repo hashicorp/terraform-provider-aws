@@ -9,6 +9,7 @@ var (
 	ResourceGuardrail                           = newResourceGuardrail
 	ResourceGuardrailVersion                    = newGuardrailVersionResource
 	ResourceModelInvocationLoggingConfiguration = newModelInvocationLoggingConfigurationResource
+	ResourceInferenceProfile                    = newResourceInferenceProfile
 
 	FindCustomModelByID                     = findCustomModelByID
 	FindGuardrailByTwoPartKey               = findGuardrailByTwoPartKey

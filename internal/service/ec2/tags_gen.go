@@ -23,7 +23,7 @@ import (
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
 func findTag(ctx context.Context, conn *ec2.Client, identifier, key string, optFns ...func(*ec2.Options)) (*string, error) {
-	input := &ec2.DescribeTagsInput{
+	input := ec2.DescribeTagsInput{
 		Filters: []awstypes.Filter{
 			{
 				Name:   aws.String("resource-id"),
@@ -36,7 +36,7 @@ func findTag(ctx context.Context, conn *ec2.Client, identifier, key string, optF
 		},
 	}
 
-	output, err := conn.DescribeTags(ctx, input, optFns...)
+	output, err := conn.DescribeTags(ctx, &input, optFns...)
 
 	if err != nil {
 		return nil, err
@@ -55,7 +55,7 @@ func findTag(ctx context.Context, conn *ec2.Client, identifier, key string, optF
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
 func listTags(ctx context.Context, conn *ec2.Client, identifier string, optFns ...func(*ec2.Options)) (tftags.KeyValueTags, error) {
-	input := &ec2.DescribeTagsInput{
+	input := ec2.DescribeTagsInput{
 		Filters: []awstypes.Filter{
 			{
 				Name:   aws.String("resource-id"),
@@ -65,7 +65,7 @@ func listTags(ctx context.Context, conn *ec2.Client, identifier string, optFns .
 	}
 	var output []awstypes.TagDescription
 
-	pages := ec2.NewDescribeTagsPaginator(conn, input)
+	pages := ec2.NewDescribeTagsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx, optFns...)
 
@@ -99,8 +99,8 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier stri
 
 // []*SERVICE.Tag handling
 
-// Tags returns ec2 service tags.
-func Tags(tags tftags.KeyValueTags) []awstypes.Tag {
+// svcTags returns ec2 service tags.
+func svcTags(tags tftags.KeyValueTags) []awstypes.Tag {
 	result := make([]awstypes.Tag, 0, len(tags))
 
 	for k, v := range tags.Map() {
@@ -147,7 +147,7 @@ func keyValueTags(ctx context.Context, tags any) tftags.KeyValueTags {
 // nil is returned if there are no input tags.
 func getTagsIn(ctx context.Context) []awstypes.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
+		if tags := svcTags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
 		}
 	}
@@ -174,12 +174,12 @@ func updateTags(ctx context.Context, conn *ec2.Client, identifier string, oldTag
 	removedTags := oldTags.Removed(newTags)
 	removedTags = removedTags.IgnoreSystem(names.EC2)
 	if len(removedTags) > 0 {
-		input := &ec2.DeleteTagsInput{
+		input := ec2.DeleteTagsInput{
 			Resources: []string{identifier},
-			Tags:      Tags(removedTags),
+			Tags:      svcTags(removedTags),
 		}
 
-		_, err := conn.DeleteTags(ctx, input, optFns...)
+		_, err := conn.DeleteTags(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -189,12 +189,12 @@ func updateTags(ctx context.Context, conn *ec2.Client, identifier string, oldTag
 	updatedTags := oldTags.Updated(newTags)
 	updatedTags = updatedTags.IgnoreSystem(names.EC2)
 	if len(updatedTags) > 0 {
-		input := &ec2.CreateTagsInput{
+		input := ec2.CreateTagsInput{
 			Resources: []string{identifier},
-			Tags:      Tags(updatedTags),
+			Tags:      svcTags(updatedTags),
 		}
 
-		_, err := conn.CreateTags(ctx, input, optFns...)
+		_, err := conn.CreateTags(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)

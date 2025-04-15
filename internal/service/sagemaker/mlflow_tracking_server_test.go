@@ -40,7 +40,7 @@ func TestAccSageMakerMlflowTrackingServer_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tracking_server_size", "Small"),
 					resource.TestCheckResourceAttrSet(resourceName, "tracking_server_url"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("mlflow-tracking-server/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("mlflow-tracking-server/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
@@ -59,7 +59,7 @@ func TestAccSageMakerMlflowTrackingServer_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "weekly_maintenance_window_start", "Sun:01:00"),
 					resource.TestCheckResourceAttrSet(resourceName, "tracking_server_url"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("mlflow-tracking-server/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("mlflow-tracking-server/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
@@ -153,7 +153,7 @@ func testAccCheckMlflowTrackingServerDestroy(ctx context.Context) resource.TestC
 			}
 
 			if err != nil {
-				return fmt.Errorf("reading SageMaker Mlflow Tracking Server (%s): %w", rs.Primary.ID, err)
+				return fmt.Errorf("reading SageMaker AI Mlflow Tracking Server (%s): %w", rs.Primary.ID, err)
 			}
 
 			return fmt.Errorf("sagemaker Mlflow Tracking Server %s still exists", rs.Primary.ID)

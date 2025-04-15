@@ -35,8 +35,8 @@ func TestAccRDSEventSubscription_basic(t *testing.T) {
 				Config: testAccEventSubscriptionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", fmt.Sprintf("es:%s", rName)),
-					acctest.CheckResourceAttrAccountID(resourceName, "customer_aws_id"),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "rds", fmt.Sprintf("es:%s", rName)),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "customer_aws_id"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "event_categories.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -200,8 +200,8 @@ func TestAccRDSEventSubscription_categories(t *testing.T) {
 				Config: testAccEventSubscriptionConfig_categories(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", fmt.Sprintf("es:%s", rName)),
-					acctest.CheckResourceAttrAccountID(resourceName, "customer_aws_id"),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "rds", fmt.Sprintf("es:%s", rName)),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "customer_aws_id"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "event_categories.#", "5"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "event_categories.*", "availability"),
@@ -226,8 +226,8 @@ func TestAccRDSEventSubscription_categories(t *testing.T) {
 				Config: testAccEventSubscriptionConfig_categoriesUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", fmt.Sprintf("es:%s", rName)),
-					acctest.CheckResourceAttrAccountID(resourceName, "customer_aws_id"),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "rds", fmt.Sprintf("es:%s", rName)),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "customer_aws_id"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "event_categories.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "event_categories.*", "creation"),
@@ -243,8 +243,8 @@ func TestAccRDSEventSubscription_categories(t *testing.T) {
 				Config: testAccEventSubscriptionConfig_categoriesAndSourceTypeUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", fmt.Sprintf("es:%s", rName)),
-					acctest.CheckResourceAttrAccountID(resourceName, "customer_aws_id"),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "rds", fmt.Sprintf("es:%s", rName)),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "customer_aws_id"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "event_categories.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "event_categories.*", "creation"),

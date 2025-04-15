@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -56,7 +55,7 @@ func sweepGeneralPurposeBucketObjects(ctx context.Context, client *conns.AWSClie
 	var sweepables []sweep.Sweepable
 
 	input := s3.ListBucketsInput{
-		BucketRegion: aws.String(client.Region),
+		BucketRegion: aws.String(client.Region(ctx)),
 	}
 	pages := s3.NewListBucketsPaginator(conn, &input)
 	for pages.HasMorePages() {
@@ -130,7 +129,7 @@ type objectSweeper struct {
 	locked bool
 }
 
-func (os objectSweeper) Delete(ctx context.Context, timeout time.Duration, optFns ...tfresource.OptionsFunc) error {
+func (os objectSweeper) Delete(ctx context.Context, optFns ...tfresource.OptionsFunc) error {
 	// Delete everything including locked objects.
 	tflog.Info(ctx, "Emptying S3 General Purpose Bucket")
 	n, err := emptyBucket(ctx, os.conn, os.bucket, os.locked)
@@ -148,7 +147,7 @@ type directoryBucketObjectSweeper struct {
 	bucket string
 }
 
-func (os directoryBucketObjectSweeper) Delete(ctx context.Context, timeout time.Duration, optFns ...tfresource.OptionsFunc) error {
+func (os directoryBucketObjectSweeper) Delete(ctx context.Context, optFns ...tfresource.OptionsFunc) error {
 	tflog.Info(ctx, "Emptying S3 Directory Bucket")
 	n, err := emptyDirectoryBucket(ctx, os.conn, os.bucket)
 	if err != nil {
@@ -167,7 +166,7 @@ func sweepBuckets(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepab
 	r := resourceBucket()
 
 	input := s3.ListBucketsInput{
-		BucketRegion: aws.String(client.Region),
+		BucketRegion: aws.String(client.Region(ctx)),
 	}
 	pages := s3.NewListBucketsPaginator(conn, &input)
 	for pages.HasMorePages() {

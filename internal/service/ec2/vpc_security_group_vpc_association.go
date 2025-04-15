@@ -51,10 +51,6 @@ type resourceSecurityGroupVPCAssociation struct {
 	framework.WithTimeouts
 }
 
-func (r *resourceSecurityGroupVPCAssociation) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_vpc_security_group_vpc_association"
-}
-
 func (r *resourceSecurityGroupVPCAssociation) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -246,7 +242,7 @@ func waitSecurityGroupVPCAssociationDeleted(ctx context.Context, conn *ec2.Clien
 }
 
 func statusSecurityGroupVPCAssociation(ctx context.Context, conn *ec2.Client, groupId string, vpcId string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := FindSecurityGroupVPCAssociationByTwoPartKey(ctx, conn, groupId, vpcId)
 		if tfresource.NotFound(err) {
 			return nil, "", nil

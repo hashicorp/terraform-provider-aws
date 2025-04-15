@@ -43,10 +43,6 @@ type resourceAuthorizeVPCEndpointAccess struct {
 	framework.WithNoUpdate
 }
 
-func (r *resourceAuthorizeVPCEndpointAccess) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_opensearch_authorize_vpc_endpoint_access"
-}
-
 func (r *resourceAuthorizeVPCEndpointAccess) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

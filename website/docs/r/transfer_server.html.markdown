@@ -153,15 +153,18 @@ This resource supports the following arguments:
     * `TransferSecurityPolicy-2022-03`
     * `TransferSecurityPolicy-2023-05`
     * `TransferSecurityPolicy-2024-01`
+    * `TransferSecurityPolicy-2025-03`
     * `TransferSecurityPolicy-FIPS-2020-06`
     * `TransferSecurityPolicy-FIPS-2023-05`
     * `TransferSecurityPolicy-FIPS-2024-01`
     * `TransferSecurityPolicy-FIPS-2024-05`
+    * `TransferSecurityPolicy-FIPS-2025-03`
     * `TransferSecurityPolicy-PQ-SSH-Experimental-2023-04`
     * `TransferSecurityPolicy-PQ-SSH-FIPS-Experimental-2023-04`
     * `TransferSecurityPolicy-Restricted-2018-11`
     * `TransferSecurityPolicy-Restricted-2020-06`
     * `TransferSecurityPolicy-Restricted-2024-06`
+    * `TransferSecurityPolicy-SshAuditCompliant-2025-02`
 
    See [Security policies for AWS Transfer Family servers](https://docs.aws.amazon.com/transfer/latest/userguide/security-policies.html) for details.
 * `structured_log_destinations` - (Optional) A set of ARNs of destinations that will receive structured logs from the transfer server such as CloudWatch Log Group ARNs. If provided this enables the transfer server to emit structured logs to the specified locations.

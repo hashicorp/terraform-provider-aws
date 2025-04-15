@@ -100,6 +100,10 @@ class MyConvertedCode(TerraformStack):
         super().__init__(scope, name)
         LambdaEventSourceMapping(self, "example",
             function_name=Token.as_string(aws_lambda_function_example.arn),
+            provisioned_poller_config=LambdaEventSourceMappingProvisionedPollerConfig(
+                maximum_poller=80,
+                minimum_poller=10
+            ),
             self_managed_event_source=LambdaEventSourceMappingSelfManagedEventSource(
                 endpoints={
                     "KAFKA_BOOTSTRAP_SERVERS": "kafka1.example.com:9092,kafka2.example.com:9092"
@@ -242,7 +246,7 @@ class MyConvertedCode(TerraformStack):
 * `bisect_batch_on_function_error`: - (Optional) If the function returns an error, split the batch in two and retry. Only available for stream sources (DynamoDB and Kinesis). Defaults to `false`.
 * `destination_config`: - (Optional) An Amazon SQS queue, Amazon SNS topic or Amazon S3 bucket (only available for Kafka sources) destination for failed records. Only available for stream sources (DynamoDB and Kinesis) and Kafka sources (Amazon MSK and Self-managed Apache Kafka). Detailed below.
 * `document_db_event_source_config`: - (Optional) Configuration settings for a DocumentDB event source. Detailed below.
-* `enabled` - (Optional) Determines if the mapping will be enabled on creation. Defaults to `true`.
+* `enabled` - (Optional) Determines if the mapping is enabled. This parameter can be used to enable or disable the mapping, both during resource creation and for already created resources. Defaults to `true`.
 * `event_source_arn` - (Optional) The event source ARN - this is required for Kinesis stream, DynamoDB stream, SQS queue, MQ broker, MSK cluster or DocumentDB change stream.  It is incompatible with a Self Managed Kafka source.
 * `filter_criteria` - (Optional) The criteria to use for [event filtering](https://docs.aws.amazon.com/lambda/latest/dg/invocation-eventfiltering.html) Kinesis stream, DynamoDB stream, SQS queue event sources. Detailed below.
 * `function_name` - (Required) The name or the ARN of the Lambda function that will be subscribing to events.
@@ -251,7 +255,9 @@ class MyConvertedCode(TerraformStack):
 * `maximum_batching_window_in_seconds` - (Optional) The maximum amount of time to gather records before invoking the function, in seconds (between 0 and 300). Records will continue to buffer (or accumulate in the case of an SQS queue event source) until either `maximum_batching_window_in_seconds` expires or `batch_size` has been met. For streaming event sources, defaults to as soon as records are available in the stream. If the batch it reads from the stream/queue only has one record in it, Lambda only sends one record to the function. Only available for stream sources (DynamoDB and Kinesis) and SQS standard queues.
 * `maximum_record_age_in_seconds`: - (Optional) The maximum age of a record that Lambda sends to a function for processing. Only available for stream sources (DynamoDB and Kinesis). Must be either -1 (forever, and the default value) or between 60 and 604800 (inclusive).
 * `maximum_retry_attempts`: - (Optional) The maximum number of times to retry when the function returns an error. Only available for stream sources (DynamoDB and Kinesis). Minimum and default of -1 (forever), maximum of 10000.
+* `metrics_config`: - (Optional) CloudWatch metrics configuration of the event source. Only available for stream sources (DynamoDB and Kinesis) and SQS queues. Detailed below.
 * `parallelization_factor`: - (Optional) The number of batches to process from each shard concurrently. Only available for stream sources (DynamoDB and Kinesis). Minimum and default of 1, maximum of 10.
+* `provisioned_poller_config`: - (Optional) Event poller configuration for the event source. Only valid for Amazon MSK or self-managed Apache Kafka sources. Detailed below.
 * `queues` - (Optional) The name of the Amazon MQ broker destination queue to consume. Only available for MQ sources. The list must contain exactly one queue name.
 * `scaling_config` - (Optional) Scaling configuration of the event source. Only available for SQS queues. Detailed below.
 * `self_managed_event_source`: - (Optional) For Self Managed Kafka sources, the location of the self managed cluster. If set, configuration must also include `source_access_configuration`. Detailed below.
@@ -288,6 +294,15 @@ class MyConvertedCode(TerraformStack):
 #### filter_criteria filter Configuration Block
 
 * `pattern` - (Optional) A filter pattern up to 4096 characters. See [Filter Rule Syntax](https://docs.aws.amazon.com/lambda/latest/dg/invocation-eventfiltering.html#filtering-syntax).
+
+### metrics_config Configuration Block
+
+* `metrics` - (Required) A list containing the metrics to be produced by the event source mapping. Valid values: `EventCount`.
+
+### provisioned_poller_config Configuration Block
+
+* `maximum_pollers` - (Optional) The maximum number of event pollers this event source can scale up to. The range is between 1 and 2000.
+* `minimum_pollers` - (Optional) The minimum number of event pollers this event source can scale down to. The range is between 1 and 200.
 
 ### scaling_config Configuration Block
 
@@ -347,4 +362,4 @@ Using `terraform import`, import Lambda event source mappings using the `UUID` (
 % terraform import aws_lambda_event_source_mapping.event_source_mapping 12345kxodurf3443
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-23cbe095e4916e1974b6f351520375105de46fe0451f897ce81436ca1299db41 -->
+<!-- cache-key: cdktf-0.20.8 input-9e0d3aa6b569a6f9fca1bf2161ad921c3f1baf63395b0b74d354d95186db63f0 -->

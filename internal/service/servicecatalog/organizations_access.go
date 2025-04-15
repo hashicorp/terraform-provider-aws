@@ -38,11 +38,11 @@ func resourceOrganizationsAccess() *schema.Resource {
 	}
 }
 
-func resourceOrganizationsAccessCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOrganizationsAccessCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
-	d.SetId(meta.(*conns.AWSClient).AccountID)
+	d.SetId(meta.(*conns.AWSClient).AccountID(ctx))
 
 	// During create, if enabled = "true", then Enable Access and vice versa
 	// During delete, the opposite
@@ -66,7 +66,7 @@ func resourceOrganizationsAccessCreate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceOrganizationsAccessRead(ctx, d, meta)...)
 }
 
-func resourceOrganizationsAccessRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOrganizationsAccessRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
@@ -96,7 +96,7 @@ func resourceOrganizationsAccessRead(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func resourceOrganizationsAccessDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOrganizationsAccessDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 

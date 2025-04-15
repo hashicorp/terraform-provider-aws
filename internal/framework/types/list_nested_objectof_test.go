@@ -9,7 +9,9 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
@@ -164,6 +166,89 @@ func TestListNestedObjectValueOfEqual(t *testing.T) {
 			t.Parallel()
 
 			got := fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &objectA).Equal(testCase.other)
+
+			if got != testCase.want {
+				t.Errorf("got = %v, want = %v", got, testCase.want)
+			}
+		})
+	}
+}
+
+func TestListNestedObjectValueOfListSemanticEquals(t *testing.T) {
+	t.Parallel()
+
+	semanticallyEqual := func(ctx context.Context, a, b fwtypes.ListNestedObjectValueOf[ObjectA]) (bool, diag.Diagnostics) {
+		var diags diag.Diagnostics
+
+		if a.Equal(b) {
+			return true, diags
+		}
+
+		aSlice, d := b.ToSlice(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return false, diags
+		}
+
+		bSlice, d := b.ToSlice(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return false, diags
+		}
+
+		if a.IsNull() && len(bSlice) == 0 {
+			return true, diags
+		}
+
+		if b.IsNull() && len(aSlice) == 0 {
+			return true, diags
+		}
+
+		return false, diags
+	}
+
+	// test artifacts
+	objectA := ObjectA{
+		Name: types.StringValue("test"),
+	}
+	objectB := ObjectA{
+		Name: types.StringValue("test2"),
+	}
+
+	emptySlice := make([]*ObjectA, 0)
+
+	ctx := context.Background()
+	testCases := map[string]struct {
+		current fwtypes.ListNestedObjectValueOf[ObjectA]
+		other   basetypes.ListValuable
+		want    bool
+	}{
+		"equal value": {
+			current: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &objectA, fwtypes.WithSemanticEqualityFunc(semanticallyEqual)),
+			other:   fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &objectA),
+			want:    true,
+		},
+		"equal nil current and empty slice": {
+			current: fwtypes.NewListNestedObjectValueOfNull(ctx, fwtypes.WithSemanticEqualityFunc(semanticallyEqual)),
+			other:   fwtypes.NewListNestedObjectValueOfSliceMust(ctx, emptySlice),
+			want:    true,
+		},
+		"equal empty current and nil slice": {
+			current: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, emptySlice, fwtypes.WithSemanticEqualityFunc(semanticallyEqual)),
+			other:   fwtypes.NewListNestedObjectValueOfNull[ObjectA](ctx),
+			want:    true,
+		},
+		"not equal": {
+			current: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &objectA, fwtypes.WithSemanticEqualityFunc(semanticallyEqual)),
+			other:   fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &objectB),
+		},
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got, _ := testCase.current.ListSemanticEquals(ctx, testCase.other)
 
 			if got != testCase.want {
 				t.Errorf("got = %v, want = %v", got, testCase.want)

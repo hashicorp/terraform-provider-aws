@@ -784,6 +784,7 @@ func TestAccDMSEndpoint_kafka(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.partition_include_schema_table", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.sasl_password", "tftest-new"),
 					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.sasl_username", "tftest-new"),
+					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.sasl_mechanism", "plain"),
 					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.security_protocol", "sasl-ssl"),
 					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.ssl_ca_certificate_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.ssl_client_certificate_arn", ""),
@@ -3441,6 +3442,7 @@ resource "aws_dms_endpoint" "test" {
     message_max_bytes              = 500000
     include_null_and_empty         = true
     security_protocol              = "sasl-ssl"
+    sasl_mechanism                 = "plain"
     sasl_username                  = "tftest-new"
     sasl_password                  = "tftest-new"
     no_hex_prefix                  = true

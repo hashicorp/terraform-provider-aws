@@ -80,7 +80,7 @@ func resourceAccess() *schema.Resource {
 				ValidateFunc:          verify.ValidIAMPolicyJSON,
 				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
 				DiffSuppressOnRefresh: true,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
@@ -124,7 +124,7 @@ func resourceAccess() *schema.Resource {
 	}
 }
 
-func resourceAccessCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccessCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
@@ -141,7 +141,7 @@ func resourceAccessCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if v, ok := d.GetOk("home_directory_mappings"); ok {
-		input.HomeDirectoryMappings = expandHomeDirectoryMapEntries(v.([]interface{}))
+		input.HomeDirectoryMappings = expandHomeDirectoryMapEntries(v.([]any))
 	}
 
 	if v, ok := d.GetOk("home_directory_type"); ok {
@@ -158,7 +158,7 @@ func resourceAccessCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if v, ok := d.GetOk("posix_profile"); ok {
-		input.PosixProfile = expandPOSIXProfile(v.([]interface{}))
+		input.PosixProfile = expandPOSIXProfile(v.([]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrRole); ok {
@@ -176,7 +176,7 @@ func resourceAccessCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceAccessRead(ctx, d, meta)...)
 }
 
-func resourceAccessRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccessRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
@@ -218,7 +218,7 @@ func resourceAccessRead(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func resourceAccessUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccessUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
@@ -237,7 +237,7 @@ func resourceAccessUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if d.HasChange("home_directory_mappings") {
-		input.HomeDirectoryMappings = expandHomeDirectoryMapEntries(d.Get("home_directory_mappings").([]interface{}))
+		input.HomeDirectoryMappings = expandHomeDirectoryMapEntries(d.Get("home_directory_mappings").([]any))
 	}
 
 	if d.HasChange("home_directory_type") {
@@ -254,7 +254,7 @@ func resourceAccessUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if d.HasChange("posix_profile") {
-		input.PosixProfile = expandPOSIXProfile(d.Get("posix_profile").([]interface{}))
+		input.PosixProfile = expandPOSIXProfile(d.Get("posix_profile").([]any))
 	}
 
 	if d.HasChange(names.AttrRole) {
@@ -270,7 +270,7 @@ func resourceAccessUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceAccessRead(ctx, d, meta)...)
 }
 
-func resourceAccessDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccessDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
@@ -280,10 +280,11 @@ func resourceAccessDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	log.Printf("[DEBUG] Deleting Transfer Access: %s", d.Id())
-	_, err = conn.DeleteAccess(ctx, &transfer.DeleteAccessInput{
+	input := transfer.DeleteAccessInput{
 		ExternalId: aws.String(externalID),
 		ServerId:   aws.String(serverID),
-	})
+	}
+	_, err = conn.DeleteAccess(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

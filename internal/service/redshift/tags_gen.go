@@ -18,8 +18,8 @@ import (
 
 // []*SERVICE.Tag handling
 
-// Tags returns redshift service tags.
-func Tags(tags tftags.KeyValueTags) []awstypes.Tag {
+// svcTags returns redshift service tags.
+func svcTags(tags tftags.KeyValueTags) []awstypes.Tag {
 	result := make([]awstypes.Tag, 0, len(tags))
 
 	for k, v := range tags.Map() {
@@ -34,8 +34,8 @@ func Tags(tags tftags.KeyValueTags) []awstypes.Tag {
 	return result
 }
 
-// KeyValueTags creates tftags.KeyValueTags from redshift service tags.
-func KeyValueTags(ctx context.Context, tags []awstypes.Tag) tftags.KeyValueTags {
+// keyValueTags creates tftags.KeyValueTags from redshift service tags.
+func keyValueTags(ctx context.Context, tags []awstypes.Tag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
@@ -49,7 +49,7 @@ func KeyValueTags(ctx context.Context, tags []awstypes.Tag) tftags.KeyValueTags 
 // nil is returned if there are no input tags.
 func getTagsIn(ctx context.Context) []awstypes.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
+		if tags := svcTags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
 		}
 	}
@@ -60,7 +60,7 @@ func getTagsIn(ctx context.Context) []awstypes.Tag {
 // setTagsOut sets redshift service tags in Context.
 func setTagsOut(ctx context.Context, tags []awstypes.Tag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		inContext.TagsOut = option.Some(KeyValueTags(ctx, tags))
+		inContext.TagsOut = option.Some(keyValueTags(ctx, tags))
 	}
 }
 
@@ -76,12 +76,12 @@ func updateTags(ctx context.Context, conn *redshift.Client, identifier string, o
 	removedTags := oldTags.Removed(newTags)
 	removedTags = removedTags.IgnoreSystem(names.Redshift)
 	if len(removedTags) > 0 {
-		input := &redshift.DeleteTagsInput{
+		input := redshift.DeleteTagsInput{
 			ResourceName: aws.String(identifier),
 			TagKeys:      removedTags.Keys(),
 		}
 
-		_, err := conn.DeleteTags(ctx, input, optFns...)
+		_, err := conn.DeleteTags(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -91,12 +91,12 @@ func updateTags(ctx context.Context, conn *redshift.Client, identifier string, o
 	updatedTags := oldTags.Updated(newTags)
 	updatedTags = updatedTags.IgnoreSystem(names.Redshift)
 	if len(updatedTags) > 0 {
-		input := &redshift.CreateTagsInput{
+		input := redshift.CreateTagsInput{
 			ResourceName: aws.String(identifier),
-			Tags:         Tags(updatedTags),
+			Tags:         svcTags(updatedTags),
 		}
 
-		_, err := conn.CreateTags(ctx, input, optFns...)
+		_, err := conn.CreateTags(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)

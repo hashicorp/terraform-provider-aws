@@ -71,7 +71,7 @@ func ResourceDetectorFeature() *schema.Resource {
 	}
 }
 
-func resourceDetectorFeaturePut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDetectorFeaturePut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
@@ -81,8 +81,8 @@ func resourceDetectorFeaturePut(ctx context.Context, d *schema.ResourceData, met
 		Status: awstypes.FeatureStatus(d.Get(names.AttrStatus).(string)),
 	}
 
-	if v, ok := d.GetOk("additional_configuration"); ok && len(v.([]interface{})) > 0 {
-		feature.AdditionalConfiguration = expandDetectorAdditionalConfigurations(v.([]interface{}))
+	if v, ok := d.GetOk("additional_configuration"); ok && len(v.([]any)) > 0 {
+		feature.AdditionalConfiguration = expandDetectorAdditionalConfigurations(v.([]any))
 	}
 
 	input := &guardduty.UpdateDetectorInput{
@@ -103,7 +103,7 @@ func resourceDetectorFeaturePut(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceDetectorFeatureRead(ctx, d, meta)...)
 }
 
-func resourceDetectorFeatureRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDetectorFeatureRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
@@ -165,7 +165,7 @@ func FindDetectorFeatureByTwoPartKey(ctx context.Context, conn *guardduty.Client
 	}))
 }
 
-func expandDetectorAdditionalConfiguration(tfMap map[string]interface{}) awstypes.DetectorAdditionalConfiguration {
+func expandDetectorAdditionalConfiguration(tfMap map[string]any) awstypes.DetectorAdditionalConfiguration {
 	apiObject := awstypes.DetectorAdditionalConfiguration{}
 
 	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
@@ -179,7 +179,7 @@ func expandDetectorAdditionalConfiguration(tfMap map[string]interface{}) awstype
 	return apiObject
 }
 
-func expandDetectorAdditionalConfigurations(tfList []interface{}) []awstypes.DetectorAdditionalConfiguration {
+func expandDetectorAdditionalConfigurations(tfList []any) []awstypes.DetectorAdditionalConfiguration {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -187,7 +187,7 @@ func expandDetectorAdditionalConfigurations(tfList []interface{}) []awstypes.Det
 	var apiObjects []awstypes.DetectorAdditionalConfiguration
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -201,8 +201,8 @@ func expandDetectorAdditionalConfigurations(tfList []interface{}) []awstypes.Det
 	return apiObjects
 }
 
-func flattenDetectorFeatureConfigurationResult(apiObject awstypes.DetectorFeatureConfigurationResult) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenDetectorFeatureConfigurationResult(apiObject awstypes.DetectorFeatureConfigurationResult) map[string]any {
+	tfMap := map[string]any{}
 
 	if v := apiObject.AdditionalConfiguration; v != nil {
 		tfMap["additional_configuration"] = flattenDetectorAdditionalConfigurationResults(v)
@@ -214,12 +214,12 @@ func flattenDetectorFeatureConfigurationResult(apiObject awstypes.DetectorFeatur
 	return tfMap
 }
 
-func flattenDetectorFeatureConfigurationResults(apiObjects []awstypes.DetectorFeatureConfigurationResult) []interface{} {
+func flattenDetectorFeatureConfigurationResults(apiObjects []awstypes.DetectorFeatureConfigurationResult) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenDetectorFeatureConfigurationResult(apiObject))
@@ -228,8 +228,8 @@ func flattenDetectorFeatureConfigurationResults(apiObjects []awstypes.DetectorFe
 	return tfList
 }
 
-func flattenDetectorAdditionalConfigurationResult(apiObject awstypes.DetectorAdditionalConfigurationResult) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenDetectorAdditionalConfigurationResult(apiObject awstypes.DetectorAdditionalConfigurationResult) map[string]any {
+	tfMap := map[string]any{}
 
 	tfMap[names.AttrName] = string(apiObject.Name)
 	tfMap[names.AttrStatus] = string(apiObject.Status)
@@ -237,12 +237,12 @@ func flattenDetectorAdditionalConfigurationResult(apiObject awstypes.DetectorAdd
 	return tfMap
 }
 
-func flattenDetectorAdditionalConfigurationResults(apiObjects []awstypes.DetectorAdditionalConfigurationResult) []interface{} {
+func flattenDetectorAdditionalConfigurationResults(apiObjects []awstypes.DetectorAdditionalConfigurationResult) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenDetectorAdditionalConfigurationResult(apiObject))

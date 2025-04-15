@@ -8,7 +8,6 @@ import (
 
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestIsIsolatedPartition(t *testing.T) {
@@ -67,27 +66,27 @@ func TestIsIsolatedRegion(t *testing.T) {
 		expected bool
 	}{
 		{
-			input:    names.USEast1RegionID,
+			input:    endpoints.UsEast1RegionID,
 			expected: false,
 		},
 		{
-			input:    names.CNNorth1RegionID,
+			input:    endpoints.CnNorth1RegionID,
 			expected: false,
 		},
 		{
-			input:    names.USGovEast1RegionID,
+			input:    endpoints.UsGovEast1RegionID,
 			expected: false,
 		},
 		{
-			input:    names.USISOEast1RegionID,
+			input:    endpoints.UsIsoEast1RegionID,
 			expected: true,
 		},
 		{
-			input:    names.USISOBEast1RegionID,
+			input:    endpoints.UsIsobEast1RegionID,
 			expected: true,
 		},
 		{
-			input:    names.EUISOEWest1RegionID,
+			input:    endpoints.EuIsoeWest1RegionID,
 			expected: true,
 		},
 	}
@@ -159,27 +158,27 @@ func TestIsStandardRegion(t *testing.T) {
 		expected bool
 	}{
 		{
-			input:    names.USEast1RegionID,
+			input:    endpoints.UsEast1RegionID,
 			expected: true,
 		},
 		{
-			input:    names.CNNorth1RegionID,
+			input:    endpoints.CnNorth1RegionID,
 			expected: false,
 		},
 		{
-			input:    names.USGovEast1RegionID,
+			input:    endpoints.UsGovEast1RegionID,
 			expected: false,
 		},
 		{
-			input:    names.USISOEast1RegionID,
+			input:    endpoints.UsIsoEast1RegionID,
 			expected: false,
 		},
 		{
-			input:    names.USISOBEast1RegionID,
+			input:    endpoints.UsIsobEast1RegionID,
 			expected: false,
 		},
 		{
-			input:    names.EUISOEWest1RegionID,
+			input:    endpoints.EuIsoeWest1RegionID,
 			expected: false,
 		},
 	}

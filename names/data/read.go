@@ -7,6 +7,7 @@ import (
 	_ "embed"
 	"fmt"
 	"log"
+	"maps"
 	"slices"
 	"strings"
 
@@ -230,8 +231,11 @@ func (sr ServiceRecord) EndpointAPIParams() string {
 	return ""
 }
 
-func (sr ServiceRecord) EndpointOverrideRegion() string {
-	return sr.service.ServiceEndpoints.EndpointRegionOverride
+func (sr ServiceRecord) EndpointRegionOverrides() map[string]string {
+	if sr.service.ServiceEndpoints != nil && len(sr.service.ServiceEndpoints.EndpointRegionOverrides) > 0 {
+		return maps.Clone(sr.service.ServiceEndpoints.EndpointRegionOverrides)
+	}
+	return nil
 }
 
 func (sr ServiceRecord) Note() string {
@@ -312,10 +316,10 @@ type EnvVar struct {
 }
 
 type EndpointInfo struct {
-	EndpointAPICall        string `hcl:"endpoint_api_call,optional"`
-	EndpointAPIParams      string `hcl:"endpoint_api_params,optional"`
-	EndpointRegionOverride string `hcl:"endpoint_region_override,optional"`
-	EndpointOnly           bool   `hcl:"endpoint_only,optional"`
+	EndpointAPICall         string            `hcl:"endpoint_api_call,optional"`
+	EndpointAPIParams       string            `hcl:"endpoint_api_params,optional"`
+	EndpointRegionOverrides map[string]string `hcl:"endpoint_region_overrides,optional"`
+	EndpointOnly            bool              `hcl:"endpoint_only,optional"`
 }
 
 type Service struct {
