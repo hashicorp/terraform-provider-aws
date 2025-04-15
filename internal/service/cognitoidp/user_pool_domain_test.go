@@ -149,6 +149,40 @@ func TestAccCognitoIDPUserPoolDomain_customCertUpdate(t *testing.T) {
 	})
 }
 
+func TestAccCognitoIDPUserPoolDomain_managedLoginVersion(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cognito_user_pool_domain.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserPoolDomainDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserPoolDomainConfig_managedLoginVersion(rName, 2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserPoolDomainExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "managed_login_version", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccUserPoolDomainConfig_managedLoginVersion(rName, 1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserPoolDomainExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "managed_login_version", "1"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckUserPoolDomainExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -235,7 +269,7 @@ resource "aws_cognito_user_pool" "test" {
 `, rName)
 }
 
-func testAccUserPoolDomainConfig_custom(rootDomain string, domain string, poolName string) string {
+func testAccUserPoolDomainConfig_custom(rootDomain, domain, poolName string) string {
 	return fmt.Sprintf(`
 data "aws_route53_zone" "test" {
   name         = %[1]q
@@ -273,7 +307,7 @@ resource "aws_cognito_user_pool_domain" "test" {
 `, rootDomain, domain, poolName)
 }
 
-func testAccUserPoolDomainConfig_customCertUpdate(rootDomain string, domain string, poolName string, appliedCertValidation string) string {
+func testAccUserPoolDomainConfig_customCertUpdate(rootDomain, domain, poolName, appliedCertValidation string) string {
 	return fmt.Sprintf(`
 data "aws_route53_zone" "test" {
   name         = %[1]q
@@ -327,4 +361,19 @@ resource "aws_cognito_user_pool_domain" "test" {
   user_pool_id    = aws_cognito_user_pool.test.id
 }
 `, rootDomain, domain, poolName, appliedCertValidation)
+}
+
+func testAccUserPoolDomainConfig_managedLoginVersion(rName string, version int) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool_domain" "test" {
+  domain       = %[1]q
+  user_pool_id = aws_cognito_user_pool.test.id
+
+  managed_login_version = %[2]d
+}
+
+resource "aws_cognito_user_pool" "test" {
+  name = %[1]q
+}
+`, rName, version)
 }
