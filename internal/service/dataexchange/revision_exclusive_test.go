@@ -319,16 +319,11 @@ func TestAccDataExchangeRevisionExclusive_S3DataAccessFromS3Bucket_basic(t *test
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
 				},
 			},
-			// {
-			// 	ResourceName:      resourceName,
-			// 	ImportState:       true,
-			// 	ImportStateVerify: true,
-			// },
 		},
 	})
 }
 
-func TestAccDataExchangeRevisionExclusive_s3DataAccessFromS3Bucket_multiple(t *testing.T) {
+func TestAccDataExchangeRevisionExclusive_S3DataAccessFromS3Bucket_multiple(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var revision dataexchange.GetRevisionOutput
@@ -443,9 +438,6 @@ func testAccCheckRevisionExclusiveDestroy(ctx context.Context) resource.TestChec
 				continue
 			}
 
-			// TIP: ==== FINDERS ====
-			// The find function should be exported. Since it won't be used outside of the package, it can be exported
-			// in the `exports_test.go` file.
 			_, err := tfdataexchange.FindRevisionByID(ctx, conn, rs.Primary.Attributes["data_set_id"], rs.Primary.ID)
 			if tfresource.NotFound(err) {
 				return nil
@@ -538,9 +530,10 @@ func checkAssetS3DataAccess(bucket string) knownvalue.Check {
 func checkAssetS3DataAccessWithCMK(bucket string) knownvalue.Check {
 	dataAccessChecks := s3DataAccessAssetDefaults(bucket)
 	maps.Copy(dataAccessChecks, map[string]knownvalue.Check{
-		"kms_keys_to_grant": knownvalue.ListExact([]knownvalue.Check{
+		"asset_source": knownvalue.ListExact([]knownvalue.Check{
 			knownvalue.ObjectExact(map[string]knownvalue.Check{
-				"kms_key_arn": knownvalue.NotNull(),
+				names.AttrBucket:   knownvalue.StringExact(bucket),
+				"kms_key_to_grant": knownvalue.NotNull(),
 			}),
 		}),
 	})
@@ -577,8 +570,8 @@ func s3DataAccessAssetDefaults(bucket string) map[string]knownvalue.Check {
 		"access_point_arn":   tfknownvalue.RegionalARNRegexpIgnoreAccount("s3", regexache.MustCompile(`accesspoint/`+verify.UUIDRegexPattern)),
 		"asset_source": knownvalue.ListExact([]knownvalue.Check{
 			knownvalue.ObjectExact(map[string]knownvalue.Check{
-				names.AttrBucket:    knownvalue.StringExact(bucket),
-				"kms_keys_to_grant": knownvalue.Null(),
+				names.AttrBucket:   knownvalue.StringExact(bucket),
+				"kms_key_to_grant": knownvalue.ListExact([]knownvalue.Check{}),
 			}),
 		}),
 	}
