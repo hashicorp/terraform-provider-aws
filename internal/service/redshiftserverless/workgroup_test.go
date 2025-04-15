@@ -52,6 +52,9 @@ func TestAccRedshiftServerlessWorkgroup_basic(t *testing.T) {
 
 // Tests the complex logic involved in updating 'base_capacity' and 'max_capacity'.
 // The order of updates is crucial and is determined by their current state values.
+// Note, if the default VPC does not have an internet gateway, enabling public accessibility will silently fail,
+// causing the test to fail.
+// TODO: break up this test into specific tests on a specific transition
 func TestAccRedshiftServerlessWorkgroup_baseAndMaxCapacityAndPubliclyAccessible(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_redshiftserverless_workgroup.test"
@@ -131,10 +134,10 @@ func TestAccRedshiftServerlessWorkgroup_configParameters(t *testing.T) {
 		CheckDestroy:             testAccCheckWorkgroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkgroupConfig_configParameters(rName, "14400"),
+				Config: testAccWorkgroupConfig_configParameters(rName, "10", "20", "30", "40", "50", "100", "60", "70", "80"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkgroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "config_parameter.#", "9"),
+					resource.TestCheckResourceAttr(resourceName, "config_parameter.#", "17"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
 						"parameter_key":   "datestyle",
 						"parameter_value": "ISO, MDY",
@@ -152,8 +155,40 @@ func TestAccRedshiftServerlessWorkgroup_configParameters(t *testing.T) {
 						"parameter_value": "$user, public",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
+						"parameter_key":   "max_query_cpu_time",
+						"parameter_value": "10",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
+						"parameter_key":   "max_query_blocks_read",
+						"parameter_value": "20",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
+						"parameter_key":   "max_scan_row_count",
+						"parameter_value": "30",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
 						"parameter_key":   "max_query_execution_time",
-						"parameter_value": "14400",
+						"parameter_value": "40",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
+						"parameter_key":   "max_query_queue_time",
+						"parameter_value": "50",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
+						"parameter_key":   "max_query_cpu_usage_percent",
+						"parameter_value": "100",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
+						"parameter_key":   "max_query_temp_blocks_to_disk",
+						"parameter_value": "60",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
+						"parameter_key":   "max_join_row_count",
+						"parameter_value": "70",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
+						"parameter_key":   "max_nested_loop_join_row_count",
+						"parameter_value": "80",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
 						"parameter_key":   "auto_mv",
@@ -165,7 +200,7 @@ func TestAccRedshiftServerlessWorkgroup_configParameters(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
 						"parameter_key":   "require_ssl",
-						"parameter_value": acctest.CtFalse,
+						"parameter_value": acctest.CtTrue,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
 						"parameter_key":   "use_fips_ssl",
@@ -179,10 +214,10 @@ func TestAccRedshiftServerlessWorkgroup_configParameters(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccWorkgroupConfig_configParameters(rName, "28800"),
+				Config: testAccWorkgroupConfig_configParameters(rName, "100", "200", "300", "400", "500", "50", "600", "700", "800"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkgroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "config_parameter.#", "9"),
+					resource.TestCheckResourceAttr(resourceName, "config_parameter.#", "17"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
 						"parameter_key":   "datestyle",
 						"parameter_value": "ISO, MDY",
@@ -200,8 +235,79 @@ func TestAccRedshiftServerlessWorkgroup_configParameters(t *testing.T) {
 						"parameter_value": "$user, public",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
+						"parameter_key":   "max_query_cpu_time",
+						"parameter_value": "100",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
+						"parameter_key":   "max_query_blocks_read",
+						"parameter_value": "200",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
+						"parameter_key":   "max_scan_row_count",
+						"parameter_value": "300",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
 						"parameter_key":   "max_query_execution_time",
-						"parameter_value": "28800",
+						"parameter_value": "400",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
+						"parameter_key":   "max_query_queue_time",
+						"parameter_value": "500",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
+						"parameter_key":   "max_query_cpu_usage_percent",
+						"parameter_value": "50",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
+						"parameter_key":   "max_query_temp_blocks_to_disk",
+						"parameter_value": "600",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
+						"parameter_key":   "max_join_row_count",
+						"parameter_value": "700",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
+						"parameter_key":   "max_nested_loop_join_row_count",
+						"parameter_value": "800",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
+						"parameter_key":   "auto_mv",
+						"parameter_value": acctest.CtTrue,
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
+						"parameter_key":   "enable_case_sensitive_identifier",
+						"parameter_value": acctest.CtFalse,
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
+						"parameter_key":   "require_ssl",
+						"parameter_value": acctest.CtTrue,
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
+						"parameter_key":   "use_fips_ssl",
+						"parameter_value": acctest.CtFalse,
+					}),
+				),
+			},
+			{
+				Config: testAccWorkgroupConfig_removeLimits(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkgroupExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "config_parameter.#", "8"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
+						"parameter_key":   "datestyle",
+						"parameter_value": "ISO, MDY",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
+						"parameter_key":   "enable_user_activity_logging",
+						"parameter_value": acctest.CtTrue,
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
+						"parameter_key":   "query_group",
+						"parameter_value": "default",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
+						"parameter_key":   "search_path",
+						"parameter_value": "$user, public",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
 						"parameter_key":   "auto_mv",
@@ -407,7 +513,18 @@ resource "aws_redshiftserverless_workgroup" "test" {
 `, rName, baseCapacity)
 }
 
-func testAccWorkgroupConfig_configParameters(rName, maxQueryExecutionTime string) string {
+func testAccWorkgroupConfig_configParameters(
+	rName,
+	maxQueryCpuTime,
+	maxQueryBlocksRead,
+	maxScanRowCount,
+	maxQueryExecutionTime,
+	maxQueryQueueTime,
+	maxQueryCpuUsagePercent,
+	maxQueryTempBlocksToDisk,
+	maxJoinRowCount,
+	maxNestedLoopJoinRowCount string,
+) string {
 	return fmt.Sprintf(`
 resource "aws_redshiftserverless_namespace" "test" {
   namespace_name = %[1]q
@@ -434,8 +551,96 @@ resource "aws_redshiftserverless_workgroup" "test" {
     parameter_value = "$user, public"
   }
   config_parameter {
-    parameter_key   = "max_query_execution_time"
+    parameter_key   = "max_query_cpu_time"
     parameter_value = %[2]q
+  }
+  config_parameter {
+    parameter_key   = "max_query_blocks_read"
+    parameter_value = %[3]q
+  }
+  config_parameter {
+    parameter_key   = "max_scan_row_count"
+    parameter_value = %[4]q
+  }
+  config_parameter {
+    parameter_key   = "max_query_execution_time"
+    parameter_value = %[5]q
+  }
+  config_parameter {
+    parameter_key   = "max_query_queue_time"
+    parameter_value = %[6]q
+  }
+  config_parameter {
+    parameter_key   = "max_query_cpu_usage_percent"
+    parameter_value = %[7]q
+  }
+  config_parameter {
+    parameter_key   = "max_query_temp_blocks_to_disk"
+    parameter_value = %[8]q
+  }
+  config_parameter {
+    parameter_key   = "max_join_row_count"
+    parameter_value = %[9]q
+  }
+  config_parameter {
+    parameter_key   = "max_nested_loop_join_row_count"
+    parameter_value = %[10]q
+  }
+  config_parameter {
+    parameter_key   = "auto_mv"
+    parameter_value = "true"
+  }
+  config_parameter {
+    parameter_key   = "enable_case_sensitive_identifier"
+    parameter_value = "false"
+  }
+  config_parameter {
+    parameter_key   = "require_ssl"
+    parameter_value = "true"
+  }
+  config_parameter {
+    parameter_key   = "use_fips_ssl"
+    parameter_value = "false"
+  }
+}
+`, rName,
+		maxQueryCpuTime,
+		maxQueryBlocksRead,
+		maxScanRowCount,
+		maxQueryExecutionTime,
+		maxQueryQueueTime,
+		maxQueryCpuUsagePercent,
+		maxQueryTempBlocksToDisk,
+		maxJoinRowCount,
+		maxNestedLoopJoinRowCount,
+	)
+}
+
+func testAccWorkgroupConfig_removeLimits(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_redshiftserverless_namespace" "test" {
+  namespace_name = %[1]q
+}
+
+resource "aws_redshiftserverless_workgroup" "test" {
+  namespace_name = aws_redshiftserverless_namespace.test.namespace_name
+  workgroup_name = %[1]q
+
+  config_parameter {
+    parameter_key   = "datestyle"
+    parameter_value = "ISO, MDY"
+  }
+  config_parameter {
+    parameter_key   = "enable_user_activity_logging"
+    parameter_value = "true"
+  }
+  config_parameter {
+    parameter_key   = "query_group"
+    parameter_value = "default"
+  }
+  config_parameter {
+    parameter_key   = "search_path"
+    parameter_value = "$user, public"
   }
   config_parameter {
     parameter_key   = "auto_mv"
@@ -454,7 +659,7 @@ resource "aws_redshiftserverless_workgroup" "test" {
     parameter_value = "false"
   }
 }
-`, rName, maxQueryExecutionTime)
+`, rName)
 }
 
 func testAccWorkgroupConfig_tags1(rName, tagKey1, tagValue1 string) string {
