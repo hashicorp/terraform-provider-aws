@@ -646,7 +646,7 @@ func expandPerformanceTarget(list []any) *awstypes.PerformanceTarget {
 	if level, ok := tfMap["level"].(string); ok && level != "" {
 		for k, v := range performanceTargetLevels {
 			if v == level {
-				apiObject.Level = aws.Int32(int32(k))
+				apiObject.Level = aws.Int32(k)
 				break
 			}
 		}
