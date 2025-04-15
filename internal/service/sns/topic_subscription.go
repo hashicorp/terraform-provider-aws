@@ -205,17 +205,7 @@ func resourceTopicSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 
 	d.SetId(aws.ToString(output.SubscriptionArn))
 
-	waitForConfirmation := true
-
-	if !d.Get("endpoint_auto_confirms").(bool) && strings.Contains(protocol, "http") {
-		waitForConfirmation = false
-	}
-
-	if strings.Contains(protocol, names.AttrEmail) {
-		waitForConfirmation = false
-	}
-
-	if waitForConfirmation {
+	if waitForConfirmation(d.Get("endpoint_auto_confirms").(bool), protocol) {
 		timeout := subscriptionPendingConfirmationTimeout
 		if strings.Contains(protocol, "http") {
 			timeout = time.Duration(int64(d.Get("confirmation_timeout_in_minutes").(int)) * int64(time.Minute))
@@ -232,6 +222,35 @@ func resourceTopicSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 func resourceTopicSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SNSClient(ctx)
+
+	// Do not remove.
+	// Though seemingly redundant with the finder below, GetSubscriptionAttributes is
+	// eventually consistent and may not reflect cases where the topic or subscription
+	// was modified or deleted out of band.
+	//
+	// This check is skipped if topic_arn is unset (e.g. during import), or if the
+	// subscription does not wait for confirmation during the create operation (to
+	// avoid errant removals from state on subsequent applies).
+	if v, ok := d.GetOk(names.AttrTopicARN); ok && waitForConfirmation(d.Get("endpoint_auto_confirms").(bool), d.Get(names.AttrProtocol).(string)) {
+		_, err := findSubscriptionInTopic(ctx, conn, v.(string), d.Id())
+		if !d.IsNewResource() && tfresource.NotFound(err) {
+			log.Printf("[WARN] SNS Topic Subscription %s not found, removing from state", d.Id())
+			d.SetId("")
+			return diags
+		}
+
+		if err != nil {
+			switch {
+			// ListSubscriptionsByTopic requires IAM permissions which were not
+			// required in minor versions prior to `v5.94.0`, so AuthorizationError
+			// exceptions are not surfaced.
+			case errs.IsAErrorMessageContains[*types.AuthorizationErrorException](err, "not authorized to perform"):
+				break
+			default:
+				return sdkdiag.AppendErrorf(diags, "reading SNS Topic Subscription (%s): %s", d.Id(), err)
+			}
+		}
+	}
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, subscriptionCreateTimeout, func() (any, error) {
 		return findSubscriptionAttributesByARN(ctx, conn, d.Id())
@@ -381,6 +400,54 @@ func findSubscriptionAttributesByARN(ctx context.Context, conn *sns.Client, arn 
 	}
 
 	return output.Attributes, nil
+}
+
+func findSubscriptionInTopic(ctx context.Context, conn *sns.Client, topicARN, subscriptionARN string) (*types.Subscription, error) {
+	input := sns.ListSubscriptionsByTopicInput{
+		TopicArn: aws.String(topicARN),
+	}
+
+	paginator := sns.NewListSubscriptionsByTopicPaginator(conn, &input)
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if errs.IsA[*types.NotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, subscription := range page.Subscriptions {
+			if aws.ToString(subscription.SubscriptionArn) == subscriptionARN {
+				return &subscription, nil
+			}
+		}
+	}
+
+	return nil, &retry.NotFoundError{
+		LastRequest: input,
+	}
+}
+
+// waitForConfirmation indicates whether the subscription should wait for confirmation
+// during the create operation.
+//
+// The subscription should wait unless:
+//   - protocol contains http (http or https) and endpoint_auto_confirms is false
+//   - protocol contains email (email or email-json)
+func waitForConfirmation(endpointAutoConfirms bool, protocol string) bool {
+	switch {
+	case strings.Contains(protocol, "http") && !endpointAutoConfirms:
+		return false
+	case strings.Contains(protocol, names.AttrEmail):
+		return false
+	}
+
+	return true
 }
 
 func statusSubscriptionPendingConfirmation(ctx context.Context, conn *sns.Client, arn string) retry.StateRefreshFunc {
