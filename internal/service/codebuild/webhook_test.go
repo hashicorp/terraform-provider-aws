@@ -573,8 +573,8 @@ resource "aws_codebuild_webhook" "test" {
 func testAccWebhookConfig_manualCreation(rName string) string {
 	return acctest.ConfigCompose(testAccProjectConfig_basic(rName), `
 resource "aws_codebuild_webhook" "test" {
-  project_name      = aws_codebuild_project.test.name
-  manual_creation   = true
+  project_name    = aws_codebuild_project.test.name
+  manual_creation = true
 }
 `)
 }
