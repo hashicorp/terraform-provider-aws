@@ -60,6 +60,10 @@ func ResourceOriginEndpoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			names.AttrURL: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"authorization": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -539,6 +543,10 @@ func resourceOriginEndpointRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if err := d.Set("channel_id", out.ChannelId); err != nil {
+		return create.AppendDiagError(diags, names.MediaPackage, create.ErrActionSetting, ResNameOriginEndpoint, d.Id(), err)
+	}
+
+	if err := d.Set("url", out.Url); err != nil {
 		return create.AppendDiagError(diags, names.MediaPackage, create.ErrActionSetting, ResNameOriginEndpoint, d.Id(), err)
 	}
 
