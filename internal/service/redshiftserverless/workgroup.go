@@ -183,7 +183,6 @@ func resourceWorkgroup() *schema.Resource {
 						"level": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							Default:      "BALANCED",
 							ValidateFunc: validation.StringInSlice(performanceTargetLevel_Values(), false),
 						},
 					},
@@ -322,8 +321,8 @@ func resourceWorkgroupRead(ctx context.Context, d *schema.ResourceData, meta any
 		return sdkdiag.AppendErrorf(diags, "setting price_performance_target: %s", err)
 	}
 	d.Set(names.AttrPubliclyAccessible, out.PubliclyAccessible)
-	d.Set(names.AttrSecurityGroupIDs, flex.FlattenStringValueSet(out.SecurityGroupIds))
-	d.Set(names.AttrSubnetIDs, flex.FlattenStringValueSet(out.SubnetIds))
+	d.Set(names.AttrSecurityGroupIDs, out.SecurityGroupIds)
+	d.Set(names.AttrSubnetIDs, out.SubnetIds)
 	d.Set("workgroup_id", out.WorkgroupId)
 	d.Set("workgroup_name", out.WorkgroupName)
 
@@ -622,12 +621,12 @@ func waitWorkgroupDeleted(ctx context.Context, conn *redshiftserverless.Client, 
 	return nil, err
 }
 
-func expandPerformanceTarget(list []any) *awstypes.PerformanceTarget {
-	if len(list) == 0 {
+func expandPerformanceTarget(tfList []any) *awstypes.PerformanceTarget {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	tfMap := list[0].(map[string]any)
+	tfMap := tfList[0].(map[string]any)
 	apiObject := &awstypes.PerformanceTarget{}
 
 	// bool is a nicer way to represent the enabled/disabled state but the API expects
@@ -695,7 +694,6 @@ func expandConfigParameters(tfList []any) []awstypes.ConfigParameter {
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]any)
-
 		if !ok {
 			continue
 		}
@@ -716,6 +714,7 @@ func flattenConfigParameter(apiObject awstypes.ConfigParameter) map[string]any {
 	if v := apiObject.ParameterValue; v != nil {
 		tfMap["parameter_value"] = aws.ToString(v)
 	}
+
 	return tfMap
 }
 
@@ -739,6 +738,7 @@ func flattenEndpoint(apiObject *awstypes.Endpoint) map[string]any {
 	}
 
 	tfMap := map[string]any{}
+
 	if v := apiObject.Address; v != nil {
 		tfMap[names.AttrAddress] = aws.ToString(v)
 	}
@@ -782,6 +782,7 @@ func flattenVPCEndpoint(apiObject *awstypes.VpcEndpoint) map[string]any {
 	if v := apiObject.NetworkInterfaces; v != nil {
 		tfMap["network_interface"] = flattenNetworkInterfaces(v)
 	}
+
 	return tfMap
 }
 
@@ -817,5 +818,6 @@ func flattenNetworkInterface(apiObject awstypes.NetworkInterface) map[string]any
 	if v := apiObject.SubnetId; v != nil {
 		tfMap[names.AttrSubnetID] = aws.ToString(v)
 	}
+
 	return tfMap
 }
