@@ -44,8 +44,8 @@ A `vpc_configuration` block supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The CodeConnections Host ARN.
 * `arn` - The CodeConnections Host ARN.
+* `id` - (**Deprecated**) The CodeConnections Host ARN.
 * `status` - The CodeConnections Host status. Possible values are `PENDING`, `AVAILABLE`, `VPC_CONFIG_DELETING`, `VPC_CONFIG_INITIALIZING`, and `VPC_CONFIG_FAILED_INITIALIZATION`.
 
 ## Import
