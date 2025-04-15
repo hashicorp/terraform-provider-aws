@@ -27,8 +27,8 @@ resource "aws_cloudfrontkeyvaluestore_keys_exclusive" "example" {
   key_value_store_arn = aws_cloudfront_key_value_store.example.arn
 
   resource_key_value_pair {
-    key                 = "Test Key"
-    value               = "Test Value"
+    key   = "Test Key"
+    value = "Test Value"
   }
 }
 ```
