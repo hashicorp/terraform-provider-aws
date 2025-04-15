@@ -70,7 +70,7 @@ This resource supports the following arguments:
 
 * `project_name` - (Required) The name of the build project.
 * `build_type` - (Optional) The type of build this webhook will trigger. Valid values for this parameter are: `BUILD`, `BUILD_BATCH`.
-* `manual_creation` - (Optional) If true, CodeBuild doesn't create a webhook in GitHub and instead returns `payloadUrl` and `secret` values for the webhook. The `payloadUrl` and `secret` values in the output can be used to manually create a webhook within GitHub.
+* `manual_creation` - (Optional) If true, CodeBuild doesn't create a webhook in GitHub and instead returns `payload_url` and `secret` values for the webhook. The `payload_url` and `secret` values in the output can be used to manually create a webhook within GitHub.
 * `branch_filter` - (Optional) A regular expression used to determine which branches get built. Default is all branches are built. We recommend using `filter_group` over `branch_filter`.
 * `filter_group` - (Optional) Information about the webhook's trigger. Filter group blocks are documented below.
 * `scope_configuration` - (Optional) Scope configuration for global or organization webhooks. Scope configuration blocks are documented below.

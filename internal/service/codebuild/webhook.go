@@ -74,6 +74,11 @@ func resourceWebhook() *schema.Resource {
 				},
 				ConflictsWith: []string{"branch_filter"},
 			},
+			"manual_creation": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				ForceNew: true,
+			},
 			"payload_url": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -105,11 +110,6 @@ func resourceWebhook() *schema.Resource {
 					},
 				},
 			},
-			"manual_creation": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
 			"secret": {
 				Type:      schema.TypeString,
 				Computed:  true,
@@ -128,12 +128,8 @@ func resourceWebhookCreate(ctx context.Context, d *schema.ResourceData, meta any
 	conn := meta.(*conns.AWSClient).CodeBuildClient(ctx)
 
 	projectName := d.Get("project_name").(string)
-	input := &codebuild.CreateWebhookInput{
+	input := codebuild.CreateWebhookInput{
 		ProjectName: aws.String(projectName),
-	}
-
-	if v, ok := d.GetOk("manual_creation"); ok {
-		input.ManualCreation = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("branch_filter"); ok {
@@ -148,11 +144,15 @@ func resourceWebhookCreate(ctx context.Context, d *schema.ResourceData, meta any
 		input.FilterGroups = expandWebhookFilterGroups(v.(*schema.Set).List())
 	}
 
+	if v, ok := d.GetOk("manual_creation"); ok {
+		input.ManualCreation = aws.Bool(v.(bool))
+	}
+
 	if v, ok := d.GetOk("scope_configuration"); ok && len(v.([]any)) > 0 {
 		input.ScopeConfiguration = expandScopeConfiguration(v.([]any))
 	}
 
-	output, err := conn.CreateWebhook(ctx, input)
+	output, err := conn.CreateWebhook(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating CodeBuild Webhook (%s): %s", projectName, err)
@@ -182,12 +182,11 @@ func resourceWebhookRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	d.Set("build_type", webhook.BuildType)
-	// Support in-place update of create-only attribute.
-	d.Set("manual_creation", d.Get("manual_creation"))
 	d.Set("branch_filter", webhook.BranchFilter)
 	if err := d.Set("filter_group", flattenWebhookFilterGroups(webhook.FilterGroups)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting filter_group: %s", err)
 	}
+	d.Set("manual_creation", d.Get("manual_creation")) // Create-only.
 	d.Set("payload_url", webhook.PayloadUrl)
 	d.Set("project_name", d.Id())
 	if err := d.Set("scope_configuration", flattenScopeConfiguration(webhook.ScopeConfiguration)); err != nil {
@@ -203,7 +202,7 @@ func resourceWebhookUpdate(ctx context.Context, d *schema.ResourceData, meta any
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeBuildClient(ctx)
 
-	input := &codebuild.UpdateWebhookInput{
+	input := codebuild.UpdateWebhookInput{
 		ProjectName: aws.String(d.Id()),
 	}
 
@@ -221,7 +220,7 @@ func resourceWebhookUpdate(ctx context.Context, d *schema.ResourceData, meta any
 		input.BranchFilter = aws.String(d.Get("branch_filter").(string))
 	}
 
-	_, err := conn.UpdateWebhook(ctx, input)
+	_, err := conn.UpdateWebhook(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating CodeBuild Webhook (%s): %s", d.Id(), err)
