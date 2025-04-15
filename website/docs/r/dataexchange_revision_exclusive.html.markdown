@@ -5,14 +5,7 @@ page_title: "AWS: aws_dataexchange_revision_exclusive"
 description: |-
   Terraform resource for managing an AWS Data Exchange Revision Exclusive.
 ---
-<!---
-TIP: A few guiding principles for writing documentation:
-1. Use simple language while avoiding jargon and figures of speech.
-2. Focus on brevity and clarity to keep a reader's attention.
-3. Use active voice and present tense whenever you can.
-4. Document your feature as it exists now; do not mention the future or past if you can help it.
-5. Use accessible and inclusive language.
---->`
+
 # Resource: aws_dataexchange_revision_exclusive
 
 Terraform resource for managing an AWS Data Exchange Revision Exclusive.
@@ -23,6 +16,19 @@ Terraform resource for managing an AWS Data Exchange Revision Exclusive.
 
 ```terraform
 resource "aws_dataexchange_revision_exclusive" "example" {
+  data_set_id = "example-data-set-id"
+
+  asset {
+    create_s3_data_access_from_s3_bucket {
+      asset_source {
+        bucket = "example-bucket"
+      }
+    }
+  }
+
+  tags = {
+    Environment = "Production"
+  }
 }
 ```
 
@@ -30,42 +36,46 @@ resource "aws_dataexchange_revision_exclusive" "example" {
 
 The following arguments are required:
 
-* `example_arg` - (Required) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `data_set_id` - (Required) The unique identifier for the data set associated with the revision.
+  * `asset` - (Required) A block to define the asset associated with the revision. This block supports the following:
+    * `create_s3_data_access_from_s3_bucket` - (Optional) A block to create S3 data access from an S3 bucket. This block supports the following:
+      * `asset_source` - (Required) A block specifying the source bucket for the asset. This block supports the following:
 
 The following arguments are optional:
 
-* `optional_arg` - (Optional) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-* `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `comment` - (Optional) A comment for the revision. Maximum length is 16,348 characters.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+
+bucket - (Required) The name of the S3 bucket.
+kms_key_to_grant - (Optional) A block specifying the KMS key to grant access. This block supports the following:
+
+
+kms_key_arn - (Required) The ARN of the KMS key.
+import_assets_from_s3 - (Optional) A block to import assets from S3. This block supports the following:
+
+
+asset_source - (Required) A block specifying the source bucket and key for the asset. This block supports the following:
+bucket - (Required) The name of the S3 bucket.
+key - (Required) The key of the object in the S3 bucket.
+import_assets_from_signed_url - (Optional) A block to import assets from a signed URL. This block supports the following:
+
+
+filename - (Required) The name of the file to import.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the Revision Exclusive. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-* `example_attribute` - Concise description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `arn` - The ARN of the Data Exchange Revision Exclusive.
+* `id` - The unique identifier for the revision.
+* `created_at` - The timestamp when the revision was created, in RFC3339 format.
+* `updated_at` - The timestamp when the revision was last updated, in RFC3339 format.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+Configuration options:
 
-* `create` - (Default `60m`)
-* `update` - (Default `180m`)
-* `delete` - (Default `90m`)
+* `create` - (Default 30m) Time to create the revision.
 
-## Import
-
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Data Exchange Revision Exclusive using the `example_id_arg`. For example:
-
-```terraform
-import {
-  to = aws_dataexchange_revision_exclusive.example
-  id = "revision_exclusive-id-12345678"
-}
-```
-
-Using `terraform import`, import Data Exchange Revision Exclusive using the `example_id_arg`. For example:
-
-```console
-% terraform import aws_dataexchange_revision_exclusive.example revision_exclusive-id-12345678
-```
