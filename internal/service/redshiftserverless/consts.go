@@ -1,27 +1,19 @@
 package redshiftserverless
 
-const (
-	performanceTargetLevelLowCostValue         = 1
-	performanceTargetLevelEconomicalValue      = 25
-	performanceTargetLevelBalancedValue        = 50
-	performanceTargetLevelResourcefulValue     = 75
-	performanceTargetLevelHighPerformanceValue = 100
+import (
+	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
 )
 
-const (
-	performanceTargetLevelLowCost         = "LOW_COST"
-	performanceTargetLevelEconomical      = "ECONOMICAL"
-	performanceTargetLevelBalanced        = "BALANCED"
-	performanceTargetLevelResourceful     = "RESOURCEFUL"
-	performanceTargetLevelHighPerformance = "HIGH_PERFORMANCE"
+var (
+	performanceTargetLevels = map[int32]string{
+		1:   "LOW_COST",
+		25:  "ECONOMICAL",
+		50:  "BALANCED",
+		75:  "RESOURCEFUL",
+		100: "HIGH_PERFORMANCE",
+	}
 )
 
 func performanceTargetLevel_Values() []string {
-	return []string{
-		performanceTargetLevelLowCost,
-		performanceTargetLevelEconomical,
-		performanceTargetLevelBalanced,
-		performanceTargetLevelResourceful,
-		performanceTargetLevelHighPerformance,
-	}
+	return tfmaps.Values(performanceTargetLevels)
 }

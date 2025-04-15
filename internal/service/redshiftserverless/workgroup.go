@@ -55,26 +55,6 @@ func resourceWorkgroup() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"price_performance_target": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
-						"level": {
-							Type:         schema.TypeString,
-							Default:      performanceTargetLevelBalanced,
-							Optional:     true,
-							ValidateFunc: validation.StringInSlice(performanceTargetLevel_Values(), false),
-						},
-					},
-				},
-			},
 			"config_parameter": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -189,6 +169,26 @@ func resourceWorkgroup() *schema.Resource {
 				Computed: true,
 				Optional: true,
 			},
+			"price_performance_target": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrEnabled: {
+							Type:     schema.TypeBool,
+							Required: true,
+						},
+						"level": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      "BALANCED",
+							ValidateFunc: validation.StringInSlice(performanceTargetLevel_Values(), false),
+						},
+					},
+				},
+			},
 			names.AttrPubliclyAccessible: {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -239,10 +239,6 @@ func resourceWorkgroupCreate(ctx context.Context, d *schema.ResourceData, meta a
 		input.BaseCapacity = aws.Int32(int32(v.(int)))
 	}
 
-	if v, ok := d.GetOk("price_performance_target"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-		input.PricePerformanceTarget = expandPricePerformanceTarget(v.([]any))
-	}
-
 	if input.BaseCapacity != nil && input.PricePerformanceTarget != nil && input.PricePerformanceTarget.Status == awstypes.PerformanceTargetStatusEnabled {
 		return sdkdiag.AppendErrorf(diags, "base_capacity cannot be set when price_performance_target.enabled is true")
 	}
@@ -261,6 +257,10 @@ func resourceWorkgroupCreate(ctx context.Context, d *schema.ResourceData, meta a
 
 	if v, ok := d.GetOk(names.AttrPort); ok {
 		input.Port = aws.Int32(int32(v.(int)))
+	}
+
+	if v, ok := d.GetOk("price_performance_target"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.PricePerformanceTarget = expandPricePerformanceTarget(v.([]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrPubliclyAccessible); ok {
@@ -308,9 +308,6 @@ func resourceWorkgroupRead(ctx context.Context, d *schema.ResourceData, meta any
 
 	d.Set(names.AttrARN, out.WorkgroupArn)
 	d.Set("base_capacity", out.BaseCapacity)
-	if err := d.Set("price_performance_target", flattenPricePerformanceTarget(out.PricePerformanceTarget)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting price_performance_target: %s", err)
-	}
 	if err := d.Set("config_parameter", flattenConfigParameters(out.ConfigParameters)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting config_parameter: %s", err)
 	}
@@ -321,6 +318,9 @@ func resourceWorkgroupRead(ctx context.Context, d *schema.ResourceData, meta any
 	d.Set(names.AttrMaxCapacity, out.MaxCapacity)
 	d.Set("namespace_name", out.NamespaceName)
 	d.Set(names.AttrPort, flattenEndpoint(out.Endpoint)[names.AttrPort])
+	if err := d.Set("price_performance_target", flattenPricePerformanceTarget(out.PricePerformanceTarget)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting price_performance_target: %s", err)
+	}
 	d.Set(names.AttrPubliclyAccessible, out.PubliclyAccessible)
 	d.Set(names.AttrSecurityGroupIDs, flex.FlattenStringValueSet(out.SecurityGroupIds))
 	d.Set(names.AttrSubnetIDs, flex.FlattenStringValueSet(out.SubnetIds))
@@ -628,8 +628,9 @@ func expandPricePerformanceTarget(list []any) *awstypes.PerformanceTarget {
 
 	tfMap := list[0].(map[string]any)
 	apiObject := &awstypes.PerformanceTarget{}
+
 	// bool is a nicer way to represent the enabled/disabled state but the API expects
-	// a string enumeration
+	// a string enumeration.
 	if enabled, ok := tfMap[names.AttrEnabled].(bool); ok {
 		if enabled {
 			apiObject.Status = awstypes.PerformanceTargetStatusEnabled
@@ -637,21 +638,16 @@ func expandPricePerformanceTarget(list []any) *awstypes.PerformanceTarget {
 			apiObject.Status = awstypes.PerformanceTargetStatusDisabled
 		}
 	}
+
 	// The target price performance level for the workgroup. Valid values include 1,
 	// 25, 50, 75, and 100. These correspond to the price performance levels LOW_COST,
 	// ECONOMICAL, BALANCED, RESOURCEFUL, and HIGH_PERFORMANCE.
-	if level, ok := tfMap["level"].(string); ok {
-		switch level {
-		case performanceTargetLevelLowCost:
-			apiObject.Level = aws.Int32(int32(performanceTargetLevelLowCostValue))
-		case performanceTargetLevelEconomical:
-			apiObject.Level = aws.Int32(int32(performanceTargetLevelEconomicalValue))
-		case performanceTargetLevelBalanced:
-			apiObject.Level = aws.Int32(int32(performanceTargetLevelBalancedValue))
-		case performanceTargetLevelResourceful:
-			apiObject.Level = aws.Int32(int32(performanceTargetLevelResourcefulValue))
-		case performanceTargetLevelHighPerformance:
-			apiObject.Level = aws.Int32(int32(performanceTargetLevelHighPerformanceValue))
+	if level, ok := tfMap["level"].(string); ok && level != "" {
+		for k, v := range performanceTargetLevels {
+			if v == level {
+				apiObject.Level = aws.Int32(int32(k))
+				break
+			}
 		}
 	}
 
@@ -666,17 +662,10 @@ func flattenPricePerformanceTarget(apiObject *awstypes.PerformanceTarget) []any 
 	tfMap := map[string]any{}
 
 	tfMap[names.AttrEnabled] = apiObject.Status == awstypes.PerformanceTargetStatusEnabled
-	switch aws.ToInt32(apiObject.Level) {
-	case performanceTargetLevelLowCostValue:
-		tfMap["level"] = performanceTargetLevelLowCost
-	case performanceTargetLevelEconomicalValue:
-		tfMap["level"] = performanceTargetLevelEconomical
-	case performanceTargetLevelBalancedValue:
-		tfMap["level"] = performanceTargetLevelBalanced
-	case performanceTargetLevelResourcefulValue:
-		tfMap["level"] = performanceTargetLevelResourceful
-	case performanceTargetLevelHighPerformanceValue:
-		tfMap["level"] = performanceTargetLevelHighPerformance
+	if v := apiObject.Level; v != nil {
+		if v, ok := performanceTargetLevels[aws.ToInt32(v)]; ok {
+			tfMap["level"] = v
+		}
 	}
 
 	return []any{tfMap}
