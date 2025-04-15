@@ -31,6 +31,7 @@ BREAKING CHANGES:
 * provider: The `endpoints.opsworks` configuration argument has been removed ([#41948](https://github.com/hashicorp/terraform-provider-aws/issues/41948))
 * provider: The `endpoints.simpledb` and `endpoints.sdb` configuration arguments have been removed ([#41775](https://github.com/hashicorp/terraform-provider-aws/issues/41775))
 * provider: The `endpoints.worklink` configuration argument has been removed ([#42059](https://github.com/hashicorp/terraform-provider-aws/issues/42059))
+* resource/aws_api_gateway_account: The `reset_on_delete` argument has been removed ([#42226](https://github.com/hashicorp/terraform-provider-aws/issues/42226))
 * resource/aws_batch_compute_environment: Rename `compute_environment_name` to `name`
 resource/aws_batch_compute_environment: Rename `compute_environment_name_prefix` to `name_prefix` ([#38050](https://github.com/hashicorp/terraform-provider-aws/issues/38050))
 * resource/aws_batch_compute_environment_data_source: Rename `compute_environment_name` to `name` ([#38050](https://github.com/hashicorp/terraform-provider-aws/issues/38050))
