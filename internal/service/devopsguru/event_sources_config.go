@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/devopsguru"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/devopsguru/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -35,6 +34,7 @@ const (
 
 type resourceEventSourcesConfig struct {
 	framework.ResourceWithConfigure
+	framework.WithImportByID
 }
 
 func (r *resourceEventSourcesConfig) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -157,10 +157,6 @@ func (r *resourceEventSourcesConfig) Delete(ctx context.Context, req resource.De
 		)
 		return
 	}
-}
-
-func (r *resourceEventSourcesConfig) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func findEventSourcesConfig(ctx context.Context, conn *devopsguru.Client) (*devopsguru.DescribeEventSourcesConfigOutput, error) {

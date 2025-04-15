@@ -22,18 +22,28 @@ Upgrade topics:
 - [AWS OpsWorks Stacks End of Life](#aws-opsworks-stacks-end-of-life)
 - [data-source/aws_ami](#data-sourceaws_ami)
 - [data-source/aws_batch_compute_environment](#data-sourceaws_batch_compute_environment)
+- [data-source/aws_ecs_task_definition](#data-sourceaws_ecs_task_definition)
+- [data-source/aws_ecs_task_execution](#data-sourceaws_ecs_task_execution)
 - [data-source/aws_globalaccelerator_accelerator](#data-sourceaws_globalaccelerator_accelerator)
+- [data-source/aws_launch_template](#data-sourceaws_launch_template)
+- [data-source/aws_s3_bucket](#data-sourceaws_s3_bucket)
 - [data-source/aws_service_discovery_service](#data-sourceaws_service_discovery_service)
+- [resource/aws_api_gateway_account](#resourceaws_api_gateway_account)
 - [resource/aws_batch_compute_environment](#resourceaws_batch_compute_environment)
+- [resource/aws_cloudfront_key_value_store](#resourceaws_cloudfront_key_value_store)
 - [resource/aws_cloudfront_response_headers_policy](#resourceaws_cloudfront_response_headers_policy)
+- [resource/aws_config_aggregate_authorization](#resourceawsconfig_aggregate_authorization)
+- [resource/aws_ecs_task_definition](#resourceaws_ecs_task_definition)
 - [resource/aws_instance](#resourceaws_instance)
 - [resource/aws_kinesis_analytics_application](#resourceaws_kinesis_analytics_application)
+- [resource/aws_launch_template](#resourceaws_launch_template)
 - [resource/aws_networkmanager_core_network](#resourceaws_networkmanager_core_network)
 - [resource/aws_redshift_cluster](#resourceaws_redshift_cluster)
 - [resource/aws_redshift_service_account](#resourceaws_redshift_service_account)
-- [resource/aws_config_aggregate_authorization](#resourceawsconfig_aggregate_authorization)
 - [resource/aws_s3_bucket](#resourceaws_s3_bucket)
-- [data-source/aws_s3_bucket](#data-sourceaws_s3_bucket)
+- [resource/aws_sagemaker_notebook_instance](#resourceaws_sagemaker_notebook_instance)
+- [resource/aws_spot_instance_request](#resourceaws_spot_instance_request)
+- [resource/aws_ssm_association](#resourceaws_ssm_association)
 
 <!-- /TOC -->
 
@@ -132,24 +142,63 @@ This is not recommended.
 
 ## data-source/aws_batch_compute_environment
 
-* `compute_environment_name` has been renamed to `name`.
+`compute_environment_name` has been renamed to `name`.
 
 ## data-source/aws_globalaccelerator_accelerator
 
 `id` is now computed only.
 
+## data-source/aws_ecs_task_definition
+
+Remove `inference_accelerator` from your configuration—it no longer exists. Amazon Elastic Inference reached end of life in April 2024.
+
+## data-source/aws_ecs_task_execution
+
+Remove `inference_accelerator_overrides` from your configuration—it no longer exists. Amazon Elastic Inference reached end of life in April 2024.
+
+## data-source/aws_launch_template
+
+Remove `elastic_inference_accelerator` from your configuration—it no longer exists. Amazon Elastic Inference reached end of life in April 2024.
+
+## data-source/aws_s3_bucket
+
+The `bucket_region` attribute has been added. We encourage use of the `bucket_region` attribute instead of the `region` attribute (which is now used for [Enhanced Multi-Region Support]()).
+
 ## data-source/aws_service_discovery_service
 
 `tags_all` has been removed.
+
+## resource/aws_api_gateway_account
+
+`reset_on_delete` has been removed.
+The destroy operation will now always reset the API Gateway account settings.
+Use a [removed](https://developer.hashicorp.com/terraform/language/resources/syntax#removing-resources) block to retain the previous behavior which left the account settings unchanged upon destruction.
 
 ## resource/aws_batch_compute_environment
 
 * `compute_environment_name` has been renamed to `name`.
 * `compute_environment_name_prefix` has been renamed to `name_prefix`.
 
+## resource/aws_cloudfront_key_value_store
+
+The `id` attribute is now set the to ID value returned by the AWS API.
+For the name, use the `name` attribute.
+
 ## resource/aws_cloudfront_response_headers_policy
 
 The `etag` argument is now computed only.
+
+## resource/aws_config_aggregate_authorization
+
+The `region` attribute has been deprecated. All configurations using `region` should be updated to use the `authorized_aws_region` attribute instead.
+
+## resource/aws_ecs_task_definition
+
+Remove `inference_accelerator` from your configuration—it no longer exists. Amazon Elastic Inference reached end of life in April 2024.
+
+## resource/aws_launch_template
+
+Remove `elastic_inference_accelerator` from your configuration—it no longer exists. Amazon Elastic Inference reached end of life in April 2024.
 
 ## resource/aws_instance
 
@@ -174,14 +223,18 @@ The `base_policy_region` argument has been removed. Use `base_policy_regions` in
 
 The `aws_redshift_service_account` resource has been removed. AWS [recommends](https://docs.aws.amazon.com/redshift/latest/mgmt/db-auditing.html#db-auditing-bucket-permissions) that a [service principal name](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_principal.html#principal-services) should be used instead of an AWS account ID in any relevant IAM policy.
 
-## resource/aws_config_aggregate_authorization
-
-The `region` attribute has been deprecated. All configurations using `region` should be updated to use the `authorized_aws_region` attribute instead.
-
 ## resource/aws_s3_bucket
 
 The `bucket_region` attribute has been added. We encourage use of the `bucket_region` attribute instead of the `region` attribute (which is now used for [Enhanced Multi-Region Support]()).
 
-## data-source/aws_s3_bucket
+## resource/aws_sagemaker_notebook_instance
 
-The `bucket_region` attribute has been added. We encourage use of the `bucket_region` attribute instead of the `region` attribute (which is now used for [Enhanced Multi-Region Support]()).
+Remove `accelerator_types` from your configuration—it no longer exists. Instead, use `instance_type` to use [Inferentia](https://docs.aws.amazon.com/sagemaker/latest/dg/neo-supported-cloud.html).
+
+## resource/aws_spot_instance_request
+
+Remove `block_duration_minutes` from your configuration—it no longer exists.
+
+## resource/aws_ssm_association
+
+Remove `instance_id` from configuration—it no longer exists. Use `targets` instead.

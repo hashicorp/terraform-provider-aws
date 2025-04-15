@@ -39,7 +39,6 @@ const (
 
 type resourceAuthorizeVPCEndpointAccess struct {
 	framework.ResourceWithConfigure
-	framework.WithImportByID
 	framework.WithNoUpdate
 }
 

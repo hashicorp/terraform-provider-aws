@@ -50,7 +50,6 @@ const (
 
 type hostResource struct {
 	framework.ResourceWithConfigure
-	framework.WithImportByID
 	framework.WithTimeouts
 }
 
