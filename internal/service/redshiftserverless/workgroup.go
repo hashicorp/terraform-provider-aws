@@ -239,10 +239,6 @@ func resourceWorkgroupCreate(ctx context.Context, d *schema.ResourceData, meta a
 		input.BaseCapacity = aws.Int32(int32(v.(int)))
 	}
 
-	if input.BaseCapacity != nil && input.PricePerformanceTarget != nil && input.PricePerformanceTarget.Status == awstypes.PerformanceTargetStatusEnabled {
-		return sdkdiag.AppendErrorf(diags, "base_capacity cannot be set when price_performance_target.enabled is true")
-	}
-
 	if v, ok := d.GetOk("config_parameter"); ok && v.(*schema.Set).Len() > 0 {
 		input.ConfigParameters = expandConfigParameters(v.(*schema.Set).List())
 	}
@@ -260,7 +256,7 @@ func resourceWorkgroupCreate(ctx context.Context, d *schema.ResourceData, meta a
 	}
 
 	if v, ok := d.GetOk("price_performance_target"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-		input.PricePerformanceTarget = expandPricePerformanceTarget(v.([]any))
+		input.PricePerformanceTarget = expandPerformanceTarget(v.([]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrPubliclyAccessible); ok {
@@ -273,6 +269,10 @@ func resourceWorkgroupCreate(ctx context.Context, d *schema.ResourceData, meta a
 
 	if v, ok := d.GetOk(names.AttrSubnetIDs); ok && v.(*schema.Set).Len() > 0 {
 		input.SubnetIds = flex.ExpandStringValueSet(v.(*schema.Set))
+	}
+
+	if input.BaseCapacity != nil && input.PricePerformanceTarget != nil && input.PricePerformanceTarget.Status == awstypes.PerformanceTargetStatusEnabled {
+		return sdkdiag.AppendErrorf(diags, "base_capacity cannot be set when price_performance_target.enabled is true")
 	}
 
 	output, err := conn.CreateWorkgroup(ctx, &input)
@@ -318,7 +318,7 @@ func resourceWorkgroupRead(ctx context.Context, d *schema.ResourceData, meta any
 	d.Set(names.AttrMaxCapacity, out.MaxCapacity)
 	d.Set("namespace_name", out.NamespaceName)
 	d.Set(names.AttrPort, flattenEndpoint(out.Endpoint)[names.AttrPort])
-	if err := d.Set("price_performance_target", flattenPricePerformanceTarget(out.PricePerformanceTarget)); err != nil {
+	if err := d.Set("price_performance_target", flattenPerformanceTarget(out.PricePerformanceTarget)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting price_performance_target: %s", err)
 	}
 	d.Set(names.AttrPubliclyAccessible, out.PubliclyAccessible)
@@ -406,7 +406,7 @@ func resourceWorkgroupUpdate(ctx context.Context, d *schema.ResourceData, meta a
 
 	if d.HasChange("price_performance_target") {
 		input := &redshiftserverless.UpdateWorkgroupInput{
-			PricePerformanceTarget: expandPricePerformanceTarget(d.Get("price_performance_target").([]interface{})),
+			PricePerformanceTarget: expandPerformanceTarget(d.Get("price_performance_target").([]interface{})),
 			WorkgroupName:          aws.String(d.Id()),
 		}
 
@@ -489,7 +489,10 @@ func resourceWorkgroupDelete(ctx context.Context, d *schema.ResourceData, meta a
 	conn := meta.(*conns.AWSClient).RedshiftServerlessClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Redshift Serverless Workgroup: %s", d.Id())
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ConflictException](ctx, workgroupDeletedTimeout,
+	const (
+		retryTimeout = 10 * time.Minute
+	)
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ConflictException](ctx, retryTimeout,
 		func() (any, error) {
 			return conn.DeleteWorkgroup(ctx, &redshiftserverless.DeleteWorkgroupInput{
 				WorkgroupName: aws.String(d.Id()),
@@ -514,7 +517,10 @@ func resourceWorkgroupDelete(ctx context.Context, d *schema.ResourceData, meta a
 }
 
 func updateWorkgroup(ctx context.Context, conn *redshiftserverless.Client, input *redshiftserverless.UpdateWorkgroupInput, timeout time.Duration) error {
-	_, err := tfresource.RetryWhen(ctx, workgroupUpdatedTimeout,
+	const (
+		retryTimeout = 20 * time.Minute
+	)
+	_, err := tfresource.RetryWhen(ctx, retryTimeout,
 		func() (any, error) {
 			return conn.UpdateWorkgroup(ctx, input)
 		}, func(err error) (bool, error) {
@@ -540,11 +546,6 @@ func updateWorkgroup(ctx context.Context, conn *redshiftserverless.Client, input
 
 	return nil
 }
-
-const (
-	workgroupDeletedTimeout = 10 * time.Minute
-	workgroupUpdatedTimeout = 20 * time.Minute
-)
 
 func findWorkgroupByName(ctx context.Context, conn *redshiftserverless.Client, name string) (*awstypes.Workgroup, error) {
 	input := &redshiftserverless.GetWorkgroupInput{
@@ -621,7 +622,7 @@ func waitWorkgroupDeleted(ctx context.Context, conn *redshiftserverless.Client, 
 	return nil, err
 }
 
-func expandPricePerformanceTarget(list []any) *awstypes.PerformanceTarget {
+func expandPerformanceTarget(list []any) *awstypes.PerformanceTarget {
 	if len(list) == 0 {
 		return nil
 	}
@@ -654,7 +655,7 @@ func expandPricePerformanceTarget(list []any) *awstypes.PerformanceTarget {
 	return apiObject
 }
 
-func flattenPricePerformanceTarget(apiObject *awstypes.PerformanceTarget) []any {
+func flattenPerformanceTarget(apiObject *awstypes.PerformanceTarget) []any {
 	if apiObject == nil {
 		return []any{}
 	}
