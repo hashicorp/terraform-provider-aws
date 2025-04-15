@@ -241,7 +241,7 @@ func (r *keyValueStoreResource) Delete(ctx context.Context, request resource.Del
 	}
 }
 
-func (w *keyValueStoreResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+func (r *keyValueStoreResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrName), request, response)
 }
 
