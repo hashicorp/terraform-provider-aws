@@ -119,7 +119,6 @@ func main() {
 type ResourceDatum struct {
 	FactoryName                       string
 	Name                              string // Friendly name (without service name), e.g. "Topic", not "SNS Topic"
-	IsGlobal                          bool   // Is the resource global?
 	RegionOverrideEnabled             bool
 	TransparentTagging                bool
 	TagsIdentifierAttribute           string
@@ -219,13 +218,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		if m := annotation.FindStringSubmatch(line); len(m) > 0 {
 			switch annotationName, args := m[1], common.ParseArgs(m[3]); annotationName {
 			case "Region":
-				if attr, ok := args.Keyword["global"]; ok {
-					if global, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid Region/global value (%s): %s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
-					} else {
-						d.IsGlobal = global
-					}
-				}
 				if attr, ok := args.Keyword["overrideEnabled"]; ok {
 					if enabled, err := strconv.ParseBool(attr); err != nil {
 						v.errs = append(v.errs, fmt.Errorf("invalid Region/overrideEnabled value (%s): %s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
