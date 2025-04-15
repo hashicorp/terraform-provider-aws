@@ -112,12 +112,6 @@ func TestAccCloudFrontKeyValueStoreKeysExclusive_value(t *testing.T) {
 func TestAccCloudFrontKeyValueStoreKeysExclusive_empty(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	var keys []string
-	var values []string
-	for i := 1; i < 6; i++ {
-		keys = append(keys, sdkacctest.RandomWithPrefix(acctest.ResourcePrefix))
-		values = append(values, sdkacctest.RandomWithPrefix(acctest.ResourcePrefix))
-	}
 
 	resourceName := "aws_cloudfrontkeyvaluestore_keys_exclusive.test"
 	keyResourceName := "aws_cloudfrontkeyvaluestore_key.test"

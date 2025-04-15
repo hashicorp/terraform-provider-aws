@@ -6,8 +6,8 @@ package cloudfrontkeyvaluestore
 import (
 	"context"
 	"fmt"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfrontkeyvaluestore"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfrontkeyvaluestore/types"
@@ -231,7 +231,7 @@ func FindKeyValueStoreByARN(ctx context.Context, conn *cloudfrontkeyvaluestore.C
 
 	if err != nil {
 		// Attempting to describe a deleted keyvaluestore produces the following error instead of a ResourceNotFoundError
-		regex := regexp.MustCompile(`Key-Value-Store was not in expected state`)
+		regex := regexache.MustCompile(`Key-Value-Store was not in expected state`)
 		if regex.MatchString(err.Error()) {
 			return nil, &retry.NotFoundError{
 				LastError:   err,
