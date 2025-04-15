@@ -325,15 +325,9 @@ func (r *resourceRevisionExclusive) Create(ctx context.Context, req resource.Cre
 				return
 			}
 
-			startJobInput := dataexchange.StartJobInput{
-				JobId: createJobOutput.Id,
-			}
-			_, err = conn.StartJob(ctx, &startJobInput)
-			if err != nil {
-				resp.Diagnostics.AddError(
-					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, "XXX", err),
-					err.Error(),
-				)
+			d = startJob(ctx, createJobOutput.Id, conn)
+			resp.Diagnostics.Append(d...)
+			if d.HasError() {
 				return
 			}
 
@@ -351,31 +345,12 @@ func (r *resourceRevisionExclusive) Create(ctx context.Context, req resource.Cre
 				DataSetId:  plan.DataSetID.ValueStringPointer(),
 				RevisionId: plan.ID.ValueStringPointer(),
 			}
-			var newAsset awstypes.AssetEntry
-			paginator := dataexchange.NewListRevisionAssetsPaginator(conn, &listAssetsInput)
-			for paginator.HasMorePages() {
-				page, err := paginator.NextPage(ctx)
-				if err != nil {
-					resp.Diagnostics.AddError(
-						create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, "XXX", err),
-						err.Error(),
-					)
-					return
-				}
-
-				for _, v := range page.Assets {
-					if !slices.Contains(existingAssetIDs, aws.ToString(v.Id)) {
-						newAsset = v
-					}
-				}
-			}
-			if newAsset.Id == nil {
-				resp.Diagnostics.AddError(
-					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, "XXX", nil),
-					"missing new asset",
-				)
+			newAsset, d := getRevisionAsset(ctx, conn, listAssetsInput, existingAssetIDs)
+			resp.Diagnostics.Append(d...)
+			if resp.Diagnostics.HasError() {
 				return
 			}
+
 			resp.Diagnostics.Append(flex.Flatten(ctx, newAsset, asset)...)
 			if resp.Diagnostics.HasError() {
 				return
@@ -498,15 +473,9 @@ func (r *resourceRevisionExclusive) Create(ctx context.Context, req resource.Cre
 			response.Body.Close()
 
 			// Start Job
-			startJobInput := dataexchange.StartJobInput{
-				JobId: createJobOutput.Id,
-			}
-			_, err = conn.StartJob(ctx, &startJobInput)
-			if err != nil {
-				resp.Diagnostics.AddError(
-					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, "XXX", err),
-					err.Error(),
-				)
+			d = startJob(ctx, createJobOutput.Id, conn)
+			resp.Diagnostics.Append(d...)
+			if d.HasError() {
 				return
 			}
 
@@ -525,31 +494,12 @@ func (r *resourceRevisionExclusive) Create(ctx context.Context, req resource.Cre
 				DataSetId:  plan.DataSetID.ValueStringPointer(),
 				RevisionId: plan.ID.ValueStringPointer(),
 			}
-			var newAsset awstypes.AssetEntry
-			paginator := dataexchange.NewListRevisionAssetsPaginator(conn, &listAssetsInput)
-			for paginator.HasMorePages() {
-				page, err := paginator.NextPage(ctx)
-				if err != nil {
-					resp.Diagnostics.AddError(
-						create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, "XXX", err),
-						err.Error(),
-					)
-					return
-				}
-
-				for _, v := range page.Assets {
-					if !slices.Contains(existingAssetIDs, aws.ToString(v.Id)) {
-						newAsset = v
-					}
-				}
-			}
-			if newAsset.Id == nil {
-				resp.Diagnostics.AddError(
-					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, "XXX", nil),
-					"missing new asset",
-				)
+			newAsset, d := getRevisionAsset(ctx, conn, listAssetsInput, existingAssetIDs)
+			resp.Diagnostics.Append(d...)
+			if resp.Diagnostics.HasError() {
 				return
 			}
+
 			resp.Diagnostics.Append(flex.Flatten(ctx, newAsset, asset)...)
 			if resp.Diagnostics.HasError() {
 				return
@@ -595,15 +545,9 @@ func (r *resourceRevisionExclusive) Create(ctx context.Context, req resource.Cre
 				return
 			}
 
-			startJobInput := dataexchange.StartJobInput{
-				JobId: createJobOutput.Id,
-			}
-			_, err = conn.StartJob(ctx, &startJobInput)
-			if err != nil {
-				resp.Diagnostics.AddError(
-					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, "XXX", err),
-					err.Error(),
-				)
+			d = startJob(ctx, createJobOutput.Id, conn)
+			resp.Diagnostics.Append(d...)
+			if d.HasError() {
 				return
 			}
 
@@ -648,6 +592,21 @@ func (r *resourceRevisionExclusive) Create(ctx context.Context, req resource.Cre
 	plan.Assets = assetsVal
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+}
+
+func startJob(ctx context.Context, id *string, conn *dataexchange.Client) (diags diag.Diagnostics) {
+	startJobInput := dataexchange.StartJobInput{
+		JobId: id,
+	}
+	_, err := conn.StartJob(ctx, &startJobInput)
+	if err != nil {
+		diags.AddError(
+			create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, "XXX", err),
+			err.Error(),
+		)
+		return diags
+	}
+	return diags
 }
 
 func (r *resourceRevisionExclusive) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -708,10 +667,6 @@ func (r *resourceRevisionExclusive) Delete(ctx context.Context, req resource.Del
 		return
 	}
 }
-
-// func (r *resourceRevisionExclusive) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-// 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-// }
 
 func findRevisionByID(ctx context.Context, conn *dataexchange.Client, dataSetId, revisionId string) (*dataexchange.GetRevisionOutput, error) {
 	input := dataexchange.GetRevisionInput{
@@ -788,58 +743,6 @@ type assetModel struct {
 	Name                           types.String                                                         `tfsdk:"name"`
 	UpdatedAt                      timetypes.RFC3339                                                    `tfsdk:"updated_at"`
 }
-
-//var _ flex.Flattener = &assetModel{}
-//
-//func (a *assetModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
-//	data, ok := v.(awstypes.AssetEntry)
-//	if !ok {
-//		diags.Append(flex.DiagFlatteningIncompatibleTypes(reflect.TypeOf(v), reflect.TypeFor[assetModel]()))
-//		return diags
-//	}
-//
-//	a.Name = flex.StringToFramework(ctx, data.Name)
-//	a.ID = flex.StringToFramework(ctx, data.Id)
-//	a.ARN = flex.StringToFramework(ctx, data.Arn)
-//	a.CreatedAt = flex.TimeToFramework(ctx, data.CreatedAt)
-//	a.UpdatedAt = flex.TimeToFramework(ctx, data.UpdatedAt)
-//	a.CreateS3DataAccessFromS3Bucket = fwtypes.NewListNestedObjectValueOfNull[createS3DataAccessFromS3BucketModel](ctx)
-//
-//	if data.AssetDetails.S3DataAccessAsset != nil {
-//		kmsGrants := make([]*kmsKeyToGrantModel, 0)
-//		for _, val := range data.AssetDetails.S3DataAccessAsset.KmsKeysToGrant {
-//			kmsGrants = append(kmsGrants, &kmsKeyToGrantModel{
-//				KmsKeyArn: flex.StringToFrameworkARN(ctx, val.KmsKeyArn),
-//			})
-//		}
-//		a.CreateS3DataAccessFromS3Bucket = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &createS3DataAccessFromS3BucketModel{
-//			AccessPointAlias: flex.StringToFramework(ctx, data.AssetDetails.S3DataAccessAsset.S3AccessPointAlias),
-//			AccessPointARN:   flex.StringToFramework(ctx, data.AssetDetails.S3DataAccessAsset.S3AccessPointArn),
-//			AssetSource: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &s3DataAccessAssetSourceModel{
-//				Bucket:         flex.StringToFramework(ctx, data.AssetDetails.S3DataAccessAsset.Bucket),
-//				KmsKeysToGrant: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, kmsGrants),
-//			}),
-//		})
-//	}
-//
-//	// set null values if source
-//	if data.AssetDetails.S3SnapshotAsset == nil {
-//		a.ImportAssetsFromS3 = fwtypes.NewListNestedObjectValueOfNull[importAssetsFromS3Model](ctx)
-//		a.ImportAssetsFromSignedURL = fwtypes.NewListNestedObjectValueOfNull[importAssetsFromSignedURLModel](ctx)
-//	}
-//
-//	return diags
-//}
-
-//func flattenS3DataAccessAssetModel(ctx context.Context, asset *awstypes.AssetEntry) (result assetModel, diags diag.Diagnostics) {
-//	diags = flex.Flatten(ctx, asset, &result)
-//
-//	details := asset.AssetDetails.S3DataAccessAsset
-//
-//}
-//
-//func flattenS3DataAccessAssetDetails(ctx context.Context, asset *awstypes.S3DataAccessAsset) (result createS3DataAccessFromS3BucketModel, diags diag.Diagnostics) {
-//}
 
 type importAssetsFromS3Model struct {
 	AssetSources fwtypes.ListNestedObjectValueOf[assetSourceModel] `tfsdk:"asset_source"`
