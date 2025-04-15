@@ -2155,8 +2155,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_vpc_ipam_organization_admin_account",
 			Name:     "IPAM Organization Admin Account",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsOverrideEnabled: false,
 			}),
 		},
 		{
