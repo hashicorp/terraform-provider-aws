@@ -105,33 +105,29 @@ var (
 	})
 )
 
-type forceNewIfRegionValueChangesInterceptor struct{}
+var (
+	forceNewIfRegionChanges customizeDiffInterceptor = interceptorFunc1[*schema.ResourceDiff, error](func(ctx context.Context, opts customizeDiffInterceptorOptions) error {
+		c := opts.c
 
-func forceNewIfRegionValueChanges() customizeDiffInterceptor {
-	return &forceNewIfRegionValueChangesInterceptor{}
-}
-
-func (r forceNewIfRegionValueChangesInterceptor) run(ctx context.Context, opts customizeDiffInterceptorOptions) error {
-	c := opts.c
-
-	switch d, when, why := opts.d, opts.when, opts.why; when {
-	case Before:
-		switch why {
-		case CustomizeDiff:
-			// Force resource replacement if the value of the top-level `region` attribute changes.
-			if d.Id() != "" && d.HasChange(names.AttrRegion) {
-				providerRegion := c.AwsConfig(ctx).Region
-				o, n := d.GetChange(names.AttrRegion)
-				if o, n := o.(string), n.(string); (o == "" && n == providerRegion) || (o == providerRegion && n == "") {
-					return nil
+		switch d, when, why := opts.d, opts.when, opts.why; when {
+		case Before:
+			switch why {
+			case CustomizeDiff:
+				// Force resource replacement if the value of the top-level `region` attribute changes.
+				if d.Id() != "" && d.HasChange(names.AttrRegion) {
+					providerRegion := c.AwsConfig(ctx).Region
+					o, n := d.GetChange(names.AttrRegion)
+					if o, n := o.(string), n.(string); (o == "" && n == providerRegion) || (o == providerRegion && n == "") {
+						return nil
+					}
+					return d.ForceNew(names.AttrRegion)
 				}
-				return d.ForceNew(names.AttrRegion)
 			}
 		}
-	}
 
-	return nil
-}
+		return nil
+	})
+)
 
 var (
 	importRegion importInterceptor = interceptorFunc2[*schema.ResourceData, []*schema.ResourceData, error](func(ctx context.Context, opts importInterceptorOptions) ([]*schema.ResourceData, error) {

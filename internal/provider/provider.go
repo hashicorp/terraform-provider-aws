@@ -495,11 +495,14 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 					why:         Read,
 					interceptor: setRegionInState,
 				})
+				// We can't just set the injected "region" attribute to ForceNew because if
+				// a plan is run with '-refresh=false', then after provider v5 to v6 upgrade
+				// the region attribute is not set in state and its value shows a change.
 				if !v.IsGlobal {
 					interceptors = append(interceptors, interceptorInvocation{
 						when:        Before,
 						why:         CustomizeDiff,
-						interceptor: forceNewIfRegionValueChanges(),
+						interceptor: forceNewIfRegionChanges,
 					})
 				}
 				interceptors = append(interceptors, interceptorInvocation{
