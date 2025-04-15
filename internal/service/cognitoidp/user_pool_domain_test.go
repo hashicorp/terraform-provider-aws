@@ -40,6 +40,7 @@ func TestAccCognitoIDPUserPoolDomain_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "cloudfront_distribution_arn"),
 					resource.TestCheckResourceAttr(resourceName, "cloudfront_distribution_zone_id", "Z2FDTNDATAQYW2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomain, rName),
+					resource.TestCheckResourceAttrSet(resourceName, "managed_login_version"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrS3Bucket),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrVersion),
 				),
