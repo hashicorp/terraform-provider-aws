@@ -64,6 +64,8 @@ func newResourceRevisionExclusive(_ context.Context) (resource.ResourceWithConfi
 
 const (
 	ResNameRevisionExclusive = "Revision Exclusive"
+
+	revisionExclusiveIDParts = 2
 )
 
 type resourceRevisionExclusive struct {
@@ -259,14 +261,14 @@ func (r *resourceRevisionExclusive) Create(ctx context.Context, req resource.Cre
 	out, err := conn.CreateRevision(ctx, &input)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, "XXX", err),
+			create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, plan.DataSetID.String(), err),
 			err.Error(),
 		)
 		return
 	}
 	if out == nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, "XXX", nil),
+			create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, plan.DataSetID.String(), nil),
 			errors.New("empty output").Error(),
 		)
 		return
@@ -282,6 +284,7 @@ func (r *resourceRevisionExclusive) Create(ctx context.Context, req resource.Cre
 	// Assets can be renamed *after* the Job that creates them is complete.
 	// The `ImportAssetsFromSignedURL` Job technically requires a `Name` parameter, but I've defaulted to the name of the file.
 	// This should probably be changed to explicitly require the `name`
+	revisionID := aws.ToString(out.Id)
 	assets := make([]assetModel, len(plan.Assets.Elements()))
 	existingAssetIDs := make([]string, 0, len(plan.Assets.Elements()))
 	for i, asset := range nestedObjectCollectionAllMust[assetModel](ctx, plan.Assets) {
@@ -312,22 +315,25 @@ func (r *resourceRevisionExclusive) Create(ctx context.Context, req resource.Cre
 			createJobOutput, err := conn.CreateJob(ctx, &createJobInput)
 			if err != nil {
 				resp.Diagnostics.AddError(
-					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, "XXX", err),
+					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, revisionID, err),
 					err.Error(),
 				)
 				return
 			}
 			if createJobOutput == nil {
 				resp.Diagnostics.AddError(
-					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, "XXX", nil),
+					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, revisionID, nil),
 					errors.New("empty output").Error(),
 				)
 				return
 			}
 
-			d = startJob(ctx, createJobOutput.Id, conn)
-			resp.Diagnostics.Append(d...)
-			if d.HasError() {
+			err = startJob(ctx, createJobOutput.Id, conn)
+			if err != nil {
+				resp.Diagnostics.AddError(
+					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, revisionID, err),
+					err.Error(),
+				)
 				return
 			}
 
@@ -335,7 +341,7 @@ func (r *resourceRevisionExclusive) Create(ctx context.Context, req resource.Cre
 			_, err = waitJobCompleted(ctx, conn, aws.ToString(createJobOutput.Id), createTimeout)
 			if err != nil {
 				resp.Diagnostics.AddError(
-					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, "XXX", err),
+					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, revisionID, err),
 					err.Error(),
 				)
 				return
@@ -345,10 +351,12 @@ func (r *resourceRevisionExclusive) Create(ctx context.Context, req resource.Cre
 				DataSetId:  plan.DataSetID.ValueStringPointer(),
 				RevisionId: plan.ID.ValueStringPointer(),
 			}
-			newAsset, d := getRevisionAsset(ctx, conn, listAssetsInput, existingAssetIDs)
-			resp.Diagnostics.Append(d...)
-			if resp.Diagnostics.HasError() {
-				return
+			newAsset, err := getRevisionAsset(ctx, conn, listAssetsInput, existingAssetIDs)
+			if err != nil {
+				resp.Diagnostics.AddError(
+					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, revisionID, err),
+					err.Error(),
+				)
 			}
 
 			resp.Diagnostics.Append(flex.Flatten(ctx, newAsset, asset)...)
@@ -374,7 +382,7 @@ func (r *resourceRevisionExclusive) Create(ctx context.Context, req resource.Cre
 			f, err := os.Open(importAssetsFromSignedURL.Filename.ValueString())
 			if err != nil {
 				resp.Diagnostics.AddError(
-					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, "XXX", err),
+					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, revisionID, err),
 					err.Error(),
 				)
 				return
@@ -384,7 +392,7 @@ func (r *resourceRevisionExclusive) Create(ctx context.Context, req resource.Cre
 			hash, err := md5Reader(f)
 			if err != nil {
 				resp.Diagnostics.AddError(
-					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, "XXX", err),
+					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, revisionID, err),
 					err.Error(),
 				)
 				return
@@ -395,7 +403,7 @@ func (r *resourceRevisionExclusive) Create(ctx context.Context, req resource.Cre
 			_, err = f.Seek(0, 0)
 			if err != nil {
 				resp.Diagnostics.AddError(
-					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, "XXX", err),
+					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, revisionID, err),
 					err.Error(),
 				)
 				return
@@ -411,14 +419,14 @@ func (r *resourceRevisionExclusive) Create(ctx context.Context, req resource.Cre
 			createJobOutput, err := conn.CreateJob(ctx, &createJobInput)
 			if err != nil {
 				resp.Diagnostics.AddError(
-					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, "XXX", err),
+					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, revisionID, err),
 					err.Error(),
 				)
 				return
 			}
 			if createJobOutput == nil {
 				resp.Diagnostics.AddError(
-					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, "XXX", nil),
+					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, revisionID, nil),
 					errors.New("empty output").Error(),
 				)
 				return
@@ -428,7 +436,7 @@ func (r *resourceRevisionExclusive) Create(ctx context.Context, req resource.Cre
 			info, err := f.Stat()
 			if err != nil {
 				resp.Diagnostics.AddError(
-					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, "XXX", err),
+					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, revisionID, err),
 					err.Error(),
 				)
 				return
@@ -437,7 +445,7 @@ func (r *resourceRevisionExclusive) Create(ctx context.Context, req resource.Cre
 			request, err := http.NewRequestWithContext(ctx, http.MethodPut, *createJobOutput.Details.ImportAssetFromSignedUrl.SignedUrl, f)
 			if err != nil {
 				resp.Diagnostics.AddError(
-					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, "XXX", err),
+					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, revisionID, err),
 					err.Error(),
 				)
 				return
@@ -450,14 +458,14 @@ func (r *resourceRevisionExclusive) Create(ctx context.Context, req resource.Cre
 			response, err := httpClient.Do(request)
 			if err != nil {
 				resp.Diagnostics.AddError(
-					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, "XXX", err),
+					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, revisionID, err),
 					err.Error(),
 				)
 				return
 			}
 			if !(response.StatusCode >= http.StatusOK && response.StatusCode <= http.StatusIMUsed) {
 				resp.Diagnostics.AddError(
-					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, "XXX", nil),
+					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, revisionID, nil),
 					fmt.Sprintf("Uploading to %q\n\nUnexpected HTTP response: %s", *createJobOutput.Details.ImportAssetFromSignedUrl.SignedUrl, response.Status),
 				)
 				return
@@ -465,7 +473,7 @@ func (r *resourceRevisionExclusive) Create(ctx context.Context, req resource.Cre
 			_, err = io.Copy(io.Discard, response.Body)
 			if err != nil {
 				resp.Diagnostics.AddError(
-					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, "XXX", err),
+					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, revisionID, err),
 					err.Error(),
 				)
 				return
@@ -473,9 +481,12 @@ func (r *resourceRevisionExclusive) Create(ctx context.Context, req resource.Cre
 			response.Body.Close()
 
 			// Start Job
-			d = startJob(ctx, createJobOutput.Id, conn)
-			resp.Diagnostics.Append(d...)
-			if d.HasError() {
+			err = startJob(ctx, createJobOutput.Id, conn)
+			if err != nil {
+				resp.Diagnostics.AddError(
+					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, revisionID, err),
+					err.Error(),
+				)
 				return
 			}
 
@@ -483,7 +494,7 @@ func (r *resourceRevisionExclusive) Create(ctx context.Context, req resource.Cre
 			_, err = waitJobCompleted(ctx, conn, aws.ToString(createJobOutput.Id), createTimeout)
 			if err != nil {
 				resp.Diagnostics.AddError(
-					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, "XXX", err),
+					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, revisionID, err),
 					err.Error(),
 				)
 				return
@@ -494,10 +505,12 @@ func (r *resourceRevisionExclusive) Create(ctx context.Context, req resource.Cre
 				DataSetId:  plan.DataSetID.ValueStringPointer(),
 				RevisionId: plan.ID.ValueStringPointer(),
 			}
-			newAsset, d := getRevisionAsset(ctx, conn, listAssetsInput, existingAssetIDs)
-			resp.Diagnostics.Append(d...)
-			if resp.Diagnostics.HasError() {
-				return
+			newAsset, err := getRevisionAsset(ctx, conn, listAssetsInput, existingAssetIDs)
+			if err != nil {
+				resp.Diagnostics.AddError(
+					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, revisionID, err),
+					err.Error(),
+				)
 			}
 
 			resp.Diagnostics.Append(flex.Flatten(ctx, newAsset, asset)...)
@@ -532,22 +545,25 @@ func (r *resourceRevisionExclusive) Create(ctx context.Context, req resource.Cre
 			createJobOutput, err := conn.CreateJob(ctx, &createJobInput)
 			if err != nil {
 				resp.Diagnostics.AddError(
-					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, "XXX", err),
+					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, revisionID, err),
 					err.Error(),
 				)
 				return
 			}
 			if createJobOutput == nil {
 				resp.Diagnostics.AddError(
-					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, "XXX", nil),
+					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, revisionID, nil),
 					errors.New("empty output").Error(),
 				)
 				return
 			}
 
-			d = startJob(ctx, createJobOutput.Id, conn)
-			resp.Diagnostics.Append(d...)
-			if d.HasError() {
+			err = startJob(ctx, createJobOutput.Id, conn)
+			if err != nil {
+				resp.Diagnostics.AddError(
+					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, revisionID, err),
+					err.Error(),
+				)
 				return
 			}
 
@@ -555,7 +571,7 @@ func (r *resourceRevisionExclusive) Create(ctx context.Context, req resource.Cre
 			_, err = waitJobCompleted(ctx, conn, aws.ToString(createJobOutput.Id), createTimeout)
 			if err != nil {
 				resp.Diagnostics.AddError(
-					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, "XXX", err),
+					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, revisionID, err),
 					err.Error(),
 				)
 				return
@@ -565,10 +581,12 @@ func (r *resourceRevisionExclusive) Create(ctx context.Context, req resource.Cre
 				DataSetId:  plan.DataSetID.ValueStringPointer(),
 				RevisionId: plan.ID.ValueStringPointer(),
 			}
-			newAsset, d := getRevisionAsset(ctx, conn, in, existingAssetIDs)
-			resp.Diagnostics.Append(d...)
-			if d.HasError() {
-				return
+			newAsset, err := getRevisionAsset(ctx, conn, in, existingAssetIDs)
+			if err != nil {
+				resp.Diagnostics.AddError(
+					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, revisionID, err),
+					err.Error(),
+				)
 			}
 
 			resp.Diagnostics.Append(flex.Flatten(ctx, newAsset, asset)...)
@@ -594,19 +612,16 @@ func (r *resourceRevisionExclusive) Create(ctx context.Context, req resource.Cre
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func startJob(ctx context.Context, id *string, conn *dataexchange.Client) (diags diag.Diagnostics) {
+func startJob(ctx context.Context, id *string, conn *dataexchange.Client) error {
 	startJobInput := dataexchange.StartJobInput{
 		JobId: id,
 	}
 	_, err := conn.StartJob(ctx, &startJobInput)
 	if err != nil {
-		diags.AddError(
-			create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, "XXX", err),
-			err.Error(),
-		)
-		return diags
+		return err
 	}
-	return diags
+
+	return nil
 }
 
 func (r *resourceRevisionExclusive) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -688,19 +703,13 @@ func findRevisionByID(ctx context.Context, conn *dataexchange.Client, dataSetId,
 	return output, nil
 }
 
-func getRevisionAsset(ctx context.Context, conn *dataexchange.Client, input dataexchange.ListRevisionAssetsInput, existingAssetIDs []string) (awstypes.AssetEntry, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
+func getRevisionAsset(ctx context.Context, conn *dataexchange.Client, input dataexchange.ListRevisionAssetsInput, existingAssetIDs []string) (awstypes.AssetEntry, error) {
 	var newAsset awstypes.AssetEntry
 	paginator := dataexchange.NewListRevisionAssetsPaginator(conn, &input)
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(ctx)
 		if err != nil {
-			diags.AddError(
-				create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, "XXX", err),
-				err.Error(),
-			)
-			return awstypes.AssetEntry{}, diags
+			return awstypes.AssetEntry{}, err
 		}
 
 		for _, v := range page.Assets {
@@ -710,14 +719,10 @@ func getRevisionAsset(ctx context.Context, conn *dataexchange.Client, input data
 		}
 	}
 	if newAsset.Id == nil {
-		diags.AddError(
-			create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, "XXX", nil),
-			"missing new asset",
-		)
-		return awstypes.AssetEntry{}, diags
+		return awstypes.AssetEntry{}, errors.New("missing new asset")
 	}
 
-	return newAsset, diags
+	return newAsset, nil
 }
 
 type resourceRevisionExclusiveModel struct {
