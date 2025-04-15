@@ -460,7 +460,7 @@ func (r *resourceDBInstance) Update(ctx context.Context, req resource.UpdateRequ
 		return
 	}
 
-	diff, d := fwflex.Diff(ctx, plan, state)
+	diff, d := fwflex.Diff(ctx, plan, state, fwflex.WithIgnoredField("SecondaryAvailabilityZone"))
 	resp.Diagnostics.Append(d...)
 	if resp.Diagnostics.HasError() {
 		return
