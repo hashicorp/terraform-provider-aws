@@ -60,18 +60,7 @@ func TestAccDataExchangeRevisionExclusive_tags(t *testing.T) {
 					},
 				},
 			},
-			{
-				ConfigDirectory: config.StaticDirectory("testdata/RevisionExclusive/tags/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
-					}),
-				},
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
+
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/RevisionExclusive/tags/"),
 				ConfigVariables: config.Variables{
@@ -108,19 +97,7 @@ func TestAccDataExchangeRevisionExclusive_tags(t *testing.T) {
 					},
 				},
 			},
-			{
-				ConfigDirectory: config.StaticDirectory("testdata/RevisionExclusive/tags/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
-						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
-					}),
-				},
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
+
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/RevisionExclusive/tags/"),
 				ConfigVariables: config.Variables{
@@ -152,18 +129,7 @@ func TestAccDataExchangeRevisionExclusive_tags(t *testing.T) {
 					},
 				},
 			},
-			{
-				ConfigDirectory: config.StaticDirectory("testdata/RevisionExclusive/tags/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
-						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
-					}),
-				},
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
+
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/RevisionExclusive/tags/"),
 				ConfigVariables: config.Variables{
@@ -184,16 +150,6 @@ func TestAccDataExchangeRevisionExclusive_tags(t *testing.T) {
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
 					},
 				},
-			},
-			{
-				ConfigDirectory: config.StaticDirectory("testdata/RevisionExclusive/tags/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
-					acctest.CtResourceTags: nil,
-				},
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
@@ -242,21 +198,6 @@ func TestAccDataExchangeRevisionExclusive_tags_null(t *testing.T) {
 					},
 				},
 			},
-			{
-				ConfigDirectory: config.StaticDirectory("testdata/RevisionExclusive/tags/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: nil,
-					}),
-				},
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					acctest.CtTagsKey1, // The canonical value returned by the AWS API is ""
-				},
-			},
 		},
 	})
 }
@@ -292,19 +233,6 @@ func TestAccDataExchangeRevisionExclusive_tags_EmptyMap(t *testing.T) {
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
 					},
-				},
-			},
-			{
-				ConfigDirectory: config.StaticDirectory("testdata/RevisionExclusive/tags/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
-					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
-				},
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					acctest.CtTagsKey1, // The canonical value returned by the AWS API is ""
 				},
 			},
 		},
@@ -375,18 +303,6 @@ func TestAccDataExchangeRevisionExclusive_tags_AddOnUpdate(t *testing.T) {
 					},
 				},
 			},
-			{
-				ConfigDirectory: config.StaticDirectory("testdata/RevisionExclusive/tags/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
-					}),
-				},
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
 		},
 	})
 }
@@ -434,18 +350,7 @@ func TestAccDataExchangeRevisionExclusive_tags_EmptyTag_OnCreate(t *testing.T) {
 					},
 				},
 			},
-			{
-				ConfigDirectory: config.StaticDirectory("testdata/RevisionExclusive/tags/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: config.StringVariable(""),
-					}),
-				},
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
+
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/RevisionExclusive/tags/"),
 				ConfigVariables: config.Variables{
@@ -466,16 +371,6 @@ func TestAccDataExchangeRevisionExclusive_tags_EmptyTag_OnCreate(t *testing.T) {
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
 					},
 				},
-			},
-			{
-				ConfigDirectory: config.StaticDirectory("testdata/RevisionExclusive/tags/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
-					acctest.CtResourceTags: nil,
-				},
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
@@ -560,19 +455,7 @@ func TestAccDataExchangeRevisionExclusive_tags_EmptyTag_OnUpdate_Add(t *testing.
 					},
 				},
 			},
-			{
-				ConfigDirectory: config.StaticDirectory("testdata/RevisionExclusive/tags/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
-						acctest.CtKey2: config.StringVariable(""),
-					}),
-				},
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
+
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/RevisionExclusive/tags/"),
 				ConfigVariables: config.Variables{
@@ -603,18 +486,6 @@ func TestAccDataExchangeRevisionExclusive_tags_EmptyTag_OnUpdate_Add(t *testing.
 						})),
 					},
 				},
-			},
-			{
-				ConfigDirectory: config.StaticDirectory("testdata/RevisionExclusive/tags/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
-					}),
-				},
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
@@ -694,18 +565,6 @@ func TestAccDataExchangeRevisionExclusive_tags_EmptyTag_OnUpdate_Replace(t *test
 					},
 				},
 			},
-			{
-				ConfigDirectory: config.StaticDirectory("testdata/RevisionExclusive/tags/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: config.StringVariable(""),
-					}),
-				},
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
 		},
 	})
 }
@@ -750,20 +609,7 @@ func TestAccDataExchangeRevisionExclusive_tags_DefaultTags_providerOnly(t *testi
 					},
 				},
 			},
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/RevisionExclusive/tags_defaults/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
-					}),
-					acctest.CtResourceTags: nil,
-				},
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
+
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/RevisionExclusive/tags_defaults/"),
@@ -796,21 +642,7 @@ func TestAccDataExchangeRevisionExclusive_tags_DefaultTags_providerOnly(t *testi
 					},
 				},
 			},
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/RevisionExclusive/tags_defaults/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
-						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
-					}),
-					acctest.CtResourceTags: nil,
-				},
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
+
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/RevisionExclusive/tags_defaults/"),
@@ -840,20 +672,7 @@ func TestAccDataExchangeRevisionExclusive_tags_DefaultTags_providerOnly(t *testi
 					},
 				},
 			},
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/RevisionExclusive/tags_defaults/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
-						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
-					}),
-					acctest.CtResourceTags: nil,
-				},
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
+
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/RevisionExclusive/tags/"),
@@ -875,17 +694,6 @@ func TestAccDataExchangeRevisionExclusive_tags_DefaultTags_providerOnly(t *testi
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
 					},
 				},
-			},
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/RevisionExclusive/tags/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
-					acctest.CtResourceTags: nil,
-				},
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
@@ -939,22 +747,7 @@ func TestAccDataExchangeRevisionExclusive_tags_DefaultTags_nonOverlapping(t *tes
 					},
 				},
 			},
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/RevisionExclusive/tags_defaults/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
-						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1),
-					}),
-					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
-						acctest.CtResourceKey1: config.StringVariable(acctest.CtResourceValue1),
-					}),
-				},
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
+
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/RevisionExclusive/tags_defaults/"),
@@ -997,23 +790,7 @@ func TestAccDataExchangeRevisionExclusive_tags_DefaultTags_nonOverlapping(t *tes
 					},
 				},
 			},
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/RevisionExclusive/tags_defaults/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
-						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1Updated),
-					}),
-					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
-						acctest.CtResourceKey1: config.StringVariable(acctest.CtResourceValue1Updated),
-						acctest.CtResourceKey2: config.StringVariable(acctest.CtResourceValue2),
-					}),
-				},
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
+
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/RevisionExclusive/tags/"),
@@ -1035,17 +812,6 @@ func TestAccDataExchangeRevisionExclusive_tags_DefaultTags_nonOverlapping(t *tes
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
 					},
 				},
-			},
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/RevisionExclusive/tags/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
-					acctest.CtResourceTags: nil,
-				},
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
@@ -1097,22 +863,7 @@ func TestAccDataExchangeRevisionExclusive_tags_DefaultTags_overlapping(t *testin
 					},
 				},
 			},
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/RevisionExclusive/tags_defaults/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
-						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
-					}),
-					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
-						acctest.CtOverlapKey1: config.StringVariable(acctest.CtResourceValue1),
-					}),
-				},
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
+
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/RevisionExclusive/tags_defaults/"),
@@ -1154,24 +905,7 @@ func TestAccDataExchangeRevisionExclusive_tags_DefaultTags_overlapping(t *testin
 					},
 				},
 			},
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/RevisionExclusive/tags_defaults/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
-						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
-						acctest.CtOverlapKey2: config.StringVariable("providervalue2"),
-					}),
-					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
-						acctest.CtOverlapKey1: config.StringVariable(acctest.CtResourceValue1),
-						acctest.CtOverlapKey2: config.StringVariable(acctest.CtResourceValue2),
-					}),
-				},
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
+
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/RevisionExclusive/tags_defaults/"),
@@ -1206,22 +940,6 @@ func TestAccDataExchangeRevisionExclusive_tags_DefaultTags_overlapping(t *testin
 						})),
 					},
 				},
-			},
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/RevisionExclusive/tags_defaults/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
-						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
-					}),
-					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
-						acctest.CtOverlapKey1: config.StringVariable(acctest.CtResourceValue2),
-					}),
-				},
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
@@ -1299,20 +1017,6 @@ func TestAccDataExchangeRevisionExclusive_tags_DefaultTags_updateToProviderOnly(
 					},
 				},
 			},
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/RevisionExclusive/tags_defaults/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
-					}),
-					acctest.CtResourceTags: nil,
-				},
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
 		},
 	})
 }
@@ -1389,19 +1093,6 @@ func TestAccDataExchangeRevisionExclusive_tags_DefaultTags_updateToResourceOnly(
 					},
 				},
 			},
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/RevisionExclusive/tags/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
-					}),
-				},
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
 		},
 	})
 }
@@ -1452,22 +1143,6 @@ func TestAccDataExchangeRevisionExclusive_tags_DefaultTags_emptyResourceTag(t *t
 					},
 				},
 			},
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/RevisionExclusive/tags_defaults/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
-					}),
-					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: config.StringVariable(""),
-					}),
-				},
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
 		},
 	})
 }
@@ -1511,20 +1186,6 @@ func TestAccDataExchangeRevisionExclusive_tags_DefaultTags_emptyProviderOnlyTag(
 						})),
 					},
 				},
-			},
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/RevisionExclusive/tags_defaults/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: config.StringVariable(""),
-					}),
-					acctest.CtResourceTags: nil,
-				},
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
@@ -1574,25 +1235,6 @@ func TestAccDataExchangeRevisionExclusive_tags_DefaultTags_nullOverlappingResour
 							acctest.CtKey1: knownvalue.StringExact(""),
 						})),
 					},
-				},
-			},
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/RevisionExclusive/tags_defaults/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: config.StringVariable(acctest.CtProviderValue1),
-					}),
-					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: nil,
-					}),
-				},
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					acctest.CtTagsKey1, // The canonical value returned by the AWS API is ""
 				},
 			},
 		},
@@ -1647,25 +1289,6 @@ func TestAccDataExchangeRevisionExclusive_tags_DefaultTags_nullNonOverlappingRes
 					},
 				},
 			},
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/RevisionExclusive/tags_defaults/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
-						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1),
-					}),
-					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
-						acctest.CtResourceKey1: nil,
-					}),
-				},
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"tags.resourcekey1", // The canonical value returned by the AWS API is ""
-				},
-			},
 		},
 	})
 }
@@ -1709,17 +1332,6 @@ func TestAccDataExchangeRevisionExclusive_tags_ComputedTag_OnCreate(t *testing.T
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 				},
-			},
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/RevisionExclusive/tagsComputed1/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"unknownTagKey": config.StringVariable("computedkey1"),
-				},
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
@@ -1805,19 +1417,6 @@ func TestAccDataExchangeRevisionExclusive_tags_ComputedTag_OnUpdate_Add(t *testi
 					},
 				},
 			},
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/RevisionExclusive/tagsComputed2/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"unknownTagKey": config.StringVariable("computedkey1"),
-					"knownTagKey":   config.StringVariable(acctest.CtKey1),
-					"knownTagValue": config.StringVariable(acctest.CtValue1),
-				},
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
 		},
 	})
 }
@@ -1893,17 +1492,6 @@ func TestAccDataExchangeRevisionExclusive_tags_ComputedTag_OnUpdate_Replace(t *t
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 				},
-			},
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/RevisionExclusive/tagsComputed1/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"unknownTagKey": config.StringVariable(acctest.CtKey1),
-				},
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})

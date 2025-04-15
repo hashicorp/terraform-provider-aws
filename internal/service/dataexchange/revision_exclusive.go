@@ -51,7 +51,7 @@ import (
 // @FrameworkResource("aws_dataexchange_revision_exclusive", name="Revision Exclusive")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/dataexchange;dataexchange.GetRevisionOutput")
-// @Testing(noImport=true) // TODO: enable import
+// @Testing(noImport=true)
 func newResourceRevisionExclusive(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceRevisionExclusive{}
 
