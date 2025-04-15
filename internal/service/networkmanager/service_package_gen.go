@@ -30,7 +30,6 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			}),
 		},
@@ -44,9 +43,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			TypeName: "aws_networkmanager_connection",
 			Name:     "Connection",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsOverrideEnabled: false,
 			}),
 		},
 		{
@@ -54,9 +51,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			TypeName: "aws_networkmanager_connections",
 			Name:     "Connections",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsOverrideEnabled: false,
 			}),
 		},
 		{
@@ -64,9 +59,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			TypeName: "aws_networkmanager_core_network_policy_document",
 			Name:     "Core Network Policy Document",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsOverrideEnabled: false,
 			}),
 		},
 		{
@@ -74,9 +67,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			TypeName: "aws_networkmanager_device",
 			Name:     "Device",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsOverrideEnabled: false,
 			}),
 		},
 		{
@@ -84,9 +75,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			TypeName: "aws_networkmanager_devices",
 			Name:     "Devices",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsOverrideEnabled: false,
 			}),
 		},
 		{
@@ -94,9 +83,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			TypeName: "aws_networkmanager_global_network",
 			Name:     "Global Network",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsOverrideEnabled: false,
 			}),
 		},
 		{
@@ -104,9 +91,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			TypeName: "aws_networkmanager_global_networks",
 			Name:     "Global Networks",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsOverrideEnabled: false,
 			}),
 		},
 		{
@@ -114,9 +99,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			TypeName: "aws_networkmanager_link",
 			Name:     "Link",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsOverrideEnabled: false,
 			}),
 		},
 		{
@@ -124,9 +107,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			TypeName: "aws_networkmanager_links",
 			Name:     "Links",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsOverrideEnabled: false,
 			}),
 		},
 		{
@@ -134,9 +115,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			TypeName: "aws_networkmanager_site",
 			Name:     "Site",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsOverrideEnabled: false,
 			}),
 		},
 		{
@@ -144,9 +123,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			TypeName: "aws_networkmanager_sites",
 			Name:     "Sites",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsOverrideEnabled: false,
 			}),
 		},
 	}
@@ -159,9 +136,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_networkmanager_attachment_accepter",
 			Name:     "Attachment Accepter",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsOverrideEnabled: false,
 			}),
 		},
 		{
@@ -172,9 +147,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsOverrideEnabled: false,
 			}),
 		},
 		{
@@ -185,9 +158,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsOverrideEnabled: false,
 			}),
 		},
 		{
@@ -198,9 +169,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsOverrideEnabled: false,
 			}),
 		},
 		{
@@ -211,9 +180,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsOverrideEnabled: false,
 			}),
 		},
 		{
@@ -221,9 +188,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_networkmanager_core_network_policy_attachment",
 			Name:     "Core Network Policy Attachment",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsOverrideEnabled: false,
 			}),
 		},
 		{
@@ -231,9 +196,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_networkmanager_customer_gateway_association",
 			Name:     "Customer Gateway Association",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsOverrideEnabled: false,
 			}),
 		},
 		{
@@ -244,9 +207,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsOverrideEnabled: false,
 			}),
 		},
 		{
@@ -257,9 +218,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsOverrideEnabled: false,
 			}),
 		},
 		{
@@ -270,9 +229,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsOverrideEnabled: false,
 			}),
 		},
 		{
@@ -280,9 +237,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_networkmanager_link_association",
 			Name:     "Link Association",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsOverrideEnabled: false,
 			}),
 		},
 		{
@@ -293,9 +248,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsOverrideEnabled: false,
 			}),
 		},
 		{
@@ -306,9 +259,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsOverrideEnabled: false,
 			}),
 		},
 		{
@@ -316,9 +267,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_networkmanager_transit_gateway_connect_peer_association",
 			Name:     "Transit Gateway Connect Peer Association",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsOverrideEnabled: false,
 			}),
 		},
 		{
@@ -329,9 +278,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsOverrideEnabled: false,
 			}),
 		},
 		{
@@ -339,9 +286,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_networkmanager_transit_gateway_registration",
 			Name:     "Transit Gateway Registration",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsOverrideEnabled: false,
 			}),
 		},
 		{
@@ -352,9 +297,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsOverrideEnabled: false,
 			}),
 		},
 		{
@@ -365,9 +308,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsOverrideEnabled: false,
 			}),
 		},
 	}

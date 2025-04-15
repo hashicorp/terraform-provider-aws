@@ -35,9 +35,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_account_alternate_contact",
 			Name:     "Alternate Contact",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsOverrideEnabled: false,
 			}),
 		},
 		{
@@ -45,9 +43,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_account_primary_contact",
 			Name:     "Primary Contact",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsOverrideEnabled: false,
 			}),
 		},
 		{
@@ -55,9 +51,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_account_region",
 			Name:     "Region",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsOverrideEnabled: false,
 			}),
 		},
 	}

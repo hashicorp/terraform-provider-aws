@@ -23,7 +23,6 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			TypeName: "aws_resourceexplorer2_search",
 			Name:     "Search",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:          false,
 				IsOverrideEnabled: false,
 			}),
 		},
@@ -40,7 +39,6 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				IdentifierAttribute: names.AttrID,
 			}),
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:          false,
 				IsOverrideEnabled: false,
 			}),
 		},
@@ -52,7 +50,6 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				IdentifierAttribute: names.AttrID,
 			}),
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:          false,
 				IsOverrideEnabled: false,
 			}),
 		},

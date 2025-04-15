@@ -31,7 +31,6 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			TypeName: "aws_wafv2_ip_set",
 			Name:     "IP Set",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
 			}),
@@ -41,7 +40,6 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			TypeName: "aws_wafv2_regex_pattern_set",
 			Name:     "Regex Pattern Set",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
 			}),
@@ -51,7 +49,6 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			TypeName: "aws_wafv2_rule_group",
 			Name:     "Rule Group",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
 			}),
@@ -61,7 +58,6 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			TypeName: "aws_wafv2_web_acl",
 			Name:     "Web ACL",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
 			}),
@@ -79,7 +75,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
 			}),
@@ -92,7 +87,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
 			}),
@@ -105,7 +99,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
 			}),
@@ -118,7 +111,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
 			}),
@@ -128,7 +120,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_wafv2_web_acl_association",
 			Name:     "Web ACL Association",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
 			}),
@@ -138,7 +129,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_wafv2_web_acl_logging_configuration",
 			Name:     "Web ACL Logging Configuration",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
 			}),

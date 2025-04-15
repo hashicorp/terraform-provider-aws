@@ -32,7 +32,6 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Name:     "Access Point",
 			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
 			}),
@@ -42,7 +41,6 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			TypeName: "aws_efs_access_points",
 			Name:     "Access Point",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
 			}),
@@ -53,7 +51,6 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Name:     "File System",
 			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
 			}),
@@ -63,7 +60,6 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			TypeName: "aws_efs_mount_target",
 			Name:     "Mount Target",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
 			}),
@@ -81,7 +77,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IdentifierAttribute: names.AttrID,
 			}),
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
 			}),
@@ -91,7 +86,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_efs_backup_policy",
 			Name:     "Backup Policy",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
 			}),
@@ -104,7 +98,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IdentifierAttribute: names.AttrID,
 			}),
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
 			}),
@@ -114,7 +107,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_efs_file_system_policy",
 			Name:     "File System Policy",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
 			}),
@@ -124,7 +116,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_efs_mount_target",
 			Name:     "Mount Target",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
 			}),
@@ -134,7 +125,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_efs_replication_configuration",
 			Name:     "Replication Configuration",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
 			}),

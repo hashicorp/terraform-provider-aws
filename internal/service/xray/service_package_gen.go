@@ -27,7 +27,6 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "aws_xray_resource_policy",
 			Name:     "Resource Policy",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:          false,
 				IsOverrideEnabled: false,
 			}),
 		},
@@ -45,7 +44,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_xray_encryption_config",
 			Name:     "Encryption Config",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
 			}),
@@ -58,7 +56,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
 			}),
@@ -71,7 +68,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
 			}),

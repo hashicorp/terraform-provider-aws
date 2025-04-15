@@ -30,7 +30,6 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:          false,
 				IsOverrideEnabled: false,
 			}),
 		},
@@ -39,7 +38,6 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "aws_paymentcryptography_key_alias",
 			Name:     "Key Alias",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:          false,
 				IsOverrideEnabled: false,
 			}),
 		},

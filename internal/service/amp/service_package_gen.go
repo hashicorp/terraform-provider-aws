@@ -23,7 +23,6 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			TypeName: "aws_prometheus_default_scraper_configuration",
 			Name:     "Default Scraper Configuration",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:          false,
 				IsOverrideEnabled: false,
 			}),
 		},
@@ -40,7 +39,6 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:          false,
 				IsOverrideEnabled: false,
 			}),
 		},
@@ -55,7 +53,6 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Name:     "Workspace",
 			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
 			}),
@@ -65,7 +62,6 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			TypeName: "aws_prometheus_workspaces",
 			Name:     "Workspaces",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
 			}),
@@ -80,7 +76,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_prometheus_alert_manager_definition",
 			Name:     "Alert Manager Definition",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
 			}),
@@ -93,7 +88,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
 			}),
@@ -106,7 +100,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
 			}),

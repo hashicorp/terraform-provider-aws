@@ -24,7 +24,6 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			TypeName: "aws_shield_protection",
 			Name:     "Protection",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			}),
 		},
@@ -38,7 +37,6 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "aws_shield_application_layer_automatic_response",
 			Name:     "Application Layer Automatic Response",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			}),
 		},
@@ -47,7 +45,6 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "aws_shield_drt_access_log_bucket_association",
 			Name:     "DRT Log Bucket Association",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			}),
 		},
@@ -56,7 +53,6 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "aws_shield_drt_access_role_arn_association",
 			Name:     "DRT Role ARN Association",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			}),
 		},
@@ -65,7 +61,6 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "aws_shield_proactive_engagement",
 			Name:     "Proactive Engagement",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			}),
 		},
@@ -74,7 +69,6 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "aws_shield_subscription",
 			Name:     "Subscription",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			}),
 		},
@@ -95,9 +89,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsOverrideEnabled: false,
 			}),
 		},
 		{
@@ -108,9 +100,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IdentifierAttribute: "protection_group_arn",
 			}),
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsOverrideEnabled: false,
 			}),
 		},
 		{
@@ -118,9 +108,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_shield_protection_health_check_association",
 			Name:     "Protection Health Check Association",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsOverrideEnabled: false,
 			}),
 		},
 	}
