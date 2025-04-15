@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/service/guardduty/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -314,7 +315,7 @@ resource "aws_guardduty_organization_configuration" "test" {
 `, autoEnable))
 }
 
-func testAccOrganizationConfigurationConfig_autoEnableOrganizationMembers(value string) string {
+func testAccOrganizationConfigurationConfig_autoEnableOrganizationMembers(value types.AutoEnableMembers) string {
 	return acctest.ConfigCompose(testAccOrganizationConfigurationConfig_base, fmt.Sprintf(`
 resource "aws_guardduty_organization_configuration" "test" {
   depends_on = [aws_guardduty_organization_admin_account.test]
