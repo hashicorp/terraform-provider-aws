@@ -35,8 +35,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_inspector2_delegated_admin_account",
 			Name:     "Delegated Admin Account",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsOverrideEnabled: false,
 			}),
 		},
 		{
