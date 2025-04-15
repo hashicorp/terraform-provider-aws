@@ -438,15 +438,9 @@ func (r *resourceBucketLifecycleConfiguration) Create(ctx context.Context, reque
 
 	expectedBucketOwner := data.ExpectedBucketOwner.ValueString()
 	createTimeout := r.CreateTimeout(ctx, data.Timeouts)
-	rules, err = waitLifecycleRulesEquals(ctx, conn, bucket, expectedBucketOwner, input.LifecycleConfiguration.Rules, createTimeout)
+	output, err := waitLifecycleConfigEquals(ctx, conn, bucket, expectedBucketOwner, input.TransitionDefaultMinimumObjectSize, input.LifecycleConfiguration.Rules, createTimeout)
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("creating S3 Bucket (%s) Lifecycle Configuration", bucket), fmt.Sprintf("While waiting: %s", err.Error()))
-		return
-	}
-
-	output, err := findBucketLifecycleConfiguration(ctx, conn, bucket, expectedBucketOwner)
-	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("creating S3 Bucket (%s) Lifecycle Configuration", bucket), err.Error())
 		return
 	}
 
@@ -485,7 +479,7 @@ func (r *resourceBucketLifecycleConfiguration) Read(ctx context.Context, request
 			return retry.NonRetryableError(err)
 		}
 
-		if lastOutput == nil || !lifecycleRulesEqual(lastOutput.Rules, output.Rules) {
+		if lastOutput == nil || !lifecycleConfigEqual(lastOutput.TransitionDefaultMinimumObjectSize, lastOutput.Rules, output.TransitionDefaultMinimumObjectSize, output.Rules) {
 			lastOutput = output
 			return retry.RetryableError(fmt.Errorf("S3 Bucket Lifecycle Configuration (%s) has not stablized; retrying", bucket))
 		}
@@ -560,15 +554,9 @@ func (r *resourceBucketLifecycleConfiguration) Update(ctx context.Context, reque
 
 	expectedBucketOwner := new.ExpectedBucketOwner.ValueString()
 	updateTimeout := r.UpdateTimeout(ctx, new.Timeouts)
-	rules, err = waitLifecycleRulesEquals(ctx, conn, bucket, expectedBucketOwner, input.LifecycleConfiguration.Rules, updateTimeout)
+	output, err := waitLifecycleConfigEquals(ctx, conn, bucket, expectedBucketOwner, input.TransitionDefaultMinimumObjectSize, input.LifecycleConfiguration.Rules, updateTimeout)
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("updating S3 Bucket (%s) Lifecycle Configuration", bucket), fmt.Sprintf("While waiting: %s", err.Error()))
-		return
-	}
-
-	output, err := findBucketLifecycleConfiguration(ctx, conn, bucket, expectedBucketOwner)
-	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("updating S3 Bucket (%s) Lifecycle Configuration", bucket), err.Error())
 		return
 	}
 
@@ -671,7 +659,11 @@ func findBucketLifecycleConfiguration(ctx context.Context, conn *s3.Client, buck
 	return output, nil
 }
 
-func lifecycleRulesEqual(rules1, rules2 []awstypes.LifecycleRule) bool {
+func lifecycleConfigEqual(transitionMinSize1 awstypes.TransitionDefaultMinimumObjectSize, rules1 []awstypes.LifecycleRule, transitionMinSize2 awstypes.TransitionDefaultMinimumObjectSize, rules2 []awstypes.LifecycleRule) bool {
+	if transitionMinSize1 != transitionMinSize2 {
+		return false
+	}
+
 	if len(rules1) != len(rules2) {
 		return false
 	}
@@ -687,9 +679,9 @@ func lifecycleRulesEqual(rules1, rules2 []awstypes.LifecycleRule) bool {
 	return true
 }
 
-func statusLifecycleRulesEquals(ctx context.Context, conn *s3.Client, bucket, expectedBucketOwner string, rules []awstypes.LifecycleRule) retry.StateRefreshFunc {
+func statusLifecycleConfigEquals(ctx context.Context, conn *s3.Client, bucket, owner string, transitionMinSize awstypes.TransitionDefaultMinimumObjectSize, rules []awstypes.LifecycleRule) retry.StateRefreshFunc {
 	return func() (any, string, error) {
-		output, err := findBucketLifecycleConfiguration(ctx, conn, bucket, expectedBucketOwner)
+		output, err := findBucketLifecycleConfiguration(ctx, conn, bucket, owner)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -699,23 +691,24 @@ func statusLifecycleRulesEquals(ctx context.Context, conn *s3.Client, bucket, ex
 			return nil, "", err
 		}
 
-		return output, strconv.FormatBool(lifecycleRulesEqual(output.Rules, rules)), nil
+		return output, strconv.FormatBool(lifecycleConfigEqual(output.TransitionDefaultMinimumObjectSize, output.Rules, transitionMinSize, rules)), nil
 	}
 }
 
-func waitLifecycleRulesEquals(ctx context.Context, conn *s3.Client, bucket, expectedBucketOwner string, rules []awstypes.LifecycleRule, timeout time.Duration) ([]awstypes.LifecycleRule, error) { //nolint:unparam
+func waitLifecycleConfigEquals(ctx context.Context, conn *s3.Client, bucket, owner string, transitionMinSize awstypes.TransitionDefaultMinimumObjectSize, rules []awstypes.LifecycleRule, timeout time.Duration) (*s3.GetBucketLifecycleConfigurationOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Target:                    []string{strconv.FormatBool(true)},
-		Refresh:                   statusLifecycleRulesEquals(ctx, conn, bucket, expectedBucketOwner, rules),
-		Timeout:                   timeout,
-		MinTimeout:                10 * time.Second,
-		ContinuousTargetOccurence: 3,
-		NotFoundChecks:            20,
+		Target:  []string{strconv.FormatBool(true)},
+		Refresh: statusLifecycleConfigEquals(ctx, conn, bucket, owner, transitionMinSize, rules),
+		Timeout: timeout,
+		Delay:   10 * time.Second,
+		// ContinuousTargetOccurence of 3 works in, e.g. us-west-2, but larger values are required in, e.g. eu-west-2
+		ContinuousTargetOccurence: 10,
+		PollInterval:              5 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.([]awstypes.LifecycleRule); ok {
+	if output, ok := outputRaw.(*s3.GetBucketLifecycleConfigurationOutput); ok {
 		return output, err
 	}
 
