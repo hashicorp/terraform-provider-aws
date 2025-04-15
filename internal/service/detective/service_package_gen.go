@@ -65,8 +65,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_detective_organization_admin_account",
 			Name:     "Organization Admin Account",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsOverrideEnabled: false,
 			}),
 		},
 		{
