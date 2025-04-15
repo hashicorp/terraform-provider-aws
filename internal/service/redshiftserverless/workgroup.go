@@ -181,9 +181,9 @@ func resourceWorkgroup() *schema.Resource {
 							Required: true,
 						},
 						"level": {
-							Type:         schema.TypeString,
+							Type:         schema.TypeInt,
 							Optional:     true,
-							ValidateFunc: validation.StringInSlice(performanceTargetLevel_Values(), false),
+							ValidateFunc: validation.IntInSlice([]int{1, 25, 50, 75, 100}),
 						},
 					},
 				},
@@ -631,24 +631,16 @@ func expandPerformanceTarget(tfList []any) *awstypes.PerformanceTarget {
 
 	// bool is a nicer way to represent the enabled/disabled state but the API expects
 	// a string enumeration.
-	if enabled, ok := tfMap[names.AttrEnabled].(bool); ok {
-		if enabled {
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
+		if v {
 			apiObject.Status = awstypes.PerformanceTargetStatusEnabled
 		} else {
 			apiObject.Status = awstypes.PerformanceTargetStatusDisabled
 		}
 	}
 
-	// The target price performance level for the workgroup. Valid values include 1,
-	// 25, 50, 75, and 100. These correspond to the price performance levels LOW_COST,
-	// ECONOMICAL, BALANCED, RESOURCEFUL, and HIGH_PERFORMANCE.
-	if level, ok := tfMap["level"].(string); ok && level != "" {
-		for k, v := range performanceTargetLevels {
-			if v == level {
-				apiObject.Level = aws.Int32(k)
-				break
-			}
-		}
+	if v, ok := tfMap["level"].(int); ok && v != 0 {
+		apiObject.Level = aws.Int32(int32(v))
 	}
 
 	return apiObject
@@ -659,13 +651,12 @@ func flattenPerformanceTarget(apiObject *awstypes.PerformanceTarget) []any {
 		return []any{}
 	}
 
-	tfMap := map[string]any{}
+	tfMap := map[string]any{
+		names.AttrEnabled: apiObject.Status == awstypes.PerformanceTargetStatusEnabled,
+	}
 
-	tfMap[names.AttrEnabled] = apiObject.Status == awstypes.PerformanceTargetStatusEnabled
 	if v := apiObject.Level; v != nil {
-		if v, ok := performanceTargetLevels[aws.ToInt32(v)]; ok {
-			tfMap["level"] = v
-		}
+		tfMap["level"] = aws.ToInt32(v)
 	}
 
 	return []any{tfMap}

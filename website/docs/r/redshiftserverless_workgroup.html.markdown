@@ -42,7 +42,7 @@ The following arguments are optional:
 ### Price Performance Target
 
 * `enabled` - (Required) Whether to enable price-performance scaling.
-* `level` - (Required) The price-performance scaling level. Valid values are `LOW_COST`, `ECONOMICAL`, `BALANCED`, `RESOURCEFUL`, and `HIGH_PERFORMANCE`.
+* `level` - (Required) The price-performance scaling level. Valid values are `1` (LOW_COST), `25` (ECONOMICAL), `50` (BALANCED), `75` (RESOURCEFUL), and `100` (HIGH_PERFORMANCE).
 
 ### Config Parameter
 

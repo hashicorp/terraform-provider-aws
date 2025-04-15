@@ -142,10 +142,17 @@ func TestAccRedshiftServerlessWorkgroup_pricePerformanceTarget(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccWorkgroupConfig_pricePerformanceTarget(rName, "LOW_COST"),
+				Config: testAccWorkgroupConfig_pricePerformanceTarget(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "price_performance_target.0.enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "price_performance_target.0.level", "LOW_COST"),
+					resource.TestCheckResourceAttr(resourceName, "price_performance_target.0.level", "1"),
+				),
+			},
+			{
+				Config: testAccWorkgroupConfig_pricePerformanceTarget(rName, 25),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "price_performance_target.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "price_performance_target.0.level", "25"),
 				),
 			},
 		},
@@ -440,7 +447,7 @@ resource "aws_redshiftserverless_workgroup" "test" {
 `, rName, baseCapacity)
 }
 
-func testAccWorkgroupConfig_pricePerformanceTarget(rName string, targetLevel string) string {
+func testAccWorkgroupConfig_pricePerformanceTarget(rName string, targetLevel int) string {
 	return fmt.Sprintf(`
 resource "aws_redshiftserverless_namespace" "test" {
   namespace_name = %[1]q
@@ -451,7 +458,7 @@ resource "aws_redshiftserverless_workgroup" "test" {
   workgroup_name = %[1]q
   price_performance_target {
     enabled = true
-    level   = %[2]q
+    level   = %[2]d
   }
 }
 
