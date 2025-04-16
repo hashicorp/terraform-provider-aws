@@ -35,6 +35,8 @@ Upgrade topics:
 - [resource/aws_instance](#resourceaws_instance)
 - [resource/aws_kinesis_analytics_application](#resourceaws_kinesis_analytics_application)
 - [resource/aws_launch_template](#resourceaws_launch_template)
+- [resource/aws_media_store_container](#resourceaws_media_store_container)
+- [resource/aws_media_store_container_policy](#resourceaws_media_store_container_policy)
 - [resource/aws_networkmanager_core_network](#resourceaws_networkmanager_core_network)
 - [resource/aws_redshift_cluster](#resourceaws_redshift_cluster)
 - [resource/aws_redshift_service_account](#resourceaws_redshift_service_account)
@@ -189,6 +191,14 @@ Remove `inference_accelerator` from your configuration—it no longer exists. Am
 ## resource/aws_launch_template
 
 Remove `elastic_inference_accelerator` from your configuration—it no longer exists. Amazon Elastic Inference reached end of life in April 2024.
+
+## resource/aws_media_store_container
+
+This resource is deprecated and will be removed in a future version. AWS made the [decision](https://aws.amazon.com/blogs/media/support-for-aws-elemental-mediastore-ending-soon/) to discontinue MediaStore, effective November 13, 2025. Use S3, AWS MediaPackage, or other storage solution instead.
+
+## resource/aws_media_store_container_policy
+
+This resource is deprecated and will be removed in a future version. AWS made the [decision](https://aws.amazon.com/blogs/media/support-for-aws-elemental-mediastore-ending-soon/) to discontinue MediaStore, effective November 13, 2025. Use S3, AWS MediaPackage, or other storage solution instead.
 
 ## resource/aws_instance
 
