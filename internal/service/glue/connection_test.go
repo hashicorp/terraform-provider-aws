@@ -467,6 +467,37 @@ func TestAccGlueConnection_bigQuery(t *testing.T) {
 	})
 }
 
+func TestAccGlueConnection_dynamoDB(t *testing.T) {
+	ctx := acctest.Context(t)
+	var connection awstypes.Connection
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_glue_connection.test"
+	bucketName := "tf-acc-test-" + sdkacctest.RandString(26)
+	region := acctest.Region()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConnectionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConnectionConfig_dynamoDB(rName, region, bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConnectionExists(ctx, resourceName, &connection),
+					resource.TestCheckResourceAttr(resourceName, "connection_type", "DYNAMODB"),
+					resource.TestCheckResourceAttrPair(resourceName, "athena_properties.spill_bucket", "aws_s3_bucket.test", names.AttrID),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccGlueConnection_openSearch(t *testing.T) {
 	ctx := acctest.Context(t)
 	var connection awstypes.Connection
@@ -1039,4 +1070,23 @@ resource "aws_glue_connection" "test" {
   }
 }
 `, rName, sfUrl)
+}
+
+func testAccConnectionConfig_dynamoDB(rName, region, bucketName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[3]q
+}
+
+resource "aws_glue_connection" "test" {
+  name = %[1]q
+
+  connection_type = "DYNAMODB"
+  athena_properties = {
+    lambda_function_arn      = "arn:aws:lambda:%[2]s:123456789012:function:athenafederatedcatalog_athena_abcdefgh"
+    disable_spill_encryption = "false"
+    spill_bucket             = aws_s3_bucket.test.bucket
+  }
+}
+`, rName, region, bucketName)
 }
