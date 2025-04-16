@@ -64,7 +64,7 @@ The following arguments are optional:
 * `asset_source` - (Required) A block specifying the source bucket and key for the asset. This block supports the following:
     * `bucket` - (Required) The name of the S3 bucket.
     * `key` - (Required) The key of the object in the S3 bucket.
- 
+
 ### Import Assets from Signed URL
 
 * `filename` - (Required) The name of the file to import.
