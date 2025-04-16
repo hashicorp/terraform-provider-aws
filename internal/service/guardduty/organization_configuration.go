@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/guardduty"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/guardduty/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -35,18 +34,9 @@ func ResourceOrganizationConfiguration() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"auto_enable": {
-				Type:         schema.TypeBool,
-				Optional:     true,
-				Computed:     true,
-				ExactlyOneOf: []string{"auto_enable", "auto_enable_organization_members"},
-				Deprecated:   "auto_enable is deprecated. Use auto_enable_organization_members instead.",
-			},
 			"auto_enable_organization_members": {
 				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ExactlyOneOf:     []string{"auto_enable", "auto_enable_organization_members"},
+				Required:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.AutoEnableMembers](),
 			},
 			"datasources": {
@@ -135,35 +125,6 @@ func ResourceOrganizationConfiguration() *schema.Resource {
 				ValidateFunc: validation.NoZeroValues,
 			},
 		},
-
-		CustomizeDiff: customdiff.Sequence(
-			func(_ context.Context, d *schema.ResourceDiff, _ any) error {
-				// When creating an organization configuration with AutoEnable=true,
-				// AWS will automatically set AutoEnableOrganizationMembers=NEW.
-				//
-				// When configuring AutoEnableOrganizationMembers=ALL or NEW,
-				// AWS will automatically set AutoEnable=true.
-				//
-				// This diff customization keeps things consistent when configuring
-				// the resource against deprecation advice from AutoEnableOrganizationMembers=ALL
-				// to AutoEnable=true, and it also removes the need to use
-				// AutoEnable in the resource update function.
-
-				if attr := d.GetRawConfig().GetAttr("auto_enable_organization_members"); attr.IsKnown() && !attr.IsNull() {
-					return d.SetNew("auto_enable", attr.AsString() != string(awstypes.AutoEnableMembersNone))
-				}
-
-				if attr := d.GetRawConfig().GetAttr("auto_enable"); attr.IsKnown() && !attr.IsNull() {
-					if attr.True() {
-						return d.SetNew("auto_enable_organization_members", string(awstypes.AutoEnableMembersNew))
-					} else {
-						return d.SetNew("auto_enable_organization_members", string(awstypes.AutoEnableMembersNone))
-					}
-				}
-
-				return nil
-			},
-		),
 	}
 }
 
@@ -219,7 +180,6 @@ func resourceOrganizationConfigurationRead(ctx context.Context, d *schema.Resour
 		return sdkdiag.AppendErrorf(diags, "reading GuardDuty Organization Configuration (%s): empty response", d.Id())
 	}
 
-	d.Set("auto_enable", output.AutoEnable)
 	d.Set("auto_enable_organization_members", output.AutoEnableOrganizationMembers)
 	if output.DataSources != nil {
 		if err := d.Set("datasources", []any{flattenOrganizationDataSourceConfigurationsResult(output.DataSources)}); err != nil {
