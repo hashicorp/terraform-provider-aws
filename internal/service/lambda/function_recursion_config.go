@@ -201,7 +201,7 @@ func (r *resourceFunctionRecursionConfig) Delete(ctx context.Context, req resour
 }
 
 func (r *resourceFunctionRecursionConfig) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("function_name"), req.ID)...)
+	resource.ImportStatePassthroughID(ctx, path.Root("function_name"), req, resp)
 }
 
 func findFunctionRecursionConfigByName(ctx context.Context, conn *lambda.Client, functionName string) (*lambda.GetFunctionRecursionConfigOutput, error) {

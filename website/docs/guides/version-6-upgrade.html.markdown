@@ -26,8 +26,10 @@ Upgrade topics:
 - [data-source/aws_globalaccelerator_accelerator](#data-sourceaws_globalaccelerator_accelerator)
 - [data-source/aws_launch_template](#data-sourceaws_launch_template)
 - [data-source/aws_service_discovery_service](#data-sourceaws_service_discovery_service)
+- [resource/aws_api_gateway_account](#resourceaws_api_gateway_account)
 - [resource/aws_api_gateway_deployment](#resourceaws_api_gateway_deployment)
 - [resource/aws_batch_compute_environment](#resourceaws_batch_compute_environment)
+- [resource/aws_cloudfront_key_value_store](#resourceaws_cloudfront_key_value_store)
 - [resource/aws_cloudfront_response_headers_policy](#resourceaws_cloudfront_response_headers_policy)
 - [resource/aws_ecs_task_definition](#resourceaws_ecs_task_definition)
 - [resource/aws_instance](#resourceaws_instance)
@@ -155,6 +157,12 @@ Remove `inference_accelerator_overrides` from your configuration—it no longer 
 
 Remove `elastic_inference_accelerator` from your configuration—it no longer exists. Amazon Elastic Inference reached end of life in April 2024.
 
+## resource/aws_api_gateway_account
+
+`reset_on_delete` has been removed.
+The destroy operation will now always reset the API Gateway account settings.
+Use a [removed](https://developer.hashicorp.com/terraform/language/resources/syntax#removing-resources) block to retain the previous behavior which left the account settings unchanged upon destruction.
+
 ## resource/aws_api_gateway_deployment
 
 The following arguments have been **removed** from the `aws_api_gateway_deployment` resource:
@@ -200,6 +208,11 @@ terraform import aws_api_gateway_stage.prod <rest_api_id>/<stage_name>
 
 * `compute_environment_name` has been renamed to `name`.
 * `compute_environment_name_prefix` has been renamed to `name_prefix`.
+
+## resource/aws_cloudfront_key_value_store
+
+The `id` attribute is now set the to ID value returned by the AWS API.
+For the name, use the `name` attribute.
 
 ## resource/aws_cloudfront_response_headers_policy
 

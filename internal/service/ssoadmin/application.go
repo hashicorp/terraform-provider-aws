@@ -45,6 +45,7 @@ const (
 
 type resourceApplication struct {
 	framework.ResourceWithConfigure
+	framework.WithImportByID
 }
 
 func (r *resourceApplication) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -366,10 +367,6 @@ func (r *resourceApplication) Delete(ctx context.Context, req resource.DeleteReq
 		)
 		return
 	}
-}
-
-func (r *resourceApplication) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func findApplicationByID(ctx context.Context, conn *ssoadmin.Client, id string) (*ssoadmin.DescribeApplicationOutput, error) {

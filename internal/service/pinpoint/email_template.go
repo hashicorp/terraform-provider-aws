@@ -47,7 +47,6 @@ const (
 
 type resourceEmailTemplate struct {
 	framework.ResourceWithConfigure
-	framework.WithImportByID
 	framework.WithTimeouts
 }
 
