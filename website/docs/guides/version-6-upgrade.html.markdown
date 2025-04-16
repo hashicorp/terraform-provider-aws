@@ -31,6 +31,7 @@ Upgrade topics:
 - [resource/aws_cloudfront_key_value_store](#resourceaws_cloudfront_key_value_store)
 - [resource/aws_cloudfront_response_headers_policy](#resourceaws_cloudfront_response_headers_policy)
 - [resource/aws_ecs_task_definition](#resourceaws_ecs_task_definition)
+- [resource/aws_guardduty_organization_configuration](#resourceaws_guardduty_organization_configuration)
 - [resource/aws_instance](#resourceaws_instance)
 - [resource/aws_kinesis_analytics_application](#resourceaws_kinesis_analytics_application)
 - [resource/aws_launch_template](#resourceaws_launch_template)
