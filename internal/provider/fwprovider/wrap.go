@@ -22,9 +22,6 @@ type getAttributeFunc func(context.Context, path.Path, any) diag.Diagnostics
 // contextFunc augments Context.
 type contextFunc func(context.Context, getAttributeFunc, *conns.AWSClient) (context.Context, diag.Diagnostics)
 
-// dataSourceSchemaFunc modifies a data source's schema.
-type dataSourceSchemaFunc func(context.Context, *conns.AWSClient, datasource.SchemaRequest, *datasource.SchemaResponse)
-
 type wrappedDataSourceOptions struct {
 	// bootstrapContext is run on all wrapped methods before any interceptors.
 	bootstrapContext contextFunc
@@ -122,9 +119,6 @@ func (w *wrappedDataSource) ValidateConfig(ctx context.Context, request datasour
 		v.ValidateConfig(ctx, request, response)
 	}
 }
-
-// ephemeralResourceSchemaFunc modifies an ephemeral resource's schema.
-type ephemeralResourceSchemaFunc func(context.Context, *conns.AWSClient, ephemeral.SchemaRequest, *ephemeral.SchemaResponse)
 
 type wrappedEphemeralResourceOptions struct {
 	// bootstrapContext is run on all wrapped methods before any interceptors.
@@ -256,9 +250,6 @@ func (w *wrappedEphemeralResource) ValidateConfig(ctx context.Context, request e
 	}
 }
 
-// resourceSchemaFunc modifies a resource's schema.
-type resourceSchemaFunc func(context.Context, *conns.AWSClient, resource.SchemaRequest, *resource.SchemaResponse)
-
 // modifyPlanFunc modifies a Terraform plan.
 type modifyPlanFunc func(context.Context, *conns.AWSClient, resource.ModifyPlanRequest, *resource.ModifyPlanResponse)
 
@@ -271,9 +262,7 @@ type wrappedResourceOptions struct {
 	interceptors     interceptorInvocations
 	// modifyPlanFuncs are run after bootstrapContext and before any ModifyPlan method on the inner resource.
 	modifyPlanFuncs []modifyPlanFunc
-	// schemaFuncs are run after bootstrapContext and after the Schema method on the inner resource.
-	schemaFuncs []resourceSchemaFunc
-	typeName    string
+	typeName        string
 	// validateConfigFuncs are run after bootstrapContext and before any ValidateConfig method on the inner resource.
 	validateConfigFuncs []validateConfigFunc
 }
@@ -304,14 +293,11 @@ func (w *wrappedResource) Schema(ctx context.Context, request resource.SchemaReq
 		return
 	}
 
-	w.inner.Schema(ctx, request, response)
-
-	for _, f := range w.opts.schemaFuncs {
-		f(ctx, w.meta, request, response)
-		if response.Diagnostics.HasError() {
-			return
-		}
+	f := func(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) diag.Diagnostics {
+		w.inner.Schema(ctx, request, response)
+		return response.Diagnostics
 	}
+	response.Diagnostics.Append(interceptedHandler(w.opts.interceptors.resourceSchema(), f, w.meta)(ctx, request, response)...)
 }
 
 func (w *wrappedResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {

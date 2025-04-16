@@ -168,6 +168,21 @@ func (s interceptorInvocations) resourceDelete() []interceptorFunc[resource.Dele
 	})
 }
 
+type resourceSchemaInterceptor interface {
+	// schema is invoked for a Schema call.
+	schema(context.Context, interceptorOptions[resource.SchemaRequest, resource.SchemaResponse]) diag.Diagnostics
+}
+
+// resourceSchema returns a slice of interceptors that run on resource Schema.
+func (s interceptorInvocations) resourceSchema() []interceptorFunc[resource.SchemaRequest, resource.SchemaResponse] {
+	return tfslices.ApplyToAll(tfslices.Filter(s, func(e any) bool {
+		_, ok := e.(resourceSchemaInterceptor)
+		return ok
+	}), func(e any) interceptorFunc[resource.SchemaRequest, resource.SchemaResponse] {
+		return e.(resourceSchemaInterceptor).schema
+	})
+}
+
 // when represents the point in the CRUD request lifecycle that an interceptor is run.
 // Multiple values can be ORed together.
 type when uint16
@@ -187,6 +202,7 @@ type interceptedRequest interface {
 		ephemeral.OpenRequest |
 		ephemeral.RenewRequest |
 		ephemeral.CloseRequest |
+		resource.SchemaRequest |
 		resource.CreateRequest |
 		resource.ReadRequest |
 		resource.UpdateRequest |
@@ -201,6 +217,7 @@ type interceptedResponse interface {
 		ephemeral.OpenResponse |
 		ephemeral.RenewResponse |
 		ephemeral.CloseResponse |
+		resource.SchemaResponse |
 		resource.CreateResponse |
 		resource.ReadResponse |
 		resource.UpdateResponse |

@@ -528,7 +528,6 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 				isRegionOverrideEnabled = true
 			}
 
-			var schemaFuncs []resourceSchemaFunc
 			var validateConfigFuncs []validateConfigFunc
 			var modifyPlanFuncs []modifyPlanFunc
 			var interceptors interceptorInvocations
@@ -536,7 +535,7 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 			if isRegionOverrideEnabled {
 				v := v.Region.Value()
 
-				schemaFuncs = append(schemaFuncs, resourceInjectRegionAttribute)
+				interceptors = append(interceptors, resourceInjectRegionAttribute())
 				if v.IsValidateOverrideInPartition {
 					validateConfigFuncs = append(validateConfigFuncs, validateRegionValueInConfiguredPartition)
 				}
@@ -579,7 +578,6 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 				},
 				interceptors:        interceptors,
 				modifyPlanFuncs:     modifyPlanFuncs,
-				schemaFuncs:         schemaFuncs,
 				typeName:            typeName,
 				validateConfigFuncs: validateConfigFuncs,
 			}
