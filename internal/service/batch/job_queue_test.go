@@ -102,6 +102,13 @@ func TestAccBatchJobQueue_Identity(t *testing.T) {
 				ImportStateKind:   resource.ImportCommandWithId,
 				ImportStateVerify: true,
 			},
+			// Can't test plannable import due to dependency on other resources
+			// {
+			// 	ResourceName:      resourceName,
+			// 	ImportState:       true,
+			// 	ImportStateKind:   resource.ImportBlockWithId,
+			// 	ImportStateVerify: true,
+			// },
 		},
 	})
 }

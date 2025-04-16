@@ -119,6 +119,16 @@ func TestAccBatchJobDefinition_Identity(t *testing.T) {
 					"deregister_on_new_revision",
 				},
 			},
+			// Can't test plannable import due to `deregister_on_new_revision`
+			// {
+			// 	ResourceName:      resourceName,
+			// 	ImportState:       true,
+			// 	ImportStateKind:   resource.ImportBlockWithId,
+			// 	ImportStateVerify: true,
+			// 	ImportStateVerifyIgnore: []string{
+			// 		"deregister_on_new_revision",
+			// 	},
+			// },
 		},
 	})
 }

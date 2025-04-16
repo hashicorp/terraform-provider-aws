@@ -71,6 +71,7 @@ func TestAccImageBlockPublicAccess_Identity(t *testing.T) {
 					}),
 				},
 			},
+			// Not importable
 		},
 	})
 }
