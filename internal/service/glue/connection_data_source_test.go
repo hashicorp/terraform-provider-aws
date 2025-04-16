@@ -116,12 +116,14 @@ resource "aws_s3_bucket" "test" {
   bucket = %[3]q
 }
 
+data "aws_partition" "current" {}
+
 resource "aws_glue_connection" "test" {
   name = %[1]q
 
   connection_type = "DYNAMODB"
   athena_properties = {
-    lambda_function_arn      = "arn:aws:lambda:%[2]s:123456789012:function:athenafederatedcatalog_athena_abcdefgh"
+    lambda_function_arn      = "arn:${data.aws_partition.current.partition}:lambda:%[2]s:123456789012:function:athenafederatedcatalog_athena_abcdefgh"
     disable_spill_encryption = "false"
     spill_bucket             = aws_s3_bucket.test.bucket
   }
