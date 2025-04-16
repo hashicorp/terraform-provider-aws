@@ -10,6 +10,8 @@ description: |-
 
 Provides a MediaStore Container.
 
+!> **WARNING:** _The resource is deprecated._ AWS has made the [decision](https://aws.amazon.com/blogs/media/support-for-aws-elemental-mediastore-ending-soon/) to discontinue MediaStore, effective November 13, 2025. Users should transition to S3, AWS MediaPackage, or other storage solutions as soon as possible. This resource will be removed in a future version.
+
 ## Example Usage
 
 ```terraform

@@ -10,6 +10,8 @@ description: |-
 
 Provides a MediaStore Container Policy.
 
+!> **WARNING:** _The resource is deprecated._ AWS has made the [decision](https://aws.amazon.com/blogs/media/support-for-aws-elemental-mediastore-ending-soon/) to discontinue MediaStore, effective November 13, 2025. Users should transition to S3, AWS MediaPackage, or other storage solutions as soon as possible. This resource will be removed in a future version.
+
 ~> **NOTE:** We suggest using [`jsonencode()`](https://developer.hashicorp.com/terraform/language/functions/jsonencode) or [`aws_iam_policy_document`](/docs/providers/aws/d/iam_policy_document.html) when assigning a value to `policy`. They seamlessly translate Terraform language into JSON, enabling you to maintain consistency within your configuration without the need for context switches. Also, you can sidestep potential complications arising from formatting discrepancies, whitespace inconsistencies, and other nuances inherent to JSON.
 
 ## Example Usage
