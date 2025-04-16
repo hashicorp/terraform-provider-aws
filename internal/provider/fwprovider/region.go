@@ -20,18 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// dataSourceInjectRegionAttribute injects a top-level "region" attribute into a data source's schema.
-func dataSourceInjectRegionAttribute(ctx context.Context, c *conns.AWSClient, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
-	if _, ok := response.Schema.Attributes[names.AttrRegion]; !ok {
-		// Inject a top-level "region" attribute.
-		response.Schema.Attributes[names.AttrRegion] = dsschema.StringAttribute{
-			Optional:    true,
-			Computed:    true,
-			Description: `The AWS Region to use for API operations. Overrides the Region set in the provider configuration.`,
-		}
-	}
-}
-
 // ephemeralResourceInjectRegionAttribute injects a top-level "region" attribute into an ephemeral resource's schema.
 func ephemeralResourceInjectRegionAttribute(ctx context.Context, c *conns.AWSClient, request ephemeral.SchemaRequest, response *ephemeral.SchemaResponse) {
 	if _, ok := response.Schema.Attributes[names.AttrRegion]; !ok {
@@ -136,6 +124,31 @@ func forceNewIfRegionValueChanges(ctx context.Context, c *conns.AWSClient, reque
 	if !planRegion.Equal(stateRegion) {
 		response.RequiresReplace = path.Paths{path.Root(names.AttrRegion)}
 	}
+}
+
+type dataSourceInjectRegionAttributeInterceptor struct{}
+
+func (r dataSourceInjectRegionAttributeInterceptor) schema(ctx context.Context, opts interceptorOptions[datasource.SchemaRequest, datasource.SchemaResponse]) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	switch response, when := opts.response, opts.when; when {
+	case After:
+		if _, ok := response.Schema.Attributes[names.AttrRegion]; !ok {
+			// Inject a top-level "region" attribute.
+			response.Schema.Attributes[names.AttrRegion] = dsschema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: `The AWS Region to use for API operations. Overrides the Region set in the provider configuration.`,
+			}
+		}
+	}
+
+	return diags
+}
+
+// dataSourceInjectRegionAttribute injects a top-level "region" attribute into a data source's schema.
+func dataSourceInjectRegionAttribute() dataSourceSchemaInterceptor {
+	return &dataSourceInjectRegionAttributeInterceptor{}
 }
 
 // regionDataSourceInterceptor implements per-resource Region override functionality for data sources.

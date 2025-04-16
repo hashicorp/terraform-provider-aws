@@ -409,13 +409,12 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 				isRegionOverrideEnabled = true
 			}
 
-			var schemaFuncs []dataSourceSchemaFunc
 			var interceptors interceptorInvocations
 
 			if isRegionOverrideEnabled {
 				v := v.Region
 
-				schemaFuncs = append(schemaFuncs, dataSourceInjectRegionAttribute)
+				interceptors = append(interceptors, dataSourceInjectRegionAttribute())
 				interceptors = append(interceptors, newRegionDataSourceInterceptor(v.Value().IsValidateOverrideInPartition))
 			}
 
@@ -450,7 +449,6 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 					return ctx, diags
 				},
 				interceptors: interceptors,
-				schemaFuncs:  schemaFuncs,
 				typeName:     typeName,
 			}
 			p.dataSources = append(p.dataSources, func() datasource.DataSource {

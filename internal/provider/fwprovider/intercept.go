@@ -23,6 +23,8 @@ type interceptorOptions[Request, Response any] struct {
 
 type interceptorFunc[Request, Response any] func(context.Context, interceptorOptions[Request, Response]) diag.Diagnostics
 
+type interceptorInvocations []any
+
 // A data source interceptor is functionality invoked during the data source's CRUD request lifecycle.
 // If a Before interceptor returns Diagnostics indicating an error occurred then
 // no further interceptors in the chain are run and neither is the schema's method.
@@ -32,8 +34,6 @@ type dataSourceCRUDInterceptor interface {
 	read(context.Context, interceptorOptions[datasource.ReadRequest, datasource.ReadResponse]) diag.Diagnostics
 }
 
-type interceptorInvocations []any
-
 // read returns a slice of interceptors that run on data source Read.
 func (s interceptorInvocations) dataSourceRead() []interceptorFunc[datasource.ReadRequest, datasource.ReadResponse] {
 	return tfslices.ApplyToAll(tfslices.Filter(s, func(e any) bool {
@@ -41,6 +41,21 @@ func (s interceptorInvocations) dataSourceRead() []interceptorFunc[datasource.Re
 		return ok
 	}), func(e any) interceptorFunc[datasource.ReadRequest, datasource.ReadResponse] {
 		return e.(dataSourceCRUDInterceptor).read
+	})
+}
+
+type dataSourceSchemaInterceptor interface {
+	// schema is invoked for a Schema call.
+	schema(context.Context, interceptorOptions[datasource.SchemaRequest, datasource.SchemaResponse]) diag.Diagnostics
+}
+
+// read returns a slice of interceptors that run on data source Read.
+func (s interceptorInvocations) dataSourceSchema() []interceptorFunc[datasource.SchemaRequest, datasource.SchemaResponse] {
+	return tfslices.ApplyToAll(tfslices.Filter(s, func(e any) bool {
+		_, ok := e.(dataSourceSchemaInterceptor)
+		return ok
+	}), func(e any) interceptorFunc[datasource.SchemaRequest, datasource.SchemaResponse] {
+		return e.(dataSourceSchemaInterceptor).schema
 	})
 }
 
@@ -134,12 +149,12 @@ const (
 
 // interceptedRequest represents a Plugin Framework request type that can be intercepted.
 type interceptedRequest interface {
-	datasource.ReadRequest | ephemeral.OpenRequest | ephemeral.RenewRequest | ephemeral.CloseRequest | resource.CreateRequest | resource.ReadRequest | resource.UpdateRequest | resource.DeleteRequest
+	datasource.SchemaRequest | datasource.ReadRequest | ephemeral.OpenRequest | ephemeral.RenewRequest | ephemeral.CloseRequest | resource.CreateRequest | resource.ReadRequest | resource.UpdateRequest | resource.DeleteRequest
 }
 
 // interceptedResponse represents a Plugin Framework response type that can be intercepted.
 type interceptedResponse interface {
-	datasource.ReadResponse | ephemeral.OpenResponse | ephemeral.RenewResponse | ephemeral.CloseResponse | resource.CreateResponse | resource.ReadResponse | resource.UpdateResponse | resource.DeleteResponse
+	datasource.SchemaResponse | datasource.ReadResponse | ephemeral.OpenResponse | ephemeral.RenewResponse | ephemeral.CloseResponse | resource.CreateResponse | resource.ReadResponse | resource.UpdateResponse | resource.DeleteResponse
 }
 
 // interceptedHandler returns a handler that runs any interceptors.

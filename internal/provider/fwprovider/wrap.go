@@ -29,9 +29,7 @@ type wrappedDataSourceOptions struct {
 	// bootstrapContext is run on all wrapped methods before any interceptors.
 	bootstrapContext contextFunc
 	interceptors     interceptorInvocations
-	// schemaFuncs are run after bootstrapContext and after the Schema method on the inner resource.
-	schemaFuncs []dataSourceSchemaFunc
-	typeName    string
+	typeName         string
 }
 
 // wrappedDataSource represents an interceptor dispatcher for a Plugin Framework data source.
@@ -60,14 +58,11 @@ func (w *wrappedDataSource) Schema(ctx context.Context, request datasource.Schem
 		return
 	}
 
-	w.inner.Schema(ctx, request, response)
-
-	for _, f := range w.opts.schemaFuncs {
-		f(ctx, w.meta, request, response)
-		if response.Diagnostics.HasError() {
-			return
-		}
+	f := func(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) diag.Diagnostics {
+		w.inner.Schema(ctx, request, response)
+		return response.Diagnostics
 	}
+	response.Diagnostics.Append(interceptedHandler(w.opts.interceptors.dataSourceSchema(), f, w.meta)(ctx, request, response)...)
 }
 
 func (w *wrappedDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
