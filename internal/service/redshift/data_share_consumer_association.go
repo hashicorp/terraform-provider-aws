@@ -42,6 +42,7 @@ const (
 
 type resourceDataShareConsumerAssociation struct {
 	framework.ResourceWithConfigure
+	framework.WithImportByID
 }
 
 func (r *resourceDataShareConsumerAssociation) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -259,9 +260,6 @@ func (r *resourceDataShareConsumerAssociation) Delete(ctx context.Context, req r
 	}
 }
 
-func (r *resourceDataShareConsumerAssociation) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-}
 func (r *resourceDataShareConsumerAssociation) ConfigValidators(_ context.Context) []resource.ConfigValidator {
 	return []resource.ConfigValidator{
 		resourcevalidator.ExactlyOneOf(

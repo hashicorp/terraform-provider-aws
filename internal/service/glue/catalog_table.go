@@ -28,12 +28,13 @@ import (
 )
 
 // @SDKResource("aws_glue_catalog_table", name="Catalog Table")
-func ResourceCatalogTable() *schema.Resource {
+func resourceCatalogTable() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCatalogTableCreate,
 		ReadWithoutTimeout:   resourceCatalogTableRead,
 		UpdateWithoutTimeout: resourceCatalogTableUpdate,
 		DeleteWithoutTimeout: resourceCatalogTableDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -438,7 +439,7 @@ func resourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	table, err := FindTableByName(ctx, conn, catalogID, dbName, name)
+	table, err := findTableByName(ctx, conn, catalogID, dbName, name)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Glue Catalog Table (%s) not found, removing from state", d.Id())
@@ -526,7 +527,7 @@ func resourceCatalogTableUpdate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	// Add back any managed parameters. See flattenNonManagedParameters.
-	table, err := FindTableByName(ctx, conn, catalogID, dbName, name)
+	table, err := findTableByName(ctx, conn, catalogID, dbName, name)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Glue Catalog Table (%s): %s", d.Id(), err)
@@ -579,7 +580,7 @@ func resourceCatalogTableDelete(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func FindTableByName(ctx context.Context, conn *glue.Client, catalogID, dbName, name string) (*awstypes.Table, error) {
+func findTableByName(ctx context.Context, conn *glue.Client, catalogID, dbName, name string) (*awstypes.Table, error) {
 	input := &glue.GetTableInput{
 		CatalogId:    aws.String(catalogID),
 		DatabaseName: aws.String(dbName),

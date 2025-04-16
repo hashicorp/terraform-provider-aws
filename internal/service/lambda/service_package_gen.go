@@ -4,257 +4,237 @@ package lambda
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) EphemeralResources(ctx context.Context) []*itypes.ServicePackageEphemeralResource {
-	return []*itypes.ServicePackageEphemeralResource{
+func (p *servicePackage) EphemeralResources(ctx context.Context) []*inttypes.ServicePackageEphemeralResource {
+	return []*inttypes.ServicePackageEphemeralResource{
 		{
 			Factory:  newEphemeralInvocation,
 			TypeName: "aws_lambda_invocation",
 			Name:     "Invocation",
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 	}
 }
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.ServicePackageFrameworkDataSource {
-	return []*itypes.ServicePackageFrameworkDataSource{}
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
+	return []*inttypes.ServicePackageFrameworkDataSource{}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.ServicePackageFrameworkResource {
-	return []*itypes.ServicePackageFrameworkResource{
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
+	return []*inttypes.ServicePackageFrameworkResource{
 		{
 			Factory:  newResourceFunctionRecursionConfig,
 			TypeName: "aws_lambda_function_recursion_config",
 			Name:     "Function Recursion Config",
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 		{
 			Factory:  newResourceRuntimeManagementConfig,
 			TypeName: "aws_lambda_runtime_management_config",
 			Name:     "Runtime Management Config",
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 	}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
-	return []*itypes.ServicePackageSDKDataSource{
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
+	return []*inttypes.ServicePackageSDKDataSource{
 		{
 			Factory:  dataSourceAlias,
 			TypeName: "aws_lambda_alias",
 			Name:     "Alias",
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 		{
 			Factory:  dataSourceCodeSigningConfig,
 			TypeName: "aws_lambda_code_signing_config",
 			Name:     "Code Signing Config",
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 		{
 			Factory:  dataSourceFunction,
 			TypeName: "aws_lambda_function",
 			Name:     "Function",
-			Tags:     &itypes.ServicePackageResourceTags{},
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 		{
 			Factory:  dataSourceFunctionURL,
 			TypeName: "aws_lambda_function_url",
 			Name:     "Function URL",
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 		{
 			Factory:  dataSourceFunctions,
 			TypeName: "aws_lambda_functions",
 			Name:     "Functions",
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 		{
 			Factory:  dataSourceInvocation,
 			TypeName: "aws_lambda_invocation",
 			Name:     "Invocation",
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 		{
 			Factory:  dataSourceLayerVersion,
 			TypeName: "aws_lambda_layer_version",
 			Name:     "Layer Version",
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 	}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
-	return []*itypes.ServicePackageSDKResource{
+func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePackageSDKResource {
+	return []*inttypes.ServicePackageSDKResource{
 		{
 			Factory:  resourceAlias,
 			TypeName: "aws_lambda_alias",
 			Name:     "Alias",
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 		{
 			Factory:  resourceCodeSigningConfig,
 			TypeName: "aws_lambda_code_signing_config",
 			Name:     "Code Signing Config",
-			Tags: &itypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 		{
 			Factory:  resourceEventSourceMapping,
 			TypeName: "aws_lambda_event_source_mapping",
 			Name:     "Event Source Mapping",
-			Tags: &itypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 		{
 			Factory:  resourceFunction,
 			TypeName: "aws_lambda_function",
 			Name:     "Function",
-			Tags: &itypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 		{
 			Factory:  resourceFunctionEventInvokeConfig,
 			TypeName: "aws_lambda_function_event_invoke_config",
 			Name:     "Function Event Invoke Config",
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 		{
 			Factory:  resourceFunctionURL,
 			TypeName: "aws_lambda_function_url",
 			Name:     "Function URL",
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 		{
 			Factory:  resourceInvocation,
 			TypeName: "aws_lambda_invocation",
 			Name:     "Invocation",
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 		{
 			Factory:  resourceLayerVersion,
 			TypeName: "aws_lambda_layer_version",
 			Name:     "Layer Version",
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 		{
 			Factory:  resourceLayerVersionPermission,
 			TypeName: "aws_lambda_layer_version_permission",
 			Name:     "Layer Version Permission",
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 		{
 			Factory:  resourcePermission,
 			TypeName: "aws_lambda_permission",
 			Name:     "Permission",
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 		{
 			Factory:  resourceProvisionedConcurrencyConfig,
 			TypeName: "aws_lambda_provisioned_concurrency_config",
 			Name:     "Provisioned Concurrency Config",
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 	}
 }

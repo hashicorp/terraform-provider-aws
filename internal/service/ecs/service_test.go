@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -106,6 +107,11 @@ func TestAccECSService_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "availability_zone_rebalancing", "DISABLED"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_lattice_configuration.#", "0"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 
 			{
@@ -118,6 +124,11 @@ func TestAccECSService_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "availability_zone_rebalancing", "DISABLED"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_lattice_configuration.#", "0"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -282,7 +293,7 @@ func TestAccECSService_CapacityProviderStrategy_basic(t *testing.T) {
 
 func TestAccECSService_CapacityProviderStrategy_forceNewDeployment(t *testing.T) {
 	ctx := acctest.Context(t)
-	var service1, service2 awstypes.Service
+	var service awstypes.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
@@ -295,15 +306,24 @@ func TestAccECSService_CapacityProviderStrategy_forceNewDeployment(t *testing.T)
 			{
 				Config: testAccServiceConfig_capacityProviderStrategy(rName, 1, 0, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceExists(ctx, resourceName, &service1),
+					testAccCheckServiceExists(ctx, resourceName, &service),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				Config: testAccServiceConfig_capacityProviderStrategy(rName, 10, 1, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceExists(ctx, resourceName, &service2),
-					testAccCheckServiceNotRecreated(&service1, &service2),
+					testAccCheckServiceExists(ctx, resourceName, &service),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -311,7 +331,7 @@ func TestAccECSService_CapacityProviderStrategy_forceNewDeployment(t *testing.T)
 
 func TestAccECSService_CapacityProviderStrategy_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	var service1, service2 awstypes.Service
+	var service awstypes.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
@@ -324,27 +344,46 @@ func TestAccECSService_CapacityProviderStrategy_update(t *testing.T) {
 			{
 				Config: testAccServiceConfig_updateCapacityProviderStrategyRemove(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceExists(ctx, resourceName, &service1),
+					testAccCheckServiceExists(ctx, resourceName, &service),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				Config: testAccServiceConfig_updateCapacityProviderStrategy(rName, 1, "FARGATE"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceExists(ctx, resourceName, &service2),
+					testAccCheckServiceExists(ctx, resourceName, &service),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
 			},
 			{
 				Config: testAccServiceConfig_updateCapacityProviderStrategy(rName, 1, "FARGATE_SPOT"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceExists(ctx, resourceName, &service1),
-					testAccCheckServiceNotRecreated(&service1, &service2),
+					testAccCheckServiceExists(ctx, resourceName, &service),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
 				Config: testAccServiceConfig_updateCapacityProviderStrategyRemove(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceExists(ctx, resourceName, &service1),
+					testAccCheckServiceExists(ctx, resourceName, &service),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
 			},
 		},
 	})
@@ -410,19 +449,50 @@ func TestAccECSService_VolumeConfiguration_update(t *testing.T) {
 				Config: testAccServiceConfig_volumeConfiguration_update(rName, "gp2", 8),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "volume_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "volume_configuration.0.managed_ebs_volume.0.volume_type", "gp2"),
+					resource.TestCheckResourceAttr(resourceName, "volume_configuration.0.managed_ebs_volume.0.size_in_gb", "8"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateId:     fmt.Sprintf("%s/%s", rName, rName),
+				ImportStateVerify: true,
+				// Resource currently defaults to importing task_definition as family:revision
+				// and wait_for_steady_state is not read from API
+				ImportStateVerifyIgnore: []string{"task_definition", "wait_for_steady_state"},
 			},
 			{
 				Config: testAccServiceConfig_volumeConfiguration_update(rName, "gp3", 8),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "volume_configuration.0.managed_ebs_volume.0.volume_type", "gp3"),
+					resource.TestCheckResourceAttr(resourceName, "volume_configuration.0.managed_ebs_volume.0.size_in_gb", "8"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
 				Config: testAccServiceConfig_volumeConfiguration_update(rName, "gp3", 16),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "volume_configuration.0.managed_ebs_volume.0.volume_type", "gp3"),
+					resource.TestCheckResourceAttr(resourceName, "volume_configuration.0.managed_ebs_volume.0.size_in_gb", "16"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -823,7 +893,7 @@ func TestAccECSService_deploymentCircuitBreaker(t *testing.T) {
 // Regression for https://github.com/hashicorp/terraform/issues/3444
 func TestAccECSService_loadBalancerChanges(t *testing.T) {
 	ctx := acctest.Context(t)
-	var s1, s2 awstypes.Service
+	var service awstypes.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
@@ -836,15 +906,24 @@ func TestAccECSService_loadBalancerChanges(t *testing.T) {
 			{
 				Config: testAccServiceConfig_lbChanges(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceExists(ctx, resourceName, &s1),
+					testAccCheckServiceExists(ctx, resourceName, &service),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				Config: testAccServiceConfig_lbChangesModified(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceExists(ctx, resourceName, &s2),
-					testAccCheckServiceNotRecreated(&s2, &s1),
+					testAccCheckServiceExists(ctx, resourceName, &service),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -922,7 +1001,7 @@ func TestAccECSService_multipleTargetGroups(t *testing.T) {
 
 func TestAccECSService_forceNewDeployment(t *testing.T) {
 	ctx := acctest.Context(t)
-	var service1, service2 awstypes.Service
+	var service awstypes.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
@@ -935,19 +1014,28 @@ func TestAccECSService_forceNewDeployment(t *testing.T) {
 			{
 				Config: testAccServiceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceExists(ctx, resourceName, &service1),
+					testAccCheckServiceExists(ctx, resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "ordered_placement_strategy.#", "0"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				Config: testAccServiceConfig_forceNewDeployment(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceExists(ctx, resourceName, &service2),
-					testAccCheckServiceNotRecreated(&service1, &service2),
+					testAccCheckServiceExists(ctx, resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "ordered_placement_strategy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ordered_placement_strategy.0.type", "binpack"),
 					resource.TestCheckResourceAttr(resourceName, "ordered_placement_strategy.0.field", "memory"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -955,7 +1043,7 @@ func TestAccECSService_forceNewDeployment(t *testing.T) {
 
 func TestAccECSService_forceNewDeploymentTriggers(t *testing.T) {
 	ctx := acctest.Context(t)
-	var service1, service2 awstypes.Service
+	var service awstypes.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
@@ -968,23 +1056,32 @@ func TestAccECSService_forceNewDeploymentTriggers(t *testing.T) {
 			{
 				Config: testAccServiceConfig_forceNewDeployment(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceExists(ctx, resourceName, &service1),
+					testAccCheckServiceExists(ctx, resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "ordered_placement_strategy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ordered_placement_strategy.0.type", "binpack"),
 					resource.TestCheckResourceAttr(resourceName, "ordered_placement_strategy.0.field", "memory"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				Config: testAccServiceConfig_forceNewDeploymentTriggers(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceExists(ctx, resourceName, &service2),
-					testAccCheckServiceNotRecreated(&service1, &service2),
+					testAccCheckServiceExists(ctx, resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "force_new_deployment", acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, "triggers.update"),
 					resource.TestCheckResourceAttr(resourceName, "ordered_placement_strategy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ordered_placement_strategy.0.type", "binpack"),
 					resource.TestCheckResourceAttr(resourceName, "ordered_placement_strategy.0.field", "memory"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -992,7 +1089,7 @@ func TestAccECSService_forceNewDeploymentTriggers(t *testing.T) {
 
 func TestAccECSService_PlacementStrategy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var service1, service2, service3, service4 awstypes.Service
+	var service awstypes.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
@@ -1005,41 +1102,58 @@ func TestAccECSService_PlacementStrategy_basic(t *testing.T) {
 			{
 				Config: testAccServiceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceExists(ctx, resourceName, &service1),
+					testAccCheckServiceExists(ctx, resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "ordered_placement_strategy.#", "0"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				Config: testAccServiceConfig_placementStrategy(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceExists(ctx, resourceName, &service2),
-					testAccCheckServiceNotRecreated(&service1, &service2),
+					testAccCheckServiceExists(ctx, resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "ordered_placement_strategy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ordered_placement_strategy.0.type", "binpack"),
 					resource.TestCheckResourceAttr(resourceName, "ordered_placement_strategy.0.field", "memory"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
 				Config: testAccServiceConfig_randomPlacementStrategy(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceExists(ctx, resourceName, &service3),
-					testAccCheckServiceNotRecreated(&service2, &service3),
+					testAccCheckServiceExists(ctx, resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "ordered_placement_strategy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ordered_placement_strategy.0.type", "random"),
 					resource.TestCheckResourceAttr(resourceName, "ordered_placement_strategy.0.field", ""),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
 				Config: testAccServiceConfig_multiplacementStrategy(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceExists(ctx, resourceName, &service4),
-					testAccCheckServiceNotRecreated(&service3, &service4),
+					testAccCheckServiceExists(ctx, resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "ordered_placement_strategy.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "ordered_placement_strategy.0.type", "binpack"),
 					resource.TestCheckResourceAttr(resourceName, "ordered_placement_strategy.0.field", "memory"),
 					resource.TestCheckResourceAttr(resourceName, "ordered_placement_strategy.1.type", "spread"),
 					resource.TestCheckResourceAttr(resourceName, "ordered_placement_strategy.1.field", "instanceId"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -1066,7 +1180,7 @@ func TestAccECSService_PlacementStrategy_missing(t *testing.T) {
 
 func TestAccECSService_PlacementConstraints_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var service1, service2 awstypes.Service
+	var service awstypes.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
@@ -1079,17 +1193,26 @@ func TestAccECSService_PlacementConstraints_basic(t *testing.T) {
 			{
 				Config: testAccServiceConfig_placementConstraint(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceExists(ctx, resourceName, &service1),
+					testAccCheckServiceExists(ctx, resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "placement_constraints.#", "1"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				Config: testAccServiceConfig_placementConstraintEmptyExpression(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceExists(ctx, resourceName, &service2),
-					testAccCheckServiceNotRecreated(&service1, &service2),
+					testAccCheckServiceExists(ctx, resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "placement_constraints.#", "1"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -1523,6 +1646,15 @@ func TestAccECSService_ServiceConnect_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.#", "1"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateId:     fmt.Sprintf("%s/%s", rName, rName),
+				ImportStateVerify: true,
+				// Resource currently defaults to importing task_definition as family:revision
+				// and wait_for_steady_state is not read from API
+				ImportStateVerifyIgnore: []string{"task_definition", "wait_for_steady_state"},
+			},
 		},
 	})
 }
@@ -1595,9 +1727,9 @@ func TestAccECSService_ServiceConnect_ingressPortOverride(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "service_connect_configuration.0.namespace"),
 					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.0.service.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.0.service.0.client_alias.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.0.service.0.client_alias.0.dns_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.0.service.0.client_alias.0.dns_name", "nginx-http."+rName),
 					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.0.service.0.client_alias.0.port", "8080"),
-					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.0.service.0.discovery_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.0.service.0.discovery_name", "nginx-http"),
 					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.0.service.0.ingress_port_override", "0"),
 					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.0.service.0.port_name", "nginx-http"),
 				),
@@ -1878,16 +2010,6 @@ func testAccCheckServiceExists(ctx context.Context, name string, service *awstyp
 		})
 
 		return err
-	}
-}
-
-func testAccCheckServiceNotRecreated(i, j *awstypes.Service) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if !aws.ToTime(i.CreatedAt).Equal(aws.ToTime(j.CreatedAt)) {
-			return fmt.Errorf("ECS Service (%s) unexpectedly recreated", aws.ToString(j.ServiceArn))
-		}
-
-		return nil
 	}
 }
 
@@ -5348,6 +5470,10 @@ resource "aws_ecs_service" "test" {
       timeout {
       }
     }
+  }
+
+  lifecycle {
+    ignore_changes = [service_connect_configuration[0].service[0].timeout]
   }
 }
 

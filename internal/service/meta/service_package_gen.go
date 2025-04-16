@@ -4,105 +4,98 @@ package meta
 
 import (
 	"context"
+	"unique"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.ServicePackageFrameworkDataSource {
-	return []*itypes.ServicePackageFrameworkDataSource{
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
+	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
 			Factory:  newARNDataSource,
 			TypeName: "aws_arn",
 			Name:     "ARN",
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:          false,
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled: false,
-			},
+			}),
 		},
 		{
 			Factory:  newDefaultTagsDataSource,
 			TypeName: "aws_default_tags",
 			Name:     "Default Tags",
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 		{
 			Factory:  newIPRangesDataSource,
 			TypeName: "aws_ip_ranges",
 			Name:     "IP Ranges",
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 		{
 			Factory:  newPartitionDataSource,
 			TypeName: "aws_partition",
 			Name:     "Partition",
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:          false,
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled: false,
-			},
+			}),
 		},
 		{
 			Factory:  newRegionDataSource,
 			TypeName: "aws_region",
 			Name:     "Region",
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: false,
-			},
+			}),
 		},
 		{
 			Factory:  newRegionsDataSource,
 			TypeName: "aws_regions",
 			Name:     "Regions",
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:          false,
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled: false,
-			},
+			}),
 		},
 		{
 			Factory:  newServiceDataSource,
 			TypeName: "aws_service",
 			Name:     "Service",
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 		{
 			Factory:  newServicePrincipalDataSource,
 			TypeName: "aws_service_principal",
 			Name:     "Service Principal",
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: false,
-			},
+			}),
 		},
 	}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.ServicePackageFrameworkResource {
-	return []*itypes.ServicePackageFrameworkResource{}
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
+	return []*inttypes.ServicePackageFrameworkResource{}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
-	return []*itypes.ServicePackageSDKDataSource{}
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
+	return []*inttypes.ServicePackageSDKDataSource{}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
-	return []*itypes.ServicePackageSDKResource{}
+func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePackageSDKResource {
+	return []*inttypes.ServicePackageSDKResource{}
 }
 
 func (p *servicePackage) ServicePackageName() string {

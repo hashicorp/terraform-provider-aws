@@ -6,6 +6,7 @@ package fwprovider
 import (
 	"context"
 	"fmt"
+	"unique"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -15,7 +16,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/interceptors"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -25,7 +26,7 @@ type tagsDataSourceInterceptor struct {
 	tagsInterceptor
 }
 
-func newTagsDataSourceInterceptor(servicePackageResourceTags *types.ServicePackageResourceTags) dataSourceInterceptor {
+func newTagsDataSourceInterceptor(servicePackageResourceTags unique.Handle[inttypes.ServicePackageResourceTags]) dataSourceInterceptor {
 	return &tagsDataSourceInterceptor{
 		tagsInterceptor: tagsInterceptor{
 			WithTaggingMethods: interceptors.WithTaggingMethods{
@@ -86,7 +87,7 @@ type tagsResourceInterceptor struct {
 	tagsInterceptor
 }
 
-func newTagsResourceInterceptor(servicePackageResourceTags *types.ServicePackageResourceTags) resourceInterceptor {
+func newTagsResourceInterceptor(servicePackageResourceTags unique.Handle[inttypes.ServicePackageResourceTags]) resourceInterceptor {
 	return &tagsResourceInterceptor{
 		tagsInterceptor: tagsInterceptor{
 			WithTaggingMethods: interceptors.WithTaggingMethods{
@@ -265,7 +266,7 @@ func (r tagsInterceptor) getIdentifier(ctx context.Context, d interface {
 }) string {
 	var identifier string
 
-	if identifierAttribute := r.ServicePackageResourceTags.IdentifierAttribute; identifierAttribute != "" {
+	if identifierAttribute := r.ServicePackageResourceTags.Value().IdentifierAttribute; identifierAttribute != "" {
 		d.GetAttribute(ctx, path.Root(identifierAttribute), &identifier)
 	}
 

@@ -4,156 +4,146 @@ package kendra
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/kendra"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.ServicePackageFrameworkDataSource {
-	return []*itypes.ServicePackageFrameworkDataSource{}
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
+	return []*inttypes.ServicePackageFrameworkDataSource{}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.ServicePackageFrameworkResource {
-	return []*itypes.ServicePackageFrameworkResource{}
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
+	return []*inttypes.ServicePackageFrameworkResource{}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
-	return []*itypes.ServicePackageSDKDataSource{
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
+	return []*inttypes.ServicePackageSDKDataSource{
 		{
 			Factory:  DataSourceExperience,
 			TypeName: "aws_kendra_experience",
 			Name:     "Experience",
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 		{
 			Factory:  DataSourceFaq,
 			TypeName: "aws_kendra_faq",
 			Name:     "FAQ",
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 		{
 			Factory:  DataSourceIndex,
 			TypeName: "aws_kendra_index",
 			Name:     "Index",
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 		{
 			Factory:  DataSourceQuerySuggestionsBlockList,
 			TypeName: "aws_kendra_query_suggestions_block_list",
 			Name:     "Query Suggestions Block List",
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 		{
 			Factory:  DataSourceThesaurus,
 			TypeName: "aws_kendra_thesaurus",
 			Name:     "Thesaurus",
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 	}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
-	return []*itypes.ServicePackageSDKResource{
+func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePackageSDKResource {
+	return []*inttypes.ServicePackageSDKResource{
 		{
 			Factory:  ResourceDataSource,
 			TypeName: "aws_kendra_data_source",
 			Name:     "Data Source",
-			Tags: &itypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 		{
 			Factory:  ResourceExperience,
 			TypeName: "aws_kendra_experience",
 			Name:     "Experience",
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 		{
 			Factory:  ResourceFaq,
 			TypeName: "aws_kendra_faq",
 			Name:     "FAQ",
-			Tags: &itypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 		{
 			Factory:  ResourceIndex,
 			TypeName: "aws_kendra_index",
 			Name:     "Index",
-			Tags: &itypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 		{
 			Factory:  ResourceQuerySuggestionsBlockList,
 			TypeName: "aws_kendra_query_suggestions_block_list",
 			Name:     "Query Suggestions Block List",
-			Tags: &itypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 		{
 			Factory:  ResourceThesaurus,
 			TypeName: "aws_kendra_thesaurus",
 			Name:     "Thesaurus",
-			Tags: &itypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 	}
 }

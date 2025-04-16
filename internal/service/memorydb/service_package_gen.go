@@ -4,201 +4,189 @@ package memorydb
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/memorydb"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.ServicePackageFrameworkDataSource {
-	return []*itypes.ServicePackageFrameworkDataSource{}
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
+	return []*inttypes.ServicePackageFrameworkDataSource{}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.ServicePackageFrameworkResource {
-	return []*itypes.ServicePackageFrameworkResource{
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
+	return []*inttypes.ServicePackageFrameworkResource{
 		{
 			Factory:  newMultiRegionClusterResource,
 			TypeName: "aws_memorydb_multi_region_cluster",
 			Name:     "Multi Region Cluster",
-			Tags: &itypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 	}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
-	return []*itypes.ServicePackageSDKDataSource{
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
+	return []*inttypes.ServicePackageSDKDataSource{
 		{
 			Factory:  dataSourceACL,
 			TypeName: "aws_memorydb_acl",
 			Name:     "ACL",
-			Tags: &itypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 		{
 			Factory:  dataSourceCluster,
 			TypeName: "aws_memorydb_cluster",
 			Name:     "Cluster",
-			Tags: &itypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 		{
 			Factory:  dataSourceParameterGroup,
 			TypeName: "aws_memorydb_parameter_group",
 			Name:     "Parameter Group",
-			Tags: &itypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 		{
 			Factory:  dataSourceSnapshot,
 			TypeName: "aws_memorydb_snapshot",
 			Name:     "Snapshot",
-			Tags: &itypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 		{
 			Factory:  dataSourceSubnetGroup,
 			TypeName: "aws_memorydb_subnet_group",
 			Name:     "Subnet Group",
-			Tags: &itypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 		{
 			Factory:  dataSourceUser,
 			TypeName: "aws_memorydb_user",
 			Name:     "User",
-			Tags: &itypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 	}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
-	return []*itypes.ServicePackageSDKResource{
+func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePackageSDKResource {
+	return []*inttypes.ServicePackageSDKResource{
 		{
 			Factory:  resourceACL,
 			TypeName: "aws_memorydb_acl",
 			Name:     "ACL",
-			Tags: &itypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 		{
 			Factory:  resourceCluster,
 			TypeName: "aws_memorydb_cluster",
 			Name:     "Cluster",
-			Tags: &itypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 		{
 			Factory:  resourceParameterGroup,
 			TypeName: "aws_memorydb_parameter_group",
 			Name:     "Parameter Group",
-			Tags: &itypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 		{
 			Factory:  resourceSnapshot,
 			TypeName: "aws_memorydb_snapshot",
 			Name:     "Snapshot",
-			Tags: &itypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 		{
 			Factory:  resourceSubnetGroup,
 			TypeName: "aws_memorydb_subnet_group",
 			Name:     "Subnet Group",
-			Tags: &itypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 		{
 			Factory:  resourceUser,
 			TypeName: "aws_memorydb_user",
 			Name:     "User",
-			Tags: &itypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 	}
 }

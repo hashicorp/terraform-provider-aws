@@ -4,160 +4,149 @@ package opensearchserverless
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.ServicePackageFrameworkDataSource {
-	return []*itypes.ServicePackageFrameworkDataSource{
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
+	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
 			Factory:  newDataSourceAccessPolicy,
 			TypeName: "aws_opensearchserverless_access_policy",
 			Name:     "Access Policy",
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 		{
 			Factory:  newDataSourceCollection,
 			TypeName: "aws_opensearchserverless_collection",
 			Name:     "Collection",
-			Tags: &itypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 		{
 			Factory:  newDataSourceLifecyclePolicy,
 			TypeName: "aws_opensearchserverless_lifecycle_policy",
 			Name:     "Lifecycle Policy",
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 		{
 			Factory:  newDataSourceSecurityConfig,
 			TypeName: "aws_opensearchserverless_security_config",
 			Name:     "Security Config",
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 	}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.ServicePackageFrameworkResource {
-	return []*itypes.ServicePackageFrameworkResource{
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
+	return []*inttypes.ServicePackageFrameworkResource{
 		{
 			Factory:  newResourceAccessPolicy,
 			TypeName: "aws_opensearchserverless_access_policy",
 			Name:     "Access Policy",
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 		{
 			Factory:  newResourceCollection,
 			TypeName: "aws_opensearchserverless_collection",
 			Name:     "Collection",
-			Tags: &itypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 		{
 			Factory:  newResourceLifecyclePolicy,
 			TypeName: "aws_opensearchserverless_lifecycle_policy",
 			Name:     "Lifecycle Policy",
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 		{
 			Factory:  newResourceSecurityConfig,
 			TypeName: "aws_opensearchserverless_security_config",
 			Name:     "Security Config",
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 		{
 			Factory:  newResourceSecurityPolicy,
 			TypeName: "aws_opensearchserverless_security_policy",
 			Name:     "Security Policy",
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 		{
 			Factory:  newVPCEndpointResource,
 			TypeName: "aws_opensearchserverless_vpc_endpoint",
 			Name:     "VPC Endpoint",
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 	}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
-	return []*itypes.ServicePackageSDKDataSource{
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
+	return []*inttypes.ServicePackageSDKDataSource{
 		{
 			Factory:  DataSourceSecurityPolicy,
 			TypeName: "aws_opensearchserverless_security_policy",
 			Name:     "Security Policy",
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 		{
 			Factory:  dataSourceVPCEndpoint,
 			TypeName: "aws_opensearchserverless_vpc_endpoint",
 			Name:     "VPC Endpoint",
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
-			},
+			}),
 		},
 	}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
-	return []*itypes.ServicePackageSDKResource{}
+func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePackageSDKResource {
+	return []*inttypes.ServicePackageSDKResource{}
 }
 
 func (p *servicePackage) ServicePackageName() string {

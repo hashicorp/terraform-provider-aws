@@ -206,7 +206,7 @@ The following arguments are optional:
 #### pre_token_configuration_type
 
 * `lambdaArn` - (Required) The Lambda Amazon Resource Name of the Lambda function that Amazon Cognito triggers to customize access tokens. If you also set an ARN in `preTokenGeneration`, its value must be identical to this one.
-* `lambdaVersion` - (Required) The Lambda version represents the signature of the "version" attribute in the "event" information Amazon Cognito passes to your pre Token Generation Lambda function. The supported values are `V1_0`, `V2_0`.
+* `lambdaVersion` - (Required) The Lambda version represents the signature of the "version" attribute in the "event" information Amazon Cognito passes to your pre Token Generation Lambda function. The supported values are `V1_0`, `V2_0`, `V3_0`.
 
 ### password_policy
 
@@ -313,7 +313,7 @@ The following arguments are required in the `softwareTokenMfaConfiguration` conf
 
 ### username_configuration
 
-* `caseSensitive` - (Required) Whether username case sensitivity will be applied for all users in the user pool through Cognito APIs.
+* `caseSensitive` - (Optional) Whether username case sensitivity will be applied for all users in the user pool through Cognito APIs.
 
 ### verification_message_template
 
@@ -366,4 +366,4 @@ Using `terraform import`, import Cognito User Pools using the `id`. For example:
 % terraform import aws_cognito_user_pool.pool us-west-2_abc123
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-5054bf1f8c99d38b3df5f641dc7c9e291006da93b9aaa80a66822cd21ccdfd0b -->
+<!-- cache-key: cdktf-0.20.8 input-1de089d90b5bc7a6d3a592c8987de03ad29aa1c45f9f1fa7b61945e93c3552b1 -->

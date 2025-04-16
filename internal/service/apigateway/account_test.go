@@ -9,9 +9,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/apigateway"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-testing/compare"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -32,7 +29,6 @@ func testAccAccount_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			t.Cleanup(accountCleanup(ctx, t))
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -45,7 +41,6 @@ func testAccAccount_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cloudwatch_role_arn"), knownvalue.StringExact("")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("features"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringExact("api-gateway-account")),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("reset_on_delete"), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("throttle_settings"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"burst_limit": knownvalue.Int32Exact(5000),
@@ -71,7 +66,6 @@ func testAccAccount_cloudwatchRoleARN_value(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			t.Cleanup(accountCleanup(ctx, t))
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -129,7 +123,6 @@ func testAccAccount_cloudwatchRoleARN_empty(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			t.Cleanup(accountCleanup(ctx, t))
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -150,80 +143,6 @@ func testAccAccount_cloudwatchRoleARN_empty(t *testing.T) {
 	})
 }
 
-func testAccAccount_resetOnDelete_false(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_api_gateway_account.test"
-
-	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			t.Cleanup(accountCleanup(ctx, t))
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccountNotDestroyed(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAccountConfig_resetOnDelete(rName, false),
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.CompareValuePairs(
-						resourceName, tfjsonpath.New("cloudwatch_role_arn"),
-						"aws_iam_role.test[0]", tfjsonpath.New(names.AttrARN),
-						compare.ValuesSame(),
-					),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("reset_on_delete"), knownvalue.Bool(false)),
-				},
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"reset_on_delete",
-				},
-			},
-		},
-	})
-}
-
-func testAccAccount_resetOnDelete_true(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_api_gateway_account.test"
-
-	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			t.Cleanup(accountCleanup(ctx, t))
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccountDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAccountConfig_resetOnDelete(rName, true),
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.CompareValuePairs(
-						resourceName, tfjsonpath.New("cloudwatch_role_arn"),
-						"aws_iam_role.test[0]", tfjsonpath.New(names.AttrARN),
-						compare.ValuesSame(),
-					),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("reset_on_delete"), knownvalue.Bool(true)),
-				},
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"reset_on_delete",
-				},
-			},
-		},
-	})
-}
-
 func testAccAccount_frameworkMigration_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_api_gateway_account.test"
@@ -231,7 +150,6 @@ func testAccAccount_frameworkMigration_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			t.Cleanup(accountCleanup(ctx, t))
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckAccountDestroy(ctx),
@@ -265,10 +183,9 @@ func testAccAccount_frameworkMigration_cloudwatchRoleARN(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			t.Cleanup(accountCleanup(ctx, t))
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
-		CheckDestroy: testAccCheckAccountNotDestroyed(ctx),
+		CheckDestroy: testAccCheckAccountDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
@@ -295,6 +212,52 @@ func testAccAccount_frameworkMigration_cloudwatchRoleARN(t *testing.T) {
 	})
 }
 
+// Verifies the upgrade to V6.0.0 in which the reset_on_delete attribute is
+// removed does not result in unexpected behavior.
+func testAccAccount_upgradeV6(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_api_gateway_account.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
+		CheckDestroy: testAccCheckAccountDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.94.1",
+					},
+				},
+				Config: testAccAccountConfig_resetOnDelete(rName, false),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(
+						resourceName, tfjsonpath.New("cloudwatch_role_arn"),
+						"aws_iam_role.test[0]", tfjsonpath.New(names.AttrARN),
+						compare.ValuesSame(),
+					),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("reset_on_delete"), knownvalue.Bool(false)),
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccAccountConfig_role0(rName),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(
+						resourceName, tfjsonpath.New("cloudwatch_role_arn"),
+						"aws_iam_role.test[0]", tfjsonpath.New(names.AttrARN),
+						compare.ValuesSame(),
+					),
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckAccountDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
@@ -310,46 +273,6 @@ func testAccCheckAccountDestroy(ctx context.Context) resource.TestCheckFunc {
 		}
 
 		return errors.New("API Gateway Account still exists")
-	}
-}
-
-func testAccCheckAccountNotDestroyed(ctx context.Context) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
-
-		account, err := tfapigateway.FindAccount(ctx, conn)
-		if err != nil {
-			return err
-		}
-
-		if account.CloudwatchRoleArn != nil {
-			// Settings have not been reset
-			return nil
-		}
-
-		return errors.New("API Gateway Account was reset")
-	}
-}
-
-func accountCleanup(ctx context.Context, t *testing.T) func() {
-	return func() {
-		t.Helper()
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
-
-		input := apigateway.UpdateAccountInput{
-			PatchOperations: []awstypes.PatchOperation{
-				{
-					Op:    awstypes.OpReplace,
-					Path:  aws.String("/cloudwatchRoleArn"),
-					Value: nil,
-				},
-			},
-		}
-
-		if _, err := conn.UpdateAccount(ctx, &input); err != nil {
-			t.Errorf("API Gateway Account cleanup: %s", err)
-		}
 	}
 }
 

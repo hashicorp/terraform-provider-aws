@@ -7,7 +7,6 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go-v2/service/auditmanager"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -20,6 +19,7 @@ import (
 )
 
 // @FrameworkResource("aws_auditmanager_organization_admin_account_registration", name="Organization Admin Account Registration")
+// @Region(overrideEnabled=false)
 func newResourceOrganizationAdminAccountRegistration(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceOrganizationAdminAccountRegistration{}, nil
 }
@@ -30,6 +30,7 @@ const (
 
 type resourceOrganizationAdminAccountRegistration struct {
 	framework.ResourceWithConfigure
+	framework.WithImportByID
 }
 
 func (r *resourceOrganizationAdminAccountRegistration) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -128,10 +129,6 @@ func (r *resourceOrganizationAdminAccountRegistration) Delete(ctx context.Contex
 			err.Error(),
 		)
 	}
-}
-
-func (r *resourceOrganizationAdminAccountRegistration) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 type resourceOrganizationAdminAccountRegistrationData struct {

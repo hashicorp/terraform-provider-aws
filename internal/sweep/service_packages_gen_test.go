@@ -223,7 +223,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalog"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalogappregistry"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/servicediscovery"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/servicequotas"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ses"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/sesv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/sfn"
@@ -254,7 +253,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/wafregional"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/wafv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/wellarchitected"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/worklink"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/workspacesweb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/xray"
@@ -478,7 +476,6 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		servicecatalog.ServicePackage(ctx),
 		servicecatalogappregistry.ServicePackage(ctx),
 		servicediscovery.ServicePackage(ctx),
-		servicequotas.ServicePackage(ctx),
 		ses.ServicePackage(ctx),
 		sesv2.ServicePackage(ctx),
 		sfn.ServicePackage(ctx),
@@ -509,7 +506,6 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		wafregional.ServicePackage(ctx),
 		wafv2.ServicePackage(ctx),
 		wellarchitected.ServicePackage(ctx),
-		worklink.ServicePackage(ctx),
 		workspaces.ServicePackage(ctx),
 		workspacesweb.ServicePackage(ctx),
 		xray.ServicePackage(ctx),

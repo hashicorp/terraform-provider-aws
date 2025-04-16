@@ -15,18 +15,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// validateRegionValueInConfiguredPartition is a CustomizeDiff function that validates that the value of
-// the top-level `region` attribute is in the configured AWS partition.
-func validateRegionValueInConfiguredPartition(ctx context.Context, d *schema.ResourceDiff, meta any) error {
-	if v, ok := d.GetOk(names.AttrRegion); ok {
-		if err := validateRegionInPartition(ctx, meta.(*conns.AWSClient), v.(string)); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
 func validateRegionInPartition(ctx context.Context, c *conns.AWSClient, region string) error {
 	if got, want := names.PartitionForRegion(region).ID(), c.Partition(ctx); got != want {
 		return fmt.Errorf("partition (%s) for per-resource Region (%s) is not the provider's configured partition (%s)", got, region, want)
@@ -35,65 +23,35 @@ func validateRegionInPartition(ctx context.Context, c *conns.AWSClient, region s
 	return nil
 }
 
-// defaultRegionValue is a CustomizeDiff function that sets the value of the top-level `region`
-// attribute to the provider's configured Region if it is not set.
-func defaultRegionValue(ctx context.Context, d *schema.ResourceDiff, meta any) error {
-	if _, ok := d.GetOk(names.AttrRegion); !ok {
-		return d.SetNew(names.AttrRegion, meta.(*conns.AWSClient).AwsConfig(ctx).Region)
-	}
+var (
+	validateRegionResource customizeDiffInterceptor = interceptorFunc1[*schema.ResourceDiff, error](func(ctx context.Context, opts customizeDiffInterceptorOptions) error {
+		c := opts.c
 
-	return nil
-}
-
-// forceNewIfRegionValueChanges is a CustomizeDiff function that forces resource replacement
-// if the value of the top-level `region` attribute changes.
-func forceNewIfRegionValueChanges(ctx context.Context, d *schema.ResourceDiff, meta any) error {
-	if d.Id() != "" && d.HasChange(names.AttrRegion) {
-		providerRegion := meta.(*conns.AWSClient).AwsConfig(ctx).Region
-		o, n := d.GetChange(names.AttrRegion)
-		if o, n := o.(string), n.(string); (o == "" && n == providerRegion) || (o == providerRegion && n == "") {
-			return nil
+		switch d, when, why := opts.d, opts.when, opts.why; when {
+		case Before:
+			switch why {
+			case CustomizeDiff:
+				// Verify that the value of the top-level `region` attribute is in the configured AWS partition.
+				if v, ok := d.GetOk(names.AttrRegion); ok {
+					if err := validateRegionInPartition(ctx, c, v.(string)); err != nil {
+						return err
+					}
+				}
+			}
 		}
-		return d.ForceNew(names.AttrRegion)
-	}
 
-	return nil
-}
+		return nil
+	})
 
-// importRegion is a StateContextFunc that imports the Region attribute for a resource.
-func importRegion(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	// Import ID optionally ends with "@<region>".
-	if matches := regexache.MustCompile(`^(.+)@([a-z]{2}(?:-[a-z]+)+-\d{1,2})$`).FindStringSubmatch(d.Id()); len(matches) == 3 {
-		d.SetId(matches[1])
-		d.Set(names.AttrRegion, matches[2])
-	} else {
-		d.Set(names.AttrRegion, meta.(*conns.AWSClient).AwsConfig(ctx).Region)
-	}
+	validateRegionDataSource crudInterceptor = interceptorFunc1[schemaResourceData, diag.Diagnostics](func(ctx context.Context, opts crudInterceptorOptions) diag.Diagnostics {
+		c := opts.c
+		var diags diag.Diagnostics
 
-	return []*schema.ResourceData{d}, nil
-}
-
-// regionDataSourceInterceptor implements per-resource Region override functionality for data sources.
-type regionDataSourceInterceptor struct {
-	validateRegionInPartition bool
-}
-
-func newRegionDataSourceInterceptor(validateRegionInPartition bool) interceptor {
-	return &regionDataSourceInterceptor{
-		validateRegionInPartition: validateRegionInPartition,
-	}
-}
-
-func (r regionDataSourceInterceptor) run(ctx context.Context, opts interceptorOptions) diag.Diagnostics {
-	c := opts.c
-	var diags diag.Diagnostics
-
-	switch d, when, why := opts.d, opts.when, opts.why; when {
-	case Before:
-		switch why {
-		case Read:
-			// As data sources have no CustomizeDiff functionality we validate the per-resource Region override value here.
-			if r.validateRegionInPartition {
+		switch when, why := opts.when, opts.why; when {
+		case Before:
+			switch why {
+			case Read:
+				// As data sources have no CustomizeDiff functionality, we validate the per-resource Region override value here.
 				if inContext, ok := conns.FromContext(ctx); ok {
 					if v := inContext.OverrideRegion(); v != "" {
 						if err := validateRegionInPartition(ctx, c, v); err != nil {
@@ -103,15 +61,92 @@ func (r regionDataSourceInterceptor) run(ctx context.Context, opts interceptorOp
 				}
 			}
 		}
-	case After:
-		// Set region in state after R.
-		switch why {
-		case Read:
-			if err := d.Set(names.AttrRegion, c.Region(ctx)); err != nil {
-				return sdkdiag.AppendErrorf(diags, "setting %s: %s", names.AttrRegion, err)
+
+		return diags
+	})
+)
+
+var (
+	defaultRegion customizeDiffInterceptor = interceptorFunc1[*schema.ResourceDiff, error](func(ctx context.Context, opts customizeDiffInterceptorOptions) error {
+		c := opts.c
+
+		switch d, when, why := opts.d, opts.when, opts.why; when {
+		case Before:
+			switch why {
+			case CustomizeDiff:
+				// Set the value of the top-level `region` attribute to the provider's configured Region if it is not set.
+				if _, ok := d.GetOk(names.AttrRegion); !ok {
+					return d.SetNew(names.AttrRegion, c.AwsConfig(ctx).Region)
+				}
 			}
 		}
-	}
 
-	return diags
-}
+		return nil
+	})
+)
+
+var (
+	setRegionInState crudInterceptor = interceptorFunc1[schemaResourceData, diag.Diagnostics](func(ctx context.Context, opts crudInterceptorOptions) diag.Diagnostics {
+		c := opts.c
+		var diags diag.Diagnostics
+
+		switch d, when, why := opts.d, opts.when, opts.why; when {
+		case After:
+			// Set region in state after R.
+			switch why {
+			case Read:
+				if err := d.Set(names.AttrRegion, c.Region(ctx)); err != nil {
+					return sdkdiag.AppendErrorf(diags, "setting %s: %s", names.AttrRegion, err)
+				}
+			}
+		}
+
+		return diags
+	})
+)
+
+var (
+	forceNewIfRegionChanges customizeDiffInterceptor = interceptorFunc1[*schema.ResourceDiff, error](func(ctx context.Context, opts customizeDiffInterceptorOptions) error {
+		c := opts.c
+
+		switch d, when, why := opts.d, opts.when, opts.why; when {
+		case Before:
+			switch why {
+			case CustomizeDiff:
+				// Force resource replacement if the value of the top-level `region` attribute changes.
+				if d.Id() != "" && d.HasChange(names.AttrRegion) {
+					providerRegion := c.AwsConfig(ctx).Region
+					o, n := d.GetChange(names.AttrRegion)
+					if o, n := o.(string), n.(string); (o == "" && n == providerRegion) || (o == providerRegion && n == "") {
+						return nil
+					}
+					return d.ForceNew(names.AttrRegion)
+				}
+			}
+		}
+
+		return nil
+	})
+)
+
+var (
+	importRegion importInterceptor = interceptorFunc2[*schema.ResourceData, []*schema.ResourceData, error](func(ctx context.Context, opts importInterceptorOptions) ([]*schema.ResourceData, error) {
+		c, d := opts.c, opts.d
+
+		switch when, why := opts.when, opts.why; when {
+		case Before:
+			switch why {
+			case Import:
+				// Import ID optionally ends with "@<region>".
+				if matches := regexache.MustCompile(`^(.+)@([a-z]{2}(?:-[a-z]+)+-\d{1,2})$`).FindStringSubmatch(d.Id()); len(matches) == 3 {
+					d.SetId(matches[1])
+					d.Set(names.AttrRegion, matches[2])
+				} else {
+					d.Set(names.AttrRegion, c.AwsConfig(ctx).Region)
+				}
+			}
+		}
+
+		return []*schema.ResourceData{d}, nil
+	})
+)

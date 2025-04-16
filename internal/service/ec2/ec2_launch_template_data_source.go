@@ -190,19 +190,6 @@ func dataSourceLaunchTemplate() *schema.Resource {
 					},
 				},
 			},
-			"elastic_inference_accelerator": {
-				Deprecated: "elastic_inference_accelerator is deprecated. AWS no longer supports the Elastic Inference service.",
-				Type:       schema.TypeList,
-				Computed:   true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrType: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
 			"enclave_options": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -830,7 +817,7 @@ func dataSourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, m
 	)...)
 
 	input.Filters = append(input.Filters, newTagFilterList(
-		Tags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]any))),
+		svcTags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]any))),
 	)...)
 
 	if len(input.Filters) == 0 {

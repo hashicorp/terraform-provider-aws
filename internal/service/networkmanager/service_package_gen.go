@@ -4,371 +4,312 @@ package networkmanager
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.ServicePackageFrameworkDataSource {
-	return []*itypes.ServicePackageFrameworkDataSource{}
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
+	return []*inttypes.ServicePackageFrameworkDataSource{}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.ServicePackageFrameworkResource {
-	return []*itypes.ServicePackageFrameworkResource{
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
+	return []*inttypes.ServicePackageFrameworkResource{
 		{
 			Factory:  newDirectConnectGatewayAttachmentResource,
 			TypeName: "aws_networkmanager_dx_gateway_attachment",
 			Name:     "Direct Connect Gateway Attachment",
-			Tags: &itypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			},
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			}),
 		},
 	}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
-	return []*itypes.ServicePackageSDKDataSource{
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
+	return []*inttypes.ServicePackageSDKDataSource{
 		{
 			Factory:  dataSourceConnection,
 			TypeName: "aws_networkmanager_connection",
 			Name:     "Connection",
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			},
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			}),
 		},
 		{
 			Factory:  dataSourceConnections,
 			TypeName: "aws_networkmanager_connections",
 			Name:     "Connections",
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			},
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			}),
 		},
 		{
 			Factory:  dataSourceCoreNetworkPolicyDocument,
 			TypeName: "aws_networkmanager_core_network_policy_document",
 			Name:     "Core Network Policy Document",
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			},
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			}),
 		},
 		{
 			Factory:  dataSourceDevice,
 			TypeName: "aws_networkmanager_device",
 			Name:     "Device",
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			},
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			}),
 		},
 		{
 			Factory:  dataSourceDevices,
 			TypeName: "aws_networkmanager_devices",
 			Name:     "Devices",
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			},
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			}),
 		},
 		{
 			Factory:  dataSourceGlobalNetwork,
 			TypeName: "aws_networkmanager_global_network",
 			Name:     "Global Network",
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			},
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			}),
 		},
 		{
 			Factory:  dataSourceGlobalNetworks,
 			TypeName: "aws_networkmanager_global_networks",
 			Name:     "Global Networks",
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			},
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			}),
 		},
 		{
 			Factory:  dataSourceLink,
 			TypeName: "aws_networkmanager_link",
 			Name:     "Link",
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			},
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			}),
 		},
 		{
 			Factory:  dataSourceLinks,
 			TypeName: "aws_networkmanager_links",
 			Name:     "Links",
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			},
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			}),
 		},
 		{
 			Factory:  dataSourceSite,
 			TypeName: "aws_networkmanager_site",
 			Name:     "Site",
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			},
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			}),
 		},
 		{
 			Factory:  dataSourceSites,
 			TypeName: "aws_networkmanager_sites",
 			Name:     "Sites",
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			},
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			}),
 		},
 	}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
-	return []*itypes.ServicePackageSDKResource{
+func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePackageSDKResource {
+	return []*inttypes.ServicePackageSDKResource{
 		{
 			Factory:  resourceAttachmentAccepter,
 			TypeName: "aws_networkmanager_attachment_accepter",
 			Name:     "Attachment Accepter",
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			},
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			}),
 		},
 		{
 			Factory:  resourceConnectAttachment,
 			TypeName: "aws_networkmanager_connect_attachment",
 			Name:     "Connect Attachment",
-			Tags: &itypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			},
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			}),
 		},
 		{
 			Factory:  resourceConnectPeer,
 			TypeName: "aws_networkmanager_connect_peer",
 			Name:     "Connect Peer",
-			Tags: &itypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			},
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			}),
 		},
 		{
 			Factory:  resourceConnection,
 			TypeName: "aws_networkmanager_connection",
 			Name:     "Connection",
-			Tags: &itypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			},
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			}),
 		},
 		{
 			Factory:  resourceCoreNetwork,
 			TypeName: "aws_networkmanager_core_network",
 			Name:     "Core Network",
-			Tags: &itypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			},
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			}),
 		},
 		{
 			Factory:  resourceCoreNetworkPolicyAttachment,
 			TypeName: "aws_networkmanager_core_network_policy_attachment",
 			Name:     "Core Network Policy Attachment",
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			},
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			}),
 		},
 		{
 			Factory:  resourceCustomerGatewayAssociation,
 			TypeName: "aws_networkmanager_customer_gateway_association",
 			Name:     "Customer Gateway Association",
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			},
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			}),
 		},
 		{
 			Factory:  resourceDevice,
 			TypeName: "aws_networkmanager_device",
 			Name:     "Device",
-			Tags: &itypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			},
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			}),
 		},
 		{
 			Factory:  resourceGlobalNetwork,
 			TypeName: "aws_networkmanager_global_network",
 			Name:     "Global Network",
-			Tags: &itypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			},
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			}),
 		},
 		{
 			Factory:  resourceLink,
 			TypeName: "aws_networkmanager_link",
 			Name:     "Link",
-			Tags: &itypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			},
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			}),
 		},
 		{
 			Factory:  resourceLinkAssociation,
 			TypeName: "aws_networkmanager_link_association",
 			Name:     "Link Association",
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			},
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			}),
 		},
 		{
 			Factory:  resourceSite,
 			TypeName: "aws_networkmanager_site",
 			Name:     "Site",
-			Tags: &itypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			},
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			}),
 		},
 		{
 			Factory:  resourceSiteToSiteVPNAttachment,
 			TypeName: "aws_networkmanager_site_to_site_vpn_attachment",
 			Name:     "Site To Site VPN Attachment",
-			Tags: &itypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			},
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			}),
 		},
 		{
 			Factory:  resourceTransitGatewayConnectPeerAssociation,
 			TypeName: "aws_networkmanager_transit_gateway_connect_peer_association",
 			Name:     "Transit Gateway Connect Peer Association",
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			},
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			}),
 		},
 		{
 			Factory:  resourceTransitGatewayPeering,
 			TypeName: "aws_networkmanager_transit_gateway_peering",
 			Name:     "Transit Gateway Peering",
-			Tags: &itypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			},
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			}),
 		},
 		{
 			Factory:  resourceTransitGatewayRegistration,
 			TypeName: "aws_networkmanager_transit_gateway_registration",
 			Name:     "Transit Gateway Registration",
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			},
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			}),
 		},
 		{
 			Factory:  resourceTransitGatewayRouteTableAttachment,
 			TypeName: "aws_networkmanager_transit_gateway_route_table_attachment",
 			Name:     "Transit Gateway Route Table Attachment",
-			Tags: &itypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			},
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			}),
 		},
 		{
 			Factory:  resourceVPCAttachment,
 			TypeName: "aws_networkmanager_vpc_attachment",
 			Name:     "VPC Attachment",
-			Tags: &itypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			},
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			}),
 		},
 	}
 }

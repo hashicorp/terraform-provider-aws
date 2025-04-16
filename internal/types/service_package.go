@@ -5,6 +5,7 @@ package types
 
 import (
 	"context"
+	"unique"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
@@ -14,7 +15,6 @@ import (
 
 // ServicePackageResourceRegion represents resource-level Region information.
 type ServicePackageResourceRegion struct {
-	IsGlobal                      bool // Is the resource global?
 	IsOverrideEnabled             bool // Is per-resource Region override supported?
 	IsValidateOverrideInPartition bool // Is the per-resource Region override value validated againt the configured partition?
 }
@@ -31,7 +31,7 @@ type ServicePackageEphemeralResource struct {
 	Factory  func(context.Context) (ephemeral.EphemeralResourceWithConfigure, error)
 	TypeName string
 	Name     string
-	Region   *ServicePackageResourceRegion
+	Region   unique.Handle[ServicePackageResourceRegion]
 }
 
 // ServicePackageFrameworkDataSource represents a Terraform Plugin Framework data source
@@ -40,8 +40,8 @@ type ServicePackageFrameworkDataSource struct {
 	Factory  func(context.Context) (datasource.DataSourceWithConfigure, error)
 	TypeName string
 	Name     string
-	Tags     *ServicePackageResourceTags
-	Region   *ServicePackageResourceRegion
+	Tags     unique.Handle[ServicePackageResourceTags]
+	Region   unique.Handle[ServicePackageResourceRegion]
 }
 
 // ServicePackageFrameworkResource represents a Terraform Plugin Framework resource
@@ -50,8 +50,8 @@ type ServicePackageFrameworkResource struct {
 	Factory  func(context.Context) (resource.ResourceWithConfigure, error)
 	TypeName string
 	Name     string
-	Tags     *ServicePackageResourceTags
-	Region   *ServicePackageResourceRegion
+	Tags     unique.Handle[ServicePackageResourceTags]
+	Region   unique.Handle[ServicePackageResourceRegion]
 }
 
 // ServicePackageSDKDataSource represents a Terraform Plugin SDK data source
@@ -60,8 +60,8 @@ type ServicePackageSDKDataSource struct {
 	Factory  func() *schema.Resource
 	TypeName string
 	Name     string
-	Tags     *ServicePackageResourceTags
-	Region   *ServicePackageResourceRegion
+	Tags     unique.Handle[ServicePackageResourceTags]
+	Region   unique.Handle[ServicePackageResourceRegion]
 }
 
 // ServicePackageSDKResource represents a Terraform Plugin SDK resource
@@ -70,6 +70,6 @@ type ServicePackageSDKResource struct {
 	Factory  func() *schema.Resource
 	TypeName string
 	Name     string
-	Tags     *ServicePackageResourceTags
-	Region   *ServicePackageResourceRegion
+	Tags     unique.Handle[ServicePackageResourceTags]
+	Region   unique.Handle[ServicePackageResourceRegion]
 }

@@ -265,10 +265,6 @@ func (r *connectionResource) Delete(ctx context.Context, req resource.DeleteRequ
 	}
 }
 
-func (r *connectionResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-}
-
 func waitConnectionCreated(ctx context.Context, conn *codeconnections.Client, id string, timeout time.Duration) (*awstypes.Connection, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},

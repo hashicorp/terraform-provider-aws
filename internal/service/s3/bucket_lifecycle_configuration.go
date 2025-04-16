@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+	"github.com/hashicorp/terraform-plugin-framework-validators/helpers/validatordiag"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
@@ -26,18 +27,26 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	tfboolplanmodifier "github.com/hashicorp/terraform-provider-aws/internal/framework/planmodifiers/boolplanmodifier"
+	tfint32planmodifier "github.com/hashicorp/terraform-provider-aws/internal/framework/planmodifiers/int32planmodifier"
+	tfint64planmodifier "github.com/hashicorp/terraform-provider-aws/internal/framework/planmodifiers/int64planmodifier"
+	tfstringplanmodifier "github.com/hashicorp/terraform-provider-aws/internal/framework/planmodifiers/stringplanmodifier"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
+	tfstringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -103,6 +112,12 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 					listvalidator.SizeAtLeast(1),
 				},
 				NestedObject: schema.NestedBlockObject{
+					Validators: []validator.Object{
+						tfobjectvalidator.WarnExactlyOneOfChildren(
+							path.MatchRelative().AtName(names.AttrFilter),
+							path.MatchRelative().AtName(names.AttrPrefix),
+						),
+					},
 					Attributes: map[string]schema.Attribute{
 						names.AttrID: schema.StringAttribute{
 							Required: true,
@@ -113,11 +128,10 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 						names.AttrPrefix: schema.StringAttribute{
 							Optional:           true,
 							Computed:           true, // Because of Legacy value handling
-							DeprecationMessage: "Use filter instead",
-							Validators: []validator.String{
-								warnExactlyOneOf(
-									path.MatchRelative().AtParent().AtName(names.AttrFilter),
-								),
+							DeprecationMessage: "Specify a prefix using 'filter' instead",
+							PlanModifiers: []planmodifier.String{
+								tfstringplanmodifier.LegacyValue(),
+								rulePrefixForUnknown(),
 							},
 						},
 						names.AttrStatus: schema.StringAttribute{
@@ -156,19 +170,25 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 										Optional: true,
 										Computed: true, // Because of Legacy value handling
 										PlanModifiers: []planmodifier.Int32{
+											tfint32planmodifier.LegacyValue(),
 											int32planmodifier.UseStateForUnknown(),
 										},
 									},
 									"expired_object_delete_marker": schema.BoolAttribute{
 										Optional: true,
-										Computed: true,
-										Validators: []validator.Bool{
-											warnIfSetWith(
-												path.MatchRelative().AtParent().AtName("date"),
-												path.MatchRelative().AtParent().AtName("days"),
-											),
+										Computed: true, // Because of Legacy value handling
+										PlanModifiers: []planmodifier.Bool{
+											tfboolplanmodifier.LegacyValue(),
+											boolplanmodifier.UseStateForUnknown(),
 										},
 									},
+								},
+								Validators: []validator.Object{
+									tfobjectvalidator.WarnExactlyOneOfChildren(
+										path.MatchRelative().AtName("date"),
+										path.MatchRelative().AtName("days"),
+										path.MatchRelative().AtName("expired_object_delete_marker"),
+									),
 								},
 							},
 						},
@@ -183,6 +203,7 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 										Optional: true,
 										Computed: true, // Because of Legacy value handling
 										PlanModifiers: []planmodifier.Int64{
+											tfint64planmodifier.NullValue(),
 											int64planmodifier.UseStateForUnknown(),
 										},
 									},
@@ -190,14 +211,18 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 										Optional: true,
 										Computed: true, // Because of Legacy value handling
 										PlanModifiers: []planmodifier.Int64{
+											tfint64planmodifier.NullValue(),
 											int64planmodifier.UseStateForUnknown(),
 										},
 									},
 									names.AttrPrefix: schema.StringAttribute{
 										Optional: true,
 										Computed: true, // Because of Legacy value handling
+										PlanModifiers: []planmodifier.String{
+											ruleFilterPrefixForUnknown(),
+										},
 										Validators: []validator.String{
-											warnExactlyOneOf(
+											tfstringvalidator.WarnExactlyOneOf(
 												path.MatchRelative().AtParent().AtName("object_size_greater_than"),
 												path.MatchRelative().AtParent().AtName("object_size_less_than"),
 												path.MatchRelative().AtParent().AtName("and"),
@@ -217,9 +242,10 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 												"object_size_greater_than": schema.Int64Attribute{
 													Optional: true,
 													Computed: true, // Because of Legacy value handling
-													// PlanModifiers: []planmodifier.Int64{
-													// 	int64planmodifier.UseStateForUnknown(),
-													// },
+													PlanModifiers: []planmodifier.Int64{
+														tfint64planmodifier.LegacyValue(),
+														int64planmodifier.UseStateForUnknown(),
+													},
 													Validators: []validator.Int64{
 														int64validator.AtLeast(0),
 													},
@@ -227,9 +253,10 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 												"object_size_less_than": schema.Int64Attribute{
 													Optional: true,
 													Computed: true, // Because of Legacy value handling
-													// PlanModifiers: []planmodifier.Int64{
-													// 	int64planmodifier.UseStateForUnknown(),
-													// },
+													PlanModifiers: []planmodifier.Int64{
+														tfint64planmodifier.LegacyValue(),
+														int64planmodifier.UseStateForUnknown(),
+													},
 													Validators: []validator.Int64{
 														int64validator.AtLeast(1),
 													},
@@ -237,9 +264,10 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 												names.AttrPrefix: schema.StringAttribute{
 													Optional: true,
 													Computed: true, // Because of Legacy value handling
-													// PlanModifiers: []planmodifier.String{
-													// 	stringplanmodifier.UseStateForUnknown(),
-													// },
+													PlanModifiers: []planmodifier.String{
+														tfstringplanmodifier.LegacyValue(),
+														stringplanmodifier.UseStateForUnknown(),
+													},
 												},
 												names.AttrTags: schema.MapAttribute{
 													ElementType: types.StringType,
@@ -278,6 +306,7 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 										Optional: true,
 										Computed: true, // Because of schema change
 										PlanModifiers: []planmodifier.Int32{
+											tfint32planmodifier.NullValue(),
 											int32planmodifier.UseStateForUnknown(),
 										},
 										Validators: []validator.Int32{
@@ -304,6 +333,7 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 										Optional: true,
 										Computed: true, // Because of schema change
 										PlanModifiers: []planmodifier.Int32{
+											tfint32planmodifier.NullValue(),
 											int32planmodifier.UseStateForUnknown(),
 										},
 										Validators: []validator.Int32{
@@ -329,6 +359,12 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 						"transition": schema.SetNestedBlock{
 							CustomType: fwtypes.NewSetNestedObjectTypeOf[transitionModel](ctx),
 							NestedObject: schema.NestedBlockObject{
+								PlanModifiers: []planmodifier.Object{
+									ruleTransitionForUnknownDays(),
+								},
+								Validators: []validator.Object{
+									ruleTransitionExactlyOneOfChildren(),
+								},
 								Attributes: map[string]schema.Attribute{
 									"date": schema.StringAttribute{
 										CustomType: timetypes.RFC3339Type{},
@@ -336,7 +372,10 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 									},
 									"days": schema.Int32Attribute{
 										Optional: true,
-										Computed: true,
+										Computed: true, // Because of Legacy value handling
+										PlanModifiers: []planmodifier.Int32{
+											int32planmodifier.UseStateForUnknown(),
+										},
 										Validators: []validator.Int32{
 											int32validator.AtLeast(0),
 										},
@@ -594,7 +633,7 @@ func (r *resourceBucketLifecycleConfiguration) ImportState(ctx context.Context, 
 	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrBucket), bucket)...)
 	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrExpectedBucketOwner), expectedBucketOwner)...)
 
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), request.ID)...)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), request, response)
 }
 
 func (r *resourceBucketLifecycleConfiguration) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
@@ -743,8 +782,9 @@ func (m lifecycleRuleModel) Expand(ctx context.Context) (result any, diags diag.
 	// For legacy-mode reasons, `prefix` may be empty, but should be treated as `nil`
 	prefix := fwflex.EmptyStringAsNull(m.Prefix)
 
-	// The AWS API requires a value for `filter` unless `prefix` is set. If `filter` is set, one and only one of
-	// `and`, `object_size_greater_than`, `object_size_less_than`, `prefix`, or `tags` must be set.
+	// The AWS API requires a value for `filter` unless `prefix` is set. If `filter` is set, only one of
+	// `and`, `object_size_greater_than`, `object_size_less_than`, `prefix`, or `tags` can be set,
+	// and an empty `filter` is valid. Setting `filter.prefix` to "" is equivalent to an empty `filter`.
 	// However, the provider historically has allowed `filter` to be null, empty, or have one child value set.
 	// (Setting multiple elements would result in a run-time error)
 	// For null `filter`, send an empty LifecycleRuleFilter
@@ -823,7 +863,7 @@ func isFilterModelZero(v *lifecycleRuleFilterModel) bool {
 		return false
 	}
 
-	if !v.Prefix.IsUnknown() {
+	if !v.Prefix.IsUnknown() && !v.Prefix.IsNull() {
 		return false
 	}
 
@@ -909,7 +949,7 @@ var (
 )
 
 type lifecycleExpirationModel struct {
-	Date                      timetypes.RFC3339 `tfsdk:"date" autoflex:",legacy"`
+	Date                      timetypes.RFC3339 `tfsdk:"date"`
 	Days                      types.Int32       `tfsdk:"days" autoflex:",legacy"`
 	ExpiredObjectDeleteMarker types.Bool        `tfsdk:"expired_object_delete_marker" autoflex:",legacy"`
 }
@@ -1073,77 +1113,220 @@ func (m transitionDefaultMinimumObjectSizeDefaultModifier) PlanModifyString(ctx 
 	resp.PlanValue = v
 }
 
-var (
-	_ validator.Bool = warnIfSetWithValidator{}
-)
-
-func warnIfSetWith(expressions ...path.Expression) validator.Bool {
-	return warnIfSetWithValidator{
-		PathExpressions: expressions,
-	}
+// rulePrefixForUnknown implements behavior similar to `UseStateForUnknown` for `rule.prefix`
+// If prefix was specified using `rule.prefix` but is now moved into `filter`, the planned value should be an empty string.
+// Otherwise, use the value in state.
+func rulePrefixForUnknown() planmodifier.String {
+	return rulePrefixUnknownModifier{}
 }
 
-type warnIfSetWithValidator struct {
-	PathExpressions path.Expressions
+type rulePrefixUnknownModifier struct{}
+
+func (m rulePrefixUnknownModifier) Description(_ context.Context) string {
+	return ""
 }
 
-func (v warnIfSetWithValidator) Description(ctx context.Context) string {
-	return v.MarkdownDescription(ctx)
+func (m rulePrefixUnknownModifier) MarkdownDescription(ctx context.Context) string {
+	return m.Description(ctx)
 }
 
-func (v warnIfSetWithValidator) MarkdownDescription(_ context.Context) string {
-	return fmt.Sprintf("Ensure that if an attribute is set, a warning is emitted if any of these are also set: %q", v.PathExpressions)
-}
-
-// Validation logic is adapted from the standard ConflictsWith validator
-// available for all types
-func (v warnIfSetWithValidator) ValidateBool(ctx context.Context, req validator.BoolRequest, resp *validator.BoolResponse) {
-	// If attribute configuration is null, it cannot conflict with others
-	// If attribute configuration is unknown, delay the validation until it is known.
-	if req.ConfigValue.IsNull() || req.ConfigValue.IsUnknown() {
+func (m rulePrefixUnknownModifier) PlanModifyString(ctx context.Context, req planmodifier.StringRequest, resp *planmodifier.StringResponse) {
+	// Do nothing if there is no state value.
+	if req.StateValue.IsNull() {
 		return
 	}
 
-	expressions := req.PathExpression.MergeExpressions(v.PathExpressions...)
+	// Do nothing if there is a known planned value.
+	if !req.PlanValue.IsUnknown() {
+		return
+	}
 
-	for _, expression := range expressions {
-		matchedPaths, diags := req.Config.PathMatches(ctx, expression)
+	// Do nothing if there is an unknown configuration value, otherwise interpolation gets messed up.
+	if req.ConfigValue.IsUnknown() {
+		return
+	}
 
+	if req.ConfigValue.IsNull() {
+		var filterValue attr.Value
+		filterPath := req.Path.ParentPath().AtName(names.AttrFilter)
+		diags := req.Config.GetAttribute(ctx, filterPath, &filterValue)
 		resp.Diagnostics.Append(diags...)
-
-		// Collect all errors
 		if diags.HasError() {
-			continue
+			return
 		}
 
-		for _, mp := range matchedPaths {
-			// If the user specifies the same attribute this validator is applied to,
-			// also as part of the input, skip it
-			if mp.Equal(req.Path) {
-				continue
-			}
-
-			var mpVal attr.Value
-			diags := req.Config.GetAttribute(ctx, mp, &mpVal)
-			resp.Diagnostics.Append(diags...)
-
-			// Collect all errors
-			if diags.HasError() {
-				continue
-			}
-
-			// Delay validation until all involved attribute have a known value
-			if mpVal.IsUnknown() {
-				return
-			}
-
-			if !mpVal.IsNull() {
-				resp.Diagnostics.Append(diag.NewAttributeWarningDiagnostic(
-					req.Path,
-					"Invalid Attribute Combination",
-					fmt.Sprintf("Attribute %q should not be specified when %q is also specified", req.Path, mp),
-				))
-			}
+		if filterValue.IsUnknown() {
+			return
 		}
+		if !filterValue.IsNull() {
+			resp.PlanValue = types.StringValue("")
+			return
+		}
+	}
+
+	resp.PlanValue = req.StateValue
+}
+
+// ruleFilterPrefixForUnknown handles the planned value for `rule.filter.prefix`
+// * If no value is set
+//   - If no other `filter` attributes are set, default to ""
+//   - Otherwise, default to `null`
+func ruleFilterPrefixForUnknown() planmodifier.String {
+	return ruleFilterPrefixUnknownModifier{}
+}
+
+type ruleFilterPrefixUnknownModifier struct{}
+
+func (m ruleFilterPrefixUnknownModifier) Description(_ context.Context) string {
+	return ""
+}
+
+func (m ruleFilterPrefixUnknownModifier) MarkdownDescription(ctx context.Context) string {
+	return m.Description(ctx)
+}
+
+func (m ruleFilterPrefixUnknownModifier) PlanModifyString(ctx context.Context, req planmodifier.StringRequest, resp *planmodifier.StringResponse) {
+	// Nothing to do if a value is configured
+	if !req.ConfigValue.IsNull() {
+		return
+	}
+
+	// Do nothing if there is a known planned value.
+	if !req.PlanValue.IsUnknown() {
+		return
+	}
+
+	// Do nothing if there is an unknown configuration value, otherwise interpolation gets messed up.
+	if req.ConfigValue.IsUnknown() {
+		return
+	}
+
+	var parentConfig lifecycleRuleFilterModel
+	andPrefixPath := req.Path.ParentPath()
+	diags := req.Config.GetAttribute(ctx, andPrefixPath, &parentConfig)
+	resp.Diagnostics.Append(diags...)
+	if diags.HasError() {
+		return
+	}
+
+	if parentConfig.And.IsNull() &&
+		parentConfig.ObjectSizeGreaterThan.IsNull() &&
+		parentConfig.ObjectSizeLessThan.IsNull() &&
+		parentConfig.Tag.IsNull() {
+		resp.PlanValue = types.StringValue("")
+	} else {
+		resp.PlanValue = types.StringNull()
+	}
+}
+
+// ruleTransitionForUnknownDays handles the planned value for `rule.transition.days`
+// * If no value is set
+//   - If `date` isn't set, default to 0
+//   - Otherwise, default to `null`
+//
+// Plan modifier cannot be set on `days` attribute because of https://github.com/hashicorp/terraform-plugin-framework/issues/1122
+func ruleTransitionForUnknownDays() planmodifier.Object {
+	return ruleTransitionForUnknownDaysModifier{}
+}
+
+type ruleTransitionForUnknownDaysModifier struct{}
+
+func (m ruleTransitionForUnknownDaysModifier) Description(_ context.Context) string {
+	return ""
+}
+
+func (m ruleTransitionForUnknownDaysModifier) MarkdownDescription(ctx context.Context) string {
+	return m.Description(ctx)
+}
+
+func (m ruleTransitionForUnknownDaysModifier) PlanModifyObject(ctx context.Context, req planmodifier.ObjectRequest, resp *planmodifier.ObjectResponse) {
+	var plan transitionModel
+	resp.Diagnostics.Append(req.PlanValue.As(ctx, &plan, basetypes.ObjectAsOptions{})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Do nothing if there is a known planned value.
+	if !plan.Days.IsUnknown() {
+		return
+	}
+
+	var config transitionModel
+	resp.Diagnostics.Append(req.ConfigValue.As(ctx, &config, basetypes.ObjectAsOptions{})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Do nothing if there is an unknown configuration value, otherwise interpolation gets messed up.
+	if config.Days.IsUnknown() {
+		return
+	}
+
+	if config.Date.IsNull() {
+		plan.Days = types.Int32Value(0)
+	} else {
+		plan.Days = types.Int32Null()
+	}
+
+	p, d := fwtypes.NewObjectValueOf(ctx, &plan)
+	resp.Diagnostics.Append(d...)
+	if d.HasError() {
+		return
+	}
+
+	resp.PlanValue = p.ObjectValue
+}
+
+// ruleTransitionExactlyOneOfChildren acts similarly to `tfobjectvalidator.ExactlyOneOfChildren` except
+// that if neither is set, it only emits a warning.
+func ruleTransitionExactlyOneOfChildren(expressions ...path.Expression) validator.Object {
+	return warnExactlyOneOfChildrenValidator{
+		pathExpressions: expressions,
+	}
+}
+
+type warnExactlyOneOfChildrenValidator struct {
+	pathExpressions path.Expressions
+}
+
+func (av warnExactlyOneOfChildrenValidator) Description(_ context.Context) string {
+	return ""
+}
+
+func (av warnExactlyOneOfChildrenValidator) MarkdownDescription(ctx context.Context) string {
+	return av.Description(ctx)
+}
+
+func (av warnExactlyOneOfChildrenValidator) ValidateObject(ctx context.Context, req validator.ObjectRequest, resp *validator.ObjectResponse) {
+	// If current attribute is unknown, delay validation
+	if req.ConfigValue.IsUnknown() {
+		return
+	}
+
+	var config transitionModel
+	resp.Diagnostics.Append(req.ConfigValue.As(ctx, &config, basetypes.ObjectAsOptions{})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Delay validation until all involved attribute have a known value
+	if config.Date.IsUnknown() || config.Days.IsUnknown() {
+		return
+	}
+
+	paths := path.Paths{
+		req.Path.AtName("date"),
+		req.Path.AtName("days"),
+	}
+	if !config.Date.IsNull() && !config.Days.IsNull() {
+		resp.Diagnostics.Append(validatordiag.InvalidAttributeCombinationDiagnostic(
+			req.Path,
+			fmt.Sprintf("2 attributes specified when one (and only one) of %s is required", paths),
+		))
+	} else if config.Date.IsNull() && config.Days.IsNull() {
+		resp.Diagnostics.Append(fwdiag.WarningInvalidAttributeCombinationDiagnostic(
+			req.Path,
+			fmt.Sprintf("No attribute specified when one (and only one) of %s is required", paths),
+		))
 	}
 }

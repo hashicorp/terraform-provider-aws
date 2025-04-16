@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/codeguruprofiler"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/codeguruprofiler/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -44,6 +43,7 @@ const (
 
 type resourceProfilingGroup struct {
 	framework.ResourceWithConfigure
+	framework.WithImportByID
 }
 
 func (r *resourceProfilingGroup) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -235,10 +235,6 @@ func (r *resourceProfilingGroup) Delete(ctx context.Context, req resource.Delete
 		)
 		return
 	}
-}
-
-func (r *resourceProfilingGroup) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func findProfilingGroupByName(ctx context.Context, conn *codeguruprofiler.Client, name string) (*awstypes.ProfilingGroupDescription, error) {
