@@ -268,17 +268,6 @@ resource "aws_guardduty_organization_admin_account" "test" {
 }
 `
 
-func testAccOrganizationConfigurationConfig_autoEnable(autoEnable bool) string {
-	return acctest.ConfigCompose(testAccOrganizationConfigurationConfig_base, fmt.Sprintf(`
-resource "aws_guardduty_organization_configuration" "test" {
-  depends_on = [aws_guardduty_organization_admin_account.test]
-
-  auto_enable = %[1]t
-  detector_id = aws_guardduty_detector.test.id
-}
-`, autoEnable))
-}
-
 func testAccOrganizationConfigurationConfig_autoEnableOrganizationMembers(value types.AutoEnableMembers) string {
 	return acctest.ConfigCompose(testAccOrganizationConfigurationConfig_base, fmt.Sprintf(`
 resource "aws_guardduty_organization_configuration" "test" {
