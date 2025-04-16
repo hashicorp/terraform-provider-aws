@@ -30,6 +30,7 @@ Upgrade topics:
 - [data-source/aws_service_discovery_service](#data-sourceaws_service_discovery_service)
 - [resource/aws_api_gateway_account](#resourceaws_api_gateway_account)
 - [resource/aws_batch_compute_environment](#resourceaws_batch_compute_environment)
+- [resource/aws_cloudformation_stack_set_instance](#resourceaws_cloudformation_stack_set_instance)
 - [resource/aws_cloudfront_key_value_store](#resourceaws_cloudfront_key_value_store)
 - [resource/aws_cloudfront_response_headers_policy](#resourceaws_cloudfront_response_headers_policy)
 - [resource/aws_config_aggregate_authorization](#resourceawsconfig_aggregate_authorization)
@@ -179,6 +180,10 @@ Use a [removed](https://developer.hashicorp.com/terraform/language/resources/syn
 
 * `compute_environment_name` has been renamed to `name`.
 * `compute_environment_name_prefix` has been renamed to `name_prefix`.
+
+## resource/aws_cloudformation_stack_set_instance
+
+The `region` attribute has been deprecated. All configurations using `region` should be updated to use the `stack_set_instance_region` attribute instead.
 
 ## resource/aws_cloudfront_key_value_store
 
