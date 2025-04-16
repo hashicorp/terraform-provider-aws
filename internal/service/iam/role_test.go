@@ -57,7 +57,7 @@ func TestAccIAMRole_basic(t *testing.T) {
 	})
 }
 
-func TestAccIAMRole_Identity(t *testing.T) {
+func TestAccIAMRole_Identity_Basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Role
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
