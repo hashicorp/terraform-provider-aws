@@ -368,5 +368,5 @@ func connectionPropertyKey_Values() []string {
 }
 
 func connectionType_Values() []string {
-	return tfslices.AppendUnique(enum.Values[awstypes.ConnectionType](), "AZURECOSMOS", "AZURESQL", "BIGQUERY", "OPENSEARCH", "SNOWFLAKE")
+	return tfslices.AppendUnique(enum.Values[awstypes.ConnectionType](), "AZURECOSMOS", "AZURESQL", "BIGQUERY", "DYNAMODB", "OPENSEARCH", "SNOWFLAKE")
 }
