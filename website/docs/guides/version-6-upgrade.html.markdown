@@ -184,6 +184,7 @@ Remove `inference_accelerator` from your configuration—it no longer exists. Am
 ## resource/aws_guardduty_organization_configuration
 
 The `auto_enable` attribute has been removed and the `auto_enable_organization_members` attribute is now required.
+
 `datasources` now returns a deprecation warning.
 
 ## resource/aws_launch_template
