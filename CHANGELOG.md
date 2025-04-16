@@ -24,6 +24,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_elasticache_serverless_cache: Fix to allow in-place updates when `engine` is changed from `redis` to `valkey` ([#42208](https://github.com/hashicorp/terraform-provider-aws/issues/42208))
+* resource/aws_kms_custom_key_store: Fix `panic: runtime error: invalid memory address or nil pointer dereference` when no `XksProxyConfiguration` is returned ([#42241](https://github.com/hashicorp/terraform-provider-aws/issues/42241))
 * resource/aws_s3_bucket_lifecycle_configuration: Fix errors when removing `rule` from top of list ([#42228](https://github.com/hashicorp/terraform-provider-aws/issues/42228))
 * resource/aws_s3_bucket_lifecycle_configuration: Fix potential eventual consistency errors in some regions ([#41764](https://github.com/hashicorp/terraform-provider-aws/issues/41764))
 * resource/aws_s3_bucket_lifecycle_configuration: No longer allows empty `rule.filter.and.tags` ([#42041](https://github.com/hashicorp/terraform-provider-aws/issues/42041))
