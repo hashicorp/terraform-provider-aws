@@ -129,10 +129,8 @@ type ephemeralResourceSchemaFunc func(context.Context, *conns.AWSClient, ephemer
 type wrappedEphemeralResourceOptions struct {
 	// bootstrapContext is run on all wrapped methods before any interceptors.
 	bootstrapContext contextFunc
-	interceptors     ephemeralResourceInterceptors
-	// schemaFuncs are run after bootstrapContext and after the Schema method on the inner resource.
-	schemaFuncs []ephemeralResourceSchemaFunc
-	typeName    string
+	interceptors     interceptorInvocations
+	typeName         string
 }
 
 // wrappedEphemeralResource represents an interceptor dispatcher for a Plugin Framework ephemeral resource.
@@ -161,14 +159,11 @@ func (w *wrappedEphemeralResource) Schema(ctx context.Context, request ephemeral
 		return
 	}
 
-	w.inner.Schema(ctx, request, response)
-
-	for _, f := range w.opts.schemaFuncs {
-		f(ctx, w.meta, request, response)
-		if response.Diagnostics.HasError() {
-			return
-		}
+	f := func(ctx context.Context, request ephemeral.SchemaRequest, response *ephemeral.SchemaResponse) diag.Diagnostics {
+		w.inner.Schema(ctx, request, response)
+		return response.Diagnostics
 	}
+	response.Diagnostics.Append(interceptedHandler(w.opts.interceptors.ephemeralResourceSchema(), f, w.meta)(ctx, request, response)...)
 }
 
 func (w *wrappedEphemeralResource) Open(ctx context.Context, request ephemeral.OpenRequest, response *ephemeral.OpenResponse) {
@@ -182,7 +177,7 @@ func (w *wrappedEphemeralResource) Open(ctx context.Context, request ephemeral.O
 		w.inner.Open(ctx, request, response)
 		return response.Diagnostics
 	}
-	response.Diagnostics.Append(interceptedHandler(w.opts.interceptors.open(), f, w.meta)(ctx, request, response)...)
+	response.Diagnostics.Append(interceptedHandler(w.opts.interceptors.ephemeralResourceOpen(), f, w.meta)(ctx, request, response)...)
 }
 
 func (w *wrappedEphemeralResource) Configure(ctx context.Context, request ephemeral.ConfigureRequest, response *ephemeral.ConfigureResponse) {
@@ -211,7 +206,7 @@ func (w *wrappedEphemeralResource) Renew(ctx context.Context, request ephemeral.
 			v.Renew(ctx, request, response)
 			return response.Diagnostics
 		}
-		response.Diagnostics.Append(interceptedHandler(w.opts.interceptors.renew(), f, w.meta)(ctx, request, response)...)
+		response.Diagnostics.Append(interceptedHandler(w.opts.interceptors.ephemeralResourceRenew(), f, w.meta)(ctx, request, response)...)
 	}
 }
 
@@ -227,7 +222,7 @@ func (w *wrappedEphemeralResource) Close(ctx context.Context, request ephemeral.
 			v.Close(ctx, request, response)
 			return response.Diagnostics
 		}
-		response.Diagnostics.Append(interceptedHandler(w.opts.interceptors.close(), f, w.meta)(ctx, request, response)...)
+		response.Diagnostics.Append(interceptedHandler(w.opts.interceptors.ephemeralResourceClose(), f, w.meta)(ctx, request, response)...)
 	}
 }
 

@@ -34,7 +34,7 @@ type dataSourceCRUDInterceptor interface {
 	read(context.Context, interceptorOptions[datasource.ReadRequest, datasource.ReadResponse]) diag.Diagnostics
 }
 
-// read returns a slice of interceptors that run on data source Read.
+// dataSourceRead returns a slice of interceptors that run on data source Read.
 func (s interceptorInvocations) dataSourceRead() []interceptorFunc[datasource.ReadRequest, datasource.ReadResponse] {
 	return tfslices.ApplyToAll(tfslices.Filter(s, func(e any) bool {
 		_, ok := e.(dataSourceCRUDInterceptor)
@@ -49,7 +49,7 @@ type dataSourceSchemaInterceptor interface {
 	schema(context.Context, interceptorOptions[datasource.SchemaRequest, datasource.SchemaResponse]) diag.Diagnostics
 }
 
-// read returns a slice of interceptors that run on data source Read.
+// dataSourceSchema returns a slice of interceptors that run on data source Schema.
 func (s interceptorInvocations) dataSourceSchema() []interceptorFunc[datasource.SchemaRequest, datasource.SchemaResponse] {
 	return tfslices.ApplyToAll(tfslices.Filter(s, func(e any) bool {
 		_, ok := e.(dataSourceSchemaInterceptor)
@@ -59,7 +59,7 @@ func (s interceptorInvocations) dataSourceSchema() []interceptorFunc[datasource.
 	})
 }
 
-type ephemeralResourceInterceptor interface {
+type ephemeralResourceORCInterceptor interface {
 	// open is invoked for an Open call.
 	open(context.Context, interceptorOptions[ephemeral.OpenRequest, ephemeral.OpenResponse]) diag.Diagnostics
 	// renew is invoked for a Renew call.
@@ -68,26 +68,48 @@ type ephemeralResourceInterceptor interface {
 	close(context.Context, interceptorOptions[ephemeral.CloseRequest, ephemeral.CloseResponse]) diag.Diagnostics
 }
 
-type ephemeralResourceInterceptors []ephemeralResourceInterceptor
-
-// open returns a slice of interceptors that run on ephemeral resource Open.
-func (s ephemeralResourceInterceptors) open() []interceptorFunc[ephemeral.OpenRequest, ephemeral.OpenResponse] {
-	return tfslices.ApplyToAll(s, func(e ephemeralResourceInterceptor) interceptorFunc[ephemeral.OpenRequest, ephemeral.OpenResponse] {
-		return e.open
+// ephemeralResourceOpen returns a slice of interceptors that run on ephemeral resource Open.
+func (s interceptorInvocations) ephemeralResourceOpen() []interceptorFunc[ephemeral.OpenRequest, ephemeral.OpenResponse] {
+	return tfslices.ApplyToAll(tfslices.Filter(s, func(e any) bool {
+		_, ok := e.(ephemeralResourceORCInterceptor)
+		return ok
+	}), func(e any) interceptorFunc[ephemeral.OpenRequest, ephemeral.OpenResponse] {
+		return e.(ephemeralResourceORCInterceptor).open
 	})
 }
 
-// renew returns a slice of interceptors that run on ephemeral resource Renew.
-func (s ephemeralResourceInterceptors) renew() []interceptorFunc[ephemeral.RenewRequest, ephemeral.RenewResponse] {
-	return tfslices.ApplyToAll(s, func(e ephemeralResourceInterceptor) interceptorFunc[ephemeral.RenewRequest, ephemeral.RenewResponse] {
-		return e.renew
+// ephemeralResourceRenew returns a slice of interceptors that run on ephemeral resource Renew.
+func (s interceptorInvocations) ephemeralResourceRenew() []interceptorFunc[ephemeral.RenewRequest, ephemeral.RenewResponse] {
+	return tfslices.ApplyToAll(tfslices.Filter(s, func(e any) bool {
+		_, ok := e.(ephemeralResourceORCInterceptor)
+		return ok
+	}), func(e any) interceptorFunc[ephemeral.RenewRequest, ephemeral.RenewResponse] {
+		return e.(ephemeralResourceORCInterceptor).renew
 	})
 }
 
-// close returns a slice of interceptors that run on ephemeral resource Renew.
-func (s ephemeralResourceInterceptors) close() []interceptorFunc[ephemeral.CloseRequest, ephemeral.CloseResponse] {
-	return tfslices.ApplyToAll(s, func(e ephemeralResourceInterceptor) interceptorFunc[ephemeral.CloseRequest, ephemeral.CloseResponse] {
-		return e.close
+// ephemeralResourceRenew returns a slice of interceptors that run on ephemeral resource Close.
+func (s interceptorInvocations) ephemeralResourceClose() []interceptorFunc[ephemeral.CloseRequest, ephemeral.CloseResponse] {
+	return tfslices.ApplyToAll(tfslices.Filter(s, func(e any) bool {
+		_, ok := e.(ephemeralResourceORCInterceptor)
+		return ok
+	}), func(e any) interceptorFunc[ephemeral.CloseRequest, ephemeral.CloseResponse] {
+		return e.(ephemeralResourceORCInterceptor).close
+	})
+}
+
+type ephemeralResourceSchemaInterceptor interface {
+	// schema is invoked for a Schema call.
+	schema(context.Context, interceptorOptions[ephemeral.SchemaRequest, ephemeral.SchemaResponse]) diag.Diagnostics
+}
+
+// ephemeralResourceSchema returns a slice of interceptors that run on ephemeral resource Schema.
+func (s interceptorInvocations) ephemeralResourceSchema() []interceptorFunc[ephemeral.SchemaRequest, ephemeral.SchemaResponse] {
+	return tfslices.ApplyToAll(tfslices.Filter(s, func(e any) bool {
+		_, ok := e.(ephemeralResourceSchemaInterceptor)
+		return ok
+	}), func(e any) interceptorFunc[ephemeral.SchemaRequest, ephemeral.SchemaResponse] {
+		return e.(ephemeralResourceSchemaInterceptor).schema
 	})
 }
 
@@ -149,12 +171,30 @@ const (
 
 // interceptedRequest represents a Plugin Framework request type that can be intercepted.
 type interceptedRequest interface {
-	datasource.SchemaRequest | datasource.ReadRequest | ephemeral.OpenRequest | ephemeral.RenewRequest | ephemeral.CloseRequest | resource.CreateRequest | resource.ReadRequest | resource.UpdateRequest | resource.DeleteRequest
+	datasource.SchemaRequest |
+		datasource.ReadRequest |
+		ephemeral.SchemaRequest |
+		ephemeral.OpenRequest |
+		ephemeral.RenewRequest |
+		ephemeral.CloseRequest |
+		resource.CreateRequest |
+		resource.ReadRequest |
+		resource.UpdateRequest |
+		resource.DeleteRequest
 }
 
 // interceptedResponse represents a Plugin Framework response type that can be intercepted.
 type interceptedResponse interface {
-	datasource.SchemaResponse | datasource.ReadResponse | ephemeral.OpenResponse | ephemeral.RenewResponse | ephemeral.CloseResponse | resource.CreateResponse | resource.ReadResponse | resource.UpdateResponse | resource.DeleteResponse
+	datasource.SchemaResponse |
+		datasource.ReadResponse |
+		ephemeral.SchemaResponse |
+		ephemeral.OpenResponse |
+		ephemeral.RenewResponse |
+		ephemeral.CloseResponse |
+		resource.CreateResponse |
+		resource.ReadResponse |
+		resource.UpdateResponse |
+		resource.DeleteResponse
 }
 
 // interceptedHandler returns a handler that runs any interceptors.

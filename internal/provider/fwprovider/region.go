@@ -11,7 +11,6 @@ import (
 	dsschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
-	erschema "github.com/hashicorp/terraform-plugin-framework/ephemeral/schema"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	rschema "github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -19,18 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
-
-// ephemeralResourceInjectRegionAttribute injects a top-level "region" attribute into an ephemeral resource's schema.
-func ephemeralResourceInjectRegionAttribute(ctx context.Context, c *conns.AWSClient, request ephemeral.SchemaRequest, response *ephemeral.SchemaResponse) {
-	if _, ok := response.Schema.Attributes[names.AttrRegion]; !ok {
-		// Inject a top-level "region" attribute.
-		response.Schema.Attributes[names.AttrRegion] = erschema.StringAttribute{
-			Optional:    true,
-			Computed:    true,
-			Description: `The AWS Region to use for API operations. Overrides the Region set in the provider configuration.`,
-		}
-	}
-}
 
 // resourceInjectRegionAttribute injects a top-level "region" attribute into a resource's schema.
 func resourceInjectRegionAttribute(ctx context.Context, c *conns.AWSClient, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -200,17 +187,43 @@ func (r regionDataSourceInterceptor) read(ctx context.Context, opts interceptorO
 	return diags
 }
 
+type ephemeralResourceInjectRegionAttributeInterceptor struct{}
+
+func (r ephemeralResourceInjectRegionAttributeInterceptor) schema(ctx context.Context, opts interceptorOptions[ephemeral.SchemaRequest, ephemeral.SchemaResponse]) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	switch response, when := opts.response, opts.when; when {
+	case After:
+		if _, ok := response.Schema.Attributes[names.AttrRegion]; !ok {
+			// Inject a top-level "region" attribute.
+			response.Schema.Attributes[names.AttrRegion] = dsschema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: `The AWS Region to use for API operations. Overrides the Region set in the provider configuration.`,
+			}
+		}
+	}
+
+	return diags
+}
+
+// ephemeralResourceInjectRegionAttribute injects a top-level "region" attribute into an ephemeral resource's schema.
+func ephemeralResourceInjectRegionAttribute() ephemeralResourceSchemaInterceptor {
+	return &ephemeralResourceInjectRegionAttributeInterceptor{}
+}
+
 // regionEphemeralResourceInterceptor implements per-resource Region override functionality for ephemeral resources.
 type regionEphemeralResourceInterceptor struct {
 	validateRegionInPartition bool
 }
 
-func newRegionEphemeralResourceInterceptor(validateRegionInPartition bool) ephemeralResourceInterceptor {
+func newRegionEphemeralResourceInterceptor(validateRegionInPartition bool) ephemeralResourceORCInterceptor {
 	return &regionEphemeralResourceInterceptor{
 		validateRegionInPartition: validateRegionInPartition,
 	}
 }
 
+// TODO REGION Split into validateRegionEphemeralResource, setRegionInState.
 func (r regionEphemeralResourceInterceptor) open(ctx context.Context, opts interceptorOptions[ephemeral.OpenRequest, ephemeral.OpenResponse]) diag.Diagnostics {
 	c := opts.c
 	var diags diag.Diagnostics

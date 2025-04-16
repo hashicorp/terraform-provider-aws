@@ -471,13 +471,12 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 					isRegionOverrideEnabled = true
 				}
 
-				var schemaFuncs []ephemeralResourceSchemaFunc
-				var interceptors ephemeralResourceInterceptors
+				var interceptors interceptorInvocations
 
 				if isRegionOverrideEnabled {
 					v := v.Region
 
-					schemaFuncs = append(schemaFuncs, ephemeralResourceInjectRegionAttribute)
+					interceptors = append(interceptors, ephemeralResourceInjectRegionAttribute())
 					interceptors = append(interceptors, newRegionEphemeralResourceInterceptor(v.Value().IsValidateOverrideInPartition))
 				}
 
@@ -507,7 +506,6 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 						return ctx, diags
 					},
 					interceptors: interceptors,
-					schemaFuncs:  schemaFuncs,
 					typeName:     v.TypeName,
 				}
 				p.ephemeralResources = append(p.ephemeralResources, func() ephemeral.EphemeralResource {
