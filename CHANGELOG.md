@@ -43,10 +43,12 @@ resource/aws_batch_compute_environment: Rename `compute_environment_name_prefix`
 * resource/aws_instance: `user_data` now displays cleartext instead of a hash. Base64 encoded content should use `user_data_base64` instead. ([#42078](https://github.com/hashicorp/terraform-provider-aws/issues/42078))
 * resource/aws_launch_template: Remove `elastic_inference_accelerator` attribute. Amazon Elastic Inference reached end of life on April, 2024. ([#42137](https://github.com/hashicorp/terraform-provider-aws/issues/42137))
 * resource/aws_networkmanager_core_network: The `base_policy_region` argument has been removed. Use `base_policy_regions` instead. ([#38398](https://github.com/hashicorp/terraform-provider-aws/issues/38398))
+* resource/aws_quicksight_data_set: `tags_all` has been removed ([#42260](https://github.com/hashicorp/terraform-provider-aws/issues/42260))
 * resource/aws_redshift_cluster: Attributes `cluster_public_key`, `cluster_revision_number`, and `endpoint` are now read only and should not be set ([#42119](https://github.com/hashicorp/terraform-provider-aws/issues/42119))
 * resource/aws_redshift_cluster: The `logging` attribute has been removed ([#42013](https://github.com/hashicorp/terraform-provider-aws/issues/42013))
 * resource/aws_redshift_cluster: The `publicly_accessible` attribute now defaults to `false` ([#41978](https://github.com/hashicorp/terraform-provider-aws/issues/41978))
 * resource/aws_redshift_cluster: The `snapshot_copy` attribute has been removed ([#41995](https://github.com/hashicorp/terraform-provider-aws/issues/41995))
+* resource/aws_rekognition_stream_processor: `regions_of_interest.bounding_box` is now a list nested block instead of a single nested block ([#41380](https://github.com/hashicorp/terraform-provider-aws/issues/41380))
 * resource/aws_sagemaker_notebook_instance: Remove `accelerator_types` from your configuration—it no longer exists. Instead, use `instance_type` to use [Inferentia](https://docs.aws.amazon.com/sagemaker/latest/dg/neo-supported-cloud.html). ([#42099](https://github.com/hashicorp/terraform-provider-aws/issues/42099))
 * resource/aws_ssm_association: Remove `instance_id` argument ([#42224](https://github.com/hashicorp/terraform-provider-aws/issues/42224))
 
@@ -60,6 +62,10 @@ NOTES:
 ENHANCEMENTS:
 
 * data-source/aws_ami: Add `allow_unsafe_filter` argument ([#42114](https://github.com/hashicorp/terraform-provider-aws/issues/42114))
+
+BUG FIXES:
+
+* resource/aws_rekognition_stream_processor: Fix `regions_of_interest.bounding_box` and `regions_of_interest.polygon` argument validation ([#41380](https://github.com/hashicorp/terraform-provider-aws/issues/41380))
 
 ## 5.94.0 (April  3, 2025)
 
