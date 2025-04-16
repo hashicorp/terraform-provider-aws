@@ -248,6 +248,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						v.errs = append(v.errs, fmt.Errorf("invalid Region/global value (%s): %s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
 					} else {
 						d.IsGlobal = global
+						if global {
+							d.RegionOverrideEnabled = false
+							d.ValidateRegionOverrideInPartition = false
+						}
 					}
 				}
 				if attr, ok := args.Keyword["overrideEnabled"]; ok {

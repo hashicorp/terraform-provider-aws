@@ -40,9 +40,8 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePa
 			TypeName: "aws_dx_gateway",
 			Name:     "Gateway",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsGlobal:          true,
+				IsOverrideEnabled: false,
 			},
 		},
 		{
@@ -128,9 +127,8 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			TypeName: "aws_dx_gateway",
 			Name:     "Gateway",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsGlobal:          true,
+				IsOverrideEnabled: false,
 			},
 			Identity: itypes.GlobalParameterizedIdentity(
 				itypes.StringIdentityAttribute(names.AttrID, true),
