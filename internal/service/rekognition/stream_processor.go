@@ -94,6 +94,7 @@ type resourceStreamProcessor struct {
 
 func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		Version: 1,
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			names.AttrKMSKeyID: schema.StringAttribute{
@@ -224,28 +225,28 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 								Attributes: map[string]schema.Attribute{
 									"height": schema.Float64Attribute{
 										Description: "Height of the bounding box as a ratio of the overall image height.",
-										Required:    true,
+										Optional:    true,
 										Validators: []validator.Float64{
 											float64validator.Between(0.0, 1.0),
 										},
 									},
 									"left": schema.Float64Attribute{
 										Description: "Left coordinate of the bounding box as a ratio of overall image width.",
-										Required:    true,
+										Optional:    true,
 										Validators: []validator.Float64{
 											float64validator.Between(0.0, 1.0),
 										},
 									},
 									"top": schema.Float64Attribute{
 										Description: "Top coordinate of the bounding box as a ratio of overall image height.",
-										Required:    true,
+										Optional:    true,
 										Validators: []validator.Float64{
 											float64validator.Between(0.0, 1.0),
 										},
 									},
 									"width": schema.Float64Attribute{
 										Description: "Width of the bounding box as a ratio of the overall image width.",
-										Required:    true,
+										Optional:    true,
 										Validators: []validator.Float64{
 											float64validator.Between(0.0, 1.0),
 										},
@@ -261,18 +262,17 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 								listvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("bounding_box")),
 							},
 							NestedObject: schema.NestedBlockObject{
-								CustomType: fwtypes.NewObjectTypeOf[polygonModel](ctx),
 								Attributes: map[string]schema.Attribute{
 									"x": schema.Float64Attribute{
 										Description: "The value of the X coordinate for a point on a Polygon.",
-										Required:    true,
+										Optional:    true,
 										Validators: []validator.Float64{
 											float64validator.Between(0.0, 1.0),
 										},
 									},
 									"y": schema.Float64Attribute{
 										Description: "The value of the Y coordinate for a point on a Polygon.",
-										Required:    true,
+										Optional:    true,
 										Validators: []validator.Float64{
 											float64validator.Between(0.0, 1.0),
 										},
@@ -436,6 +436,17 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 				Update: true,
 				Delete: true,
 			}),
+		},
+	}
+}
+
+func (r *resourceStreamProcessor) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
+	schemaV0 := streamProcessorSchema0(ctx)
+
+	return map[int64]resource.StateUpgrader{
+		0: {
+			PriorSchema:   &schemaV0,
+			StateUpgrader: upgradeStreamProcessorStateV0toV1,
 		},
 	}
 }
