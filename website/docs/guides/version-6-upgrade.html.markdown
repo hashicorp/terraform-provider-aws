@@ -36,6 +36,7 @@ Upgrade topics:
 - [resource/aws_kinesis_analytics_application](#resourceaws_kinesis_analytics_application)
 - [resource/aws_launch_template](#resourceaws_launch_template)
 - [resource/aws_networkmanager_core_network](#resourceaws_networkmanager_core_network)
+- [resource/aws_paymentcryptography_key](#resourceaws_paymentcryptography_key)
 - [resource/aws_redshift_cluster](#resourceaws_redshift_cluster)
 - [resource/aws_redshift_service_account](#resourceaws_redshift_service_account)
 - [resource/aws_rekognition_stream_processor](#resourceaws_rekognition_stream_processor)
@@ -202,6 +203,12 @@ This resource is deprecated and will be removed in a future version. [Effective 
 
 The `base_policy_region` argument has been removed. Use `base_policy_regions` instead.
 
+## resource/aws_paymentcryptography_key
+
+The `key_attributes` and `key_attributes.key_modes_of_use` arguments are now list nested blocks instead of single nested blocks.
+When referencing these arguments, the indicies must now be included in the attribute address.
+For example, `key_attributes.key_modes_of_use.decrypt` would now be referenced as `key_attributes[0].key_modes_of_use[0].decrypt`.
+
 ## resource/aws_redshift_cluster
 
 * The `publicly_accessible` attribute now defaults to `false`.
@@ -217,7 +224,7 @@ The `aws_redshift_service_account` resource has been removed. AWS [recommends](h
 
 The `regions_of_interest.bounding_box` argument is now a list nested block instead of a single nested block.
 When referencing this argument, the index must now be included in the attribute address.
-For example, `regions_of_interest[0].bounding_box.height` would now be referenced as `regions_of_interest[0].bounding_box[0].height`
+For example, `regions_of_interest[0].bounding_box.height` would now be referenced as `regions_of_interest[0].bounding_box[0].height`.
 
 ## resource/aws_sagemaker_notebook_instance
 
