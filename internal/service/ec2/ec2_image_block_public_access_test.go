@@ -19,8 +19,8 @@ func TestAccEC2ImageBlockPublicAccess_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic: testAccImageBlockPublicAccess_basic,
-		"Identity":      TestAccImageBlockPublicAccess_Identity,
+		acctest.CtBasic:  testAccImageBlockPublicAccess_basic,
+		"Identity_Basic": testAccImageBlockPublicAccess_Identity_Basic,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -38,14 +38,14 @@ func testAccImageBlockPublicAccess_basic(t *testing.T) {
 			{
 				Config: testAccImageBlockPublicAccessConfig_basic("unblocked"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, names.AttrID, acctest.AccountID(ctx)),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "unblocked"),
 				),
 			},
 			{
 				Config: testAccImageBlockPublicAccessConfig_basic("block-new-sharing"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, names.AttrID, acctest.AccountID(ctx)),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "block-new-sharing"),
 				),
 			},
@@ -53,7 +53,7 @@ func testAccImageBlockPublicAccess_basic(t *testing.T) {
 	})
 }
 
-func TestAccImageBlockPublicAccess_Identity(t *testing.T) {
+func testAccImageBlockPublicAccess_Identity_Basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ec2_image_block_public_access.test"
 
@@ -67,7 +67,6 @@ func TestAccImageBlockPublicAccess_Identity(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
-						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
 					}),
 				},
 			},

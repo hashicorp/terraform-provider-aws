@@ -1430,11 +1430,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			TypeName: "aws_ec2_image_block_public_access",
 			Name:     "Image Block Public Access",
 			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      false,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsGlobal:          true,
+				IsOverrideEnabled: false,
 			},
-			Identity: itypes.RegionalSingletonIdentity(),
+			Identity: itypes.GlobalSingletonIdentity(),
 		},
 		{
 			Factory:  resourceInstanceState,
