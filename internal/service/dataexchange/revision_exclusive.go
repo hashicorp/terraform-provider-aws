@@ -103,6 +103,13 @@ func (r *resourceRevisionExclusive) Schema(ctx context.Context, req resource.Sch
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			//"force_delete": schema.BoolAttribute{
+			//	Optional: true,
+			//	Default:  booldefault.StaticBool(false),
+			//},
+			//"finalized": schema.BoolAttribute{
+			//	Required: true,
+			//},
 			names.AttrID: framework.IDAttribute(),
 			"updated_at": schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
