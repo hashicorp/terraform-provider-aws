@@ -26,6 +26,7 @@ Upgrade topics:
 - [data-source/aws_ecs_task_execution](#data-sourceaws_ecs_task_execution)
 - [data-source/aws_globalaccelerator_accelerator](#data-sourceaws_globalaccelerator_accelerator)
 - [data-source/aws_launch_template](#data-sourceaws_launch_template)
+- [data-source/aws_quicksight_data_set](#data-sourceaws_quicksight_data_set)
 - [data-source/aws_s3_bucket](#data-sourceaws_s3_bucket)
 - [data-source/aws_service_discovery_service](#data-sourceaws_service_discovery_service)
 - [data-source/aws_vpc_endpoint_service](#data-sourceaws_vpc_endpoint_service)
@@ -44,6 +45,7 @@ Upgrade topics:
 - [resource/aws_networkmanager_core_network](#resourceaws_networkmanager_core_network)
 - [resource/aws_redshift_cluster](#resourceaws_redshift_cluster)
 - [resource/aws_redshift_service_account](#resourceaws_redshift_service_account)
+- [resource/aws_rekognition_stream_processor](#resourceaws_rekognition_stream_processor)
 - [resource/aws_s3_bucket](#resourceaws_s3_bucket)
 - [resource/aws_sagemaker_notebook_instance](#resourceaws_sagemaker_notebook_instance)
 - [resource/aws_spot_instance_request](#resourceaws_spot_instance_request)
@@ -164,6 +166,10 @@ Remove `inference_accelerator_overrides` from your configuration—it no longer 
 
 Remove `elastic_inference_accelerator` from your configuration—it no longer exists. Amazon Elastic Inference reached end of life in April 2024.
 
+## data-source/aws_quicksight_data_set
+
+`tags_all` has been removed.
+
 ## data-source/aws_s3_bucket
 
 The `bucket_region` attribute has been added. We encourage use of the `bucket_region` attribute instead of the `region` attribute (which is now used for [Enhanced Multi-Region Support]()).
@@ -242,6 +248,12 @@ The `base_policy_region` argument has been removed. Use `base_policy_regions` in
 ## resource/aws_redshift_service_account
 
 The `aws_redshift_service_account` resource has been removed. AWS [recommends](https://docs.aws.amazon.com/redshift/latest/mgmt/db-auditing.html#db-auditing-bucket-permissions) that a [service principal name](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_principal.html#principal-services) should be used instead of an AWS account ID in any relevant IAM policy.
+
+## resource/aws_rekognition_stream_processor
+
+The `regions_of_interest.bounding_box` argument is now a list nested block instead of a single nested block.
+When referencing this argument, the index must now be included in the attribute address.
+For example, `regions_of_interest[0].bounding_box.height` would now be referenced as `regions_of_interest[0].bounding_box[0].height`
 
 ## resource/aws_s3_bucket
 

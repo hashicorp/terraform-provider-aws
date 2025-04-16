@@ -94,6 +94,7 @@ type resourceStreamProcessor struct {
 
 func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		Version: 1,
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			names.AttrKMSKeyID: schema.StringAttribute{
@@ -213,45 +214,42 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 						objectvalidator.AtLeastOneOf(path.MatchRelative().AtName("bounding_box"), path.MatchRelative().AtName("polygon")),
 					},
 					Blocks: map[string]schema.Block{
-						"bounding_box": schema.SingleNestedBlock{ // nosemgrep:ci.avoid-SingleNestedBlock pre-existing, will be converted
-							CustomType:  fwtypes.NewObjectTypeOf[boundingBoxModel](ctx),
+						"bounding_box": schema.ListNestedBlock{
+							CustomType:  fwtypes.NewListNestedObjectTypeOf[boundingBoxModel](ctx),
 							Description: "The box representing a region of interest on screen.",
-							Validators: []validator.Object{
-								objectvalidator.AlsoRequires(
-									path.MatchRelative().AtName("height"),
-									path.MatchRelative().AtName("left"),
-									path.MatchRelative().AtName("top"),
-									path.MatchRelative().AtName("width"),
-								),
-								objectvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("polygon")),
+							Validators: []validator.List{
+								listvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("polygon")),
+								listvalidator.SizeBetween(1, 1),
 							},
-							Attributes: map[string]schema.Attribute{
-								"height": schema.Float64Attribute{
-									Optional:    true,
-									Description: "Height of the bounding box as a ratio of the overall image height.",
-									Validators: []validator.Float64{
-										float64validator.Between(0.0, 1.0),
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"height": schema.Float64Attribute{
+										Description: "Height of the bounding box as a ratio of the overall image height.",
+										Optional:    true,
+										Validators: []validator.Float64{
+											float64validator.Between(0.0, 1.0),
+										},
 									},
-								},
-								"left": schema.Float64Attribute{
-									Description: "Left coordinate of the bounding box as a ratio of overall image width.",
-									Optional:    true,
-									Validators: []validator.Float64{
-										float64validator.Between(0.0, 1.0),
+									"left": schema.Float64Attribute{
+										Description: "Left coordinate of the bounding box as a ratio of overall image width.",
+										Optional:    true,
+										Validators: []validator.Float64{
+											float64validator.Between(0.0, 1.0),
+										},
 									},
-								},
-								"top": schema.Float64Attribute{
-									Description: "Top coordinate of the bounding box as a ratio of overall image height.",
-									Optional:    true,
-									Validators: []validator.Float64{
-										float64validator.Between(0.0, 1.0),
+									"top": schema.Float64Attribute{
+										Description: "Top coordinate of the bounding box as a ratio of overall image height.",
+										Optional:    true,
+										Validators: []validator.Float64{
+											float64validator.Between(0.0, 1.0),
+										},
 									},
-								},
-								"width": schema.Float64Attribute{
-									Description: "Width of the bounding box as a ratio of the overall image width.",
-									Optional:    true,
-									Validators: []validator.Float64{
-										float64validator.Between(0.0, 1.0),
+									"width": schema.Float64Attribute{
+										Description: "Width of the bounding box as a ratio of the overall image width.",
+										Optional:    true,
+										Validators: []validator.Float64{
+											float64validator.Between(0.0, 1.0),
+										},
 									},
 								},
 							},
@@ -264,12 +262,6 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 								listvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("bounding_box")),
 							},
 							NestedObject: schema.NestedBlockObject{
-								CustomType: fwtypes.NewObjectTypeOf[polygonModel](ctx),
-								Validators: []validator.Object{
-									objectvalidator.AlsoRequires(
-										path.MatchRelative().AtName("x"),
-										path.MatchRelative().AtName("y"),
-									)},
 								Attributes: map[string]schema.Attribute{
 									"x": schema.Float64Attribute{
 										Description: "The value of the X coordinate for a point on a Polygon.",
@@ -444,6 +436,17 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 				Update: true,
 				Delete: true,
 			}),
+		},
+	}
+}
+
+func (r *resourceStreamProcessor) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
+	schemaV0 := streamProcessorSchema0(ctx)
+
+	return map[int64]resource.StateUpgrader{
+		0: {
+			PriorSchema:   &schemaV0,
+			StateUpgrader: upgradeStreamProcessorStateV0toV1,
 		},
 	}
 }
@@ -871,8 +874,8 @@ type s3DestinationModel struct {
 }
 
 type regionOfInterestModel struct {
-	BoundingBox fwtypes.ObjectValueOf[boundingBoxModel]       `tfsdk:"bounding_box"`
-	Polygon     fwtypes.ListNestedObjectValueOf[polygonModel] `tfsdk:"polygon"`
+	BoundingBox fwtypes.ListNestedObjectValueOf[boundingBoxModel] `tfsdk:"bounding_box"`
+	Polygon     fwtypes.ListNestedObjectValueOf[polygonModel]     `tfsdk:"polygon"`
 }
 
 type boundingBoxModel struct {
