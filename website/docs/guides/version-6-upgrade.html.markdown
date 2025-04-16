@@ -26,6 +26,7 @@ Upgrade topics:
 - [data-source/aws_globalaccelerator_accelerator](#data-sourceaws_globalaccelerator_accelerator)
 - [data-source/aws_launch_template](#data-sourceaws_launch_template)
 - [data-source/aws_service_discovery_service](#data-sourceaws_service_discovery_service)
+- [resource/aws_api_gateway_deployment](#resourceaws_api_gateway_deployment)
 - [resource/aws_batch_compute_environment](#resourceaws_batch_compute_environment)
 - [resource/aws_cloudfront_response_headers_policy](#resourceaws_cloudfront_response_headers_policy)
 - [resource/aws_ecs_task_definition](#resourceaws_ecs_task_definition)
@@ -153,6 +154,47 @@ Remove `inference_accelerator_overrides` from your configuration—it no longer 
 ## data-source/aws_launch_template
 
 Remove `elastic_inference_accelerator` from your configuration—it no longer exists. Amazon Elastic Inference reached end of life in April 2024.
+
+## resource/aws_api_gateway_deployment
+
+The following arguments have been **removed** from the `aws_api_gateway_deployment` resource:
+
+- `stage_name`
+- `stage_description`
+- `canary_settings`
+
+Additionally, the computed attributes `invoke_url` and `execution_arn` have been removed from `aws_api_gateway_deployment`. These are now only available via the `aws_api_gateway_stage` resource.
+
+### Migration Example
+
+**Before (v5 and earlier, using implicit stage):**
+```hcl
+resource "aws_api_gateway_deployment" "example" {
+  rest_api_id = aws_api_gateway_rest_api.example.id
+  stage_name  = "prod"
+}
+```
+
+**After (v6+, using explicit stage):**
+```hcl
+resource "aws_api_gateway_deployment" "example" {
+  rest_api_id = aws_api_gateway_rest_api.example.id
+}
+
+resource "aws_api_gateway_stage" "prod" {
+  stage_name    = "prod"
+  rest_api_id   = aws_api_gateway_rest_api.example.id
+  deployment_id = aws_api_gateway_deployment.example.id
+}
+```
+
+### Importing an Implicit Stage into Terraform
+
+If your previous configuration relied on an implicitly created stage, you can import it into a managed `aws_api_gateway_stage` resource like so:
+
+```sh
+terraform import aws_api_gateway_stage.prod <rest_api_id>/<stage_name>
+```
 
 ## resource/aws_batch_compute_environment
 
