@@ -176,7 +176,8 @@ Additionally, the computed attributes `invoke_url` and `execution_arn` have been
 ### Migration Example
 
 **Before (v5 and earlier, using implicit stage):**
-```hcl
+
+```terraform
 resource "aws_api_gateway_deployment" "example" {
   rest_api_id = aws_api_gateway_rest_api.example.id
   stage_name  = "prod"
@@ -184,7 +185,8 @@ resource "aws_api_gateway_deployment" "example" {
 ```
 
 **After (v6+, using explicit stage):**
-```hcl
+
+```terraform
 resource "aws_api_gateway_deployment" "example" {
   rest_api_id = aws_api_gateway_rest_api.example.id
 }
