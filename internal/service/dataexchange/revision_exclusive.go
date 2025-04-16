@@ -57,10 +57,7 @@ import (
 // @Testing(noImport=true)
 func newResourceRevisionExclusive(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceRevisionExclusive{}
-
 	r.SetDefaultCreateTimeout(30 * time.Minute)
-	// r.SetDefaultUpdateTimeout(30 * time.Minute)
-	// r.SetDefaultDeleteTimeout(30 * time.Minute)
 
 	return r, nil
 }
