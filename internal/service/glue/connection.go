@@ -47,6 +47,11 @@ func resourceConnection() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"athena_properties": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			names.AttrCatalogID: {
 				Type:     schema.TypeString,
 				ForceNew: true,
@@ -173,6 +178,10 @@ func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta an
 	}.String()
 	d.Set(names.AttrARN, connectionArn)
 
+	if err := d.Set("athena_properties", connection.AthenaProperties); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting athena_properties: %s", err)
+	}
+
 	d.Set(names.AttrCatalogID, catalogID)
 	if err := d.Set("connection_properties", connection.ConnectionProperties); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting connection_properties: %s", err)
@@ -296,6 +305,14 @@ func expandConnectionInput(d *schema.ResourceData) *awstypes.ConnectionInput {
 		ConnectionProperties: connectionProperties,
 		ConnectionType:       awstypes.ConnectionType(d.Get("connection_type").(string)),
 		Name:                 aws.String(d.Get(names.AttrName).(string)),
+	}
+
+	if v, ok := d.GetOk("athena_properties"); ok {
+		athenaProperties := make(map[string]string)
+		for k, v := range v.(map[string]any) {
+			athenaProperties[k] = v.(string)
+		}
+		connectionInput.AthenaProperties = athenaProperties
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
