@@ -40,10 +40,11 @@ func ResourceOrganizationConfiguration() *schema.Resource {
 				ValidateDiagFunc: enum.Validate[awstypes.AutoEnableMembers](),
 			},
 			"datasources": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
+				Type:       schema.TypeList,
+				Optional:   true,
+				Computed:   true,
+				MaxItems:   1,
+				Deprecated: "datasources is deprecated. Use \"aws_guardduty_organization_configuration_feature\" resources instead.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"kubernetes": {
