@@ -74,7 +74,7 @@ func testAccConfigurationPolicyAssociation_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationPolicyAssociationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "policy_id", "aws_securityhub_configuration_policy.test_2", names.AttrID),
-					resource.TestCheckResourceAttrPair(resourceName, "target_id", "aws_organizations_organizational_unit.test", "parent_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "target_id", "aws_organizations_organizational_unit.test", names.AttrParentID),
 				),
 			},
 			{

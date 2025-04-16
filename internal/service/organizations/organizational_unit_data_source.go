@@ -32,7 +32,7 @@ func dataSourceOrganizationalUnit() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"parent_id": {
+			names.AttrParentID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile("^(r-[0-9a-z]{4,32})|(ou-[0-9a-z]{4,32}-[0-9a-z]{8,32})$"), "see https://docs.aws.amazon.com/organizations/latest/APIReference/API_CreateOrganizationalUnit.html#organizations-CreateOrganizationalUnit-request-ParentId"),
@@ -46,7 +46,7 @@ func dataSourceOrganizationalUnitRead(ctx context.Context, d *schema.ResourceDat
 	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	parentID := d.Get("parent_id").(string)
+	parentID := d.Get(names.AttrParentID).(string)
 	input := &organizations.ListOrganizationalUnitsForParentInput{
 		ParentId: aws.String(parentID),
 	}
