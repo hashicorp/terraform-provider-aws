@@ -33,6 +33,7 @@ Upgrade topics:
 - [resource/aws_cloudfront_key_value_store](#resourceaws_cloudfront_key_value_store)
 - [resource/aws_cloudfront_response_headers_policy](#resourceaws_cloudfront_response_headers_policy)
 - [resource/aws_config_aggregate_authorization](#resourceawsconfig_aggregate_authorization)
+- [resource/aws_dx_hosted_connection](#resourceaws_dx_hosted_connection)
 - [resource/aws_ecs_task_definition](#resourceaws_ecs_task_definition)
 - [resource/aws_instance](#resourceaws_instance)
 - [resource/aws_kinesis_analytics_application](#resourceaws_kinesis_analytics_application)
@@ -191,6 +192,10 @@ The `etag` argument is now computed only.
 ## resource/aws_config_aggregate_authorization
 
 The `region` attribute has been deprecated. All configurations using `region` should be updated to use the `authorized_aws_region` attribute instead.
+
+## resource/aws_dx_hosted_connection
+
+The `region` attribute has been deprecated. All configurations using `region` should be updated to use the `connection_region` attribute instead.
 
 ## resource/aws_ecs_task_definition
 
