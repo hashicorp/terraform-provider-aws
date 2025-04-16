@@ -28,6 +28,7 @@ Upgrade topics:
 - [data-source/aws_quicksight_data_set](#data-sourceaws_quicksight_data_set)
 - [data-source/aws_service_discovery_service](#data-sourceaws_service_discovery_service)
 - [resource/aws_api_gateway_account](#resourceaws_api_gateway_account)
+- [resource/aws_api_gateway_deployment](#resourceaws_api_gateway_deployment)
 - [resource/aws_batch_compute_environment](#resourceaws_batch_compute_environment)
 - [resource/aws_cloudfront_key_value_store](#resourceaws_cloudfront_key_value_store)
 - [resource/aws_cloudfront_response_headers_policy](#resourceaws_cloudfront_response_headers_policy)
@@ -167,6 +168,49 @@ Remove `elastic_inference_accelerator` from your configuration—it no longer ex
 `reset_on_delete` has been removed.
 The destroy operation will now always reset the API Gateway account settings.
 Use a [removed](https://developer.hashicorp.com/terraform/language/resources/syntax#removing-resources) block to retain the previous behavior which left the account settings unchanged upon destruction.
+
+## resource/aws_api_gateway_deployment
+
+The following arguments have been **removed** from the `aws_api_gateway_deployment` resource:
+
+- `stage_name`
+- `stage_description`
+- `canary_settings`
+
+Additionally, the computed attributes `invoke_url` and `execution_arn` have been removed from `aws_api_gateway_deployment`. These are now only available via the `aws_api_gateway_stage` resource.
+
+### Migration Example
+
+**Before (v5 and earlier, using implicit stage):**
+
+```terraform
+resource "aws_api_gateway_deployment" "example" {
+  rest_api_id = aws_api_gateway_rest_api.example.id
+  stage_name  = "prod"
+}
+```
+
+**After (v6+, using explicit stage):**
+
+```terraform
+resource "aws_api_gateway_deployment" "example" {
+  rest_api_id = aws_api_gateway_rest_api.example.id
+}
+
+resource "aws_api_gateway_stage" "prod" {
+  stage_name    = "prod"
+  rest_api_id   = aws_api_gateway_rest_api.example.id
+  deployment_id = aws_api_gateway_deployment.example.id
+}
+```
+
+### Importing an Implicit Stage into Terraform
+
+If your previous configuration relied on an implicitly created stage, you can import it into a managed `aws_api_gateway_stage` resource like so:
+
+```sh
+terraform import aws_api_gateway_stage.prod <rest_api_id>/<stage_name>
+```
 
 ## resource/aws_batch_compute_environment
 
