@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	tfjson "github.com/hashicorp/terraform-json"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
@@ -19,9 +20,10 @@ import (
 var _ statecheck.StateCheck = expectIdentityRegionalARNFormatCheck{}
 
 type expectIdentityRegionalARNFormatCheck struct {
-	base       Base
-	arnService string
-	arnFormat  string
+	base         Base
+	arnService   string
+	arnFormat    string
+	checkFactory func(service string, arn string) knownvalue.Check
 }
 
 func (e expectIdentityRegionalARNFormatCheck) CheckState(ctx context.Context, request statecheck.CheckStateRequest, response *statecheck.CheckStateResponse) {
@@ -55,7 +57,7 @@ func (e expectIdentityRegionalARNFormatCheck) CheckState(ctx context.Context, re
 		return
 	}
 
-	knownCheck := tfknownvalue.RegionalARNExact(e.arnService, arnString)
+	knownCheck := e.checkFactory(e.arnService, arnString)
 	if err = knownCheck.CheckValue(value); err != nil {
 		response.Error = fmt.Errorf("checking value for attribute at path: %s.%s, err: %s", e.base.ResourceAddress(), attrPath, err)
 		return
@@ -96,6 +98,20 @@ func ExpectIdentityRegionalARNFormat(ctx context.Context, resourceAddress string
 		base:       NewBase(resourceAddress),
 		arnService: arnService,
 		arnFormat:  arnFormat,
+		checkFactory: func(service string, arn string) knownvalue.Check {
+			return tfknownvalue.RegionalARNExact(service, arn)
+		},
+	}
+}
+
+func ExpectIdentityRegionalARNAlternateRegionFormat(ctx context.Context, resourceAddress string, arnService, arnFormat string) statecheck.StateCheck {
+	return expectIdentityRegionalARNFormatCheck{
+		base:       NewBase(resourceAddress),
+		arnService: arnService,
+		arnFormat:  arnFormat,
+		checkFactory: func(service string, arn string) knownvalue.Check {
+			return tfknownvalue.RegionalARNAlternateRegionExact(service, arn)
+		},
 	}
 }
 

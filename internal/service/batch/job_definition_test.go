@@ -86,7 +86,7 @@ func TestAccBatchJobDefinition_basic(t *testing.T) {
 	})
 }
 
-func TestAccBatchJobDefinition_Identity(t *testing.T) {
+func TestAccBatchJobDefinition_Identity_Basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var jd awstypes.JobDefinition
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -122,6 +122,51 @@ func TestAccBatchJobDefinition_Identity(t *testing.T) {
 			// Can't test plannable import due to `deregister_on_new_revision`
 			// {
 			// 	ResourceName:      resourceName,
+			// 	ImportState:       true,
+			// 	ImportStateKind:   resource.ImportBlockWithId,
+			// 	ImportStateVerify: true,
+			// 	ImportStateVerifyIgnore: []string{
+			// 		"deregister_on_new_revision",
+			// 	},
+			// },
+		},
+	})
+}
+
+func TestAccBatchJobDefinition_Identity_RegionOverride(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_batch_job_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_12_0),
+		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckJobDefinitionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccJobDefinitionConfig_regionOverride(rName),
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectIdentityRegionalARNAlternateRegionFormat(ctx, resourceName, "batch", "job-definition/{name}:{revision}"),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
+				ImportState:       true,
+				ImportStateKind:   resource.ImportCommandWithId,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"deregister_on_new_revision",
+				},
+			},
+			// Can't test plannable import due to `deregister_on_new_revision`
+			// {
+			// 	ResourceName:      resourceName,
+			// 	ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
 			// 	ImportState:       true,
 			// 	ImportStateKind:   resource.ImportBlockWithId,
 			// 	ImportStateVerify: true,
@@ -1408,6 +1453,23 @@ resource "aws_batch_job_definition" "test" {
   type = "container"
 }
 `, rName)
+}
+
+func testAccJobDefinitionConfig_regionOverride(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_batch_job_definition" "test" {
+  region = %[2]q
+
+  container_properties = jsonencode({
+    command = ["echo", "test"]
+    image   = "busybox"
+    memory  = 128
+    vcpus   = 1
+  })
+  name = %[1]q
+  type = "container"
+}
+`, rName, acctest.AlternateRegion())
 }
 
 func testAccJobDefinitionConfig_containerPropertiesAdvanced(rName, param string, retries, timeout int) string {
