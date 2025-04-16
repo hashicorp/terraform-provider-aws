@@ -174,7 +174,7 @@ func resourceUserPoolDomainUpdate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if d.HasChange(names.AttrCertificateARN) {
-		timeout = 60 * time.Minute
+		timeout = 60 * time.Minute // Certificate ARN updates on custom domains take more time to become active.
 		input.CustomDomainConfig = &awstypes.CustomDomainConfigType{
 			CertificateArn: aws.String(d.Get(names.AttrCertificateARN).(string)),
 		}
