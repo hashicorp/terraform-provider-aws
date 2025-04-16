@@ -28,6 +28,7 @@ Upgrade topics:
 - [data-source/aws_launch_template](#data-sourceaws_launch_template)
 - [data-source/aws_s3_bucket](#data-sourceaws_s3_bucket)
 - [data-source/aws_service_discovery_service](#data-sourceaws_service_discovery_service)
+- [data-source/aws_vpc_endpoint_service](#data-sourceaws_vpc_endpoint_service)
 - [resource/aws_api_gateway_account](#resourceaws_api_gateway_account)
 - [resource/aws_batch_compute_environment](#resourceaws_batch_compute_environment)
 - [resource/aws_cloudformation_stack_set_instance](#resourceaws_cloudformation_stack_set_instance)
@@ -169,6 +170,10 @@ The `bucket_region` attribute has been added. We encourage use of the `bucket_re
 ## data-source/aws_service_discovery_service
 
 `tags_all` has been removed.
+
+## data-source/aws_vpc_endpoint_service
+
+The `region` attribute has been deprecated. All configurations using `region` should be updated to use the `service_region` attribute instead.
 
 ## resource/aws_api_gateway_account
 

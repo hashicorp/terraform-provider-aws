@@ -913,6 +913,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Factory:  dataSourceVPCEndpointService,
 			TypeName: "aws_vpc_endpoint_service",
 			Name:     "Endpoint Service",
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled: false,
 			}),
