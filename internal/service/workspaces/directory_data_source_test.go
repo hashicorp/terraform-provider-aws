@@ -44,6 +44,9 @@ func testAccDirectoryDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "iam_role_id", resourceName, "iam_role_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "ip_group_ids", resourceName, "ip_group_ids"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "registration_code", resourceName, "registration_code"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "certificate_based_auth_properties.#", resourceName, "certificate_based_auth_properties.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "certificate_based_auth_properties.0.status", resourceName, "certificate_based_auth_properties.0.status"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "certificate_based_auth_properties.0.certificate_authority_arn", resourceName, "certificate_based_auth_properties.0.certificate_authority_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "saml_properties.#", resourceName, "saml_properties.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "saml_properties.0.relay_state_parameter_name", resourceName, "saml_properties.0.relay_state_parameter_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "saml_properties.0.status", resourceName, "saml_properties.0.status"),
@@ -93,6 +96,11 @@ resource "aws_security_group" "test" {
 
 resource "aws_workspaces_directory" "test" {
   directory_id = aws_directory_service_directory.main.id
+
+  certificate_based_auth_properties {
+    status = "ENABLED"
+    certificate_authority_arn = "arn:aws:acm-pca:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:certificate-authority/12345678-1234-1234-1234-123456789012"
+  }
 
   saml_properties {
     relay_state_parameter_name = "LinkMode"
