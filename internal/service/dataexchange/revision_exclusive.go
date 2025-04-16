@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -74,7 +75,7 @@ const (
 type resourceRevisionExclusive struct {
 	framework.ResourceWithConfigure
 	framework.WithTimeouts
-	framework.WithNoOpUpdate[resourceRevisionExclusiveModel]
+	//framework.WithNoOpUpdate[resourceRevisionExclusiveModel]
 }
 
 func (r *resourceRevisionExclusive) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -103,13 +104,14 @@ func (r *resourceRevisionExclusive) Schema(ctx context.Context, req resource.Sch
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			//"force_delete": schema.BoolAttribute{
-			//	Optional: true,
-			//	Default:  booldefault.StaticBool(false),
-			//},
-			//"finalized": schema.BoolAttribute{
-			//	Required: true,
-			//},
+			"force_delete": schema.BoolAttribute{
+				Optional: true,
+				Computed: true,
+				Default:  booldefault.StaticBool(false),
+			},
+			"finalized": schema.BoolAttribute{
+				Required: true,
+			},
 			names.AttrID: framework.IDAttribute(),
 			"updated_at": schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
@@ -720,6 +722,17 @@ func (r *resourceRevisionExclusive) Read(ctx context.Context, req resource.ReadR
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
+func (r *resourceRevisionExclusive) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var plan, state resourceRevisionExclusiveModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+}
+
 func (r *resourceRevisionExclusive) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().DataExchangeClient(ctx)
 
@@ -791,16 +804,18 @@ func getRevisionAsset(ctx context.Context, conn *dataexchange.Client, input data
 }
 
 type resourceRevisionExclusiveModel struct {
-	ARN       types.String                               `tfsdk:"arn"`
-	Assets    fwtypes.SetNestedObjectValueOf[assetModel] `tfsdk:"asset"`
-	Comment   types.String                               `tfsdk:"comment"`
-	CreatedAt timetypes.RFC3339                          `tfsdk:"created_at"`
-	DataSetID types.String                               `tfsdk:"data_set_id"`
-	ID        types.String                               `tfsdk:"id"`
-	UpdatedAt timetypes.RFC3339                          `tfsdk:"updated_at"`
-	Tags      tftags.Map                                 `tfsdk:"tags"`
-	TagsAll   tftags.Map                                 `tfsdk:"tags_all"`
-	Timeouts  timeouts.Value                             `tfsdk:"timeouts"`
+	ARN         types.String                               `tfsdk:"arn"`
+	Assets      fwtypes.SetNestedObjectValueOf[assetModel] `tfsdk:"asset"`
+	Comment     types.String                               `tfsdk:"comment"`
+	CreatedAt   timetypes.RFC3339                          `tfsdk:"created_at"`
+	DataSetID   types.String                               `tfsdk:"data_set_id"`
+	Finalized   types.Bool                                 `tfsdk:"finalized"`
+	ForceDelete types.Bool                                 `tfsdk:"force_delete"`
+	ID          types.String                               `tfsdk:"id"`
+	UpdatedAt   timetypes.RFC3339                          `tfsdk:"updated_at"`
+	Tags        tftags.Map                                 `tfsdk:"tags"`
+	TagsAll     tftags.Map                                 `tfsdk:"tags_all"`
+	Timeouts    timeouts.Value                             `tfsdk:"timeouts"`
 }
 
 type assetModel struct {

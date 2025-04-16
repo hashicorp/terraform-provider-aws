@@ -9,6 +9,7 @@ provider "aws" {
 
 resource "aws_dataexchange_revision_exclusive" "test" {
   data_set_id = aws_dataexchange_data_set.test.id
+  finalized   = false
 
   asset {
     import_assets_from_s3 {
