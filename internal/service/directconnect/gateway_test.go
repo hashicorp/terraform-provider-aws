@@ -54,7 +54,7 @@ func TestAccDirectConnectGateway_basic(t *testing.T) {
 	})
 }
 
-func TestAccDirectConnectGateway_Identity(t *testing.T) {
+func TestAccDirectConnectGateway_Identity_Basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.DirectConnectGateway
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
