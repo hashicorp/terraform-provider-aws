@@ -25,6 +25,7 @@ Upgrade topics:
 - [data-source/aws_ecs_task_execution](#data-sourceaws_ecs_task_execution)
 - [data-source/aws_globalaccelerator_accelerator](#data-sourceaws_globalaccelerator_accelerator)
 - [data-source/aws_launch_template](#data-sourceaws_launch_template)
+- [data-source/aws_quicksight_data_set](#data-sourceaws_quicksight_data_set)
 - [data-source/aws_service_discovery_service](#data-sourceaws_service_discovery_service)
 - [resource/aws_api_gateway_account](#resourceaws_api_gateway_account)
 - [resource/aws_batch_compute_environment](#resourceaws_batch_compute_environment)
@@ -139,6 +140,10 @@ This is not recommended.
 ## data-source/aws_globalaccelerator_accelerator
 
 `id` is now computed only.
+
+## data-source/aws_quicksight_data_set
+
+`tags_all` has been removed.
 
 ## data-source/aws_service_discovery_service
 
