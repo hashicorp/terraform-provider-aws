@@ -143,7 +143,8 @@ type regionDataSourceInterceptor struct {
 	validateRegionInPartition bool
 }
 
-func newRegionDataSourceInterceptor(validateRegionInPartition bool) dataSourceInterceptor {
+// TODO REGION Split into validateRegionDataSource, setRegionInState.
+func newRegionDataSourceInterceptor(validateRegionInPartition bool) dataSourceCRUDInterceptor {
 	return &regionDataSourceInterceptor{
 		validateRegionInPartition: validateRegionInPartition,
 	}

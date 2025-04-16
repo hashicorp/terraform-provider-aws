@@ -26,7 +26,7 @@ type tagsDataSourceInterceptor struct {
 	tagsInterceptor
 }
 
-func newTagsDataSourceInterceptor(servicePackageResourceTags unique.Handle[inttypes.ServicePackageResourceTags]) dataSourceInterceptor {
+func newTagsDataSourceInterceptor(servicePackageResourceTags unique.Handle[inttypes.ServicePackageResourceTags]) dataSourceCRUDInterceptor {
 	return &tagsDataSourceInterceptor{
 		tagsInterceptor: tagsInterceptor{
 			WithTaggingMethods: interceptors.WithTaggingMethods{

@@ -28,7 +28,7 @@ type dataSourceSchemaFunc func(context.Context, *conns.AWSClient, datasource.Sch
 type wrappedDataSourceOptions struct {
 	// bootstrapContext is run on all wrapped methods before any interceptors.
 	bootstrapContext contextFunc
-	interceptors     dataSourceInterceptors
+	interceptors     interceptorInvocations
 	// schemaFuncs are run after bootstrapContext and after the Schema method on the inner resource.
 	schemaFuncs []dataSourceSchemaFunc
 	typeName    string
@@ -81,7 +81,7 @@ func (w *wrappedDataSource) Read(ctx context.Context, request datasource.ReadReq
 		w.inner.Read(ctx, request, response)
 		return response.Diagnostics
 	}
-	response.Diagnostics.Append(interceptedHandler(w.opts.interceptors.read(), f, w.meta)(ctx, request, response)...)
+	response.Diagnostics.Append(interceptedHandler(w.opts.interceptors.dataSourceRead(), f, w.meta)(ctx, request, response)...)
 }
 
 func (w *wrappedDataSource) Configure(ctx context.Context, request datasource.ConfigureRequest, response *datasource.ConfigureResponse) {

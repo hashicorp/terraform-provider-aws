@@ -410,7 +410,7 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 			}
 
 			var schemaFuncs []dataSourceSchemaFunc
-			var interceptors dataSourceInterceptors
+			var interceptors interceptorInvocations
 
 			if isRegionOverrideEnabled {
 				v := v.Region

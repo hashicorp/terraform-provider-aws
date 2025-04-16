@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/slices"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 )
 
 type interceptorOptions[Request, Response any] struct {
@@ -27,17 +27,20 @@ type interceptorFunc[Request, Response any] func(context.Context, interceptorOpt
 // If a Before interceptor returns Diagnostics indicating an error occurred then
 // no further interceptors in the chain are run and neither is the schema's method.
 // In other cases all interceptors in the chain are run.
-type dataSourceInterceptor interface {
+type dataSourceCRUDInterceptor interface {
 	// read is invoked for a Read call.
 	read(context.Context, interceptorOptions[datasource.ReadRequest, datasource.ReadResponse]) diag.Diagnostics
 }
 
-type dataSourceInterceptors []dataSourceInterceptor
+type interceptorInvocations []any
 
 // read returns a slice of interceptors that run on data source Read.
-func (s dataSourceInterceptors) read() []interceptorFunc[datasource.ReadRequest, datasource.ReadResponse] {
-	return slices.ApplyToAll(s, func(e dataSourceInterceptor) interceptorFunc[datasource.ReadRequest, datasource.ReadResponse] {
-		return e.read
+func (s interceptorInvocations) dataSourceRead() []interceptorFunc[datasource.ReadRequest, datasource.ReadResponse] {
+	return tfslices.ApplyToAll(tfslices.Filter(s, func(e any) bool {
+		_, ok := e.(dataSourceCRUDInterceptor)
+		return ok
+	}), func(e any) interceptorFunc[datasource.ReadRequest, datasource.ReadResponse] {
+		return e.(dataSourceCRUDInterceptor).read
 	})
 }
 
@@ -54,21 +57,21 @@ type ephemeralResourceInterceptors []ephemeralResourceInterceptor
 
 // open returns a slice of interceptors that run on ephemeral resource Open.
 func (s ephemeralResourceInterceptors) open() []interceptorFunc[ephemeral.OpenRequest, ephemeral.OpenResponse] {
-	return slices.ApplyToAll(s, func(e ephemeralResourceInterceptor) interceptorFunc[ephemeral.OpenRequest, ephemeral.OpenResponse] {
+	return tfslices.ApplyToAll(s, func(e ephemeralResourceInterceptor) interceptorFunc[ephemeral.OpenRequest, ephemeral.OpenResponse] {
 		return e.open
 	})
 }
 
 // renew returns a slice of interceptors that run on ephemeral resource Renew.
 func (s ephemeralResourceInterceptors) renew() []interceptorFunc[ephemeral.RenewRequest, ephemeral.RenewResponse] {
-	return slices.ApplyToAll(s, func(e ephemeralResourceInterceptor) interceptorFunc[ephemeral.RenewRequest, ephemeral.RenewResponse] {
+	return tfslices.ApplyToAll(s, func(e ephemeralResourceInterceptor) interceptorFunc[ephemeral.RenewRequest, ephemeral.RenewResponse] {
 		return e.renew
 	})
 }
 
 // close returns a slice of interceptors that run on ephemeral resource Renew.
 func (s ephemeralResourceInterceptors) close() []interceptorFunc[ephemeral.CloseRequest, ephemeral.CloseResponse] {
-	return slices.ApplyToAll(s, func(e ephemeralResourceInterceptor) interceptorFunc[ephemeral.CloseRequest, ephemeral.CloseResponse] {
+	return tfslices.ApplyToAll(s, func(e ephemeralResourceInterceptor) interceptorFunc[ephemeral.CloseRequest, ephemeral.CloseResponse] {
 		return e.close
 	})
 }
@@ -92,28 +95,28 @@ type resourceInterceptors []resourceInterceptor
 
 // create returns a slice of interceptors that run on resource Create.
 func (s resourceInterceptors) create() []interceptorFunc[resource.CreateRequest, resource.CreateResponse] {
-	return slices.ApplyToAll(s, func(e resourceInterceptor) interceptorFunc[resource.CreateRequest, resource.CreateResponse] {
+	return tfslices.ApplyToAll(s, func(e resourceInterceptor) interceptorFunc[resource.CreateRequest, resource.CreateResponse] {
 		return e.create
 	})
 }
 
 // read returns a slice of interceptors that run on resource Read.
 func (s resourceInterceptors) read() []interceptorFunc[resource.ReadRequest, resource.ReadResponse] {
-	return slices.ApplyToAll(s, func(e resourceInterceptor) interceptorFunc[resource.ReadRequest, resource.ReadResponse] {
+	return tfslices.ApplyToAll(s, func(e resourceInterceptor) interceptorFunc[resource.ReadRequest, resource.ReadResponse] {
 		return e.read
 	})
 }
 
 // update returns a slice of interceptors that run on resource Update.
 func (s resourceInterceptors) update() []interceptorFunc[resource.UpdateRequest, resource.UpdateResponse] {
-	return slices.ApplyToAll(s, func(e resourceInterceptor) interceptorFunc[resource.UpdateRequest, resource.UpdateResponse] {
+	return tfslices.ApplyToAll(s, func(e resourceInterceptor) interceptorFunc[resource.UpdateRequest, resource.UpdateResponse] {
 		return e.update
 	})
 }
 
 // delete returns a slice of interceptors that run on resource Delete.
 func (s resourceInterceptors) delete() []interceptorFunc[resource.DeleteRequest, resource.DeleteResponse] {
-	return slices.ApplyToAll(s, func(e resourceInterceptor) interceptorFunc[resource.DeleteRequest, resource.DeleteResponse] {
+	return tfslices.ApplyToAll(s, func(e resourceInterceptor) interceptorFunc[resource.DeleteRequest, resource.DeleteResponse] {
 		return e.delete
 	})
 }
@@ -163,7 +166,7 @@ func interceptedHandler[Request interceptedRequest, Response interceptedResponse
 		}
 
 		// All other interceptors are run last to first.
-		reverse := slices.Reverse(forward)
+		reverse := tfslices.Reverse(forward)
 		diags = f(ctx, request, response)
 
 		if diags.HasError() {
