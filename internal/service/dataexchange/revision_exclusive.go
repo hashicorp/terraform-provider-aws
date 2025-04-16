@@ -27,9 +27,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -170,9 +172,23 @@ func (r *resourceRevisionExclusive) Schema(ctx context.Context, req resource.Sch
 														stringplanmodifier.RequiresReplace(),
 													},
 												},
+												"key_prefixes": schema.SetAttribute{
+													CustomType: fwtypes.SetOfStringType,
+													Optional:   true,
+													PlanModifiers: []planmodifier.Set{
+														setplanmodifier.RequiresReplace(),
+													},
+												},
+												"keys": schema.SetAttribute{
+													CustomType: fwtypes.SetOfStringType,
+													Optional:   true,
+													PlanModifiers: []planmodifier.Set{
+														setplanmodifier.RequiresReplace(),
+													},
+												},
 											},
 											Blocks: map[string]schema.Block{
-												"kms_key_to_grant": schema.ListNestedBlock{
+												"kms_keys_to_grant": schema.ListNestedBlock{
 													CustomType: fwtypes.NewListNestedObjectTypeOf[kmsKeyToGrantModel](ctx),
 													NestedObject: schema.NestedBlockObject{
 														Attributes: map[string]schema.Attribute{
@@ -298,7 +314,6 @@ func (r *resourceRevisionExclusive) Create(ctx context.Context, req resource.Cre
 	assets := make([]assetModel, len(plan.Assets.Elements()))
 	existingAssetIDs := make([]string, 0, len(plan.Assets.Elements()))
 	for i, asset := range nestedObjectCollectionAllMust[assetModel](ctx, plan.Assets) {
-		// TODO: There's a lot of duplication here which can be factored out
 		switch {
 		case !asset.ImportAssetsFromS3.IsNull():
 			importAssetsFromS3, d := asset.ImportAssetsFromS3.ToPtr(ctx)
@@ -377,160 +392,190 @@ func (r *resourceRevisionExclusive) Create(ctx context.Context, req resource.Cre
 			existingAssetIDs = append(existingAssetIDs, aws.ToString(newAsset.Id))
 
 		case !asset.ImportAssetsFromSignedURL.IsNull():
-			importAssetsFromSignedURL, d := asset.ImportAssetsFromSignedURL.ToPtr(ctx)
-			resp.Diagnostics.Append(d...)
-			if d.HasError() {
-				return
-			}
+			/* calling defer functions directly in a loop is bad practice and can cause resource leaks
+			by deferring all deferred actions until the end of the function.
+			Wrapping execution in anonymous function to ensure deferred actions are executed at the end of each iteration.
+			*/
+			func() {
+				importAssetsFromSignedURL, d := asset.ImportAssetsFromSignedURL.ToPtr(ctx)
+				resp.Diagnostics.Append(d...)
+				if d.HasError() {
+					return
+				}
 
-			var importAssetFromSignedUrlRequestDetails awstypes.ImportAssetFromSignedUrlRequestDetails
-			importAssetFromSignedUrlRequestDetails.DataSetId = plan.DataSetID.ValueStringPointer()
-			importAssetFromSignedUrlRequestDetails.RevisionId = plan.ID.ValueStringPointer()
-			// Default `AssetName` to last path component?
-			importAssetFromSignedUrlRequestDetails.AssetName = importAssetsFromSignedURL.Filename.ValueStringPointer()
-			// Stream MD5
-			f, err := os.Open(importAssetsFromSignedURL.Filename.ValueString())
-			if err != nil {
-				resp.Diagnostics.AddError(
-					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, revisionID, err),
-					err.Error(),
-				)
-				return
-			}
-			defer f.Close()
+				var importAssetFromSignedUrlRequestDetails awstypes.ImportAssetFromSignedUrlRequestDetails
+				importAssetFromSignedUrlRequestDetails.DataSetId = plan.DataSetID.ValueStringPointer()
+				importAssetFromSignedUrlRequestDetails.RevisionId = plan.ID.ValueStringPointer()
+				// Default `AssetName` to last path component?
+				importAssetFromSignedUrlRequestDetails.AssetName = importAssetsFromSignedURL.Filename.ValueStringPointer()
+				// Stream MD5
+				f, err := os.Open(importAssetsFromSignedURL.Filename.ValueString())
+				if err != nil {
+					resp.Diagnostics.AddError(
+						create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, revisionID, err),
+						err.Error(),
+					)
+					return
+				}
 
-			hash, err := md5Reader(f)
-			if err != nil {
-				resp.Diagnostics.AddError(
-					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, revisionID, err),
-					err.Error(),
-				)
-				return
-			}
+				defer func() {
+					err := f.Close()
+					if err != nil {
+						tflog.Warn(ctx, "error closing file", map[string]any{
+							"file":  f.Name(),
+							"error": err.Error(),
+						})
+					}
+				}()
 
-			importAssetFromSignedUrlRequestDetails.Md5Hash = aws.String(hash)
+				hash, err := md5Reader(f)
+				if err != nil {
+					resp.Diagnostics.AddError(
+						create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, revisionID, err),
+						err.Error(),
+					)
+					return
+				}
 
-			_, err = f.Seek(0, 0)
-			if err != nil {
-				resp.Diagnostics.AddError(
-					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, revisionID, err),
-					err.Error(),
-				)
-				return
-			}
+				importAssetFromSignedUrlRequestDetails.Md5Hash = aws.String(hash)
 
-			requestDetails := awstypes.RequestDetails{
-				ImportAssetFromSignedUrl: &importAssetFromSignedUrlRequestDetails,
-			}
-			createJobInput := dataexchange.CreateJobInput{
-				Type:    awstypes.TypeImportAssetFromSignedUrl,
-				Details: &requestDetails,
-			}
-			createJobOutput, err := conn.CreateJob(ctx, &createJobInput)
-			if err != nil {
-				resp.Diagnostics.AddError(
-					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, revisionID, err),
-					err.Error(),
-				)
-				return
-			}
-			if createJobOutput == nil {
-				resp.Diagnostics.AddError(
-					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, revisionID, nil),
-					errors.New("empty output").Error(),
-				)
-				return
-			}
+				_, err = f.Seek(0, 0)
+				if err != nil {
+					resp.Diagnostics.AddError(
+						create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, revisionID, err),
+						err.Error(),
+					)
+					return
+				}
 
-			// Upload file to URL with PUT operation
-			info, err := f.Stat()
-			if err != nil {
-				resp.Diagnostics.AddError(
-					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, revisionID, err),
-					err.Error(),
-				)
-				return
-			}
-			// TODO: Add timeout for upload
-			request, err := http.NewRequestWithContext(ctx, http.MethodPut, *createJobOutput.Details.ImportAssetFromSignedUrl.SignedUrl, f)
-			if err != nil {
-				resp.Diagnostics.AddError(
-					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, revisionID, err),
-					err.Error(),
-				)
-				return
-			}
-			request.ContentLength = info.Size()
-			request.Header.Set("Content-MD5", hash)
-			request.Header.Set("Provider-Version", version.ProviderVersion)
-			request.Header.Set("Terraform-Version", r.Meta().TerraformVersion(ctx))
+				requestDetails := awstypes.RequestDetails{
+					ImportAssetFromSignedUrl: &importAssetFromSignedUrlRequestDetails,
+				}
+				createJobInput := dataexchange.CreateJobInput{
+					Type:    awstypes.TypeImportAssetFromSignedUrl,
+					Details: &requestDetails,
+				}
+				createJobOutput, err := conn.CreateJob(ctx, &createJobInput)
+				if err != nil {
+					resp.Diagnostics.AddError(
+						create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, revisionID, err),
+						err.Error(),
+					)
+					return
+				}
+				if createJobOutput == nil {
+					resp.Diagnostics.AddError(
+						create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, revisionID, nil),
+						errors.New("empty output").Error(),
+					)
+					return
+				}
 
-			httpClient := r.Meta().AwsConfig(ctx).HTTPClient
-			response, err := httpClient.Do(request)
-			if err != nil {
-				resp.Diagnostics.AddError(
-					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, revisionID, err),
-					err.Error(),
-				)
-				return
-			}
-			if !(response.StatusCode >= http.StatusOK && response.StatusCode <= http.StatusIMUsed) {
-				resp.Diagnostics.AddError(
-					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, revisionID, nil),
-					fmt.Sprintf("Uploading to %q\n\nUnexpected HTTP response: %s", *createJobOutput.Details.ImportAssetFromSignedUrl.SignedUrl, response.Status),
-				)
-				return
-			}
-			_, err = io.Copy(io.Discard, response.Body)
-			if err != nil {
-				resp.Diagnostics.AddError(
-					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, revisionID, err),
-					err.Error(),
-				)
-				return
-			}
-			response.Body.Close()
+				// Upload file to URL with PUT operation
+				info, err := f.Stat()
+				if err != nil {
+					resp.Diagnostics.AddError(
+						create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, revisionID, err),
+						err.Error(),
+					)
+					return
+				}
 
-			// Start Job
-			err = startJob(ctx, createJobOutput.Id, conn)
-			if err != nil {
-				resp.Diagnostics.AddError(
-					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, revisionID, err),
-					err.Error(),
+				const (
+					uploadTimeout = 1 * time.Minute
 				)
-				return
-			}
+				ctxUpload, cancel := context.WithTimeout(ctx, uploadTimeout)
+				defer cancel()
 
-			createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-			_, err = waitJobCompleted(ctx, conn, aws.ToString(createJobOutput.Id), createTimeout)
-			if err != nil {
-				resp.Diagnostics.AddError(
-					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, revisionID, err),
-					err.Error(),
-				)
-				return
-			}
+				request, err := http.NewRequestWithContext(ctxUpload, http.MethodPut, *createJobOutput.Details.ImportAssetFromSignedUrl.SignedUrl, f)
+				if err != nil {
+					resp.Diagnostics.AddError(
+						create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, revisionID, err),
+						err.Error(),
+					)
+					return
+				}
+				request.ContentLength = info.Size()
+				request.Header.Set("Content-MD5", hash)
+				request.Header.Set("Provider-Version", version.ProviderVersion)
+				request.Header.Set("Terraform-Version", r.Meta().TerraformVersion(ctx))
 
-			// List assets
-			listAssetsInput := dataexchange.ListRevisionAssetsInput{
-				DataSetId:  plan.DataSetID.ValueStringPointer(),
-				RevisionId: plan.ID.ValueStringPointer(),
-			}
-			newAsset, err := getRevisionAsset(ctx, conn, listAssetsInput, existingAssetIDs)
-			if err != nil {
-				resp.Diagnostics.AddError(
-					create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, revisionID, err),
-					err.Error(),
-				)
-			}
+				httpClient := r.Meta().AwsConfig(ctx).HTTPClient
+				response, err := httpClient.Do(request)
+				if err != nil {
+					resp.Diagnostics.AddError(
+						create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, revisionID, err),
+						err.Error(),
+					)
+					return
+				}
 
-			resp.Diagnostics.Append(flex.Flatten(ctx, newAsset, asset)...)
-			if resp.Diagnostics.HasError() {
-				return
-			}
-			assets[i] = *asset // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-assignment
-			existingAssetIDs = append(existingAssetIDs, aws.ToString(newAsset.Id))
+				defer func() {
+					err := response.Body.Close()
+					if err != nil {
+						tflog.Warn(ctx, "error closing file", map[string]any{
+							"file":  f.Name(),
+							"error": err.Error(),
+						})
+					}
+				}()
 
+				if !(response.StatusCode >= http.StatusOK && response.StatusCode <= http.StatusIMUsed) {
+					resp.Diagnostics.AddError(
+						create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, revisionID, nil),
+						fmt.Sprintf("Uploading to %q\n\nUnexpected HTTP response: %s", *createJobOutput.Details.ImportAssetFromSignedUrl.SignedUrl, response.Status),
+					)
+					return
+				}
+				_, err = io.Copy(io.Discard, response.Body)
+				if err != nil {
+					resp.Diagnostics.AddError(
+						create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, revisionID, err),
+						err.Error(),
+					)
+					return
+				}
+
+				// Start Job
+				err = startJob(ctx, createJobOutput.Id, conn)
+				if err != nil {
+					resp.Diagnostics.AddError(
+						create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, revisionID, err),
+						err.Error(),
+					)
+					return
+				}
+
+				createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
+				_, err = waitJobCompleted(ctx, conn, aws.ToString(createJobOutput.Id), createTimeout)
+				if err != nil {
+					resp.Diagnostics.AddError(
+						create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, revisionID, err),
+						err.Error(),
+					)
+					return
+				}
+
+				// List assets
+				listAssetsInput := dataexchange.ListRevisionAssetsInput{
+					DataSetId:  plan.DataSetID.ValueStringPointer(),
+					RevisionId: plan.ID.ValueStringPointer(),
+				}
+				newAsset, err := getRevisionAsset(ctx, conn, listAssetsInput, existingAssetIDs)
+				if err != nil {
+					resp.Diagnostics.AddError(
+						create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, revisionID, err),
+						err.Error(),
+					)
+				}
+
+				resp.Diagnostics.Append(flex.Flatten(ctx, newAsset, asset)...)
+				if resp.Diagnostics.HasError() {
+					return
+				}
+				assets[i] = *asset // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-assignment
+				existingAssetIDs = append(existingAssetIDs, aws.ToString(newAsset.Id))
+			}()
 		case !asset.CreateS3DataAccessFromS3Bucket.IsNull():
 			createS3DataAccessFromS3Bucket, d := asset.CreateS3DataAccessFromS3Bucket.ToPtr(ctx)
 			resp.Diagnostics.Append(d...)
@@ -663,6 +708,8 @@ func (r *resourceRevisionExclusive) Read(ctx context.Context, req resource.ReadR
 		return
 	}
 
+	setTagsOut(ctx, out.Tags)
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
@@ -781,7 +828,9 @@ type createS3DataAccessFromS3BucketModel struct {
 
 type s3DataAccessAssetSourceModel struct {
 	Bucket         types.String                                        `tfsdk:"bucket"`
-	KmsKeysToGrant fwtypes.ListNestedObjectValueOf[kmsKeyToGrantModel] `tfsdk:"kms_key_to_grant"`
+	KeyPrefixes    fwtypes.SetOfString                                 `tfsdk:"key_prefixes"`
+	Keys           fwtypes.SetOfString                                 `tfsdk:"keys"`
+	KmsKeysToGrant fwtypes.ListNestedObjectValueOf[kmsKeyToGrantModel] `tfsdk:"kms_keys_to_grant"`
 }
 
 type kmsKeyToGrantModel struct {

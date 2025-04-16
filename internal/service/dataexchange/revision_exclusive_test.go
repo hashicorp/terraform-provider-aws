@@ -134,11 +134,6 @@ func TestAccDataExchangeRevisionExclusive_S3Snapshot_ImportMultipleFromS3(t *tes
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
 				},
 			},
-			// {
-			// 	ResourceName:      resourceName,
-			// 	ImportState:       true,
-			// 	ImportStateVerify: true,
-			// },
 		},
 	})
 }
@@ -180,11 +175,6 @@ func TestAccDataExchangeRevisionExclusive_S3Snapshot_Upload(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
 				},
 			},
-			// {
-			// 	ResourceName:      resourceName,
-			// 	ImportState:       true,
-			// 	ImportStateVerify: true,
-			// },
 		},
 	})
 }
@@ -227,11 +217,6 @@ func TestAccDataExchangeRevisionExclusive_S3Snapshot_UploadMultiple(t *testing.T
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
 				},
 			},
-			// {
-			// 	ResourceName:      resourceName,
-			// 	ImportState:       true,
-			// 	ImportStateVerify: true,
-			// },
 		},
 	})
 }
@@ -274,11 +259,6 @@ func TestAccDataExchangeRevisionExclusive_S3Snapshot_ImportAndUpload(t *testing.
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
 				},
 			},
-			// {
-			// 	ResourceName:      resourceName,
-			// 	ImportState:       true,
-			// 	ImportStateVerify: true,
-			// },
 		},
 	})
 }
@@ -319,6 +299,11 @@ func TestAccDataExchangeRevisionExclusive_S3DataAccessFromS3Bucket_basic(t *test
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
 				},
 			},
+			// {
+			// 	ResourceName:      resourceName,
+			// 	ImportState:       true,
+			// 	ImportStateVerify: true,
+			// },
 		},
 	})
 }
@@ -360,11 +345,6 @@ func TestAccDataExchangeRevisionExclusive_S3DataAccessFromS3Bucket_multiple(t *t
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
 				},
 			},
-			// {
-			// 	ResourceName:      resourceName,
-			// 	ImportState:       true,
-			// 	ImportStateVerify: true,
-			// },
 		},
 	})
 }
@@ -532,8 +512,8 @@ func checkAssetS3DataAccessWithCMK(bucket string) knownvalue.Check {
 	maps.Copy(dataAccessChecks, map[string]knownvalue.Check{
 		"asset_source": knownvalue.ListExact([]knownvalue.Check{
 			knownvalue.ObjectExact(map[string]knownvalue.Check{
-				names.AttrBucket:   knownvalue.StringExact(bucket),
-				"kms_key_to_grant": knownvalue.NotNull(),
+				names.AttrBucket:    knownvalue.StringExact(bucket),
+				"kms_keys_to_grant": knownvalue.NotNull(),
 			}),
 		}),
 	})
@@ -570,8 +550,8 @@ func s3DataAccessAssetDefaults(bucket string) map[string]knownvalue.Check {
 		"access_point_arn":   tfknownvalue.RegionalARNRegexpIgnoreAccount("s3", regexache.MustCompile(`accesspoint/`+verify.UUIDRegexPattern)),
 		"asset_source": knownvalue.ListExact([]knownvalue.Check{
 			knownvalue.ObjectExact(map[string]knownvalue.Check{
-				names.AttrBucket:   knownvalue.StringExact(bucket),
-				"kms_key_to_grant": knownvalue.ListExact([]knownvalue.Check{}),
+				names.AttrBucket:    knownvalue.StringExact(bucket),
+				"kms_keys_to_grant": knownvalue.ListExact([]knownvalue.Check{}),
 			}),
 		}),
 	}
@@ -876,7 +856,7 @@ resource "aws_s3_object" "test" {
 resource "aws_s3_bucket_policy" "test" {
   count = 2
 
-  bucket  = aws_s3_bucket.test[count.index].bucket
+  bucket = aws_s3_bucket.test[count.index].bucket
   policy = data.aws_iam_policy_document.test[count.index].json
 }
 
@@ -931,10 +911,10 @@ resource "aws_dataexchange_revision_exclusive" "test" {
   asset {
     create_s3_data_access_from_s3_bucket {
       asset_source {
-        bucket            = aws_s3_object.test.bucket
-		kms_key_to_grant {
-		kms_key_arn=aws_kms_key.test.arn
-		}
+        bucket = aws_s3_object.test.bucket
+        kms_keys_to_grant {
+          kms_key_arn = aws_kms_key.test.arn
+        }
       }
     }
   }
@@ -962,7 +942,7 @@ resource "aws_s3_object" "test" {
   content = "test"
 
   depends_on = [
-  aws_s3_bucket_server_side_encryption_configuration.test
+    aws_s3_bucket_server_side_encryption_configuration.test
   ]
 }
 
@@ -1019,7 +999,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "test" {
       sse_algorithm     = "aws:kms"
     }
 
-	bucket_key_enabled = true
+    bucket_key_enabled = true
   }
 }
 
