@@ -126,7 +126,7 @@ func TestAccAPIGatewayDeployment_triggers(t *testing.T) {
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment1),
 					testAccCheckStageExists(ctx, stageResource, &stage),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
-					resource.TestCheckResourceAttr(stageResource, "description", "description1"),
+					resource.TestCheckResourceAttr(stageResource, names.AttrDescription, "description1"),
 				),
 				// Due to how the Terraform state is handled for resources during creation,
 				// any SHA1 of whole resources will change after first apply, then stabilize.
@@ -139,7 +139,7 @@ func TestAccAPIGatewayDeployment_triggers(t *testing.T) {
 					testAccCheckDeploymentRecreated(&deployment1, &deployment2),
 					testAccCheckStageExists(ctx, stageResource, &stage),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
-					resource.TestCheckResourceAttr(stageResource, "description", "description1"),
+					resource.TestCheckResourceAttr(stageResource, names.AttrDescription, "description1"),
 				),
 			},
 			{
@@ -149,7 +149,7 @@ func TestAccAPIGatewayDeployment_triggers(t *testing.T) {
 					testAccCheckDeploymentNotRecreated(&deployment2, &deployment3),
 					testAccCheckStageExists(ctx, stageResource, &stage),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
-					resource.TestCheckResourceAttr(stageResource, "description", "description1"),
+					resource.TestCheckResourceAttr(stageResource, names.AttrDescription, "description1"),
 				),
 			},
 			{
@@ -159,7 +159,7 @@ func TestAccAPIGatewayDeployment_triggers(t *testing.T) {
 					testAccCheckDeploymentRecreated(&deployment3, &deployment4),
 					testAccCheckStageExists(ctx, stageResource, &stage),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description2"),
-					resource.TestCheckResourceAttr(stageResource, "description", "description2"),
+					resource.TestCheckResourceAttr(stageResource, names.AttrDescription, "description2"),
 				),
 			},
 		},
@@ -215,7 +215,7 @@ func TestAccAPIGatewayDeployment_stageDescription(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
 					testAccCheckStageExists(ctx, stageResource, &stage),
-					resource.TestCheckResourceAttr(stageResource, "description", "description1"),
+					resource.TestCheckResourceAttr(stageResource, names.AttrDescription, "description1"),
 				),
 			},
 		},
