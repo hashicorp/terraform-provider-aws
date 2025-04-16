@@ -959,6 +959,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Factory:  dataSourceVPCPeeringConnection,
 			TypeName: "aws_vpc_peering_connection",
 			Name:     "VPC Peering Connection",
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled: false,
 			}),
