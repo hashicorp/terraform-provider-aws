@@ -190,7 +190,7 @@ func (r *resourceRevisionExclusive) Schema(ctx context.Context, req resource.Sch
 													CustomType: fwtypes.NewListNestedObjectTypeOf[kmsKeyToGrantModel](ctx),
 													NestedObject: schema.NestedBlockObject{
 														Attributes: map[string]schema.Attribute{
-															"kms_key_arn": schema.StringAttribute{
+															names.AttrKMSKeyARN: schema.StringAttribute{
 																CustomType: fwtypes.ARNType,
 																Required:   true,
 																PlanModifiers: []planmodifier.String{
