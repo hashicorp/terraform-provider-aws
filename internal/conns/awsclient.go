@@ -55,6 +55,7 @@ func (c *AWSClient) SetServicePackages(_ context.Context, servicePackages map[st
 func (c *AWSClient) TerraformVersion(_ context.Context) string {
 	return c.terraformVersion
 }
+
 func (c *AWSClient) ServicePackage(_ context.Context, name string) ServicePackage {
 	sp, ok := c.servicePackages[name]
 	if !ok {

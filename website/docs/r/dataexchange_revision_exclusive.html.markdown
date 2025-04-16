@@ -37,9 +37,7 @@ resource "aws_dataexchange_revision_exclusive" "example" {
 The following arguments are required:
 
 * `data_set_id` - (Required) The unique identifier for the data set associated with the revision.
-  * `asset` - (Required) A block to define the asset associated with the revision. See [Asset](#asset) for more details.
-    * `create_s3_data_access_from_s3_bucket` - (Optional) A block to create S3 data access from an S3 bucket.
-      * `asset_source` - (Required) A block specifying the source bucket for the asset. This block supports the following:
+* `asset` - (Required) A block to define the asset associated with the revision. See [Asset](#asset) for more details.
 
 The following arguments are optional:
 
@@ -55,17 +53,17 @@ The following arguments are optional:
 #### Create S3 Data Access from S3 Bucket
 
 * `asset_source` - (Required) A block specifying the source bucket for the asset. This block supports the following:
-  * `bucket` - (Required) The name of the S3 bucket.
-  * `keys` - (Required) List of object keys in the S3 bucket.
-  * `key_prefixes` - (Optional) List of key prefixes in the S3 bucket.
-  * `kms_key_to_grant` - (Optional) A block specifying the KMS key to grant access. This block supports the following:
-    * `kms_key_arn` - (Required) The ARN of the KMS key.
+    * `bucket` - (Required) The name of the S3 bucket.
+        * `keys` - (Required) List of object keys in the S3 bucket.
+        * `key_prefixes` - (Optional) List of key prefixes in the S3 bucket.
+        * `kms_key_to_grant` - (Optional) A block specifying the KMS key to grant access. This block supports the following:
+            * `kms_key_arn` - (Required) The ARN of the KMS key.
 
 ### Import Assets from S3
 
 * `asset_source` - (Required) A block specifying the source bucket and key for the asset. This block supports the following:
-  * `bucket` - (Required) The name of the S3 bucket.
-  * `key` - (Required) The key of the object in the S3 bucket.
+    * `bucket` - (Required) The name of the S3 bucket.
+    * `key` - (Required) The key of the object in the S3 bucket.
  
 ### Import Assets from Signed URL
 
