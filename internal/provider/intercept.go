@@ -58,13 +58,13 @@ type (
 
 type interceptorFunc1[D, E any] func(context.Context, interceptorOptions[D]) E
 
-func (f interceptorFunc1[D, E]) run(ctx context.Context, opts interceptorOptions[D]) E {
+func (f interceptorFunc1[D, E]) run(ctx context.Context, opts interceptorOptions[D]) E { //nolint:unused // used via crudInterceptor/customizeDiffInterceptor
 	return f(ctx, opts)
 }
 
 type interceptorFunc2[D, R, E any] func(context.Context, interceptorOptions[D]) (R, E)
 
-func (f interceptorFunc2[D, R, E]) run(ctx context.Context, opts interceptorOptions[D]) (R, E) {
+func (f interceptorFunc2[D, R, E]) run(ctx context.Context, opts interceptorOptions[D]) (R, E) { //nolint:unused // used via importInterceptor
 	return f(ctx, opts)
 }
 

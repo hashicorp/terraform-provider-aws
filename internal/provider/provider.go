@@ -387,7 +387,7 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 				interceptors = append(interceptors, interceptorInvocation{
 					when:        Before | After,
 					why:         Read,
-					interceptor: transparentTaggingResource(v.Tags),
+					interceptor: transparentTaggingDataSource(v.Tags),
 				})
 			}
 
