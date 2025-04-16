@@ -531,7 +531,7 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 			var schemaFuncs []resourceSchemaFunc
 			var validateConfigFuncs []validateConfigFunc
 			var modifyPlanFuncs []modifyPlanFunc
-			var interceptors resourceInterceptors
+			var interceptors interceptorInvocations
 
 			if isRegionOverrideEnabled {
 				v := v.Region.Value()

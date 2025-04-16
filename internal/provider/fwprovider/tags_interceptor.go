@@ -87,7 +87,7 @@ type tagsResourceInterceptor struct {
 	tagsInterceptor
 }
 
-func newTagsResourceInterceptor(servicePackageResourceTags unique.Handle[inttypes.ServicePackageResourceTags]) resourceInterceptor {
+func newTagsResourceInterceptor(servicePackageResourceTags unique.Handle[inttypes.ServicePackageResourceTags]) resourceCRUDInterceptor {
 	return &tagsResourceInterceptor{
 		tagsInterceptor: tagsInterceptor{
 			WithTaggingMethods: interceptors.WithTaggingMethods{

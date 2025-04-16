@@ -268,7 +268,7 @@ type validateConfigFunc func(context.Context, *conns.AWSClient, resource.Validat
 type wrappedResourceOptions struct {
 	// bootstrapContext is run on all wrapped methods before any interceptors.
 	bootstrapContext contextFunc
-	interceptors     resourceInterceptors
+	interceptors     interceptorInvocations
 	// modifyPlanFuncs are run after bootstrapContext and before any ModifyPlan method on the inner resource.
 	modifyPlanFuncs []modifyPlanFunc
 	// schemaFuncs are run after bootstrapContext and after the Schema method on the inner resource.
@@ -325,7 +325,7 @@ func (w *wrappedResource) Create(ctx context.Context, request resource.CreateReq
 		w.inner.Create(ctx, request, response)
 		return response.Diagnostics
 	}
-	response.Diagnostics.Append(interceptedHandler(w.opts.interceptors.create(), f, w.meta)(ctx, request, response)...)
+	response.Diagnostics.Append(interceptedHandler(w.opts.interceptors.resourceCreate(), f, w.meta)(ctx, request, response)...)
 }
 
 func (w *wrappedResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
@@ -339,7 +339,7 @@ func (w *wrappedResource) Read(ctx context.Context, request resource.ReadRequest
 		w.inner.Read(ctx, request, response)
 		return response.Diagnostics
 	}
-	response.Diagnostics.Append(interceptedHandler(w.opts.interceptors.read(), f, w.meta)(ctx, request, response)...)
+	response.Diagnostics.Append(interceptedHandler(w.opts.interceptors.resourceRead(), f, w.meta)(ctx, request, response)...)
 }
 
 func (w *wrappedResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
@@ -353,7 +353,7 @@ func (w *wrappedResource) Update(ctx context.Context, request resource.UpdateReq
 		w.inner.Update(ctx, request, response)
 		return response.Diagnostics
 	}
-	response.Diagnostics.Append(interceptedHandler(w.opts.interceptors.update(), f, w.meta)(ctx, request, response)...)
+	response.Diagnostics.Append(interceptedHandler(w.opts.interceptors.resourceUpdate(), f, w.meta)(ctx, request, response)...)
 }
 
 func (w *wrappedResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
@@ -367,7 +367,7 @@ func (w *wrappedResource) Delete(ctx context.Context, request resource.DeleteReq
 		w.inner.Delete(ctx, request, response)
 		return response.Diagnostics
 	}
-	response.Diagnostics.Append(interceptedHandler(w.opts.interceptors.delete(), f, w.meta)(ctx, request, response)...)
+	response.Diagnostics.Append(interceptedHandler(w.opts.interceptors.resourceDelete(), f, w.meta)(ctx, request, response)...)
 }
 
 func (w *wrappedResource) Configure(ctx context.Context, request resource.ConfigureRequest, response *resource.ConfigureResponse) {

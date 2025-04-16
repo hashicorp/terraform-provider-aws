@@ -117,7 +117,7 @@ func (s interceptorInvocations) ephemeralResourceSchema() []interceptorFunc[ephe
 // If a Before interceptor returns Diagnostics indicating an error occurred then
 // no further interceptors in the chain are run and neither is the schema's method.
 // In other cases all interceptors in the chain are run.
-type resourceInterceptor interface {
+type resourceCRUDInterceptor interface {
 	// create is invoked for a Create call.
 	create(context.Context, interceptorOptions[resource.CreateRequest, resource.CreateResponse]) diag.Diagnostics
 	// read is invoked for a Read call.
@@ -128,33 +128,43 @@ type resourceInterceptor interface {
 	delete(context.Context, interceptorOptions[resource.DeleteRequest, resource.DeleteResponse]) diag.Diagnostics
 }
 
-type resourceInterceptors []resourceInterceptor
-
-// create returns a slice of interceptors that run on resource Create.
-func (s resourceInterceptors) create() []interceptorFunc[resource.CreateRequest, resource.CreateResponse] {
-	return tfslices.ApplyToAll(s, func(e resourceInterceptor) interceptorFunc[resource.CreateRequest, resource.CreateResponse] {
-		return e.create
+// resourceCreate returns a slice of interceptors that run on resource Create.
+func (s interceptorInvocations) resourceCreate() []interceptorFunc[resource.CreateRequest, resource.CreateResponse] {
+	return tfslices.ApplyToAll(tfslices.Filter(s, func(e any) bool {
+		_, ok := e.(resourceCRUDInterceptor)
+		return ok
+	}), func(e any) interceptorFunc[resource.CreateRequest, resource.CreateResponse] {
+		return e.(resourceCRUDInterceptor).create
 	})
 }
 
-// read returns a slice of interceptors that run on resource Read.
-func (s resourceInterceptors) read() []interceptorFunc[resource.ReadRequest, resource.ReadResponse] {
-	return tfslices.ApplyToAll(s, func(e resourceInterceptor) interceptorFunc[resource.ReadRequest, resource.ReadResponse] {
-		return e.read
+// resourceRead returns a slice of interceptors that run on resource Read.
+func (s interceptorInvocations) resourceRead() []interceptorFunc[resource.ReadRequest, resource.ReadResponse] {
+	return tfslices.ApplyToAll(tfslices.Filter(s, func(e any) bool {
+		_, ok := e.(resourceCRUDInterceptor)
+		return ok
+	}), func(e any) interceptorFunc[resource.ReadRequest, resource.ReadResponse] {
+		return e.(resourceCRUDInterceptor).read
 	})
 }
 
-// update returns a slice of interceptors that run on resource Update.
-func (s resourceInterceptors) update() []interceptorFunc[resource.UpdateRequest, resource.UpdateResponse] {
-	return tfslices.ApplyToAll(s, func(e resourceInterceptor) interceptorFunc[resource.UpdateRequest, resource.UpdateResponse] {
-		return e.update
+// resourceUpdate returns a slice of interceptors that run on resource Update.
+func (s interceptorInvocations) resourceUpdate() []interceptorFunc[resource.UpdateRequest, resource.UpdateResponse] {
+	return tfslices.ApplyToAll(tfslices.Filter(s, func(e any) bool {
+		_, ok := e.(resourceCRUDInterceptor)
+		return ok
+	}), func(e any) interceptorFunc[resource.UpdateRequest, resource.UpdateResponse] {
+		return e.(resourceCRUDInterceptor).update
 	})
 }
 
-// delete returns a slice of interceptors that run on resource Delete.
-func (s resourceInterceptors) delete() []interceptorFunc[resource.DeleteRequest, resource.DeleteResponse] {
-	return tfslices.ApplyToAll(s, func(e resourceInterceptor) interceptorFunc[resource.DeleteRequest, resource.DeleteResponse] {
-		return e.delete
+// resourceDelete returns a slice of interceptors that run on resource Delete.
+func (s interceptorInvocations) resourceDelete() []interceptorFunc[resource.DeleteRequest, resource.DeleteResponse] {
+	return tfslices.ApplyToAll(tfslices.Filter(s, func(e any) bool {
+		_, ok := e.(resourceCRUDInterceptor)
+		return ok
+	}), func(e any) interceptorFunc[resource.DeleteRequest, resource.DeleteResponse] {
+		return e.(resourceCRUDInterceptor).delete
 	})
 }
 
