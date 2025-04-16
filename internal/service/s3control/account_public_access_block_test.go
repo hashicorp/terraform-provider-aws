@@ -35,7 +35,7 @@ func TestAccS3ControlAccountPublicAccessBlock_serial(t *testing.T) {
 			"AccountId":             testAccAccountPublicAccessBlock_AccountID,
 			"BlockPublicAcls":       testAccAccountPublicAccessBlock_BlockPublicACLs,
 			"BlockPublicPolicy":     testAccAccountPublicAccessBlock_BlockPublicPolicy,
-			"Identity":              testAccAccountPublicAccessBlock_Identity,
+			"Identity_Basic":        testAccAccountPublicAccessBlock_Identity_Basic,
 			"IgnorePublicAcls":      testAccAccountPublicAccessBlock_IgnorePublicACLs,
 			"RestrictPublicBuckets": testAccAccountPublicAccessBlock_RestrictPublicBuckets,
 			"DataSourceBasic":       testAccAccountPublicAccessBlockDataSource_basic,
@@ -77,7 +77,7 @@ func testAccAccountPublicAccessBlock_basic(t *testing.T) {
 	})
 }
 
-func testAccAccountPublicAccessBlock_Identity(t *testing.T) {
+func testAccAccountPublicAccessBlock_Identity_Basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.PublicAccessBlockConfiguration
 	resourceName := "aws_s3_account_public_access_block.test"
