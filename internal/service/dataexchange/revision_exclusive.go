@@ -668,11 +668,8 @@ func startJob(ctx context.Context, id *string, conn *dataexchange.Client) error 
 		JobId: id,
 	}
 	_, err := conn.StartJob(ctx, &startJobInput)
-	if err != nil {
-		return err
-	}
 
-	return nil
+	return err
 }
 
 func (r *resourceRevisionExclusive) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {

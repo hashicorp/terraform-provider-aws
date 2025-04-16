@@ -44,13 +44,13 @@ The following arguments are optional:
 * `comment` - (Optional) A comment for the revision. Maximum length is 16,348 characters.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### Asset
+### asset
 
-* `create_s3_data_access_from_s3_bucket` - (Optional) A block to create S3 data access from an S3 bucket. See [Create S3 Data Access from S3 Bucket](#create-s3-data-access-from-s3-bucket) for more details.
-* `import_assets_from_s3` - (Optional) A block to import assets from S3. See [Import Assets from S3](#import-assets-from-s3) for more details.
-* `import_assets_from_signed_url` - (Optional) A block to import assets from a signed URL. See [Import Assets from Signed URL](#import-assets-from-signed-url) for more details.
+* `create_s3_data_access_from_s3_bucket` - (Optional) A block to create S3 data access from an S3 bucket. See [Create S3 Data Access from S3 Bucket](#create_s3_data_access_from_s3_bucket) for more details.
+* `import_assets_from_s3` - (Optional) A block to import assets from S3. See [Import Assets from S3](#import_assets_from_s3) for more details.
+* `import_assets_from_signed_url` - (Optional) A block to import assets from a signed URL. See [Import Assets from Signed URL](#import_assets_from_signed_url) for more details.
 
-#### Create S3 Data Access from S3 Bucket
+#### create_s3_data_access_from_s3_bucket
 
 * `asset_source` - (Required) A block specifying the source bucket for the asset. This block supports the following:
     * `bucket` - (Required) The name of the S3 bucket.
@@ -59,13 +59,13 @@ The following arguments are optional:
         * `kms_key_to_grant` - (Optional) A block specifying the KMS key to grant access. This block supports the following:
             * `kms_key_arn` - (Required) The ARN of the KMS key.
 
-### Import Assets from S3
+### import_assets_from_s3
 
 * `asset_source` - (Required) A block specifying the source bucket and key for the asset. This block supports the following:
     * `bucket` - (Required) The name of the S3 bucket.
     * `key` - (Required) The key of the object in the S3 bucket.
 
-### Import Assets from Signed URL
+### import_assets_from_signed_url
 
 * `filename` - (Required) The name of the file to import.
 
