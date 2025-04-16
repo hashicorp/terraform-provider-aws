@@ -50,7 +50,7 @@ func ResourceContainerPolicy() *schema.Resource {
 				},
 			},
 		},
-		DeprecationMessage: "`aws_media_store_container` is deprecated. Use S3, AWS MediaPackage, or other storage solution instead.",
+		DeprecationMessage: "aws_media_store_container_policy is deprecated. Use S3, AWS MediaPackage, or other storage solution instead.",
 	}
 }
 
