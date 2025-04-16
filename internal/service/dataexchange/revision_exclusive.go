@@ -46,6 +46,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
+	"github.com/hashicorp/terraform-provider-aws/version"
 )
 
 // @FrameworkResource("aws_dataexchange_revision_exclusive", name="Revision Exclusive")
@@ -82,6 +83,9 @@ func (r *resourceRevisionExclusive) Schema(ctx context.Context, req resource.Sch
 				Optional: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(0, 16_348),
+				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			names.AttrCreatedAt: schema.StringAttribute{
@@ -175,6 +179,9 @@ func (r *resourceRevisionExclusive) Schema(ctx context.Context, req resource.Sch
 															"kms_key_arn": schema.StringAttribute{
 																CustomType: fwtypes.ARNType,
 																Required:   true,
+																PlanModifiers: []planmodifier.String{
+																	stringplanmodifier.RequiresReplace(),
+																},
 															},
 														},
 													},
@@ -226,6 +233,9 @@ func (r *resourceRevisionExclusive) Schema(ctx context.Context, req resource.Sch
 								Attributes: map[string]schema.Attribute{
 									"filename": schema.StringAttribute{
 										Required: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
 									},
 								},
 							},
@@ -452,7 +462,8 @@ func (r *resourceRevisionExclusive) Create(ctx context.Context, req resource.Cre
 			}
 			request.ContentLength = info.Size()
 			request.Header.Set("Content-MD5", hash)
-			// TODO: User-Agent header
+			request.Header.Set("Provider-Version", version.ProviderVersion)
+			request.Header.Set("Terraform-Version", r.Meta().TerraformVersion(ctx))
 
 			httpClient := r.Meta().AwsConfig(ctx).HTTPClient
 			response, err := httpClient.Do(request)
