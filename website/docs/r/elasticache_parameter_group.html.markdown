@@ -35,7 +35,8 @@ resource "aws_elasticache_parameter_group" "default" {
 
 This resource supports the following arguments:
 
-* `name` - (Required) The name of the ElastiCache parameter group.
+* `name` - (Optional) The name of the ElastiCache parameter group. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
+* `name_prefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `family` - (Required) The family of the ElastiCache parameter group.
 * `description` - (Optional) The description of the ElastiCache parameter group. Defaults to "Managed by Terraform".
 * `parameter` - (Optional) A list of ElastiCache parameters to apply.
