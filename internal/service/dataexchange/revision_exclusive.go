@@ -663,15 +663,6 @@ func (r *resourceRevisionExclusive) Create(ctx context.Context, req resource.Cre
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func startJob(ctx context.Context, id *string, conn *dataexchange.Client) error {
-	startJobInput := dataexchange.StartJobInput{
-		JobId: id,
-	}
-	_, err := conn.StartJob(ctx, &startJobInput)
-
-	return err
-}
-
 func (r *resourceRevisionExclusive) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().DataExchangeClient(ctx)
 
@@ -855,6 +846,15 @@ func jobError(errs []awstypes.JobError) error {
 	return errors.Join(tfslices.ApplyToAll(errs, func(e awstypes.JobError) error {
 		return fmt.Errorf("%s: %s", e.Code, *e.Message)
 	})...)
+}
+
+func startJob(ctx context.Context, id *string, conn *dataexchange.Client) error {
+	startJobInput := dataexchange.StartJobInput{
+		JobId: id,
+	}
+	_, err := conn.StartJob(ctx, &startJobInput)
+
+	return err
 }
 
 func statusJob(ctx context.Context, conn *dataexchange.Client, jobID string) retry.StateRefreshFunc {
