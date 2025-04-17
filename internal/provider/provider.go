@@ -375,13 +375,13 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 					interceptors = append(interceptors, interceptorInvocation{
 						when:        Before,
 						why:         Read,
-						interceptor: validateRegionDataSource,
+						interceptor: dataSourceValidateRegion(),
 					})
 				}
 				interceptors = append(interceptors, interceptorInvocation{
 					when:        After,
 					why:         Read,
-					interceptor: setRegionInState,
+					interceptor: setRegionInState(),
 				})
 			}
 
@@ -389,7 +389,7 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 				interceptors = append(interceptors, interceptorInvocation{
 					when:        Before | After,
 					why:         Read,
-					interceptor: transparentTaggingDataSource(v.Tags),
+					interceptor: dataSourceTransparentTagging(v.Tags),
 				})
 			}
 
@@ -485,18 +485,18 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 					interceptors = append(interceptors, interceptorInvocation{
 						when:        Before,
 						why:         CustomizeDiff,
-						interceptor: validateRegionResource,
+						interceptor: resourceValidateRegion(),
 					})
 				}
 				interceptors = append(interceptors, interceptorInvocation{
 					when:        Before,
 					why:         CustomizeDiff,
-					interceptor: defaultRegion,
+					interceptor: defaultRegion(),
 				})
 				interceptors = append(interceptors, interceptorInvocation{
 					when:        After,
 					why:         Read,
-					interceptor: setRegionInState,
+					interceptor: setRegionInState(),
 				})
 				// We can't just set the injected "region" attribute to ForceNew because if
 				// a plan is run with '-refresh=false', then after provider v5 to v6 upgrade
@@ -504,12 +504,12 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 				interceptors = append(interceptors, interceptorInvocation{
 					when:        Before,
 					why:         CustomizeDiff,
-					interceptor: forceNewIfRegionChanges,
+					interceptor: forceNewIfRegionChanges(),
 				})
 				interceptors = append(interceptors, interceptorInvocation{
 					when:        Before,
 					why:         Import,
-					interceptor: importRegion,
+					interceptor: importRegion(),
 				})
 			}
 
@@ -517,12 +517,12 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 				interceptors = append(interceptors, interceptorInvocation{
 					when:        Before | After | Finally,
 					why:         Create | Read | Update,
-					interceptor: transparentTaggingResource(v.Tags),
+					interceptor: resourceTransparentTagging(v.Tags),
 				})
 				interceptors = append(interceptors, interceptorInvocation{
 					when:        Before,
 					why:         CustomizeDiff,
-					interceptor: setTagsAll,
+					interceptor: setTagsAll(),
 				})
 			}
 

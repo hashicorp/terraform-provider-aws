@@ -66,7 +66,7 @@ func TestTagsResourceInterceptor(t *testing.T) {
 	sp := unique.Make(inttypes.ServicePackageResourceTags{
 		IdentifierAttribute: "id",
 	})
-	tags := transparentTaggingResource(sp)
+	tags := resourceTransparentTagging(sp)
 	interceptors = append(interceptors, interceptorInvocation{
 		when:        Finally,
 		why:         Update,
