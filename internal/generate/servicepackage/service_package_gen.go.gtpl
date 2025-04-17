@@ -96,7 +96,21 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 				IsValidateOverrideInPartition: {{ $value.ValidateRegionOverrideInPartition }},
 			{{- end }}
 			},
-			{{- if $value.ARNIdentity }}
+			{{- if gt (len $value.IdentityAttributes) 0 }}
+				{{- if or $.IsGlobal $value.IsGlobal }}
+				Identity: itypes.GlobalParameterizedIdentity({{ range $value.IdentityAttributes }}
+					itypes.StringIdentityAttribute({{ .Name }},
+					{{- if .Optional }}false{{ else }}true{{ end }}),
+				{{- end }}
+				),
+				{{ else }}
+				Identity: itypes.ParameterizedIdentity({{ range $value.IdentityAttributes }}
+					itypes.StringIdentityAttribute({{ .Name }},
+					{{- if .Optional }}false{{ else }}true{{ end }}),
+				{{- end }}
+				),
+				{{- end }}
+			{{- else if $value.ARNIdentity }}
 			Identity: itypes.ARNIdentity(),
 			{{- end }}
 		},
