@@ -908,9 +908,8 @@ func instanceStateUpgradeV1(_ context.Context, rawState map[string]any, meta any
 	}
 
 	// Initialize cpu_options if it doesn't exist
-	cpuOptions, ok := rawState["cpu_options"].([]any)
-	cpuOptionsExisted := ok // Track if cpu_options existed initially
-	if !ok || len(cpuOptions) == 0 || cpuOptions[0] == nil {
+	cpuOptions, cpuOptionsExisted := rawState["cpu_options"].([]any)
+	if !cpuOptionsExisted || len(cpuOptions) == 0 || cpuOptions[0] == nil {
 		cpuOptions = []any{map[string]any{}}
 	}
 
