@@ -98,6 +98,28 @@ func (s interceptorInvocations) ephemeralResourceClose() []interceptorFunc[ephem
 	})
 }
 
+// ephemeralResourceNoOpORCInterceptor is a no-op implementation of the ephemeralResourceORCInterceptor interface.
+// It can be embedded into a struct to provide default behavior for the open, renew, and close methods.
+type ephemeralResourceNoOpORCInterceptor struct{}
+
+func (r ephemeralResourceNoOpORCInterceptor) open(ctx context.Context, opts interceptorOptions[ephemeral.OpenRequest, ephemeral.OpenResponse]) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	return diags
+}
+
+func (r ephemeralResourceNoOpORCInterceptor) renew(ctx context.Context, opts interceptorOptions[ephemeral.RenewRequest, ephemeral.RenewResponse]) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	return diags
+}
+
+func (r ephemeralResourceNoOpORCInterceptor) close(ctx context.Context, opts interceptorOptions[ephemeral.CloseRequest, ephemeral.CloseResponse]) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	return diags
+}
+
 type ephemeralResourceSchemaInterceptor interface {
 	// schema is invoked for a Schema call.
 	schema(context.Context, interceptorOptions[ephemeral.SchemaRequest, ephemeral.SchemaResponse]) diag.Diagnostics
@@ -166,6 +188,34 @@ func (s interceptorInvocations) resourceDelete() []interceptorFunc[resource.Dele
 	}), func(e any) interceptorFunc[resource.DeleteRequest, resource.DeleteResponse] {
 		return e.(resourceCRUDInterceptor).delete
 	})
+}
+
+// resourceNoOpCRUDInterceptor is a no-op implementation of the resourceCRUDInterceptor interface.
+// It can be embedded into a struct to provide default behavior for the create, read, update, and delete methods.
+type resourceNoOpCRUDInterceptor struct{}
+
+func (r resourceNoOpCRUDInterceptor) create(ctx context.Context, opts interceptorOptions[resource.CreateRequest, resource.CreateResponse]) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	return diags
+}
+
+func (r resourceNoOpCRUDInterceptor) read(ctx context.Context, opts interceptorOptions[resource.ReadRequest, resource.ReadResponse]) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	return diags
+}
+
+func (r resourceNoOpCRUDInterceptor) update(ctx context.Context, opts interceptorOptions[resource.UpdateRequest, resource.UpdateResponse]) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	return diags
+}
+
+func (r resourceNoOpCRUDInterceptor) delete(ctx context.Context, opts interceptorOptions[resource.DeleteRequest, resource.DeleteResponse]) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	return diags
 }
 
 type resourceSchemaInterceptor interface {

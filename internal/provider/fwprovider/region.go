@@ -68,31 +68,36 @@ func dataSourceInjectRegionAttribute() dataSourceSchemaInterceptor {
 	return &dataSourceInjectRegionAttributeInterceptor{}
 }
 
-// regionDataSourceInterceptor implements per-resource Region override functionality for data sources.
-type regionDataSourceInterceptor struct {
-	validateRegionInPartition bool
-}
+type dataSourceValidateRegionInterceptor struct{}
 
-// TODO REGION Split into validateRegionDataSource, setRegionInState.
-func newRegionDataSourceInterceptor(validateRegionInPartition bool) dataSourceCRUDInterceptor {
-	return &regionDataSourceInterceptor{
-		validateRegionInPartition: validateRegionInPartition,
+func (r dataSourceValidateRegionInterceptor) read(ctx context.Context, opts interceptorOptions[datasource.ReadRequest, datasource.ReadResponse]) diag.Diagnostics {
+	c := opts.c
+	var diags diag.Diagnostics
+
+	switch when := opts.when; when {
+	case Before:
+		// As data sources have no ModifyPlan functionality we validate the per-resource Region override value before R.
+		diags.Append(validateInContextRegionInPartition(ctx, c)...)
+		if diags.HasError() {
+			return diags
+		}
 	}
+
+	return diags
 }
 
-func (r regionDataSourceInterceptor) read(ctx context.Context, opts interceptorOptions[datasource.ReadRequest, datasource.ReadResponse]) diag.Diagnostics {
+// dataSourceValidateRegion validates that the value of the top-level `region` attribute is in the configured AWS partition.
+func dataSourceValidateRegion() dataSourceCRUDInterceptor {
+	return &dataSourceValidateRegionInterceptor{}
+}
+
+type dataSourceSetRegionInStateInterceptor struct{}
+
+func (r dataSourceSetRegionInStateInterceptor) read(ctx context.Context, opts interceptorOptions[datasource.ReadRequest, datasource.ReadResponse]) diag.Diagnostics {
 	c := opts.c
 	var diags diag.Diagnostics
 
 	switch response, when := opts.response, opts.when; when {
-	case Before:
-		// As data sources have no ModifyPlan functionality we validate the per-resource Region override value here.
-		if r.validateRegionInPartition {
-			diags.Append(validateInContextRegionInPartition(ctx, c)...)
-			if diags.HasError() {
-				return diags
-			}
-		}
 	case After:
 		// Set region in state after R, but only if the data source didn't explictly set it (e.g. aws_region).
 		var target types.String
@@ -110,6 +115,11 @@ func (r regionDataSourceInterceptor) read(ctx context.Context, opts interceptorO
 	}
 
 	return diags
+}
+
+// dataSourceSetRegionInState set the value of the top-level `region` attribute in state after Read.
+func dataSourceSetRegionInState() dataSourceCRUDInterceptor {
+	return &dataSourceSetRegionInStateInterceptor{}
 }
 
 type ephemeralResourceInjectRegionAttributeInterceptor struct{}
@@ -137,31 +147,15 @@ func ephemeralResourceInjectRegionAttribute() ephemeralResourceSchemaInterceptor
 	return &ephemeralResourceInjectRegionAttributeInterceptor{}
 }
 
-// regionEphemeralResourceInterceptor implements per-resource Region override functionality for ephemeral resources.
-type regionEphemeralResourceInterceptor struct {
-	validateRegionInPartition bool
+type ephemeralResourceSetRegionInStateInterceptor struct {
+	ephemeralResourceNoOpORCInterceptor
 }
 
-func newRegionEphemeralResourceInterceptor(validateRegionInPartition bool) ephemeralResourceORCInterceptor {
-	return &regionEphemeralResourceInterceptor{
-		validateRegionInPartition: validateRegionInPartition,
-	}
-}
-
-// TODO REGION Split into validateRegionEphemeralResource, setRegionInState.
-func (r regionEphemeralResourceInterceptor) open(ctx context.Context, opts interceptorOptions[ephemeral.OpenRequest, ephemeral.OpenResponse]) diag.Diagnostics {
+func (r ephemeralResourceSetRegionInStateInterceptor) open(ctx context.Context, opts interceptorOptions[ephemeral.OpenRequest, ephemeral.OpenResponse]) diag.Diagnostics {
 	c := opts.c
 	var diags diag.Diagnostics
 
 	switch response, when := opts.response, opts.when; when {
-	case Before:
-		// As data sources have no ModifyPlan functionality we validate the per-resource Region override value here.
-		if r.validateRegionInPartition {
-			diags.Append(validateInContextRegionInPartition(ctx, c)...)
-			if diags.HasError() {
-				return diags
-			}
-		}
 	case After:
 		// Set region in state after R.
 		diags.Append(response.Result.SetAttribute(ctx, path.Root(names.AttrRegion), c.Region(ctx))...)
@@ -173,16 +167,34 @@ func (r regionEphemeralResourceInterceptor) open(ctx context.Context, opts inter
 	return diags
 }
 
-func (r regionEphemeralResourceInterceptor) renew(ctx context.Context, opts interceptorOptions[ephemeral.RenewRequest, ephemeral.RenewResponse]) diag.Diagnostics {
+// ephemeralResourceSetRegionInResult set the value of the top-level `region` attribute in the result after Open.
+func ephemeralResourceSetRegionInResult() ephemeralResourceORCInterceptor {
+	return &ephemeralResourceSetRegionInStateInterceptor{}
+}
+
+type ephemeralResourceValidateRegionInterceptor struct {
+	ephemeralResourceNoOpORCInterceptor
+}
+
+func (r ephemeralResourceValidateRegionInterceptor) open(ctx context.Context, opts interceptorOptions[ephemeral.OpenRequest, ephemeral.OpenResponse]) diag.Diagnostics {
+	c := opts.c
 	var diags diag.Diagnostics
+
+	switch when := opts.when; when {
+	case Before:
+		// As ephemeral resources have no ModifyPlan functionality we validate the per-resource Region override value here.
+		diags.Append(validateInContextRegionInPartition(ctx, c)...)
+		if diags.HasError() {
+			return diags
+		}
+	}
 
 	return diags
 }
 
-func (r regionEphemeralResourceInterceptor) close(ctx context.Context, opts interceptorOptions[ephemeral.CloseRequest, ephemeral.CloseResponse]) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	return diags
+// ephemeralResourceValidateRegion validates that the value of the top-level `region` attribute is in the configured AWS partition.
+func ephemeralResourceValidateRegion() ephemeralResourceORCInterceptor {
+	return &ephemeralResourceValidateRegionInterceptor{}
 }
 
 type resourceInjectRegionAttributeInterceptor struct{}
@@ -314,4 +326,29 @@ func (r resourceForceNewIfRegionChangesInterceptor) modifyPlan(ctx context.Conte
 // resourceForceNewIfRegionChanges forces resource replacement if the value of the top-level `region` attribute changes.
 func resourceForceNewIfRegionChanges() resourceModifyPlanInterceptor {
 	return &resourceForceNewIfRegionChangesInterceptor{}
+}
+
+type resourceSetRegionInStateInterceptor struct {
+	resourceNoOpCRUDInterceptor
+}
+
+func (r resourceSetRegionInStateInterceptor) read(ctx context.Context, opts interceptorOptions[resource.ReadRequest, resource.ReadResponse]) diag.Diagnostics {
+	c := opts.c
+	var diags diag.Diagnostics
+
+	switch response, when := opts.response, opts.when; when {
+	case After:
+		// Set region in state after R.
+		diags.Append(response.State.SetAttribute(ctx, path.Root(names.AttrRegion), c.Region(ctx))...)
+		if diags.HasError() {
+			return diags
+		}
+	}
+
+	return diags
+}
+
+// ephemeralResourceSetRegionInState set the value of the top-level `region` attribute in state after Read.
+func resourceSetRegionInState() resourceCRUDInterceptor {
+	return &resourceSetRegionInStateInterceptor{}
 }

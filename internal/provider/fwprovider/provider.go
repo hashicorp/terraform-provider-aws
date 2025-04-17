@@ -412,10 +412,13 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 			var interceptors interceptorInvocations
 
 			if isRegionOverrideEnabled {
-				v := v.Region
+				v := v.Region.Value()
 
 				interceptors = append(interceptors, dataSourceInjectRegionAttribute())
-				interceptors = append(interceptors, newRegionDataSourceInterceptor(v.Value().IsValidateOverrideInPartition))
+				if v.IsValidateOverrideInPartition {
+					interceptors = append(interceptors, dataSourceValidateRegion())
+				}
+				interceptors = append(interceptors, dataSourceSetRegionInState())
 			}
 
 			if !tfunique.IsHandleNil(v.Tags) {
@@ -473,10 +476,13 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 				var interceptors interceptorInvocations
 
 				if isRegionOverrideEnabled {
-					v := v.Region
+					v := v.Region.Value()
 
 					interceptors = append(interceptors, ephemeralResourceInjectRegionAttribute())
-					interceptors = append(interceptors, newRegionEphemeralResourceInterceptor(v.Value().IsValidateOverrideInPartition))
+					if v.IsValidateOverrideInPartition {
+						interceptors = append(interceptors, ephemeralResourceValidateRegion())
+					}
+					interceptors = append(interceptors, ephemeralResourceSetRegionInResult())
 				}
 
 				opts := wrappedEphemeralResourceOptions{
@@ -537,6 +543,7 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 				}
 				interceptors = append(interceptors, resourceDefaultRegion())
 				interceptors = append(interceptors, resourceForceNewIfRegionChanges())
+				interceptors = append(interceptors, resourceSetRegionInState())
 			}
 
 			if !tfunique.IsHandleNil(v.Tags) {

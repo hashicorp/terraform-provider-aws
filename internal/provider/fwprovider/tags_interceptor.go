@@ -25,16 +25,6 @@ type tagsDataSourceInterceptor struct {
 	tagsInterceptor
 }
 
-func dataSourceTransparentTagging(servicePackageResourceTags unique.Handle[inttypes.ServicePackageResourceTags]) dataSourceCRUDInterceptor {
-	return &tagsDataSourceInterceptor{
-		tagsInterceptor: tagsInterceptor{
-			WithTaggingMethods: interceptors.WithTaggingMethods{
-				ServicePackageResourceTags: servicePackageResourceTags,
-			},
-		},
-	}
-}
-
 func (r tagsDataSourceInterceptor) read(ctx context.Context, opts interceptorOptions[datasource.ReadRequest, datasource.ReadResponse]) diag.Diagnostics {
 	c := opts.c
 	var diags diag.Diagnostics
@@ -81,22 +71,20 @@ func (r tagsDataSourceInterceptor) read(ctx context.Context, opts interceptorOpt
 	return diags
 }
 
-// tagsResourceInterceptor implements transparent tagging for resources.
-type tagsResourceInterceptor struct {
-	tagsInterceptor
-}
-
-func resourceTransparentTagging(servicePackageResourceTags unique.Handle[inttypes.ServicePackageResourceTags]) interface {
-	resourceCRUDInterceptor
-	resourceModifyPlanInterceptor
-} {
-	return &tagsResourceInterceptor{
+func dataSourceTransparentTagging(servicePackageResourceTags unique.Handle[inttypes.ServicePackageResourceTags]) dataSourceCRUDInterceptor {
+	return &tagsDataSourceInterceptor{
 		tagsInterceptor: tagsInterceptor{
 			WithTaggingMethods: interceptors.WithTaggingMethods{
 				ServicePackageResourceTags: servicePackageResourceTags,
 			},
 		},
 	}
+}
+
+// tagsResourceInterceptor implements transparent tagging for resources.
+type tagsResourceInterceptor struct {
+	resourceNoOpCRUDInterceptor
+	tagsInterceptor
 }
 
 func (r tagsResourceInterceptor) create(ctx context.Context, opts interceptorOptions[resource.CreateRequest, resource.CreateResponse]) diag.Diagnostics {
@@ -252,12 +240,6 @@ func (r tagsResourceInterceptor) update(ctx context.Context, opts interceptorOpt
 	return diags
 }
 
-func (r tagsResourceInterceptor) delete(ctx context.Context, opts interceptorOptions[resource.DeleteRequest, resource.DeleteResponse]) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	return diags
-}
-
 func (r tagsResourceInterceptor) modifyPlan(ctx context.Context, opts interceptorOptions[resource.ModifyPlanRequest, resource.ModifyPlanResponse]) diag.Diagnostics {
 	c := opts.c
 	var diags diag.Diagnostics
@@ -289,6 +271,19 @@ func (r tagsResourceInterceptor) modifyPlan(ctx context.Context, opts intercepto
 	}
 
 	return diags
+}
+
+func resourceTransparentTagging(servicePackageResourceTags unique.Handle[inttypes.ServicePackageResourceTags]) interface {
+	resourceCRUDInterceptor
+	resourceModifyPlanInterceptor
+} {
+	return &tagsResourceInterceptor{
+		tagsInterceptor: tagsInterceptor{
+			WithTaggingMethods: interceptors.WithTaggingMethods{
+				ServicePackageResourceTags: servicePackageResourceTags,
+			},
+		},
+	}
 }
 
 type tagsInterceptor struct {
