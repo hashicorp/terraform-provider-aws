@@ -33,7 +33,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource("aws_paymentcryptography_key", name="Key")
 // @Tags(identifierAttribute="arn")
 func newResourceKey(_ context.Context) (resource.ResourceWithConfigure, error) {
@@ -59,6 +58,7 @@ type resourceKey struct {
 
 func (r *resourceKey) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
+		Version: 1,
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			names.AttrID:  framework.IDAttribute(),
@@ -116,105 +116,109 @@ func (r *resourceKey) Schema(ctx context.Context, request resource.SchemaRequest
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			"key_attributes": schema.SingleNestedBlock{ // nosemgrep:ci.avoid-SingleNestedBlock pre-existing, will be converted
-				CustomType: fwtypes.NewObjectTypeOf[keyAttributesModel](ctx),
-				Attributes: map[string]schema.Attribute{
-					"key_algorithm": schema.StringAttribute{
-						Required:   true,
-						CustomType: fwtypes.StringEnumType[awstypes.KeyAlgorithm](),
-						PlanModifiers: []planmodifier.String{
-							stringplanmodifier.RequiresReplace(),
+			"key_attributes": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[keyAttributesModel](ctx),
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"key_algorithm": schema.StringAttribute{
+							Required:   true,
+							CustomType: fwtypes.StringEnumType[awstypes.KeyAlgorithm](),
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
+						},
+						"key_class": schema.StringAttribute{
+							Required:   true,
+							CustomType: fwtypes.StringEnumType[awstypes.KeyClass](),
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
+						},
+						"key_usage": schema.StringAttribute{
+							Required:   true,
+							CustomType: fwtypes.StringEnumType[awstypes.KeyUsage](),
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
 						},
 					},
-					"key_class": schema.StringAttribute{
-						Required:   true,
-						CustomType: fwtypes.StringEnumType[awstypes.KeyClass](),
-						PlanModifiers: []planmodifier.String{
-							stringplanmodifier.RequiresReplace(),
-						},
-					},
-					"key_usage": schema.StringAttribute{
-						Required:   true,
-						CustomType: fwtypes.StringEnumType[awstypes.KeyUsage](),
-						PlanModifiers: []planmodifier.String{
-							stringplanmodifier.RequiresReplace(),
-						},
-					},
-				},
-				Blocks: map[string]schema.Block{
-					"key_modes_of_use": schema.SingleNestedBlock{ // nosemgrep:ci.avoid-SingleNestedBlock pre-existing, will be converted
-						CustomType: fwtypes.NewObjectTypeOf[keyModesOfUseModel](ctx),
-						Attributes: map[string]schema.Attribute{
-							"decrypt": schema.BoolAttribute{
-								Optional: true,
-								Computed: true,
-								PlanModifiers: []planmodifier.Bool{
-									boolplanmodifier.RequiresReplace(),
-									boolplanmodifier.UseStateForUnknown(),
-								},
-							},
-							"derive_key": schema.BoolAttribute{
-								Optional: true,
-								Computed: true,
-								PlanModifiers: []planmodifier.Bool{
-									boolplanmodifier.RequiresReplace(),
-									boolplanmodifier.UseStateForUnknown(),
-								},
-							},
-							"encrypt": schema.BoolAttribute{
-								Optional: true,
-								Computed: true,
-								PlanModifiers: []planmodifier.Bool{
-									boolplanmodifier.RequiresReplace(),
-									boolplanmodifier.UseStateForUnknown(),
-								},
-							},
-							"generate": schema.BoolAttribute{
-								Optional: true,
-								Computed: true,
-								PlanModifiers: []planmodifier.Bool{
-									boolplanmodifier.RequiresReplace(),
-									boolplanmodifier.UseStateForUnknown(),
-								},
-							},
-							"no_restrictions": schema.BoolAttribute{
-								Optional: true,
-								Computed: true,
-								PlanModifiers: []planmodifier.Bool{
-									boolplanmodifier.RequiresReplace(),
-									boolplanmodifier.UseStateForUnknown(),
-								},
-							},
-							"sign": schema.BoolAttribute{
-								Optional: true,
-								Computed: true,
-								PlanModifiers: []planmodifier.Bool{
-									boolplanmodifier.RequiresReplace(),
-									boolplanmodifier.UseStateForUnknown(),
-								},
-							},
-							"unwrap": schema.BoolAttribute{
-								Optional: true,
-								Computed: true,
-								PlanModifiers: []planmodifier.Bool{
-									boolplanmodifier.RequiresReplace(),
-									boolplanmodifier.UseStateForUnknown(),
-								},
-							},
-							"verify": schema.BoolAttribute{
-								Optional: true,
-								Computed: true,
-								PlanModifiers: []planmodifier.Bool{
-									boolplanmodifier.RequiresReplace(),
-									boolplanmodifier.UseStateForUnknown(),
-								},
-							},
-							"wrap": schema.BoolAttribute{
-								Optional: true,
-								Computed: true,
-								PlanModifiers: []planmodifier.Bool{
-									boolplanmodifier.RequiresReplace(),
-									boolplanmodifier.UseStateForUnknown(),
+					Blocks: map[string]schema.Block{
+						"key_modes_of_use": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[keyModesOfUseModel](ctx),
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"decrypt": schema.BoolAttribute{
+										Optional: true,
+										Computed: true,
+										PlanModifiers: []planmodifier.Bool{
+											boolplanmodifier.RequiresReplace(),
+											boolplanmodifier.UseStateForUnknown(),
+										},
+									},
+									"derive_key": schema.BoolAttribute{
+										Optional: true,
+										Computed: true,
+										PlanModifiers: []planmodifier.Bool{
+											boolplanmodifier.RequiresReplace(),
+											boolplanmodifier.UseStateForUnknown(),
+										},
+									},
+									"encrypt": schema.BoolAttribute{
+										Optional: true,
+										Computed: true,
+										PlanModifiers: []planmodifier.Bool{
+											boolplanmodifier.RequiresReplace(),
+											boolplanmodifier.UseStateForUnknown(),
+										},
+									},
+									"generate": schema.BoolAttribute{
+										Optional: true,
+										Computed: true,
+										PlanModifiers: []planmodifier.Bool{
+											boolplanmodifier.RequiresReplace(),
+											boolplanmodifier.UseStateForUnknown(),
+										},
+									},
+									"no_restrictions": schema.BoolAttribute{
+										Optional: true,
+										Computed: true,
+										PlanModifiers: []planmodifier.Bool{
+											boolplanmodifier.RequiresReplace(),
+											boolplanmodifier.UseStateForUnknown(),
+										},
+									},
+									"sign": schema.BoolAttribute{
+										Optional: true,
+										Computed: true,
+										PlanModifiers: []planmodifier.Bool{
+											boolplanmodifier.RequiresReplace(),
+											boolplanmodifier.UseStateForUnknown(),
+										},
+									},
+									"unwrap": schema.BoolAttribute{
+										Optional: true,
+										Computed: true,
+										PlanModifiers: []planmodifier.Bool{
+											boolplanmodifier.RequiresReplace(),
+											boolplanmodifier.UseStateForUnknown(),
+										},
+									},
+									"verify": schema.BoolAttribute{
+										Optional: true,
+										Computed: true,
+										PlanModifiers: []planmodifier.Bool{
+											boolplanmodifier.RequiresReplace(),
+											boolplanmodifier.UseStateForUnknown(),
+										},
+									},
+									"wrap": schema.BoolAttribute{
+										Optional: true,
+										Computed: true,
+										PlanModifiers: []planmodifier.Bool{
+											boolplanmodifier.RequiresReplace(),
+											boolplanmodifier.UseStateForUnknown(),
+										},
+									},
 								},
 							},
 						},
@@ -226,6 +230,17 @@ func (r *resourceKey) Schema(ctx context.Context, request resource.SchemaRequest
 				Update: true,
 				Delete: true,
 			}),
+		},
+	}
+}
+
+func (r *resourceKey) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
+	schemaV0 := keySchemaV0(ctx)
+
+	return map[int64]resource.StateUpgrader{
+		0: {
+			PriorSchema:   &schemaV0,
+			StateUpgrader: upgradeKeyStateV0toV1,
 		},
 	}
 }
@@ -498,7 +513,7 @@ type resourceKeyModel struct {
 	Enabled                types.Bool                                          `tfsdk:"enabled"`
 	Exportable             types.Bool                                          `tfsdk:"exportable"`
 	ID                     types.String                                        `tfsdk:"id"`
-	KeyAttributes          fwtypes.ObjectValueOf[keyAttributesModel]           `tfsdk:"key_attributes"`
+	KeyAttributes          fwtypes.ListNestedObjectValueOf[keyAttributesModel] `tfsdk:"key_attributes"`
 	KeyCheckValue          types.String                                        `tfsdk:"key_check_value"`
 	KeyCheckValueAlgorithm fwtypes.StringEnum[awstypes.KeyCheckValueAlgorithm] `tfsdk:"key_check_value_algorithm"`
 	KeyOrigin              fwtypes.StringEnum[awstypes.KeyOrigin]              `tfsdk:"key_origin"`
@@ -513,10 +528,10 @@ func (k *resourceKeyModel) setId() {
 }
 
 type keyAttributesModel struct {
-	KeyAlgorithm  fwtypes.StringEnum[awstypes.KeyAlgorithm] `tfsdk:"key_algorithm"`
-	KeyClass      fwtypes.StringEnum[awstypes.KeyClass]     `tfsdk:"key_class"`
-	KeyModesOfUse fwtypes.ObjectValueOf[keyModesOfUseModel] `tfsdk:"key_modes_of_use"`
-	KeyUsage      fwtypes.StringEnum[awstypes.KeyUsage]     `tfsdk:"key_usage"`
+	KeyAlgorithm  fwtypes.StringEnum[awstypes.KeyAlgorithm]           `tfsdk:"key_algorithm"`
+	KeyClass      fwtypes.StringEnum[awstypes.KeyClass]               `tfsdk:"key_class"`
+	KeyModesOfUse fwtypes.ListNestedObjectValueOf[keyModesOfUseModel] `tfsdk:"key_modes_of_use"`
+	KeyUsage      fwtypes.StringEnum[awstypes.KeyUsage]               `tfsdk:"key_usage"`
 }
 
 type keyModesOfUseModel struct {

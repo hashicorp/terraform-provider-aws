@@ -13,9 +13,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -23,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -49,6 +47,7 @@ type resourceSecurityConfig struct {
 
 func (r *resourceSecurityConfig) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		Version: 1,
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: framework.IDAttribute(),
 			"config_version": schema.StringAttribute{
@@ -78,35 +77,52 @@ func (r *resourceSecurityConfig) Schema(ctx context.Context, req resource.Schema
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"saml_options": schema.SingleNestedBlock{ // nosemgrep:ci.avoid-SingleNestedBlock pre-existing, will be converted
-				Attributes: map[string]schema.Attribute{
-					"group_attribute": schema.StringAttribute{
-						Optional: true,
-						Validators: []validator.String{
-							stringvalidator.LengthBetween(1, 2048),
+			"saml_options": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[samlOptionsData](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"group_attribute": schema.StringAttribute{
+							Optional: true,
+							Validators: []validator.String{
+								stringvalidator.LengthBetween(1, 2048),
+							},
 						},
-					},
-					"metadata": schema.StringAttribute{
-						Required: true,
-						Validators: []validator.String{
-							stringvalidator.LengthBetween(1, 20480),
+						"metadata": schema.StringAttribute{
+							Required: true,
+							Validators: []validator.String{
+								stringvalidator.LengthBetween(1, 20480),
+							},
 						},
-					},
-					"session_timeout": schema.Int64Attribute{
-						Optional: true,
-						Computed: true,
-						Validators: []validator.Int64{
-							int64validator.Between(5, 1540),
+						"session_timeout": schema.Int64Attribute{
+							Optional: true,
+							Computed: true,
+							Validators: []validator.Int64{
+								int64validator.Between(5, 1540),
+							},
 						},
-					},
-					"user_attribute": schema.StringAttribute{
-						Optional: true,
-						Validators: []validator.String{
-							stringvalidator.LengthBetween(1, 2048),
+						"user_attribute": schema.StringAttribute{
+							Optional: true,
+							Validators: []validator.String{
+								stringvalidator.LengthBetween(1, 2048),
+							},
 						},
 					},
 				},
 			},
+		},
+	}
+}
+
+func (r *resourceSecurityConfig) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
+	schemaV0 := securityConfigSchemaV0()
+
+	return map[int64]resource.StateUpgrader{
+		0: {
+			PriorSchema:   &schemaV0,
+			StateUpgrader: upgradeSecurityConfigStateFromV0,
 		},
 	}
 }
@@ -121,17 +137,11 @@ func (r *resourceSecurityConfig) Create(ctx context.Context, req resource.Create
 	}
 
 	input := opensearchserverless.CreateSecurityConfigInput{}
-	ignoreFieldOption := fwflex.WithIgnoredFieldNamesAppend("SamlOptions")
-	resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &input, ignoreFieldOption)...)
+	resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &input)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
 	input.ClientToken = aws.String(sdkid.UniqueId())
-	input.SamlOptions = expandSAMLOptions(ctx, plan.SamlOptions, &resp.Diagnostics)
-	if resp.Diagnostics.HasError() {
-		return
-	}
 
 	out, err := conn.CreateSecurityConfig(ctx, &input)
 	if err != nil {
@@ -150,14 +160,12 @@ func (r *resourceSecurityConfig) Create(ctx context.Context, req resource.Create
 		return
 	}
 
-	state := plan
-	resp.Diagnostics.Append(fwflex.Flatten(ctx, out.SecurityConfigDetail, &state)...)
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, out.SecurityConfigDetail, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	state.SamlOptions = flattenSAMLOptions(ctx, out.SecurityConfigDetail.SamlOptions)
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
 func (r *resourceSecurityConfig) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -184,12 +192,10 @@ func (r *resourceSecurityConfig) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
-	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &state, fwflex.WithIgnoredFieldNamesAppend("SamlOptions"))...)
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	state.SamlOptions = flattenSAMLOptions(ctx, out.SamlOptions)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -212,18 +218,12 @@ func (r *resourceSecurityConfig) Update(ctx context.Context, req resource.Update
 
 	if diff.HasChanges() {
 		input := opensearchserverless.UpdateSecurityConfigInput{}
-		flexIgnoreOption := fwflex.WithIgnoredFieldNamesAppend("SamlOptions")
-		resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &input, flexIgnoreOption)...)
+		resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &input)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
-
 		input.ClientToken = aws.String(sdkid.UniqueId())
 		input.ConfigVersion = state.ConfigVersion.ValueStringPointer()
-		input.SamlOptions = expandSAMLOptions(ctx, plan.SamlOptions, &resp.Diagnostics)
-		if resp.Diagnostics.HasError() {
-			return
-		}
 
 		out, err := conn.UpdateSecurityConfig(ctx, &input)
 		if err != nil {
@@ -231,7 +231,7 @@ func (r *resourceSecurityConfig) Update(ctx context.Context, req resource.Update
 			return
 		}
 
-		resp.Diagnostics.Append(fwflex.Flatten(ctx, out.SecurityConfigDetail, &plan, flexIgnoreOption)...)
+		resp.Diagnostics.Append(fwflex.Flatten(ctx, out.SecurityConfigDetail, &plan)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -278,61 +278,17 @@ func (r *resourceSecurityConfig) ImportState(ctx context.Context, req resource.I
 }
 
 type resourceSecurityConfigData struct {
-	ID            types.String                                    `tfsdk:"id"`
-	ConfigVersion types.String                                    `tfsdk:"config_version"`
-	Description   types.String                                    `tfsdk:"description"`
-	Name          types.String                                    `tfsdk:"name"`
-	SamlOptions   types.Object                                    `tfsdk:"saml_options"`
-	Type          fwtypes.StringEnum[awstypes.SecurityConfigType] `tfsdk:"type"`
+	ID            types.String                                     `tfsdk:"id"`
+	ConfigVersion types.String                                     `tfsdk:"config_version"`
+	Description   types.String                                     `tfsdk:"description"`
+	Name          types.String                                     `tfsdk:"name"`
+	SamlOptions   fwtypes.ListNestedObjectValueOf[samlOptionsData] `tfsdk:"saml_options"`
+	Type          fwtypes.StringEnum[awstypes.SecurityConfigType]  `tfsdk:"type"`
 }
 
-type samlOptions struct {
+type samlOptionsData struct {
 	GroupAttribute types.String `tfsdk:"group_attribute"`
 	Metadata       types.String `tfsdk:"metadata"`
 	SessionTimeout types.Int64  `tfsdk:"session_timeout"`
 	UserAttribute  types.String `tfsdk:"user_attribute"`
-}
-
-func (so *samlOptions) expand(_ context.Context) *awstypes.SamlConfigOptions {
-	if so == nil {
-		return nil
-	}
-
-	result := &awstypes.SamlConfigOptions{
-		Metadata:       so.Metadata.ValueStringPointer(),
-		GroupAttribute: so.GroupAttribute.ValueStringPointer(),
-		UserAttribute:  so.UserAttribute.ValueStringPointer(),
-	}
-
-	if so.SessionTimeout.ValueInt64() != 0 {
-		result.SessionTimeout = aws.Int32(int32(so.SessionTimeout.ValueInt64()))
-	}
-
-	return result
-}
-
-func expandSAMLOptions(ctx context.Context, object types.Object, diags *diag.Diagnostics) *awstypes.SamlConfigOptions {
-	var options samlOptions
-	diags.Append(object.As(ctx, &options, basetypes.ObjectAsOptions{})...)
-	if diags.HasError() {
-		return nil
-	}
-
-	return options.expand(ctx)
-}
-
-func flattenSAMLOptions(ctx context.Context, so *awstypes.SamlConfigOptions) types.Object {
-	if so == nil {
-		return fwtypes.NewObjectValueOfNull[samlOptions](ctx).ObjectValue
-	}
-
-	attributeTypes := fwtypes.AttributeTypesMust[samlOptions](ctx)
-	attrs := map[string]attr.Value{}
-	attrs["group_attribute"] = fwflex.StringToFramework(ctx, so.GroupAttribute)
-	attrs["metadata"] = fwflex.StringToFramework(ctx, so.Metadata)
-	timeout := int64(*so.SessionTimeout)
-	attrs["session_timeout"] = fwflex.Int64ToFramework(ctx, &timeout)
-	attrs["user_attribute"] = fwflex.StringToFramework(ctx, so.UserAttribute)
-
-	return types.ObjectValueMust(attributeTypes, attrs)
 }

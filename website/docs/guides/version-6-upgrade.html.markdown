@@ -26,12 +26,14 @@ Upgrade topics:
 - [data-source/aws_ecs_task_execution](#data-sourceaws_ecs_task_execution)
 - [data-source/aws_globalaccelerator_accelerator](#data-sourceaws_globalaccelerator_accelerator)
 - [data-source/aws_launch_template](#data-sourceaws_launch_template)
+- [data-source/aws_opensearchserverless_security_config](#data-sourceaws_opensearchserverless_security_config)
 - [data-source/aws_quicksight_data_set](#data-sourceaws_quicksight_data_set)
 - [data-source/aws_s3_bucket](#data-sourceaws_s3_bucket)
 - [data-source/aws_service_discovery_service](#data-sourceaws_service_discovery_service)
 - [data-source/aws_vpc_endpoint_service](#data-sourceaws_vpc_endpoint_service)
 - [data-source/aws_vpc_peering_connection](#data-sourceaws_vpc_peering_connection)
 - [resource/aws_api_gateway_account](#resourceaws_api_gateway_account)
+- [resource/aws_api_gateway_deployment](#resourceaws_api_gateway_deployment)
 - [resource/aws_batch_compute_environment](#resourceaws_batch_compute_environment)
 - [resource/aws_cloudformation_stack_set_instance](#resourceaws_cloudformation_stack_set_instance)
 - [resource/aws_cloudfront_key_value_store](#resourceaws_cloudfront_key_value_store)
@@ -42,7 +44,11 @@ Upgrade topics:
 - [resource/aws_instance](#resourceaws_instance)
 - [resource/aws_kinesis_analytics_application](#resourceaws_kinesis_analytics_application)
 - [resource/aws_launch_template](#resourceaws_launch_template)
+- [resource/aws_media_store_container](#resourceaws_media_store_container)
+- [resource/aws_media_store_container_policy](#resourceaws_media_store_container_policy)
 - [resource/aws_networkmanager_core_network](#resourceaws_networkmanager_core_network)
+- [resource/aws_opensearchserverless_security_config](#resourceaws_opensearchserverless_security_config)
+- [resource/aws_paymentcryptography_key](#resourceaws_paymentcryptography_key)
 - [resource/aws_redshift_cluster](#resourceaws_redshift_cluster)
 - [resource/aws_redshift_service_account](#resourceaws_redshift_service_account)
 - [resource/aws_rekognition_stream_processor](#resourceaws_rekognition_stream_processor)
@@ -166,6 +172,12 @@ Remove `inference_accelerator_overrides` from your configuration—it no longer 
 
 Remove `elastic_inference_accelerator` from your configuration—it no longer exists. Amazon Elastic Inference reached end of life in April 2024.
 
+## data-source/aws_opensearchserverless_security_config
+
+The `saml_options` attribute is now a list nested block instead of a single nested block.
+When referencing this attribute, the index must now be included in the attribute address.
+For example, `saml_options.session_timeout` would now be referenced as `saml_options[0].session_timeout`.
+
 ## data-source/aws_quicksight_data_set
 
 `tags_all` has been removed.
@@ -191,6 +203,49 @@ The `region` attribute has been deprecated. All configurations using `region` sh
 `reset_on_delete` has been removed.
 The destroy operation will now always reset the API Gateway account settings.
 Use a [removed](https://developer.hashicorp.com/terraform/language/resources/syntax#removing-resources) block to retain the previous behavior which left the account settings unchanged upon destruction.
+
+## resource/aws_api_gateway_deployment
+
+The following arguments have been **removed** from the `aws_api_gateway_deployment` resource:
+
+- `stage_name`
+- `stage_description`
+- `canary_settings`
+
+Additionally, the computed attributes `invoke_url` and `execution_arn` have been removed from `aws_api_gateway_deployment`. These are now only available via the `aws_api_gateway_stage` resource.
+
+### Migration Example
+
+**Before (v5 and earlier, using implicit stage):**
+
+```terraform
+resource "aws_api_gateway_deployment" "example" {
+  rest_api_id = aws_api_gateway_rest_api.example.id
+  stage_name  = "prod"
+}
+```
+
+**After (v6+, using explicit stage):**
+
+```terraform
+resource "aws_api_gateway_deployment" "example" {
+  rest_api_id = aws_api_gateway_rest_api.example.id
+}
+
+resource "aws_api_gateway_stage" "prod" {
+  stage_name    = "prod"
+  rest_api_id   = aws_api_gateway_rest_api.example.id
+  deployment_id = aws_api_gateway_deployment.example.id
+}
+```
+
+### Importing an Implicit Stage into Terraform
+
+If your previous configuration relied on an implicitly created stage, you can import it into a managed `aws_api_gateway_stage` resource like so:
+
+```sh
+terraform import aws_api_gateway_stage.prod <rest_api_id>/<stage_name>
+```
 
 ## resource/aws_batch_compute_environment
 
@@ -226,6 +281,14 @@ Remove `inference_accelerator` from your configuration—it no longer exists. Am
 
 Remove `elastic_inference_accelerator` from your configuration—it no longer exists. Amazon Elastic Inference reached end of life in April 2024.
 
+## resource/aws_media_store_container
+
+This resource is deprecated and will be removed in a future version. AWS has [announced](https://aws.amazon.com/blogs/media/support-for-aws-elemental-mediastore-ending-soon/) the discontinuation of AWS Elemental MediaStore, effective November 13, 2025. Users should begin transitioning to alternative solutions as soon as possible. For simple live streaming workflows, AWS recommends migrating to Amazon S3. For advanced use cases that require features such as packaging, DRM, or cross-region redundancy, consider using AWS Elemental MediaPackage.
+
+## resource/aws_media_store_container_policy
+
+This resource is deprecated and will be removed in a future version. AWS has [announced](https://aws.amazon.com/blogs/media/support-for-aws-elemental-mediastore-ending-soon/) the discontinuation of AWS Elemental MediaStore, effective November 13, 2025. Users should begin transitioning to alternative solutions as soon as possible. For simple live streaming workflows, AWS recommends migrating to Amazon S3. For advanced use cases that require features such as packaging, DRM, or cross-region redundancy, consider using AWS Elemental MediaPackage.
+
 ## resource/aws_instance
 
 The `user_data` attribute no longer applies hashing and is now stored in clear text. **Do not include passwords or sensitive information** in `user_data`, as it will be visible in plaintext. Follow [AWS Best Practices](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-metadata.html) to secure your instance metadata. If you need to provide base64-encoded user data, use the `user_data_base64` attribute instead.
@@ -237,6 +300,18 @@ This resource is deprecated and will be removed in a future version. [Effective 
 ## resource/aws_networkmanager_core_network
 
 The `base_policy_region` argument has been removed. Use `base_policy_regions` instead.
+
+## resource/aws_opensearchserverless_security_config
+
+The `saml_options` argument is now a list nested block instead of a single nested block.
+When referencing this argument, the index must now be included in the attribute address.
+For example, `saml_options.session_timeout` would now be referenced as `saml_options[0].session_timeout`.
+
+## resource/aws_paymentcryptography_key
+
+The `key_attributes` and `key_attributes.key_modes_of_use` arguments are now list nested blocks instead of single nested blocks.
+When referencing these arguments, the indicies must now be included in the attribute address.
+For example, `key_attributes.key_modes_of_use.decrypt` would now be referenced as `key_attributes[0].key_modes_of_use[0].decrypt`.
 
 ## resource/aws_redshift_cluster
 
@@ -253,7 +328,7 @@ The `aws_redshift_service_account` resource has been removed. AWS [recommends](h
 
 The `regions_of_interest.bounding_box` argument is now a list nested block instead of a single nested block.
 When referencing this argument, the index must now be included in the attribute address.
-For example, `regions_of_interest[0].bounding_box.height` would now be referenced as `regions_of_interest[0].bounding_box[0].height`
+For example, `regions_of_interest[0].bounding_box.height` would now be referenced as `regions_of_interest[0].bounding_box[0].height`.
 
 ## resource/aws_s3_bucket
 
