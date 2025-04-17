@@ -23,7 +23,7 @@ type tagsResourceCRUDInterceptor struct {
 	tagsInterceptor
 }
 
-func transparentTaggingResource(servicePackageResourceTags unique.Handle[inttypes.ServicePackageResourceTags]) crudInterceptor {
+func resourceTransparentTagging(servicePackageResourceTags unique.Handle[inttypes.ServicePackageResourceTags]) crudInterceptor {
 	return &tagsResourceCRUDInterceptor{
 		tagsInterceptor: tagsInterceptor{
 			WithTaggingMethods: interceptors.WithTaggingMethods{
@@ -181,7 +181,7 @@ type tagsDataSourceCRUDInterceptor struct {
 	tagsInterceptor
 }
 
-func transparentTaggingDataSource(servicePackageResourceTags unique.Handle[inttypes.ServicePackageResourceTags]) crudInterceptor {
+func dataSourceTransparentTagging(servicePackageResourceTags unique.Handle[inttypes.ServicePackageResourceTags]) crudInterceptor {
 	return &tagsDataSourceCRUDInterceptor{
 		tagsInterceptor: tagsInterceptor{
 			WithTaggingMethods: interceptors.WithTaggingMethods{
@@ -263,8 +263,8 @@ func (r tagsInterceptor) getIdentifier(d schemaResourceData) string {
 	return identifier
 }
 
-var (
-	setTagsAll customizeDiffInterceptor = interceptorFunc1[*schema.ResourceDiff, error](func(ctx context.Context, opts customizeDiffInterceptorOptions) error {
+func setTagsAll() customizeDiffInterceptor {
+	return interceptorFunc1[*schema.ResourceDiff, error](func(ctx context.Context, opts customizeDiffInterceptorOptions) error {
 		c := opts.c
 
 		switch d, when, why := opts.d, opts.when, opts.why; when {
@@ -323,4 +323,4 @@ var (
 
 		return nil
 	})
-)
+}

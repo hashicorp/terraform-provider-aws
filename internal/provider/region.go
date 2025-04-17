@@ -23,27 +23,37 @@ func validateRegionInPartition(ctx context.Context, c *conns.AWSClient, region s
 	return nil
 }
 
-var (
-	validateRegionResource customizeDiffInterceptor = interceptorFunc1[*schema.ResourceDiff, error](func(ctx context.Context, opts customizeDiffInterceptorOptions) error {
+func validateInContextRegionInPartition(ctx context.Context, c *conns.AWSClient) error {
+	// Verify that the value of the top-level `region` attribute is in the configured AWS partition.
+	if inContext, ok := conns.FromContext(ctx); ok {
+		if v := inContext.OverrideRegion(); v != "" {
+			if err := validateRegionInPartition(ctx, c, v); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+func resourceValidateRegion() customizeDiffInterceptor {
+	return interceptorFunc1[*schema.ResourceDiff, error](func(ctx context.Context, opts customizeDiffInterceptorOptions) error {
 		c := opts.c
 
-		switch d, when, why := opts.d, opts.when, opts.why; when {
+		switch when, why := opts.when, opts.why; when {
 		case Before:
 			switch why {
 			case CustomizeDiff:
-				// Verify that the value of the top-level `region` attribute is in the configured AWS partition.
-				if v, ok := d.GetOk(names.AttrRegion); ok {
-					if err := validateRegionInPartition(ctx, c, v.(string)); err != nil {
-						return err
-					}
-				}
+				return validateInContextRegionInPartition(ctx, c)
 			}
 		}
 
 		return nil
 	})
+}
 
-	validateRegionDataSource crudInterceptor = interceptorFunc1[schemaResourceData, diag.Diagnostics](func(ctx context.Context, opts crudInterceptorOptions) diag.Diagnostics {
+func dataSourceValidateRegion() crudInterceptor {
+	return interceptorFunc1[schemaResourceData, diag.Diagnostics](func(ctx context.Context, opts crudInterceptorOptions) diag.Diagnostics {
 		c := opts.c
 		var diags diag.Diagnostics
 
@@ -52,22 +62,18 @@ var (
 			switch why {
 			case Read:
 				// As data sources have no CustomizeDiff functionality, we validate the per-resource Region override value here.
-				if inContext, ok := conns.FromContext(ctx); ok {
-					if v := inContext.OverrideRegion(); v != "" {
-						if err := validateRegionInPartition(ctx, c, v); err != nil {
-							return sdkdiag.AppendFromErr(diags, err)
-						}
-					}
+				if err := validateInContextRegionInPartition(ctx, c); err != nil {
+					return sdkdiag.AppendFromErr(diags, err)
 				}
 			}
 		}
 
 		return diags
 	})
-)
+}
 
-var (
-	defaultRegion customizeDiffInterceptor = interceptorFunc1[*schema.ResourceDiff, error](func(ctx context.Context, opts customizeDiffInterceptorOptions) error {
+func defaultRegion() customizeDiffInterceptor {
+	return interceptorFunc1[*schema.ResourceDiff, error](func(ctx context.Context, opts customizeDiffInterceptorOptions) error {
 		c := opts.c
 
 		switch d, when, why := opts.d, opts.when, opts.why; when {
@@ -83,10 +89,10 @@ var (
 
 		return nil
 	})
-)
+}
 
-var (
-	setRegionInState crudInterceptor = interceptorFunc1[schemaResourceData, diag.Diagnostics](func(ctx context.Context, opts crudInterceptorOptions) diag.Diagnostics {
+func setRegionInState() crudInterceptor {
+	return interceptorFunc1[schemaResourceData, diag.Diagnostics](func(ctx context.Context, opts crudInterceptorOptions) diag.Diagnostics {
 		c := opts.c
 		var diags diag.Diagnostics
 
@@ -103,10 +109,10 @@ var (
 
 		return diags
 	})
-)
+}
 
-var (
-	forceNewIfRegionChanges customizeDiffInterceptor = interceptorFunc1[*schema.ResourceDiff, error](func(ctx context.Context, opts customizeDiffInterceptorOptions) error {
+func forceNewIfRegionChanges() customizeDiffInterceptor {
+	return interceptorFunc1[*schema.ResourceDiff, error](func(ctx context.Context, opts customizeDiffInterceptorOptions) error {
 		c := opts.c
 
 		switch d, when, why := opts.d, opts.when, opts.why; when {
@@ -127,10 +133,10 @@ var (
 
 		return nil
 	})
-)
+}
 
-var (
-	importRegion importInterceptor = interceptorFunc2[*schema.ResourceData, []*schema.ResourceData, error](func(ctx context.Context, opts importInterceptorOptions) ([]*schema.ResourceData, error) {
+func importRegion() importInterceptor {
+	return interceptorFunc2[*schema.ResourceData, []*schema.ResourceData, error](func(ctx context.Context, opts importInterceptorOptions) ([]*schema.ResourceData, error) {
 		c, d := opts.c, opts.d
 
 		switch when, why := opts.when, opts.why; when {
@@ -149,4 +155,4 @@ var (
 
 		return []*schema.ResourceData{d}, nil
 	})
-)
+}
