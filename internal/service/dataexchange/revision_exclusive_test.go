@@ -616,7 +616,6 @@ func testAccRevisionExclusiveConfig_s3Snapshot_importFromS3(rName string) string
 	return fmt.Sprintf(`
 resource "aws_dataexchange_revision_exclusive" "test" {
   data_set_id = aws_dataexchange_data_set.test.id
-  finalized   = false
 
   asset {
     import_assets_from_s3 {
@@ -651,7 +650,6 @@ func testAccRevisionExclusiveConfig_s3SNapsht_importMultipleFromS3(rName string)
 	return fmt.Sprintf(`
 resource "aws_dataexchange_revision_exclusive" "test" {
   data_set_id = aws_dataexchange_data_set.test.id
-  finalized   = false
 
   asset {
     import_assets_from_s3 {
@@ -698,7 +696,6 @@ func testAccRevisionExclusiveConfig_s3Snapshot_upload(rName, filename string) st
 	return fmt.Sprintf(`
 resource "aws_dataexchange_revision_exclusive" "test" {
   data_set_id = aws_dataexchange_data_set.test.id
-  finalized   = false
 
   asset {
     import_assets_from_signed_url {
@@ -719,7 +716,6 @@ func testAccRevisionExclusiveConfig_s3Snapshot_uploadMultiple(rName, filename, f
 	return fmt.Sprintf(`
 resource "aws_dataexchange_revision_exclusive" "test" {
   data_set_id = aws_dataexchange_data_set.test.id
-  finalized   = false
 
   asset {
     import_assets_from_signed_url {
@@ -746,7 +742,6 @@ func testAccRevisionExclusiveConfig_s3Snapshot_importAndUpload(rName, filename s
 	return fmt.Sprintf(`
 resource "aws_dataexchange_revision_exclusive" "test" {
   data_set_id = aws_dataexchange_data_set.test.id
-  finalized   = false
 
   asset {
     import_assets_from_signed_url {
@@ -787,7 +782,6 @@ func testAccRevisionExclusiveConfig_s3DataAccessFromS3Bucket_basic(rName string)
 	return fmt.Sprintf(`
 resource "aws_dataexchange_revision_exclusive" "test" {
   data_set_id = aws_dataexchange_data_set.test.id
-  finalized   = false
 
   asset {
     create_s3_data_access_from_s3_bucket {
@@ -935,7 +929,6 @@ func testAccRevisionExclusiveConfig_s3DataAccessFromS3Bucket_keys(rName string) 
 	return acctest.ConfigCompose(testAccRevisionExclusiveConfig_s3DataAccessFromS3Bucket_baseConfig(rName), `
 resource "aws_dataexchange_revision_exclusive" "test" {
   data_set_id = aws_dataexchange_data_set.test.id
-  finalized   = false
 
   asset {
     create_s3_data_access_from_s3_bucket {
@@ -959,7 +952,6 @@ func testAccRevisionExclusiveConfig_s3DataAccessFromS3Bucket_multiple(rName stri
 	return fmt.Sprintf(`
 resource "aws_dataexchange_revision_exclusive" "test" {
   data_set_id = aws_dataexchange_data_set.test.id
-  finalized   = false
 
   asset {
     create_s3_data_access_from_s3_bucket {
@@ -1058,7 +1050,6 @@ func testAccRevisionExclusiveConfig_s3DataAccessFromS3Bucket_cmk(rName string) s
 	return fmt.Sprintf(`
 resource "aws_dataexchange_revision_exclusive" "test" {
   data_set_id = aws_dataexchange_data_set.test.id
-  finalized   = false
 
   asset {
     create_s3_data_access_from_s3_bucket {
