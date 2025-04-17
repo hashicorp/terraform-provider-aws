@@ -263,7 +263,8 @@ This resource is deprecated and will be removed in a future version. AWS has [an
 
 ## resource/aws_instance
 
-The `user_data` attribute no longer applies hashing and is now stored in clear text. **Do not include passwords or sensitive information** in `user_data`, as it will be visible in plaintext. Follow [AWS Best Practices](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-metadata.html) to secure your instance metadata. If you need to provide base64-encoded user data, use the `user_data_base64` attribute instead.
+* The `user_data` attribute no longer applies hashing and is now stored in clear text. **Do not include passwords or sensitive information** in `user_data`, as it will be visible in plaintext. Follow [AWS Best Practices](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-metadata.html) to secure your instance metadata. If you need to provide base64-encoded user data, use the `user_data_base64` attribute instead.
+* Remove `cpu_core_count` and `cpu_threads_per_core` from your configuration—they no longer exist. Instead, use the `cpu_options` configuration block with `core_count` and `threads_per_core`.
 
 ## resource/aws_kinesis_analytics_application
 
