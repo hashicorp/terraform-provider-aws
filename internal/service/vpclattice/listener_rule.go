@@ -235,10 +235,8 @@ func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, met
 	name := d.Get(names.AttrName).(string)
 	serviceID, listenerID := d.Get("service_identifier").(string), d.Get("listener_identifier").(string)
 	input := vpclattice.CreateRuleInput{
-		Action:             expandRuleAction(d.Get(names.AttrAction).([]any)[0].(map[string]any)),
 		ClientToken:        aws.String(sdkid.UniqueId()),
 		ListenerIdentifier: aws.String(listenerID),
-		Match:              expandRuleMatch(d.Get("match").([]any)[0].(map[string]any)),
 		Name:               aws.String(name),
 		ServiceIdentifier:  aws.String(serviceID),
 		Tags:               getTagsIn(ctx),
@@ -246,6 +244,22 @@ func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, met
 
 	if v, ok := d.GetOk(names.AttrPriority); ok {
 		input.Priority = aws.Int32(int32(v.(int)))
+	}
+
+	if v, ok := d.GetOk(names.AttrAction); ok {
+		if v, ok := v.([]any); ok && len(v) > 0 && v[0] != nil {
+			input.Action = expandRuleAction(v[0].(map[string]any))
+		} else {
+			return sdkdiag.AppendErrorf(diags, "Invalid \"action\" value: %v", v)
+		}
+	}
+
+	if v, ok := d.GetOk("match"); ok {
+		if v, ok := v.([]any); ok && len(v) > 0 && v[0] != nil {
+			input.Match = expandRuleMatch(v[0].(map[string]any))
+		} else {
+			return sdkdiag.AppendErrorf(diags, "Invalid \"match\" value: %v", v)
+		}
 	}
 
 	output, err := conn.CreateRule(ctx, &input)
