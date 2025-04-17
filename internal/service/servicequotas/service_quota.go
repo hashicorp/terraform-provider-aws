@@ -237,19 +237,22 @@ func resourceServiceQuotaRead(ctx context.Context, d *schema.ResourceData, meta 
 	if requestID := d.Get("request_id").(string); requestID != "" {
 		output, err := findRequestedServiceQuotaChangeByID(ctx, conn, requestID)
 
-		if tfresource.NotFound(err) {
+		switch {
+		case tfresource.NotFound(err):
 			d.Set("request_id", "")
 			d.Set("request_status", "")
 
 			return diags
-		}
-
-		d.Set("request_status", output.Status)
-		switch output.Status {
-		case awstypes.RequestStatusApproved, awstypes.RequestStatusCaseClosed, awstypes.RequestStatusDenied:
-			d.Set("request_id", "")
-		case awstypes.RequestStatusCaseOpened, awstypes.RequestStatusPending:
-			d.Set(names.AttrValue, output.DesiredValue)
+		case err != nil:
+			return sdkdiag.AppendErrorf(diags, "reading Service Quotas Requested Service Quota Change (%s): %s", requestID, err)
+		default:
+			d.Set("request_status", output.Status)
+			switch output.Status {
+			case awstypes.RequestStatusApproved, awstypes.RequestStatusCaseClosed, awstypes.RequestStatusDenied:
+				d.Set("request_id", "")
+			case awstypes.RequestStatusCaseOpened, awstypes.RequestStatusPending:
+				d.Set(names.AttrValue, output.DesiredValue)
+			}
 		}
 	}
 
