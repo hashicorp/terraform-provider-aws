@@ -46,3 +46,16 @@ func stripOnDemandThroughputAttributes(in map[string]any) (map[string]any, error
 
 	return m, nil
 }
+
+func stripWarmThroughputAttributes(in map[string]any) (map[string]any, error) {
+	mapCopy, err := copystructure.Copy(in)
+	if err != nil {
+		return nil, err
+	}
+
+	m := mapCopy.(map[string]any)
+
+	delete(m, "warm_throughput")
+
+	return m, nil
+}
