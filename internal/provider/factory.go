@@ -23,9 +23,15 @@ func ProtoV5ProviderServerFactory(ctx context.Context) (func() tfprotov5.Provide
 		return nil, nil, err
 	}
 
+	secondary, err := fwprovider.New(ctx, primary)
+
+	if err != nil {
+		return nil, nil, err
+	}
+
 	servers := []func() tfprotov5.ProviderServer{
 		primary.GRPCProvider,
-		providerserver.NewProtocol5(fwprovider.New(primary)),
+		providerserver.NewProtocol5(secondary),
 	}
 
 	muxServer, err := tf5muxserver.NewMuxServer(ctx, servers...)

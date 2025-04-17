@@ -9,12 +9,13 @@ import (
 {{ if .GenerateClient }}
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/{{ .GoV2Package }}"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 {{- end }}
 {{- if gt (len .EndpointRegionOverrides) 0 }}
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 {{- end }}
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 {{- if ne .ProviderPackage "meta" }}
 	"github.com/hashicorp/terraform-provider-aws/names"
 {{- end }}
@@ -23,28 +24,36 @@ import (
 type servicePackage struct {}
 
 {{- if .EphemeralResources }}
-func (p *servicePackage) EphemeralResources(ctx context.Context) []*types.ServicePackageEphemeralResource {
-	return []*types.ServicePackageEphemeralResource {
+func (p *servicePackage) EphemeralResources(ctx context.Context) []*inttypes.ServicePackageEphemeralResource {
+	return []*inttypes.ServicePackageEphemeralResource {
 {{- range $key, $value := .EphemeralResources }}
+	{{- $regionOverrideEnabled := and (not $.IsGlobal) $value.RegionOverrideEnabled }}
 		{
-			Factory:  {{ $value.FactoryName }},
-			TypeName: "{{ $key }}",
-			Name:     "{{ $value.Name }}",
+			Factory:                 {{ $value.FactoryName }},
+			TypeName:                "{{ $key }}",
+			Name:                    "{{ $value.Name }}",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion {
+				IsOverrideEnabled: {{ $regionOverrideEnabled }},
+	{{- if $regionOverrideEnabled }}
+				IsValidateOverrideInPartition: {{ $value.ValidateRegionOverrideInPartition }},
+	{{- end }}
+			}),
 		},
 {{- end }}
 	}
 }
 {{- end }}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
-	return []*types.ServicePackageFrameworkDataSource {
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
+	return []*inttypes.ServicePackageFrameworkDataSource {
 {{- range $key, $value := .FrameworkDataSources }}
+	{{- $regionOverrideEnabled := and (not $.IsGlobal) $value.RegionOverrideEnabled }}
 		{
-			Factory: {{ $value.FactoryName }},
+			Factory:  {{ $value.FactoryName }},
 			TypeName: "{{ $key }}",
-			Name:    "{{ $value.Name }}",
+			Name:     "{{ $value.Name }}",
 			{{- if .TransparentTagging }}
-			Tags: unique.Make(types.ServicePackageResourceTags {
+			Tags: unique.Make(inttypes.ServicePackageResourceTags {
 				{{- if ne .TagsIdentifierAttribute "" }}
 				IdentifierAttribute: {{ .TagsIdentifierAttribute }},
 				{{- end }}
@@ -53,20 +62,27 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 				{{- end }}
 			}),
 			{{- end }}
+			Region: unique.Make(inttypes.ServicePackageResourceRegion {
+				IsOverrideEnabled: {{ $regionOverrideEnabled }},
+	{{- if $regionOverrideEnabled }}
+				IsValidateOverrideInPartition: {{ $value.ValidateRegionOverrideInPartition }},
+	{{- end }}
+			}),
 		},
 {{- end }}
 	}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource {
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
+	return []*inttypes.ServicePackageFrameworkResource {
 {{- range $key, $value := .FrameworkResources }}
+	{{- $regionOverrideEnabled := and (not $.IsGlobal) $value.RegionOverrideEnabled }}
 		{
 			Factory:  {{ $value.FactoryName }},
 			TypeName: "{{ $key }}",
 			Name:     "{{ $value.Name }}",
 			{{- if .TransparentTagging }}
-			Tags: unique.Make(types.ServicePackageResourceTags {
+			Tags: unique.Make(inttypes.ServicePackageResourceTags {
 				{{- if ne .TagsIdentifierAttribute "" }}
 				IdentifierAttribute: {{ .TagsIdentifierAttribute }},
 				{{- end }}
@@ -75,20 +91,27 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 				{{- end }}
 			}),
 			{{- end }}
+			Region: unique.Make(inttypes.ServicePackageResourceRegion {
+				IsOverrideEnabled: {{ $regionOverrideEnabled }},
+	{{- if $regionOverrideEnabled }}
+				IsValidateOverrideInPartition: {{ $value.ValidateRegionOverrideInPartition }},
+	{{- end }}
+			}),
 		},
 {{- end }}
 	}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
-	return []*types.ServicePackageSDKDataSource {
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
+	return []*inttypes.ServicePackageSDKDataSource {
 {{- range $key, $value := .SDKDataSources }}
+	{{- $regionOverrideEnabled := and (not $.IsGlobal) $value.RegionOverrideEnabled }}
 		{
 			Factory:  {{ $value.FactoryName }},
 			TypeName: "{{ $key }}",
 			Name:     "{{ $value.Name }}",
 			{{- if $value.TransparentTagging }}
-			Tags: unique.Make(types.ServicePackageResourceTags {
+			Tags: unique.Make(inttypes.ServicePackageResourceTags {
 				{{- if ne $value.TagsIdentifierAttribute "" }}
 				IdentifierAttribute: {{ $value.TagsIdentifierAttribute }},
 				{{- end }}
@@ -97,20 +120,27 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 				{{- end }}
 			}),
 			{{- end }}
+			Region: unique.Make(inttypes.ServicePackageResourceRegion {
+				IsOverrideEnabled: {{ $regionOverrideEnabled }},
+	{{- if $regionOverrideEnabled }}
+				IsValidateOverrideInPartition: {{ $value.ValidateRegionOverrideInPartition }},
+	{{- end }}
+			}),
 		},
 {{- end }}
 	}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
-	return []*types.ServicePackageSDKResource {
+func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePackageSDKResource {
+	return []*inttypes.ServicePackageSDKResource {
 {{- range $key, $value := .SDKResources }}
+	{{- $regionOverrideEnabled := and (not $.IsGlobal) $value.RegionOverrideEnabled }}
 		{
 			Factory:  {{ $value.FactoryName }},
 			TypeName: "{{ $key }}",
 			Name:     "{{ $value.Name }}",
 			{{- if $value.TransparentTagging }}
-			Tags: unique.Make(types.ServicePackageResourceTags {
+			Tags: unique.Make(inttypes.ServicePackageResourceTags {
 				{{- if ne $value.TagsIdentifierAttribute "" }}
 				IdentifierAttribute: {{ $value.TagsIdentifierAttribute }},
 				{{- end }}
@@ -119,6 +149,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 				{{- end }}
 			}),
 			{{- end }}
+			Region: unique.Make(inttypes.ServicePackageResourceRegion {
+				IsOverrideEnabled: {{ $regionOverrideEnabled }},
+	{{- if $regionOverrideEnabled }}
+				IsValidateOverrideInPartition: {{ $value.ValidateRegionOverrideInPartition }},
+	{{- end }}
+			}),
 		},
 {{- end }}
 	}
@@ -139,14 +175,25 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 	optFns := []func(*{{ .GoV2Package }}.Options){
 		{{ .GoV2Package }}.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+		func(o *{{ .GoV2Package }}.Options) {
+			if region := config[names.AttrRegion].(string); o.Region != region {
+				tflog.Info(ctx, "overriding provider-configured AWS API region", map[string]any{
+					"service":         p.ServicePackageName(),
+					"original_region": o.Region,
+					"override_region": region,
+				})
+				o.Region = region
+			}
+		},
 {{- if gt (len .EndpointRegionOverrides) 0 }}
 		func(o *{{ .GoV2Package }}.Options) {
 			switch partition := config["partition"].(string); partition {
 	{{- range $k, $v := .EndpointRegionOverrides }}
 			case endpoints.{{ $k | Camel }}PartitionID:
-				if region := endpoints.{{ $v | Camel }}RegionID; cfg.Region != region {
-					tflog.Info(ctx, "overriding region", map[string]any{
-						"original_region": cfg.Region,
+				if region := endpoints.{{ $v | Camel }}RegionID; o.Region != region {
+					tflog.Info(ctx, "overriding effective AWS API region", map[string]any{
+					    "service":         p.ServicePackageName(),
+						"original_region": o.Region,
 						"override_region": region,
 					})
 					o.Region = region

@@ -7,6 +7,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 )
 
@@ -70,7 +71,9 @@ func TestAWSClientRegionalHostname(t *testing.T) { // nosemgrep:ci.aws-in-func-n
 			Name: "AWS Commercial",
 			AWSClient: &AWSClient{
 				partition: standardPartition,
-				region:    "us-west-2", //lintignore:AWSAT003
+				awsConfig: &aws.Config{
+					Region: "us-west-2", //lintignore:AWSAT003
+				},
 			},
 			Prefix:   "test",
 			Expected: "test.us-west-2.amazonaws.com", //lintignore:AWSAT003
@@ -79,7 +82,9 @@ func TestAWSClientRegionalHostname(t *testing.T) { // nosemgrep:ci.aws-in-func-n
 			Name: "AWS China",
 			AWSClient: &AWSClient{
 				partition: chinaPartition,
-				region:    "cn-northwest-1", //lintignore:AWSAT003
+				awsConfig: &aws.Config{
+					Region: "cn-northwest-1", //lintignore:AWSAT003
+				},
 			},
 			Prefix:   "test",
 			Expected: "test.cn-northwest-1.amazonaws.com.cn", //lintignore:AWSAT003
@@ -113,7 +118,9 @@ func TestAWSClientEC2PrivateDNSNameForIP(t *testing.T) { // nosemgrep:ci.aws-in-
 			Name: "us-west-2",
 			AWSClient: &AWSClient{
 				partition: standardPartition,
-				region:    "us-west-2", //lintignore:AWSAT003
+				awsConfig: &aws.Config{
+					Region: "us-west-2", //lintignore:AWSAT003
+				},
 			},
 			IP:       "10.20.30.40",
 			Expected: "ip-10-20-30-40.us-west-2.compute.internal", //lintignore:AWSAT003
@@ -122,7 +129,9 @@ func TestAWSClientEC2PrivateDNSNameForIP(t *testing.T) { // nosemgrep:ci.aws-in-
 			Name: "us-east-1",
 			AWSClient: &AWSClient{
 				partition: standardPartition,
-				region:    "us-east-1", //lintignore:AWSAT003
+				awsConfig: &aws.Config{
+					Region: "us-east-1", //lintignore:AWSAT003
+				},
 			},
 			IP:       "10.20.30.40",
 			Expected: "ip-10-20-30-40.ec2.internal",
@@ -156,7 +165,9 @@ func TestAWSClientEC2PublicDNSNameForIP(t *testing.T) { // nosemgrep:ci.aws-in-f
 			Name: "us-west-2",
 			AWSClient: &AWSClient{
 				partition: standardPartition,
-				region:    "us-west-2", //lintignore:AWSAT003
+				awsConfig: &aws.Config{
+					Region: "us-west-2", //lintignore:AWSAT003
+				},
 			},
 			IP:       "10.20.30.40",
 			Expected: "ec2-10-20-30-40.us-west-2.compute.amazonaws.com", //lintignore:AWSAT003
@@ -165,7 +176,9 @@ func TestAWSClientEC2PublicDNSNameForIP(t *testing.T) { // nosemgrep:ci.aws-in-f
 			Name: "us-east-1",
 			AWSClient: &AWSClient{
 				partition: standardPartition,
-				region:    "us-east-1", //lintignore:AWSAT003
+				awsConfig: &aws.Config{
+					Region: "us-east-1", //lintignore:AWSAT003
+				},
 			},
 			IP:       "10.20.30.40",
 			Expected: "ec2-10-20-30-40.compute-1.amazonaws.com",

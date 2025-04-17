@@ -73,6 +73,7 @@ func deleteFrameworkResource(
 
 		resource.Configure(ctx, fwresource.ConfigureRequest{ProviderData: provo.Meta()}, &fwresource.ConfigureResponse{})
 
+		// TODO REGION Need to add 'region' (if appropriate)
 		schemaResp := fwresource.SchemaResponse{}
 		resource.Schema(ctx, fwresource.SchemaRequest{}, &schemaResp)
 

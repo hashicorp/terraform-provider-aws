@@ -14,7 +14,7 @@ import (
 
 func TestAccELBServiceAccountDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	expectedAccountID := tfelb.AccountIDPerRegionMap[acctest.Region()]
+	expectedAccountID := tfelb.ServiceAccountPerRegionMap[acctest.Region()]
 	dataSourceName := "data.aws_elb_service_account.main"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -35,7 +35,7 @@ func TestAccELBServiceAccountDataSource_basic(t *testing.T) {
 
 func TestAccELBServiceAccountDataSource_region(t *testing.T) {
 	ctx := acctest.Context(t)
-	expectedAccountID := tfelb.AccountIDPerRegionMap[acctest.Region()]
+	expectedAccountID := tfelb.ServiceAccountPerRegionMap[acctest.Region()]
 	dataSourceName := "data.aws_elb_service_account.regional"
 
 	resource.ParallelTest(t, resource.TestCase{

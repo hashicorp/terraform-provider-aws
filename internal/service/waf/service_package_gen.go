@@ -8,124 +8,176 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/waf"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
-	return []*types.ServicePackageFrameworkDataSource{}
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
+	return []*inttypes.ServicePackageFrameworkDataSource{}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{}
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
+	return []*inttypes.ServicePackageFrameworkResource{}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
-	return []*types.ServicePackageSDKDataSource{
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
+	return []*inttypes.ServicePackageSDKDataSource{
 		{
 			Factory:  dataSourceIPSet,
 			TypeName: "aws_waf_ipset",
 			Name:     "IPSet",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			}),
 		},
 		{
 			Factory:  dataSourceRateBasedRule,
 			TypeName: "aws_waf_rate_based_rule",
 			Name:     "Rate Based Rule",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			}),
 		},
 		{
 			Factory:  dataSourceRule,
 			TypeName: "aws_waf_rule",
 			Name:     "Rule",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			}),
 		},
 		{
 			Factory:  dataSourceSubscribedRuleGroup,
 			TypeName: "aws_waf_subscribed_rule_group",
 			Name:     "Subscribed Rule Group",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			}),
 		},
 		{
 			Factory:  dataSourceWebACL,
 			TypeName: "aws_waf_web_acl",
 			Name:     "Web ACL",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			}),
 		},
 	}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
-	return []*types.ServicePackageSDKResource{
+func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePackageSDKResource {
+	return []*inttypes.ServicePackageSDKResource{
 		{
 			Factory:  resourceByteMatchSet,
 			TypeName: "aws_waf_byte_match_set",
 			Name:     "ByteMatchSet",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			}),
 		},
 		{
 			Factory:  resourceGeoMatchSet,
 			TypeName: "aws_waf_geo_match_set",
 			Name:     "GeoMatchSet",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			}),
 		},
 		{
 			Factory:  resourceIPSet,
 			TypeName: "aws_waf_ipset",
 			Name:     "IPSet",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			}),
 		},
 		{
 			Factory:  resourceRateBasedRule,
 			TypeName: "aws_waf_rate_based_rule",
 			Name:     "Rate Based Rule",
-			Tags: unique.Make(types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
 			}),
 		},
 		{
 			Factory:  resourceRegexMatchSet,
 			TypeName: "aws_waf_regex_match_set",
 			Name:     "Regex Match Set",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			}),
 		},
 		{
 			Factory:  resourceRegexPatternSet,
 			TypeName: "aws_waf_regex_pattern_set",
 			Name:     "Regex Pattern Set",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			}),
 		},
 		{
 			Factory:  resourceRule,
 			TypeName: "aws_waf_rule",
 			Name:     "Rule",
-			Tags: unique.Make(types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
 			}),
 		},
 		{
 			Factory:  resourceRuleGroup,
 			TypeName: "aws_waf_rule_group",
 			Name:     "Rule Group",
-			Tags: unique.Make(types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
 			}),
 		},
 		{
 			Factory:  resourceSizeConstraintSet,
 			TypeName: "aws_waf_size_constraint_set",
 			Name:     "Size Constraint Set",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			}),
 		},
 		{
 			Factory:  resourceSQLInjectionMatchSet,
 			TypeName: "aws_waf_sql_injection_match_set",
 			Name:     "SqlInjectionMatchSet",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			}),
 		},
 		{
 			Factory:  resourceWebACL,
 			TypeName: "aws_waf_web_acl",
 			Name:     "Web ACL",
-			Tags: unique.Make(types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
 			}),
 		},
 		{
 			Factory:  resourceXSSMatchSet,
 			TypeName: "aws_waf_xss_match_set",
 			Name:     "XSS Match Set",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			}),
 		},
 	}
 }
@@ -140,6 +192,16 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 	optFns := []func(*waf.Options){
 		waf.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+		func(o *waf.Options) {
+			if region := config[names.AttrRegion].(string); o.Region != region {
+				tflog.Info(ctx, "overriding provider-configured AWS API region", map[string]any{
+					"service":         p.ServicePackageName(),
+					"original_region": o.Region,
+					"override_region": region,
+				})
+				o.Region = region
+			}
+		},
 		withExtraOptions(ctx, p, config),
 	}
 

@@ -3,12 +3,12 @@ subcategory: "Service Quotas"
 layout: "aws"
 page_title: "AWS: aws_servicequotas_templates"
 description: |-
-  Terraform data source for managing an AWS Service Quotas Templates.
+  Terraform data source for managing AWS Service Quotas Templates.
 ---
 
 # Data Source: aws_servicequotas_templates
 
-Terraform data source for managing an AWS Service Quotas Templates.
+Terraform data source for managing AWS Service Quotas Templates.
 
 ## Example Usage
 
@@ -16,15 +16,14 @@ Terraform data source for managing an AWS Service Quotas Templates.
 
 ```terraform
 data "aws_servicequotas_templates" "example" {
-  region = "us-east-1"
+  aws_region = "us-east-1"
 }
 ```
 
 ## Argument Reference
 
-The following arguments are required:
-
-* `region` - (Required) AWS Region to which the quota increases apply.
+* `aws_region` - (Optional) AWS Region to which the quota increases apply.
+* `region` - (Optional, **Deprecated**) AWS Region to which the quota increases apply. Use `aws_region` instead.
 
 ## Attribute Reference
 
@@ -38,7 +37,7 @@ This data source exports the following attributes in addition to the arguments a
 * `quota_name` - Quota name.
 * `quota_code` - Quota identifier.
 * `region` - AWS Region to which the template applies.
-* `service_code` - (Required) Service identifier.
+* `service_code` - Service identifier.
 * `service_name` - Service name.
 * `unit` - Unit of measurement.
-* `value` - (Required) The new, increased value for the quota.
+* `value` - The new, increased value for the quota.

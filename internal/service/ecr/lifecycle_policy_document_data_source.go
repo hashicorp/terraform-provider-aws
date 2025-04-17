@@ -22,6 +22,7 @@ import (
 )
 
 // @FrameworkDataSource("aws_ecr_lifecycle_policy_document", name="Lifecycle Policy Document")
+// @Region(overrideEnabled=false)
 func newLifecyclePolicyDocumentDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &lifecyclePolicyDocumentDataSource{}, nil
 }

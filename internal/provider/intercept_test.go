@@ -12,31 +12,34 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+type (
+	crudInterceptorFunc = interceptorFunc1[schemaResourceData, diag.Diagnostics]
+)
+
 func TestInterceptorsWhy(t *testing.T) {
 	t.Parallel()
 
-	var interceptors interceptorItems
-
-	interceptors = append(interceptors, interceptorItem{
+	var interceptors interceptorInvocations
+	interceptors = append(interceptors, interceptorInvocation{
 		when: Before,
 		why:  Create,
-		interceptor: interceptorFunc(func(ctx context.Context, opts interceptorOptions) diag.Diagnostics {
+		interceptor: crudInterceptorFunc(func(ctx context.Context, opts crudInterceptorOptions) diag.Diagnostics {
 			var diags diag.Diagnostics
 			return diags
 		}),
 	})
-	interceptors = append(interceptors, interceptorItem{
+	interceptors = append(interceptors, interceptorInvocation{
 		when: After,
 		why:  Delete,
-		interceptor: interceptorFunc(func(ctx context.Context, opts interceptorOptions) diag.Diagnostics {
+		interceptor: crudInterceptorFunc(func(ctx context.Context, opts crudInterceptorOptions) diag.Diagnostics {
 			var diags diag.Diagnostics
 			return diags
 		}),
 	})
-	interceptors = append(interceptors, interceptorItem{
+	interceptors = append(interceptors, interceptorInvocation{
 		when: Before,
 		why:  Create,
-		interceptor: interceptorFunc(func(ctx context.Context, opts interceptorOptions) diag.Diagnostics {
+		interceptor: crudInterceptorFunc(func(ctx context.Context, opts crudInterceptorOptions) diag.Diagnostics {
 			var diags diag.Diagnostics
 			return diags
 		}),
@@ -59,28 +62,28 @@ func TestInterceptorsWhy(t *testing.T) {
 func TestInterceptedHandler(t *testing.T) {
 	t.Parallel()
 
-	var interceptors interceptorItems
+	var interceptors interceptorInvocations
 
-	interceptors = append(interceptors, interceptorItem{
+	interceptors = append(interceptors, interceptorInvocation{
 		when: Before,
 		why:  Create,
-		interceptor: interceptorFunc(func(ctx context.Context, opts interceptorOptions) diag.Diagnostics {
+		interceptor: crudInterceptorFunc(func(ctx context.Context, opts crudInterceptorOptions) diag.Diagnostics {
 			var diags diag.Diagnostics
 			return diags
 		}),
 	})
-	interceptors = append(interceptors, interceptorItem{
+	interceptors = append(interceptors, interceptorInvocation{
 		when: After,
 		why:  Delete,
-		interceptor: interceptorFunc(func(ctx context.Context, opts interceptorOptions) diag.Diagnostics {
+		interceptor: crudInterceptorFunc(func(ctx context.Context, opts crudInterceptorOptions) diag.Diagnostics {
 			var diags diag.Diagnostics
 			return diags
 		}),
 	})
-	interceptors = append(interceptors, interceptorItem{
+	interceptors = append(interceptors, interceptorInvocation{
 		when: Before,
 		why:  Create,
-		interceptor: interceptorFunc(func(ctx context.Context, opts interceptorOptions) diag.Diagnostics {
+		interceptor: crudInterceptorFunc(func(ctx context.Context, opts crudInterceptorOptions) diag.Diagnostics {
 			var diags diag.Diagnostics
 			return diags
 		}),
@@ -90,12 +93,11 @@ func TestInterceptedHandler(t *testing.T) {
 		var diags diag.Diagnostics
 		return sdkdiag.AppendErrorf(diags, "read error")
 	}
-	bootstrapContext := func(ctx context.Context, _ getAttributeFunc, meta any) (context.Context, diag.Diagnostics) {
-		var diags diag.Diagnostics
-		return ctx, diags
+	bootstrapContext := func(ctx context.Context, _ getAttributeFunc, meta any) (context.Context, error) {
+		return ctx, nil
 	}
 
-	diags := interceptedHandler(bootstrapContext, interceptors, read, Read)(context.Background(), nil, 42)
+	diags := interceptedCRUDHandler(bootstrapContext, interceptors, read, Read)(context.Background(), nil, 42)
 	if got, want := len(diags), 1; got != want {
 		t.Errorf("length of diags = %v, want %v", got, want)
 	}

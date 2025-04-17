@@ -8,133 +8,191 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/organizations"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
-	return []*types.ServicePackageFrameworkDataSource{}
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
+	return []*inttypes.ServicePackageFrameworkDataSource{}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{}
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
+	return []*inttypes.ServicePackageFrameworkResource{}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
-	return []*types.ServicePackageSDKDataSource{
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
+	return []*inttypes.ServicePackageSDKDataSource{
 		{
 			Factory:  dataSourceDelegatedAdministrators,
 			TypeName: "aws_organizations_delegated_administrators",
 			Name:     "Delegated Administrators",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			}),
 		},
 		{
 			Factory:  dataSourceDelegatedServices,
 			TypeName: "aws_organizations_delegated_services",
 			Name:     "Delegated Services",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			}),
 		},
 		{
 			Factory:  dataSourceOrganization,
 			TypeName: "aws_organizations_organization",
 			Name:     "Organization",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			}),
 		},
 		{
 			Factory:  dataSourceOrganizationalUnit,
 			TypeName: "aws_organizations_organizational_unit",
 			Name:     "Organizational Unit",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			}),
 		},
 		{
 			Factory:  dataSourceOrganizationalUnitChildAccounts,
 			TypeName: "aws_organizations_organizational_unit_child_accounts",
 			Name:     "Organizational Unit Child Accounts",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			}),
 		},
 		{
 			Factory:  dataSourceOrganizationalUnitDescendantAccounts,
 			TypeName: "aws_organizations_organizational_unit_descendant_accounts",
 			Name:     "Organizational Unit Descendant Accounts",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			}),
 		},
 		{
 			Factory:  dataSourceOrganizationalUnitDescendantOrganizationalUnits,
 			TypeName: "aws_organizations_organizational_unit_descendant_organizational_units",
 			Name:     "Organizational Unit Descendant Organization Units",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			}),
 		},
 		{
 			Factory:  dataSourceOrganizationalUnits,
 			TypeName: "aws_organizations_organizational_units",
 			Name:     "Organizational Unit",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			}),
 		},
 		{
 			Factory:  dataSourcePolicies,
 			TypeName: "aws_organizations_policies",
 			Name:     "Policies",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			}),
 		},
 		{
 			Factory:  dataSourcePoliciesForTarget,
 			TypeName: "aws_organizations_policies_for_target",
 			Name:     "Policies For Target",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			}),
 		},
 		{
 			Factory:  dataSourcePolicy,
 			TypeName: "aws_organizations_policy",
 			Name:     "Policy",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			}),
 		},
 		{
 			Factory:  dataSourceResourceTags,
 			TypeName: "aws_organizations_resource_tags",
 			Name:     "Resource Tags",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			}),
 		},
 	}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
-	return []*types.ServicePackageSDKResource{
+func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePackageSDKResource {
+	return []*inttypes.ServicePackageSDKResource{
 		{
 			Factory:  resourceAccount,
 			TypeName: "aws_organizations_account",
 			Name:     "Account",
-			Tags: unique.Make(types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
 			}),
 		},
 		{
 			Factory:  resourceDelegatedAdministrator,
 			TypeName: "aws_organizations_delegated_administrator",
 			Name:     "Delegated Administrator",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			}),
 		},
 		{
 			Factory:  resourceOrganization,
 			TypeName: "aws_organizations_organization",
 			Name:     "Organization",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			}),
 		},
 		{
 			Factory:  resourceOrganizationalUnit,
 			TypeName: "aws_organizations_organizational_unit",
 			Name:     "Organizational Unit",
-			Tags: unique.Make(types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
 			}),
 		},
 		{
 			Factory:  resourcePolicy,
 			TypeName: "aws_organizations_policy",
 			Name:     "Policy",
-			Tags: unique.Make(types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
 			}),
 		},
 		{
 			Factory:  resourcePolicyAttachment,
 			TypeName: "aws_organizations_policy_attachment",
 			Name:     "Policy Attachment",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			}),
 		},
 		{
 			Factory:  resourceResourcePolicy,
 			TypeName: "aws_organizations_resource_policy",
 			Name:     "Resource Policy",
-			Tags: unique.Make(types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
 			}),
 		},
 	}
@@ -150,6 +208,16 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 	optFns := []func(*organizations.Options){
 		organizations.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+		func(o *organizations.Options) {
+			if region := config[names.AttrRegion].(string); o.Region != region {
+				tflog.Info(ctx, "overriding provider-configured AWS API region", map[string]any{
+					"service":         p.ServicePackageName(),
+					"original_region": o.Region,
+					"override_region": region,
+				})
+				o.Region = region
+			}
+		},
 		withExtraOptions(ctx, p, config),
 	}
 

@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
 )
 
@@ -23,20 +23,20 @@ var (
 	_ tftags.ServiceTagUpdater = &mockService{}
 )
 
-func (t *mockService) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
-	return []*types.ServicePackageFrameworkDataSource{}
+func (t *mockService) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
+	return []*inttypes.ServicePackageFrameworkDataSource{}
 }
 
-func (t *mockService) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{}
+func (t *mockService) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
+	return []*inttypes.ServicePackageFrameworkResource{}
 }
 
-func (t *mockService) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
-	return []*types.ServicePackageSDKDataSource{}
+func (t *mockService) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
+	return []*inttypes.ServicePackageSDKDataSource{}
 }
 
-func (t *mockService) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
-	return []*types.ServicePackageSDKResource{}
+func (t *mockService) SDKResources(ctx context.Context) []*inttypes.ServicePackageSDKResource {
+	return []*inttypes.ServicePackageSDKResource{}
 }
 
 func (t *mockService) ServicePackageName() string {
@@ -62,12 +62,12 @@ func TestTagsResourceInterceptor(t *testing.T) {
 	t.Parallel()
 
 	ctx := context.Background()
-	var interceptors interceptorItems
-	sp := unique.Make(types.ServicePackageResourceTags{
+	var interceptors interceptorInvocations
+	sp := unique.Make(inttypes.ServicePackageResourceTags{
 		IdentifierAttribute: "id",
 	})
-	tags := newTagsResourceInterceptor(sp)
-	interceptors = append(interceptors, interceptorItem{
+	tags := resourceTransparentTagging(sp)
+	interceptors = append(interceptors, interceptorInvocation{
 		when:        Finally,
 		why:         Update,
 		interceptor: tags,
@@ -85,7 +85,7 @@ func TestTagsResourceInterceptor(t *testing.T) {
 	}))
 
 	bootstrapContext := func(ctx context.Context, meta any) context.Context {
-		ctx = conns.NewResourceContext(ctx, "Test", "aws_test")
+		ctx = conns.NewResourceContext(ctx, "Test", "aws_test", "")
 		if v, ok := meta.(*conns.AWSClient); ok {
 			ctx = tftags.NewContext(ctx, v.DefaultTagsConfig(ctx), v.IgnoreTagsConfig(ctx))
 		}
@@ -97,13 +97,13 @@ func TestTagsResourceInterceptor(t *testing.T) {
 	d := &resourceData{}
 
 	for _, v := range interceptors {
-		opts := interceptorOptions{
+		opts := crudInterceptorOptions{
 			c:    conn,
 			d:    d,
 			when: v.when,
 			why:  v.why,
 		}
-		diags := v.interceptor.run(ctx, opts)
+		diags := v.interceptor.(crudInterceptor).run(ctx, opts)
 		if got, want := len(diags), 1; got != want {
 			t.Errorf("length of diags = %v, want %v", got, want)
 		}
