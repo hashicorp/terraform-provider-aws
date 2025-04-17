@@ -186,7 +186,7 @@ func findDefaultServiceQuota(ctx context.Context, conn *servicequotas.Client, in
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findDefaultServiceQuotas(ctx context.Context, conn *servicequotas.Client, input *servicequotas.ListAWSDefaultServiceQuotasInput, filter tfslices.Predicate[*awstypes.ServiceQuota]) ([]awstypes.ServiceQuota, error) {
+func findDefaultServiceQuotas(ctx context.Context, conn *servicequotas.Client, input *servicequotas.ListAWSDefaultServiceQuotasInput, filter tfslices.Predicate[*awstypes.ServiceQuota]) ([]awstypes.ServiceQuota, error) { // nosemgrep:ci.servicequotas-in-func-name
 	var output []awstypes.ServiceQuota
 
 	pages := servicequotas.NewListAWSDefaultServiceQuotasPaginator(conn, input)
