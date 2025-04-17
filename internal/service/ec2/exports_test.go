@@ -252,6 +252,7 @@ var (
 	FlattenSecurityGroups                                      = flattenSecurityGroups
 	IPAMServicePrincipal                                       = ipamServicePrincipal
 	InstanceMigrateState                                       = instanceMigrateState
+	InstanceStateUpgradeV1                                     = instanceStateUpgradeV1
 	InternetGatewayAttachmentParseResourceID                   = internetGatewayAttachmentParseResourceID
 	KeyPairMigrateState                                        = keyPairMigrateState
 	ManagedPrefixListEntryCreateResourceID                     = managedPrefixListEntryCreateResourceID
