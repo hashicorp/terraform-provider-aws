@@ -183,6 +183,21 @@ func (s interceptorInvocations) resourceSchema() []interceptorFunc[resource.Sche
 	})
 }
 
+type resourceModifyPlanInterceptor interface {
+	// modifyPlan is invoked for a ModifyPlan call.
+	modifyPlan(context.Context, interceptorOptions[resource.ModifyPlanRequest, resource.ModifyPlanResponse]) diag.Diagnostics
+}
+
+// resourceModifyPlan returns a slice of interceptors that run on resource ModifyPlan.
+func (s interceptorInvocations) resourceModifyPlan() []interceptorFunc[resource.ModifyPlanRequest, resource.ModifyPlanResponse] {
+	return tfslices.ApplyToAll(tfslices.Filter(s, func(e any) bool {
+		_, ok := e.(resourceModifyPlanInterceptor)
+		return ok
+	}), func(e any) interceptorFunc[resource.ModifyPlanRequest, resource.ModifyPlanResponse] {
+		return e.(resourceModifyPlanInterceptor).modifyPlan
+	})
+}
+
 // when represents the point in the CRUD request lifecycle that an interceptor is run.
 // Multiple values can be ORed together.
 type when uint16
@@ -206,7 +221,8 @@ type interceptedRequest interface {
 		resource.CreateRequest |
 		resource.ReadRequest |
 		resource.UpdateRequest |
-		resource.DeleteRequest
+		resource.DeleteRequest |
+		resource.ModifyPlanRequest
 }
 
 // interceptedResponse represents a Plugin Framework response type that can be intercepted.
@@ -221,7 +237,8 @@ type interceptedResponse interface {
 		resource.CreateResponse |
 		resource.ReadResponse |
 		resource.UpdateResponse |
-		resource.DeleteResponse
+		resource.DeleteResponse |
+		resource.ModifyPlanResponse
 }
 
 // interceptedHandler returns a handler that runs any interceptors.

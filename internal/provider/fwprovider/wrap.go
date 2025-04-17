@@ -250,21 +250,11 @@ func (w *wrappedEphemeralResource) ValidateConfig(ctx context.Context, request e
 	}
 }
 
-// modifyPlanFunc modifies a Terraform plan.
-type modifyPlanFunc func(context.Context, *conns.AWSClient, resource.ModifyPlanRequest, *resource.ModifyPlanResponse)
-
-// validateConfigFunc validates a Terraform configuration.
-type validateConfigFunc func(context.Context, *conns.AWSClient, resource.ValidateConfigRequest, *resource.ValidateConfigResponse)
-
 type wrappedResourceOptions struct {
 	// bootstrapContext is run on all wrapped methods before any interceptors.
 	bootstrapContext contextFunc
 	interceptors     interceptorInvocations
-	// modifyPlanFuncs are run after bootstrapContext and before any ModifyPlan method on the inner resource.
-	modifyPlanFuncs []modifyPlanFunc
-	typeName        string
-	// validateConfigFuncs are run after bootstrapContext and before any ValidateConfig method on the inner resource.
-	validateConfigFuncs []validateConfigFunc
+	typeName         string
 }
 
 // wrappedResource represents an interceptor dispatcher for a Plugin Framework resource.
@@ -396,16 +386,17 @@ func (w *wrappedResource) ModifyPlan(ctx context.Context, request resource.Modif
 		return
 	}
 
-	for _, f := range w.opts.modifyPlanFuncs {
-		f(ctx, w.meta, request, response)
-		if response.Diagnostics.HasError() {
-			return
+	// We run ModifyPlan interceptors even if the resource has not defined a ModifyPlan method.
+	f := func(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) diag.Diagnostics {
+		return response.Diagnostics
+	}
+	if v, ok := w.inner.(resource.ResourceWithModifyPlan); ok {
+		f = func(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) diag.Diagnostics {
+			v.ModifyPlan(ctx, request, response)
+			return response.Diagnostics
 		}
 	}
-
-	if v, ok := w.inner.(resource.ResourceWithModifyPlan); ok {
-		v.ModifyPlan(ctx, request, response)
-	}
+	response.Diagnostics.Append(interceptedHandler(w.opts.interceptors.resourceModifyPlan(), f, w.meta)(ctx, request, response)...)
 }
 
 func (w *wrappedResource) ConfigValidators(ctx context.Context) []resource.ConfigValidator {
@@ -431,13 +422,6 @@ func (w *wrappedResource) ValidateConfig(ctx context.Context, request resource.V
 	response.Diagnostics.Append(diags...)
 	if response.Diagnostics.HasError() {
 		return
-	}
-
-	for _, f := range w.opts.validateConfigFuncs {
-		f(ctx, w.meta, request, response)
-		if response.Diagnostics.HasError() {
-			return
-		}
 	}
 
 	if v, ok := w.inner.(resource.ResourceWithValidateConfig); ok {

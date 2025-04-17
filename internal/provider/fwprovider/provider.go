@@ -419,7 +419,7 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 			}
 
 			if !tfunique.IsHandleNil(v.Tags) {
-				interceptors = append(interceptors, newTagsDataSourceInterceptor(v.Tags))
+				interceptors = append(interceptors, dataSourceTransparentTagging(v.Tags))
 			}
 
 			opts := wrappedDataSourceOptions{
@@ -430,7 +430,6 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 
 					if !tfunique.IsHandleNil(v.Region) && v.Region.Value().IsOverrideEnabled && getAttribute != nil {
 						var target types.String
-
 						diags.Append(getAttribute(ctx, path.Root(names.AttrRegion), &target)...)
 						if diags.HasError() {
 							return ctx, diags
@@ -488,7 +487,6 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 
 						if !tfunique.IsHandleNil(v.Region) && v.Region.Value().IsOverrideEnabled && getAttribute != nil {
 							var target types.String
-
 							diags.Append(getAttribute(ctx, path.Root(names.AttrRegion), &target)...)
 							if diags.HasError() {
 								return ctx, diags
@@ -528,8 +526,6 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 				isRegionOverrideEnabled = true
 			}
 
-			var validateConfigFuncs []validateConfigFunc
-			var modifyPlanFuncs []modifyPlanFunc
 			var interceptors interceptorInvocations
 
 			if isRegionOverrideEnabled {
@@ -537,17 +533,14 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 
 				interceptors = append(interceptors, resourceInjectRegionAttribute())
 				if v.IsValidateOverrideInPartition {
-					validateConfigFuncs = append(validateConfigFuncs, validateRegionValueInConfiguredPartition)
+					interceptors = append(interceptors, resourceValidateRegion())
 				}
-				modifyPlanFuncs = append(modifyPlanFuncs, defaultRegionValue)
-				modifyPlanFuncs = append(modifyPlanFuncs, forceNewIfRegionValueChanges)
-
-				// TODO REGION: Ensure that WithNoUpdate. Update isn't invoked on region change. Remove WithNoUpdate.
+				interceptors = append(interceptors, resourceDefaultRegion())
+				interceptors = append(interceptors, resourceForceNewIfRegionChanges())
 			}
 
 			if !tfunique.IsHandleNil(v.Tags) {
-				modifyPlanFuncs = append(modifyPlanFuncs, setTagsAll)
-				interceptors = append(interceptors, newTagsResourceInterceptor(v.Tags))
+				interceptors = append(interceptors, resourceTransparentTagging(v.Tags))
 			}
 
 			opts := wrappedResourceOptions{
@@ -558,7 +551,6 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 
 					if !tfunique.IsHandleNil(v.Region) && v.Region.Value().IsOverrideEnabled && getAttribute != nil {
 						var target types.String
-
 						diags.Append(getAttribute(ctx, path.Root(names.AttrRegion), &target)...)
 						if diags.HasError() {
 							return ctx, diags
@@ -576,10 +568,8 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 
 					return ctx, diags
 				},
-				interceptors:        interceptors,
-				modifyPlanFuncs:     modifyPlanFuncs,
-				typeName:            typeName,
-				validateConfigFuncs: validateConfigFuncs,
+				interceptors: interceptors,
+				typeName:     typeName,
 			}
 			p.resources = append(p.resources, func() resource.Resource {
 				return newWrappedResource(inner, opts)

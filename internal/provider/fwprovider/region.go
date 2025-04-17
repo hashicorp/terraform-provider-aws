@@ -20,22 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// validateRegionValueInConfiguredPartition is a config validator that validates that the value of
-// the top-level `region` attribute is in the configured AWS partition.
-func validateRegionValueInConfiguredPartition(ctx context.Context, c *conns.AWSClient, request resource.ValidateConfigRequest, response *resource.ValidateConfigResponse) {
-	var configRegion types.String
-	response.Diagnostics.Append(request.Config.GetAttribute(ctx, path.Root(names.AttrRegion), &configRegion)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	if !configRegion.IsNull() && !configRegion.IsUnknown() {
-		if err := validateRegionInPartition(ctx, c, configRegion.ValueString()); err != nil {
-			response.Diagnostics.AddAttributeError(path.Root(names.AttrRegion), "Invalid Region Value", err.Error())
-		}
-	}
-}
-
 func validateRegionInPartition(ctx context.Context, c *conns.AWSClient, region string) error {
 	if got, want := names.PartitionForRegion(region).ID(), c.Partition(ctx); got != want {
 		return fmt.Errorf("partition (%s) for per-resource Region (%s) is not the provider's configured partition (%s)", got, region, want)
@@ -44,62 +28,19 @@ func validateRegionInPartition(ctx context.Context, c *conns.AWSClient, region s
 	return nil
 }
 
-// defaultRegionValue is a plan modifier that sets the value of the top-level `region`
-// attribute to the provider's configured Region if it is not set.
-func defaultRegionValue(ctx context.Context, c *conns.AWSClient, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	// If the entire plan is null, the resource is planned for destruction.
-	if request.Plan.Raw.IsNull() {
-		return
-	}
+func validateInContextRegionInPartition(ctx context.Context, c *conns.AWSClient) diag.Diagnostics {
+	var diags diag.Diagnostics
 
-	var planRegion types.String
-	response.Diagnostics.Append(request.Plan.GetAttribute(ctx, path.Root(names.AttrRegion), &planRegion)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	if planRegion.IsNull() || planRegion.IsUnknown() {
-		// Set the region to the provider's configured region
-		response.Diagnostics.Append(response.Plan.SetAttribute(ctx, path.Root(names.AttrRegion), c.AwsConfig(ctx).Region)...)
-		if response.Diagnostics.HasError() {
-			return
+	// Verify that the value of the top-level `region` attribute is in the configured AWS partition.
+	if inContext, ok := conns.FromContext(ctx); ok {
+		if v := inContext.OverrideRegion(); v != "" {
+			if err := validateRegionInPartition(ctx, c, v); err != nil {
+				diags.AddAttributeError(path.Root(names.AttrRegion), "Invalid Region Value", err.Error())
+			}
 		}
 	}
-}
 
-// forceNewIfRegionValueChanges is a plan modifier that forces resource replacement
-// if the value of the top-level `region` attribute changes.
-func forceNewIfRegionValueChanges(ctx context.Context, c *conns.AWSClient, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	// If the entire plan is null, the resource is planned for destruction.
-	if request.Plan.Raw.IsNull() {
-		return
-	}
-
-	// If the entire state is null, the resource is new.
-	if request.State.Raw.IsNull() {
-		return
-	}
-
-	var planRegion types.String
-	response.Diagnostics.Append(request.Plan.GetAttribute(ctx, path.Root(names.AttrRegion), &planRegion)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	var stateRegion types.String
-	response.Diagnostics.Append(request.State.GetAttribute(ctx, path.Root(names.AttrRegion), &stateRegion)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	providerRegion := c.AwsConfig(ctx).Region
-	if stateRegion.IsNull() && planRegion.ValueString() == providerRegion {
-		return
-	}
-
-	if !planRegion.Equal(stateRegion) {
-		response.RequiresReplace = path.Paths{path.Root(names.AttrRegion)}
-	}
+	return diags
 }
 
 type dataSourceInjectRegionAttributeInterceptor struct{}
@@ -147,14 +88,9 @@ func (r regionDataSourceInterceptor) read(ctx context.Context, opts interceptorO
 	case Before:
 		// As data sources have no ModifyPlan functionality we validate the per-resource Region override value here.
 		if r.validateRegionInPartition {
-			if inContext, ok := conns.FromContext(ctx); ok {
-				if v := inContext.OverrideRegion(); v != "" {
-					if err := validateRegionInPartition(ctx, c, v); err != nil {
-						diags.AddAttributeError(path.Root(names.AttrRegion), "Invalid Region Value", err.Error())
-
-						return diags
-					}
-				}
+			diags.Append(validateInContextRegionInPartition(ctx, c)...)
+			if diags.HasError() {
+				return diags
 			}
 		}
 	case After:
@@ -221,14 +157,9 @@ func (r regionEphemeralResourceInterceptor) open(ctx context.Context, opts inter
 	case Before:
 		// As data sources have no ModifyPlan functionality we validate the per-resource Region override value here.
 		if r.validateRegionInPartition {
-			if inContext, ok := conns.FromContext(ctx); ok {
-				if v := inContext.OverrideRegion(); v != "" {
-					if err := validateRegionInPartition(ctx, c, v); err != nil {
-						diags.AddAttributeError(path.Root(names.AttrRegion), "Invalid Region Value", err.Error())
-
-						return diags
-					}
-				}
+			diags.Append(validateInContextRegionInPartition(ctx, c)...)
+			if diags.HasError() {
+				return diags
 			}
 		}
 	case After:
@@ -277,4 +208,110 @@ func (r resourceInjectRegionAttributeInterceptor) schema(ctx context.Context, op
 // resourceInjectRegionAttribute injects a top-level "region" attribute into a resource's schema.
 func resourceInjectRegionAttribute() resourceSchemaInterceptor {
 	return &resourceInjectRegionAttributeInterceptor{}
+}
+
+type resourceValidateRegionInterceptor struct{}
+
+func (r resourceValidateRegionInterceptor) modifyPlan(ctx context.Context, opts interceptorOptions[resource.ModifyPlanRequest, resource.ModifyPlanResponse]) diag.Diagnostics {
+	c := opts.c
+	var diags diag.Diagnostics
+
+	switch when := opts.when; when {
+	case Before:
+		diags.Append(validateInContextRegionInPartition(ctx, c)...)
+		if diags.HasError() {
+			return diags
+		}
+	}
+
+	return diags
+}
+
+// resourceValidateRegion validates that the value of the top-level `region` attribute is in the configured AWS partition.
+func resourceValidateRegion() resourceModifyPlanInterceptor {
+	return &resourceValidateRegionInterceptor{}
+}
+
+type resourceDefaultRegionInterceptor struct{}
+
+func (r resourceDefaultRegionInterceptor) modifyPlan(ctx context.Context, opts interceptorOptions[resource.ModifyPlanRequest, resource.ModifyPlanResponse]) diag.Diagnostics {
+	c := opts.c
+	var diags diag.Diagnostics
+
+	switch request, response, when := opts.request, opts.response, opts.when; when {
+	case Before:
+		// If the entire plan is null, the resource is planned for destruction.
+		if request.Plan.Raw.IsNull() {
+			return diags
+		}
+
+		var target types.String
+		diags.Append(request.Plan.GetAttribute(ctx, path.Root(names.AttrRegion), &target)...)
+		if diags.HasError() {
+			return diags
+		}
+
+		if target.IsNull() || target.IsUnknown() {
+			// Set the region to the provider's configured region
+			diags.Append(response.Plan.SetAttribute(ctx, path.Root(names.AttrRegion), c.AwsConfig(ctx).Region)...)
+			if diags.HasError() {
+				return diags
+			}
+		}
+	}
+
+	return diags
+}
+
+// resourceDefaultRegion sets the value of the top-level `region` attribute to the provider's configured Region if it is not set.
+func resourceDefaultRegion() resourceModifyPlanInterceptor {
+	return &resourceDefaultRegionInterceptor{}
+}
+
+type resourceForceNewIfRegionChangesInterceptor struct{}
+
+func (r resourceForceNewIfRegionChangesInterceptor) modifyPlan(ctx context.Context, opts interceptorOptions[resource.ModifyPlanRequest, resource.ModifyPlanResponse]) diag.Diagnostics {
+	c := opts.c
+	var diags diag.Diagnostics
+
+	switch request, response, when := opts.request, opts.response, opts.when; when {
+	case Before:
+		// If the entire plan is null, the resource is planned for destruction.
+		if request.Plan.Raw.IsNull() {
+			return diags
+		}
+
+		// If the entire state is null, the resource is new.
+		if request.State.Raw.IsNull() {
+			return diags
+		}
+
+		var planRegion types.String
+		diags.Append(request.Plan.GetAttribute(ctx, path.Root(names.AttrRegion), &planRegion)...)
+		if diags.HasError() {
+			return diags
+		}
+
+		var stateRegion types.String
+		diags.Append(request.State.GetAttribute(ctx, path.Root(names.AttrRegion), &stateRegion)...)
+		if diags.HasError() {
+			return diags
+		}
+
+		providerRegion := c.AwsConfig(ctx).Region
+		if stateRegion.IsNull() && planRegion.ValueString() == providerRegion {
+			return diags
+		}
+
+		if !planRegion.Equal(stateRegion) {
+			response.RequiresReplace = path.Paths{path.Root(names.AttrRegion)}
+		}
+	}
+
+	return diags
+}
+
+// resourceForceNewIfRegionChanges forces resource replacement if the value of the top-level `region` attribute changes.
+func resourceForceNewIfRegionChanges() resourceModifyPlanInterceptor {
+	return &resourceForceNewIfRegionChangesInterceptor{}
 }
