@@ -23,6 +23,7 @@ Upgrade topics:
 - [data-source/aws_batch_compute_environment](#data-sourceaws_batch_compute_environment)
 - [data-source/aws_ecs_task_definition](#data-sourceaws_ecs_task_definition)
 - [data-source/aws_ecs_task_execution](#data-sourceaws_ecs_task_execution)
+- [data-source/aws_elbv2_listener_rule](#data-sourceaws_elbv2_listener_rule)
 - [data-source/aws_globalaccelerator_accelerator](#data-sourceaws_globalaccelerator_accelerator)
 - [data-source/aws_launch_template](#data-sourceaws_launch_template)
 - [data-source/aws_opensearch_domain](#data-sourceaws_opensearch_domain)
@@ -171,6 +172,26 @@ Remove `inference_accelerator` from your configuration—it no longer exists. Am
 ## data-source/aws_ecs_task_execution
 
 Remove `inference_accelerator_overrides` from your configuration—it no longer exists. Amazon Elastic Inference reached end of life in April 2024.
+
+## data-source/aws_elbv2_listener_rule
+
+The following attributes are now list nested blocks instead of single nested blocks.
+
+- `action.authenticate_cognito`
+- `action.authenticate_oidc`
+- `action.fixed_response`
+- `action.forward`
+- `action.forward.stickiness`
+- `action.redirect`
+- `condition.host_header`
+- `condition.http_header`
+- `condition.http_request_method`
+- `condition.path_pattern`
+- `condition.query_string`
+- `condition.source_ip`
+
+When referencing these attributes, the indicies must now be included in the attribute address.
+For example, `action[0].authenticate_cognito.scope` would now be referenced as `action[0].authenticate_cognito[0].scope`.
 
 ## data-source/aws_launch_template
 
