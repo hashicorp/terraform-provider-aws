@@ -324,7 +324,8 @@ This resource supports the following arguments:
 * `deprecate_rule` - (Optional) The AMI deprecation rule for cross-Region AMI copies created by the rule. See the [`deprecate_rule`](#cross-region-copy-rule-deprecate-rule-arguments) block.
 * `encrypted` - (Required) To encrypt a copy of an unencrypted snapshot if encryption by default is not enabled, enable encryption using this parameter. Copies of encrypted snapshots are encrypted, even if this parameter is false or if encryption by default is not enabled.
 * `retain_rule` - (Required) The retention rule that indicates how long snapshot copies are to be retained in the destination Region. See the [`retain_rule`](#cross-region-copy-rule-retain-rule-arguments) block. Max of 1 per schedule.
-* `target` - (Required) The target Region or the Amazon Resource Name (ARN) of the target Outpost for the snapshot copies.
+* `target` - Use only for DLM policies of `policy_type=EBS_SNAPSHOT_MANAGEMENT`. The target Region or the Amazon Resource Name (ARN) of the target Outpost for the snapshot copies.
+* `target_region` - Use only for DLM policies of `policy_type=IMAGE_MANAGEMENT`. The target Region or the Amazon Resource Name (ARN) of the target Outpost for the snapshot copies.
 
 #### Cross Region Copy Rule Deprecate Rule arguments
 
