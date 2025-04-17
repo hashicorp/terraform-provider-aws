@@ -12,8 +12,12 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcloudfront "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -52,6 +56,52 @@ func TestAccCloudFrontKeyValueStore_basic(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccCloudFrontKeyValueStore_Identity_Basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	var keyvaluestore awstypes.KeyValueStore
+	resourceName := "aws_cloudfront_key_value_store.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_12_0),
+		},
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.CloudFront)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFront),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckKeyValueStoreDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKeyValueStoreConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckKeyValueStoreExists(ctx, resourceName, &keyvaluestore),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrAccountID: tfknownvalue.AccountID(),
+						names.AttrName:      knownvalue.StringExact(rName),
+					}),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateKind:   resource.ImportCommandWithId,
+				ImportStateVerify: true,
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateKind:   resource.ImportBlockWithId,
 				ImportStateVerify: true,
 			},
 		},
