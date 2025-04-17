@@ -16,7 +16,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/interceptors"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -26,7 +26,7 @@ type tagsDataSourceInterceptor struct {
 	tagsInterceptor
 }
 
-func newTagsDataSourceInterceptor(servicePackageResourceTags unique.Handle[types.ServicePackageResourceTags]) dataSourceInterceptor {
+func newTagsDataSourceInterceptor(servicePackageResourceTags unique.Handle[inttypes.ServicePackageResourceTags]) dataSourceInterceptor {
 	return &tagsDataSourceInterceptor{
 		tagsInterceptor: tagsInterceptor{
 			WithTaggingMethods: interceptors.WithTaggingMethods{
@@ -87,7 +87,7 @@ type tagsResourceInterceptor struct {
 	tagsInterceptor
 }
 
-func newTagsResourceInterceptor(servicePackageResourceTags unique.Handle[types.ServicePackageResourceTags]) resourceInterceptor {
+func newTagsResourceInterceptor(servicePackageResourceTags unique.Handle[inttypes.ServicePackageResourceTags]) resourceInterceptor {
 	return &tagsResourceInterceptor{
 		tagsInterceptor: tagsInterceptor{
 			WithTaggingMethods: interceptors.WithTaggingMethods{

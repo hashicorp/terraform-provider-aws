@@ -91,7 +91,8 @@ The `filter` configuration block supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `group_name` - For Availability Zones, this is the same value as the Region name. For Local Zones, the name of the associated group, for example `us-west-2-lax-1`.
+* `group_long_name` - The long name of the Availability Zone group, Local Zone group, or Wavelength Zone group.
+* `group_name` - The name of the zone group. For example: `us-east-1-zg-1`, `us-west-2-lax-1`, or `us-east-1-wl1-bos-wlz-1`.
 * `name_suffix` - Part of the AZ name that appears after the region name, uniquely identifying the AZ within its region.
 For Availability Zones this is usually a single letter, for example `a` for the `us-west-2a` zone.
 For Local and Wavelength Zones this is a longer string, for example `wl1-sfo-wlz-1` for the `us-west-2-wl1-sfo-wlz-1` zone.
@@ -99,7 +100,6 @@ For Local and Wavelength Zones this is a longer string, for example `wl1-sfo-wlz
 * `opt_in_status` - For Availability Zones, this always has the value of `opt-in-not-required`. For Local Zones, this is the opt in status. The possible values are `opted-in` and `not-opted-in`.
 * `parent_zone_id` - ID of the zone that handles some of the Local Zone or Wavelength Zone control plane operations, such as API calls.
 * `parent_zone_name` - Name of the zone that handles some of the Local Zone or Wavelength Zone control plane operations, such as API calls.
-* `region` - Region where the selected availability zone resides. This is always the region selected on the provider, since this data source searches only within that region.
 * `zone_type` - Type of zone. Values are `availability-zone`, `local-zone`, and `wavelength-zone`.
 
 ## Timeouts

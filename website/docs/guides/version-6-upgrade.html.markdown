@@ -16,6 +16,7 @@ Upgrade topics:
 
 - [Provider Version Configuration](#provider-version-configuration)
 - [Provider Arguments](#provider-arguments)
+- [Enhanced Multi-Region Support](#enhanced-multi-region-support)
 - [Dropping Support For Amazon SimpleDB](#dropping-support-for-amazon-simpledb)
 - [Dropping Support For Amazon Worklink](#dropping-support-for-amazon-worklink)
 - [AWS OpsWorks Stacks End of Life](#aws-opsworks-stacks-end-of-life)
@@ -28,12 +29,18 @@ Upgrade topics:
 - [data-source/aws_opensearch_domain](#data-sourceaws_opensearch_domain)
 - [data-source/aws_opensearchserverless_security_config](#data-sourceaws_opensearchserverless_security_config)
 - [data-source/aws_quicksight_data_set](#data-sourceaws_quicksight_data_set)
+- [data-source/aws_s3_bucket](#data-sourceaws_s3_bucket)
 - [data-source/aws_service_discovery_service](#data-sourceaws_service_discovery_service)
+- [data-source/aws_vpc_endpoint_service](#data-sourceaws_vpc_endpoint_service)
+- [data-source/aws_vpc_peering_connection](#data-sourceaws_vpc_peering_connection)
 - [resource/aws_api_gateway_account](#resourceaws_api_gateway_account)
 - [resource/aws_api_gateway_deployment](#resourceaws_api_gateway_deployment)
 - [resource/aws_batch_compute_environment](#resourceaws_batch_compute_environment)
+- [resource/aws_cloudformation_stack_set_instance](#resourceaws_cloudformation_stack_set_instance)
 - [resource/aws_cloudfront_key_value_store](#resourceaws_cloudfront_key_value_store)
 - [resource/aws_cloudfront_response_headers_policy](#resourceaws_cloudfront_response_headers_policy)
+- [resource/aws_config_aggregate_authorization](#resourceawsconfig_aggregate_authorization)
+- [resource/aws_dx_hosted_connection](#resourceaws_dx_hosted_connection)
 - [resource/aws_ecs_task_definition](#resourceaws_ecs_task_definition)
 - [resource/aws_instance](#resourceaws_instance)
 - [resource/aws_kinesis_analytics_application](#resourceaws_kinesis_analytics_application)
@@ -47,6 +54,7 @@ Upgrade topics:
 - [resource/aws_redshift_cluster](#resourceaws_redshift_cluster)
 - [resource/aws_redshift_service_account](#resourceaws_redshift_service_account)
 - [resource/aws_rekognition_stream_processor](#resourceaws_rekognition_stream_processor)
+- [resource/aws_s3_bucket](#resourceaws_s3_bucket)
 - [resource/aws_sagemaker_notebook_instance](#resourceaws_sagemaker_notebook_instance)
 - [resource/aws_spot_instance_request](#resourceaws_spot_instance_request)
 - [resource/aws_ssm_association](#resourceaws_ssm_association)
@@ -101,6 +109,10 @@ Version 6.0.0 removes these `provider` arguments:
 * `endpoints.simpledb` and `endpoints.sdb` - Removed following dropping support for Amazon SimpleDB
 * `endpoints.worklink` - Removed following dropping support for Amazon Worklink
 
+## Enhanced Multi-Region Support
+
+Blah blah blah.
+
 ## Dropping Support For Amazon SimpleDB
 
 As the [AWS SDK for Go v2](https://docs.aws.amazon.com/sdk-for-go/v2/developer-guide/welcome.html) does not support Amazon SimpleDB, the `aws_simpledb_domain` resource has been removed.
@@ -150,20 +162,6 @@ This is not recommended.
 
 `id` is now computed only.
 
-## data-source/aws_opensearchserverless_security_config
-
-The `saml_options` attribute is now a list nested block instead of a single nested block.
-When referencing this attribute, the index must now be included in the attribute address.
-For example, `saml_options.session_timeout` would now be referenced as `saml_options[0].session_timeout`.
-
-## data-source/aws_quicksight_data_set
-
-`tags_all` has been removed.
-
-## data-source/aws_service_discovery_service
-
-`tags_all` has been removed.
-
 ## data-source/aws_ecs_task_definition
 
 Remove `inference_accelerator` from your configuration—it no longer exists. Amazon Elastic Inference reached end of life in April 2024.
@@ -181,6 +179,32 @@ Remove `elastic_inference_accelerator` from your configuration—it no longer ex
 Remove `kibana_endpoint` from your configuration—it no longer exists. AWS OpenSearch Service does **not** use Kibana endpoints (i.e., `_plugin/kibana`). Instead, OpenSearch uses **Dashboards**, accessible at the path `/_dashboards/` on the domain endpoint. The terminology has shifted from “Kibana” to “Dashboards.”
 
 For more information, see the [AWS OpenSearch Dashboards documentation](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/dashboards.html).
+
+## data-source/aws_opensearchserverless_security_config
+
+The `saml_options` attribute is now a list nested block instead of a single nested block.
+When referencing this attribute, the index must now be included in the attribute address.
+For example, `saml_options.session_timeout` would now be referenced as `saml_options[0].session_timeout`.
+
+## data-source/aws_quicksight_data_set
+
+`tags_all` has been removed.
+
+## data-source/aws_s3_bucket
+
+The `bucket_region` attribute has been added. We encourage use of the `bucket_region` attribute instead of the `region` attribute (which is now used for [Enhanced Multi-Region Support]()).
+
+## data-source/aws_service_discovery_service
+
+`tags_all` has been removed.
+
+## data-source/aws_vpc_endpoint_service
+
+The `region` attribute has been deprecated. All configurations using `region` should be updated to use the `service_region` attribute instead.
+
+## data-source/aws_vpc_peering_connection
+
+The `region` attribute has been deprecated. All configurations using `region` should be updated to use the `requester_region` attribute instead.
 
 ## resource/aws_api_gateway_account
 
@@ -236,6 +260,10 @@ terraform import aws_api_gateway_stage.prod <rest_api_id>/<stage_name>
 * `compute_environment_name` has been renamed to `name`.
 * `compute_environment_name_prefix` has been renamed to `name_prefix`.
 
+## resource/aws_cloudformation_stack_set_instance
+
+The `region` attribute has been deprecated. All configurations using `region` should be updated to use the `stack_set_instance_region` attribute instead.
+
 ## resource/aws_cloudfront_key_value_store
 
 The `id` attribute is now set the to ID value returned by the AWS API.
@@ -244,6 +272,14 @@ For the name, use the `name` attribute.
 ## resource/aws_cloudfront_response_headers_policy
 
 The `etag` argument is now computed only.
+
+## resource/aws_config_aggregate_authorization
+
+The `region` attribute has been deprecated. All configurations using `region` should be updated to use the `authorized_aws_region` attribute instead.
+
+## resource/aws_dx_hosted_connection
+
+The `region` attribute has been deprecated. All configurations using `region` should be updated to use the `connection_region` attribute instead.
 
 ## resource/aws_ecs_task_definition
 
@@ -307,6 +343,10 @@ The `aws_redshift_service_account` resource has been removed. AWS [recommends](h
 The `regions_of_interest.bounding_box` argument is now a list nested block instead of a single nested block.
 When referencing this argument, the index must now be included in the attribute address.
 For example, `regions_of_interest[0].bounding_box.height` would now be referenced as `regions_of_interest[0].bounding_box[0].height`.
+
+## resource/aws_s3_bucket
+
+The `bucket_region` attribute has been added. We encourage use of the `bucket_region` attribute instead of the `region` attribute (which is now used for [Enhanced Multi-Region Support]()).
 
 ## resource/aws_sagemaker_notebook_instance
 

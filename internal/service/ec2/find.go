@@ -3181,7 +3181,9 @@ func findVPCPeeringConnection(ctx context.Context, conn *ec2.Client, input *ec2.
 		return nil, err
 	}
 
-	return tfresource.AssertSingleValueResult(output, func(v *awstypes.VpcPeeringConnection) bool { return v.Status != nil })
+	return tfresource.AssertSingleValueResult(output, func(v *awstypes.VpcPeeringConnection) bool {
+		return v.AccepterVpcInfo != nil && v.RequesterVpcInfo != nil && v.Status != nil
+	})
 }
 
 func findVPCPeeringConnections(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcPeeringConnectionsInput) ([]awstypes.VpcPeeringConnection, error) {
