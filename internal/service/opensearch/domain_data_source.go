@@ -325,11 +325,6 @@ func dataSourceDomain() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"kibana_endpoint": {
-				Type:       schema.TypeString,
-				Computed:   true,
-				Deprecated: "kibana_endpoint is deprecated. Use dashboard_endpoint instead.",
-			},
 			"log_publishing_options": {
 				Type:     schema.TypeSet,
 				Computed: true,
@@ -503,7 +498,6 @@ func dataSourceDomainRead(ctx context.Context, d *schema.ResourceData, meta any)
 	d.Set("domain_id", ds.DomainId)
 	d.Set(names.AttrEndpoint, ds.Endpoint)
 	d.Set("dashboard_endpoint", getDashboardEndpoint(d.Get(names.AttrEndpoint).(string)))
-	d.Set("kibana_endpoint", getKibanaEndpoint(d.Get(names.AttrEndpoint).(string)))
 
 	if err := d.Set("advanced_security_options", flattenAdvancedSecurityOptions(ds.AdvancedSecurityOptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting advanced_security_options: %s", err)
@@ -549,7 +543,6 @@ func dataSourceDomainRead(ctx context.Context, d *schema.ResourceData, meta any)
 			return sdkdiag.AppendErrorf(diags, "setting endpoint: %s", err)
 		}
 		d.Set("dashboard_endpoint", getDashboardEndpoint(d.Get(names.AttrEndpoint).(string)))
-		d.Set("kibana_endpoint", getKibanaEndpoint(d.Get(names.AttrEndpoint).(string)))
 		if endpoints["vpcv2"] != nil {
 			d.Set("endpoint_v2", endpoints["vpcv2"])
 			d.Set("dashboard_endpoint_v2", getDashboardEndpoint(d.Get("endpoint_v2").(string)))
@@ -564,7 +557,6 @@ func dataSourceDomainRead(ctx context.Context, d *schema.ResourceData, meta any)
 		if ds.Endpoint != nil {
 			d.Set(names.AttrEndpoint, ds.Endpoint)
 			d.Set("dashboard_endpoint", getDashboardEndpoint(d.Get(names.AttrEndpoint).(string)))
-			d.Set("kibana_endpoint", getKibanaEndpoint(d.Get(names.AttrEndpoint).(string)))
 		}
 		if ds.EndpointV2 != nil {
 			d.Set("endpoint_v2", ds.EndpointV2)

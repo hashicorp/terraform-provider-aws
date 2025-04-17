@@ -496,7 +496,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `endpoint_v2` - V2 domain endpoint that works with both IPv4 and IPv6 addresses, used to submit index, search, and data upload requests.
 * `dashboard_endpoint` - Domain-specific endpoint for Dashboard without https scheme.
 * `dashboard_endpoint_v2` - V2 domain endpoint for Dashboard that works with both IPv4 and IPv6 addresses, without https scheme.
-* `kibana_endpoint` - (**Deprecated**) Domain-specific endpoint for kibana without https scheme. Use the `dashboard_endpoint` attribute instead.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `vpc_options.0.availability_zones` - If the domain was created inside a VPC, the names of the availability zones the configured `subnet_ids` were created inside.
 * `vpc_options.0.vpc_id` - If the domain was created inside a VPC, the ID of the VPC.

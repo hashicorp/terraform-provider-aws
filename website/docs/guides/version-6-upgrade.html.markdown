@@ -25,6 +25,7 @@ Upgrade topics:
 - [data-source/aws_ecs_task_execution](#data-sourceaws_ecs_task_execution)
 - [data-source/aws_globalaccelerator_accelerator](#data-sourceaws_globalaccelerator_accelerator)
 - [data-source/aws_launch_template](#data-sourceaws_launch_template)
+- [data-source/aws_opensearch_domain](#data-sourceaws_opensearch_domain)
 - [data-source/aws_opensearchserverless_security_config](#data-sourceaws_opensearchserverless_security_config)
 - [data-source/aws_quicksight_data_set](#data-sourceaws_quicksight_data_set)
 - [data-source/aws_service_discovery_service](#data-sourceaws_service_discovery_service)
@@ -40,6 +41,7 @@ Upgrade topics:
 - [resource/aws_media_store_container](#resourceaws_media_store_container)
 - [resource/aws_media_store_container_policy](#resourceaws_media_store_container_policy)
 - [resource/aws_networkmanager_core_network](#resourceaws_networkmanager_core_network)
+- [resource/aws_opensearch_domain](#resourceaws_opensearch_domain)
 - [resource/aws_opensearchserverless_security_config](#resourceaws_opensearchserverless_security_config)
 - [resource/aws_paymentcryptography_key](#resourceaws_paymentcryptography_key)
 - [resource/aws_redshift_cluster](#resourceaws_redshift_cluster)
@@ -174,6 +176,12 @@ Remove `inference_accelerator_overrides` from your configuration—it no longer 
 
 Remove `elastic_inference_accelerator` from your configuration—it no longer exists. Amazon Elastic Inference reached end of life in April 2024.
 
+## data-source/aws_opensearch_domain
+
+Remove `kibana_endpoint` from your configuration—it no longer exists. AWS OpenSearch Service does **not** use Kibana endpoints (i.e., `_plugin/kibana`). Instead, OpenSearch uses **Dashboards**, accessible at the path `/_dashboards/` on the domain endpoint. The terminology has shifted from “Kibana” to “Dashboards.”
+
+For more information, see the [AWS OpenSearch Dashboards documentation](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/dashboards.html).
+
 ## resource/aws_api_gateway_account
 
 `reset_on_delete` has been removed.
@@ -264,6 +272,12 @@ This resource is deprecated and will be removed in a future version. [Effective 
 ## resource/aws_networkmanager_core_network
 
 The `base_policy_region` argument has been removed. Use `base_policy_regions` instead.
+
+## resource/aws_opensearch_domain
+
+Remove `kibana_endpoint` from your configuration—it no longer exists. AWS OpenSearch Service does **not** use Kibana endpoints (i.e., `_plugin/kibana`). Instead, OpenSearch uses **Dashboards**, accessible at the path `/_dashboards/` on the domain endpoint. The terminology has shifted from “Kibana” to “Dashboards.”
+
+For more information, see the [AWS OpenSearch Dashboards documentation](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/dashboards.html).
 
 ## resource/aws_opensearchserverless_security_config
 
