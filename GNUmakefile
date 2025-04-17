@@ -271,9 +271,9 @@ gh-workflow-lint: ## [CI] Workflow Linting / actionlint
 	@actionlint -shellcheck=
 
 go-build: ## [CI] Provider Checks / go-build
-	@os_arch=`go env GOOS`_`go env GOARCH` ; \
+	@os_arch=`$(GO_VER) env GOOS`_`$(GO_VER) env GOARCH` ; \
 	echo "make: Provider Checks / go-build ($$os_arch)..." ; \
-	go build -o terraform-plugin-dir/registry.terraform.io/hashicorp/aws/99.99.99/$$os_arch/terraform-provider-aws .
+	$(GO_VER) build -o terraform-plugin-dir/registry.terraform.io/hashicorp/aws/99.99.99/$$os_arch/terraform-provider-aws .
 
 go-misspell: ## [CI] Provider Checks / misspell
 	@echo "make: Provider Checks / misspell..."
