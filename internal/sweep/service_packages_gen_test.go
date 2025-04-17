@@ -223,6 +223,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalog"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalogappregistry"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/servicediscovery"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/servicequotas"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ses"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/sesv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/sfn"
@@ -476,6 +477,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		servicecatalog.ServicePackage(ctx),
 		servicecatalogappregistry.ServicePackage(ctx),
 		servicediscovery.ServicePackage(ctx),
+		servicequotas.ServicePackage(ctx),
 		ses.ServicePackage(ctx),
 		sesv2.ServicePackage(ctx),
 		sfn.ServicePackage(ctx),

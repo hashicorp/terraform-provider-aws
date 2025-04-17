@@ -13,7 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -53,19 +54,22 @@ func (d *dataSourceSecurityConfig) Schema(ctx context.Context, req datasource.Sc
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"saml_options": schema.SingleNestedBlock{ // nosemgrep:ci.avoid-SingleNestedBlock pre-existing, will be converted
-				Attributes: map[string]schema.Attribute{
-					"group_attribute": schema.StringAttribute{
-						Computed: true,
-					},
-					"metadata": schema.StringAttribute{
-						Computed: true,
-					},
-					"session_timeout": schema.Int64Attribute{
-						Computed: true,
-					},
-					"user_attribute": schema.StringAttribute{
-						Computed: true,
+			"saml_options": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[samlOptionsData](ctx),
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"group_attribute": schema.StringAttribute{
+							Computed: true,
+						},
+						"metadata": schema.StringAttribute{
+							Computed: true,
+						},
+						"session_timeout": schema.Int64Attribute{
+							Computed: true,
+						},
+						"user_attribute": schema.StringAttribute{
+							Computed: true,
+						},
 					},
 				},
 			},
@@ -91,30 +95,24 @@ func (d *dataSourceSecurityConfig) Read(ctx context.Context, req datasource.Read
 		return
 	}
 
-	createdDate := time.UnixMilli(aws.ToInt64(out.CreatedDate))
-	data.CreatedDate = flex.StringValueToFramework(ctx, createdDate.Format(time.RFC3339))
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &data, fwflex.WithIgnoredFieldNames([]string{"CreatedDate", "LastModifiedDate"}))...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-	data.ConfigVersion = flex.StringToFramework(ctx, out.ConfigVersion)
-	data.Description = flex.StringToFramework(ctx, out.Description)
-	data.ID = flex.StringToFramework(ctx, out.Id)
-
-	lastModifiedDate := time.UnixMilli(aws.ToInt64(out.LastModifiedDate))
-	data.LastModifiedDate = flex.StringValueToFramework(ctx, lastModifiedDate.Format(time.RFC3339))
-
-	data.Type = flex.StringValueToFramework(ctx, out.Type)
-
-	samlOptions := flattenSAMLOptions(ctx, out.SamlOptions)
-	data.SamlOptions = samlOptions
+	// Special handling for Unix time conversion
+	data.CreatedDate = fwflex.StringValueToFramework(ctx, time.UnixMilli(aws.ToInt64(out.CreatedDate)).Format(time.RFC3339))
+	data.LastModifiedDate = fwflex.StringValueToFramework(ctx, time.UnixMilli(aws.ToInt64(out.LastModifiedDate)).Format(time.RFC3339))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 type dataSourceSecurityConfigData struct {
-	ConfigVersion    types.String `tfsdk:"config_version"`
-	CreatedDate      types.String `tfsdk:"created_date"`
-	Description      types.String `tfsdk:"description"`
-	ID               types.String `tfsdk:"id"`
-	LastModifiedDate types.String `tfsdk:"last_modified_date"`
-	SamlOptions      types.Object `tfsdk:"saml_options"`
-	Type             types.String `tfsdk:"type"`
+	ConfigVersion    types.String                                     `tfsdk:"config_version"`
+	CreatedDate      types.String                                     `tfsdk:"created_date"`
+	Description      types.String                                     `tfsdk:"description"`
+	ID               types.String                                     `tfsdk:"id"`
+	LastModifiedDate types.String                                     `tfsdk:"last_modified_date"`
+	SamlOptions      fwtypes.ListNestedObjectValueOf[samlOptionsData] `tfsdk:"saml_options"`
+	Type             types.String                                     `tfsdk:"type"`
 }
