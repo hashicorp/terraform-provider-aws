@@ -48,6 +48,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 				IsGlobal:          true,
 				IsOverrideEnabled: false,
 			},
+			Identity: itypes.GlobalParameterizedIdentity(
+				itypes.StringIdentityAttribute(names.AttrName, true),
+			),
 		},
 		{
 			Factory:  newVPCOriginResource,

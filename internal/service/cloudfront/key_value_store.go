@@ -32,6 +32,7 @@ import (
 )
 
 // @FrameworkResource("aws_cloudfront_key_value_store", name="Key Value Store")
+// @IdentityAttribute("name")
 func newKeyValueStoreResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &keyValueStoreResource{}
 
