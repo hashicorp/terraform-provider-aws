@@ -928,7 +928,6 @@ func instanceStateUpgradeV1(_ context.Context, rawState map[string]any, meta any
 	if _, exists := cpuOptionsMap["threads_per_core"]; !exists {
 		if v, ok := rawState["cpu_threads_per_core"]; ok {
 			cpuOptionsMap["threads_per_core"] = v
-
 		}
 	}
 
