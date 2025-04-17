@@ -13,6 +13,7 @@ ENHANCEMENTS:
 * data-source/aws_ec2_network_insights_path: Support `filter_at_destination` and `filter_at_source` attributes ([#42214](https://github.com/hashicorp/terraform-provider-aws/issues/42214))
 * resource/aws_amplify_app: Add `compute_role_arn` argument ([#41650](https://github.com/hashicorp/terraform-provider-aws/issues/41650))
 * resource/aws_codebuild_webhook: Add `manual_creation` argument ([#40155](https://github.com/hashicorp/terraform-provider-aws/issues/40155))
+* resource/aws_cognito_user_pool_domain: Add `managed_login_version` argument ([#40855](https://github.com/hashicorp/terraform-provider-aws/issues/40855))
 * resource/aws_ec2_network_insights_path: Add `filter_at_destination` and `filter_at_source` configuration blocks ([#42214](https://github.com/hashicorp/terraform-provider-aws/issues/42214))
 * resource/aws_eks_cluster: Add `force_update_version` argument ([#42134](https://github.com/hashicorp/terraform-provider-aws/issues/42134))
 * resource/aws_prometheus_scraper: Allow `alias`, `destination`, `role_configuration`, and `scrape_configuration` to be updated in-place ([#42109](https://github.com/hashicorp/terraform-provider-aws/issues/42109))
