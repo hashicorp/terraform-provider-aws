@@ -37,6 +37,8 @@ Upgrade topics:
 - [resource/aws_instance](#resourceaws_instance)
 - [resource/aws_kinesis_analytics_application](#resourceaws_kinesis_analytics_application)
 - [resource/aws_launch_template](#resourceaws_launch_template)
+- [resource/aws_media_store_container](#resourceaws_media_store_container)
+- [resource/aws_media_store_container_policy](#resourceaws_media_store_container_policy)
 - [resource/aws_networkmanager_core_network](#resourceaws_networkmanager_core_network)
 - [resource/aws_opensearchserverless_security_config](#resourceaws_opensearchserverless_security_config)
 - [resource/aws_paymentcryptography_key](#resourceaws_paymentcryptography_key)
@@ -242,6 +244,14 @@ Remove `inference_accelerator` from your configuration—it no longer exists. Am
 ## resource/aws_launch_template
 
 Remove `elastic_inference_accelerator` from your configuration—it no longer exists. Amazon Elastic Inference reached end of life in April 2024.
+
+## resource/aws_media_store_container
+
+This resource is deprecated and will be removed in a future version. AWS has [announced](https://aws.amazon.com/blogs/media/support-for-aws-elemental-mediastore-ending-soon/) the discontinuation of AWS Elemental MediaStore, effective November 13, 2025. Users should begin transitioning to alternative solutions as soon as possible. For simple live streaming workflows, AWS recommends migrating to Amazon S3. For advanced use cases that require features such as packaging, DRM, or cross-region redundancy, consider using AWS Elemental MediaPackage.
+
+## resource/aws_media_store_container_policy
+
+This resource is deprecated and will be removed in a future version. AWS has [announced](https://aws.amazon.com/blogs/media/support-for-aws-elemental-mediastore-ending-soon/) the discontinuation of AWS Elemental MediaStore, effective November 13, 2025. Users should begin transitioning to alternative solutions as soon as possible. For simple live streaming workflows, AWS recommends migrating to Amazon S3. For advanced use cases that require features such as packaging, DRM, or cross-region redundancy, consider using AWS Elemental MediaPackage.
 
 ## resource/aws_instance
 
