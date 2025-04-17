@@ -99,7 +99,7 @@ func (r dataSourceSetRegionInStateInterceptor) read(ctx context.Context, opts in
 
 	switch response, when := opts.response, opts.when; when {
 	case After:
-		// Set region in state after R, but only if the data source didn't explictly set it (e.g. aws_region).
+		// Set region in state after R, but only if the data source didn't explicitly set it (e.g. aws_region).
 		var target types.String
 		diags.Append(response.State.GetAttribute(ctx, path.Root(names.AttrRegion), &target)...)
 		if diags.HasError() {
