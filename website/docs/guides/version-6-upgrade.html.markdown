@@ -26,6 +26,7 @@ Upgrade topics:
 - [data-source/aws_globalaccelerator_accelerator](#data-sourceaws_globalaccelerator_accelerator)
 - [data-source/aws_launch_template](#data-sourceaws_launch_template)
 - [data-source/aws_opensearch_domain](#data-sourceaws_opensearch_domain)
+- [data-source/aws_opensearchserverless_security_config](#data-sourceaws_opensearchserverless_security_config)
 - [data-source/aws_quicksight_data_set](#data-sourceaws_quicksight_data_set)
 - [data-source/aws_service_discovery_service](#data-sourceaws_service_discovery_service)
 - [resource/aws_api_gateway_account](#resourceaws_api_gateway_account)
@@ -37,8 +38,11 @@ Upgrade topics:
 - [resource/aws_instance](#resourceaws_instance)
 - [resource/aws_kinesis_analytics_application](#resourceaws_kinesis_analytics_application)
 - [resource/aws_launch_template](#resourceaws_launch_template)
-- [resource/aws_opensearch_domain](#resourceaws_opensearch_domain)
+- [resource/aws_media_store_container](#resourceaws_media_store_container)
+- [resource/aws_media_store_container_policy](#resourceaws_media_store_container_policy)
 - [resource/aws_networkmanager_core_network](#resourceaws_networkmanager_core_network)
+- [resource/aws_opensearch_domain](#resourceaws_opensearch_domain)
+- [resource/aws_opensearchserverless_security_config](#resourceaws_opensearchserverless_security_config)
 - [resource/aws_paymentcryptography_key](#resourceaws_paymentcryptography_key)
 - [resource/aws_redshift_cluster](#resourceaws_redshift_cluster)
 - [resource/aws_redshift_service_account](#resourceaws_redshift_service_account)
@@ -146,6 +150,12 @@ This is not recommended.
 
 `id` is now computed only.
 
+## data-source/aws_opensearchserverless_security_config
+
+The `saml_options` attribute is now a list nested block instead of a single nested block.
+When referencing this attribute, the index must now be included in the attribute address.
+For example, `saml_options.session_timeout` would now be referenced as `saml_options[0].session_timeout`.
+
 ## data-source/aws_quicksight_data_set
 
 `tags_all` has been removed.
@@ -243,6 +253,14 @@ Remove `inference_accelerator` from your configuration—it no longer exists. Am
 
 Remove `elastic_inference_accelerator` from your configuration—it no longer exists. Amazon Elastic Inference reached end of life in April 2024.
 
+## resource/aws_media_store_container
+
+This resource is deprecated and will be removed in a future version. AWS has [announced](https://aws.amazon.com/blogs/media/support-for-aws-elemental-mediastore-ending-soon/) the discontinuation of AWS Elemental MediaStore, effective November 13, 2025. Users should begin transitioning to alternative solutions as soon as possible. For simple live streaming workflows, AWS recommends migrating to Amazon S3. For advanced use cases that require features such as packaging, DRM, or cross-region redundancy, consider using AWS Elemental MediaPackage.
+
+## resource/aws_media_store_container_policy
+
+This resource is deprecated and will be removed in a future version. AWS has [announced](https://aws.amazon.com/blogs/media/support-for-aws-elemental-mediastore-ending-soon/) the discontinuation of AWS Elemental MediaStore, effective November 13, 2025. Users should begin transitioning to alternative solutions as soon as possible. For simple live streaming workflows, AWS recommends migrating to Amazon S3. For advanced use cases that require features such as packaging, DRM, or cross-region redundancy, consider using AWS Elemental MediaPackage.
+
 ## resource/aws_instance
 
 The `user_data` attribute no longer applies hashing and is now stored in clear text. **Do not include passwords or sensitive information** in `user_data`, as it will be visible in plaintext. Follow [AWS Best Practices](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-metadata.html) to secure your instance metadata. If you need to provide base64-encoded user data, use the `user_data_base64` attribute instead.
@@ -260,6 +278,12 @@ The `base_policy_region` argument has been removed. Use `base_policy_regions` in
 Remove `kibana_endpoint` from your configuration—it no longer exists. AWS OpenSearch Service does **not** use Kibana endpoints (i.e., `_plugin/kibana`). Instead, OpenSearch uses **Dashboards**, accessible at the path `/_dashboards/` on the domain endpoint. The terminology has shifted from “Kibana” to “Dashboards.”
 
 For more information, see the [AWS OpenSearch Dashboards documentation](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/dashboards.html).
+
+## resource/aws_opensearchserverless_security_config
+
+The `saml_options` argument is now a list nested block instead of a single nested block.
+When referencing this argument, the index must now be included in the attribute address.
+For example, `saml_options.session_timeout` would now be referenced as `saml_options[0].session_timeout`.
 
 ## resource/aws_paymentcryptography_key
 
