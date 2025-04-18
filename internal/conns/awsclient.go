@@ -45,10 +45,15 @@ type AWSClient struct {
 	s3UsePathStyle            bool   // From provider configuration.
 	s3USEast1RegionalEndpoint string // From provider configuration.
 	stsRegion                 string // From provider configuration.
+	terraformVersion          string // From provider configuration.
 }
 
 func (c *AWSClient) SetServicePackages(_ context.Context, servicePackages map[string]ServicePackage) {
 	c.servicePackages = maps.Clone(servicePackages)
+}
+
+func (c *AWSClient) TerraformVersion(_ context.Context) string {
+	return c.terraformVersion
 }
 
 func (c *AWSClient) ServicePackage(_ context.Context, name string) ServicePackage {

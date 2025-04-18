@@ -32,24 +32,3 @@ func FindDataSetById(ctx context.Context, conn *dataexchange.Client, id string) 
 
 	return output, nil
 }
-
-func FindRevisionById(ctx context.Context, conn *dataexchange.Client, dataSetId, revisionId string) (*dataexchange.GetRevisionOutput, error) {
-	input := &dataexchange.GetRevisionInput{
-		DataSetId:  aws.String(dataSetId),
-		RevisionId: aws.String(revisionId),
-	}
-	output, err := conn.GetRevision(ctx, input)
-
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	return output, nil
-}

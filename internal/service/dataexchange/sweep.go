@@ -22,6 +22,10 @@ func RegisterSweepers() {
 	)
 
 	awsv2.Register("aws_dataexchange_event_action", sweepEventActions)
+
+	awsv2.Register("aws_dataexchange_revision", sweepRevisions,
+		"aws_dataexchange_data_set",
+	)
 }
 
 func sweepDataSets(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
