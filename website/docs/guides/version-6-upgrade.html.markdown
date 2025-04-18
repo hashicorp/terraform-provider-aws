@@ -48,6 +48,7 @@ Upgrade topics:
 - [resource/aws_redshift_cluster](#resourceaws_redshift_cluster)
 - [resource/aws_redshift_service_account](#resourceaws_redshift_service_account)
 - [resource/aws_rekognition_stream_processor](#resourceaws_rekognition_stream_processor)
+- [resource/aws_resiliencehub_resiliency_policy](#resourceaws_resiliencehub_resiliency_policy)
 - [resource/aws_sagemaker_notebook_instance](#resourceaws_sagemaker_notebook_instance)
 - [resource/aws_spot_instance_request](#resourceaws_spot_instance_request)
 - [resource/aws_ssm_association](#resourceaws_ssm_association)
@@ -328,6 +329,19 @@ The `aws_redshift_service_account` resource has been removed. AWS [recommends](h
 The `regions_of_interest.bounding_box` argument is now a list nested block instead of a single nested block.
 When referencing this argument, the index must now be included in the attribute address.
 For example, `regions_of_interest[0].bounding_box.height` would now be referenced as `regions_of_interest[0].bounding_box[0].height`.
+
+## resource/aws_resiliencehub_resiliency_policy
+
+The following arguments are now list nested blocks instead of single nested blocks.
+
+- `policy`
+- `policy.az`
+- `policy.hardware`
+- `policy.software`
+- `policy.region`
+
+When referencing these arguments, the indicies must now be included in the attribute address.
+For example, `policy.az.rpo` would now be referenced as `policy[0].az[0].rpo`.
 
 ## resource/aws_sagemaker_notebook_instance
 
