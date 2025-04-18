@@ -87,6 +87,32 @@ func main() {
 			SDKDataSources:          v.sdkDataSources,
 			SDKResources:            v.sdkResources,
 		}
+
+		var imports []goImport
+		for resource := range maps.Values(v.ephemeralResources) {
+			imports = append(imports, resource.goImports...)
+		}
+		for resource := range maps.Values(v.frameworkDataSources) {
+			imports = append(imports, resource.goImports...)
+		}
+		for resource := range maps.Values(v.frameworkResources) {
+			imports = append(imports, resource.goImports...)
+		}
+		for resource := range maps.Values(v.sdkDataSources) {
+			imports = append(imports, resource.goImports...)
+		}
+		for resource := range maps.Values(v.sdkResources) {
+			imports = append(imports, resource.goImports...)
+		}
+		slices.SortFunc(imports, func(a, b goImport) int {
+			if n := strings.Compare(a.Path, b.Path); n != 0 {
+				return n
+			}
+			return strings.Compare(a.Alias, b.Alias)
+		})
+		imports = slices.Compact(imports)
+		s.GoImports = imports
+
 		templateFuncMap := template.FuncMap{
 			"Camel": names.ToCamelCase,
 		}
@@ -130,11 +156,17 @@ type ResourceDatum struct {
 	IdentityAttributes                []identityAttribute
 	ARNIdentity                       bool
 	SingletonIdentity                 bool
+	goImports                         []goImport
 }
 
 type identityAttribute struct {
 	Name     string
 	Optional bool
+}
+
+type goImport struct {
+	Path  string
+	Alias string
 }
 
 type ServiceDatum struct {
@@ -149,6 +181,7 @@ type ServiceDatum struct {
 	FrameworkResources      map[string]ResourceDatum
 	SDKDataSources          map[string]ResourceDatum
 	SDKResources            map[string]ResourceDatum
+	GoImports               []goImport
 }
 
 //go:embed service_package_gen.go.gtpl

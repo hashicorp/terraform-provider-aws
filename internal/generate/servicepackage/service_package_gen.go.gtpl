@@ -25,6 +25,9 @@ import (
 {{- if ne .ProviderPackage "meta" }}
 	"github.com/hashicorp/terraform-provider-aws/names"
 {{- end }}
+	{{ range .GoImports -}}
+	{{ if .Alias }}{{ .Alias }} {{ end }}"{{ .Path }}"
+	{{ end }}
 )
 
 type servicePackage struct {}
