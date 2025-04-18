@@ -199,7 +199,7 @@ func resourceRestAPICreate(ctx context.Context, d *schema.ResourceData, meta any
 		input.DisableExecuteApiEndpoint = v.(bool)
 	}
 
-	if v, ok := d.GetOk("endpoint_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk("endpoint_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		input.EndpointConfiguration = expandEndpointConfiguration(v.([]any)[0].(map[string]any))
 	}
 
