@@ -125,7 +125,7 @@ variable "workflow_labels" {
       color       = "ac72f0", # color:terraform (link on black)
       description = "Introduces a new service."
     },
-    "no-changelog" = {
+    "no-changelog-needed" = {
       color       = "828a90", # color:stale grey
       description = "Indicates that a changelog entry is not necessary"
     }

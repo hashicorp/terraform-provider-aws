@@ -228,7 +228,7 @@ jobs:
               - 'CHANGELOG.md'
 
       - name: Determine Changelog Update Need
-        if: ${{ !contains(toJSON(github.event.pull_request.labels.*.name), 'no-changelog') }}
+        if: ${{ !contains(toJSON(github.event.pull_request.labels.*.name), 'no-changelog-needed') }}
         id: changelog-update-needed
         uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
         with:
