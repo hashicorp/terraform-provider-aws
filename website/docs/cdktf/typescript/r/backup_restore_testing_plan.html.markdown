@@ -24,13 +24,11 @@ import { TerraformStack } from "cdktf";
  * See https://cdk.tf/provider-generation for more details.
  */
 import { BackupRestoreTestingPlan } from "./.gen/providers/aws/backup-restore-testing-plan";
-interface MyConfig {
-  name: any;
-}
 class MyConvertedCode extends TerraformStack {
-  constructor(scope: Construct, name: string, config: MyConfig) {
+  constructor(scope: Construct, name: string) {
     super(scope, name);
     new BackupRestoreTestingPlan(this, "example", {
+      name: "example_restore_testing_plan",
       recoveryPointSelection: [
         {
           algorithm: "LATEST_WITHIN_WINDOW",
@@ -39,7 +37,6 @@ class MyConvertedCode extends TerraformStack {
         },
       ],
       scheduleExpression: "cron(0 12 ? * * *)",
-      name: config.name,
     });
   }
 }
@@ -103,4 +100,4 @@ Using `terraform import`, import Backup Restore Testing Plan using the `name`. F
 % terraform import aws_backup_restore_testing_plan.example my_testing_plan
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-98db3ae18382b6c8b94d2b7f18b80388610b87baff76a2f102ab07a4c96f6a9e -->
+<!-- cache-key: cdktf-0.20.8 input-49a768bc1aad7c0da28c06537c069dfe011156513181947cebfbec5c52c34c43 -->

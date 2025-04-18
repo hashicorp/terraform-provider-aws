@@ -54,7 +54,7 @@ jobs:
   go_build:
     name: go build
     needs: [go_mod_download]
-    runs-on: custom-linux-medium
+    runs-on: custom-ubuntu-22.04-medium
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
@@ -122,7 +122,7 @@ jobs:
   go_test:
     name: go test
     needs: [go_build]
-    runs-on: custom-linux-xl
+    runs-on: custom-ubuntu-22.04-xl
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
@@ -182,7 +182,7 @@ jobs:
   validate_sweepers_unlinked:
     name: Sweeper Functions Not Linked
     needs: [go_build]
-    runs-on: custom-linux-medium
+    runs-on: custom-ubuntu-22.04-medium
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:

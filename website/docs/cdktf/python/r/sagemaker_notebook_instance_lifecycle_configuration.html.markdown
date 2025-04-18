@@ -42,12 +42,14 @@ This resource supports the following arguments:
 * `name` - (Optional) The name of the lifecycle configuration (must be unique). If omitted, Terraform will assign a random, unique name.
 * `on_create` - (Optional) A shell script (base64-encoded) that runs only once when the SageMaker AI Notebook Instance is created.
 * `on_start` - (Optional) A shell script (base64-encoded) that runs every time the SageMaker AI Notebook Instance is started including the time it's created.
+* `tags` - (Optional) A mapping of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) assigned by AWS to this lifecycle configuration.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -74,4 +76,4 @@ Using `terraform import`, import models using the `name`. For example:
 % terraform import aws_sagemaker_notebook_instance_lifecycle_configuration.lc foo
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-3d97b9fcfade495fc5ac2ef137ec8fc95a8b9695c8432145463fa4a009c13b68 -->
+<!-- cache-key: cdktf-0.20.8 input-28227de71629dcfc9159d835c7e580a0b16ad921fd1e5b06c024e7da6fe7fb70 -->
