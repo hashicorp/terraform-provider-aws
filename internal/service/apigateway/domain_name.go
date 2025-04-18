@@ -192,6 +192,8 @@ func resourceDomainName() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
+
+		CustomizeDiff: endpointConfigurationPlantimeValidate,
 	}
 }
 
@@ -226,13 +228,8 @@ func resourceDomainNameCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.CertificatePrivateKey = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("endpoint_configuration"); ok {
-		v, err := expandEndpointConfiguration(v.([]any))
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "%s", err)
-		} else {
-			input.EndpointConfiguration = v
-		}
+	if v, ok := d.GetOk("endpoint_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.EndpointConfiguration = expandEndpointConfiguration(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("ownership_verification_certificate_arn"); ok {
@@ -268,7 +265,8 @@ func resourceDomainNameCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.APIGatewayClient(ctx)
 
 	domainName, domainNameID, err := domainNameParseResourceID(d.Id())
 	if err != nil {
@@ -290,7 +288,7 @@ func resourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta an
 	if output.DomainNameArn != nil { // nosemgrep: ci.helper-schema-ResourceData-Set-extraneous-nil-check
 		d.Set(names.AttrARN, output.DomainNameArn)
 	} else {
-		d.Set(names.AttrARN, domainNameARN(ctx, meta.(*conns.AWSClient), d.Id()))
+		d.Set(names.AttrARN, domainNameARN(ctx, c, d.Id()))
 	}
 	d.Set(names.AttrCertificateARN, output.CertificateArn)
 	d.Set("certificate_name", output.CertificateName)
@@ -300,7 +298,7 @@ func resourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta an
 		d.Set("certificate_upload_date", nil)
 	}
 	d.Set("cloudfront_domain_name", output.DistributionDomainName)
-	d.Set("cloudfront_zone_id", meta.(*conns.AWSClient).CloudFrontDistributionHostedZoneID(ctx))
+	d.Set("cloudfront_zone_id", c.CloudFrontDistributionHostedZoneID(ctx))
 	d.Set(names.AttrDomainName, output.DomainName)
 	d.Set("domain_name_id", output.DomainNameId)
 	if err := d.Set("endpoint_configuration", flattenEndpointConfiguration(output.EndpointConfiguration)); err != nil {
@@ -353,7 +351,7 @@ func resourceDomainNameUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		if d.HasChange("endpoint_configuration.0.types") {
 			// The domain name must have an endpoint type.
 			// If attempting to remove the configuration, do nothing.
-			if v, ok := d.GetOk("endpoint_configuration"); ok && len(v.([]any)) > 0 {
+			if v, ok := d.GetOk("endpoint_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 				tfMap := v.([]any)[0].(map[string]any)
 
 				operations = append(operations, types.PatchOperation{
@@ -365,7 +363,7 @@ func resourceDomainNameUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		}
 
 		if d.HasChange("endpoint_configuration.0.ip_address_type") {
-			if v, ok := d.GetOk("endpoint_configuration"); ok && len(v.([]any)) > 0 {
+			if v, ok := d.GetOk("endpoint_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 				tfMap := v.([]any)[0].(map[string]any)
 
 				operations = append(operations, types.PatchOperation{

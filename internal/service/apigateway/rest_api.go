@@ -5,7 +5,6 @@ package apigateway
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"slices"
@@ -21,12 +20,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -149,18 +148,7 @@ func resourceRestAPI() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			names.AttrPolicy: {
-				Type:                  schema.TypeString,
-				Optional:              true,
-				Computed:              true,
-				ValidateFunc:          validation.StringIsJSON,
-				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
-				DiffSuppressOnRefresh: true,
-				StateFunc: func(v any) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
-				},
-			},
+			names.AttrPolicy: sdkv2.JSONDocumentSchemaOptionalComputed(),
 			"put_rest_api_mode": {
 				Type:             schema.TypeString,
 				Optional:         true,
@@ -180,6 +168,8 @@ func resourceRestAPI() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
+
+		CustomizeDiff: endpointConfigurationPlantimeValidate,
 	}
 }
 
@@ -209,29 +199,23 @@ func resourceRestAPICreate(ctx context.Context, d *schema.ResourceData, meta any
 		input.DisableExecuteApiEndpoint = v.(bool)
 	}
 
-	if v, ok := d.GetOk("endpoint_configuration"); ok {
-		if v, err := expandEndpointConfiguration(v.([]any)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "%s", err)
-		} else {
-			input.EndpointConfiguration = v
-		}
+	if v, ok := d.GetOk("endpoint_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.EndpointConfiguration = expandEndpointConfiguration(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("minimum_compression_size"); ok && v.(string) != "" && v.(string) != "-1" {
-		mcs, err := strconv.ParseInt(v.(string), 0, 32)
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "converting minimum_compression_size (%s): %s", v, err)
+	if v, ok := d.GetOk("minimum_compression_size"); ok {
+		if v, null, _ := nullable.Int(v.(string)).ValueInt32(); !null && v != -1 {
+			input.MinimumCompressionSize = aws.Int32(v)
 		}
-		input.MinimumCompressionSize = aws.Int32(int32(mcs))
 	}
 
 	if v, ok := d.GetOk(names.AttrPolicy); ok {
-		policy, err := structure.NormalizeJsonString(v.(string))
+		v, err := structure.NormalizeJsonString(v.(string))
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 
-		input.Policy = aws.String(policy)
+		input.Policy = aws.String(v)
 	}
 
 	output, err := conn.CreateRestApi(ctx, &input)
@@ -290,7 +274,8 @@ func resourceRestAPICreate(ctx context.Context, d *schema.ResourceData, meta any
 
 func resourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.APIGatewayClient(ctx)
 
 	api, err := findRestAPIByID(ctx, conn, d.Id())
 
@@ -305,7 +290,7 @@ func resourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	d.Set("api_key_source", api.ApiKeySource)
-	d.Set(names.AttrARN, apiARN(ctx, meta.(*conns.AWSClient), d.Id()))
+	d.Set(names.AttrARN, apiARN(ctx, c, d.Id()))
 	d.Set("binary_media_types", api.BinaryMediaTypes)
 	d.Set(names.AttrCreatedDate, api.CreatedDate.Format(time.RFC3339))
 	d.Set(names.AttrDescription, api.Description)
@@ -313,11 +298,11 @@ func resourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	if err := d.Set("endpoint_configuration", flattenEndpointConfiguration(api.EndpointConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting endpoint_configuration: %s", err)
 	}
-	d.Set("execution_arn", apiInvokeARN(ctx, meta.(*conns.AWSClient), d.Id()))
+	d.Set("execution_arn", apiInvokeARN(ctx, c, d.Id()))
 	if api.MinimumCompressionSize == nil {
 		d.Set("minimum_compression_size", nil)
 	} else {
-		d.Set("minimum_compression_size", strconv.FormatInt(int64(aws.ToInt32(api.MinimumCompressionSize)), 10))
+		d.Set("minimum_compression_size", flex.Int32ToStringValue(api.MinimumCompressionSize))
 	}
 	d.Set(names.AttrName, api.Name)
 
@@ -590,6 +575,18 @@ func resourceRestAPIDelete(ctx context.Context, d *schema.ResourceData, meta any
 	return diags
 }
 
+func endpointConfigurationPlantimeValidate(_ context.Context, diff *schema.ResourceDiff, v any) error {
+	if v, ok := diff.GetOk("endpoint_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		if apiObject := expandEndpointConfiguration(v.([]any)[0].(map[string]any)); apiObject != nil {
+			if apiObject.Types[0] == types.EndpointTypePrivate && apiObject.IpAddressType == types.IpAddressTypeIpv4 {
+				return fmt.Errorf("endpoint_configuration type %[1]q requires ip_address_type %[2]q", types.EndpointTypePrivate, types.IpAddressTypeDualstack)
+			}
+		}
+	}
+
+	return nil
+}
+
 func findRestAPIByID(ctx context.Context, conn *apigateway.Client, id string) (*apigateway.GetRestApiOutput, error) {
 	input := apigateway.GetRestApiInput{
 		RestApiId: aws.String(id),
@@ -662,8 +659,8 @@ func resourceRestAPIWithBodyUpdateOperations(d *schema.ResourceData, output *api
 	}
 
 	// Compare the defined values to the output values, don't blindly remove as they can cause race conditions with DNS and endpoint creation
-	if v, ok := d.GetOk("endpoint_configuration"); ok {
-		endpointConfiguration, _ := expandEndpointConfiguration(v.([]any))
+	if v, ok := d.GetOk("endpoint_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		endpointConfiguration := expandEndpointConfiguration(v.([]any)[0].(map[string]any))
 		if endpointConfiguration != nil && len(endpointConfiguration.VpcEndpointIds) > 0 {
 			prefix := "/endpointConfiguration/vpcEndpointIds"
 			if output.EndpointConfiguration != nil {
@@ -754,48 +751,42 @@ func modeConfigOrDefault(d *schema.ResourceData) string {
 	}
 }
 
-func expandEndpointConfiguration(l []any) (*types.EndpointConfiguration, error) {
-	if len(l) == 0 {
-		return nil, nil
+func expandEndpointConfiguration(tfMap map[string]any) *types.EndpointConfiguration {
+	if tfMap == nil {
+		return nil
 	}
 
-	m := l[0].(map[string]any)
-
-	endpointConfiguration := &types.EndpointConfiguration{
-		Types: flex.ExpandStringyValueList[types.EndpointType](m["types"].([]any)),
+	apiObject := &types.EndpointConfiguration{
+		Types: flex.ExpandStringyValueList[types.EndpointType](tfMap["types"].([]any)),
 	}
 
-	if endpointIds, ok := m["vpc_endpoint_ids"]; ok {
-		endpointConfiguration.VpcEndpointIds = flex.ExpandStringValueSet(endpointIds.(*schema.Set))
+	if v, ok := tfMap[names.AttrIPAddressType].(string); ok && v != "" {
+		apiObject.IpAddressType = types.IpAddressType(v)
 	}
 
-	if ipAddressType, ok := m[names.AttrIPAddressType]; ok {
-		endpointConfiguration.IpAddressType = types.IpAddressType(ipAddressType.(string))
+	if v, ok := tfMap["vpc_endpoint_ids"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.VpcEndpointIds = flex.ExpandStringValueSet(v)
 	}
 
-	if endpointConfiguration.Types[0] == types.EndpointTypePrivate && endpointConfiguration.IpAddressType == types.IpAddressTypeIpv4 {
-		return nil, errors.New("only ip_address_type \"dualstack\" is supported for \"PRIVATE\" endpoint type")
-	}
-
-	return endpointConfiguration, nil
+	return apiObject
 }
 
-func flattenEndpointConfiguration(endpointConfiguration *types.EndpointConfiguration) []any {
-	if endpointConfiguration == nil {
+func flattenEndpointConfiguration(apiObject *types.EndpointConfiguration) []any {
+	if apiObject == nil {
 		return []any{}
 	}
 
-	m := map[string]any{
-		"types": endpointConfiguration.Types,
+	tfMap := map[string]any{
+		names.AttrIPAddressType: apiObject.IpAddressType,
+		"types":                 apiObject.Types,
 	}
 
-	if len(endpointConfiguration.VpcEndpointIds) > 0 {
-		m["vpc_endpoint_ids"] = endpointConfiguration.VpcEndpointIds
+	// No VPC endpoints IDs for domain names.
+	if len(apiObject.VpcEndpointIds) > 0 {
+		tfMap["vpc_endpoint_ids"] = apiObject.VpcEndpointIds
 	}
 
-	m[names.AttrIPAddressType] = endpointConfiguration.IpAddressType
-
-	return []any{m}
+	return []any{tfMap}
 }
 
 func flattenAPIPolicy(apiObject *string) (string, error) {
