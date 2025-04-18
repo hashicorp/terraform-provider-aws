@@ -1074,7 +1074,7 @@ func TestAccAPIGatewayRestAPI_ipAddressType_privateError(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccRestAPIConfig_ipAddressType(rName, "PRIVATE", "ipv4"),
-				ExpectError: regexache.MustCompile("only ip_address_type \"dualstack\" is supported for \"PRIVATE\" endpoint type"),
+				ExpectError: regexache.MustCompile(`endpoint_configuration type "PRIVATE" requires ip_address_type "dualstack"`),
 			},
 		},
 	})
