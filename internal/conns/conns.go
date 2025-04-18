@@ -5,6 +5,7 @@ package conns
 
 import (
 	"context"
+	"maps"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 )
@@ -39,6 +40,7 @@ type InContext struct {
 	overrideRegion     string // Any currently in effect per-resource Region override.
 	resourceName       string // Friendly resource name, e.g. "Subnet"
 	servicePackageName string // Canonical name defined as a constant in names package
+	properties         map[string]any
 }
 
 // OverrideRegion returns any currently in effect per-resource Region override.
@@ -56,11 +58,21 @@ func (c *InContext) ServicePackageName() string {
 	return c.servicePackageName
 }
 
+// TODO REGION: Rethink this properties mess.
+func (c *InContext) Properties() map[string]any {
+	return maps.Clone(c.properties)
+}
+
+func (c *InContext) SetProperties(properties map[string]any) {
+	c.properties = maps.Clone(properties)
+}
+
 func NewResourceContext(ctx context.Context, servicePackageName, resourceName, overrideRegion string) context.Context {
 	v := InContext{
 		overrideRegion:     overrideRegion,
 		resourceName:       resourceName,
 		servicePackageName: servicePackageName,
+		properties:         make(map[string]any),
 	}
 
 	return context.WithValue(ctx, contextKey, &v)
@@ -70,3 +82,5 @@ func FromContext(ctx context.Context) (*InContext, bool) {
 	v, ok := ctx.Value(contextKey).(*InContext)
 	return v, ok
 }
+
+// TODO REGION: Consider modelling on https://github.com/open-telemetry/opentelemetry-go/baggage, https://github.com/w3c/baggage.

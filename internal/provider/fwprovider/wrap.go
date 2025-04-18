@@ -369,6 +369,14 @@ func (w *wrappedResource) ImportState(ctx context.Context, request resource.Impo
 		}
 
 		f := func(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) diag.Diagnostics {
+			// TODO REGION: Rethink this properties mess.
+			if inContext, ok := conns.FromContext(ctx); ok {
+				properties := inContext.Properties()
+				if v, ok := properties["effectiveImportID"]; ok {
+					request.ID = v.(string)
+				}
+			}
+
 			v.ImportState(ctx, request, response)
 			return response.Diagnostics
 		}

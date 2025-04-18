@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfappfabric "github.com/hashicorp/terraform-provider-aws/internal/service/appfabric"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -263,13 +264,12 @@ func testAccAppBundle_regionCreateNull(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(endpoints.ApNortheast1RegionID)),
 				},
 			},
-			// TODO REGION: Need a way of signalling the new import ID.
-			// {
-			// 	ResourceName:      resourceName,
-			// 	ImportState:       true,
-			// 	ImportStateVerify: true,
-			// 	ImportStateIdFunc: testAccAppBundleRegionImportStateIDFunc(resourceName, endpoints.ApNortheast1RegionID),
-			// },
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccAppBundleRegionImportStateIDFunc(resourceName, endpoints.ApNortheast1RegionID),
+			},
 		},
 	})
 }
@@ -308,13 +308,12 @@ func testAccAppBundle_regionCreateNonNull(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(endpoints.EuWest1RegionID)),
 				},
 			},
-			// TODO REGION: Need a way of signalling the new import ID.
-			// {
-			// 	ResourceName:      resourceName,
-			// 	ImportState:       true,
-			// 	ImportStateVerify: true,
-			// 	ImportStateIdFunc: testAccAppBundleRegionImportStateIDFunc(resourceName, endpoints.EuWest1RegionID),
-			// },
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccAppBundleRegionImportStateIDFunc(resourceName, endpoints.EuWest1RegionID),
+			},
 			{
 				Config: testAccAppBundleConfig_region(acctest.Region()),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -354,6 +353,11 @@ func testAccCheckAppBundleDestroy(ctx context.Context) resource.TestCheckFunc {
 			_, err := tfappfabric.FindAppBundleByID(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "Invalid Resource Identifier") {
+				// This can happen when a per-resource Region override is in effect.
 				continue
 			}
 
