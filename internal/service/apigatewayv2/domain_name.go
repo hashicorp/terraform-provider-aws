@@ -427,5 +427,5 @@ func flattenMutualTLSAuthentication(apiObject *awstypes.MutualTlsAuthentication)
 }
 
 func domainNameARN(ctx context.Context, c *conns.AWSClient, name string) string {
-	return c.RegionalARN(ctx, "apigateway", "/domainnames/"+name)
+	return c.RegionalARNNoAccount(ctx, "apigateway", "/domainnames/"+name)
 }
