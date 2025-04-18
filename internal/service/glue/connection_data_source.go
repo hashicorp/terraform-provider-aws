@@ -34,6 +34,11 @@ func dataSourceConnection() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.NoZeroValues,
 			},
+			"athena_properties": {
+				Type:     schema.TypeMap,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			names.AttrCatalogID: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -123,6 +128,10 @@ func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta 
 		Resource:  fmt.Sprintf("connection/%s", connectionName),
 	}.String()
 	d.Set(names.AttrARN, connectionArn)
+
+	if err := d.Set("athena_properties", connection.AthenaProperties); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting athena_properties: %s", err)
+	}
 
 	if err := d.Set("connection_properties", connection.ConnectionProperties); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting connection_properties: %s", err)
