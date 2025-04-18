@@ -5,14 +5,13 @@ package elasticache_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -284,7 +283,7 @@ func TestAccElastiCacheServerlessCache_fullValkey(t *testing.T) {
 	})
 }
 
-func TestAccElastiCacheServerlessCache_update(t *testing.T) {
+func TestAccElastiCacheServerlessCache_description(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -305,7 +304,7 @@ func TestAccElastiCacheServerlessCache_update(t *testing.T) {
 		),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServerlessCacheConfig_update(rName, descriptionOld),
+				Config: testAccServerlessCacheConfig_description(rName, descriptionOld),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServerlessCacheExists(ctx, resourceName, &serverlessElasticCache),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "elasticache", "serverlesscache:{name}"),
@@ -327,7 +326,7 @@ func TestAccElastiCacheServerlessCache_update(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccServerlessCacheConfig_update(rName, descriptionNew),
+				Config: testAccServerlessCacheConfig_description(rName, descriptionNew),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServerlessCacheExists(ctx, resourceName, &serverlessElasticCache),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "elasticache", "serverlesscache:{name}"),
@@ -342,12 +341,17 @@ func TestAccElastiCacheServerlessCache_update(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
 					resource.TestCheckResourceAttrSet(resourceName, "subnet_ids.#"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
 }
 
-func TestAccElastiCacheServerlessCache_updatesc(t *testing.T) {
+func TestAccElastiCacheServerlessCache_cacheUsageLimits(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -357,7 +361,7 @@ func TestAccElastiCacheServerlessCache_updatesc(t *testing.T) {
 	descriptionOld := "Memcached Serverless Cluster"
 	descriptionNew := "Memcached Serverless Cluster updated"
 	resourceName := "aws_elasticache_serverless_cache.test"
-	var v1, v2, v3, v4 awstypes.ServerlessCache
+	var v awstypes.ServerlessCache
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -368,9 +372,9 @@ func TestAccElastiCacheServerlessCache_updatesc(t *testing.T) {
 		),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServerlessCacheConfig_updatesc(rName, descriptionOld, 1, 1000),
+				Config: testAccServerlessCacheConfig_cacheUsageLimits(rName, descriptionOld, 1, 1000),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServerlessCacheExists(ctx, resourceName, &v1),
+					testAccCheckServerlessCacheExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "elasticache", "serverlesscache:{name}"),
 					resource.TestCheckResourceAttrSet(resourceName, "cache_usage_limits.#"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreateTime),
@@ -383,6 +387,11 @@ func TestAccElastiCacheServerlessCache_updatesc(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
 					resource.TestCheckResourceAttrSet(resourceName, "subnet_ids.#"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -390,10 +399,9 @@ func TestAccElastiCacheServerlessCache_updatesc(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccServerlessCacheConfig_updatesc(rName, descriptionOld, 2, 1000),
+				Config: testAccServerlessCacheConfig_cacheUsageLimits(rName, descriptionOld, 2, 1000),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServerlessCacheExists(ctx, resourceName, &v2),
-					testAccCheckServerlessCacheNotRecreated(&v1, &v2),
+					testAccCheckServerlessCacheExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "elasticache", "serverlesscache:{name}"),
 					resource.TestCheckResourceAttrSet(resourceName, "cache_usage_limits.#"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreateTime),
@@ -406,12 +414,16 @@ func TestAccElastiCacheServerlessCache_updatesc(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
 					resource.TestCheckResourceAttrSet(resourceName, "subnet_ids.#"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
-				Config: testAccServerlessCacheConfig_updatesc(rName, descriptionNew, 2, 1000),
+				Config: testAccServerlessCacheConfig_cacheUsageLimits(rName, descriptionNew, 2, 1000),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServerlessCacheExists(ctx, resourceName, &v3),
-					testAccCheckServerlessCacheNotRecreated(&v2, &v3),
+					testAccCheckServerlessCacheExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "elasticache", "serverlesscache:{name}"),
 					resource.TestCheckResourceAttrSet(resourceName, "cache_usage_limits.#"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreateTime),
@@ -424,12 +436,16 @@ func TestAccElastiCacheServerlessCache_updatesc(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
 					resource.TestCheckResourceAttrSet(resourceName, "subnet_ids.#"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
-				Config: testAccServerlessCacheConfig_updatesc(rName, descriptionNew, 2, 1010),
+				Config: testAccServerlessCacheConfig_cacheUsageLimits(rName, descriptionNew, 2, 1010),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServerlessCacheExists(ctx, resourceName, &v4),
-					testAccCheckServerlessCacheNotRecreated(&v3, &v4),
+					testAccCheckServerlessCacheExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "elasticache", "serverlesscache:{name}"),
 					resource.TestCheckResourceAttrSet(resourceName, "cache_usage_limits.#"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreateTime),
@@ -442,12 +458,17 @@ func TestAccElastiCacheServerlessCache_updatesc(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
 					resource.TestCheckResourceAttrSet(resourceName, "subnet_ids.#"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
 }
 
-func TestAccElastiCacheServerlessCache_update_RedisToValkey(t *testing.T) {
+func TestAccElastiCacheServerlessCache_engine(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -455,7 +476,7 @@ func TestAccElastiCacheServerlessCache_update_RedisToValkey(t *testing.T) {
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_serverless_cache.test"
-	var v1, v2 awstypes.ServerlessCache
+	var v awstypes.ServerlessCache
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -466,18 +487,40 @@ func TestAccElastiCacheServerlessCache_update_RedisToValkey(t *testing.T) {
 		),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServerlessCacheConfig_basicRedis(rName),
+				Config: testAccServerlessCacheConfig_engine(rName, tfelasticache.EngineRedis),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServerlessCacheExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "redis"),
+					testAccCheckServerlessCacheExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfelasticache.EngineRedis),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
-				Config: testAccServerlessCacheConfig_updateValkey(rName),
+				Config: testAccServerlessCacheConfig_engine(rName, tfelasticache.EngineValkey),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServerlessCacheExists(ctx, resourceName, &v2),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "valkey"),
+					testAccCheckServerlessCacheExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfelasticache.EngineValkey),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				Config: testAccServerlessCacheConfig_engine(rName, tfelasticache.EngineRedis),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckServerlessCacheExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfelasticache.EngineRedis),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
 			},
 		},
 	})
@@ -507,6 +550,11 @@ func TestAccElastiCacheServerlessCache_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfelasticache.ResourceServerlessCache, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -606,7 +654,6 @@ func testAccCheckServerlessCacheDestroy(ctx context.Context) resource.TestCheckF
 			}
 
 			_, err := tfelasticache.FindServerlessCacheByID(ctx, conn, rs.Primary.ID)
-
 			if tfresource.NotFound(err) {
 				continue
 			}
@@ -615,16 +662,6 @@ func testAccCheckServerlessCacheDestroy(ctx context.Context) resource.TestCheckF
 			}
 
 			return fmt.Errorf("ElastiCache Serverless Cache (%s) still exists", rs.Primary.ID)
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckServerlessCacheNotRecreated(i, j *awstypes.ServerlessCache) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if !aws.ToTime(i.CreateTime).Equal(aws.ToTime(j.CreateTime)) {
-			return errors.New("ElastiCache Serverless Cache was recreated")
 		}
 
 		return nil
@@ -658,13 +695,13 @@ resource "aws_elasticache_serverless_cache" "test" {
 `, rName)
 }
 
-func testAccServerlessCacheConfig_updateValkey(rName string) string {
+func testAccServerlessCacheConfig_engine(rName, engine string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_serverless_cache" "test" {
-  engine = "valkey"
   name   = %[1]q
+  engine = %[2]q
 }
-`, rName)
+`, rName, engine)
 }
 
 func testAccServerlessCacheConfig_full(rName string) string {
@@ -853,7 +890,7 @@ resource "aws_security_group" "test" {
 `, rName))
 }
 
-func testAccServerlessCacheConfig_update(rName, desc string) string {
+func testAccServerlessCacheConfig_description(rName, desc string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_serverless_cache" "test" {
   engine      = "memcached"
@@ -863,7 +900,7 @@ resource "aws_elasticache_serverless_cache" "test" {
 `, rName, desc)
 }
 
-func testAccServerlessCacheConfig_updatesc(rName string, desc string, d1 int64, d2 int64) string {
+func testAccServerlessCacheConfig_cacheUsageLimits(rName, desc string, d1, d2 int) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_serverless_cache" "test" {
   engine      = "memcached"

@@ -819,7 +819,7 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionCreating, resNameTable, d.Id(), fmt.Errorf("replicas: %w", err))
 		}
 
-		if err := updateReplicaTags(ctx, conn, aws.ToString(output.TableArn), v.List(), KeyValueTags(ctx, getTagsIn(ctx))); err != nil {
+		if err := updateReplicaTags(ctx, conn, aws.ToString(output.TableArn), v.List(), keyValueTags(ctx, getTagsIn(ctx))); err != nil {
 			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionCreating, resNameTable, d.Id(), fmt.Errorf("replica tags: %w", err))
 		}
 	}

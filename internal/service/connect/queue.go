@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"slices"
 	"strings"
 	"time"
 
@@ -307,31 +308,38 @@ func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 		os, ns := o.(*schema.Set), n.(*schema.Set)
 		add, del := flex.ExpandStringValueSet(ns.Difference(os)), flex.ExpandStringValueSet(os.Difference(ns))
 
+		// API only supports adding or removing 50 at a time.
+		const batchSize = 50
+
 		if len(add) > 0 {
-			input := &connect.AssociateQueueQuickConnectsInput{
-				InstanceId:      aws.String(instanceID),
-				QueueId:         aws.String(queueID),
-				QuickConnectIds: add,
-			}
+			for chunk := range slices.Chunk(add, batchSize) {
+				input := &connect.AssociateQueueQuickConnectsInput{
+					InstanceId:      aws.String(instanceID),
+					QueueId:         aws.String(queueID),
+					QuickConnectIds: chunk,
+				}
 
-			_, err = conn.AssociateQueueQuickConnects(ctx, input)
+				_, err = conn.AssociateQueueQuickConnects(ctx, input)
 
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "associating Connect Queue (%s) Quick Connects: %s", d.Id(), err)
+				if err != nil {
+					return sdkdiag.AppendErrorf(diags, "associating Connect Queue (%s) Quick Connects: %s", d.Id(), err)
+				}
 			}
 		}
 
 		if len(del) > 0 {
-			input := &connect.DisassociateQueueQuickConnectsInput{
-				InstanceId:      aws.String(instanceID),
-				QueueId:         aws.String(queueID),
-				QuickConnectIds: del,
-			}
+			for chunk := range slices.Chunk(del, batchSize) {
+				input := &connect.DisassociateQueueQuickConnectsInput{
+					InstanceId:      aws.String(instanceID),
+					QueueId:         aws.String(queueID),
+					QuickConnectIds: chunk,
+				}
 
-			_, err = conn.DisassociateQueueQuickConnects(ctx, input)
+				_, err = conn.DisassociateQueueQuickConnects(ctx, input)
 
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "disassociating Connect Queue (%s) Quick Connects: %s", d.Id(), err)
+				if err != nil {
+					return sdkdiag.AppendErrorf(diags, "disassociating Connect Queue (%s) Quick Connects: %s", d.Id(), err)
+				}
 			}
 		}
 	}

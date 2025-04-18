@@ -53,7 +53,7 @@ jobs:
             --disable-rule=terraform_typed_variables
 
   validate-terraform:
-    runs-on: custom-linux-large
+    runs-on: custom-ubuntu-22.04-large
     strategy:
       fail-fast: false
       matrix:
