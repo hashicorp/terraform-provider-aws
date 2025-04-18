@@ -544,6 +544,7 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 				interceptors = append(interceptors, resourceDefaultRegion())
 				interceptors = append(interceptors, resourceForceNewIfRegionChanges())
 				interceptors = append(interceptors, resourceSetRegionInState())
+				interceptors = append(interceptors, resourceImportRegion())
 			}
 
 			if !tfunique.IsHandleNil(v.Tags) {

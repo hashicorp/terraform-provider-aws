@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	dsschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -348,7 +349,39 @@ func (r resourceSetRegionInStateInterceptor) read(ctx context.Context, opts inte
 	return diags
 }
 
-// ephemeralResourceSetRegionInState set the value of the top-level `region` attribute in state after Read.
+// resourceSetRegionInState set the value of the top-level `region` attribute in state after Read.
 func resourceSetRegionInState() resourceCRUDInterceptor {
 	return &resourceSetRegionInStateInterceptor{}
+}
+
+type resourceImportRegionInterceptor struct{}
+
+func (r resourceImportRegionInterceptor) importState(ctx context.Context, opts interceptorOptions[resource.ImportStateRequest, resource.ImportStateResponse]) diag.Diagnostics {
+	c := opts.c
+	var diags diag.Diagnostics
+
+	switch request, response, when := opts.request, opts.response, opts.when; when {
+	case Before:
+		// Import ID optionally ends with "@<region>".
+		if matches := regexache.MustCompile(`^(.+)@([a-z]{2}(?:-[a-z]+)+-\d{1,2})$`).FindStringSubmatch(request.ID); len(matches) == 3 {
+			// TODO REGION: Need a way of signalling the new import ID.
+			request.ID = matches[1]
+			diags.Append(response.State.SetAttribute(ctx, path.Root(names.AttrRegion), matches[2])...)
+			if diags.HasError() {
+				return diags
+			}
+		} else {
+			diags.Append(response.State.SetAttribute(ctx, path.Root(names.AttrRegion), c.AwsConfig(ctx).Region)...)
+			if diags.HasError() {
+				return diags
+			}
+		}
+	}
+
+	return diags
+}
+
+// resourceImportRegion sets the value of the top-level `region` attribute during import.
+func resourceImportRegion() resourceImportStateInterceptor {
+	return &resourceImportRegionInterceptor{}
 }
