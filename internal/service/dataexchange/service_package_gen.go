@@ -25,6 +25,11 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			TypeName: "aws_dataexchange_event_action",
 			Name:     "Event Action",
 		},
+		{
+			Factory:  ResourceJob,
+			TypeName: "aws_dataexchange_job",
+			Name:     "Job",
+		},
 	}
 }
 
