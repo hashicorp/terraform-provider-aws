@@ -131,7 +131,7 @@ func dataSourceAPIRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	d.Set("api_endpoint", api.ApiEndpoint)
 	d.Set("api_key_selection_expression", api.ApiKeySelectionExpression)
 	d.Set(names.AttrARN, apiARN(ctx, meta.(*conns.AWSClient), d.Id()))
-	if err := d.Set("cors_configuration", flattenCORSConfiguration(api.CorsConfiguration)); err != nil {
+	if err := d.Set("cors_configuration", flattenCORS(api.CorsConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting cors_configuration: %s", err)
 	}
 	d.Set(names.AttrDescription, api.Description)

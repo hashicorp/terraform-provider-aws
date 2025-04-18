@@ -191,7 +191,7 @@ func resourceAPICreate(ctx context.Context, d *schema.ResourceData, meta any) di
 	}
 
 	if v, ok := d.GetOk("cors_configuration"); ok {
-		input.CorsConfiguration = expandCORSConfiguration(v.([]any))
+		input.CorsConfiguration = expandCORS(v.([]any))
 	}
 
 	if v, ok := d.GetOk("credentials_arn"); ok {
@@ -260,7 +260,7 @@ func resourceAPIRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 	d.Set("api_endpoint", output.ApiEndpoint)
 	d.Set("api_key_selection_expression", output.ApiKeySelectionExpression)
 	d.Set(names.AttrARN, apiARN(ctx, meta.(*conns.AWSClient), d.Id()))
-	if err := d.Set("cors_configuration", flattenCORSConfiguration(output.CorsConfiguration)); err != nil {
+	if err := d.Set("cors_configuration", flattenCORS(output.CorsConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting cors_configuration: %s", err)
 	}
 	d.Set(names.AttrDescription, output.Description)
@@ -308,7 +308,7 @@ func resourceAPIUpdate(ctx context.Context, d *schema.ResourceData, meta any) di
 		}
 
 		if d.HasChange("cors_configuration") {
-			input.CorsConfiguration = expandCORSConfiguration(d.Get("cors_configuration").([]any))
+			input.CorsConfiguration = expandCORS(d.Get("cors_configuration").([]any))
 		}
 
 		if d.HasChange(names.AttrDescription) {
@@ -442,7 +442,7 @@ func reimportOpenAPIDefinition(ctx context.Context, d *schema.ResourceData, meta
 					return fmt.Errorf("deleting API Gateway v2 API (%s) CORS configuration: %w", d.Id(), err)
 				}
 			} else {
-				inputUA.CorsConfiguration = expandCORSConfiguration(configuredCORSConfiguration.([]any))
+				inputUA.CorsConfiguration = expandCORS(configuredCORSConfiguration.([]any))
 			}
 		}
 
@@ -485,7 +485,7 @@ func findAPI(ctx context.Context, conn *apigatewayv2.Client, input *apigatewayv2
 	return output, nil
 }
 
-func expandCORSConfiguration(tfList []any) *awstypes.Cors {
+func expandCORS(tfList []any) *awstypes.Cors {
 	apiObject := &awstypes.Cors{}
 
 	if len(tfList) == 0 || tfList[0] == nil {
@@ -516,7 +516,7 @@ func expandCORSConfiguration(tfList []any) *awstypes.Cors {
 	return apiObject
 }
 
-func flattenCORSConfiguration(apiObject *awstypes.Cors) []any {
+func flattenCORS(apiObject *awstypes.Cors) []any {
 	if apiObject == nil {
 		return []any{}
 	}

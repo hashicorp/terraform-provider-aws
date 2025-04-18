@@ -139,7 +139,7 @@ func resourceDomainNameCreate(ctx context.Context, d *schema.ResourceData, meta 
 	input := apigatewayv2.CreateDomainNameInput{
 		DomainName:               aws.String(domainName),
 		DomainNameConfigurations: expandDomainNameConfigurations(d.Get("domain_name_configuration").([]any)),
-		MutualTlsAuthentication:  expandMutualTLSAuthentication(d.Get("mutual_tls_authentication").([]any)),
+		MutualTlsAuthentication:  expandMutualTLSAuthenticationInput(d.Get("mutual_tls_authentication").([]any)),
 		Tags:                     getTagsIn(ctx),
 	}
 
@@ -388,7 +388,7 @@ func flattenDomainNameConfiguration(apiObject awstypes.DomainNameConfiguration) 
 	return []any{tfMap}
 }
 
-func expandMutualTLSAuthentication(tfList []any) *awstypes.MutualTlsAuthenticationInput {
+func expandMutualTLSAuthenticationInput(tfList []any) *awstypes.MutualTlsAuthenticationInput {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
