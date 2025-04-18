@@ -502,6 +502,57 @@ func testAccCheckExperimentTemplateDestroy(ctx context.Context) resource.TestChe
 	}
 }
 
+func TestAccFISExperimentTemplate_reportConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_fis_experiment_template.test"
+	var conf awstypes.ExperimentTemplate
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, fis.ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckExperimentTemplateDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccExperimentTemplateConfig_reportConfiguration(rName, "An experiment template for testing report configuration", "test-action-1", "", "aws:ec2:terminate-instances", "Instances", "to-terminate-1", "aws:ec2:instance", "COUNT(1)", "env", "test"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccExperimentTemplateExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "experiment_report_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "experiment_report_configuration.0.data_sources.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "experiment_report_configuration.0.data_sources.0.cloudwatch_dashboard.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "experiment_report_configuration.0.data_sources.0.cloudwatch_dashboard.0.dashboard_arn", "aws_cloudwatch_dashboard.test", "dashboard_arn"),
+					resource.TestCheckResourceAttr(resourceName, "experiment_report_configuration.0.outputs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "experiment_report_configuration.0.outputs.0.s3_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "experiment_report_configuration.0.outputs.0.s3_configuration.0.bucket_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "experiment_report_configuration.0.outputs.0.s3_configuration.0.prefix", "fis-test-reports"),
+					resource.TestCheckResourceAttr(resourceName, "experiment_report_configuration.0.post_experiment_duration", "PT6M"),
+					resource.TestCheckResourceAttr(resourceName, "experiment_report_configuration.0.pre_experiment_duration", "PT6M"),
+				),
+			},
+			// Delete Report Configuration
+			{
+				Config: testAccExperimentTemplateConfig_basic(rName, "An experiment template for testing", "test-action-1", "", "aws:ec2:terminate-instances", "Instances", "to-terminate-1", "aws:ec2:instance", "COUNT(1)", "env", "test"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccExperimentTemplateExists(ctx, resourceName, &conf),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+			// S3 Configuration
+			{
+				Config: testAccExperimentTemplateConfig_reportConfiguration_s3Config_only(rName, "An experiment template for testing report configuration", "test-action-1", "", "aws:ec2:terminate-instances", "Instances", "to-terminate-1", "aws:ec2:instance", "COUNT(1)", "env", "test"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccExperimentTemplateExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "experiment_report_configuration.0.outputs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "experiment_report_configuration.0.outputs.0.s3_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "experiment_report_configuration.0.outputs.0.s3_configuration.0.bucket_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "experiment_report_configuration.0.outputs.0.s3_configuration.0.prefix", "fis-test-reports"),
+				),
+			},
+		},
+	})
+}
+
 func testAccExperimentTemplateConfig_basic(rName, desc, actionName, actionDesc, actionID, actionTargetK, actionTargetV, targetResType, targetSelectMode, targetResTagK, targetResTagV string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
@@ -1164,4 +1215,257 @@ resource "aws_fis_experiment_template" "test" {
   }
 }
 `, rName, mode)
+}
+
+func testAccExperimentTemplateConfig_reportConfiguration(rName, desc, actionName, actionDesc, actionID, actionTargetK, actionTargetV, targetResType, targetSelectMode, targetResTagK, targetResTagV string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = [
+          "fis.${data.aws_partition.current.dns_suffix}",
+        ]
+      }
+    }]
+    Version = "2012-10-17"
+  })
+}
+
+data "aws_iam_policy_document" "report_access" {
+  version = "2012-10-17"
+
+  statement {
+    sid       = "logsDelivery"
+    effect    = "Allow"
+    actions   = ["logs:CreateLogDelivery"]
+    resources = ["*"]
+  }
+
+  statement {
+    sid       = "ReportsBucket"
+    effect    = "Allow"
+    actions   = ["s3:PutObject", "s3:GetObject"]
+    resources = ["*"]
+  }
+
+  statement {
+    sid       = "GetDashboard"
+    effect    = "Allow"
+    actions   = ["cloudwatch:GetDashboard"]
+    resources = ["*"]
+  }
+
+  statement {
+    sid       = "GetDashboardData"
+    effect    = "Allow"
+    actions   = ["cloudwatch:getMetricWidgetImage"]
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_policy" "report_access" {
+  name   = "report_access"
+  policy = data.aws_iam_policy_document.report_access.json
+}
+
+resource "aws_iam_role_policy_attachment" "report_access" {
+  role       = aws_iam_role.test.name
+  policy_arn = aws_iam_policy.report_access.arn
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_cloudwatch_dashboard" "test" {
+  dashboard_name = %[1]q
+  dashboard_body = jsonencode({
+    widgets = [
+      {
+        type   = "text"
+        x      = 0
+        y      = 0
+        width  = 24
+        height = 1
+        properties = {
+          markdown = "## FIS"
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_fis_experiment_template" "test" {
+  description = %[2]q
+  role_arn    = aws_iam_role.test.arn
+
+  stop_condition {
+    source = "none"
+  }
+
+  action {
+    name        = %[3]q
+    description = %[4]q
+    action_id   = %[5]q
+
+    target {
+      key   = %[6]q
+      value = %[7]q
+    }
+  }
+
+  target {
+    name           = %[7]q
+    resource_type  = %[8]q
+    selection_mode = %[9]q
+
+    resource_tag {
+      key   = %[10]q
+      value = %[11]q
+    }
+  }
+
+  experiment_report_configuration {
+    data_sources {
+      cloudwatch_dashboard {
+        dashboard_arn = aws_cloudwatch_dashboard.test.dashboard_arn
+      }
+    }
+
+    outputs {
+      s3_configuration {
+        bucket_name = aws_s3_bucket.test.bucket
+        prefix      = "fis-test-reports"
+      }
+    }
+
+    post_experiment_duration = "PT6M"
+    pre_experiment_duration  = "PT6M"
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, desc, actionName, actionDesc, actionID, actionTargetK, actionTargetV, targetResType, targetSelectMode, targetResTagK, targetResTagV)
+}
+
+func testAccExperimentTemplateConfig_reportConfiguration_s3Config_only(rName, desc, actionName, actionDesc, actionID, actionTargetK, actionTargetV, targetResType, targetSelectMode, targetResTagK, targetResTagV string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = [
+          "fis.${data.aws_partition.current.dns_suffix}",
+        ]
+      }
+    }]
+    Version = "2012-10-17"
+  })
+}
+
+data "aws_iam_policy_document" "report_access" {
+  version = "2012-10-17"
+
+  statement {
+    sid       = "logsDelivery"
+    effect    = "Allow"
+    actions   = ["logs:CreateLogDelivery"]
+    resources = ["*"]
+  }
+
+  statement {
+    sid       = "ReportsBucket"
+    effect    = "Allow"
+    actions   = ["s3:PutObject", "s3:GetObject"]
+    resources = ["*"]
+  }
+
+  statement {
+    sid       = "GetDashboard"
+    effect    = "Allow"
+    actions   = ["cloudwatch:GetDashboard"]
+    resources = ["*"]
+  }
+
+  statement {
+    sid       = "GetDashboardData"
+    effect    = "Allow"
+    actions   = ["cloudwatch:getMetricWidgetImage"]
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_policy" "report_access" {
+  name   = "report_access"
+  policy = data.aws_iam_policy_document.report_access.json
+}
+
+resource "aws_iam_role_policy_attachment" "report_access" {
+  role       = aws_iam_role.test.name
+  policy_arn = aws_iam_policy.report_access.arn
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_fis_experiment_template" "test" {
+  description = %[2]q
+  role_arn    = aws_iam_role.test.arn
+
+  stop_condition {
+    source = "none"
+  }
+
+  action {
+    name        = %[3]q
+    description = %[4]q
+    action_id   = %[5]q
+
+    target {
+      key   = %[6]q
+      value = %[7]q
+    }
+  }
+
+  target {
+    name           = %[7]q
+    resource_type  = %[8]q
+    selection_mode = %[9]q
+
+    resource_tag {
+      key   = %[10]q
+      value = %[11]q
+    }
+  }
+
+  experiment_report_configuration {
+    outputs {
+      s3_configuration {
+        bucket_name = aws_s3_bucket.test.bucket
+        prefix      = "fis-test-reports"
+      }
+    }
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, desc, actionName, actionDesc, actionID, actionTargetK, actionTargetV, targetResType, targetSelectMode, targetResTagK, targetResTagV)
 }
