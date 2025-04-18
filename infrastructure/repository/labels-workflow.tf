@@ -128,7 +128,7 @@ variable "workflow_labels" {
     "no-changelog-needed" = {
       color       = "828a90", # color:stale grey
       description = "Indicates that a changelog entry is not necessary"
-    }
+    },
     "partner" = {
       color       = "ff9900", # color:aws
       description = "Contribution from a partner."
