@@ -403,7 +403,7 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 						}
 					}
 
-					ctx = conns.NewDataSourceContext(ctx, servicePackageName, v.Name, overrideRegion)
+					ctx = conns.NewResourceContext(ctx, servicePackageName, v.Name, overrideRegion)
 					if c, ok := meta.(*conns.AWSClient); ok {
 						ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx))
 						ctx = c.RegisterLogger(ctx)

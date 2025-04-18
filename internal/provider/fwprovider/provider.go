@@ -441,7 +441,7 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 						overrideRegion = target.ValueString()
 					}
 
-					ctx = conns.NewDataSourceContext(ctx, servicePackageName, v.Name, overrideRegion)
+					ctx = conns.NewResourceContext(ctx, servicePackageName, v.Name, overrideRegion)
 					if c != nil {
 						ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx))
 						ctx = c.RegisterLogger(ctx)
@@ -501,7 +501,7 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 							overrideRegion = target.ValueString()
 						}
 
-						ctx = conns.NewEphemeralResourceContext(ctx, servicePackageName, v.Name, overrideRegion)
+						ctx = conns.NewResourceContext(ctx, servicePackageName, v.Name, overrideRegion)
 						if c != nil {
 							ctx = c.RegisterLogger(ctx)
 							ctx = fwflex.RegisterLogger(ctx)
