@@ -98,20 +98,28 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 			},
 			{{- if gt (len $value.IdentityAttributes) 0 }}
 				{{- if or $.IsGlobal $value.IsGlobal }}
-				Identity: itypes.GlobalParameterizedIdentity({{ range $value.IdentityAttributes }}
-					itypes.StringIdentityAttribute({{ .Name }},
-					{{- if .Optional }}false{{ else }}true{{ end }}),
-				{{- end }}
-				),
+					Identity: itypes.GlobalParameterizedIdentity(
+						{{- range $value.IdentityAttributes }}
+							itypes.StringIdentityAttribute({{ .Name }},
+							{{- if .Optional }}false{{ else }}true{{ end }}),
+						{{- end }}
+					),
 				{{ else }}
-				Identity: itypes.ParameterizedIdentity({{ range $value.IdentityAttributes }}
-					itypes.StringIdentityAttribute({{ .Name }},
-					{{- if .Optional }}false{{ else }}true{{ end }}),
-				{{- end }}
-				),
+					Identity: itypes.ParameterizedIdentity(
+						{{- range $value.IdentityAttributes }}
+							itypes.StringIdentityAttribute({{ .Name }},
+							{{- if .Optional }}false{{ else }}true{{ end }}),
+						{{- end }}
+					),
 				{{- end }}
 			{{- else if $value.ARNIdentity }}
-			Identity: itypes.ARNIdentity(),
+				Identity: itypes.ARNIdentity(),
+			{{- else if $value.SingletonIdentity }}
+				{{- if or $.IsGlobal $value.IsGlobal }}
+					Identity: itypes.GlobalSingletonIdentity(),
+				{{ else }}
+					Identity: itypes.RegionalSingletonIdentity(),
+				{{- end }}
 			{{- end }}
 		},
 {{- end }}
@@ -173,25 +181,27 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 			},
 			{{- if gt (len $value.IdentityAttributes) 0 }}
 				{{- if or $.IsGlobal $value.IsGlobal }}
-				Identity: itypes.GlobalParameterizedIdentity({{ range $value.IdentityAttributes }}
-					itypes.StringIdentityAttribute({{ .Name }},
-					{{- if .Optional }}false{{ else }}true{{ end }}),
-				{{- end }}
-				),
+					Identity: itypes.GlobalParameterizedIdentity(
+						{{- range $value.IdentityAttributes }}
+							itypes.StringIdentityAttribute({{ .Name }},
+							{{- if .Optional }}false{{ else }}true{{ end }}),
+						{{- end }}
+					),
 				{{ else }}
-				Identity: itypes.ParameterizedIdentity({{ range $value.IdentityAttributes }}
-					itypes.StringIdentityAttribute({{ .Name }},
-					{{- if .Optional }}false{{ else }}true{{ end }}),
-				{{- end }}
-				),
+					Identity: itypes.ParameterizedIdentity(
+						{{- range $value.IdentityAttributes }}
+							itypes.StringIdentityAttribute({{ .Name }},
+							{{- if .Optional }}false{{ else }}true{{ end }}),
+						{{- end }}
+					),
 				{{- end }}
 			{{- else if $value.ARNIdentity }}
-			Identity: itypes.ARNIdentity(),
+				Identity: itypes.ARNIdentity(),
 			{{- else if $value.SingletonIdentity }}
 				{{- if or $.IsGlobal $value.IsGlobal }}
-				Identity: itypes.GlobalSingletonIdentity(),
+					Identity: itypes.GlobalSingletonIdentity(),
 				{{ else }}
-				Identity: itypes.RegionalSingletonIdentity(),
+					Identity: itypes.RegionalSingletonIdentity(),
 				{{- end }}
 			{{- end }}
 		},
