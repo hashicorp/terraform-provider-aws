@@ -148,7 +148,7 @@ func resourceRestAPI() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			names.AttrPolicy: sdkv2.JSONDocumentSchemaOptionalComputed(),
+			names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaOptionalComputed(),
 			"put_rest_api_mode": {
 				Type:             schema.TypeString,
 				Optional:         true,

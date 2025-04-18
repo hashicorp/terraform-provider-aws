@@ -68,8 +68,8 @@ func ComputedOnlyFromResourceSchema(rs map[string]*schema.Schema) map[string]*sc
 	return cs
 }
 
-// JSONDocumentSchemaOptionalComputed returns the standard schema for an optional, computed JSON document.
-var JSONDocumentSchemaOptionalComputed = sync.OnceValue(jsonDocumentSchemaOptionalComputedFunc(SuppressEquivalentJSONDocuments))
+// IAMPolicyDocumentSchemaOptionalComputed returns the standard schema for an optional, computed IAM policy JSON document.
+var IAMPolicyDocumentSchemaOptionalComputed = sync.OnceValue(jsonDocumentSchemaOptionalComputedFunc(SuppressEquivalentIAMPolicyDocuments))
 
 // JSONDocumentSchemaRequired returns the standard schema for a required JSON document.
 var JSONDocumentSchemaRequired = sync.OnceValue(jsonDocumentSchemaRequiredFunc(SuppressEquivalentJSONDocuments))
