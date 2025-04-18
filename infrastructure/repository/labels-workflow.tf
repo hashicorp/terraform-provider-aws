@@ -96,7 +96,7 @@ variable "workflow_labels" {
     "resource-import" = {
       color       = "844fba", # color:terraform (main)
       description = "Pertains to issues importing resources."
-    }
+    },
     "linter" = {
       color       = "f4ecff", # color:terraform secondary
       description = "Pertains to changes to or issues with the various linters."
