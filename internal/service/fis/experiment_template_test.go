@@ -520,8 +520,8 @@ func TestAccFISExperimentTemplate_reportConfiguration(t *testing.T) {
 					testAccExperimentTemplateExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "experiment_report_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "experiment_report_configuration.0.data_sources.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "experiment_report_configuration.0.data_sources.0.cloudwatch_dashboards.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "experiment_report_configuration.0.data_sources.0.cloudwatch_dashboards.0.dashboard_arn", "aws_cloudwatch_dashboard.test", "dashboard_arn"),
+					resource.TestCheckResourceAttr(resourceName, "experiment_report_configuration.0.data_sources.0.cloudwatch_dashboard.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "experiment_report_configuration.0.data_sources.0.cloudwatch_dashboard.0.dashboard_arn", "aws_cloudwatch_dashboard.test", "dashboard_arn"),
 					resource.TestCheckResourceAttr(resourceName, "experiment_report_configuration.0.outputs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "experiment_report_configuration.0.outputs.0.s3_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "experiment_report_configuration.0.outputs.0.s3_configuration.0.bucket_name", rName),
@@ -1334,7 +1334,7 @@ resource "aws_fis_experiment_template" "test" {
 
   experiment_report_configuration {
     data_sources {
-      cloudwatch_dashboards {
+      cloudwatch_dashboard {
         dashboard_arn = aws_cloudwatch_dashboard.test.dashboard_arn
       }
     }

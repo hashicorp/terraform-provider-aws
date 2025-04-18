@@ -143,7 +143,7 @@ resource "aws_fis_experiment_template" "example" {
 
   experiment_report_configuration {
     data_sources {
-      cloudwatch_dashboards {
+      cloudwatch_dashboard {
         dashboard_arn = aws_cloudwatch_dashboard.example.dashboard_arn
       }
     }
@@ -263,9 +263,9 @@ For a list of parameters supported by each action, see [AWS FIS actions referenc
 
 #### `data_sources`
 
-* `cloudwatch_dashboards` - (Required) The data sources for the experiment report. See below.
+* `cloudwatch_dashboard` - (Required) The data sources for the experiment report. See below.
 
-#### `cloudwatch_dashboards`
+#### `cloudwatch_dashboard`
 
 * `dashboard_arn` - (Required) The ARN of the CloudWatch dashboard.
 

@@ -14,7 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/fis"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fis/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -146,16 +146,18 @@ func resourceExperimentTemplate() *schema.Resource {
 				},
 			},
 			"experiment_report_configuration": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"data_sources": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Optional: true,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"cloudwatch_dashboards": {
+									"cloudwatch_dashboard": {
 										Type:     schema.TypeList,
 										Optional: true,
 										Elem: &schema.Resource{
@@ -174,6 +176,7 @@ func resourceExperimentTemplate() *schema.Resource {
 						"outputs": {
 							Type:     schema.TypeList,
 							Optional: true,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"s3_configuration": {
@@ -365,19 +368,22 @@ func resourceExperimentTemplateCreate(ctx context.Context, d *schema.ResourceDat
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FISClient(ctx)
 
-	input := &fis.CreateExperimentTemplateInput{
-		Actions:                       expandExperimentTemplateActions(d.Get(names.AttrAction).(*schema.Set)),
-		ClientToken:                   aws.String(id.UniqueId()),
-		Description:                   aws.String(d.Get(names.AttrDescription).(string)),
-		ExperimentReportConfiguration: expandCeateExperimentTemplateExperimentReportConfiguration(d.Get("experiment_report_configuration").(*schema.Set)),
-		LogConfiguration:              expandExperimentTemplateLogConfiguration(d.Get("log_configuration").([]any)),
-		RoleArn:                       aws.String(d.Get(names.AttrRoleARN).(string)),
-		StopConditions:                expandExperimentTemplateStopConditions(d.Get("stop_condition").(*schema.Set)),
-		Tags:                          getTagsIn(ctx),
+	input := fis.CreateExperimentTemplateInput{
+		Actions:          expandExperimentTemplateActions(d.Get(names.AttrAction).(*schema.Set)),
+		ClientToken:      aws.String(sdkid.UniqueId()),
+		Description:      aws.String(d.Get(names.AttrDescription).(string)),
+		LogConfiguration: expandExperimentTemplateLogConfiguration(d.Get("log_configuration").([]any)),
+		RoleArn:          aws.String(d.Get(names.AttrRoleARN).(string)),
+		StopConditions:   expandExperimentTemplateStopConditions(d.Get("stop_condition").(*schema.Set)),
+		Tags:             getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("experiment_options"); ok {
 		input.ExperimentOptions = expandCreateExperimentTemplateExperimentOptionsInput(v.([]any))
+	}
+
+	if v, ok := d.GetOk("experiment_report_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.ExperimentReportConfiguration = expandCreateExperimentTemplateReportConfigurationInput(v.([]any)[0].(map[string]any))
 	}
 
 	if targets, err := expandExperimentTemplateTargets(d.Get(names.AttrTarget).(*schema.Set)); err != nil {
@@ -386,7 +392,7 @@ func resourceExperimentTemplateCreate(ctx context.Context, d *schema.ResourceDat
 		input.Targets = targets
 	}
 
-	output, err := conn.CreateExperimentTemplate(ctx, input)
+	output, err := conn.CreateExperimentTemplate(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating FIS Experiment Template: %s", err)
@@ -422,6 +428,9 @@ func resourceExperimentTemplateRead(ctx context.Context, d *schema.ResourceData,
 	if err := d.Set("experiment_options", flattenExperimentTemplateExperimentOptions(experimentTemplate.ExperimentOptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting experiment_options: %s", err)
 	}
+	if err := d.Set("experiment_report_configuration", flattenExperimentTemplateReportConfiguration(experimentTemplate.ExperimentReportConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting experiment_report_configuration: %s", err)
+	}
 	if err := d.Set("log_configuration", flattenExperimentTemplateLogConfiguration(experimentTemplate.LogConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting log_configuration: %s", err)
 	}
@@ -430,9 +439,6 @@ func resourceExperimentTemplateRead(ctx context.Context, d *schema.ResourceData,
 	}
 	if err := d.Set(names.AttrTarget, flattenExperimentTemplateTargets(experimentTemplate.Targets)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting target: %s", err)
-	}
-	if err := d.Set("experiment_report_configuration", flattenExperimentTemplateExperimentReportConfiguration(experimentTemplate.ExperimentReportConfiguration)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting experiment_report_configuration: %s", err)
 	}
 
 	setTagsOut(ctx, experimentTemplate.Tags)
@@ -446,7 +452,7 @@ func resourceExperimentTemplateUpdate(ctx context.Context, d *schema.ResourceDat
 	conn := meta.(*conns.AWSClient).FISClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		input := &fis.UpdateExperimentTemplateInput{
+		input := fis.UpdateExperimentTemplateInput{
 			Id: aws.String(d.Id()),
 		}
 
@@ -460,6 +466,12 @@ func resourceExperimentTemplateUpdate(ctx context.Context, d *schema.ResourceDat
 
 		if d.HasChange("experiment_options") {
 			input.ExperimentOptions = expandUpdateExperimentTemplateExperimentOptionsInput(d.Get("experiment_options").([]any))
+		}
+
+		if d.HasChange("experiment_report_configuration") {
+			if v, ok := d.GetOk("experiment_report_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.ExperimentReportConfiguration = expandUpdateExperimentTemplateReportConfigurationInput(v.([]any)[0].(map[string]any))
+			}
 		}
 
 		if d.HasChange("log_configuration") {
@@ -483,11 +495,7 @@ func resourceExperimentTemplateUpdate(ctx context.Context, d *schema.ResourceDat
 			}
 		}
 
-		if d.HasChange("experiment_report_configuration") {
-			input.ExperimentReportConfiguration = expandUpdateExperimentTemplateExperimentReportConfiguration(d.Get("experiment_report_configuration").(*schema.Set))
-		}
-
-		_, err := conn.UpdateExperimentTemplate(ctx, input)
+		_, err := conn.UpdateExperimentTemplate(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating FIS Experiment Template (%s): %s", d.Id(), err)
@@ -502,9 +510,10 @@ func resourceExperimentTemplateDelete(ctx context.Context, d *schema.ResourceDat
 	conn := meta.(*conns.AWSClient).FISClient(ctx)
 
 	log.Printf("[DEBUG] Deleting FIS Experiment Template: %s", d.Id())
-	_, err := conn.DeleteExperimentTemplate(ctx, &fis.DeleteExperimentTemplateInput{
+	input := fis.DeleteExperimentTemplateInput{
 		Id: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteExperimentTemplate(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
@@ -518,11 +527,11 @@ func resourceExperimentTemplateDelete(ctx context.Context, d *schema.ResourceDat
 }
 
 func findExperimentTemplateByID(ctx context.Context, conn *fis.Client, id string) (*awstypes.ExperimentTemplate, error) {
-	input := &fis.GetExperimentTemplateInput{
+	input := fis.GetExperimentTemplateInput{
 		Id: aws.String(id),
 	}
 
-	output, err := conn.GetExperimentTemplate(ctx, input)
+	output, err := conn.GetExperimentTemplate(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
@@ -973,185 +982,180 @@ func expandExperimentTemplateTargetResourceTags(l *schema.Set) map[string]string
 	return attrs
 }
 
-func expandCeateExperimentTemplateExperimentReportConfiguration(l *schema.Set) *awstypes.CreateExperimentTemplateReportConfigurationInput {
-	if l == nil || l.Len() == 0 {
+func expandCreateExperimentTemplateReportConfigurationInput(tfMap map[string]any) *awstypes.CreateExperimentTemplateReportConfigurationInput {
+	if tfMap == nil {
 		return nil
 	}
 
-	config := &awstypes.CreateExperimentTemplateReportConfigurationInput{}
+	apiObject := &awstypes.CreateExperimentTemplateReportConfigurationInput{}
 
-	raw := l.List()[0].(map[string]any)
-
-	if v, ok := raw["data_sources"].(*schema.Set); ok && v.Len() > 0 {
-		config.DataSources = expandExperimentTemplateExperimentReportConfigurationDataSources(v)
+	if v, ok := tfMap["data_sources"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.DataSources = expandExperimentTemplateReportConfigurationDataSourcesInput(v[0].(map[string]any))
 	}
 
-	if v, ok := raw["outputs"].([]any); ok && len(v) > 0 {
-		config.Outputs = expandExperimentTemplateExperimentReportConfigurationOutputs(v)
+	if v, ok := tfMap["outputs"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Outputs = expandExperimentTemplateReportConfigurationOutputsInput(v[0].(map[string]any))
 	}
 
-	if v, ok := raw["post_experiment_duration"].(string); ok && v != "" {
-		config.PostExperimentDuration = aws.String(v)
+	if v, ok := tfMap["post_experiment_duration"].(string); ok && v != "" {
+		apiObject.PostExperimentDuration = aws.String(v)
 	}
 
-	if v, ok := raw["pre_experiment_duration"].(string); ok && v != "" {
-		config.PreExperimentDuration = aws.String(v)
+	if v, ok := tfMap["pre_experiment_duration"].(string); ok && v != "" {
+		apiObject.PreExperimentDuration = aws.String(v)
 	}
 
-	return config
+	return apiObject
 }
 
-func expandUpdateExperimentTemplateExperimentReportConfiguration(l *schema.Set) *awstypes.UpdateExperimentTemplateReportConfigurationInput {
-	if l == nil || l.Len() == 0 {
+func expandUpdateExperimentTemplateReportConfigurationInput(tfMap map[string]any) *awstypes.UpdateExperimentTemplateReportConfigurationInput {
+	if tfMap == nil {
 		return nil
 	}
 
-	config := &awstypes.UpdateExperimentTemplateReportConfigurationInput{}
+	apiObject := &awstypes.UpdateExperimentTemplateReportConfigurationInput{}
 
-	raw := l.List()[0].(map[string]any)
-
-	if v, ok := raw["data_sources"].(*schema.Set); ok && v.Len() > 0 {
-		config.DataSources = expandExperimentTemplateExperimentReportConfigurationDataSources(v)
+	if v, ok := tfMap["data_sources"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.DataSources = expandExperimentTemplateReportConfigurationDataSourcesInput(v[0].(map[string]any))
 	}
 
-	if v, ok := raw["outputs"].([]any); ok && len(v) > 0 {
-		config.Outputs = expandExperimentTemplateExperimentReportConfigurationOutputs(v)
+	if v, ok := tfMap["outputs"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Outputs = expandExperimentTemplateReportConfigurationOutputsInput(v[0].(map[string]any))
 	}
 
-	if v, ok := raw["post_experiment_duration"].(string); ok && v != "" {
-		config.PostExperimentDuration = aws.String(v)
+	if v, ok := tfMap["post_experiment_duration"].(string); ok && v != "" {
+		apiObject.PostExperimentDuration = aws.String(v)
 	}
 
-	if v, ok := raw["pre_experiment_duration"].(string); ok && v != "" {
-		config.PreExperimentDuration = aws.String(v)
+	if v, ok := tfMap["pre_experiment_duration"].(string); ok && v != "" {
+		apiObject.PreExperimentDuration = aws.String(v)
 	}
 
-	return config
+	return apiObject
 }
 
-func expandExperimentTemplateExperimentReportConfigurationDataSources(s *schema.Set) *awstypes.ExperimentTemplateReportConfigurationDataSourcesInput {
-	if s == nil || s.Len() == 0 {
+func expandExperimentTemplateReportConfigurationDataSourcesInput(tfMap map[string]any) *awstypes.ExperimentTemplateReportConfigurationDataSourcesInput {
+	if tfMap == nil {
 		return nil
 	}
 
-	dataSourcesInput := &awstypes.ExperimentTemplateReportConfigurationDataSourcesInput{}
+	apiObject := &awstypes.ExperimentTemplateReportConfigurationDataSourcesInput{}
 
-	rawMap := s.List()[0].(map[string]any)
-
-	if v, ok := rawMap["cloudwatch_dashboards"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap["cloudwatch_dashboard"].([]any); ok && len(v) > 0 {
 		dashboards := make([]awstypes.ReportConfigurationCloudWatchDashboardInput, 0, len(v))
 
-		for _, dashboard := range v {
-			dashboardMap := dashboard.(map[string]any)
-			if dashboardArn, ok := dashboardMap["dashboard_arn"].(string); ok && dashboardArn != "" {
+		for _, tfMapRaw := range v {
+			tfMap, ok := tfMapRaw.(map[string]any)
+			if !ok {
+				continue
+			}
+
+			if v, ok := tfMap["dashboard_arn"].(string); ok && v != "" {
 				dashboards = append(dashboards, awstypes.ReportConfigurationCloudWatchDashboardInput{
-					DashboardIdentifier: aws.String(dashboardArn),
+					DashboardIdentifier: aws.String(v),
 				})
 			}
 		}
 
-		dataSourcesInput.CloudWatchDashboards = dashboards
+		apiObject.CloudWatchDashboards = dashboards
 	}
 
-	return dataSourcesInput
+	return apiObject
 }
 
-func expandExperimentTemplateExperimentReportConfigurationOutputs(l []any) *awstypes.ExperimentTemplateReportConfigurationOutputsInput {
-	if len(l) == 0 || l[0] == nil {
+func expandExperimentTemplateReportConfigurationOutputsInput(tfMap map[string]any) *awstypes.ExperimentTemplateReportConfigurationOutputsInput {
+	if tfMap == nil {
 		return nil
 	}
 
-	rawMap := l[0].(map[string]any)
+	apiObject := &awstypes.ExperimentTemplateReportConfigurationOutputsInput{}
 
-	outputsInput := &awstypes.ExperimentTemplateReportConfigurationOutputsInput{}
-
-	if v, ok := rawMap["s3_configuration"].([]any); ok && len(v) > 0 {
-		outputsInput.S3Configuration = expandExperimentTemplateReportConfigurationS3Configuration(v)
+	if v, ok := tfMap["s3_configuration"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.S3Configuration = expandExperimentTemplateReportConfigurationS3Configuration(v[0].(map[string]any))
 	}
 
-	return outputsInput
+	return apiObject
 }
 
-func expandExperimentTemplateReportConfigurationS3Configuration(l []any) *awstypes.ReportConfigurationS3OutputInput {
-	if len(l) == 0 {
+func expandExperimentTemplateReportConfigurationS3Configuration(tfMap map[string]any) *awstypes.ReportConfigurationS3OutputInput {
+	if tfMap == nil {
 		return nil
 	}
 
-	raw := l[0].(map[string]any)
-
-	config := awstypes.ReportConfigurationS3OutputInput{
-		BucketName: aws.String(raw[names.AttrBucketName].(string)),
+	apiObject := &awstypes.ReportConfigurationS3OutputInput{
+		BucketName: aws.String(tfMap[names.AttrBucketName].(string)),
 	}
 
-	if v, ok := raw[names.AttrPrefix].(string); ok && v != "" {
-		config.Prefix = aws.String(v)
+	if v, ok := tfMap[names.AttrPrefix].(string); ok && v != "" {
+		apiObject.Prefix = aws.String(v)
 	}
 
-	return &config
+	return apiObject
 }
 
-func flattenExperimentTemplateExperimentReportConfiguration(configured *awstypes.ExperimentTemplateReportConfiguration) []map[string]any {
-	if configured == nil {
-		return make([]map[string]any, 0)
+func flattenExperimentTemplateReportConfiguration(apiObject *awstypes.ExperimentTemplateReportConfiguration) []any {
+	if apiObject == nil {
+		return make([]any, 0)
 	}
 
-	dataResources := make([]map[string]any, 1)
-	dataResources[0] = make(map[string]any)
-	dataResources[0]["data_sources"] = flattenExperimentTemplateExperimentReportConfigurationDataSources(configured.DataSources)
-	dataResources[0]["outputs"] = flattenExperimentTemplateExperimentReportConfigurationOutputs(configured.Outputs)
-	dataResources[0]["post_experiment_duration"] = aws.ToString(configured.PostExperimentDuration)
-	dataResources[0]["pre_experiment_duration"] = aws.ToString(configured.PreExperimentDuration)
+	tfMap := map[string]any{
+		"data_sources":             flattenExperimentTemplateExperimentReportConfigurationDataSources(apiObject.DataSources),
+		"outputs":                  flattenExperimentTemplateExperimentReportConfigurationOutputs(apiObject.Outputs),
+		"post_experiment_duration": aws.ToString(apiObject.PostExperimentDuration),
+		"pre_experiment_duration":  aws.ToString(apiObject.PreExperimentDuration),
+	}
 
-	return dataResources
+	return []any{tfMap}
 }
 
-func flattenExperimentTemplateExperimentReportConfigurationOutputs(configured *awstypes.ExperimentTemplateReportConfigurationOutputs) []map[string]any {
-	if configured == nil {
-		return make([]map[string]any, 0)
+func flattenExperimentTemplateExperimentReportConfigurationOutputs(apiObject *awstypes.ExperimentTemplateReportConfigurationOutputs) []any {
+	if apiObject == nil {
+		return make([]any, 0)
 	}
 
-	dataResources := make([]map[string]any, 1)
-	dataResources[0] = make(map[string]any)
-	dataResources[0]["s3_configuration"] = flattenExperimentTemplateExperimentReportConfigurationS3Configuration(configured.S3Configuration)
+	tfMap := map[string]any{
+		"s3_configuration": flattenReportConfigurationS3Output(apiObject.S3Configuration),
+	}
 
-	return dataResources
+	return []any{tfMap}
 }
 
-func flattenExperimentTemplateExperimentReportConfigurationDataSources(configured *awstypes.ExperimentTemplateReportConfigurationDataSources) []map[string]any {
-	if configured == nil {
-		return make([]map[string]any, 0)
+func flattenExperimentTemplateExperimentReportConfigurationDataSources(apiObject *awstypes.ExperimentTemplateReportConfigurationDataSources) []any {
+	if apiObject == nil {
+		return make([]any, 0)
 	}
 
-	dataResources := make([]map[string]any, 1)
-	dataResources[0] = make(map[string]any)
-	dataResources[0]["cloudwatch_dashboards"] = flattenExperimentTemplateExperimentReportConfigurationCloudWatchDashboards(configured.CloudWatchDashboards)
+	tfMap := map[string]any{
+		"cloudwatch_dashboard": flattenExperimentTemplateReportConfigurationCloudWatchDashboards(apiObject.CloudWatchDashboards),
+	}
 
-	return dataResources
+	return []any{tfMap}
 }
 
-func flattenExperimentTemplateExperimentReportConfigurationCloudWatchDashboards(configured []awstypes.ExperimentTemplateReportConfigurationCloudWatchDashboard) []map[string]any {
-	dataResources := make([]map[string]any, 0, len(configured))
+func flattenExperimentTemplateReportConfigurationCloudWatchDashboards(apiObjects []awstypes.ExperimentTemplateReportConfigurationCloudWatchDashboard) []any {
+	tfList := make([]any, 0, len(apiObjects))
 
-	for _, v := range configured {
-		item := make(map[string]any)
-		item["dashboard_arn"] = aws.ToString(v.DashboardIdentifier)
-		dataResources = append(dataResources, item)
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{
+			"dashboard_arn": aws.ToString(apiObject.DashboardIdentifier),
+		}
+		tfList = append(tfList, tfMap)
 	}
 
-	return dataResources
+	return tfList
 }
 
-func flattenExperimentTemplateExperimentReportConfigurationS3Configuration(configured *awstypes.ReportConfigurationS3Output) []map[string]any {
-	if configured == nil {
-		return make([]map[string]any, 0)
+func flattenReportConfigurationS3Output(apiObject *awstypes.ReportConfigurationS3Output) []any {
+	if apiObject == nil {
+		return make([]any, 0)
 	}
 
-	dataResources := make([]map[string]any, 1)
-	dataResources[0] = make(map[string]any)
-	dataResources[0][names.AttrBucketName] = aws.ToString(configured.BucketName)
-	dataResources[0][names.AttrPrefix] = aws.ToString(configured.Prefix)
+	tfMap := map[string]any{
+		names.AttrBucketName: aws.ToString(apiObject.BucketName),
+		names.AttrPrefix:     aws.ToString(apiObject.Prefix),
+	}
 
-	return dataResources
+	return []any{tfMap}
 }
 
 func flattenExperimentTemplateActions(configured map[string]awstypes.ExperimentTemplateAction) []map[string]any {
