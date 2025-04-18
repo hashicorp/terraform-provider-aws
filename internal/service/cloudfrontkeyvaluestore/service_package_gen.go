@@ -25,6 +25,11 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			TypeName: "aws_cloudfrontkeyvaluestore_key",
 			Name:     "Key",
 		},
+		{
+			Factory:  newResourceKeysExclusive,
+			TypeName: "aws_cloudfrontkeyvaluestore_keys_exclusive",
+			Name:     "Keys  Exclusive",
+		},
 	}
 }
 
