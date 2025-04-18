@@ -9,4 +9,6 @@ var (
 	ResourceMalwareProtectionPlan = newResourceMalwareProtectionPlan
 
 	FindMemberDetectorFeatureByThreePartKey = findMemberDetectorFeatureByThreePartKey
+
+	GetOrganizationAdminAccount = getOrganizationAdminAccount
 )

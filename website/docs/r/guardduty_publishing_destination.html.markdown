@@ -137,9 +137,7 @@ This resource supports the following arguments:
 
 ## Attribute Reference
 
-This resource exports the following attributes in addition to the arguments above:
-
-* `id` - The ID of the GuardDuty PublishingDestination and the detector ID. Format: `<DetectorID>:<PublishingDestinationID>`
+This resource exports no additional attributes.
 
 ## Import
 

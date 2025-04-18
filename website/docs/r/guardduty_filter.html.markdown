@@ -73,7 +73,6 @@ The `criterion` block suports the following:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the GuardDuty filter.
-* `id` - A compound field, consisting of the ID of the GuardDuty detector and the name of the filter.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import

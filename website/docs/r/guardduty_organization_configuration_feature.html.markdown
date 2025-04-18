@@ -10,7 +10,7 @@ description: |-
 
 Provides a resource to manage a single Amazon GuardDuty [organization configuration feature](https://docs.aws.amazon.com/guardduty/latest/ug/guardduty-features-activation-model.html#guardduty-features).
 
-~> **NOTE:** Deleting this resource does not disable the organization configuration feature, the resource in simply removed from state instead.
+~> **NOTE:** Deleting this resource does not disable the organization configuration feature, the resource is simply removed from state instead.
 
 ## Example Usage
 
