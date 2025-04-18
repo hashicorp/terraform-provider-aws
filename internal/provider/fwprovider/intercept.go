@@ -248,6 +248,21 @@ func (s interceptorInvocations) resourceModifyPlan() []interceptorFunc[resource.
 	})
 }
 
+type resourceImportStateInterceptor interface {
+	// importState is invoked for an ImportState call.
+	importState(context.Context, interceptorOptions[resource.ImportStateRequest, resource.ImportStateResponse]) diag.Diagnostics
+}
+
+// resourceSchema returns a slice of interceptors that run on resource Schema.
+func (s interceptorInvocations) resourceImportState() []interceptorFunc[resource.ImportStateRequest, resource.ImportStateResponse] {
+	return tfslices.ApplyToAll(tfslices.Filter(s, func(e any) bool {
+		_, ok := e.(resourceImportStateInterceptor)
+		return ok
+	}), func(e any) interceptorFunc[resource.ImportStateRequest, resource.ImportStateResponse] {
+		return e.(resourceImportStateInterceptor).importState
+	})
+}
+
 // when represents the point in the CRUD request lifecycle that an interceptor is run.
 // Multiple values can be ORed together.
 type when uint16
@@ -272,7 +287,8 @@ type interceptedRequest interface {
 		resource.ReadRequest |
 		resource.UpdateRequest |
 		resource.DeleteRequest |
-		resource.ModifyPlanRequest
+		resource.ModifyPlanRequest |
+		resource.ImportStateRequest
 }
 
 // interceptedResponse represents a Plugin Framework response type that can be intercepted.
@@ -288,7 +304,8 @@ type interceptedResponse interface {
 		resource.ReadResponse |
 		resource.UpdateResponse |
 		resource.DeleteResponse |
-		resource.ModifyPlanResponse
+		resource.ModifyPlanResponse |
+		resource.ImportStateResponse
 }
 
 // interceptedHandler returns a handler that runs any interceptors.

@@ -368,7 +368,11 @@ func (w *wrappedResource) ImportState(ctx context.Context, request resource.Impo
 			return
 		}
 
-		v.ImportState(ctx, request, response)
+		f := func(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) diag.Diagnostics {
+			v.ImportState(ctx, request, response)
+			return response.Diagnostics
+		}
+		response.Diagnostics.Append(interceptedHandler(w.opts.interceptors.resourceImportState(), f, w.meta)(ctx, request, response)...)
 
 		return
 	}
