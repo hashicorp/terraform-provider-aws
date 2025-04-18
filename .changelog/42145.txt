@@ -1,9 +1,9 @@
 ```release-note:enhancement
-resource/aws_apigatewayv2_api: Add `ip_address_type` argument to support dual-stack (IPv4 and IPv6) endpoints.
+resource/aws_apigatewayv2_api: Add `ip_address_type` argument to support dual-stack (IPv4 and IPv6) endpoints
 ```
 
 ```release-note:enhancement
-data-source/aws_apigatewayv2_api: Add `ip_address_type` attribute.
+data-source/aws_apigatewayv2_api: Add `ip_address_type` attribute
 ```
 
 ```release-note:enhancement

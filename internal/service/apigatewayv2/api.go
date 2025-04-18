@@ -135,7 +135,7 @@ func resourceAPI() *schema.Resource {
 			names.AttrIPAddressType: {
 				Type:             schema.TypeString,
 				Optional:         true,
-				Default:          "ipv4",
+				Computed:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.IpAddressType](),
 			},
 			names.AttrName: {
@@ -180,7 +180,7 @@ func resourceAPICreate(ctx context.Context, d *schema.ResourceData, meta any) di
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	input := &apigatewayv2.CreateApiInput{
+	input := apigatewayv2.CreateApiInput{
 		Name:         aws.String(name),
 		ProtocolType: awstypes.ProtocolType(d.Get("protocol_type").(string)),
 		Tags:         getTagsIn(ctx),
@@ -226,7 +226,7 @@ func resourceAPICreate(ctx context.Context, d *schema.ResourceData, meta any) di
 		input.Version = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateApi(ctx, input)
+	output, err := conn.CreateApi(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating API Gateway v2 API (%s): %s", name, err)
@@ -234,9 +234,7 @@ func resourceAPICreate(ctx context.Context, d *schema.ResourceData, meta any) di
 
 	d.SetId(aws.ToString(output.ApiId))
 
-	err = reimportOpenAPIDefinition(ctx, d, meta)
-
-	if err != nil {
+	if err := reimportOpenAPIDefinition(ctx, d, meta); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
@@ -287,11 +285,11 @@ func resourceAPIUpdate(ctx context.Context, d *schema.ResourceData, meta any) di
 	if d.HasChange("cors_configuration") {
 		if v := d.Get("cors_configuration"); len(v.([]any)) == 0 {
 			corsConfigurationDeleted = true
-			input := &apigatewayv2.DeleteCorsConfigurationInput{
+			input := apigatewayv2.DeleteCorsConfigurationInput{
 				ApiId: aws.String(d.Id()),
 			}
 
-			_, err := conn.DeleteCorsConfiguration(ctx, input)
+			_, err := conn.DeleteCorsConfiguration(ctx, &input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "deleting API Gateway v2 API (%s) CORS configuration: %s", d.Id(), err)
@@ -301,7 +299,7 @@ func resourceAPIUpdate(ctx context.Context, d *schema.ResourceData, meta any) di
 
 	if d.HasChanges("api_key_selection_expression", names.AttrDescription, "disable_execute_api_endpoint", names.AttrIPAddressType, names.AttrName, "route_selection_expression", names.AttrVersion) ||
 		(d.HasChange("cors_configuration") && !corsConfigurationDeleted) {
-		input := &apigatewayv2.UpdateApiInput{
+		input := apigatewayv2.UpdateApiInput{
 			ApiId: aws.String(d.Id()),
 		}
 
@@ -337,7 +335,7 @@ func resourceAPIUpdate(ctx context.Context, d *schema.ResourceData, meta any) di
 			input.Version = aws.String(d.Get(names.AttrVersion).(string))
 		}
 
-		_, err := conn.UpdateApi(ctx, input)
+		_, err := conn.UpdateApi(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating API Gateway v2 API (%s): %s", d.Id(), err)
@@ -345,9 +343,7 @@ func resourceAPIUpdate(ctx context.Context, d *schema.ResourceData, meta any) di
 	}
 
 	if d.HasChange("body") {
-		err := reimportOpenAPIDefinition(ctx, d, meta)
-
-		if err != nil {
+		if err := reimportOpenAPIDefinition(ctx, d, meta); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
@@ -386,7 +382,7 @@ func reimportOpenAPIDefinition(ctx context.Context, d *schema.ResourceData, meta
 		configuredName := d.Get(names.AttrName).(string)
 		configuredVersion := d.Get(names.AttrVersion).(string)
 
-		inputRA := &apigatewayv2.ReimportApiInput{
+		inputRA := apigatewayv2.ReimportApiInput{
 			ApiId: aws.String(d.Id()),
 			Body:  aws.String(body),
 		}
@@ -395,7 +391,7 @@ func reimportOpenAPIDefinition(ctx context.Context, d *schema.ResourceData, meta
 			inputRA.FailOnWarnings = aws.Bool(value.(bool))
 		}
 
-		_, err := conn.ReimportApi(ctx, inputRA)
+		_, err := conn.ReimportApi(ctx, &inputRA)
 
 		if err != nil {
 			return fmt.Errorf("reimporting API Gateway v2 API (%s) OpenAPI definition: %w", d.Id(), err)
@@ -427,7 +423,7 @@ func reimportOpenAPIDefinition(ctx context.Context, d *schema.ResourceData, meta
 			}
 		}
 
-		inputUA := &apigatewayv2.UpdateApiInput{
+		inputUA := apigatewayv2.UpdateApiInput{
 			ApiId:       aws.String(d.Id()),
 			Description: aws.String(description),
 			Name:        aws.String(name),
@@ -436,11 +432,11 @@ func reimportOpenAPIDefinition(ctx context.Context, d *schema.ResourceData, meta
 
 		if !reflect.DeepEqual(configuredCORSConfiguration, d.Get("cors_configuration")) {
 			if len(configuredCORSConfiguration.([]any)) == 0 {
-				input := &apigatewayv2.DeleteCorsConfigurationInput{
+				input := apigatewayv2.DeleteCorsConfigurationInput{
 					ApiId: aws.String(d.Id()),
 				}
 
-				_, err := conn.DeleteCorsConfiguration(ctx, input)
+				_, err := conn.DeleteCorsConfiguration(ctx, &input)
 
 				if err != nil {
 					return fmt.Errorf("deleting API Gateway v2 API (%s) CORS configuration: %w", d.Id(), err)
@@ -450,7 +446,7 @@ func reimportOpenAPIDefinition(ctx context.Context, d *schema.ResourceData, meta
 			}
 		}
 
-		_, err = conn.UpdateApi(ctx, inputUA)
+		_, err = conn.UpdateApi(ctx, &inputUA)
 
 		if err != nil {
 			return fmt.Errorf("updating API Gateway v2 API (%s): %w", d.Id(), err)
@@ -470,6 +466,7 @@ func findAPIByID(ctx context.Context, conn *apigatewayv2.Client, id string) (*ap
 
 func findAPI(ctx context.Context, conn *apigatewayv2.Client, input *apigatewayv2.GetApiInput) (*apigatewayv2.GetApiOutput, error) {
 	output, err := conn.GetApi(ctx, input)
+
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
@@ -488,48 +485,49 @@ func findAPI(ctx context.Context, conn *apigatewayv2.Client, input *apigatewayv2
 	return output, nil
 }
 
-func expandCORSConfiguration(vConfiguration []any) *awstypes.Cors {
-	configuration := &awstypes.Cors{}
+func expandCORSConfiguration(tfList []any) *awstypes.Cors {
+	apiObject := &awstypes.Cors{}
 
-	if len(vConfiguration) == 0 || vConfiguration[0] == nil {
-		return configuration
-	}
-	mConfiguration := vConfiguration[0].(map[string]any)
-
-	if vAllowCredentials, ok := mConfiguration["allow_credentials"].(bool); ok {
-		configuration.AllowCredentials = aws.Bool(vAllowCredentials)
-	}
-	if vAllowHeaders, ok := mConfiguration["allow_headers"].(*schema.Set); ok {
-		configuration.AllowHeaders = flex.ExpandStringValueSet(vAllowHeaders)
-	}
-	if vAllowMethods, ok := mConfiguration["allow_methods"].(*schema.Set); ok {
-		configuration.AllowMethods = flex.ExpandStringValueSet(vAllowMethods)
-	}
-	if vAllowOrigins, ok := mConfiguration["allow_origins"].(*schema.Set); ok {
-		configuration.AllowOrigins = flex.ExpandStringValueSet(vAllowOrigins)
-	}
-	if vExposeHeaders, ok := mConfiguration["expose_headers"].(*schema.Set); ok {
-		configuration.ExposeHeaders = flex.ExpandStringValueSet(vExposeHeaders)
-	}
-	if vMaxAge, ok := mConfiguration["max_age"].(int); ok {
-		configuration.MaxAge = aws.Int32(int32(vMaxAge))
+	if len(tfList) == 0 || tfList[0] == nil {
+		return apiObject
 	}
 
-	return configuration
+	tfMap := tfList[0].(map[string]any)
+
+	if v, ok := tfMap["allow_credentials"].(bool); ok {
+		apiObject.AllowCredentials = aws.Bool(v)
+	}
+	if v, ok := tfMap["allow_headers"].(*schema.Set); ok {
+		apiObject.AllowHeaders = flex.ExpandStringValueSet(v)
+	}
+	if v, ok := tfMap["allow_methods"].(*schema.Set); ok {
+		apiObject.AllowMethods = flex.ExpandStringValueSet(v)
+	}
+	if v, ok := tfMap["allow_origins"].(*schema.Set); ok {
+		apiObject.AllowOrigins = flex.ExpandStringValueSet(v)
+	}
+	if v, ok := tfMap["expose_headers"].(*schema.Set); ok {
+		apiObject.ExposeHeaders = flex.ExpandStringValueSet(v)
+	}
+	if v, ok := tfMap["max_age"].(int); ok {
+		apiObject.MaxAge = aws.Int32(int32(v))
+	}
+
+	return apiObject
 }
 
-func flattenCORSConfiguration(configuration *awstypes.Cors) []any {
-	if configuration == nil {
+func flattenCORSConfiguration(apiObject *awstypes.Cors) []any {
+	if apiObject == nil {
 		return []any{}
 	}
 
 	return []any{map[string]any{
-		"allow_credentials": aws.ToBool(configuration.AllowCredentials),
-		"allow_headers":     flex.FlattenStringValueSetCaseInsensitive(configuration.AllowHeaders),
-		"allow_methods":     flex.FlattenStringValueSetCaseInsensitive(configuration.AllowMethods),
-		"allow_origins":     flex.FlattenStringValueSetCaseInsensitive(configuration.AllowOrigins),
-		"expose_headers":    flex.FlattenStringValueSetCaseInsensitive(configuration.ExposeHeaders),
-		"max_age":           aws.ToInt32(configuration.MaxAge),
+		"allow_credentials": aws.ToBool(apiObject.AllowCredentials),
+		"allow_headers":     flex.FlattenStringValueSetCaseInsensitive(apiObject.AllowHeaders),
+		"allow_methods":     flex.FlattenStringValueSetCaseInsensitive(apiObject.AllowMethods),
+		"allow_origins":     flex.FlattenStringValueSetCaseInsensitive(apiObject.AllowOrigins),
+		"expose_headers":    flex.FlattenStringValueSetCaseInsensitive(apiObject.ExposeHeaders),
+		"max_age":           aws.ToInt32(apiObject.MaxAge),
 	}}
 }
 
