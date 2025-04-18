@@ -376,6 +376,7 @@ The following arguments are optional:
 * `computeConfig` - (Optional) Configuration block with compute configuration for EKS Auto Mode. [Detailed](#compute_config) below.
 * `enabledClusterLogTypes` - (Optional) List of the desired control plane logging to enable. For more information, see [Amazon EKS Control Plane Logging](https://docs.aws.amazon.com/eks/latest/userguide/control-plane-logs.html).
 * `encryptionConfig` - (Optional) Configuration block with encryption configuration for the cluster. [Detailed](#encryption_config) below.
+* `forceUpdateVersion` - (Optional) Force version update by overriding upgrade-blocking readiness checks when updating a cluster.
 * `kubernetesNetworkConfig` - (Optional) Configuration block with kubernetes network configuration for the cluster. [Detailed](#kubernetes_network_config) below. If removed, Terraform will only perform drift detection if a configuration value is provided.
 * `outpostConfig` - (Optional) Configuration block representing the configuration of your local Amazon EKS cluster on an AWS Outpost. This block isn't available for creating Amazon EKS clusters on the AWS cloud.
 * `remoteNetworkConfig` - (Optional) Configuration block with remote network configuration for EKS Hybrid Nodes. [Detailed](#remote_network_config) below.
@@ -573,4 +574,4 @@ Using `terraform import`, import EKS Clusters using the `name`. For example:
 % terraform import aws_eks_cluster.my_cluster my_cluster
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-2d24990bd2ea1c0eb7e155f17072c56c6730c8900950a6c003e033a6e8faafd3 -->
+<!-- cache-key: cdktf-0.20.8 input-a809599a5fdfc173a7ce3ac8112cc24c0cf11b3b89570945b88acc1b4f4a2cf7 -->

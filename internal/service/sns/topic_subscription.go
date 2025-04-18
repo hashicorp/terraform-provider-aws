@@ -240,7 +240,15 @@ func resourceTopicSubscriptionRead(ctx context.Context, d *schema.ResourceData, 
 		}
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading SNS Topic Subscription (%s): %s", d.Id(), err)
+			switch {
+			// ListSubscriptionsByTopic requires IAM permissions which were not
+			// required in minor versions prior to `v5.94.0`, so AuthorizationError
+			// exceptions are not surfaced.
+			case errs.IsAErrorMessageContains[*types.AuthorizationErrorException](err, "not authorized to perform"):
+				break
+			default:
+				return sdkdiag.AppendErrorf(diags, "reading SNS Topic Subscription (%s): %s", d.Id(), err)
+			}
 		}
 	}
 
