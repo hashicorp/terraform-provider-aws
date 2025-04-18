@@ -103,14 +103,14 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 		input.PermissionsBoundary = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateUser(ctx, input)
+	output, err := retryCreateUser(ctx, conn, input)
 
 	// Some partitions (e.g. ISO) may not support tag-on-create.
 	partition := meta.(*conns.AWSClient).Partition(ctx)
 	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(partition, err) {
 		input.Tags = nil
 
-		output, err = conn.CreateUser(ctx, input)
+		output, err = retryCreateUser(ctx, conn, input)
 	}
 
 	if err != nil {
@@ -606,4 +606,30 @@ func userTags(ctx context.Context, conn *iam.Client, identifier string) ([]awsty
 	}
 
 	return output.Tags, nil
+}
+
+func retryCreateUser(ctx context.Context, conn *iam.Client, input *iam.CreateUserInput) (*iam.CreateUserOutput, error) {
+	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
+		func() (any, error) {
+			return conn.CreateUser(ctx, input)
+		},
+		func(err error) (bool, error) {
+			if errs.IsA[*awstypes.ConcurrentModificationException](err) {
+				return true, err
+			}
+
+			return false, err
+		},
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	output, ok := outputRaw.(*iam.CreateUserOutput)
+	if !ok || output == nil || aws.ToString(output.User.UserName) == "" {
+		return nil, fmt.Errorf("create IAM user (%s) returned an empty result", aws.ToString(input.UserName))
+	}
+
+	return output, err
 }
