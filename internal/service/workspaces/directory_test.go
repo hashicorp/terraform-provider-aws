@@ -55,6 +55,8 @@ func testAccDirectory_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "iam_role_id", iamRoleDataSourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "ip_group_ids.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "registration_code"),
+					resource.TestCheckResourceAttr(resourceName, "certificate_based_auth_properties.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "certificate_based_auth_properties.0.status", "DISABLED"),
 					resource.TestCheckResourceAttr(resourceName, "saml_properties.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "saml_properties.0.relay_state_parameter_name", "RelayState"),
 					resource.TestCheckResourceAttr(resourceName, "saml_properties.0.status", "DISABLED"),
@@ -288,6 +290,68 @@ func testAccDirectory_SamlProperties(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "saml_properties.0.relay_state_parameter_name", "RelayState"),
 					resource.TestCheckResourceAttr(resourceName, "saml_properties.0.user_access_url", ""),
 					resource.TestCheckResourceAttr(resourceName, "saml_properties.0.status", "DISABLED"),
+				),
+			},
+		},
+	})
+}
+
+func testAccDirectory_CertificateBasedAuthProperties(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.WorkspaceDirectory
+	rName := sdkacctest.RandString(8)
+
+	resourceName := "aws_workspaces_directory.main"
+
+	domain := acctest.RandomDomainName()
+
+	certificateAuthorityID := "12345678-1234-1234-1234-123456789012"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckDirectory(ctx, t)
+			acctest.PreCheckDirectoryServiceSimpleDirectory(ctx, t)
+			acctest.PreCheckHasIAMRole(ctx, t, "workspaces_DefaultRole")
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(workspaces.ServiceID)),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDirectoryDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDirectoryConfig_certificateBasedAuthPropertiesEnabled(rName, domain, certificateAuthorityID),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDirectoryExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "certificate_based_auth_properties.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "certificate_based_auth_properties.0.status", "ENABLED"),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, "certificate_based_auth_properties.0.certificate_authority_arn", "acm-pca", fmt.Sprintf("certificate-authority/%s", certificateAuthorityID)),
+				),
+			},
+			{
+				Config: testAccDirectoryConfig_certificateBasedAuthPropertiesDisabled(rName, domain),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDirectoryExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "certificate_based_auth_properties.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "certificate_based_auth_properties.0.status", "DISABLED"),
+					resource.TestCheckResourceAttr(resourceName, "certificate_based_auth_properties.0.certificate_authority_arn", ""),
+				),
+			},
+			{
+				Config: testAccDirectoryConfig_certificateBasedAuthPropertiesDisabledARN(rName, domain, certificateAuthorityID),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDirectoryExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "certificate_based_auth_properties.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "certificate_based_auth_properties.0.status", "DISABLED"),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, "certificate_based_auth_properties.0.certificate_authority_arn", "acm-pca", fmt.Sprintf("certificate-authority/%s", certificateAuthorityID)),
+				),
+			},
+			{
+				Config: testAccDirectoryConfig_certificateBasedAuthPropertiesEmpty(rName, domain),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDirectoryExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "certificate_based_auth_properties.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "certificate_based_auth_properties.0.status", "DISABLED"),
+					resource.TestCheckResourceAttr(resourceName, "certificate_based_auth_properties.0.certificate_authority_arn", ""),
 				),
 			},
 		},
@@ -575,6 +639,8 @@ func testAccDirectoryConfig_Prerequisites(rName, domain string) string {
 		fmt.Sprintf(`
 data "aws_region" "current" {}
 
+data "aws_caller_identity" "current" {}
+
 locals {
   region_workspaces_az_ids = {
     "us-east-1" = formatlist("use1-az%%d", [2, 4, 6])
@@ -716,6 +782,106 @@ resource "aws_workspaces_directory" "main" {
   tags = {
     Name = "tf-testacc-workspaces-directory-%[1]s"
   }
+}
+`, rName))
+}
+
+func testAccDirectoryConfig_certificateBasedAuthPropertiesEnabled(rName, domain, certificateAuthorityID string) string {
+	return acctest.ConfigCompose(
+		testAccDirectoryConfig_Prerequisites(rName, domain),
+		fmt.Sprintf(`
+resource "aws_workspaces_directory" "main" {
+  directory_id = aws_directory_service_directory.main.id
+
+  certificate_based_auth_properties {
+    status                   = "ENABLED"
+    certificate_authority_arn = "arn:aws:acm-pca:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:certificate-authority/%[3]s"
+  }
+
+  saml_properties {
+    relay_state_parameter_name = "RelayState"
+    user_access_url            = "https://sso.%[2]s/"
+    status                     = "ENABLED"
+  }
+
+  tags = {
+    Name = "tf-testacc-workspaces-directory-%[1]s"
+  }
+}
+
+data "aws_iam_role" "workspaces-default" {
+  name = "workspaces_DefaultRole"
+}
+`, rName, domain, certificateAuthorityID))
+}
+
+func testAccDirectoryConfig_certificateBasedAuthPropertiesDisabled(rName, domain string) string {
+	return acctest.ConfigCompose(
+		testAccDirectoryConfig_Prerequisites(rName, domain),
+		fmt.Sprintf(`
+resource "aws_workspaces_directory" "main" {
+  directory_id = aws_directory_service_directory.main.id
+
+  certificate_based_auth_properties {
+    status                   = "DISABLED"
+    certificate_authority_arn = ""
+  }
+
+  tags = {
+    Name = "tf-testacc-workspaces-directory-%[1]s"
+  }
+}
+
+data "aws_iam_role" "workspaces-default" {
+  name = "workspaces_DefaultRole"
+}
+`, rName))
+}
+
+func testAccDirectoryConfig_certificateBasedAuthPropertiesDisabledARN(rName, domain, certificateAuthorityID string) string {
+	return acctest.ConfigCompose(
+		testAccDirectoryConfig_Prerequisites(rName, domain),
+		fmt.Sprintf(`
+resource "aws_workspaces_directory" "main" {
+  directory_id = aws_directory_service_directory.main.id
+
+  certificate_based_auth_properties {
+    status                   = "DISABLED"
+    certificate_authority_arn = "arn:aws:acm-pca:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:certificate-authority/%[3]s"
+  }
+
+  saml_properties {
+    relay_state_parameter_name = "RelayState"
+    user_access_url            = "https://sso.%[2]s/"
+    status                     = "ENABLED"
+  }
+
+  tags = {
+    Name = "tf-testacc-workspaces-directory-%[1]s"
+  }
+}
+data "aws_iam_role" "workspaces-default" {
+  name = "workspaces_DefaultRole"
+}
+`, rName, domain, certificateAuthorityID))
+}
+
+func testAccDirectoryConfig_certificateBasedAuthPropertiesEmpty(rName, domain string) string {
+	return acctest.ConfigCompose(
+		testAccDirectoryConfig_Prerequisites(rName, domain),
+		fmt.Sprintf(`
+resource "aws_workspaces_directory" "main" {
+  directory_id = aws_directory_service_directory.main.id
+
+  certificate_based_auth_properties {}
+
+  tags = {
+    Name = "tf-testacc-workspaces-directory-%[1]s"
+  }
+}
+
+data "aws_iam_role" "workspaces-default" {
+  name = "workspaces_DefaultRole"
 }
 `, rName))
 }

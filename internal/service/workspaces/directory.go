@@ -80,6 +80,26 @@ func resourceDirectory() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"certificate_based_auth_properties": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"certificate_authority_arn": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						names.AttrStatus: {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Default:          types.CertificateBasedAuthStatusEnumDisabled,
+							ValidateDiagFunc: enum.Validate[types.CertificateBasedAuthStatusEnum](),
+						},
+					},
+				},
+			},
 			"saml_properties": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -288,6 +308,19 @@ func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta a
 		}
 	}
 
+	if v, ok := d.GetOk("certificate_based_auth_properties"); ok {
+		input := &workspaces.ModifyCertificateBasedAuthPropertiesInput{
+			ResourceId:                     aws.String(d.Id()),
+			CertificateBasedAuthProperties: expandCertificateBasedAuthProperties(v.([]any)),
+		}
+
+		_, err := conn.ModifyCertificateBasedAuthProperties(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting WorkSpaces Directory (%s) certificate based auth properties: %s", d.Id(), err)
+		}
+	}
+
 	if v, ok := d.GetOk("self_service_permissions"); ok {
 		input := &workspaces.ModifySelfservicePermissionsInput{
 			ResourceId:             aws.String(d.Id()),
@@ -367,6 +400,9 @@ func resourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta any
 	d.Set("iam_role_id", directory.IamRoleId)
 	d.Set("ip_group_ids", directory.IpGroupIds)
 	d.Set("registration_code", directory.RegistrationCode)
+	if err := d.Set("certificate_based_auth_properties", flattenCertificateBasedAuthProperties(directory.CertificateBasedAuthProperties)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting certificate_based_auth_properties: %s", err)
+	}
 	if err := d.Set("self_service_permissions", flattenSelfservicePermissions(directory.SelfservicePermissions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting self_service_permissions: %s", err)
 	}
@@ -411,6 +447,28 @@ func resourceDirectoryUpdate(ctx context.Context, d *schema.ResourceData, meta a
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating WorkSpaces Directory (%s) SAML properties: %s", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("certificate_based_auth_properties") {
+		tfListCertificateBasedAuthProperties := d.Get("certificate_based_auth_properties").([]any)
+		tfMap := tfListCertificateBasedAuthProperties[0].(map[string]any)
+
+		var dels []types.DeletableCertificateBasedAuthProperty
+		if tfMap["certificate_authority_arn"].(string) == "" {
+			dels = append(dels, types.DeletableCertificateBasedAuthPropertyCertificateBasedAuthPropertiesCertificateAuthorityArn)
+		}
+
+		input := &workspaces.ModifyCertificateBasedAuthPropertiesInput{
+			PropertiesToDelete:             dels,
+			ResourceId:                     aws.String(d.Id()),
+			CertificateBasedAuthProperties: expandCertificateBasedAuthProperties(tfListCertificateBasedAuthProperties),
+		}
+
+		_, err := conn.ModifyCertificateBasedAuthProperties(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating WorkSpaces Directory (%s) certificate based auth properties: %s", d.Id(), err)
 		}
 	}
 
@@ -677,6 +735,25 @@ func expandWorkspaceAccessProperties(tfList []any) *types.WorkspaceAccessPropert
 	return apiObject
 }
 
+func expandCertificateBasedAuthProperties(tfList []any) *types.CertificateBasedAuthProperties {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	apiObject := &types.CertificateBasedAuthProperties{}
+	tfMap := tfList[0].(map[string]any)
+
+	if tfMap["certificate_authority_arn"].(string) != "" {
+		apiObject.CertificateAuthorityArn = aws.String(tfMap["certificate_authority_arn"].(string))
+	}
+
+	if tfMap[names.AttrStatus].(string) != "" {
+		apiObject.Status = types.CertificateBasedAuthStatusEnum(tfMap[names.AttrStatus].(string))
+	}
+
+	return apiObject
+}
+
 func expandSAMLProperties(tfList []any) *types.SamlProperties {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
@@ -779,6 +856,19 @@ func flattenWorkspaceAccessProperties(apiObject *types.WorkspaceAccessProperties
 			"device_type_web":        apiObject.DeviceTypeWeb,
 			"device_type_windows":    apiObject.DeviceTypeWindows,
 			"device_type_zeroclient": apiObject.DeviceTypeZeroClient,
+		},
+	}
+}
+
+func flattenCertificateBasedAuthProperties(apiObject *types.CertificateBasedAuthProperties) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	return []any{
+		map[string]any{
+			"certificate_authority_arn": aws.ToString(apiObject.CertificateAuthorityArn),
+			names.AttrStatus:            apiObject.Status,
 		},
 	}
 }
