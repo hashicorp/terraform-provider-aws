@@ -9,57 +9,72 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/fis"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fis/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_fis_experiment_templates", name="Experiment Templates")
-func DataSourceExperimentTemplates() *schema.Resource {
-	return &schema.Resource{
-		ReadWithoutTimeout: dataSourceExperimentTemplatesRead,
+// @FrameworkDataSource("aws_fis_experiment_templates", name="Experiment Templates")
+func newExperimentTemplatesDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &experimentTemplatesDataSource{}, nil
+}
 
-		Schema: map[string]*schema.Schema{
-			names.AttrIDs: {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+type experimentTemplatesDataSource struct {
+	framework.DataSourceWithConfigure
+}
+
+func (d *experimentTemplatesDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
+	response.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			names.AttrIDs: schema.ListAttribute{
+				Computed:    true,
+				ElementType: types.StringType,
 			},
-			names.AttrTags: tftags.TagsSchema(),
+			names.AttrTags: tftags.TagsAttribute(),
 		},
 	}
 }
 
-func dataSourceExperimentTemplatesRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FISClient(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
+func (d *experimentTemplatesDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+	var data experimentTemplatesDataSourceDataSourceModel
+	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
-	input := &fis.ListExperimentTemplatesInput{}
+	conn := d.Meta().FISClient(ctx)
 
+	input := fis.ListExperimentTemplatesInput{}
 	filter := tfslices.PredicateTrue[*awstypes.ExperimentTemplateSummary]()
-	if tagsToMatch := tftags.New(ctx, d.Get(names.AttrTags).(map[string]any)).IgnoreAWS().IgnoreConfig(ignoreTagsConfig); len(tagsToMatch) > 0 {
+	if tagsToMatch := tftags.New(ctx, data.Tags); len(tagsToMatch) > 0 {
 		filter = func(v *awstypes.ExperimentTemplateSummary) bool {
 			return keyValueTags(ctx, v.Tags).ContainsAll(tagsToMatch)
 		}
 	}
 
-	output, err := findExperimentTemplates(ctx, conn, input, filter)
+	output, err := findExperimentTemplates(ctx, conn, &input, filter)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading FIS Experiment Templates: %s", err)
+		response.Diagnostics.AddError("reading FIS Experiment Templates", err.Error())
+
+		return
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region(ctx))
-	d.Set(names.AttrIDs, tfslices.ApplyToAll(output, func(v awstypes.ExperimentTemplateSummary) string {
+	data.IDs = fwflex.FlattenFrameworkStringValueList(ctx, tfslices.ApplyToAll(output, func(v awstypes.ExperimentTemplateSummary) string {
 		return aws.ToString(v.Id)
 	}))
 
-	return diags
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+}
+
+type experimentTemplatesDataSourceDataSourceModel struct {
+	IDs  types.List `tfsdk:"ids"`
+	Tags tftags.Map `tfsdk:"tags"`
 }
 
 func findExperimentTemplates(ctx context.Context, conn *fis.Client, input *fis.ListExperimentTemplatesInput, filter tfslices.Predicate[*awstypes.ExperimentTemplateSummary]) ([]awstypes.ExperimentTemplateSummary, error) {

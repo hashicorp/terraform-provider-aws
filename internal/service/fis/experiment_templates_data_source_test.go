@@ -58,7 +58,7 @@ data "aws_iam_policy" "fis_ec2_access" {
 }
 
 resource "aws_iam_role" "fis" {
-  name                  = "fis"
+  name                  = %[1]q
   assume_role_policy    = data.aws_iam_policy_document.assume.json
   force_detach_policies = true
   managed_policy_arns   = [data.aws_iam_policy.fis_ec2_access.arn]
