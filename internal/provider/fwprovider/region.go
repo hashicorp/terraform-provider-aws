@@ -364,12 +364,7 @@ func (r resourceImportRegionInterceptor) importState(ctx context.Context, opts i
 	case Before:
 		// Import ID optionally ends with "@<region>".
 		if matches := regexache.MustCompile(`^(.+)@([a-z]{2}(?:-[a-z]+)+-\d{1,2})$`).FindStringSubmatch(request.ID); len(matches) == 3 {
-			// TODO REGION: Rethink this properties mess.
-			if inContext, ok := conns.FromContext(ctx); ok {
-				properties := inContext.Properties()
-				properties["effectiveImportID"] = matches[1]
-				inContext.SetProperties(properties)
-			}
+			request.ID = matches[1]
 			diags.Append(response.State.SetAttribute(ctx, path.Root(names.AttrRegion), matches[2])...)
 			if diags.HasError() {
 				return diags
