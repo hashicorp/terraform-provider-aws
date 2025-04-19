@@ -63,6 +63,7 @@ func resourceDomainConfiguration() *schema.Resource {
 			names.AttrDomainName: {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 				ForceNew: true,
 			},
 			"domain_type": {

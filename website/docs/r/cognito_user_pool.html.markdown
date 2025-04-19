@@ -251,7 +251,7 @@ The following arguments are required in the `software_token_mfa_configuration` c
 
 ### username_configuration
 
-* `case_sensitive` - (Required) Whether username case sensitivity will be applied for all users in the user pool through Cognito APIs.
+* `case_sensitive` - (Optional) Whether username case sensitivity will be applied for all users in the user pool through Cognito APIs.
 
 ### verification_message_template
 

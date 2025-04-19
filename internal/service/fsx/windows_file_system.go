@@ -619,7 +619,7 @@ func resourceWindowsFileSystemDelete(ctx context.Context, d *schema.ResourceData
 	}
 
 	if v, ok := d.GetOk("final_backup_tags"); ok && len(v.(map[string]any)) > 0 {
-		input.WindowsConfiguration.FinalBackupTags = Tags(tftags.New(ctx, v))
+		input.WindowsConfiguration.FinalBackupTags = svcTags(tftags.New(ctx, v))
 	}
 
 	log.Printf("[DEBUG] Deleting FSx for Windows File Server File System: %s", d.Id())

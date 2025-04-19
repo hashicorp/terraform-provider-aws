@@ -47,7 +47,7 @@ func dataSourceExperimentTemplatesRead(ctx context.Context, d *schema.ResourceDa
 	var inputTags map[string]string
 
 	if tags, tagsOk := d.GetOk(names.AttrTags); tagsOk && len(tags.(map[string]any)) > 0 {
-		inputTags = Tags(tftags.New(ctx, tags.(map[string]any)))
+		inputTags = svcTags(tftags.New(ctx, tags.(map[string]any)))
 	}
 
 	var output []types.ExperimentTemplateSummary

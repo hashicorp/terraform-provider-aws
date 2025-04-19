@@ -43,7 +43,7 @@ func instanceProfileUpdateTags(ctx context.Context, conn *iam.Client, identifier
 	if updatedTags := oldTags.Updated(newTags).IgnoreSystem(names.IAM); len(updatedTags) > 0 {
 		input := &iam.TagInstanceProfileInput{
 			InstanceProfileName: aws.String(identifier),
-			Tags:                Tags(updatedTags),
+			Tags:                svcTags(updatedTags),
 		}
 
 		_, err := conn.TagInstanceProfile(ctx, input)
@@ -95,7 +95,7 @@ func openIDConnectProviderUpdateTags(ctx context.Context, conn *iam.Client, iden
 	if updatedTags := oldTags.Updated(newTags).IgnoreSystem(names.IAM); len(updatedTags) > 0 {
 		input := &iam.TagOpenIDConnectProviderInput{
 			OpenIDConnectProviderArn: aws.String(identifier),
-			Tags:                     Tags(updatedTags),
+			Tags:                     svcTags(updatedTags),
 		}
 
 		_, err := conn.TagOpenIDConnectProvider(ctx, input)
@@ -147,7 +147,7 @@ func policyUpdateTags(ctx context.Context, conn *iam.Client, identifier string, 
 	if updatedTags := oldTags.Updated(newTags).IgnoreSystem(names.IAM); len(updatedTags) > 0 {
 		input := &iam.TagPolicyInput{
 			PolicyArn: aws.String(identifier),
-			Tags:      Tags(updatedTags),
+			Tags:      svcTags(updatedTags),
 		}
 
 		_, err := conn.TagPolicy(ctx, input)
@@ -199,7 +199,7 @@ func roleUpdateTags(ctx context.Context, conn *iam.Client, identifier string, ol
 	if updatedTags := oldTags.Updated(newTags).IgnoreSystem(names.IAM); len(updatedTags) > 0 {
 		input := &iam.TagRoleInput{
 			RoleName: aws.String(identifier),
-			Tags:     Tags(updatedTags),
+			Tags:     svcTags(updatedTags),
 		}
 
 		_, err := conn.TagRole(ctx, input)
@@ -251,7 +251,7 @@ func samlProviderUpdateTags(ctx context.Context, conn *iam.Client, identifier st
 	if updatedTags := oldTags.Updated(newTags).IgnoreSystem(names.IAM); len(updatedTags) > 0 {
 		input := &iam.TagSAMLProviderInput{
 			SAMLProviderArn: aws.String(identifier),
-			Tags:            Tags(updatedTags),
+			Tags:            svcTags(updatedTags),
 		}
 
 		_, err := conn.TagSAMLProvider(ctx, input)
@@ -294,7 +294,7 @@ func serverCertificateUpdateTags(ctx context.Context, conn *iam.Client, identifi
 	if updatedTags := oldTags.Updated(newTags).IgnoreSystem(names.IAM); len(updatedTags) > 0 {
 		input := &iam.TagServerCertificateInput{
 			ServerCertificateName: aws.String(identifier),
-			Tags:                  Tags(updatedTags),
+			Tags:                  svcTags(updatedTags),
 		}
 
 		_, err := conn.TagServerCertificate(ctx, input)
@@ -346,7 +346,7 @@ func userUpdateTags(ctx context.Context, conn *iam.Client, identifier string, ol
 	if updatedTags := oldTags.Updated(newTags).IgnoreSystem(names.IAM); len(updatedTags) > 0 {
 		input := &iam.TagUserInput{
 			UserName: aws.String(identifier),
-			Tags:     Tags(updatedTags),
+			Tags:     svcTags(updatedTags),
 		}
 
 		_, err := conn.TagUser(ctx, input)
@@ -398,7 +398,7 @@ func virtualMFADeviceUpdateTags(ctx context.Context, conn *iam.Client, identifie
 	if updatedTags := oldTags.Updated(newTags).IgnoreSystem(names.IAM); len(updatedTags) > 0 {
 		input := &iam.TagMFADeviceInput{
 			SerialNumber: aws.String(identifier),
-			Tags:         Tags(updatedTags),
+			Tags:         svcTags(updatedTags),
 		}
 
 		_, err := conn.TagMFADevice(ctx, input)
