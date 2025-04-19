@@ -66,6 +66,11 @@ func resourceFirewall() *schema.Resource {
 					Type:     schema.TypeString,
 					Optional: true,
 				},
+				"enabled_analysis_types": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
 				names.AttrEncryptionConfiguration: encryptionConfigurationSchema(),
 				"firewall_policy_arn": {
 					Type:         schema.TypeString,
@@ -176,6 +181,14 @@ func resourceFirewallCreate(ctx context.Context, d *schema.ResourceData, meta an
 		input.Description = aws.String(v.(string))
 	}
 
+	if v := d.Get("enabled_analysis_types").(*schema.Set); v.Len() > 0 {
+		var analysisTypes []awstypes.EnabledAnalysisType
+		for _, v := range v.List() {
+			analysisTypes = append(analysisTypes, awstypes.EnabledAnalysisType(v.(string)))
+		}
+		input.EnabledAnalysisTypes = analysisTypes
+	}
+
 	if v, ok := d.GetOk(names.AttrEncryptionConfiguration); ok {
 		input.EncryptionConfiguration = expandEncryptionConfiguration(v.([]any))
 	}
@@ -223,6 +236,7 @@ func resourceFirewallRead(ctx context.Context, d *schema.ResourceData, meta any)
 	d.Set(names.AttrARN, firewall.FirewallArn)
 	d.Set("delete_protection", firewall.DeleteProtection)
 	d.Set(names.AttrDescription, firewall.Description)
+	d.Set("enabled_analysis_types", firewall.EnabledAnalysisTypes)
 	if err := d.Set(names.AttrEncryptionConfiguration, flattenEncryptionConfiguration(firewall.EncryptionConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting encryption_configuration: %s", err)
 	}
@@ -277,6 +291,27 @@ func resourceFirewallUpdate(ctx context.Context, d *schema.ResourceData, meta an
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating NetworkFirewall Firewall (%s) description: %s", d.Id(), err)
+		}
+
+		updateToken = aws.ToString(output.UpdateToken)
+	}
+
+	if d.HasChange("enabled_analysis_types") {
+		var analysisTypes []awstypes.EnabledAnalysisType
+		for _, v := range d.Get("enabled_analysis_types").(*schema.Set).List() {
+			analysisTypes = append(analysisTypes, awstypes.EnabledAnalysisType(v.(string)))
+		}
+
+		input := &networkfirewall.UpdateFirewallAnalysisSettingsInput{
+			EnabledAnalysisTypes: analysisTypes,
+			FirewallArn:          aws.String(d.Id()),
+			UpdateToken:          aws.String(updateToken),
+		}
+
+		output, err := conn.UpdateFirewallAnalysisSettings(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating NetworkFirewall Firewall (%s) analysis settings: %s", d.Id(), err)
 		}
 
 		updateToken = aws.ToString(output.UpdateToken)
