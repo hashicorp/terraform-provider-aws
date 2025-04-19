@@ -10,7 +10,6 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	tffis "github.com/hashicorp/terraform-provider-aws/internal/service/fis"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -253,40 +252,4 @@ data "aws_fis_experiment_templates" "none" {
   }
 }
 `)
-}
-
-func TestIsSubset(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name     string
-		subset   map[string]string
-		superset map[string]string
-		want     bool
-	}{
-		{
-			name:     "Test 1: Subset is actually a subset of Superset",
-			subset:   map[string]string{acctest.CtKey1: acctest.CtValue1, acctest.CtKey2: acctest.CtValue2},
-			superset: map[string]string{acctest.CtKey1: acctest.CtValue1, acctest.CtKey2: acctest.CtValue2, "key3": "value3"},
-			want:     true,
-		},
-		{
-			name:     "Test 2: Subset is not a subset of Superset",
-			subset:   map[string]string{acctest.CtKey1: acctest.CtValue1, acctest.CtKey2: acctest.CtValue2},
-			superset: map[string]string{acctest.CtKey1: acctest.CtValue1, "key3": "value3"},
-			want:     false,
-		},
-		{
-			name:     "Test 3: Subset is equal to Superset",
-			subset:   map[string]string{acctest.CtKey1: acctest.CtValue1, acctest.CtKey2: acctest.CtValue2},
-			superset: map[string]string{acctest.CtKey1: acctest.CtValue1, acctest.CtKey2: acctest.CtValue2},
-			want:     true,
-		},
-	}
-
-	for _, test := range tests {
-		if got := tffis.IsSubset(test.subset, test.superset); got != test.want {
-			t.Errorf("IsSubset() = %v, want %v", got, test.want)
-		}
-	}
 }

@@ -8,11 +8,12 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/fis"
-	"github.com/aws/aws-sdk-go-v2/service/fis/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/fis/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -28,70 +29,56 @@ func DataSourceExperimentTemplates() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			names.AttrTags: {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
+			names.AttrTags: tftags.TagsSchema(),
 		},
 	}
 }
 
 func dataSourceExperimentTemplatesRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).FISClient(ctx)
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	input := &fis.ListExperimentTemplatesInput{}
 
-	var inputTags map[string]string
-
-	if tags, tagsOk := d.GetOk(names.AttrTags); tagsOk && len(tags.(map[string]any)) > 0 {
-		inputTags = svcTags(tftags.New(ctx, tags.(map[string]any)))
+	filter := tfslices.PredicateTrue[*awstypes.ExperimentTemplateSummary]()
+	if tagsToMatch := tftags.New(ctx, d.Get(names.AttrTags).(map[string]any)).IgnoreAWS().IgnoreConfig(ignoreTagsConfig); len(tagsToMatch) > 0 {
+		filter = func(v *awstypes.ExperimentTemplateSummary) bool {
+			return keyValueTags(ctx, v.Tags).ContainsAll(tagsToMatch)
+		}
 	}
 
-	var output []types.ExperimentTemplateSummary
+	output, err := findExperimentTemplates(ctx, conn, input, filter)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading FIS Experiment Templates: %s", err)
+	}
+
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
+	d.Set(names.AttrIDs, tfslices.ApplyToAll(output, func(v awstypes.ExperimentTemplateSummary) string {
+		return aws.ToString(v.Id)
+	}))
+
+	return diags
+}
+
+func findExperimentTemplates(ctx context.Context, conn *fis.Client, input *fis.ListExperimentTemplatesInput, filter tfslices.Predicate[*awstypes.ExperimentTemplateSummary]) ([]awstypes.ExperimentTemplateSummary, error) {
+	var output []awstypes.ExperimentTemplateSummary
 
 	pages := fis.NewListExperimentTemplatesPaginator(conn, input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading FIS Experiment Templates: %s", err)
+			return nil, err
 		}
 
-		for _, result := range page.ExperimentTemplates {
-			if len(inputTags) > 0 {
-				if IsSubset(inputTags, result.Tags) {
-					output = append(output, result)
-				}
-			} else {
-				output = append(output, result)
+		for _, v := range page.ExperimentTemplates {
+			if filter(&v) {
+				output = append(output, v)
 			}
 		}
 	}
 
-	var expIds []string
-
-	for _, exp := range output {
-		expIds = append(expIds, aws.ToString(exp.Id))
-	}
-
-	d.SetId(meta.(*conns.AWSClient).Region(ctx))
-	d.Set(names.AttrIDs, expIds)
-
-	return diags
-}
-
-func IsSubset(subset map[string]string, superset map[string]string) bool {
-	if len(subset) > len(superset) {
-		return false
-	}
-
-	for k, v := range subset {
-		if supersetValue, ok := superset[k]; !ok || supersetValue != v {
-			return false
-		}
-	}
-	return true
+	return output, nil
 }
