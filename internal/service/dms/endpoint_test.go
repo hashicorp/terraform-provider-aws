@@ -3518,7 +3518,7 @@ resource "aws_dms_endpoint" "test" {
     include_transaction_details    = true
     partition_include_schema_table = true
     use_large_integer_value        = false
-    
+
     service_access_role_arn = aws_iam_role.test.arn
     stream_arn              = aws_kinesis_stream.test1.arn
   }
