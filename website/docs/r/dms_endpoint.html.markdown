@@ -121,6 +121,7 @@ The following arguments are optional:
 * `partition_include_schema_table` - (Optional) Prefixes schema and table names to partition values, when the partition type is primary-key-type. Default is `false`.
 * `service_access_role_arn` - (Optional) ARN of the IAM Role with permissions to write to the Kinesis data stream.
 * `stream_arn` - (Optional) ARN of the Kinesis data stream.
+* `use_large_integer_value` - (Optional) Use up to 18 digit int instead of casting ints as doubles, available from AWS DMS version 3.5.4. Default is `false`.
 
 ### mongodb_settings
 

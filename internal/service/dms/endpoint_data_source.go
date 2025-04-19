@@ -199,6 +199,10 @@ func dataSourceEndpoint() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"use_large_integer_value": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
 					},
 				},
 			},
