@@ -16,7 +16,7 @@ import (
 
 type interceptorOptions[Request, Response any] struct {
 	c        *conns.AWSClient
-	request  Request
+	request  *Request
 	response *Response
 	when     when
 }
@@ -309,8 +309,8 @@ type interceptedResponse interface {
 }
 
 // interceptedHandler returns a handler that runs any interceptors.
-func interceptedHandler[Request interceptedRequest, Response interceptedResponse](interceptors []interceptorFunc[Request, Response], f func(context.Context, Request, *Response) diag.Diagnostics, c *conns.AWSClient) func(context.Context, Request, *Response) diag.Diagnostics {
-	return func(ctx context.Context, request Request, response *Response) diag.Diagnostics {
+func interceptedHandler[Request interceptedRequest, Response interceptedResponse](interceptors []interceptorFunc[Request, Response], f func(context.Context, Request, *Response) diag.Diagnostics, c *conns.AWSClient) func(context.Context, *Request, *Response) diag.Diagnostics {
+	return func(ctx context.Context, request *Request, response *Response) diag.Diagnostics {
 		var diags diag.Diagnostics
 		// Before interceptors are run first to last.
 		forward := interceptors
@@ -333,7 +333,7 @@ func interceptedHandler[Request interceptedRequest, Response interceptedResponse
 
 		// All other interceptors are run last to first.
 		reverse := tfslices.Reverse(forward)
-		diags = f(ctx, request, response)
+		diags = f(ctx, *request, response)
 
 		if diags.HasError() {
 			when = OnError
