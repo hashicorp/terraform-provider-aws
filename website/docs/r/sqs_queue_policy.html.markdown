@@ -31,8 +31,7 @@ data "aws_iam_policy_document" "test" {
       identifiers = ["*"]
     }
 
-    actions   = ["sqs:SendMessage"]
-    resources = [aws_sqs_queue.q.arn]
+    actions = ["sqs:SendMessage"]
 
     condition {
       test     = "ArnEquals"
@@ -72,8 +71,7 @@ resource "aws_sqs_queue_policy" "example" {
       Principal = {
         Service = "s3.amazonaws.com"
       }
-      Action   = "SQS:SendMessage"
-      Resource = aws_sqs_queue.example.arn
+      Action = "SQS:SendMessage"
       Condition = {
         ArnLike = {
           "aws:SourceArn" = aws_s3_bucket.example.arn
