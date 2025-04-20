@@ -122,6 +122,14 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Name:     "VPC Endpoint Service Private DNS Verification",
 		},
 		{
+			Factory:  newVPCRouteServerResource,
+			TypeName: "aws_vpc_route_server",
+			Name:     "VPC Route Server",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			},
+		},
+		{
 			Factory:  newSecurityGroupEgressRuleResource,
 			TypeName: "aws_vpc_security_group_egress_rule",
 			Name:     "Security Group Egress Rule",
