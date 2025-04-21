@@ -1,4 +1,10 @@
 ## 5.96.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* data-source/aws_dms_endpoint: Add `kinesis_settings.use_large_integer_value` attribute ([#42300](https://github.com/hashicorp/terraform-provider-aws/issues/42300))
+* resource/aws_dms_endpoint: Add `kinesis_settings.use_large_integer_value` argument ([#42300](https://github.com/hashicorp/terraform-provider-aws/issues/42300))
+
 ## 5.95.0 (April 17, 2025)
 
 NOTES:
