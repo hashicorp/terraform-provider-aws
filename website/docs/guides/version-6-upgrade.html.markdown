@@ -34,6 +34,7 @@ Upgrade topics:
 - [resource/aws_api_gateway_account](#resourceaws_api_gateway_account)
 - [resource/aws_api_gateway_deployment](#resourceaws_api_gateway_deployment)
 - [resource/aws_batch_compute_environment](#resourceaws_batch_compute_environment)
+- [resource/aws_bedrock_model_invocation_logging_configuration](#resourceaws_bedrock_model_invocation_logging_configuration)
 - [resource/aws_cloudfront_key_value_store](#resourceaws_cloudfront_key_value_store)
 - [resource/aws_cloudfront_response_headers_policy](#resourceaws_cloudfront_response_headers_policy)
 - [resource/aws_ecs_task_definition](#resourceaws_ecs_task_definition)
@@ -205,7 +206,7 @@ The following attributes are now list nested blocks instead of single nested blo
 - `condition.query_string`
 - `condition.source_ip`
 
-When referencing these attributes, the indicies must now be included in the attribute address.
+When referencing these attributes, the indices must now be included in the attribute address.
 For example, `action[0].authenticate_cognito.scope` would now be referenced as `action[0].authenticate_cognito[0].scope`.
 
 ## data-source/aws_launch_template
@@ -274,6 +275,18 @@ terraform import aws_api_gateway_stage.prod <rest_api_id>/<stage_name>
 * `compute_environment_name` has been renamed to `name`.
 * `compute_environment_name_prefix` has been renamed to `name_prefix`.
 
+## resource/aws_bedrock_model_invocation_logging_configuration
+
+The following arguments are now list nested blocks instead of single nested blocks.
+
+- `logging_config`
+- `logging_config.cloudwatch_config`
+- `logging_config.cloudwatch_config.large_data_delivery_s3_config`
+- `logging_config.s3_config`
+
+When referencing these arguments, the indices must now be included in the attribute address.
+For example, `logging_config.cloudwatch_config.log_group_name` would now be referenced as `logging_config[0].cloudwatch_config[0].log_group_name`.
+
 ## resource/aws_cloudfront_key_value_store
 
 The `id` attribute is now set the to ID value returned by the AWS API.
@@ -328,7 +341,7 @@ For example, `saml_options.session_timeout` would now be referenced as `saml_opt
 ## resource/aws_paymentcryptography_key
 
 The `key_attributes` and `key_attributes.key_modes_of_use` arguments are now list nested blocks instead of single nested blocks.
-When referencing these arguments, the indicies must now be included in the attribute address.
+When referencing these arguments, the indices must now be included in the attribute address.
 For example, `key_attributes.key_modes_of_use.decrypt` would now be referenced as `key_attributes[0].key_modes_of_use[0].decrypt`.
 
 ## resource/aws_redshift_cluster
@@ -358,7 +371,7 @@ The following arguments are now list nested blocks instead of single nested bloc
 - `policy.software`
 - `policy.region`
 
-When referencing these arguments, the indicies must now be included in the attribute address.
+When referencing these arguments, the indices must now be included in the attribute address.
 For example, `policy.az.rpo` would now be referenced as `policy[0].az[0].rpo`.
 
 ## resource/aws_sagemaker_notebook_instance
