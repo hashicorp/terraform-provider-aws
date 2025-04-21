@@ -53,6 +53,7 @@ Upgrade topics:
 - [resource/aws_sagemaker_notebook_instance](#resourceaws_sagemaker_notebook_instance)
 - [resource/aws_spot_instance_request](#resourceaws_spot_instance_request)
 - [resource/aws_ssm_association](#resourceaws_ssm_association)
+- [resource/aws_verifiedpermissions_schema](#resourceaws_verifiedpermissions_schema)
 
 <!-- /TOC -->
 
@@ -367,3 +368,9 @@ Remove `block_duration_minutes` from your configuration—it no longer exists.
 ## resource/aws_ssm_association
 
 Remove `instance_id` from configuration—it no longer exists. Use `targets` instead.
+
+## resource/aws_verifiedpermissions_schema
+
+The `definition` argument is now a list nested block instead of a single nested block.
+When referencing this argument, the index must now be included in the attribute address.
+For example, `definition.value` would now be referenced as `definition[0].value`.
