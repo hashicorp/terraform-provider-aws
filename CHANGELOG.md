@@ -56,6 +56,7 @@ resource/aws_batch_compute_environment: Rename `compute_environment_name_prefix`
 * resource/aws_redshift_cluster: The `publicly_accessible` attribute now defaults to `false` ([#41978](https://github.com/hashicorp/terraform-provider-aws/issues/41978))
 * resource/aws_redshift_cluster: The `snapshot_copy` attribute has been removed ([#41995](https://github.com/hashicorp/terraform-provider-aws/issues/41995))
 * resource/aws_rekognition_stream_processor: `regions_of_interest.bounding_box` is now a list nested block instead of a single nested block ([#41380](https://github.com/hashicorp/terraform-provider-aws/issues/41380))
+* resource/aws_resiliencehub_resiliency_policy: `policy`, `policy.az`, `policy.hardware`, `policy.software`, and `policy.region` are now list nested blocks instead of single nested blocks ([#42297](https://github.com/hashicorp/terraform-provider-aws/issues/42297))
 * resource/aws_sagemaker_notebook_instance: Remove `accelerator_types` from your configuration—it no longer exists. Instead, use `instance_type` to use [Inferentia](https://docs.aws.amazon.com/sagemaker/latest/dg/neo-supported-cloud.html). ([#42099](https://github.com/hashicorp/terraform-provider-aws/issues/42099))
 * resource/aws_ssm_association: Remove `instance_id` argument ([#42224](https://github.com/hashicorp/terraform-provider-aws/issues/42224))
 
@@ -63,6 +64,10 @@ NOTES:
 
 * provider: Practitioners using Terraform 0.12 must [pin the version](https://developer.hashicorp.com/terraform/language/providers/requirements#v0-12-compatible-provider-requirements) of the AWS Provider to an exact version so as not to install a pre-release ([#41722](https://github.com/hashicorp/terraform-provider-aws/issues/41722))
 * resource/aws_codeconnections_host: Deprecates `id` in favor of `arn` ([#42232](https://github.com/hashicorp/terraform-provider-aws/issues/42232))
+* resource/aws_evidently_feature: This resource is deprecated. Use [AWS AppConfig feature flags](https://aws.amazon.com/blogs/mt/using-aws-appconfig-feature-flags/) instead. ([#42227](https://github.com/hashicorp/terraform-provider-aws/issues/42227))
+* resource/aws_evidently_launch: This resource is deprecated. Use [AWS AppConfig feature flags](https://aws.amazon.com/blogs/mt/using-aws-appconfig-feature-flags/) instead. ([#42227](https://github.com/hashicorp/terraform-provider-aws/issues/42227))
+* resource/aws_evidently_project: This resource is deprecated. Use [AWS AppConfig feature flags](https://aws.amazon.com/blogs/mt/using-aws-appconfig-feature-flags/) instead. ([#42227](https://github.com/hashicorp/terraform-provider-aws/issues/42227))
+* resource/aws_evidently_segment: This resource is deprecated. Use [AWS AppConfig feature flags](https://aws.amazon.com/blogs/mt/using-aws-appconfig-feature-flags/) instead. ([#42227](https://github.com/hashicorp/terraform-provider-aws/issues/42227))
 * resource/aws_kinesis_analytics_application: Effective January 27, 2026, AWS will no longer support Kinesis Data Analytics for SQL. This resource is deprecated and will be removed in a future version. Use the `aws_kinesisanalyticsv2_application` resource instead ([#42102](https://github.com/hashicorp/terraform-provider-aws/issues/42102))
 * resource/aws_media_store_container: This resource is deprecated. It will be removed in a future version. Use S3, AWS MediaPackage, or other storage solution instead. ([#42265](https://github.com/hashicorp/terraform-provider-aws/issues/42265))
 * resource/aws_media_store_container_policy: This resource is deprecated. It will be removed in a future version. Use S3, AWS MediaPackage, or other storage solution instead. ([#42265](https://github.com/hashicorp/terraform-provider-aws/issues/42265))
