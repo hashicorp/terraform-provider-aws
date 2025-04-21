@@ -47,7 +47,7 @@ func resourceVault() *schema.Resource {
 				ValidateFunc:          validation.StringIsJSON,
 				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
 				DiffSuppressOnRefresh: true,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
@@ -98,12 +98,10 @@ func resourceVault() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceVaultCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVaultCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlacierClient(ctx)
 
@@ -145,10 +143,10 @@ func resourceVaultCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
-	if v, ok := d.GetOk("notification"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk("notification"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		input := &glacier.SetVaultNotificationsInput{
 			VaultName:               aws.String(d.Id()),
-			VaultNotificationConfig: expandVaultNotificationConfig(v.([]interface{})[0].(map[string]interface{})),
+			VaultNotificationConfig: expandVaultNotificationConfig(v.([]any)[0].(map[string]any)),
 		}
 
 		_, err := conn.SetVaultNotifications(ctx, input)
@@ -161,7 +159,7 @@ func resourceVaultCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceVaultRead(ctx, d, meta)...)
 }
 
-func resourceVaultRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVaultRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlacierClient(ctx)
 
@@ -209,7 +207,7 @@ func resourceVaultRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		}
 	} else if output != nil && output.VaultNotificationConfig != nil {
 		apiObject := output.VaultNotificationConfig
-		tfMap := map[string]interface{}{}
+		tfMap := map[string]any{}
 
 		if v := apiObject.Events; v != nil {
 			tfMap["events"] = v
@@ -219,7 +217,7 @@ func resourceVaultRead(ctx context.Context, d *schema.ResourceData, meta interfa
 			tfMap["sns_topic"] = aws.ToString(v)
 		}
 
-		if err := d.Set("notification", []interface{}{tfMap}); err != nil {
+		if err := d.Set("notification", []any{tfMap}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting notification: %s", err)
 		}
 	}
@@ -227,7 +225,7 @@ func resourceVaultRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	return diags
 }
 
-func resourceVaultUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVaultUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlacierClient(ctx)
 
@@ -265,10 +263,10 @@ func resourceVaultUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if d.HasChange("notification") {
-		if v, ok := d.GetOk("notification"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		if v, ok := d.GetOk("notification"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 			input := &glacier.SetVaultNotificationsInput{
 				VaultName:               aws.String(d.Id()),
-				VaultNotificationConfig: expandVaultNotificationConfig(v.([]interface{})[0].(map[string]interface{})),
+				VaultNotificationConfig: expandVaultNotificationConfig(v.([]any)[0].(map[string]any)),
 			}
 
 			_, err := conn.SetVaultNotifications(ctx, input)
@@ -292,7 +290,7 @@ func resourceVaultUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceVaultRead(ctx, d, meta)...)
 }
 
-func resourceVaultDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVaultDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlacierClient(ctx)
 
@@ -333,7 +331,7 @@ func findVaultByName(ctx context.Context, conn *glacier.Client, name string) (*g
 	return output, nil
 }
 
-func expandVaultNotificationConfig(tfMap map[string]interface{}) *types.VaultNotificationConfig {
+func expandVaultNotificationConfig(tfMap map[string]any) *types.VaultNotificationConfig {
 	if tfMap == nil {
 		return nil
 	}

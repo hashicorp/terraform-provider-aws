@@ -23,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -45,8 +44,6 @@ func resourceEventDataStore() *schema.Resource {
 			Update: schema.DefaultTimeout(5 * time.Minute),
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			"advanced_event_selector": {
@@ -195,7 +192,7 @@ func resourceEventDataStore() *schema.Resource {
 	}
 }
 
-func resourceEventDataStoreCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEventDataStoreCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudTrailClient(ctx)
 
@@ -211,7 +208,7 @@ func resourceEventDataStoreCreate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if _, ok := d.GetOk("advanced_event_selector"); ok {
-		input.AdvancedEventSelectors = expandAdvancedEventSelector(d.Get("advanced_event_selector").([]interface{}))
+		input.AdvancedEventSelectors = expandAdvancedEventSelector(d.Get("advanced_event_selector").([]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
@@ -239,7 +236,7 @@ func resourceEventDataStoreCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceEventDataStoreRead(ctx, d, meta)...)
 }
 
-func resourceEventDataStoreRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEventDataStoreRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudTrailClient(ctx)
 
@@ -270,7 +267,7 @@ func resourceEventDataStoreRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceEventDataStoreUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEventDataStoreUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudTrailClient(ctx)
 
@@ -280,7 +277,7 @@ func resourceEventDataStoreUpdate(ctx context.Context, d *schema.ResourceData, m
 		}
 
 		if d.HasChange("advanced_event_selector") {
-			input.AdvancedEventSelectors = expandAdvancedEventSelector(d.Get("advanced_event_selector").([]interface{}))
+			input.AdvancedEventSelectors = expandAdvancedEventSelector(d.Get("advanced_event_selector").([]any))
 		}
 
 		if d.HasChange("billing_mode") {
@@ -336,14 +333,15 @@ func resourceEventDataStoreUpdate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceEventDataStoreRead(ctx, d, meta)...)
 }
 
-func resourceEventDataStoreDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEventDataStoreDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudTrailClient(ctx)
 
 	log.Printf("[DEBUG] Deleting CloudTrail Event Data Store: %s", d.Id())
-	_, err := conn.DeleteEventDataStore(ctx, &cloudtrail.DeleteEventDataStoreInput{
+	input := cloudtrail.DeleteEventDataStoreInput{
 		EventDataStore: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteEventDataStore(ctx, &input)
 
 	if errs.IsA[*types.EventDataStoreNotFoundException](err) {
 		return diags
@@ -403,7 +401,7 @@ func findEventDataStore(ctx context.Context, conn *cloudtrail.Client, input *clo
 }
 
 func statusEventDataStore(ctx context.Context, conn *cloudtrail.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findEventDataStoreByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {

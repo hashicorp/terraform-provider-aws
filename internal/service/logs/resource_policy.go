@@ -31,7 +31,7 @@ func resourceResourcePolicy() *schema.Resource {
 		DeleteWithoutTimeout: resourceResourcePolicyDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			State: func(d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 				d.Set("policy_name", d.Id())
 				return []*schema.ResourceData{d}, nil
 			},
@@ -48,7 +48,7 @@ func resourceResourcePolicy() *schema.Resource {
 	}
 }
 
-func resourceResourcePolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourcePolicyPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
@@ -76,7 +76,7 @@ func resourceResourcePolicyPut(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceResourcePolicyRead(ctx, d, meta)...)
 }
 
-func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
@@ -107,7 +107,7 @@ func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceResourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 

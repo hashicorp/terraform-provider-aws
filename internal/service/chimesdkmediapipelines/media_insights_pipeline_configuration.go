@@ -105,8 +105,6 @@ func ResourceMediaInsightsPipelineConfiguration() *schema.Resource {
 			names.AttrTags:                  tftags.TagsSchema(),
 			names.AttrTagsAll:               tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -471,12 +469,12 @@ func RealTimeAlertConfigurationSchema() *schema.Schema {
 	}
 }
 
-func resourceMediaInsightsPipelineConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMediaInsightsPipelineConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ChimeSDKMediaPipelinesClient(ctx)
 
-	elements, err := expandElements(d.Get("elements").([]interface{}))
+	elements, err := expandElements(d.Get("elements").([]any))
 	if err != nil {
 		return create.AppendDiagError(diags, names.ChimeSDKMediaPipelines, create.ErrActionCreating,
 			ResNameMediaInsightsPipelineConfiguration, d.Get(names.AttrName).(string), err)
@@ -489,8 +487,8 @@ func resourceMediaInsightsPipelineConfigurationCreate(ctx context.Context, d *sc
 		Tags:                                   getTagsIn(ctx),
 	}
 
-	if realTimeAlertConfiguration, ok := d.GetOk("real_time_alert_configuration"); ok && len(realTimeAlertConfiguration.([]interface{})) > 0 {
-		rtac, err := expandRealTimeAlertConfiguration(realTimeAlertConfiguration.([]interface{})[0].(map[string]interface{}))
+	if realTimeAlertConfiguration, ok := d.GetOk("real_time_alert_configuration"); ok && len(realTimeAlertConfiguration.([]any)) > 0 {
+		rtac, err := expandRealTimeAlertConfiguration(realTimeAlertConfiguration.([]any)[0].(map[string]any))
 		if err != nil {
 			return create.AppendDiagError(diags, names.ChimeSDKMediaPipelines, create.ErrActionCreating,
 				ResNameMediaInsightsPipelineConfiguration, d.Get(names.AttrName).(string), err)
@@ -526,7 +524,7 @@ func resourceMediaInsightsPipelineConfigurationCreate(ctx context.Context, d *sc
 	return append(diags, resourceMediaInsightsPipelineConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceMediaInsightsPipelineConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMediaInsightsPipelineConfigurationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ChimeSDKMediaPipelinesClient(ctx)
@@ -559,13 +557,13 @@ func resourceMediaInsightsPipelineConfigurationRead(ctx context.Context, d *sche
 	return diags
 }
 
-func resourceMediaInsightsPipelineConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMediaInsightsPipelineConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ChimeSDKMediaPipelinesClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		elements, err := expandElements(d.Get("elements").([]interface{}))
+		elements, err := expandElements(d.Get("elements").([]any))
 		if err != nil {
 			return create.AppendDiagError(diags, names.ChimeSDKMediaPipelines, create.ErrActionUpdating, ResNameMediaInsightsPipelineConfiguration, d.Id(), err)
 		}
@@ -575,8 +573,8 @@ func resourceMediaInsightsPipelineConfigurationUpdate(ctx context.Context, d *sc
 			ResourceAccessRoleArn: aws.String(d.Get("resource_access_role_arn").(string)),
 			Elements:              elements,
 		}
-		if realTimeAlertConfiguration, ok := d.GetOk("real_time_alert_configuration"); ok && len(realTimeAlertConfiguration.([]interface{})) > 0 {
-			rtac, err := expandRealTimeAlertConfiguration(realTimeAlertConfiguration.([]interface{})[0].(map[string]interface{}))
+		if realTimeAlertConfiguration, ok := d.GetOk("real_time_alert_configuration"); ok && len(realTimeAlertConfiguration.([]any)) > 0 {
+			rtac, err := expandRealTimeAlertConfiguration(realTimeAlertConfiguration.([]any)[0].(map[string]any))
 			if err != nil {
 				return create.AppendDiagError(diags, names.ChimeSDKMediaPipelines, create.ErrActionUpdating, ResNameMediaInsightsPipelineConfiguration, d.Id(), err)
 			}
@@ -605,7 +603,7 @@ func resourceMediaInsightsPipelineConfigurationUpdate(ctx context.Context, d *sc
 	return append(diags, resourceMediaInsightsPipelineConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceMediaInsightsPipelineConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMediaInsightsPipelineConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ChimeSDKMediaPipelinesClient(ctx)
@@ -613,7 +611,7 @@ func resourceMediaInsightsPipelineConfigurationDelete(ctx context.Context, d *sc
 	log.Printf("[INFO] Deleting ChimeSDKMediaPipelines MediaInsightsPipelineConfiguration %s", d.Id())
 
 	// eventual consistency may cause an initial failure
-	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, 15*time.Second, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, 15*time.Second, func() (any, error) {
 		return conn.DeleteMediaInsightsPipelineConfiguration(ctx, &chimesdkmediapipelines.DeleteMediaInsightsPipelineConfigurationInput{
 			Identifier: aws.String(d.Id()),
 		})
@@ -653,7 +651,7 @@ func FindMediaInsightsPipelineConfigurationByID(ctx context.Context, conn *chime
 	return out.MediaInsightsPipelineConfiguration, nil
 }
 
-func expandElements(inputElements []interface{}) ([]awstypes.MediaInsightsPipelineConfigurationElement, error) {
+func expandElements(inputElements []any) ([]awstypes.MediaInsightsPipelineConfigurationElement, error) {
 	if len(inputElements) == 0 || inputElements[0] == nil {
 		return nil, nil
 	}
@@ -672,8 +670,8 @@ func expandElements(inputElements []interface{}) ([]awstypes.MediaInsightsPipeli
 	return elements, nil
 }
 
-func expandElement(inputElement interface{}) (awstypes.MediaInsightsPipelineConfigurationElement, error) {
-	inputMapRaw, ok := inputElement.(map[string]interface{})
+func expandElement(inputElement any) (awstypes.MediaInsightsPipelineConfigurationElement, error) {
+	inputMapRaw, ok := inputElement.(map[string]any)
 	if !ok {
 		return awstypes.MediaInsightsPipelineConfigurationElement{}, errConvertingElement
 	}
@@ -684,17 +682,17 @@ func expandElement(inputElement interface{}) (awstypes.MediaInsightsPipelineConf
 
 	switch {
 	case element.Type == awstypes.MediaInsightsPipelineConfigurationElementTypeAmazonTranscribeCallAnalyticsProcessor:
-		var configuration []interface{}
-		if configuration, ok = inputMapRaw["amazon_transcribe_call_analytics_processor_configuration"].([]interface{}); !ok || len(configuration) != 1 {
+		var configuration []any
+		if configuration, ok = inputMapRaw["amazon_transcribe_call_analytics_processor_configuration"].([]any); !ok || len(configuration) != 1 {
 			return awstypes.MediaInsightsPipelineConfigurationElement{}, errConvertingElement
 		}
 
-		rawConfiguration := configuration[0].(map[string]interface{})
+		rawConfiguration := configuration[0].(map[string]any)
 		element.AmazonTranscribeCallAnalyticsProcessorConfiguration = &awstypes.AmazonTranscribeCallAnalyticsProcessorConfiguration{
 			LanguageCode: awstypes.CallAnalyticsLanguageCode(rawConfiguration[names.AttrLanguageCode].(string)),
 		}
 
-		if callAnalyticsStreamCategories, ok := rawConfiguration["call_analytics_stream_categories"].([]interface{}); ok && len(callAnalyticsStreamCategories) > 0 {
+		if callAnalyticsStreamCategories, ok := rawConfiguration["call_analytics_stream_categories"].([]any); ok && len(callAnalyticsStreamCategories) > 0 {
 			element.AmazonTranscribeCallAnalyticsProcessorConfiguration.CallAnalyticsStreamCategories = flex.ExpandStringValueList(callAnalyticsStreamCategories)
 		}
 
@@ -726,8 +724,8 @@ func expandElement(inputElement interface{}) (awstypes.MediaInsightsPipelineConf
 			element.AmazonTranscribeCallAnalyticsProcessorConfiguration.PiiEntityTypes = aws.String(piiEntityTypes)
 		}
 
-		if postCallAnalyticsSettings, ok := rawConfiguration["post_call_analytics_settings"].([]interface{}); ok && len(postCallAnalyticsSettings) == 1 {
-			rawPostCallSettings := postCallAnalyticsSettings[0].(map[string]interface{})
+		if postCallAnalyticsSettings, ok := rawConfiguration["post_call_analytics_settings"].([]any); ok && len(postCallAnalyticsSettings) == 1 {
+			rawPostCallSettings := postCallAnalyticsSettings[0].(map[string]any)
 
 			postCallSettingsApi := &awstypes.PostCallAnalyticsSettings{
 				DataAccessRoleArn: aws.String(rawPostCallSettings["data_access_role_arn"].(string)),
@@ -754,12 +752,12 @@ func expandElement(inputElement interface{}) (awstypes.MediaInsightsPipelineConf
 			element.AmazonTranscribeCallAnalyticsProcessorConfiguration.VocabularyName = aws.String(vocabularyName)
 		}
 	case element.Type == awstypes.MediaInsightsPipelineConfigurationElementTypeAmazonTranscribeProcessor:
-		var configuration []interface{}
-		if configuration, ok = inputMapRaw["amazon_transcribe_processor_configuration"].([]interface{}); !ok || len(configuration) != 1 {
+		var configuration []any
+		if configuration, ok = inputMapRaw["amazon_transcribe_processor_configuration"].([]any); !ok || len(configuration) != 1 {
 			return awstypes.MediaInsightsPipelineConfigurationElement{}, errConvertingElement
 		}
 
-		rawConfiguration := configuration[0].(map[string]interface{})
+		rawConfiguration := configuration[0].(map[string]any)
 		element.AmazonTranscribeProcessorConfiguration = &awstypes.AmazonTranscribeProcessorConfiguration{
 			LanguageCode: awstypes.CallAnalyticsLanguageCode(rawConfiguration[names.AttrLanguageCode].(string)),
 		}
@@ -808,62 +806,62 @@ func expandElement(inputElement interface{}) (awstypes.MediaInsightsPipelineConf
 			element.AmazonTranscribeProcessorConfiguration.VocabularyName = aws.String(vocabularyName)
 		}
 	case element.Type == awstypes.MediaInsightsPipelineConfigurationElementTypeKinesisDataStreamSink:
-		var configuration []interface{}
-		if configuration, ok = inputMapRaw["kinesis_data_stream_sink_configuration"].([]interface{}); !ok || len(configuration) != 1 {
+		var configuration []any
+		if configuration, ok = inputMapRaw["kinesis_data_stream_sink_configuration"].([]any); !ok || len(configuration) != 1 {
 			return awstypes.MediaInsightsPipelineConfigurationElement{}, errConvertingElement
 		}
 
-		rawConfiguration := configuration[0].(map[string]interface{})
+		rawConfiguration := configuration[0].(map[string]any)
 		element.KinesisDataStreamSinkConfiguration = &awstypes.KinesisDataStreamSinkConfiguration{
 			InsightsTarget: aws.String(rawConfiguration["insights_target"].(string)),
 		}
 	case element.Type == awstypes.MediaInsightsPipelineConfigurationElementTypeSnsTopicSink:
-		var configuration []interface{}
-		if configuration, ok = inputMapRaw["sns_topic_sink_configuration"].([]interface{}); !ok || len(configuration) != 1 {
+		var configuration []any
+		if configuration, ok = inputMapRaw["sns_topic_sink_configuration"].([]any); !ok || len(configuration) != 1 {
 			return awstypes.MediaInsightsPipelineConfigurationElement{}, errConvertingElement
 		}
 
-		rawConfiguration := configuration[0].(map[string]interface{})
+		rawConfiguration := configuration[0].(map[string]any)
 		element.SnsTopicSinkConfiguration = &awstypes.SnsTopicSinkConfiguration{
 			InsightsTarget: aws.String(rawConfiguration["insights_target"].(string)),
 		}
 	case element.Type == awstypes.MediaInsightsPipelineConfigurationElementTypeSqsQueueSink:
-		var configuration []interface{}
-		if configuration, ok = inputMapRaw["sqs_queue_sink_configuration"].([]interface{}); !ok || len(configuration) != 1 {
+		var configuration []any
+		if configuration, ok = inputMapRaw["sqs_queue_sink_configuration"].([]any); !ok || len(configuration) != 1 {
 			return awstypes.MediaInsightsPipelineConfigurationElement{}, errConvertingElement
 		}
 
-		rawConfiguration := configuration[0].(map[string]interface{})
+		rawConfiguration := configuration[0].(map[string]any)
 		element.SqsQueueSinkConfiguration = &awstypes.SqsQueueSinkConfiguration{
 			InsightsTarget: aws.String(rawConfiguration["insights_target"].(string)),
 		}
 	case element.Type == awstypes.MediaInsightsPipelineConfigurationElementTypeLambdaFunctionSink:
-		var configuration []interface{}
-		if configuration, ok = inputMapRaw["lambda_function_sink_configuration"].([]interface{}); !ok || len(configuration) != 1 {
+		var configuration []any
+		if configuration, ok = inputMapRaw["lambda_function_sink_configuration"].([]any); !ok || len(configuration) != 1 {
 			return awstypes.MediaInsightsPipelineConfigurationElement{}, errConvertingElement
 		}
 
-		rawConfiguration := configuration[0].(map[string]interface{})
+		rawConfiguration := configuration[0].(map[string]any)
 		element.LambdaFunctionSinkConfiguration = &awstypes.LambdaFunctionSinkConfiguration{
 			InsightsTarget: aws.String(rawConfiguration["insights_target"].(string)),
 		}
 	case element.Type == awstypes.MediaInsightsPipelineConfigurationElementTypeS3RecordingSink:
-		var configuration []interface{}
-		if configuration, ok = inputMapRaw["s3_recording_sink_configuration"].([]interface{}); !ok || len(configuration) != 1 {
+		var configuration []any
+		if configuration, ok = inputMapRaw["s3_recording_sink_configuration"].([]any); !ok || len(configuration) != 1 {
 			return awstypes.MediaInsightsPipelineConfigurationElement{}, errConvertingElement
 		}
 
-		rawConfiguration := configuration[0].(map[string]interface{})
+		rawConfiguration := configuration[0].(map[string]any)
 		element.S3RecordingSinkConfiguration = &awstypes.S3RecordingSinkConfiguration{
 			Destination: aws.String(rawConfiguration[names.AttrDestination].(string)),
 		}
 	case element.Type == awstypes.MediaInsightsPipelineConfigurationElementTypeVoiceAnalyticsProcessor:
-		var configuration []interface{}
-		if configuration, ok = inputMapRaw["voice_analytics_processor_configuration"].([]interface{}); !ok || len(configuration) != 1 {
+		var configuration []any
+		if configuration, ok = inputMapRaw["voice_analytics_processor_configuration"].([]any); !ok || len(configuration) != 1 {
 			return awstypes.MediaInsightsPipelineConfigurationElement{}, errConvertingElement
 		}
 
-		rawConfiguration := configuration[0].(map[string]interface{})
+		rawConfiguration := configuration[0].(map[string]any)
 		element.VoiceAnalyticsProcessorConfiguration = &awstypes.VoiceAnalyticsProcessorConfiguration{
 			SpeakerSearchStatus:     awstypes.VoiceAnalyticsConfigurationStatus(rawConfiguration["speaker_search_status"].(string)),
 			VoiceToneAnalysisStatus: awstypes.VoiceAnalyticsConfigurationStatus(rawConfiguration["voice_tone_analysis_status"].(string)),
@@ -872,11 +870,11 @@ func expandElement(inputElement interface{}) (awstypes.MediaInsightsPipelineConf
 	return element, nil
 }
 
-func expandRealTimeAlertConfiguration(inputConfiguration map[string]interface{}) (*awstypes.RealTimeAlertConfiguration, error) {
+func expandRealTimeAlertConfiguration(inputConfiguration map[string]any) (*awstypes.RealTimeAlertConfiguration, error) {
 	apiConfiguration := &awstypes.RealTimeAlertConfiguration{
 		Disabled: inputConfiguration["disabled"].(bool),
 	}
-	if inputRules, ok := inputConfiguration["rules"].([]interface{}); ok && len(inputRules) > 0 {
+	if inputRules, ok := inputConfiguration["rules"].([]any); ok && len(inputRules) > 0 {
 		rules := make([]awstypes.RealTimeAlertRule, 0, len(inputRules))
 		for _, inputRule := range inputRules {
 			rule, err := expandRealTimeAlertRule(inputRule)
@@ -890,8 +888,8 @@ func expandRealTimeAlertConfiguration(inputConfiguration map[string]interface{})
 	return apiConfiguration, nil
 }
 
-func expandRealTimeAlertRule(inputRule interface{}) (awstypes.RealTimeAlertRule, error) {
-	inputRuleRaw, ok := inputRule.(map[string]interface{})
+func expandRealTimeAlertRule(inputRule any) (awstypes.RealTimeAlertRule, error) {
+	inputRuleRaw, ok := inputRule.(map[string]any)
 	if !ok {
 		return awstypes.RealTimeAlertRule{}, nil
 	}
@@ -902,26 +900,26 @@ func expandRealTimeAlertRule(inputRule interface{}) (awstypes.RealTimeAlertRule,
 
 	switch {
 	case ruleType == awstypes.RealTimeAlertRuleTypeIssueDetection:
-		var configuration []interface{}
-		if configuration, ok = inputRuleRaw["issue_detection_configuration"].([]interface{}); !ok || len(configuration) != 1 {
+		var configuration []any
+		if configuration, ok = inputRuleRaw["issue_detection_configuration"].([]any); !ok || len(configuration) != 1 {
 			return awstypes.RealTimeAlertRule{}, errConvertingRuleConfiguration
 		}
 
-		rawConfiguration := configuration[0].(map[string]interface{})
+		rawConfiguration := configuration[0].(map[string]any)
 		apiConfiguration := &awstypes.IssueDetectionConfiguration{
 			RuleName: aws.String(rawConfiguration["rule_name"].(string)),
 		}
 
 		apiRule.IssueDetectionConfiguration = apiConfiguration
 	case ruleType == awstypes.RealTimeAlertRuleTypeKeywordMatch:
-		var configuration []interface{}
-		if configuration, ok = inputRuleRaw["keyword_match_configuration"].([]interface{}); !ok || len(configuration) != 1 {
+		var configuration []any
+		if configuration, ok = inputRuleRaw["keyword_match_configuration"].([]any); !ok || len(configuration) != 1 {
 			return awstypes.RealTimeAlertRule{}, errConvertingRuleConfiguration
 		}
 
-		rawConfiguration := configuration[0].(map[string]interface{})
+		rawConfiguration := configuration[0].(map[string]any)
 		apiConfiguration := &awstypes.KeywordMatchConfiguration{
-			Keywords: flex.ExpandStringValueList((rawConfiguration["keywords"].([]interface{}))),
+			Keywords: flex.ExpandStringValueList((rawConfiguration["keywords"].([]any))),
 			RuleName: aws.String(rawConfiguration["rule_name"].(string)),
 		}
 
@@ -931,12 +929,12 @@ func expandRealTimeAlertRule(inputRule interface{}) (awstypes.RealTimeAlertRule,
 
 		apiRule.KeywordMatchConfiguration = apiConfiguration
 	case ruleType == awstypes.RealTimeAlertRuleTypeSentiment:
-		var configuration []interface{}
-		if configuration, ok = inputRuleRaw["sentiment_configuration"].([]interface{}); !ok || len(configuration) != 1 {
+		var configuration []any
+		if configuration, ok = inputRuleRaw["sentiment_configuration"].([]any); !ok || len(configuration) != 1 {
 			return awstypes.RealTimeAlertRule{}, errConvertingRuleConfiguration
 		}
 
-		rawConfiguration := configuration[0].(map[string]interface{})
+		rawConfiguration := configuration[0].(map[string]any)
 		apiConfiguration := &awstypes.SentimentConfiguration{
 			RuleName:      aws.String(rawConfiguration["rule_name"].(string)),
 			SentimentType: awstypes.SentimentType(rawConfiguration["sentiment_type"].(string)),
@@ -948,11 +946,11 @@ func expandRealTimeAlertRule(inputRule interface{}) (awstypes.RealTimeAlertRule,
 	return apiRule, nil
 }
 
-func flattenElements(apiElements []awstypes.MediaInsightsPipelineConfigurationElement) []interface{} {
+func flattenElements(apiElements []awstypes.MediaInsightsPipelineConfigurationElement) []any {
 	if len(apiElements) == 0 {
 		return nil
 	}
-	var tfElements []interface{}
+	var tfElements []any
 	for _, apiElement := range apiElements {
 		if apiElement == (awstypes.MediaInsightsPipelineConfigurationElement{}) {
 			continue
@@ -962,14 +960,14 @@ func flattenElements(apiElements []awstypes.MediaInsightsPipelineConfigurationEl
 	return tfElements
 }
 
-func flattenElement(apiElement awstypes.MediaInsightsPipelineConfigurationElement) map[string]interface{} {
+func flattenElement(apiElement awstypes.MediaInsightsPipelineConfigurationElement) map[string]any {
 	if apiElement == (awstypes.MediaInsightsPipelineConfigurationElement{}) {
 		return nil
 	}
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 	tfMap[names.AttrType] = string(apiElement.Type)
 
-	configuration := map[string]interface{}{}
+	configuration := map[string]any{}
 
 	switch {
 	case apiElement.Type == awstypes.MediaInsightsPipelineConfigurationElementTypeAmazonTranscribeCallAnalyticsProcessor:
@@ -985,18 +983,18 @@ func flattenElement(apiElement awstypes.MediaInsightsPipelineConfigurationElemen
 		configuration["pii_entity_types"] = processorConfiguration.PiiEntityTypes
 
 		if processorConfiguration.PostCallAnalyticsSettings != nil {
-			postCallSettings := map[string]interface{}{}
+			postCallSettings := map[string]any{}
 			postCallSettings["content_redaction_output"] = processorConfiguration.PostCallAnalyticsSettings.ContentRedactionOutput
 			postCallSettings["data_access_role_arn"] = processorConfiguration.PostCallAnalyticsSettings.DataAccessRoleArn
 			postCallSettings["output_encryption_kms_key_id"] = processorConfiguration.PostCallAnalyticsSettings.OutputEncryptionKMSKeyId
 			postCallSettings["output_location"] = processorConfiguration.PostCallAnalyticsSettings.OutputLocation
-			configuration["post_call_analytics_settings"] = []interface{}{postCallSettings}
+			configuration["post_call_analytics_settings"] = []any{postCallSettings}
 		}
 
 		configuration["vocabulary_filter_method"] = processorConfiguration.VocabularyFilterMethod
 		configuration["vocabulary_filter_name"] = processorConfiguration.VocabularyFilterName
 		configuration["vocabulary_name"] = processorConfiguration.VocabularyName
-		tfMap["amazon_transcribe_call_analytics_processor_configuration"] = []interface{}{configuration}
+		tfMap["amazon_transcribe_call_analytics_processor_configuration"] = []any{configuration}
 	case apiElement.Type == awstypes.MediaInsightsPipelineConfigurationElementTypeAmazonTranscribeProcessor:
 		processorConfiguration := apiElement.AmazonTranscribeProcessorConfiguration
 		configuration["content_identification_type"] = processorConfiguration.ContentIdentificationType
@@ -1011,46 +1009,46 @@ func flattenElement(apiElement awstypes.MediaInsightsPipelineConfigurationElemen
 		configuration["vocabulary_filter_method"] = processorConfiguration.VocabularyFilterMethod
 		configuration["vocabulary_filter_name"] = processorConfiguration.VocabularyFilterName
 		configuration["vocabulary_name"] = processorConfiguration.VocabularyName
-		tfMap["amazon_transcribe_processor_configuration"] = []interface{}{configuration}
+		tfMap["amazon_transcribe_processor_configuration"] = []any{configuration}
 	case apiElement.Type == awstypes.MediaInsightsPipelineConfigurationElementTypeKinesisDataStreamSink:
 		processorConfiguration := apiElement.KinesisDataStreamSinkConfiguration
 		configuration["insights_target"] = processorConfiguration.InsightsTarget
-		tfMap["kinesis_data_stream_sink_configuration"] = []interface{}{configuration}
+		tfMap["kinesis_data_stream_sink_configuration"] = []any{configuration}
 	case apiElement.Type == awstypes.MediaInsightsPipelineConfigurationElementTypeLambdaFunctionSink:
 		processorConfiguration := apiElement.LambdaFunctionSinkConfiguration
 		configuration["insights_target"] = processorConfiguration.InsightsTarget
-		tfMap["lambda_function_sink_configuration"] = []interface{}{configuration}
+		tfMap["lambda_function_sink_configuration"] = []any{configuration}
 	case apiElement.Type == awstypes.MediaInsightsPipelineConfigurationElementTypeSnsTopicSink:
 		processorConfiguration := apiElement.SnsTopicSinkConfiguration
 		configuration["insights_target"] = processorConfiguration.InsightsTarget
-		tfMap["sns_topic_sink_configuration"] = []interface{}{configuration}
+		tfMap["sns_topic_sink_configuration"] = []any{configuration}
 	case apiElement.Type == awstypes.MediaInsightsPipelineConfigurationElementTypeSqsQueueSink:
 		processorConfiguration := apiElement.SqsQueueSinkConfiguration
 		configuration["insights_target"] = processorConfiguration.InsightsTarget
-		tfMap["sqs_queue_sink_configuration"] = []interface{}{configuration}
+		tfMap["sqs_queue_sink_configuration"] = []any{configuration}
 	case apiElement.Type == awstypes.MediaInsightsPipelineConfigurationElementTypeS3RecordingSink:
 		processorConfiguration := apiElement.S3RecordingSinkConfiguration
 		configuration[names.AttrDestination] = processorConfiguration.Destination
-		tfMap["s3_recording_sink_configuration"] = []interface{}{configuration}
+		tfMap["s3_recording_sink_configuration"] = []any{configuration}
 	case apiElement.Type == awstypes.MediaInsightsPipelineConfigurationElementTypeVoiceAnalyticsProcessor:
 		processorConfiguration := apiElement.VoiceAnalyticsProcessorConfiguration
 		configuration["speaker_search_status"] = processorConfiguration.SpeakerSearchStatus
 		configuration["voice_tone_analysis_status"] = processorConfiguration.VoiceToneAnalysisStatus
-		tfMap["voice_analytics_processor_configuration"] = []interface{}{configuration}
+		tfMap["voice_analytics_processor_configuration"] = []any{configuration}
 	}
 	return tfMap
 }
 
-func flattenRealTimeAlertConfiguration(apiConfiguration *awstypes.RealTimeAlertConfiguration) []interface{} {
+func flattenRealTimeAlertConfiguration(apiConfiguration *awstypes.RealTimeAlertConfiguration) []any {
 	if apiConfiguration == nil {
 		return nil
 	}
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 	tfMap["disabled"] = apiConfiguration.Disabled
 	if apiConfiguration.Rules == nil {
-		return []interface{}{}
+		return []any{}
 	}
-	var tfRules []interface{}
+	var tfRules []any
 
 	for _, apiRule := range apiConfiguration.Rules {
 		if apiRule == (awstypes.RealTimeAlertRule{}) {
@@ -1059,35 +1057,35 @@ func flattenRealTimeAlertConfiguration(apiConfiguration *awstypes.RealTimeAlertC
 		tfRules = append(tfRules, flattenRealTimeAlertRule(apiRule))
 	}
 	tfMap["rules"] = tfRules
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenRealTimeAlertRule(apiRule awstypes.RealTimeAlertRule) interface{} {
+func flattenRealTimeAlertRule(apiRule awstypes.RealTimeAlertRule) any {
 	if apiRule == (awstypes.RealTimeAlertRule{}) {
 		return nil
 	}
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 	tfMap[names.AttrType] = string(apiRule.Type)
 
-	configuration := map[string]interface{}{}
+	configuration := map[string]any{}
 
 	switch {
 	case apiRule.Type == awstypes.RealTimeAlertRuleTypeIssueDetection:
 		issueDetectionConfiguration := apiRule.IssueDetectionConfiguration
 		configuration["rule_name"] = issueDetectionConfiguration.RuleName
-		tfMap["issue_detection_configuration"] = []interface{}{configuration}
+		tfMap["issue_detection_configuration"] = []any{configuration}
 	case apiRule.Type == awstypes.RealTimeAlertRuleTypeKeywordMatch:
 		keywordMatchConfiguration := apiRule.KeywordMatchConfiguration
 		configuration["rule_name"] = keywordMatchConfiguration.RuleName
 		configuration["keywords"] = keywordMatchConfiguration.Keywords
 		configuration["negate"] = keywordMatchConfiguration.Negate
-		tfMap["keyword_match_configuration"] = []interface{}{configuration}
+		tfMap["keyword_match_configuration"] = []any{configuration}
 	case apiRule.Type == awstypes.RealTimeAlertRuleTypeSentiment:
 		sentimentConfiguration := apiRule.SentimentConfiguration
 		configuration["rule_name"] = sentimentConfiguration.RuleName
 		configuration["sentiment_type"] = sentimentConfiguration.SentimentType
 		configuration["time_period"] = sentimentConfiguration.TimePeriod
-		tfMap["sentiment_configuration"] = []interface{}{configuration}
+		tfMap["sentiment_configuration"] = []any{configuration}
 	}
 	return tfMap
 }

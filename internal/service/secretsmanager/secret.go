@@ -88,7 +88,7 @@ func resourceSecret() *schema.Resource {
 				ValidateFunc:          validation.StringIsJSON,
 				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
 				DiffSuppressOnRefresh: true,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
@@ -106,10 +106,10 @@ func resourceSecret() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
-				Set: func(v interface{}) int {
+				Set: func(v any) int {
 					var buf bytes.Buffer
 
-					m := v.(map[string]interface{})
+					m := v.(map[string]any)
 
 					if v, ok := m[names.AttrKMSKeyID].(string); ok {
 						buf.WriteString(fmt.Sprintf("%s-", v))
@@ -150,12 +150,10 @@ func resourceSecret() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceSecretCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSecretCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
 
@@ -178,7 +176,7 @@ func resourceSecretCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	// Retry for secret recreation after deletion.
 	outputRaw, err := tfresource.RetryWhen(ctx, PropagationTimeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.CreateSecret(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -198,7 +196,7 @@ func resourceSecretCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.SetId(aws.ToString(outputRaw.(*secretsmanager.CreateSecretOutput).ARN))
 
-	_, err = tfresource.RetryWhenNotFound(ctx, PropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, PropagationTimeout, func() (any, error) {
 		return findSecretByID(ctx, conn, d.Id())
 	})
 
@@ -225,7 +223,7 @@ func resourceSecretCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceSecretRead(ctx, d, meta)...)
 }
 
-func resourceSecretRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSecretRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
 
@@ -290,7 +288,7 @@ func resourceSecretRead(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func resourceSecretUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSecretUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
 
@@ -354,7 +352,7 @@ func resourceSecretUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceSecretRead(ctx, d, meta)...)
 }
 
-func resourceSecretDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSecretDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
 
@@ -385,7 +383,7 @@ func resourceSecretDelete(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "deleting Secrets Manager Secret (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, PropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, PropagationTimeout, func() (any, error) {
 		return findSecretByID(ctx, conn, d.Id())
 	})
 
@@ -444,7 +442,7 @@ func removeSecretReplicas(ctx context.Context, conn *secretsmanager.Client, id s
 }
 
 func putSecretPolicy(ctx context.Context, conn *secretsmanager.Client, input *secretsmanager.PutResourcePolicyInput) (*secretsmanager.PutResourcePolicyOutput, error) {
-	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*types.MalformedPolicyDocumentException](ctx, PropagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*types.MalformedPolicyDocumentException](ctx, PropagationTimeout, func() (any, error) {
 		return conn.PutResourcePolicy(ctx, input)
 	}, "This resource policy contains an unsupported principal")
 
@@ -508,7 +506,7 @@ func findSecretByID(ctx context.Context, conn *secretsmanager.Client, id string)
 	return output, nil
 }
 
-func expandReplicaRegionType(tfMap map[string]interface{}) *types.ReplicaRegionType {
+func expandReplicaRegionType(tfMap map[string]any) *types.ReplicaRegionType {
 	if tfMap == nil {
 		return nil
 	}
@@ -526,7 +524,7 @@ func expandReplicaRegionType(tfMap map[string]interface{}) *types.ReplicaRegionT
 	return apiObject
 }
 
-func expandReplicaRegionTypes(tfList []interface{}) []types.ReplicaRegionType {
+func expandReplicaRegionTypes(tfList []any) []types.ReplicaRegionType {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -534,7 +532,7 @@ func expandReplicaRegionTypes(tfList []interface{}) []types.ReplicaRegionType {
 	var apiObjects []types.ReplicaRegionType
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -556,8 +554,8 @@ func expandReplicaRegionTypes(tfList []interface{}) []types.ReplicaRegionType {
 	return apiObjects
 }
 
-func flattenReplicationStatusType(apiObject types.ReplicationStatusType) map[string]interface{} {
-	tfMap := map[string]interface{}{
+func flattenReplicationStatusType(apiObject types.ReplicationStatusType) map[string]any {
+	tfMap := map[string]any{
 		names.AttrStatus: apiObject.Status,
 	}
 
@@ -580,12 +578,12 @@ func flattenReplicationStatusType(apiObject types.ReplicationStatusType) map[str
 	return tfMap
 }
 
-func flattenReplicationStatusTypes(apiObjects []types.ReplicationStatusType) []interface{} {
+func flattenReplicationStatusTypes(apiObjects []types.ReplicationStatusType) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenReplicationStatusType(apiObject))

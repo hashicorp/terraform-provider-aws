@@ -302,9 +302,10 @@ func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 			if rs.Type != "aws_dax_cluster" {
 				continue
 			}
-			res, err := conn.DescribeClusters(ctx, &dax.DescribeClustersInput{
+			input := dax.DescribeClustersInput{
 				ClusterNames: []string{rs.Primary.ID},
-			})
+			}
+			res, err := conn.DescribeClusters(ctx, &input)
 			if err != nil {
 				// Verify the error is what we want
 				if errs.IsA[*awstypes.ClusterNotFoundFault](err) {
@@ -332,9 +333,10 @@ func testAccCheckClusterExists(ctx context.Context, n string, v *awstypes.Cluste
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DAXClient(ctx)
-		resp, err := conn.DescribeClusters(ctx, &dax.DescribeClustersInput{
+		input := dax.DescribeClustersInput{
 			ClusterNames: []string{rs.Primary.ID},
-		})
+		}
+		resp, err := conn.DescribeClusters(ctx, &input)
 		if err != nil {
 			return fmt.Errorf("DAX error: %v", err)
 		}

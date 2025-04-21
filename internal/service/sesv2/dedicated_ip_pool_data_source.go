@@ -67,7 +67,7 @@ const (
 	dsNameDedicatedIPPool = "Dedicated IP Pool Data Source"
 )
 
-func dataSourceDedicatedIPPoolRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceDedicatedIPPoolRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
@@ -90,14 +90,14 @@ func dataSourceDedicatedIPPoolRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func flattenDedicatedIPs(apiObjects []types.DedicatedIp) []interface{} {
+func flattenDedicatedIPs(apiObjects []types.DedicatedIp) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var dedicatedIps []interface{}
+	var dedicatedIps []any
 	for _, apiObject := range apiObjects {
-		ip := map[string]interface{}{
+		ip := map[string]any{
 			"ip":                aws.ToString(apiObject.Ip),
 			"warmup_percentage": apiObject.WarmupPercentage,
 			"warmup_status":     string(apiObject.WarmupStatus),

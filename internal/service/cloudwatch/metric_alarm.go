@@ -290,8 +290,7 @@ func resourceMetricAlarm() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			verify.SetTagsDiff,
-			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+			func(_ context.Context, diff *schema.ResourceDiff, v any) error {
 				_, metricNameOk := diff.GetOk(names.AttrMetricName)
 				_, statisticOk := diff.GetOk("statistic")
 				_, extendedStatisticOk := diff.GetOk("extended_statistic")
@@ -302,10 +301,10 @@ func resourceMetricAlarm() *schema.Resource {
 
 				if v := diff.Get("metric_query"); v != nil {
 					for _, v := range v.(*schema.Set).List() {
-						tfMap := v.(map[string]interface{})
+						tfMap := v.(map[string]any)
 						if v, ok := tfMap[names.AttrExpression]; ok && v.(string) != "" {
 							if v := tfMap["metric"]; v != nil {
-								if len(v.([]interface{})) > 0 {
+								if len(v.([]any)) > 0 {
 									return errors.New("No metric_query may have both `expression` and a `metric` specified")
 								}
 							}
@@ -319,7 +318,7 @@ func resourceMetricAlarm() *schema.Resource {
 	}
 }
 
-func resourceMetricAlarmCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMetricAlarmCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudWatchClient(ctx)
 
@@ -352,7 +351,7 @@ func resourceMetricAlarmCreate(ctx context.Context, d *schema.ResourceData, meta
 		err = createTags(ctx, conn, aws.ToString(alarm.AlarmArn), tags)
 
 		// If default tags only, continue. Otherwise, error.
-		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]any)) == 0) && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
 			return append(diags, resourceMetricAlarmRead(ctx, d, meta)...)
 		}
 
@@ -364,7 +363,7 @@ func resourceMetricAlarmCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceMetricAlarmRead(ctx, d, meta)...)
 }
 
-func resourceMetricAlarmRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMetricAlarmRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudWatchClient(ctx)
 
@@ -416,7 +415,7 @@ func resourceMetricAlarmRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceMetricAlarmUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMetricAlarmUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudWatchClient(ctx)
 
@@ -433,14 +432,15 @@ func resourceMetricAlarmUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceMetricAlarmRead(ctx, d, meta)...)
 }
 
-func resourceMetricAlarmDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMetricAlarmDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudWatchClient(ctx)
 
 	log.Printf("[INFO] Deleting CloudWatch Metric Alarm: %s", d.Id())
-	_, err := conn.DeleteAlarms(ctx, &cloudwatch.DeleteAlarmsInput{
+	input := cloudwatch.DeleteAlarmsInput{
 		AlarmNames: []string{d.Id()},
-	})
+	}
+	_, err := conn.DeleteAlarms(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
@@ -497,8 +497,8 @@ func expandPutMetricAlarmInput(ctx context.Context, d *schema.ResourceData) *clo
 		apiObject.DatapointsToAlarm = aws.Int32(int32(v.(int)))
 	}
 
-	if v, ok := d.GetOk("dimensions"); ok && len(v.(map[string]interface{})) > 0 {
-		apiObject.Dimensions = expandMetricAlarmDimensions(v.(map[string]interface{}))
+	if v, ok := d.GetOk("dimensions"); ok && len(v.(map[string]any)) > 0 {
+		apiObject.Dimensions = expandMetricAlarmDimensions(v.(map[string]any))
 	}
 
 	if v, ok := d.GetOk("evaluate_low_sample_count_percentiles"); ok {
@@ -550,8 +550,8 @@ func expandPutMetricAlarmInput(ctx context.Context, d *schema.ResourceData) *clo
 	return apiObject
 }
 
-func flattenMetricAlarmDimensions(apiObjects []types.Dimension) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenMetricAlarmDimensions(apiObjects []types.Dimension) map[string]any {
+	tfMap := map[string]any{}
 
 	for _, apiObject := range apiObjects {
 		tfMap[aws.ToString(apiObject.Name)] = aws.ToString(apiObject.Value)
@@ -560,15 +560,15 @@ func flattenMetricAlarmDimensions(apiObjects []types.Dimension) map[string]inter
 	return tfMap
 }
 
-func flattenMetricAlarmMetrics(apiObjects []types.MetricDataQuery) []interface{} {
+func flattenMetricAlarmMetrics(apiObjects []types.MetricDataQuery) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			names.AttrAccountID:  aws.ToString(apiObject.AccountId),
 			names.AttrExpression: aws.ToString(apiObject.Expression),
 			names.AttrID:         aws.ToString(apiObject.Id),
@@ -577,7 +577,7 @@ func flattenMetricAlarmMetrics(apiObjects []types.MetricDataQuery) []interface{}
 		}
 
 		if v := apiObject.MetricStat; v != nil {
-			tfMap["metric"] = []interface{}{flattenMetricAlarmMetricsMetricStat(v)}
+			tfMap["metric"] = []any{flattenMetricAlarmMetricsMetricStat(v)}
 		}
 
 		if apiObject.Period != nil {
@@ -590,12 +590,12 @@ func flattenMetricAlarmMetrics(apiObjects []types.MetricDataQuery) []interface{}
 	return tfList
 }
 
-func flattenMetricAlarmMetricsMetricStat(apiObject *types.MetricStat) map[string]interface{} {
+func flattenMetricAlarmMetricsMetricStat(apiObject *types.MetricStat) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"period":       aws.ToInt32(apiObject.Period),
 		"stat":         aws.ToString(apiObject.Stat),
 		names.AttrUnit: apiObject.Unit,
@@ -610,11 +610,11 @@ func flattenMetricAlarmMetricsMetricStat(apiObject *types.MetricStat) map[string
 	return tfMap
 }
 
-func expandMetricAlarmMetrics(tfList []interface{}) []types.MetricDataQuery {
+func expandMetricAlarmMetrics(tfList []any) []types.MetricDataQuery {
 	var apiObjects []types.MetricDataQuery
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -644,8 +644,8 @@ func expandMetricAlarmMetrics(tfList []interface{}) []types.MetricDataQuery {
 			apiObject.ReturnData = aws.Bool(v.(bool))
 		}
 
-		if v, ok := tfMap["metric"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-			apiObject.MetricStat = expandMetricAlarmMetricsMetric(v[0].(map[string]interface{}))
+		if v, ok := tfMap["metric"].([]any); ok && len(v) > 0 && v[0] != nil {
+			apiObject.MetricStat = expandMetricAlarmMetricsMetric(v[0].(map[string]any))
 		}
 
 		if v, ok := tfMap["period"]; ok && v.(int) != 0 {
@@ -662,7 +662,7 @@ func expandMetricAlarmMetrics(tfList []interface{}) []types.MetricDataQuery {
 	return apiObjects
 }
 
-func expandMetricAlarmMetricsMetric(tfMap map[string]interface{}) *types.MetricStat {
+func expandMetricAlarmMetricsMetric(tfMap map[string]any) *types.MetricStat {
 	if tfMap == nil {
 		return nil
 	}
@@ -674,7 +674,7 @@ func expandMetricAlarmMetricsMetric(tfMap map[string]interface{}) *types.MetricS
 		Stat: aws.String(tfMap["stat"].(string)),
 	}
 
-	if v, ok := tfMap["dimensions"].(map[string]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["dimensions"].(map[string]any); ok && len(v) > 0 {
 		apiObject.Metric.Dimensions = expandMetricAlarmDimensions(v)
 	}
 
@@ -693,7 +693,7 @@ func expandMetricAlarmMetricsMetric(tfMap map[string]interface{}) *types.MetricS
 	return apiObject
 }
 
-func expandMetricAlarmDimensions(tfMap map[string]interface{}) []types.Dimension {
+func expandMetricAlarmDimensions(tfMap map[string]any) []types.Dimension {
 	if len(tfMap) == 0 {
 		return nil
 	}

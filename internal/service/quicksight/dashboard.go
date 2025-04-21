@@ -117,8 +117,6 @@ func resourceDashboard() *schema.Resource {
 				},
 			}
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -126,7 +124,7 @@ const (
 	dashboardLatestVersion int64 = -1
 )
 
-func resourceDashboardCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDashboardCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
@@ -143,24 +141,24 @@ func resourceDashboardCreate(ctx context.Context, d *schema.ResourceData, meta i
 		Tags:         getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("dashboard_publish_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.DashboardPublishOptions = quicksightschema.ExpandDashboardPublishOptions(d.Get("dashboard_publish_options").([]interface{}))
+	if v, ok := d.GetOk("dashboard_publish_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.DashboardPublishOptions = quicksightschema.ExpandDashboardPublishOptions(d.Get("dashboard_publish_options").([]any))
 	}
 
-	if v, ok := d.GetOk("definition"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Definition = quicksightschema.ExpandDashboardDefinition(d.Get("definition").([]interface{}))
+	if v, ok := d.GetOk("definition"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.Definition = quicksightschema.ExpandDashboardDefinition(d.Get("definition").([]any))
 	}
 
-	if v, ok := d.GetOk(names.AttrParameters); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Parameters = quicksightschema.ExpandParameters(d.Get(names.AttrParameters).([]interface{}))
+	if v, ok := d.GetOk(names.AttrParameters); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.Parameters = quicksightschema.ExpandParameters(d.Get(names.AttrParameters).([]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrPermissions); ok && v.(*schema.Set).Len() != 0 {
 		input.Permissions = quicksightschema.ExpandResourcePermissions(v.(*schema.Set).List())
 	}
 
-	if v, ok := d.GetOk("source_entity"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.SourceEntity = quicksightschema.ExpandDashboardSourceEntity(v.([]interface{}))
+	if v, ok := d.GetOk("source_entity"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.SourceEntity = quicksightschema.ExpandDashboardSourceEntity(v.([]any))
 	}
 
 	if v, ok := d.GetOk("version_description"); ok {
@@ -182,7 +180,7 @@ func resourceDashboardCreate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceDashboardRead(ctx, d, meta)...)
 }
 
-func resourceDashboardRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDashboardRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
@@ -242,7 +240,7 @@ func resourceDashboardRead(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func resourceDashboardUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDashboardUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
@@ -259,18 +257,18 @@ func resourceDashboardUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			VersionDescription: aws.String(d.Get("version_description").(string)),
 		}
 
-		if v, ok := d.GetOk("dashboard_publish_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			inputUD.DashboardPublishOptions = quicksightschema.ExpandDashboardPublishOptions(d.Get("dashboard_publish_options").([]interface{}))
+		if v, ok := d.GetOk("dashboard_publish_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			inputUD.DashboardPublishOptions = quicksightschema.ExpandDashboardPublishOptions(d.Get("dashboard_publish_options").([]any))
 		}
 
 		if v, ok := d.GetOk("source_entity"); ok {
-			inputUD.SourceEntity = quicksightschema.ExpandDashboardSourceEntity(v.([]interface{}))
+			inputUD.SourceEntity = quicksightschema.ExpandDashboardSourceEntity(v.([]any))
 		} else {
-			inputUD.Definition = quicksightschema.ExpandDashboardDefinition(d.Get("definition").([]interface{}))
+			inputUD.Definition = quicksightschema.ExpandDashboardDefinition(d.Get("definition").([]any))
 		}
 
-		if v, ok := d.GetOk(names.AttrParameters); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			inputUD.Parameters = quicksightschema.ExpandParameters(d.Get(names.AttrParameters).([]interface{}))
+		if v, ok := d.GetOk(names.AttrParameters); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			inputUD.Parameters = quicksightschema.ExpandParameters(d.Get(names.AttrParameters).([]any))
 		}
 
 		output, err := conn.UpdateDashboard(ctx, inputUD)
@@ -326,7 +324,7 @@ func resourceDashboardUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceDashboardRead(ctx, d, meta)...)
 }
 
-func resourceDashboardDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDashboardDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
@@ -470,7 +468,7 @@ func findDashboardPermissions(ctx context.Context, conn *quicksight.Client, inpu
 }
 
 func statusDashboard(ctx context.Context, conn *quicksight.Client, awsAccountID, dashboardID string, version int64) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findDashboardByThreePartKey(ctx, conn, awsAccountID, dashboardID, version)
 
 		if tfresource.NotFound(err) {

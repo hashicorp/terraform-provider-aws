@@ -305,6 +305,7 @@ Datadog, Dynatrace, Infor Nexus, Marketo, ServiceNow, Slack, Veeva, and Zendesk 
 
 * `instance_url` (Optional) - The location of the Salesforce resource.
 * `is_sandbox_environment` (Optional) - Indicates whether the connector profile applies to a sandbox or production environment.
+* `use_privatelink_for_metadata_and_authorization` (Optional) - Indicates whether Amazon AppFlow uses the private network to send metadata and authorization calls to Salesforce. Amazon AppFlow sends private calls through AWS PrivateLink. These calls travel through AWS infrastructure without being exposed to the public internet.
 
 #### SAPOData Connector Profile Properties
 
@@ -364,4 +365,4 @@ Using `terraform import`, import AppFlow Connector Profile using the connector p
 [1]: https://docs.aws.amazon.com/appflow/1.0/APIReference/Welcome.html
 [2]: https://docs.aws.amazon.com/appflow/1.0/APIReference/API_CreateConnectorProfile.html
 
-<!-- cache-key: cdktf-0.20.8 input-e7d0ceaa36169ec31d54db61161dc854a227bd68c2f7b1bd576ae5713ea98f3d -->
+<!-- cache-key: cdktf-0.20.8 input-d3e3e2c908c8c3dd7075520c865ae5b60c091179d912f82c4c3fc91e7b4e5a5a -->

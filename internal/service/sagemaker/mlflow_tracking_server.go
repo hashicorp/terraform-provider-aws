@@ -85,12 +85,10 @@ func resourceMlflowTrackingServer() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceMlflowTrackingServerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMlflowTrackingServerCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -114,19 +112,19 @@ func resourceMlflowTrackingServerCreate(ctx context.Context, d *schema.ResourceD
 
 	_, err := conn.CreateMlflowTrackingServer(ctx, input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker Mlflow Tracking Server %s: %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Mlflow Tracking Server %s: %s", name, err)
 	}
 
 	d.SetId(name)
 
 	if _, err := waitMlflowTrackingServerCreated(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Mlflow Tracking Server (%s) to delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Mlflow Tracking Server (%s) to delete: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceMlflowTrackingServerRead(ctx, d, meta)...)
 }
 
-func resourceMlflowTrackingServerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMlflowTrackingServerRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -134,12 +132,12 @@ func resourceMlflowTrackingServerRead(ctx context.Context, d *schema.ResourceDat
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		d.SetId("")
-		log.Printf("[WARN] Unable to find SageMaker Mlflow Tracking Server (%s); removing from state", d.Id())
+		log.Printf("[WARN] Unable to find SageMaker AI Mlflow Tracking Server (%s); removing from state", d.Id())
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SageMaker Mlflow Tracking Server (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI Mlflow Tracking Server (%s): %s", d.Id(), err)
 	}
 
 	d.Set("tracking_server_name", output.TrackingServerName)
@@ -155,7 +153,7 @@ func resourceMlflowTrackingServerRead(ctx context.Context, d *schema.ResourceDat
 	return diags
 }
 
-func resourceMlflowTrackingServerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMlflowTrackingServerUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -188,21 +186,21 @@ func resourceMlflowTrackingServerUpdate(ctx context.Context, d *schema.ResourceD
 			}
 		}
 
-		log.Printf("[DEBUG] SageMaker Mlflow Tracking Server update config: %#v", *input)
+		log.Printf("[DEBUG] SageMaker AI Mlflow Tracking Server update config: %#v", *input)
 		_, err := conn.UpdateMlflowTrackingServer(ctx, input)
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating SageMaker Mlflow Tracking Server: %s", err)
+			return sdkdiag.AppendErrorf(diags, "updating SageMaker AI Mlflow Tracking Server: %s", err)
 		}
 
 		if _, err := waitMlflowTrackingServerUpdated(ctx, conn, d.Id()); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Mlflow Tracking Server (%s) to update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Mlflow Tracking Server (%s) to update: %s", d.Id(), err)
 		}
 	}
 
 	return append(diags, resourceMlflowTrackingServerRead(ctx, d, meta)...)
 }
 
-func resourceMlflowTrackingServerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMlflowTrackingServerDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -214,11 +212,11 @@ func resourceMlflowTrackingServerDelete(ctx context.Context, d *schema.ResourceD
 		if errs.IsA[*awstypes.ResourceNotFound](err) {
 			return diags
 		}
-		return sdkdiag.AppendErrorf(diags, "deleting SageMaker Mlflow Tracking Server (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SageMaker AI Mlflow Tracking Server (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitMlflowTrackingServerDeleted(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Mlflow Tracking Server (%s) to delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Mlflow Tracking Server (%s) to delete: %s", d.Id(), err)
 	}
 
 	return diags

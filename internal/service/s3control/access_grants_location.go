@@ -42,10 +42,6 @@ type accessGrantsLocationResource struct {
 	framework.WithImportByID
 }
 
-func (r *accessGrantsLocationResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_s3control_access_grants_location"
-}
-
 func (r *accessGrantsLocationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -110,7 +106,7 @@ func (r *accessGrantsLocationResource) Create(ctx context.Context, request resou
 
 	input.Tags = getTagsIn(ctx)
 
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, s3PropagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, s3PropagationTimeout, func() (any, error) {
 		return conn.CreateAccessGrantsLocation(ctx, input)
 	}, errCodeInvalidIAMRole)
 
@@ -180,7 +176,7 @@ func (r *accessGrantsLocationResource) Read(ctx context.Context, request resourc
 		return
 	}
 
-	setTagsOut(ctx, Tags(tags))
+	setTagsOut(ctx, svcTags(tags))
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -209,7 +205,7 @@ func (r *accessGrantsLocationResource) Update(ctx context.Context, request resou
 			return
 		}
 
-		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, s3PropagationTimeout, func() (interface{}, error) {
+		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, s3PropagationTimeout, func() (any, error) {
 			return conn.UpdateAccessGrantsLocation(ctx, input)
 		}, errCodeInvalidIAMRole)
 
@@ -248,7 +244,7 @@ func (r *accessGrantsLocationResource) Delete(ctx context.Context, request resou
 	}
 
 	// "AccessGrantsLocationNotEmptyError: Please delete access grants before deleting access grants location".
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, s3PropagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, s3PropagationTimeout, func() (any, error) {
 		return conn.DeleteAccessGrantsLocation(ctx, input)
 	}, errCodeAccessGrantsLocationNotEmptyError)
 
@@ -261,10 +257,6 @@ func (r *accessGrantsLocationResource) Delete(ctx context.Context, request resou
 
 		return
 	}
-}
-
-func (r *accessGrantsLocationResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func findAccessGrantsLocationByTwoPartKey(ctx context.Context, conn *s3control.Client, accountID, locationID string) (*s3control.GetAccessGrantsLocationOutput, error) {

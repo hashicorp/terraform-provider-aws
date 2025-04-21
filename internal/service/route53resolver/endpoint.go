@@ -27,7 +27,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -129,12 +128,10 @@ func resourceEndpoint() *schema.Resource {
 			Update: schema.DefaultTimeout(10 * time.Minute),
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverClient(ctx)
 
@@ -173,7 +170,7 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceEndpointRead(ctx, d, meta)...)
 }
 
-func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverClient(ctx)
 
@@ -210,7 +207,7 @@ func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverClient(ctx)
 
@@ -288,7 +285,7 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceEndpointRead(ctx, d, meta)...)
 }
 
-func resourceEndpointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEndpointDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverClient(ctx)
 
@@ -358,7 +355,7 @@ func findResolverEndpointIPAddressesByID(ctx context.Context, conn *route53resol
 }
 
 func statusEndpoint(ctx context.Context, conn *route53resolver.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findResolverEndpointByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
@@ -436,17 +433,17 @@ func waitEndpointDeleted(ctx context.Context, conn *route53resolver.Client, id s
 	return nil, err
 }
 
-func endpointHashIPAddress(v interface{}) int {
+func endpointHashIPAddress(v any) int {
 	var buf bytes.Buffer
-	m := v.(map[string]interface{})
+	m := v.(map[string]any)
 	buf.WriteString(fmt.Sprintf("%s-%s-", m[names.AttrSubnetID].(string), m["ip"].(string)))
 	return create.StringHashcode(buf.String())
 }
 
-func expandEndpointIPAddressUpdate(vIpAddress interface{}) *awstypes.IpAddressUpdate {
+func expandEndpointIPAddressUpdate(vIpAddress any) *awstypes.IpAddressUpdate {
 	ipAddressUpdate := &awstypes.IpAddressUpdate{}
 
-	mIpAddress := vIpAddress.(map[string]interface{})
+	mIpAddress := vIpAddress.(map[string]any)
 
 	if vSubnetId, ok := mIpAddress[names.AttrSubnetID].(string); ok && vSubnetId != "" {
 		ipAddressUpdate.SubnetId = aws.String(vSubnetId)
@@ -470,7 +467,7 @@ func expandEndpointIPAddresses(vIpAddresses *schema.Set) []awstypes.IpAddressReq
 	for _, vIpAddress := range vIpAddresses.List() {
 		ipAddressRequest := awstypes.IpAddressRequest{}
 
-		mIpAddress := vIpAddress.(map[string]interface{})
+		mIpAddress := vIpAddress.(map[string]any)
 
 		if vSubnetId, ok := mIpAddress[names.AttrSubnetID].(string); ok && vSubnetId != "" {
 			ipAddressRequest.SubnetId = aws.String(vSubnetId)
@@ -488,15 +485,15 @@ func expandEndpointIPAddresses(vIpAddresses *schema.Set) []awstypes.IpAddressReq
 	return ipAddressRequests
 }
 
-func flattenEndpointIPAddresses(ipAddresses []awstypes.IpAddressResponse) []interface{} {
+func flattenEndpointIPAddresses(ipAddresses []awstypes.IpAddressResponse) []any {
 	if ipAddresses == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	vIpAddresses := []interface{}{}
+	vIpAddresses := []any{}
 
 	for _, ipAddress := range ipAddresses {
-		mIpAddress := map[string]interface{}{
+		mIpAddress := map[string]any{
 			names.AttrSubnetID: aws.ToString(ipAddress.SubnetId),
 			"ipv6":             aws.ToString(ipAddress.Ipv6),
 			"ip":               aws.ToString(ipAddress.Ip),

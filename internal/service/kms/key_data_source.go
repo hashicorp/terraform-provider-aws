@@ -165,7 +165,7 @@ func dataSourceKey() *schema.Resource {
 	}
 }
 
-func dataSourceKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceKeyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
@@ -174,8 +174,8 @@ func dataSourceKeyRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		KeyId: aws.String(keyID),
 	}
 
-	if v, ok := d.GetOk("grant_tokens"); ok && len(v.([]interface{})) > 0 {
-		input.GrantTokens = flex.ExpandStringValueList(v.([]interface{}))
+	if v, ok := d.GetOk("grant_tokens"); ok && len(v.([]any)) > 0 {
+		input.GrantTokens = flex.ExpandStringValueList(v.([]any))
 	}
 
 	output, err := findKey(ctx, conn, input)
@@ -203,7 +203,7 @@ func dataSourceKeyRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("key_usage", output.KeyUsage)
 	d.Set("multi_region", output.MultiRegion)
 	if output.MultiRegionConfiguration != nil {
-		if err := d.Set("multi_region_configuration", []interface{}{flattenMultiRegionConfiguration(output.MultiRegionConfiguration)}); err != nil {
+		if err := d.Set("multi_region_configuration", []any{flattenMultiRegionConfiguration(output.MultiRegionConfiguration)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting multi_region_configuration: %s", err)
 		}
 	} else {
@@ -215,7 +215,7 @@ func dataSourceKeyRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		d.Set("valid_to", aws.ToTime(output.ValidTo).Format(time.RFC3339))
 	}
 	if output.XksKeyConfiguration != nil {
-		if err := d.Set("xks_key_configuration", []interface{}{flattenXksKeyConfigurationType(output.XksKeyConfiguration)}); err != nil {
+		if err := d.Set("xks_key_configuration", []any{flattenXksKeyConfigurationType(output.XksKeyConfiguration)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting xks_key_configuration: %s", err)
 		}
 	} else {
@@ -225,17 +225,17 @@ func dataSourceKeyRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	return diags
 }
 
-func flattenMultiRegionConfiguration(apiObject *awstypes.MultiRegionConfiguration) map[string]interface{} {
+func flattenMultiRegionConfiguration(apiObject *awstypes.MultiRegionConfiguration) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"multi_region_key_type": apiObject.MultiRegionKeyType,
 	}
 
 	if v := apiObject.PrimaryKey; v != nil {
-		tfMap["primary_key"] = []interface{}{flattenMultiRegionKey(v)}
+		tfMap["primary_key"] = []any{flattenMultiRegionKey(v)}
 	}
 
 	if v := apiObject.ReplicaKeys; v != nil {
@@ -245,12 +245,12 @@ func flattenMultiRegionConfiguration(apiObject *awstypes.MultiRegionConfiguratio
 	return tfMap
 }
 
-func flattenMultiRegionKey(apiObject *awstypes.MultiRegionKey) map[string]interface{} {
+func flattenMultiRegionKey(apiObject *awstypes.MultiRegionKey) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Arn; v != nil {
 		tfMap[names.AttrARN] = aws.ToString(v)
@@ -263,12 +263,12 @@ func flattenMultiRegionKey(apiObject *awstypes.MultiRegionKey) map[string]interf
 	return tfMap
 }
 
-func flattenMultiRegionKeys(apiObjects []awstypes.MultiRegionKey) []interface{} {
+func flattenMultiRegionKeys(apiObjects []awstypes.MultiRegionKey) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenMultiRegionKey(&apiObject))
@@ -277,12 +277,12 @@ func flattenMultiRegionKeys(apiObjects []awstypes.MultiRegionKey) []interface{} 
 	return tfList
 }
 
-func flattenXksKeyConfigurationType(apiObject *awstypes.XksKeyConfigurationType) map[string]interface{} {
+func flattenXksKeyConfigurationType(apiObject *awstypes.XksKeyConfigurationType) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Id; v != nil {
 		tfMap[names.AttrID] = aws.ToString(v)

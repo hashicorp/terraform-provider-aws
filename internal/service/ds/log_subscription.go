@@ -46,7 +46,7 @@ func resourceLogSubscription() *schema.Resource {
 	}
 }
 
-func resourceLogSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLogSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DSClient(ctx)
 
@@ -67,7 +67,7 @@ func resourceLogSubscriptionCreate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceLogSubscriptionRead(ctx, d, meta)...)
 }
 
-func resourceLogSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLogSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DSClient(ctx)
 
@@ -89,14 +89,15 @@ func resourceLogSubscriptionRead(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func resourceLogSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLogSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DSClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Directory Service Log Subscription: %s", d.Id())
-	_, err := conn.DeleteLogSubscription(ctx, &directoryservice.DeleteLogSubscriptionInput{
+	input := directoryservice.DeleteLogSubscriptionInput{
 		DirectoryId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteLogSubscription(ctx, &input)
 
 	if errs.IsA[*awstypes.EntityDoesNotExistException](err) {
 		return diags

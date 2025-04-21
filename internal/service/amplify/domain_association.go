@@ -123,7 +123,7 @@ func resourceDomainAssociation() *schema.Resource {
 	}
 }
 
-func resourceDomainAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AmplifyClient(ctx)
 
@@ -137,8 +137,8 @@ func resourceDomainAssociationCreate(ctx context.Context, d *schema.ResourceData
 		SubDomainSettings:   expandSubDomainSettings(d.Get("sub_domain").(*schema.Set).List()),
 	}
 
-	if v, ok := d.GetOk("certificate_settings"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.CertificateSettings = expandCertificateSettings(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("certificate_settings"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.CertificateSettings = expandCertificateSettings(v.([]any)[0].(map[string]any))
 	}
 
 	_, err := conn.CreateDomainAssociation(ctx, &input)
@@ -162,7 +162,7 @@ func resourceDomainAssociationCreate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceDomainAssociationRead(ctx, d, meta)...)
 }
 
-func resourceDomainAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AmplifyClient(ctx)
 
@@ -198,7 +198,7 @@ func resourceDomainAssociationRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func resourceDomainAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AmplifyClient(ctx)
 
@@ -215,7 +215,7 @@ func resourceDomainAssociationUpdate(ctx context.Context, d *schema.ResourceData
 
 		if d.HasChange("certificate_settings") {
 			if v, ok := d.GetOk("certificate_settings"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-				input.CertificateSettings = expandCertificateSettings(d.Get("certificate_settings").([]interface{})[0].(map[string]interface{}))
+				input.CertificateSettings = expandCertificateSettings(d.Get("certificate_settings").([]any)[0].(map[string]any))
 			}
 		}
 
@@ -243,7 +243,7 @@ func resourceDomainAssociationUpdate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceDomainAssociationRead(ctx, d, meta)...)
 }
 
-func resourceDomainAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AmplifyClient(ctx)
 
@@ -297,7 +297,7 @@ func findDomainAssociationByTwoPartKey(ctx context.Context, conn *amplify.Client
 }
 
 func statusDomainAssociation(ctx context.Context, conn *amplify.Client, appID, domainName string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		domainAssociation, err := findDomainAssociationByTwoPartKey(ctx, conn, appID, domainName)
 
 		if tfresource.NotFound(err) {
@@ -327,6 +327,7 @@ func waitDomainAssociationCreated(ctx context.Context, conn *amplify.Client, app
 			types.DomainStatusPendingVerification,
 			types.DomainStatusPendingDeployment,
 			types.DomainStatusAvailable,
+			types.DomainStatusAwaitingAppCname,
 		),
 		Refresh: statusDomainAssociation(ctx, conn, appID, domainName),
 		Timeout: timeout,
@@ -354,6 +355,8 @@ func waitDomainAssociationVerified(ctx context.Context, conn *amplify.Client, ap
 			types.DomainStatusUpdating,
 			types.DomainStatusInProgress,
 			types.DomainStatusPendingVerification,
+			types.DomainStatusAwaitingAppCname,
+			types.DomainStatusImportingCustomCertificate,
 		),
 		Target: enum.Slice(
 			types.DomainStatusPendingDeployment,
@@ -426,7 +429,7 @@ func domainAssociationParseResourceID(id string) (string, string, error) {
 	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected APPID%[2]sDOMAINNAME", id, domainAssociationResourceIDSeparator)
 }
 
-func expandSubDomainSetting(tfMap map[string]interface{}) *types.SubDomainSetting {
+func expandSubDomainSetting(tfMap map[string]any) *types.SubDomainSetting {
 	if tfMap == nil {
 		return nil
 	}
@@ -445,7 +448,7 @@ func expandSubDomainSetting(tfMap map[string]interface{}) *types.SubDomainSettin
 	return apiObject
 }
 
-func expandSubDomainSettings(tfList []interface{}) []types.SubDomainSetting {
+func expandSubDomainSettings(tfList []any) []types.SubDomainSetting {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -453,7 +456,7 @@ func expandSubDomainSettings(tfList []interface{}) []types.SubDomainSetting {
 	var apiObjects []types.SubDomainSetting
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -471,7 +474,7 @@ func expandSubDomainSettings(tfList []interface{}) []types.SubDomainSetting {
 	return apiObjects
 }
 
-func expandCertificateSettings(tfMap map[string]interface{}) *types.CertificateSettings {
+func expandCertificateSettings(tfMap map[string]any) *types.CertificateSettings {
 	if tfMap == nil {
 		return nil
 	}
@@ -487,12 +490,12 @@ func expandCertificateSettings(tfMap map[string]interface{}) *types.CertificateS
 	return apiObject
 }
 
-func flattenCertificateSettings(apiObject *types.Certificate) []interface{} {
+func flattenCertificateSettings(apiObject *types.Certificate) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	tfMap[names.AttrType] = apiObject.Type
 
@@ -503,11 +506,11 @@ func flattenCertificateSettings(apiObject *types.Certificate) []interface{} {
 		tfMap["custom_certificate_arn"] = aws.ToString(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenSubDomain(apiObject types.SubDomain) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenSubDomain(apiObject types.SubDomain) map[string]any {
+	tfMap := map[string]any{}
 
 	if v := apiObject.DnsRecord; v != nil {
 		tfMap["dns_record"] = aws.ToString(v)
@@ -532,12 +535,12 @@ func flattenSubDomain(apiObject types.SubDomain) map[string]interface{} {
 	return tfMap
 }
 
-func flattenSubDomains(apiObjects []types.SubDomain) []interface{} {
+func flattenSubDomains(apiObjects []types.SubDomain) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenSubDomain(apiObject))

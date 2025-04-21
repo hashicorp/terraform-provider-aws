@@ -151,12 +151,10 @@ func resourceInfrastructureConfiguration() *schema.Resource {
 				Default:  false,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceInfrastructureConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInfrastructureConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
@@ -170,8 +168,8 @@ func resourceInfrastructureConfigurationCreate(ctx context.Context, d *schema.Re
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("instance_metadata_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.InstanceMetadataOptions = expandInstanceMetadataOptions(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("instance_metadata_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.InstanceMetadataOptions = expandInstanceMetadataOptions(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("instance_profile_name"); ok {
@@ -190,12 +188,12 @@ func resourceInfrastructureConfigurationCreate(ctx context.Context, d *schema.Re
 		input.Name = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("logging"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Logging = expandLogging(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("logging"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.Logging = expandLogging(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk(names.AttrResourceTags); ok && len(v.(map[string]interface{})) > 0 {
-		input.ResourceTags = Tags(tftags.New(ctx, v.(map[string]interface{})))
+	if v, ok := d.GetOk(names.AttrResourceTags); ok && len(v.(map[string]any)) > 0 {
+		input.ResourceTags = svcTags(tftags.New(ctx, v.(map[string]any)))
 	}
 
 	if v, ok := d.GetOk(names.AttrSecurityGroupIDs); ok && v.(*schema.Set).Len() > 0 {
@@ -211,7 +209,7 @@ func resourceInfrastructureConfigurationCreate(ctx context.Context, d *schema.Re
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.CreateInfrastructureConfiguration(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -232,7 +230,7 @@ func resourceInfrastructureConfigurationCreate(ctx context.Context, d *schema.Re
 	return append(diags, resourceInfrastructureConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceInfrastructureConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInfrastructureConfigurationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
@@ -253,7 +251,7 @@ func resourceInfrastructureConfigurationRead(ctx context.Context, d *schema.Reso
 	d.Set("date_updated", infrastructureConfiguration.DateUpdated)
 	d.Set(names.AttrDescription, infrastructureConfiguration.Description)
 	if infrastructureConfiguration.InstanceMetadataOptions != nil {
-		if err := d.Set("instance_metadata_options", []interface{}{flattenInstanceMetadataOptions(infrastructureConfiguration.InstanceMetadataOptions)}); err != nil {
+		if err := d.Set("instance_metadata_options", []any{flattenInstanceMetadataOptions(infrastructureConfiguration.InstanceMetadataOptions)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting instance_metadata_options: %s", err)
 		}
 	} else {
@@ -263,14 +261,14 @@ func resourceInfrastructureConfigurationRead(ctx context.Context, d *schema.Reso
 	d.Set("instance_types", infrastructureConfiguration.InstanceTypes)
 	d.Set("key_pair", infrastructureConfiguration.KeyPair)
 	if infrastructureConfiguration.Logging != nil {
-		if err := d.Set("logging", []interface{}{flattenLogging(infrastructureConfiguration.Logging)}); err != nil {
+		if err := d.Set("logging", []any{flattenLogging(infrastructureConfiguration.Logging)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting logging: %s", err)
 		}
 	} else {
 		d.Set("logging", nil)
 	}
 	d.Set(names.AttrName, infrastructureConfiguration.Name)
-	d.Set(names.AttrResourceTags, KeyValueTags(ctx, infrastructureConfiguration.ResourceTags).Map())
+	d.Set(names.AttrResourceTags, keyValueTags(ctx, infrastructureConfiguration.ResourceTags).Map())
 	d.Set(names.AttrSecurityGroupIDs, infrastructureConfiguration.SecurityGroupIds)
 	d.Set(names.AttrSNSTopicARN, infrastructureConfiguration.SnsTopicArn)
 	d.Set(names.AttrSubnetID, infrastructureConfiguration.SubnetId)
@@ -281,7 +279,7 @@ func resourceInfrastructureConfigurationRead(ctx context.Context, d *schema.Reso
 	return diags
 }
 
-func resourceInfrastructureConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInfrastructureConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
@@ -307,8 +305,8 @@ func resourceInfrastructureConfigurationUpdate(ctx context.Context, d *schema.Re
 			input.Description = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("instance_metadata_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.InstanceMetadataOptions = expandInstanceMetadataOptions(v.([]interface{})[0].(map[string]interface{}))
+		if v, ok := d.GetOk("instance_metadata_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.InstanceMetadataOptions = expandInstanceMetadataOptions(v.([]any)[0].(map[string]any))
 		}
 
 		if v, ok := d.GetOk("instance_profile_name"); ok {
@@ -323,12 +321,12 @@ func resourceInfrastructureConfigurationUpdate(ctx context.Context, d *schema.Re
 			input.KeyPair = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("logging"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.Logging = expandLogging(v.([]interface{})[0].(map[string]interface{}))
+		if v, ok := d.GetOk("logging"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.Logging = expandLogging(v.([]any)[0].(map[string]any))
 		}
 
-		if v, ok := d.GetOk(names.AttrResourceTags); ok && len(v.(map[string]interface{})) > 0 {
-			input.ResourceTags = Tags(tftags.New(ctx, v.(map[string]interface{})))
+		if v, ok := d.GetOk(names.AttrResourceTags); ok && len(v.(map[string]any)) > 0 {
+			input.ResourceTags = svcTags(tftags.New(ctx, v.(map[string]any)))
 		}
 
 		if v, ok := d.GetOk(names.AttrSecurityGroupIDs); ok && v.(*schema.Set).Len() > 0 {
@@ -344,7 +342,7 @@ func resourceInfrastructureConfigurationUpdate(ctx context.Context, d *schema.Re
 		}
 
 		_, err := tfresource.RetryWhen(ctx, propagationTimeout,
-			func() (interface{}, error) {
+			func() (any, error) {
 				return conn.UpdateInfrastructureConfiguration(ctx, input)
 			},
 			func(err error) (bool, error) {
@@ -364,7 +362,7 @@ func resourceInfrastructureConfigurationUpdate(ctx context.Context, d *schema.Re
 	return append(diags, resourceInfrastructureConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceInfrastructureConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInfrastructureConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
@@ -409,7 +407,7 @@ func findInfrastructureConfigurationByARN(ctx context.Context, conn *imagebuilde
 	return output.InfrastructureConfiguration, nil
 }
 
-func expandInstanceMetadataOptions(tfMap map[string]interface{}) *awstypes.InstanceMetadataOptions {
+func expandInstanceMetadataOptions(tfMap map[string]any) *awstypes.InstanceMetadataOptions {
 	if tfMap == nil {
 		return nil
 	}
@@ -427,21 +425,21 @@ func expandInstanceMetadataOptions(tfMap map[string]interface{}) *awstypes.Insta
 	return apiObject
 }
 
-func expandLogging(tfMap map[string]interface{}) *awstypes.Logging {
+func expandLogging(tfMap map[string]any) *awstypes.Logging {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.Logging{}
 
-	if v, ok := tfMap["s3_logs"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.S3Logs = expandS3Logs(v[0].(map[string]interface{}))
+	if v, ok := tfMap["s3_logs"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.S3Logs = expandS3Logs(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandS3Logs(tfMap map[string]interface{}) *awstypes.S3Logs {
+func expandS3Logs(tfMap map[string]any) *awstypes.S3Logs {
 	if tfMap == nil {
 		return nil
 	}
@@ -459,12 +457,12 @@ func expandS3Logs(tfMap map[string]interface{}) *awstypes.S3Logs {
 	return apiObject
 }
 
-func flattenInstanceMetadataOptions(apiObject *awstypes.InstanceMetadataOptions) map[string]interface{} {
+func flattenInstanceMetadataOptions(apiObject *awstypes.InstanceMetadataOptions) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.HttpPutResponseHopLimit; v != nil {
 		tfMap["http_put_response_hop_limit"] = aws.ToInt32(v)
@@ -477,26 +475,26 @@ func flattenInstanceMetadataOptions(apiObject *awstypes.InstanceMetadataOptions)
 	return tfMap
 }
 
-func flattenLogging(apiObject *awstypes.Logging) map[string]interface{} {
+func flattenLogging(apiObject *awstypes.Logging) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.S3Logs; v != nil {
-		tfMap["s3_logs"] = []interface{}{flattenS3Logs(v)}
+		tfMap["s3_logs"] = []any{flattenS3Logs(v)}
 	}
 
 	return tfMap
 }
 
-func flattenS3Logs(apiObject *awstypes.S3Logs) map[string]interface{} {
+func flattenS3Logs(apiObject *awstypes.S3Logs) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.S3BucketName; v != nil {
 		tfMap[names.AttrS3BucketName] = aws.ToString(v)

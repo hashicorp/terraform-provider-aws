@@ -19,7 +19,7 @@ jobs:
     steps:
       - if: github.event_name == 'workflow_run'
         name: Download Artifact from Release workflow
-        uses: dawidd6/action-download-artifact@20319c5641d495c8a52e688b7dc5fada6c3a9fbc # v8
+        uses: dawidd6/action-download-artifact@07ab29fd4a977ae4d2b275087cf67563dfdf0295 # v9
         with:
           workflow: release.yml
           name: release-tag
@@ -37,7 +37,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Tidy Jira
-        uses: breathingdust/github-jira-tidy@b503407f09af5564fd806924bdf4495510d848b6 # v0.10.0
+        uses: breathingdust/github-jira-tidy@a64b76479e0021bf2ea7b2066b7496e0d365f929 # v0.11.0
         with:
           jira_host: 'hashicorp.atlassian.net'
           jira_username: 'sdavis@hashicorp.com'

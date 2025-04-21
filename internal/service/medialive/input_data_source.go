@@ -33,10 +33,6 @@ type dataSourceInput struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *dataSourceInput) Metadata(_ context.Context, _ datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_medialive_input"
-}
-
 func (d *dataSourceInput) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

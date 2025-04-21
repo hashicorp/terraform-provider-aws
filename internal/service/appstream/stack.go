@@ -26,7 +26,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -36,7 +35,7 @@ const (
 
 // @SDKResource("aws_appstream_stack", name="Stack")
 // @Tags(identifierAttribute="arn")
-func ResourceStack() *schema.Resource {
+func resourceStack() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStackCreate,
 		ReadWithoutTimeout:   resourceStackRead,
@@ -116,7 +115,6 @@ func ResourceStack() *schema.Resource {
 					Type:         schema.TypeString,
 					ValidateFunc: validation.StringLenBetween(0, 128),
 				},
-				Set: schema.HashString,
 			},
 			"feedback_url": {
 				Type:         schema.TypeString,
@@ -206,8 +204,7 @@ func ResourceStack() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			verify.SetTagsDiff,
-			func(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+			func(_ context.Context, d *schema.ResourceDiff, meta any) error {
 				if d.Id() == "" {
 					return nil
 				}
@@ -238,7 +235,7 @@ func ResourceStack() *schema.Resource {
 
 				return nil
 			},
-			func(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+			func(_ context.Context, d *schema.ResourceDiff, meta any) error {
 				_, enabled := d.GetOk("application_settings.0.enabled")
 				v, sg := d.GetOk("application_settings.0.settings_group")
 				log.Print(v)
@@ -254,13 +251,12 @@ func ResourceStack() *schema.Resource {
 	}
 }
 
-func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).AppStreamClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	input := &appstream.CreateStackInput{
+	input := appstream.CreateStackInput{
 		Name: aws.String(name),
 		Tags: getTagsIn(ctx),
 	}
@@ -270,7 +266,7 @@ func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if v, ok := d.GetOk("application_settings"); ok {
-		input.ApplicationSettings = expandApplicationSettings(v.([]interface{}))
+		input.ApplicationSettings = expandApplicationSettings(v.([]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -298,19 +294,19 @@ func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if v, ok := d.GetOk("streaming_experience_settings"); ok {
-		input.StreamingExperienceSettings = expandStreamingExperienceSettings(v.([]interface{}))
+		input.StreamingExperienceSettings = expandStreamingExperienceSettings(v.([]any))
 	}
 
 	if v, ok := d.GetOk("user_settings"); ok {
 		input.UserSettings = expandUserSettings(v.(*schema.Set).List())
 	}
 
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.ResourceNotFoundException](ctx, stackOperationTimeout, func() (interface{}, error) {
-		return conn.CreateStack(ctx, input)
+	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.ResourceNotFoundException](ctx, stackOperationTimeout, func() (any, error) {
+		return conn.CreateStack(ctx, &input)
 	})
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Appstream Stack (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating AppStream Stack (%s): %s", name, err)
 	}
 
 	d.SetId(aws.ToString(outputRaw.(*appstream.CreateStackOutput).Stack.Name))
@@ -318,21 +314,20 @@ func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceStackRead(ctx, d, meta)...)
 }
 
-func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).AppStreamClient(ctx)
 
-	stack, err := FindStackByName(ctx, conn, d.Id())
+	stack, err := findStackByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] Appstream Stack (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] AppStream Stack (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Appstream Stack (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading AppStream Stack (%s): %s", d.Id(), err)
 	}
 
 	if err = d.Set("access_endpoints", flattenAccessEndpoints(stack.AccessEndpoints)); err != nil {
@@ -345,16 +340,14 @@ func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set(names.AttrCreatedTime, aws.ToTime(stack.CreatedTime).Format(time.RFC3339))
 	d.Set(names.AttrDescription, stack.Description)
 	d.Set(names.AttrDisplayName, stack.DisplayName)
-	if err = d.Set("embed_host_domains", flex.FlattenStringValueList(stack.EmbedHostDomains)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting embed_host_domains: %s", err)
-	}
+	d.Set("embed_host_domains", stack.EmbedHostDomains)
 	d.Set("feedback_url", stack.FeedbackURL)
 	d.Set(names.AttrName, stack.Name)
 	d.Set("redirect_url", stack.RedirectURL)
 	if err = d.Set("storage_connectors", flattenStorageConnectors(stack.StorageConnectors)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting storage_connectors: %s", err)
 	}
-	if err = d.Set("streaming_experience_settings", flattenStreaminExperienceSettings(stack.StreamingExperienceSettings)); err != nil {
+	if err = d.Set("streaming_experience_settings", flattenStreamingExperienceSettings(stack.StreamingExperienceSettings)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting streaming_experience_settings: %s", err)
 	}
 	if err = d.Set("user_settings", flattenUserSettings(stack.UserSettings)); err != nil {
@@ -364,13 +357,12 @@ func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	return diags
 }
 
-func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).AppStreamClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		input := &appstream.UpdateStackInput{
+		input := appstream.UpdateStackInput{
 			Name: aws.String(d.Id()),
 		}
 
@@ -379,7 +371,7 @@ func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 
 		if d.HasChange("application_settings") {
-			input.ApplicationSettings = expandApplicationSettings(d.Get("application_settings").([]interface{}))
+			input.ApplicationSettings = expandApplicationSettings(d.Get("application_settings").([]any))
 		}
 
 		if d.HasChange(names.AttrDescription) {
@@ -399,58 +391,82 @@ func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 
 		if d.HasChange("streaming_experience_settings") {
-			input.StreamingExperienceSettings = expandStreamingExperienceSettings(d.Get("streaming_experience_settings").([]interface{}))
+			input.StreamingExperienceSettings = expandStreamingExperienceSettings(d.Get("streaming_experience_settings").([]any))
 		}
 
 		if d.HasChange("user_settings") {
 			input.UserSettings = expandUserSettings(d.Get("user_settings").(*schema.Set).List())
 		}
 
-		_, err := conn.UpdateStack(ctx, input)
+		_, err := conn.UpdateStack(ctx, &input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Appstream Stack (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating AppStream Stack (%s): %s", d.Id(), err)
 		}
 	}
 
 	return append(diags, resourceStackRead(ctx, d, meta)...)
 }
 
-func resourceStackDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStackDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).AppStreamClient(ctx)
 
-	log.Printf("[DEBUG] Deleting AppStream Stack: (%s)", d.Id())
-	_, err := conn.DeleteStack(ctx, &appstream.DeleteStackInput{
+	log.Printf("[DEBUG] Deleting AppStream Stack: %s", d.Id())
+	input := appstream.DeleteStackInput{
 		Name: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteStack(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Appstream Stack (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting AppStream Stack (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, stackOperationTimeout, func() (interface{}, error) {
-		return FindStackByName(ctx, conn, d.Id())
+	_, err = tfresource.RetryUntilNotFound(ctx, stackOperationTimeout, func() (any, error) {
+		return findStackByID(ctx, conn, d.Id())
 	})
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for Appstream Stack (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for AppStream Stack (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func FindStackByName(ctx context.Context, conn *appstream.Client, name string) (*awstypes.Stack, error) {
-	input := &appstream.DescribeStacksInput{
-		Names: []string{name},
+func findStackByID(ctx context.Context, conn *appstream.Client, id string) (*awstypes.Stack, error) {
+	input := appstream.DescribeStacksInput{
+		Names: []string{id},
 	}
 
-	output, err := conn.DescribeStacks(ctx, input)
+	return findStack(ctx, conn, &input)
+}
+
+func findStack(ctx context.Context, conn *appstream.Client, input *appstream.DescribeStacksInput) (*awstypes.Stack, error) {
+	output, err := findStacks(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findStacks(ctx context.Context, conn *appstream.Client, input *appstream.DescribeStacksInput) ([]awstypes.Stack, error) {
+	var output []awstypes.Stack
+
+	err := describeStacksPages(ctx, conn, input, func(page *appstream.DescribeStacksOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		output = append(output, page.Stacks...)
+
+		return !lastPage
+	})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
@@ -463,18 +479,10 @@ func FindStackByName(ctx context.Context, conn *appstream.Client, name string) (
 		return nil, err
 	}
 
-	if output == nil || len(output.Stacks) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(output.Stacks); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return &output.Stacks[0], nil
+	return output, nil
 }
 
-func expandAccessEndpoint(tfMap map[string]interface{}) awstypes.AccessEndpoint {
+func expandAccessEndpoint(tfMap map[string]any) awstypes.AccessEndpoint {
 	if tfMap == nil {
 		return awstypes.AccessEndpoint{}
 	}
@@ -482,6 +490,7 @@ func expandAccessEndpoint(tfMap map[string]interface{}) awstypes.AccessEndpoint 
 	apiObject := awstypes.AccessEndpoint{
 		EndpointType: awstypes.AccessEndpointType(tfMap[names.AttrEndpointType].(string)),
 	}
+
 	if v, ok := tfMap["vpce_id"]; ok {
 		apiObject.VpceId = aws.String(v.(string))
 	}
@@ -489,7 +498,7 @@ func expandAccessEndpoint(tfMap map[string]interface{}) awstypes.AccessEndpoint 
 	return apiObject
 }
 
-func expandAccessEndpoints(tfList []interface{}) []awstypes.AccessEndpoint {
+func expandAccessEndpoints(tfList []any) []awstypes.AccessEndpoint {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -497,34 +506,32 @@ func expandAccessEndpoints(tfList []interface{}) []awstypes.AccessEndpoint {
 	var apiObjects []awstypes.AccessEndpoint
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
-
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
 
-		apiObject := expandAccessEndpoint(tfMap)
-
-		apiObjects = append(apiObjects, apiObject)
+		apiObjects = append(apiObjects, expandAccessEndpoint(tfMap))
 	}
 
 	return apiObjects
 }
 
-func flattenAccessEndpoint(apiObject awstypes.AccessEndpoint) map[string]interface{} {
-	tfMap := map[string]interface{}{}
-	tfMap[names.AttrEndpointType] = string(apiObject.EndpointType)
+func flattenAccessEndpoint(apiObject awstypes.AccessEndpoint) map[string]any {
+	tfMap := map[string]any{}
+
+	tfMap[names.AttrEndpointType] = apiObject.EndpointType
 	tfMap["vpce_id"] = aws.ToString(apiObject.VpceId)
 
 	return tfMap
 }
 
-func flattenAccessEndpoints(apiObjects []awstypes.AccessEndpoint) []map[string]interface{} {
+func flattenAccessEndpoints(apiObjects []awstypes.AccessEndpoint) []map[string]any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []map[string]interface{}
+	var tfList []map[string]any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenAccessEndpoint(apiObject))
@@ -533,18 +540,19 @@ func flattenAccessEndpoints(apiObjects []awstypes.AccessEndpoint) []map[string]i
 	return tfList
 }
 
-func expandApplicationSettings(tfList []interface{}) *awstypes.ApplicationSettings {
+func expandApplicationSettings(tfList []any) *awstypes.ApplicationSettings {
 	if len(tfList) == 0 {
 		return &awstypes.ApplicationSettings{
 			Enabled: aws.Bool(false),
 		}
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
 	apiObject := &awstypes.ApplicationSettings{
 		Enabled: aws.Bool(tfMap[names.AttrEnabled].(bool)),
 	}
+
 	if v, ok := tfMap["settings_group"]; ok {
 		apiObject.SettingsGroup = aws.String(v.(string))
 	}
@@ -552,35 +560,35 @@ func expandApplicationSettings(tfList []interface{}) *awstypes.ApplicationSettin
 	return apiObject
 }
 
-func flattenApplicationSetting(apiObject *awstypes.ApplicationSettingsResponse) map[string]interface{} {
+func flattenApplicationSetting(apiObject *awstypes.ApplicationSettingsResponse) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	return map[string]interface{}{
+	return map[string]any{
 		names.AttrEnabled: aws.ToBool(apiObject.Enabled),
 		"settings_group":  aws.ToString(apiObject.SettingsGroup),
 	}
 }
 
-func flattenApplicationSettings(apiObject *awstypes.ApplicationSettingsResponse) []interface{} {
+func flattenApplicationSettings(apiObject *awstypes.ApplicationSettingsResponse) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	tfList = append(tfList, flattenApplicationSetting(apiObject))
 
 	return tfList
 }
 
-func expandStreamingExperienceSettings(tfList []interface{}) *awstypes.StreamingExperienceSettings {
+func expandStreamingExperienceSettings(tfList []any) *awstypes.StreamingExperienceSettings {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
 	apiObject := &awstypes.StreamingExperienceSettings{
 		PreferredProtocol: awstypes.PreferredProtocol(tfMap["preferred_protocol"].(string)),
@@ -589,29 +597,29 @@ func expandStreamingExperienceSettings(tfList []interface{}) *awstypes.Streaming
 	return apiObject
 }
 
-func flattenStreaminExperienceSetting(apiObject *awstypes.StreamingExperienceSettings) map[string]interface{} {
+func flattenStreamingExperienceSetting(apiObject *awstypes.StreamingExperienceSettings) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	return map[string]interface{}{
-		"preferred_protocol": string(apiObject.PreferredProtocol),
+	return map[string]any{
+		"preferred_protocol": apiObject.PreferredProtocol,
 	}
 }
 
-func flattenStreaminExperienceSettings(apiObject *awstypes.StreamingExperienceSettings) []interface{} {
+func flattenStreamingExperienceSettings(apiObject *awstypes.StreamingExperienceSettings) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
-	tfList = append(tfList, flattenStreaminExperienceSetting(apiObject))
+	tfList = append(tfList, flattenStreamingExperienceSetting(apiObject))
 
 	return tfList
 }
 
-func expandStorageConnector(tfMap map[string]interface{}) awstypes.StorageConnector {
+func expandStorageConnector(tfMap map[string]any) awstypes.StorageConnector {
 	if tfMap == nil {
 		return awstypes.StorageConnector{}
 	}
@@ -619,9 +627,11 @@ func expandStorageConnector(tfMap map[string]interface{}) awstypes.StorageConnec
 	apiObject := awstypes.StorageConnector{
 		ConnectorType: awstypes.StorageConnectorType(tfMap["connector_type"].(string)),
 	}
-	if v, ok := tfMap["domains"]; ok && len(v.([]interface{})) > 0 {
-		apiObject.Domains = flex.ExpandStringValueList(v.([]interface{}))
+
+	if v, ok := tfMap["domains"]; ok && len(v.([]any)) > 0 {
+		apiObject.Domains = flex.ExpandStringValueList(v.([]any))
 	}
+
 	if v, ok := tfMap["resource_identifier"]; ok && v.(string) != "" {
 		apiObject.ResourceIdentifier = aws.String(v.(string))
 	}
@@ -629,7 +639,7 @@ func expandStorageConnector(tfMap map[string]interface{}) awstypes.StorageConnec
 	return apiObject
 }
 
-func expandStorageConnectors(tfList []interface{}) []awstypes.StorageConnector {
+func expandStorageConnectors(tfList []any) []awstypes.StorageConnector {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -637,34 +647,33 @@ func expandStorageConnectors(tfList []interface{}) []awstypes.StorageConnector {
 	var apiObjects []awstypes.StorageConnector
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
-
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
 
-		apiObject := expandStorageConnector(tfMap)
-		apiObjects = append(apiObjects, apiObject)
+		apiObjects = append(apiObjects, expandStorageConnector(tfMap))
 	}
 
 	return apiObjects
 }
 
-func flattenStorageConnector(apiObject awstypes.StorageConnector) map[string]interface{} {
-	tfMap := map[string]interface{}{}
-	tfMap["connector_type"] = string(apiObject.ConnectorType)
+func flattenStorageConnector(apiObject awstypes.StorageConnector) map[string]any {
+	tfMap := map[string]any{}
+
+	tfMap["connector_type"] = apiObject.ConnectorType
 	tfMap["domains"] = apiObject.Domains
 	tfMap["resource_identifier"] = aws.ToString(apiObject.ResourceIdentifier)
 
 	return tfMap
 }
 
-func flattenStorageConnectors(apiObjects []awstypes.StorageConnector) []map[string]interface{} {
+func flattenStorageConnectors(apiObjects []awstypes.StorageConnector) []map[string]any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []map[string]interface{}
+	var tfList []map[string]any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenStorageConnector(apiObject))
@@ -673,7 +682,7 @@ func flattenStorageConnectors(apiObjects []awstypes.StorageConnector) []map[stri
 	return tfList
 }
 
-func expandUserSetting(tfMap map[string]interface{}) awstypes.UserSetting {
+func expandUserSetting(tfMap map[string]any) awstypes.UserSetting {
 	if tfMap == nil {
 		return awstypes.UserSetting{}
 	}
@@ -686,7 +695,7 @@ func expandUserSetting(tfMap map[string]interface{}) awstypes.UserSetting {
 	return apiObject
 }
 
-func expandUserSettings(tfList []interface{}) []awstypes.UserSetting {
+func expandUserSettings(tfList []any) []awstypes.UserSetting {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -694,33 +703,32 @@ func expandUserSettings(tfList []interface{}) []awstypes.UserSetting {
 	var apiObjects []awstypes.UserSetting
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
-
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
 
-		apiObject := expandUserSetting(tfMap)
-		apiObjects = append(apiObjects, apiObject)
+		apiObjects = append(apiObjects, expandUserSetting(tfMap))
 	}
 
 	return apiObjects
 }
 
-func flattenUserSetting(apiObject awstypes.UserSetting) map[string]interface{} {
-	tfMap := map[string]interface{}{}
-	tfMap[names.AttrAction] = string(apiObject.Action)
-	tfMap["permission"] = string(apiObject.Permission)
+func flattenUserSetting(apiObject awstypes.UserSetting) map[string]any {
+	tfMap := map[string]any{}
+
+	tfMap[names.AttrAction] = apiObject.Action
+	tfMap["permission"] = apiObject.Permission
 
 	return tfMap
 }
 
-func flattenUserSettings(apiObjects []awstypes.UserSetting) []map[string]interface{} {
+func flattenUserSettings(apiObjects []awstypes.UserSetting) []map[string]any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []map[string]interface{}
+	var tfList []map[string]any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenUserSetting(apiObject))

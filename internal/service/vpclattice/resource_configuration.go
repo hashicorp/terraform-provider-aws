@@ -60,10 +60,6 @@ type resourceConfigurationResource struct {
 	framework.WithTimeouts
 }
 
-func (*resourceConfigurationResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_vpclattice_resource_configuration"
-}
-
 func (r *resourceConfigurationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	typeType := fwtypes.StringEnumType[awstypes.ResourceConfigurationType]()
 
@@ -376,7 +372,7 @@ func (r *resourceConfigurationResource) Delete(ctx context.Context, request reso
 	const (
 		timeout = 1 * time.Minute
 	)
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ValidationException](ctx, timeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ValidationException](ctx, timeout, func() (any, error) {
 		return conn.DeleteResourceConfiguration(ctx, &vpclattice.DeleteResourceConfigurationInput{
 			ResourceConfigurationIdentifier: fwflex.StringFromFramework(ctx, data.ID),
 		})
@@ -397,10 +393,6 @@ func (r *resourceConfigurationResource) Delete(ctx context.Context, request reso
 
 		return
 	}
-}
-
-func (r *resourceConfigurationResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func findResourceConfigurationByID(ctx context.Context, conn *vpclattice.Client, id string) (*vpclattice.GetResourceConfigurationOutput, error) {
@@ -429,7 +421,7 @@ func findResourceConfigurationByID(ctx context.Context, conn *vpclattice.Client,
 }
 
 func statusResourceConfiguration(ctx context.Context, conn *vpclattice.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findResourceConfigurationByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

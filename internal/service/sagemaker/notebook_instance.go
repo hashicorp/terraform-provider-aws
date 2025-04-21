@@ -43,16 +43,16 @@ func resourceNotebookInstance() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			customdiff.ForceNewIfChange(names.AttrVolumeSize, func(_ context.Context, old, new, meta interface{}) bool {
+			customdiff.ForceNewIfChange(names.AttrVolumeSize, func(_ context.Context, old, new, meta any) bool {
 				return new.(int) < old.(int)
 			}),
-			verify.SetTagsDiff,
 		),
 
 		Schema: map[string]*schema.Schema{
 			"accelerator_types": {
-				Type:     schema.TypeSet,
-				Optional: true,
+				Deprecated: "accelerator_types is deprecated. Use instance_type instead.",
+				Type:       schema.TypeSet,
+				Optional:   true,
 				Elem: &schema.Schema{
 					Type:             schema.TypeString,
 					ValidateDiagFunc: enum.Validate[awstypes.NotebookInstanceAcceleratorType](),
@@ -165,13 +165,13 @@ func resourceNotebookInstance() *schema.Resource {
 	}
 }
 
-func resourceNotebookInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNotebookInstanceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
 	input := &sagemaker.CreateNotebookInstanceInput{
-		InstanceMetadataServiceConfiguration: expandNotebookInstanceMetadataServiceConfiguration(d.Get("instance_metadata_service_configuration").([]interface{})),
+		InstanceMetadataServiceConfiguration: expandNotebookInstanceMetadataServiceConfiguration(d.Get("instance_metadata_service_configuration").([]any)),
 		InstanceType:                         awstypes.InstanceType(d.Get(names.AttrInstanceType).(string)),
 		NotebookInstanceName:                 aws.String(name),
 		RoleArn:                              aws.String(d.Get(names.AttrRoleARN).(string)),
@@ -219,36 +219,36 @@ func resourceNotebookInstanceCreate(ctx context.Context, d *schema.ResourceData,
 		input.VolumeSizeInGB = aws.Int32(int32(v.(int)))
 	}
 
-	log.Printf("[DEBUG] Creating SageMaker Notebook Instance: %#v", input)
+	log.Printf("[DEBUG] Creating SageMaker AI Notebook Instance: %#v", input)
 	_, err := conn.CreateNotebookInstance(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker Notebook Instance: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Notebook Instance: %s", err)
 	}
 
 	d.SetId(name)
 
 	if err := waitNotebookInstanceInService(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Notebook Instance (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Notebook Instance (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceNotebookInstanceRead(ctx, d, meta)...)
 }
 
-func resourceNotebookInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNotebookInstanceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
 	notebookInstance, err := findNotebookInstanceByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] SageMaker Notebook Instance (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] SageMaker AI Notebook Instance (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SageMaker Notebook Instance (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI Notebook Instance (%s): %s", d.Id(), err)
 	}
 
 	d.Set("accelerator_types", flex.FlattenStringyValueSet[awstypes.NotebookInstanceAcceleratorType](notebookInstance.AcceleratorTypes))
@@ -276,7 +276,7 @@ func resourceNotebookInstanceRead(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func resourceNotebookInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNotebookInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -310,7 +310,7 @@ func resourceNotebookInstanceUpdate(ctx context.Context, d *schema.ResourceData,
 		}
 
 		if d.HasChange("instance_metadata_service_configuration") {
-			input.InstanceMetadataServiceConfiguration = expandNotebookInstanceMetadataServiceConfiguration(d.Get("instance_metadata_service_configuration").([]interface{}))
+			input.InstanceMetadataServiceConfiguration = expandNotebookInstanceMetadataServiceConfiguration(d.Get("instance_metadata_service_configuration").([]any))
 		}
 
 		if d.HasChange(names.AttrInstanceType) {
@@ -341,29 +341,29 @@ func resourceNotebookInstanceUpdate(ctx context.Context, d *schema.ResourceData,
 		notebook, err := findNotebookInstanceByName(ctx, conn, d.Id())
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating SageMaker Notebook Instance (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating SageMaker AI Notebook Instance (%s): %s", d.Id(), err)
 		}
 
 		previousStatus := notebook.NotebookInstanceStatus
 
 		if previousStatus != awstypes.NotebookInstanceStatusStopped {
 			if err := stopNotebookInstance(ctx, conn, d.Id()); err != nil {
-				return sdkdiag.AppendErrorf(diags, "updating SageMaker Notebook Instance (%s): %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "updating SageMaker AI Notebook Instance (%s): %s", d.Id(), err)
 			}
 		}
 
 		if _, err := conn.UpdateNotebookInstance(ctx, input); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating SageMaker Notebook Instance (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating SageMaker AI Notebook Instance (%s): %s", d.Id(), err)
 		}
 
 		if err := waitNotebookInstanceStopped(ctx, conn, d.Id()); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Notebook Instance (%s) to stop: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Notebook Instance (%s) to stop: %s", d.Id(), err)
 		}
 
 		// Restart if needed
 		if previousStatus == awstypes.NotebookInstanceStatusInService {
 			if err := startNotebookInstance(ctx, conn, d.Id()); err != nil {
-				return sdkdiag.AppendErrorf(diags, "updating SageMaker Notebook Instance (%s): %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "updating SageMaker AI Notebook Instance (%s): %s", d.Id(), err)
 			}
 		}
 	}
@@ -371,7 +371,7 @@ func resourceNotebookInstanceUpdate(ctx context.Context, d *schema.ResourceData,
 	return append(diags, resourceNotebookInstanceRead(ctx, d, meta)...)
 }
 
-func resourceNotebookInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNotebookInstanceDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -382,27 +382,27 @@ func resourceNotebookInstanceDelete(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SageMaker Notebook Instance (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI Notebook Instance (%s): %s", d.Id(), err)
 	}
 
 	switch notebook.NotebookInstanceStatus {
 	case awstypes.NotebookInstanceStatusInService:
 		if err := stopNotebookInstance(ctx, conn, d.Id()); err != nil {
-			return sdkdiag.AppendErrorf(diags, "stopping SageMaker Notebook Instance (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "stopping SageMaker AI Notebook Instance (%s): %s", d.Id(), err)
 		}
 	}
 
-	log.Printf("[DEBUG] Deleting SageMaker Notebook Instance: %s", d.Id())
+	log.Printf("[DEBUG] Deleting SageMaker AI Notebook Instance: %s", d.Id())
 	_, err = conn.DeleteNotebookInstance(ctx, &sagemaker.DeleteNotebookInstanceInput{
 		NotebookInstanceName: aws.String(d.Id()),
 	})
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting SageMaker Notebook Instance (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SageMaker AI Notebook Instance (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitNotebookInstanceDeleted(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Notebook Instance (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Notebook Instance (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
@@ -499,12 +499,12 @@ func stopNotebookInstance(ctx context.Context, conn *sagemaker.Client, id string
 	return nil
 }
 
-func expandNotebookInstanceMetadataServiceConfiguration(l []interface{}) *awstypes.InstanceMetadataServiceConfiguration {
+func expandNotebookInstanceMetadataServiceConfiguration(l []any) *awstypes.InstanceMetadataServiceConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.InstanceMetadataServiceConfiguration{
 		MinimumInstanceMetadataServiceVersion: aws.String(m["minimum_instance_metadata_service_version"].(string)),
@@ -513,14 +513,14 @@ func expandNotebookInstanceMetadataServiceConfiguration(l []interface{}) *awstyp
 	return config
 }
 
-func flattenNotebookInstanceMetadataServiceConfiguration(config *awstypes.InstanceMetadataServiceConfiguration) []map[string]interface{} {
+func flattenNotebookInstanceMetadataServiceConfiguration(config *awstypes.InstanceMetadataServiceConfiguration) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"minimum_instance_metadata_service_version": aws.ToString(config.MinimumInstanceMetadataServiceVersion),
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }

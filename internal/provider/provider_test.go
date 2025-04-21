@@ -51,13 +51,13 @@ func TestExpandEndpoints(t *testing.T) { //nolint:paralleltest
 	var expectedDiags diag.Diagnostics
 
 	ctx := context.Background()
-	endpoints := make(map[string]interface{})
+	endpoints := make(map[string]any)
 	for _, serviceKey := range names.Aliases() {
 		endpoints[serviceKey] = ""
 	}
 	endpoints["sts"] = "https://sts.fake.test"
 
-	results, diags := expandEndpoints(ctx, []interface{}{endpoints})
+	results, diags := expandEndpoints(ctx, []any{endpoints})
 	if diff := cmp.Diff(diags, expectedDiags, cmp.Comparer(sdkdiag.Comparer)); diff != "" {
 		t.Errorf("unexpected diagnostics difference: %s", diff)
 	}
@@ -112,7 +112,7 @@ func TestEndpointMultipleKeys(t *testing.T) { //nolint:paralleltest
 		oldEnv := stashEnv()
 		defer popEnv(oldEnv)
 
-		endpoints := make(map[string]interface{})
+		endpoints := make(map[string]any)
 		for _, serviceKey := range names.Aliases() {
 			endpoints[serviceKey] = ""
 		}
@@ -120,7 +120,7 @@ func TestEndpointMultipleKeys(t *testing.T) { //nolint:paralleltest
 			endpoints[k] = v
 		}
 
-		results, diags := expandEndpoints(ctx, []interface{}{endpoints})
+		results, diags := expandEndpoints(ctx, []any{endpoints})
 		if diff := cmp.Diff(diags, testcase.expectedDiags, cmp.Comparer(sdkdiag.Comparer)); diff != "" {
 			t.Errorf("unexpected diagnostics difference: %s", diff)
 		}
@@ -204,10 +204,10 @@ func TestEndpointEnvVarPrecedence(t *testing.T) { //nolint:paralleltest
 			defer popEnv(oldEnv)
 
 			for k, v := range testcase.envvars {
-				os.Setenv(k, v)
+				os.Setenv(k, v) //nolint:usetesting // stashEnv & popEnv require os.Setenv
 			}
 
-			endpoints := make(map[string]interface{})
+			endpoints := make(map[string]any)
 			for _, serviceKey := range names.Aliases() {
 				endpoints[serviceKey] = ""
 			}
@@ -215,7 +215,7 @@ func TestEndpointEnvVarPrecedence(t *testing.T) { //nolint:paralleltest
 				endpoints[k] = v
 			}
 
-			results, diags := expandEndpoints(ctx, []interface{}{endpoints})
+			results, diags := expandEndpoints(ctx, []any{endpoints})
 			if diff := cmp.Diff(diags, testcase.expectedDiags, cmp.Comparer(sdkdiag.Comparer)); diff != "" {
 				t.Errorf("unexpected diagnostics difference: %s", diff)
 			}
@@ -234,7 +234,7 @@ func TestEndpointEnvVarPrecedence(t *testing.T) { //nolint:paralleltest
 func TestExpandDefaultTags(t *testing.T) { //nolint:paralleltest
 	ctx := context.Background()
 	testcases := map[string]struct {
-		tags                  map[string]interface{}
+		tags                  map[string]any
 		envvars               map[string]string
 		expectedDefaultConfig *tftags.DefaultConfig
 	}{
@@ -255,7 +255,7 @@ func TestExpandDefaultTags(t *testing.T) { //nolint:paralleltest
 			},
 		},
 		"config": {
-			tags: map[string]interface{}{
+			tags: map[string]any{
 				"Owner": "my-team",
 			},
 			envvars: map[string]string{},
@@ -266,7 +266,7 @@ func TestExpandDefaultTags(t *testing.T) { //nolint:paralleltest
 			},
 		},
 		"envvar and config": {
-			tags: map[string]interface{}{
+			tags: map[string]any{
 				"Application": "foobar",
 			},
 			envvars: map[string]string{
@@ -286,11 +286,12 @@ func TestExpandDefaultTags(t *testing.T) { //nolint:paralleltest
 		t.Run(name, func(t *testing.T) {
 			oldEnv := stashEnv()
 			defer popEnv(oldEnv)
+
 			for k, v := range testcase.envvars {
-				os.Setenv(k, v)
+				os.Setenv(k, v) //nolint:usetesting // stashEnv & popEnv require os.Setenv
 			}
 
-			results := expandDefaultTags(ctx, map[string]interface{}{
+			results := expandDefaultTags(ctx, map[string]any{
 				"tags": testcase.tags,
 			})
 
@@ -310,8 +311,8 @@ func TestExpandDefaultTags(t *testing.T) { //nolint:paralleltest
 func TestExpandIgnoreTags(t *testing.T) { //nolint:paralleltest
 	ctx := context.Background()
 	testcases := map[string]struct {
-		keys                 []interface{}
-		keyPrefixes          []interface{}
+		keys                 []any
+		keyPrefixes          []any
 		envvars              map[string]string
 		expectedIgnoreConfig *tftags.IgnoreConfig
 	}{
@@ -327,8 +328,8 @@ func TestExpandIgnoreTags(t *testing.T) { //nolint:paralleltest
 				tftags.IgnoreTagsKeyPrefixesEnvVar: "env2",
 			},
 			expectedIgnoreConfig: &tftags.IgnoreConfig{
-				Keys:        tftags.New(ctx, []interface{}{"env1"}),
-				KeyPrefixes: tftags.New(ctx, []interface{}{"env2"}),
+				Keys:        tftags.New(ctx, []any{"env1"}),
+				KeyPrefixes: tftags.New(ctx, []any{"env2"}),
 			},
 		},
 		"envvar multiple": {
@@ -337,8 +338,8 @@ func TestExpandIgnoreTags(t *testing.T) { //nolint:paralleltest
 				tftags.IgnoreTagsKeyPrefixesEnvVar: "env3,env4",
 			},
 			expectedIgnoreConfig: &tftags.IgnoreConfig{
-				Keys:        tftags.New(ctx, []interface{}{"env1", "env2"}),
-				KeyPrefixes: tftags.New(ctx, []interface{}{"env3", "env4"}),
+				Keys:        tftags.New(ctx, []any{"env1", "env2"}),
+				KeyPrefixes: tftags.New(ctx, []any{"env3", "env4"}),
 			},
 		},
 		"envvar keys": {
@@ -346,7 +347,7 @@ func TestExpandIgnoreTags(t *testing.T) { //nolint:paralleltest
 				tftags.IgnoreTagsKeysEnvVar: "env1,env1",
 			},
 			expectedIgnoreConfig: &tftags.IgnoreConfig{
-				Keys: tftags.New(ctx, []interface{}{"env1"}),
+				Keys: tftags.New(ctx, []any{"env1"}),
 			},
 		},
 		"envvar key_prefixes": {
@@ -354,46 +355,46 @@ func TestExpandIgnoreTags(t *testing.T) { //nolint:paralleltest
 				tftags.IgnoreTagsKeyPrefixesEnvVar: "env1,env1",
 			},
 			expectedIgnoreConfig: &tftags.IgnoreConfig{
-				KeyPrefixes: tftags.New(ctx, []interface{}{"env1"}),
+				KeyPrefixes: tftags.New(ctx, []any{"env1"}),
 			},
 		},
 		"config": {
-			keys:        []interface{}{"config1", "config2"},
-			keyPrefixes: []interface{}{"config3", "config4"},
+			keys:        []any{"config1", "config2"},
+			keyPrefixes: []any{"config3", "config4"},
 			envvars:     map[string]string{},
 			expectedIgnoreConfig: &tftags.IgnoreConfig{
-				Keys:        tftags.New(ctx, []interface{}{"config1", "config2"}),
-				KeyPrefixes: tftags.New(ctx, []interface{}{"config3", "config4"}),
+				Keys:        tftags.New(ctx, []any{"config1", "config2"}),
+				KeyPrefixes: tftags.New(ctx, []any{"config3", "config4"}),
 			},
 		},
 		"envvar and config": {
-			keys:        []interface{}{"config1", "config2"},
-			keyPrefixes: []interface{}{"config3", "config4"},
+			keys:        []any{"config1", "config2"},
+			keyPrefixes: []any{"config3", "config4"},
 			envvars: map[string]string{
 				tftags.IgnoreTagsKeysEnvVar:        "env1,env2",
 				tftags.IgnoreTagsKeyPrefixesEnvVar: "env3,env4",
 			},
 			expectedIgnoreConfig: &tftags.IgnoreConfig{
-				Keys:        tftags.New(ctx, []interface{}{"env1", "env2", "config1", "config2"}),
-				KeyPrefixes: tftags.New(ctx, []interface{}{"env3", "env4", "config3", "config4"}),
+				Keys:        tftags.New(ctx, []any{"env1", "env2", "config1", "config2"}),
+				KeyPrefixes: tftags.New(ctx, []any{"env3", "env4", "config3", "config4"}),
 			},
 		},
 		"envvar and config keys duplicates": {
-			keys: []interface{}{"example1", "example2"},
+			keys: []any{"example1", "example2"},
 			envvars: map[string]string{
 				tftags.IgnoreTagsKeysEnvVar: "example1,example3",
 			},
 			expectedIgnoreConfig: &tftags.IgnoreConfig{
-				Keys: tftags.New(ctx, []interface{}{"example1", "example2", "example3"}),
+				Keys: tftags.New(ctx, []any{"example1", "example2", "example3"}),
 			},
 		},
 		"envvar and config key_prefixes duplicates": {
-			keyPrefixes: []interface{}{"example1", "example2"},
+			keyPrefixes: []any{"example1", "example2"},
 			envvars: map[string]string{
 				tftags.IgnoreTagsKeyPrefixesEnvVar: "example1,example3",
 			},
 			expectedIgnoreConfig: &tftags.IgnoreConfig{
-				KeyPrefixes: tftags.New(ctx, []interface{}{"example1", "example2", "example3"}),
+				KeyPrefixes: tftags.New(ctx, []any{"example1", "example2", "example3"}),
 			},
 		},
 	}
@@ -402,11 +403,12 @@ func TestExpandIgnoreTags(t *testing.T) { //nolint:paralleltest
 		t.Run(name, func(t *testing.T) {
 			oldEnv := stashEnv()
 			defer popEnv(oldEnv)
+
 			for k, v := range testcase.envvars {
-				os.Setenv(k, v)
+				os.Setenv(k, v) //nolint:usetesting // stashEnv & popEnv require os.Setenv
 			}
 
-			results := expandIgnoreTags(ctx, map[string]interface{}{
+			results := expandIgnoreTags(ctx, map[string]any{
 				"keys":         schema.NewSet(schema.HashString, testcase.keys),
 				"key_prefixes": schema.NewSet(schema.HashString, testcase.keyPrefixes),
 			})

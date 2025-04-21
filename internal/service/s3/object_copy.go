@@ -40,11 +40,11 @@ func resourceObjectCopy() *schema.Resource {
 		UpdateWithoutTimeout: resourceObjectCopyUpdate,
 		DeleteWithoutTimeout: resourceObjectCopyDelete,
 
-		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
 			if ignoreProviderDefaultTags(ctx, d) {
 				return d.SetNew(names.AttrTagsAll, d.Get(names.AttrTags))
 			}
-			return verify.SetTagsDiff(ctx, d, meta)
+			return nil
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -85,6 +85,10 @@ func resourceObjectCopy() *schema.Resource {
 				Computed: true,
 			},
 			"checksum_crc32c": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"checksum_crc64nvme": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -358,12 +362,12 @@ func resourceObjectCopy() *schema.Resource {
 	}
 }
 
-func resourceObjectCopyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceObjectCopyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	return append(diags, resourceObjectCopyDoCopy(ctx, d, meta)...)
 }
 
-func resourceObjectCopyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceObjectCopyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
@@ -401,6 +405,7 @@ func resourceObjectCopyRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("cache_control", output.CacheControl)
 	d.Set("checksum_crc32", output.ChecksumCRC32)
 	d.Set("checksum_crc32c", output.ChecksumCRC32C)
+	d.Set("checksum_crc64nvme", output.ChecksumCRC64NVME)
 	d.Set("checksum_sha1", output.ChecksumSHA1)
 	d.Set("checksum_sha256", output.ChecksumSHA256)
 	d.Set("content_disposition", output.ContentDisposition)
@@ -431,7 +436,7 @@ func resourceObjectCopyRead(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourceObjectCopyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceObjectCopyUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// if any of these exist, let the API decide whether to copy
@@ -488,7 +493,7 @@ func resourceObjectCopyUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func resourceObjectCopyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceObjectCopyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
@@ -518,7 +523,7 @@ func resourceObjectCopyDelete(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func resourceObjectCopyDoCopy(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceObjectCopyDoCopy(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
@@ -630,7 +635,7 @@ func resourceObjectCopyDoCopy(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if v, ok := d.GetOk("metadata"); ok {
-		input.Metadata = flex.ExpandStringValueMap(v.(map[string]interface{}))
+		input.Metadata = flex.ExpandStringValueMap(v.(map[string]any))
 	}
 
 	if v, ok := d.GetOk("metadata_directive"); ok {
@@ -678,7 +683,7 @@ func resourceObjectCopyDoCopy(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
-	tags := tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))
+	tags := tftags.New(ctx, d.Get(names.AttrTags).(map[string]any))
 	if ignoreProviderDefaultTags(ctx, d) {
 		tags = tags.RemoveDefaultConfig(defaultTagsConfig)
 	} else {
@@ -719,7 +724,7 @@ type s3Grants struct {
 	WriteACP    *string
 }
 
-func expandObjectCopyGrant(tfMap map[string]interface{}) string {
+func expandObjectCopyGrant(tfMap map[string]any) string {
 	if tfMap == nil {
 		return ""
 	}
@@ -758,7 +763,7 @@ func expandObjectCopyGrant(tfMap map[string]interface{}) string {
 	return fmt.Sprintf("uri=%s", aws.ToString(apiObject.URI))
 }
 
-func expandObjectCopyGrants(tfList []interface{}) *s3Grants {
+func expandObjectCopyGrants(tfList []any) *s3Grants {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -769,7 +774,7 @@ func expandObjectCopyGrants(tfList []interface{}) *s3Grants {
 	grantWriteACP := make([]string, 0)
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -812,9 +817,9 @@ func expandObjectCopyGrants(tfList []interface{}) *s3Grants {
 	return apiObjects
 }
 
-func grantHash(v interface{}) int {
+func grantHash(v any) int {
 	var buf bytes.Buffer
-	m, ok := v.(map[string]interface{})
+	m, ok := v.(map[string]any)
 
 	if !ok {
 		return 0

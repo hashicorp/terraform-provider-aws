@@ -79,7 +79,7 @@ const (
 	userPoolUICustomizationResourceIDPartCount = 2
 )
 
-func resourceUserPoolUICustomizationPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserPoolUICustomizationPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 
@@ -115,7 +115,7 @@ func resourceUserPoolUICustomizationPut(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourceUserPoolUICustomizationRead(ctx, d, meta)...)
 }
 
-func resourceUserPoolUICustomizationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserPoolUICustomizationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 
@@ -148,7 +148,7 @@ func resourceUserPoolUICustomizationRead(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func resourceUserPoolUICustomizationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserPoolUICustomizationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 
@@ -159,10 +159,11 @@ func resourceUserPoolUICustomizationDelete(ctx context.Context, d *schema.Resour
 	userPoolID, clientID := parts[0], parts[1]
 
 	log.Printf("[DEBUG] Deleting Cognito User Pool UI Customization: %s", d.Id())
-	_, err = conn.SetUICustomization(ctx, &cognitoidentityprovider.SetUICustomizationInput{
+	input := cognitoidentityprovider.SetUICustomizationInput{
 		ClientId:   aws.String(clientID),
 		UserPoolId: aws.String(userPoolID),
-	})
+	}
+	_, err = conn.SetUICustomization(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

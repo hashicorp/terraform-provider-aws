@@ -40,7 +40,6 @@ func resourceVPCAttachment() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			verify.SetTagsDiff,
 			func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
 				if d.Id() == "" {
 					return nil
@@ -157,7 +156,7 @@ func resourceVPCAttachment() *schema.Resource {
 	}
 }
 
-func resourceVPCAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
@@ -170,8 +169,8 @@ func resourceVPCAttachmentCreate(ctx context.Context, d *schema.ResourceData, me
 		VpcArn:        aws.String(vpcARN),
 	}
 
-	if v, ok := d.GetOk("options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Options = expandVpcOptions(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.Options = expandVpcOptions(v.([]any)[0].(map[string]any))
 	}
 
 	output, err := conn.CreateVpcAttachment(ctx, input)
@@ -189,7 +188,7 @@ func resourceVPCAttachmentCreate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceVPCAttachmentRead(ctx, d, meta)...)
 }
 
-func resourceVPCAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCAttachmentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
@@ -213,7 +212,7 @@ func resourceVPCAttachmentRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("core_network_id", attachment.CoreNetworkId)
 	d.Set("edge_location", attachment.EdgeLocation)
 	if vpcAttachment.Options != nil {
-		if err := d.Set("options", []interface{}{flattenVpcOptions(vpcAttachment.Options)}); err != nil {
+		if err := d.Set("options", []any{flattenVpcOptions(vpcAttachment.Options)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting options: %s", err)
 		}
 	} else {
@@ -231,7 +230,7 @@ func resourceVPCAttachmentRead(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func resourceVPCAttachmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCAttachmentUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
@@ -241,8 +240,8 @@ func resourceVPCAttachmentUpdate(ctx context.Context, d *schema.ResourceData, me
 		}
 
 		if d.HasChange("options") {
-			if v, ok := d.GetOk("options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.Options = expandVpcOptions(v.([]interface{})[0].(map[string]interface{}))
+			if v, ok := d.GetOk("options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.Options = expandVpcOptions(v.([]any)[0].(map[string]any))
 			}
 		}
 
@@ -273,7 +272,7 @@ func resourceVPCAttachmentUpdate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceVPCAttachmentRead(ctx, d, meta)...)
 }
 
-func resourceVPCAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
@@ -311,7 +310,7 @@ func resourceVPCAttachmentDelete(ctx context.Context, d *schema.ResourceData, me
 	const (
 		timeout = 5 * time.Minute
 	)
-	_, err = tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ValidationException](ctx, timeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ValidationException](ctx, timeout, func() (any, error) {
 		return conn.DeleteAttachment(ctx, &networkmanager.DeleteAttachmentInput{
 			AttachmentId: aws.String(d.Id()),
 		})
@@ -358,7 +357,7 @@ func findVPCAttachmentByID(ctx context.Context, conn *networkmanager.Client, id 
 }
 
 func statusVPCAttachment(ctx context.Context, conn *networkmanager.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findVPCAttachmentByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
@@ -470,7 +469,7 @@ func waitVPCAttachmentUpdated(ctx context.Context, conn *networkmanager.Client, 
 	return nil, err
 }
 
-func expandVpcOptions(tfMap map[string]interface{}) *awstypes.VpcOptions { // nosemgrep:ci.caps5-in-func-name
+func expandVpcOptions(tfMap map[string]any) *awstypes.VpcOptions { // nosemgrep:ci.caps5-in-func-name
 	if tfMap == nil {
 		return nil
 	}
@@ -488,12 +487,12 @@ func expandVpcOptions(tfMap map[string]interface{}) *awstypes.VpcOptions { // no
 	return apiObject
 }
 
-func flattenVpcOptions(apiObject *awstypes.VpcOptions) map[string]interface{} { // nosemgrep:ci.caps5-in-func-name
+func flattenVpcOptions(apiObject *awstypes.VpcOptions) map[string]any { // nosemgrep:ci.caps5-in-func-name
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"appliance_mode_support": apiObject.ApplianceModeSupport,
 		"ipv6_support":           apiObject.Ipv6Support,
 	}

@@ -45,7 +45,7 @@ func resourceStandardsSubscription() *schema.Resource {
 	}
 }
 
-func resourceStandardsSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStandardsSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
@@ -71,7 +71,7 @@ func resourceStandardsSubscriptionCreate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceStandardsSubscriptionRead(ctx, d, meta)...)
 }
 
-func resourceStandardsSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStandardsSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
@@ -92,7 +92,7 @@ func resourceStandardsSubscriptionRead(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func resourceStandardsSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStandardsSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
@@ -168,7 +168,7 @@ func findStandardsSubscriptions(ctx context.Context, conn *securityhub.Client, i
 }
 
 func statusStandardsSubscriptionCreate(ctx context.Context, conn *securityhub.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findStandardsSubscriptionByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
@@ -184,7 +184,7 @@ func statusStandardsSubscriptionCreate(ctx context.Context, conn *securityhub.Cl
 }
 
 func statusStandardsSubscriptionDelete(ctx context.Context, conn *securityhub.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findStandardsSubscriptionByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {

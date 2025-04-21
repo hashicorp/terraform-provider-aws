@@ -56,7 +56,7 @@ func DiagnosticString(d diag.Diagnostic) string {
 		fmt.Fprintf(&buf, "\n\n%s", d.Detail)
 	}
 	if len(d.AttributePath) > 0 {
-		fmt.Fprintf(&buf, "\n%s", pathString(d.AttributePath))
+		fmt.Fprintf(&buf, "\n\nPath: %s", pathString(d.AttributePath))
 	}
 
 	return buf.String()

@@ -50,10 +50,6 @@ type resourceProvisionedModelThroughput struct {
 	framework.WithTimeouts
 }
 
-func (r *resourceProvisionedModelThroughput) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_bedrock_provisioned_model_throughput"
-}
-
 func (r *resourceProvisionedModelThroughput) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -185,9 +181,10 @@ func (r *resourceProvisionedModelThroughput) Delete(ctx context.Context, request
 
 	conn := r.Meta().BedrockClient(ctx)
 
-	_, err := conn.DeleteProvisionedModelThroughput(ctx, &bedrock.DeleteProvisionedModelThroughputInput{
+	input := bedrock.DeleteProvisionedModelThroughputInput{
 		ProvisionedModelId: fwflex.StringFromFramework(ctx, data.ID),
-	})
+	}
+	_, err := conn.DeleteProvisionedModelThroughput(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
@@ -198,10 +195,6 @@ func (r *resourceProvisionedModelThroughput) Delete(ctx context.Context, request
 
 		return
 	}
-}
-
-func (r *resourceProvisionedModelThroughput) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, req, resp)
 }
 
 func findProvisionedModelThroughputByID(ctx context.Context, conn *bedrock.Client, id string) (*bedrock.GetProvisionedModelThroughputOutput, error) {
@@ -230,7 +223,7 @@ func findProvisionedModelThroughputByID(ctx context.Context, conn *bedrock.Clien
 }
 
 func statusProvisionedModelThroughput(ctx context.Context, conn *bedrock.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findProvisionedModelThroughputByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

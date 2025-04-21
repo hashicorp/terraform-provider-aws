@@ -459,6 +459,46 @@ func TestAccOpenSearchDomain_Cluster_dedicatedMaster(t *testing.T) {
 	})
 }
 
+func TestAccOpenSearchDomain_Cluster_dedicatedCoordinator(t *testing.T) {
+	ctx := acctest.Context(t)
+	var domain awstypes.DomainStatus
+	rName := testAccRandomDomainName()
+	resourceName := "aws_opensearch_domain.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_dedicatedCoordinator(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateId:     rName,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDomainConfig_dedicatedCoordinator(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+				),
+			},
+			{
+				Config: testAccDomainConfig_dedicatedCoordinator(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+				),
+			},
+		},
+	})
+}
+
 func TestAccOpenSearchDomain_Cluster_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -2587,6 +2627,50 @@ resource "aws_opensearch_domain" "test" {
 `, rName, enabled)
 }
 
+func testAccDomainConfig_dedicatedCoordinator(rName string, enabled bool) string {
+	nodeOptions := `
+    node_options {
+      node_type = "coordinator"
+      node_config {
+        enabled = false
+      }
+    }`
+
+	if enabled {
+		nodeOptions = `
+    node_options {
+      node_type = "coordinator"
+      node_config {
+        enabled = true
+        count   = 1
+        type    = "m5.large.search"
+      }
+    }`
+	}
+
+	return fmt.Sprintf(`
+resource "aws_opensearch_domain" "test" {
+  domain_name = %[1]q
+
+  cluster_config {
+    instance_type            = "t2.small.search"
+    instance_count           = "1"
+    dedicated_master_enabled = true
+    dedicated_master_count   = "3"
+    dedicated_master_type    = "t2.small.search"
+
+    %[2]s
+
+  }
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+}
+`, rName, nodeOptions)
+}
+
 func testAccDomainConfig_multiAzWithStandbyEnabled(rName string, enableStandby bool) string {
 	return fmt.Sprintf(`
 resource "aws_opensearch_domain" "test" {
@@ -3090,7 +3174,7 @@ resource "aws_opensearch_domain" "test" {
   }
 
   tags = {
-    bar = "complex"
+    Name = %[1]q
   }
 }
 `, rName)

@@ -1,14 +1,14 @@
 ---
-subcategory: "SageMaker"
+subcategory: "SageMaker AI"
 layout: "aws"
 page_title: "AWS: aws_sagemaker_studio_lifecycle_config"
 description: |-
-  Provides a SageMaker Studio Lifecycle Config resource.
+  Provides a SageMaker AI Studio Lifecycle Config resource.
 ---
 
 # Resource: aws_sagemaker_studio_lifecycle_config
 
-Provides a SageMaker Studio Lifecycle Config resource.
+Provides a SageMaker AI Studio Lifecycle Config resource.
 
 ## Example Usage
 
@@ -41,7 +41,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker Studio Lifecycle Configs using the `studio_lifecycle_config_name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker AI Studio Lifecycle Configs using the `studio_lifecycle_config_name`. For example:
 
 ```terraform
 import {
@@ -50,7 +50,7 @@ import {
 }
 ```
 
-Using `terraform import`, import SageMaker Studio Lifecycle Configs using the `studio_lifecycle_config_name`. For example:
+Using `terraform import`, import SageMaker AI Studio Lifecycle Configs using the `studio_lifecycle_config_name`. For example:
 
 ```console
 % terraform import aws_sagemaker_studio_lifecycle_config.example example

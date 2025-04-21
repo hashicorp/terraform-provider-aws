@@ -40,32 +40,32 @@ The following argument is required:
 * `name` - (Required, Forces new resource) Name of the table bucket.
   Must be between 3 and 63 characters in length.
   Can consist of lowercase letters, numbers, and hyphens, and must begin and end with a lowercase letter or number.
-  A full list of bucket naming rules may be found in [S3 Tables documentation](???).
+  A full list of bucket naming rules can be found in the [S3 Tables documentation](https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-tables-buckets-naming.html#table-buckets-naming-rules).
 
 The following argument is optional:
 
-* `maintenance_configuration` - (Optional) A single table bucket maintenance configuration block.
-  [See `maintenance_configuration` below](#maintenance_configuration)
+* `maintenance_configuration` - (Optional) A single table bucket maintenance configuration object.
+  [See `maintenance_configuration` below](#maintenance_configuration).
 
-### maintenance_configuration
+### `maintenance_configuration`
 
-The `maintenance_configuration` configuration block supports the following argument:
+The `maintenance_configuration` object supports the following argument:
 
-* `iceberg_unreferenced_file_removal` - (Required) A single Iceberg unreferenced file removal settings block.
-  [See `iceberg_unreferenced_file_removal` below](#iceberg_unreferenced_file_removal)
+* `iceberg_unreferenced_file_removal` - (Required) A single Iceberg unreferenced file removal settings object.
+  [See `iceberg_unreferenced_file_removal` below](#iceberg_unreferenced_file_removal).
 
 ### `iceberg_unreferenced_file_removal`
 
-The `iceberg_unreferenced_file_removal` configuration block supports the following arguments:
+The `iceberg_unreferenced_file_removal` object supports the following arguments:
 
-* `settings` - (Required) Settings for unreferenced file removal.
-  [See `iceberg_unreferenced_file_removal.settings` below](#iceberg_unreferenced_file_removalsettings)
+* `settings` - (Required) Settings object for unreferenced file removal.
+  [See `iceberg_unreferenced_file_removal.settings` below](#iceberg_unreferenced_file_removalsettings).
 * `status` - (Required) Whether the configuration is enabled.
   Valid values are `enabled` and `disabled`.
 
 ### `iceberg_unreferenced_file_removal.settings`
 
-The `iceberg_unreferenced_file_removal.settings` configuration block supports the following arguments:
+The `iceberg_unreferenced_file_removal.settings` object supports the following arguments:
 
 * `non_current_days` - (Required) Data objects marked for deletion are deleted after this many days.
   Must be at least `1`.
@@ -105,4 +105,4 @@ Using `terraform import`, import S3 Tables Table Bucket using the `arn`. For exa
 % terraform import aws_s3tables_table_bucket.example arn:aws:s3tables:us-west-2:123456789012:bucket/example-bucket
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-47f3f3fef4a9bbb41fc3e632242f6de287d2344c846385513d081e07175d7f8f -->
+<!-- cache-key: cdktf-0.20.8 input-f9317df876a0daeedf264a027d2ca947a205340cdbb3a2d3d6ea113167a47fcc -->

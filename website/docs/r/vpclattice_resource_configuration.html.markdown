@@ -20,6 +20,7 @@ resource "aws_vpclattice_resource_configuration" "example" {
   resource_gateway_identifier = aws_vpclattice_resource_gateway.example.id
 
   port_ranges = ["80"]
+  protocol    = "TCP"
 
   resource_configuration_definition {
     dns_resource {
@@ -43,6 +44,7 @@ resource "aws_vpclattice_resource_configuration" "example" {
   resource_gateway_identifier = aws_vpclattice_resource_gateway.example.id
 
   port_ranges = ["80"]
+  protocol    = "TCP"
 
   resource_configuration_definition {
     ip_resource {

@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -38,8 +37,6 @@ func resourceQuickConnect() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -146,7 +143,7 @@ func resourceQuickConnect() *schema.Resource {
 	}
 }
 
-func resourceQuickConnectCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceQuickConnectCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
@@ -155,7 +152,7 @@ func resourceQuickConnectCreate(ctx context.Context, d *schema.ResourceData, met
 	input := &connect.CreateQuickConnectInput{
 		InstanceId:         aws.String(instanceID),
 		Name:               aws.String(name),
-		QuickConnectConfig: expandQuickConnectConfig(d.Get("quick_connect_config").([]interface{})),
+		QuickConnectConfig: expandQuickConnectConfig(d.Get("quick_connect_config").([]any)),
 		Tags:               getTagsIn(ctx),
 	}
 
@@ -175,7 +172,7 @@ func resourceQuickConnectCreate(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceQuickConnectRead(ctx, d, meta)...)
 }
 
-func resourceQuickConnectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceQuickConnectRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
@@ -210,7 +207,7 @@ func resourceQuickConnectRead(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func resourceQuickConnectUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceQuickConnectUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
@@ -245,7 +242,7 @@ func resourceQuickConnectUpdate(ctx context.Context, d *schema.ResourceData, met
 		// updates to configuration settings
 		input := &connect.UpdateQuickConnectConfigInput{
 			InstanceId:         aws.String(instanceID),
-			QuickConnectConfig: expandQuickConnectConfig(d.Get("quick_connect_config").([]interface{})),
+			QuickConnectConfig: expandQuickConnectConfig(d.Get("quick_connect_config").([]any)),
 			QuickConnectId:     aws.String(quickConnectID),
 		}
 
@@ -259,7 +256,7 @@ func resourceQuickConnectUpdate(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceQuickConnectRead(ctx, d, meta)...)
 }
 
-func resourceQuickConnectDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceQuickConnectDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
@@ -269,10 +266,11 @@ func resourceQuickConnectDelete(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	log.Printf("[DEBUG] Deleting Connect Quick Connect: %s", d.Id())
-	_, err = conn.DeleteQuickConnect(ctx, &connect.DeleteQuickConnectInput{
+	input := connect.DeleteQuickConnectInput{
 		InstanceId:     aws.String(instanceID),
 		QuickConnectId: aws.String(quickConnectID),
-	})
+	}
+	_, err = conn.DeleteQuickConnect(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
@@ -334,12 +332,12 @@ func findQuickConnect(ctx context.Context, conn *connect.Client, input *connect.
 	return output.QuickConnect, nil
 }
 
-func expandQuickConnectConfig(tfList []interface{}) *awstypes.QuickConnectConfig {
+func expandQuickConnectConfig(tfList []any) *awstypes.QuickConnectConfig {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -351,38 +349,38 @@ func expandQuickConnectConfig(tfList []interface{}) *awstypes.QuickConnectConfig
 
 	switch quickConnectType {
 	case awstypes.QuickConnectTypePhoneNumber:
-		v := tfMap["phone_config"].([]interface{})
+		v := tfMap["phone_config"].([]any)
 		if len(v) == 0 || v[0] == nil {
 			log.Printf("[ERR] 'phone_config' must be set when 'quick_connect_type' is '%s'", quickConnectType)
 			return nil
 		}
 
-		tfMap := v[0].(map[string]interface{})
+		tfMap := v[0].(map[string]any)
 		apiObject.PhoneConfig = &awstypes.PhoneNumberQuickConnectConfig{
 			PhoneNumber: aws.String(tfMap["phone_number"].(string)),
 		}
 
 	case awstypes.QuickConnectTypeQueue:
-		v := tfMap["queue_config"].([]interface{})
+		v := tfMap["queue_config"].([]any)
 		if len(v) == 0 || v[0] == nil {
 			log.Printf("[ERR] 'queue_config' must be set when 'quick_connect_type' is '%s'", quickConnectType)
 			return nil
 		}
 
-		tfMap := v[0].(map[string]interface{})
+		tfMap := v[0].(map[string]any)
 		apiObject.QueueConfig = &awstypes.QueueQuickConnectConfig{
 			ContactFlowId: aws.String(tfMap["contact_flow_id"].(string)),
 			QueueId:       aws.String(tfMap["queue_id"].(string)),
 		}
 
 	case awstypes.QuickConnectTypeUser:
-		v := tfMap["user_config"].([]interface{})
+		v := tfMap["user_config"].([]any)
 		if len(v) == 0 || v[0] == nil {
 			log.Printf("[ERR] 'user_config' must be set when 'quick_connect_type' is '%s'", quickConnectType)
 			return nil
 		}
 
-		tfMap := v[0].(map[string]interface{})
+		tfMap := v[0].(map[string]any)
 		apiObject.UserConfig = &awstypes.UserQuickConnectConfig{
 			ContactFlowId: aws.String(tfMap["contact_flow_id"].(string)),
 			UserId:        aws.String(tfMap["user_id"].(string)),
@@ -396,30 +394,30 @@ func expandQuickConnectConfig(tfList []interface{}) *awstypes.QuickConnectConfig
 	return apiObject
 }
 
-func flattenQuickConnectConfig(apiObject *awstypes.QuickConnectConfig) []interface{} {
+func flattenQuickConnectConfig(apiObject *awstypes.QuickConnectConfig) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
 	quickConnectType := apiObject.QuickConnectType
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"quick_connect_type": quickConnectType,
 	}
 
 	switch quickConnectType {
 	case awstypes.QuickConnectTypePhoneNumber:
-		tfMap["phone_config"] = []interface{}{map[string]interface{}{
+		tfMap["phone_config"] = []any{map[string]any{
 			"phone_number": aws.ToString(apiObject.PhoneConfig.PhoneNumber),
 		}}
 
 	case awstypes.QuickConnectTypeQueue:
-		tfMap["queue_config"] = []interface{}{map[string]interface{}{
+		tfMap["queue_config"] = []any{map[string]any{
 			"contact_flow_id": aws.ToString(apiObject.QueueConfig.ContactFlowId),
 			"queue_id":        aws.ToString(apiObject.QueueConfig.QueueId),
 		}}
 
 	case awstypes.QuickConnectTypeUser:
-		tfMap["user_config"] = []interface{}{map[string]interface{}{
+		tfMap["user_config"] = []any{map[string]any{
 			"contact_flow_id": aws.ToString(apiObject.UserConfig.ContactFlowId),
 			"user_id":         aws.ToString(apiObject.UserConfig.UserId),
 		}}
@@ -429,5 +427,5 @@ func flattenQuickConnectConfig(apiObject *awstypes.QuickConnectConfig) []interfa
 		return nil
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

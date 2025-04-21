@@ -103,7 +103,7 @@ The given filters must match exactly one VPC endpoint service whose data will be
 
 * `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
 * `service` - (Optional) Common name of an AWS service (e.g., `s3`).
-* `serviceName` - (Optional) Service name that is specified when creating a VPC endpoint. For AWS services the service name is usually in the form `com.amazonaws.<region>.<service>` (the SageMaker Notebook service is an exception to this rule, the service name is in the form `aws.sagemaker.<region>.notebook`).
+* `serviceName` - (Optional) Service name that is specified when creating a VPC endpoint. For AWS services the service name is usually in the form `com.amazonaws.<region>.<service>` (the SageMaker AI Notebook service is an exception to this rule, the service name is in the form `aws.sagemaker.<region>.notebook`).
 * `serviceRegions` - (Optional) AWS regions in which to look for services.
 * `serviceType` - (Optional) Service type, `Gateway` or `Interface`.
 * `tags` - (Optional) Map of tags, each pair of which must exactly match a pair on the desired VPC Endpoint Service.
@@ -141,4 +141,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.8 input-38d7121cfc7cba878f7c79020dee432097522a776d67ec066df32796d636d45a -->
+<!-- cache-key: cdktf-0.20.8 input-cab12df260f773a8c2d1885e24368dc15d34f3e5c3a8483cfb1a5e37cc12aeab -->

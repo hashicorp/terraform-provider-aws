@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_ecr_pull_through_cache_rule: Add `custom_role_arn` and `upstream_repository_prefix` arguments
+```
+
+```release-note:enhancement
+resource/aws_ecr_pull_through_cache_rule: Correct plan-time validation of `ecr_repository_prefix` to support a value of `"ROOT"`
+```
+
+```release-note:enhancement
+data-source/aws_ecr_pull_through_cache_rule: Add `custom_role_arn` and `upstream_repository_prefix` attributes
+```

@@ -28,10 +28,6 @@ type capacityBlockOfferingDataSource struct {
 	framework.DataSourceWithConfigure
 }
 
-func (*capacityBlockOfferingDataSource) Metadata(_ context.Context, _ datasource.MetadataRequest, response *datasource.MetadataResponse) {
-	response.TypeName = "aws_ec2_capacity_block_offering"
-}
-
 func (d *capacityBlockOfferingDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -80,13 +76,13 @@ func (d *capacityBlockOfferingDataSource) Read(ctx context.Context, request data
 
 	conn := d.Meta().EC2Client(ctx)
 
-	input := &ec2.DescribeCapacityBlockOfferingsInput{}
-	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+	input := ec2.DescribeCapacityBlockOfferingsInput{}
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	output, err := findCapacityBlockOffering(ctx, conn, input)
+	output, err := findCapacityBlockOffering(ctx, conn, &input)
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("reading EC2 Capacity Block Offering (%s)", data.InstanceType.ValueString()), err.Error())

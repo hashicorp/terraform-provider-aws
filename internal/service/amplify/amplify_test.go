@@ -25,6 +25,7 @@ func TestAccAmplify_serial(t *testing.T) {
 			"BasicAuthCredentials":     testAccApp_BasicAuthCredentials,
 			"BuildSpec":                testAccApp_BuildSpec,
 			"CacheConfig":              testAccApp_CacheConfig,
+			"ComputeRole":              testAccApp_ComputeRole,
 			"CustomRules":              testAccApp_CustomRules,
 			"Description":              testAccApp_Description,
 			"EnvironmentVariables":     testAccApp_EnvironmentVariables,
@@ -51,6 +52,7 @@ func TestAccAmplify_serial(t *testing.T) {
 			"certificateSettings_Custom":  testAccDomainAssociation_certificateSettings_Custom,
 			acctest.CtDisappears:          testAccDomainAssociation_disappears,
 			"update":                      testAccDomainAssociation_update,
+			"createWithSubdomain":         testAccDomainAssociation_CreateWithSubdomain,
 		},
 		"Webhook": {
 			acctest.CtBasic:      testAccWebhook_basic,

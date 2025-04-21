@@ -108,11 +108,10 @@ func resourceNetworkProfile() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceNetworkProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNetworkProfileCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
@@ -177,7 +176,7 @@ func resourceNetworkProfileCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceNetworkProfileRead(ctx, d, meta)...)
 }
 
-func resourceNetworkProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNetworkProfileRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
@@ -217,7 +216,7 @@ func resourceNetworkProfileRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceNetworkProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNetworkProfileUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
@@ -280,14 +279,15 @@ func resourceNetworkProfileUpdate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceNetworkProfileRead(ctx, d, meta)...)
 }
 
-func resourceNetworkProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNetworkProfileDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
 	log.Printf("[DEBUG] Deleting DeviceFarm Network Profile: %s", d.Id())
-	_, err := conn.DeleteNetworkProfile(ctx, &devicefarm.DeleteNetworkProfileInput{
+	input := devicefarm.DeleteNetworkProfileInput{
 		Arn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteNetworkProfile(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags

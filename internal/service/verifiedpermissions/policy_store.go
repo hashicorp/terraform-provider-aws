@@ -44,10 +44,6 @@ type resourcePolicyStore struct {
 	framework.ResourceWithConfigure
 }
 
-func (r *resourcePolicyStore) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_verifiedpermissions_policy_store"
-}
-
 func (r *resourcePolicyStore) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -211,7 +207,7 @@ func (r *resourcePolicyStore) Delete(ctx context.Context, request resource.Delet
 		return
 	}
 
-	tflog.Debug(ctx, "deleting Verified Permissions Policy Store", map[string]interface{}{
+	tflog.Debug(ctx, "deleting Verified Permissions Policy Store", map[string]any{
 		names.AttrID: state.ID.ValueString(),
 	})
 

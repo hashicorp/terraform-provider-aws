@@ -220,7 +220,7 @@ func testAccCheckImageDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			if err != nil {
-				return fmt.Errorf("reading SageMaker Image (%s): %w", rs.Primary.ID, err)
+				return fmt.Errorf("reading SageMaker AI Image (%s): %w", rs.Primary.ID, err)
 			}
 
 			return fmt.Errorf("sagemaker Image %q still exists", rs.Primary.ID)

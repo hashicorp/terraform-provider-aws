@@ -23,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -37,7 +36,7 @@ func resourceApp() *schema.Resource {
 		DeleteWithoutTimeout: resourceAppDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), appResourceIDSeparator)
 
 				if len(idParts) == 2 {
@@ -92,12 +91,10 @@ func resourceApp() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeployClient(ctx)
 
@@ -124,7 +121,7 @@ func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	return append(diags, resourceAppRead(ctx, d, meta)...)
 }
 
-func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeployClient(ctx)
 
@@ -169,7 +166,7 @@ func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta interface
 	return diags
 }
 
-func resourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeployClient(ctx)
 
@@ -190,14 +187,15 @@ func resourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{
 	return append(diags, resourceAppRead(ctx, d, meta)...)
 }
 
-func resourceAppDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAppDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeployClient(ctx)
 
 	log.Printf("[INFO] Deleting CodeDeploy Application: %s", d.Id())
-	_, err := conn.DeleteApplication(ctx, &codedeploy.DeleteApplicationInput{
+	input := codedeploy.DeleteApplicationInput{
 		ApplicationName: aws.String(d.Get(names.AttrName).(string)),
-	})
+	}
+	_, err := conn.DeleteApplication(ctx, &input)
 
 	if errs.IsA[*types.ApplicationDoesNotExistException](err) {
 		return diags

@@ -16,7 +16,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/batch/types"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -29,7 +28,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -60,7 +58,7 @@ func resourceJobDefinition() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ConflictsWith: []string{"ecs_properties", "eks_properties", "node_properties"},
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
@@ -80,7 +78,7 @@ func resourceJobDefinition() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ConflictsWith: []string{"container_properties", "eks_properties", "node_properties"},
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
@@ -458,7 +456,7 @@ func resourceJobDefinition() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ConflictsWith: []string{"container_properties", "ecs_properties", "eks_properties"},
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
@@ -573,14 +571,11 @@ func resourceJobDefinition() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: customdiff.Sequence(
-			jobDefinitionCustomizeDiff,
-			verify.SetTagsDiff,
-		),
+		CustomizeDiff: jobDefinitionCustomizeDiff,
 	}
 }
 
-func jobDefinitionCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+func jobDefinitionCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta any) error {
 	if d.Id() != "" && needsJobDefUpdate(d) && d.Get(names.AttrARN).(string) != "" {
 		d.SetNewComputed(names.AttrARN)
 		d.SetNewComputed("revision")
@@ -640,7 +635,7 @@ func needsJobDefUpdate(d *schema.ResourceDiff) bool {
 
 	if d.HasChange("eks_properties") {
 		o, n := d.GetChange("eks_properties")
-		if len(o.([]interface{})) == 0 && len(n.([]interface{})) == 0 {
+		if len(o.([]any)) == 0 && len(n.([]any)) == 0 {
 			return false
 		}
 
@@ -649,17 +644,17 @@ func needsJobDefUpdate(d *schema.ResourceDiff) bool {
 		}
 
 		var oeks, neks *awstypes.EksPodProperties
-		if len(o.([]interface{})) > 0 && o.([]interface{})[0] != nil {
-			oProps := o.([]interface{})[0].(map[string]interface{})
-			if opodProps, ok := oProps["pod_properties"].([]interface{}); ok && len(opodProps) > 0 {
-				oeks = expandEKSPodProperties(opodProps[0].(map[string]interface{}))
+		if len(o.([]any)) > 0 && o.([]any)[0] != nil {
+			oProps := o.([]any)[0].(map[string]any)
+			if opodProps, ok := oProps["pod_properties"].([]any); ok && len(opodProps) > 0 {
+				oeks = expandEKSPodProperties(opodProps[0].(map[string]any))
 			}
 		}
 
-		if len(n.([]interface{})) > 0 && n.([]interface{})[0] != nil {
-			nProps := n.([]interface{})[0].(map[string]interface{})
-			if npodProps, ok := nProps["pod_properties"].([]interface{}); ok && len(npodProps) > 0 {
-				neks = expandEKSPodProperties(npodProps[0].(map[string]interface{}))
+		if len(n.([]any)) > 0 && n.([]any)[0] != nil {
+			nProps := n.([]any)[0].(map[string]any)
+			if npodProps, ok := nProps["pod_properties"].([]any); ok && len(npodProps) > 0 {
+				neks = expandEKSPodProperties(npodProps[0].(map[string]any))
 			}
 		}
 
@@ -668,18 +663,18 @@ func needsJobDefUpdate(d *schema.ResourceDiff) bool {
 
 	if d.HasChange("retry_strategy") {
 		o, n := d.GetChange("retry_strategy")
-		if len(o.([]interface{})) == 0 && len(n.([]interface{})) == 0 {
+		if len(o.([]any)) == 0 && len(n.([]any)) == 0 {
 			return false
 		}
 
 		var ors, nrs *awstypes.RetryStrategy
-		if len(o.([]interface{})) > 0 && o.([]interface{})[0] != nil {
-			oProps := o.([]interface{})[0].(map[string]interface{})
+		if len(o.([]any)) > 0 && o.([]any)[0] != nil {
+			oProps := o.([]any)[0].(map[string]any)
 			ors = expandRetryStrategy(oProps)
 		}
 
-		if len(n.([]interface{})) > 0 && n.([]interface{})[0] != nil {
-			nProps := n.([]interface{})[0].(map[string]interface{})
+		if len(n.([]any)) > 0 && n.([]any)[0] != nil {
+			nProps := n.([]any)[0].(map[string]any)
 			nrs = expandRetryStrategy(nProps)
 		}
 
@@ -688,18 +683,18 @@ func needsJobDefUpdate(d *schema.ResourceDiff) bool {
 
 	if d.HasChange(names.AttrTimeout) {
 		o, n := d.GetChange(names.AttrTimeout)
-		if len(o.([]interface{})) == 0 && len(n.([]interface{})) == 0 {
+		if len(o.([]any)) == 0 && len(n.([]any)) == 0 {
 			return false
 		}
 
 		var ors, nrs *awstypes.JobTimeout
-		if len(o.([]interface{})) > 0 && o.([]interface{})[0] != nil {
-			oProps := o.([]interface{})[0].(map[string]interface{})
+		if len(o.([]any)) > 0 && o.([]any)[0] != nil {
+			oProps := o.([]any)[0].(map[string]any)
 			ors = expandJobTimeout(oProps)
 		}
 
-		if len(n.([]interface{})) > 0 && n.([]interface{})[0] != nil {
-			nProps := n.([]interface{})[0].(map[string]interface{})
+		if len(n.([]any)) > 0 && n.([]any)[0] != nil {
+			nProps := n.([]any)[0].(map[string]any)
 			nrs = expandJobTimeout(nProps)
 		}
 
@@ -719,7 +714,7 @@ func needsJobDefUpdate(d *schema.ResourceDiff) bool {
 	return false
 }
 
-func resourceJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BatchClient(ctx)
 
@@ -762,10 +757,10 @@ func resourceJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, me
 			input.EcsProperties = props
 		}
 
-		if v, ok := d.GetOk("eks_properties"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			eksProps := v.([]interface{})[0].(map[string]interface{})
-			if podProps, ok := eksProps["pod_properties"].([]interface{}); ok && len(podProps) > 0 {
-				props := expandEKSPodProperties(podProps[0].(map[string]interface{}))
+		if v, ok := d.GetOk("eks_properties"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			eksProps := v.([]any)[0].(map[string]any)
+			if podProps, ok := eksProps["pod_properties"].([]any); ok && len(podProps) > 0 {
+				props := expandEKSPodProperties(podProps[0].(map[string]any))
 				input.EksProperties = &awstypes.EksProperties{
 					PodProperties: props,
 				}
@@ -799,23 +794,23 @@ func resourceJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if v, ok := d.GetOk(names.AttrParameters); ok {
-		input.Parameters = flex.ExpandStringValueMap(v.(map[string]interface{}))
+		input.Parameters = flex.ExpandStringValueMap(v.(map[string]any))
 	}
 
 	if v, ok := d.GetOk("platform_capabilities"); ok && v.(*schema.Set).Len() > 0 {
 		input.PlatformCapabilities = flex.ExpandStringyValueSet[awstypes.PlatformCapability](v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("retry_strategy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.RetryStrategy = expandRetryStrategy(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("retry_strategy"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.RetryStrategy = expandRetryStrategy(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("scheduling_priority"); ok {
 		input.SchedulingPriority = aws.Int32(int32(v.(int)))
 	}
 
-	if v, ok := d.GetOk(names.AttrTimeout); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Timeout = expandJobTimeout(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk(names.AttrTimeout); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.Timeout = expandJobTimeout(v.([]any)[0].(map[string]any))
 	}
 
 	output, err := conn.RegisterJobDefinition(ctx, input)
@@ -829,7 +824,7 @@ func resourceJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceJobDefinitionRead(ctx, d, meta)...)
 }
 
-func resourceJobDefinitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceJobDefinitionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BatchClient(ctx)
 
@@ -873,7 +868,7 @@ func resourceJobDefinitionRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("platform_capabilities", jobDefinition.PlatformCapabilities)
 	d.Set(names.AttrPropagateTags, jobDefinition.PropagateTags)
 	if jobDefinition.RetryStrategy != nil {
-		if err := d.Set("retry_strategy", []interface{}{flattenRetryStrategy(jobDefinition.RetryStrategy)}); err != nil {
+		if err := d.Set("retry_strategy", []any{flattenRetryStrategy(jobDefinition.RetryStrategy)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting retry_strategy: %s", err)
 		}
 	} else {
@@ -882,7 +877,7 @@ func resourceJobDefinitionRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("revision", revision)
 	d.Set("scheduling_priority", jobDefinition.SchedulingPriority)
 	if jobDefinition.Timeout != nil {
-		if err := d.Set(names.AttrTimeout, []interface{}{flattenJobTimeout(jobDefinition.Timeout)}); err != nil {
+		if err := d.Set(names.AttrTimeout, []any{flattenJobTimeout(jobDefinition.Timeout)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting timeout: %s", err)
 		}
 	} else {
@@ -895,7 +890,7 @@ func resourceJobDefinitionRead(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func resourceJobDefinitionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceJobDefinitionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BatchClient(ctx)
 
@@ -935,9 +930,9 @@ func resourceJobDefinitionUpdate(ctx context.Context, d *schema.ResourceData, me
 			}
 
 			if v, ok := d.GetOk("eks_properties"); ok {
-				eksProps := v.([]interface{})[0].(map[string]interface{})
-				if podProps, ok := eksProps["pod_properties"].([]interface{}); ok && len(podProps) > 0 {
-					props := expandEKSPodProperties(podProps[0].(map[string]interface{}))
+				eksProps := v.([]any)[0].(map[string]any)
+				if podProps, ok := eksProps["pod_properties"].([]any); ok && len(podProps) > 0 {
+					props := expandEKSPodProperties(podProps[0].(map[string]any))
 					input.EksProperties = &awstypes.EksProperties{
 						PodProperties: props,
 					}
@@ -959,7 +954,7 @@ func resourceJobDefinitionUpdate(ctx context.Context, d *schema.ResourceData, me
 		}
 
 		if v, ok := d.GetOk(names.AttrParameters); ok {
-			input.Parameters = flex.ExpandStringValueMap(v.(map[string]interface{}))
+			input.Parameters = flex.ExpandStringValueMap(v.(map[string]any))
 		}
 
 		if v, ok := d.GetOk("platform_capabilities"); ok && v.(*schema.Set).Len() > 0 {
@@ -970,16 +965,16 @@ func resourceJobDefinitionUpdate(ctx context.Context, d *schema.ResourceData, me
 			input.PropagateTags = aws.Bool(v.(bool))
 		}
 
-		if v, ok := d.GetOk("retry_strategy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.RetryStrategy = expandRetryStrategy(v.([]interface{})[0].(map[string]interface{}))
+		if v, ok := d.GetOk("retry_strategy"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.RetryStrategy = expandRetryStrategy(v.([]any)[0].(map[string]any))
 		}
 
 		if v, ok := d.GetOk("scheduling_priority"); ok {
 			input.SchedulingPriority = aws.Int32(int32(v.(int)))
 		}
 
-		if v, ok := d.GetOk(names.AttrTimeout); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.Timeout = expandJobTimeout(v.([]interface{})[0].(map[string]interface{}))
+		if v, ok := d.GetOk(names.AttrTimeout); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.Timeout = expandJobTimeout(v.([]any)[0].(map[string]any))
 		}
 
 		jd, err := conn.RegisterJobDefinition(ctx, input)
@@ -997,9 +992,10 @@ func resourceJobDefinitionUpdate(ctx context.Context, d *schema.ResourceData, me
 
 		if v := d.Get("deregister_on_new_revision"); v == true {
 			log.Printf("[DEBUG] Deleting previous Batch Job Definition: %s", currentARN)
-			_, err := conn.DeregisterJobDefinition(ctx, &batch.DeregisterJobDefinitionInput{
+			input := batch.DeregisterJobDefinitionInput{
 				JobDefinition: aws.String(currentARN),
-			})
+			}
+			_, err := conn.DeregisterJobDefinition(ctx, &input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "deleting Batch Job Definition (%s): %s", currentARN, err)
@@ -1010,7 +1006,7 @@ func resourceJobDefinitionUpdate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceJobDefinitionRead(ctx, d, meta)...)
 }
 
-func resourceJobDefinitionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceJobDefinitionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BatchClient(ctx)
 
@@ -1030,9 +1026,10 @@ func resourceJobDefinitionDelete(ctx context.Context, d *schema.ResourceData, me
 		arn := aws.ToString(jds[i].JobDefinitionArn)
 
 		log.Printf("[DEBUG] Deregistering Batch Job Definition: %s", arn)
-		_, err := conn.DeregisterJobDefinition(ctx, &batch.DeregisterJobDefinitionInput{
+		input := batch.DeregisterJobDefinitionInput{
 			JobDefinition: aws.String(arn),
-		})
+		}
+		_, err := conn.DeregisterJobDefinition(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "deregistering Batch Job Definition (%s): %s", arn, err)
@@ -1093,7 +1090,7 @@ func findJobDefinitions(ctx context.Context, conn *batch.Client, input *batch.De
 	return output, nil
 }
 
-func validJobContainerProperties(v interface{}, k string) (ws []string, errors []error) {
+func validJobContainerProperties(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	_, err := expandContainerProperties(value)
 	if err != nil {
@@ -1102,7 +1099,7 @@ func validJobContainerProperties(v interface{}, k string) (ws []string, errors [
 	return
 }
 
-func validJobECSProperties(v interface{}, k string) (ws []string, errors []error) {
+func validJobECSProperties(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	_, err := expandECSProperties(value)
 	if err != nil {
@@ -1111,7 +1108,7 @@ func validJobECSProperties(v interface{}, k string) (ws []string, errors []error
 	return
 }
 
-func validJobNodeProperties(v interface{}, k string) (ws []string, errors []error) {
+func validJobNodeProperties(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	_, err := expandJobNodeProperties(value)
 	if err != nil {
@@ -1120,7 +1117,7 @@ func validJobNodeProperties(v interface{}, k string) (ws []string, errors []erro
 	return
 }
 
-func expandRetryStrategy(tfMap map[string]interface{}) *awstypes.RetryStrategy {
+func expandRetryStrategy(tfMap map[string]any) *awstypes.RetryStrategy {
 	if tfMap == nil {
 		return nil
 	}
@@ -1131,14 +1128,14 @@ func expandRetryStrategy(tfMap map[string]interface{}) *awstypes.RetryStrategy {
 		apiObject.Attempts = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["evaluate_on_exit"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["evaluate_on_exit"].([]any); ok && len(v) > 0 {
 		apiObject.EvaluateOnExit = expandEvaluateOnExits(v)
 	}
 
 	return apiObject
 }
 
-func expandEvaluateOnExit(tfMap map[string]interface{}) *awstypes.EvaluateOnExit {
+func expandEvaluateOnExit(tfMap map[string]any) *awstypes.EvaluateOnExit {
 	if tfMap == nil {
 		return nil
 	}
@@ -1164,7 +1161,7 @@ func expandEvaluateOnExit(tfMap map[string]interface{}) *awstypes.EvaluateOnExit
 	return apiObject
 }
 
-func expandEvaluateOnExits(tfList []interface{}) []awstypes.EvaluateOnExit {
+func expandEvaluateOnExits(tfList []any) []awstypes.EvaluateOnExit {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1172,7 +1169,7 @@ func expandEvaluateOnExits(tfList []interface{}) []awstypes.EvaluateOnExit {
 	var apiObjects []awstypes.EvaluateOnExit
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -1189,12 +1186,12 @@ func expandEvaluateOnExits(tfList []interface{}) []awstypes.EvaluateOnExit {
 	return apiObjects
 }
 
-func flattenRetryStrategy(apiObject *awstypes.RetryStrategy) map[string]interface{} {
+func flattenRetryStrategy(apiObject *awstypes.RetryStrategy) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Attempts; v != nil {
 		tfMap["attempts"] = aws.ToInt32(v)
@@ -1207,12 +1204,12 @@ func flattenRetryStrategy(apiObject *awstypes.RetryStrategy) map[string]interfac
 	return tfMap
 }
 
-func flattenEvaluateOnExit(apiObject *awstypes.EvaluateOnExit) map[string]interface{} {
+func flattenEvaluateOnExit(apiObject *awstypes.EvaluateOnExit) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		names.AttrAction: apiObject.Action,
 	}
 
@@ -1231,12 +1228,12 @@ func flattenEvaluateOnExit(apiObject *awstypes.EvaluateOnExit) map[string]interf
 	return tfMap
 }
 
-func flattenEvaluateOnExits(apiObjects []awstypes.EvaluateOnExit) []interface{} {
+func flattenEvaluateOnExits(apiObjects []awstypes.EvaluateOnExit) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenEvaluateOnExit(&apiObject))
@@ -1245,7 +1242,7 @@ func flattenEvaluateOnExits(apiObjects []awstypes.EvaluateOnExit) []interface{} 
 	return tfList
 }
 
-func expandJobTimeout(tfMap map[string]interface{}) *awstypes.JobTimeout {
+func expandJobTimeout(tfMap map[string]any) *awstypes.JobTimeout {
 	if tfMap == nil {
 		return nil
 	}
@@ -1259,12 +1256,12 @@ func expandJobTimeout(tfMap map[string]interface{}) *awstypes.JobTimeout {
 	return apiObject
 }
 
-func flattenJobTimeout(apiObject *awstypes.JobTimeout) map[string]interface{} {
+func flattenJobTimeout(apiObject *awstypes.JobTimeout) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.AttemptDurationSeconds; v != nil {
 		tfMap["attempt_duration_seconds"] = aws.ToInt32(v)
@@ -1289,11 +1286,11 @@ func removeEmptyEnvironmentVariables(environment []awstypes.KeyValuePair, attrib
 	return diags
 }
 
-func expandEKSPodProperties(tfMap map[string]interface{}) *awstypes.EksPodProperties {
+func expandEKSPodProperties(tfMap map[string]any) *awstypes.EksPodProperties {
 	apiObject := &awstypes.EksPodProperties{}
 
 	if v, ok := tfMap["containers"]; ok {
-		apiObject.Containers = expandContainers(v.([]interface{}))
+		apiObject.Containers = expandContainers(v.([]any))
 	}
 
 	if v, ok := tfMap["dns_policy"].(string); ok && v != "" {
@@ -1305,17 +1302,17 @@ func expandEKSPodProperties(tfMap map[string]interface{}) *awstypes.EksPodProper
 	}
 
 	if v, ok := tfMap["image_pull_secret"]; ok {
-		apiObject.ImagePullSecrets = expandImagePullSecrets(v.([]interface{}))
+		apiObject.ImagePullSecrets = expandImagePullSecrets(v.([]any))
 	}
 
 	if v, ok := tfMap["init_containers"]; ok {
-		apiObject.InitContainers = expandContainers(v.([]interface{}))
+		apiObject.InitContainers = expandContainers(v.([]any))
 	}
 
-	if v, ok := tfMap["metadata"].([]interface{}); ok && len(v) > 0 {
-		if v, ok := v[0].(map[string]interface{})["labels"]; ok {
+	if v, ok := tfMap["metadata"].([]any); ok && len(v) > 0 {
+		if v, ok := v[0].(map[string]any)["labels"]; ok {
 			apiObject.Metadata = &awstypes.EksMetadata{
-				Labels: flex.ExpandStringValueMap(v.(map[string]interface{})),
+				Labels: flex.ExpandStringValueMap(v.(map[string]any)),
 			}
 		}
 	}
@@ -1329,25 +1326,25 @@ func expandEKSPodProperties(tfMap map[string]interface{}) *awstypes.EksPodProper
 	}
 
 	if v, ok := tfMap["volumes"]; ok {
-		apiObject.Volumes = expandVolumes(v.([]interface{}))
+		apiObject.Volumes = expandVolumes(v.([]any))
 	}
 
 	return apiObject
 }
 
-func expandContainers(tfList []interface{}) []awstypes.EksContainer {
+func expandContainers(tfList []any) []awstypes.EksContainer {
 	var apiObjects []awstypes.EksContainer
 
 	for _, tfMapRaw := range tfList {
-		tfMap := tfMapRaw.(map[string]interface{})
+		tfMap := tfMapRaw.(map[string]any)
 		apiObject := awstypes.EksContainer{}
 
 		if v, ok := tfMap["args"]; ok {
-			apiObject.Args = flex.ExpandStringValueList(v.([]interface{}))
+			apiObject.Args = flex.ExpandStringValueList(v.([]any))
 		}
 
 		if v, ok := tfMap["command"]; ok {
-			apiObject.Command = flex.ExpandStringValueList(v.([]interface{}))
+			apiObject.Command = flex.ExpandStringValueList(v.([]any))
 		}
 
 		if v, ok := tfMap["env"].(*schema.Set); ok && v.Len() > 0 {
@@ -1355,7 +1352,7 @@ func expandContainers(tfList []interface{}) []awstypes.EksContainer {
 
 			for _, tfMapRaw := range v.List() {
 				apiObject := awstypes.EksContainerEnvironmentVariable{}
-				tfMap := tfMapRaw.(map[string]interface{})
+				tfMap := tfMapRaw.(map[string]any)
 
 				if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 					apiObject.Name = aws.String(v)
@@ -1383,24 +1380,24 @@ func expandContainers(tfList []interface{}) []awstypes.EksContainer {
 			apiObject.Name = aws.String(v)
 		}
 
-		if v, ok := tfMap[names.AttrResources].([]interface{}); ok && len(v) > 0 {
+		if v, ok := tfMap[names.AttrResources].([]any); ok && len(v) > 0 {
 			resources := &awstypes.EksContainerResourceRequirements{}
-			tfMap := v[0].(map[string]interface{})
+			tfMap := v[0].(map[string]any)
 
 			if v, ok := tfMap["limits"]; ok {
-				resources.Limits = flex.ExpandStringValueMap(v.(map[string]interface{}))
+				resources.Limits = flex.ExpandStringValueMap(v.(map[string]any))
 			}
 
 			if v, ok := tfMap["requests"]; ok {
-				resources.Requests = flex.ExpandStringValueMap(v.(map[string]interface{}))
+				resources.Requests = flex.ExpandStringValueMap(v.(map[string]any))
 			}
 
 			apiObject.Resources = resources
 		}
 
-		if v, ok := tfMap["security_context"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := tfMap["security_context"].([]any); ok && len(v) > 0 {
 			securityContext := &awstypes.EksContainerSecurityContext{}
-			tfMap := v[0].(map[string]interface{})
+			tfMap := v[0].(map[string]any)
 
 			if v, ok := tfMap["privileged"]; ok {
 				securityContext.Privileged = aws.Bool(v.(bool))
@@ -1426,7 +1423,7 @@ func expandContainers(tfList []interface{}) []awstypes.EksContainer {
 		}
 
 		if v, ok := tfMap["volume_mounts"]; ok {
-			apiObject.VolumeMounts = expandVolumeMounts(v.([]interface{}))
+			apiObject.VolumeMounts = expandVolumeMounts(v.([]any))
 		}
 
 		apiObjects = append(apiObjects, apiObject)
@@ -1435,12 +1432,12 @@ func expandContainers(tfList []interface{}) []awstypes.EksContainer {
 	return apiObjects
 }
 
-func expandImagePullSecrets(tfList []interface{}) []awstypes.ImagePullSecret {
+func expandImagePullSecrets(tfList []any) []awstypes.ImagePullSecret {
 	var apiObjects []awstypes.ImagePullSecret
 
 	for _, tfMapRaw := range tfList {
 		apiObject := awstypes.ImagePullSecret{}
-		tfMap := tfMapRaw.(map[string]interface{})
+		tfMap := tfMapRaw.(map[string]any)
 
 		if v, ok := tfMap[names.AttrName].(string); ok {
 			apiObject.Name = aws.String(v)
@@ -1451,15 +1448,15 @@ func expandImagePullSecrets(tfList []interface{}) []awstypes.ImagePullSecret {
 	return apiObjects
 }
 
-func expandVolumes(tfList []interface{}) []awstypes.EksVolume {
+func expandVolumes(tfList []any) []awstypes.EksVolume {
 	var apiObjects []awstypes.EksVolume
 
 	for _, tfMapRaw := range tfList {
 		apiObject := awstypes.EksVolume{}
-		tfMap := tfMapRaw.(map[string]interface{})
+		tfMap := tfMapRaw.(map[string]any)
 
-		if v, ok := tfMap["empty_dir"].([]interface{}); ok && len(v) > 0 {
-			if v, ok := v[0].(map[string]interface{}); ok {
+		if v, ok := tfMap["empty_dir"].([]any); ok && len(v) > 0 {
+			if v, ok := v[0].(map[string]any); ok {
 				apiObject.EmptyDir = &awstypes.EksEmptyDir{
 					Medium:    aws.String(v["medium"].(string)),
 					SizeLimit: aws.String(v["size_limit"].(string)),
@@ -1471,20 +1468,20 @@ func expandVolumes(tfList []interface{}) []awstypes.EksVolume {
 			apiObject.Name = aws.String(v)
 		}
 
-		if v, ok := tfMap["host_path"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := tfMap["host_path"].([]any); ok && len(v) > 0 {
 			apiObject.HostPath = &awstypes.EksHostPath{}
 
-			if v, ok := v[0].(map[string]interface{}); ok {
+			if v, ok := v[0].(map[string]any); ok {
 				if v, ok := v[names.AttrPath]; ok {
 					apiObject.HostPath.Path = aws.String(v.(string))
 				}
 			}
 		}
 
-		if v, ok := tfMap["secret"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := tfMap["secret"].([]any); ok && len(v) > 0 {
 			apiObject.Secret = &awstypes.EksSecret{}
 
-			if v := v[0].(map[string]interface{}); ok {
+			if v := v[0].(map[string]any); ok {
 				if v, ok := v["optional"]; ok {
 					apiObject.Secret.Optional = aws.Bool(v.(bool))
 				}
@@ -1501,12 +1498,12 @@ func expandVolumes(tfList []interface{}) []awstypes.EksVolume {
 	return apiObjects
 }
 
-func expandVolumeMounts(tfList []interface{}) []awstypes.EksContainerVolumeMount {
+func expandVolumeMounts(tfList []any) []awstypes.EksContainerVolumeMount {
 	var apiObjects []awstypes.EksContainerVolumeMount
 
 	for _, tfMapRaw := range tfList {
 		apiObject := awstypes.EksContainerVolumeMount{}
-		tfMap := tfMapRaw.(map[string]interface{})
+		tfMap := tfMapRaw.(map[string]any)
 
 		if v, ok := tfMap["mount_path"]; ok {
 			apiObject.MountPath = aws.String(v.(string))
@@ -1526,15 +1523,15 @@ func expandVolumeMounts(tfList []interface{}) []awstypes.EksContainerVolumeMount
 	return apiObjects
 }
 
-func flattenEKSProperties(apiObject *awstypes.EksProperties) []interface{} {
-	var tfList []interface{}
+func flattenEKSProperties(apiObject *awstypes.EksProperties) []any {
+	var tfList []any
 
 	if apiObject == nil {
 		return tfList
 	}
 
 	if v := apiObject.PodProperties; v != nil {
-		tfList = append(tfList, map[string]interface{}{
+		tfList = append(tfList, map[string]any{
 			"pod_properties": flattenEKSPodProperties(apiObject.PodProperties),
 		})
 	}
@@ -1542,9 +1539,9 @@ func flattenEKSProperties(apiObject *awstypes.EksProperties) []interface{} {
 	return tfList
 }
 
-func flattenEKSPodProperties(apiObject *awstypes.EksPodProperties) []interface{} {
-	var tfList []interface{}
-	tfMap := make(map[string]interface{}, 0)
+func flattenEKSPodProperties(apiObject *awstypes.EksPodProperties) []any {
+	var tfList []any
+	tfMap := make(map[string]any, 0)
 
 	if v := apiObject.Containers; v != nil {
 		tfMap["containers"] = flattenEKSContainers(v)
@@ -1567,10 +1564,10 @@ func flattenEKSPodProperties(apiObject *awstypes.EksPodProperties) []interface{}
 	}
 
 	if v := apiObject.Metadata; v != nil {
-		metadata := make([]map[string]interface{}, 0)
+		metadata := make([]map[string]any, 0)
 
 		if v := v.Labels; v != nil {
-			metadata = append(metadata, map[string]interface{}{
+			metadata = append(metadata, map[string]any{
 				"labels": v,
 			})
 		}
@@ -1595,11 +1592,11 @@ func flattenEKSPodProperties(apiObject *awstypes.EksPodProperties) []interface{}
 	return tfList
 }
 
-func flattenImagePullSecrets(apiObjects []awstypes.ImagePullSecret) []interface{} {
-	var tfList []interface{}
+func flattenImagePullSecrets(apiObjects []awstypes.ImagePullSecret) []any {
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{}
+		tfMap := map[string]any{}
 
 		if v := apiObject.Name; v != nil {
 			tfMap[names.AttrName] = aws.ToString(v)
@@ -1610,11 +1607,11 @@ func flattenImagePullSecrets(apiObjects []awstypes.ImagePullSecret) []interface{
 	return tfList
 }
 
-func flattenEKSContainers(apiObjects []awstypes.EksContainer) []interface{} {
-	var tfList []interface{}
+func flattenEKSContainers(apiObjects []awstypes.EksContainer) []any {
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{}
+		tfMap := map[string]any{}
 
 		if v := apiObject.Args; v != nil {
 			tfMap["args"] = v
@@ -1641,14 +1638,14 @@ func flattenEKSContainers(apiObjects []awstypes.EksContainer) []interface{} {
 		}
 
 		if v := apiObject.Resources; v != nil {
-			tfMap[names.AttrResources] = []map[string]interface{}{{
+			tfMap[names.AttrResources] = []map[string]any{{
 				"limits":   v.Limits,
 				"requests": v.Requests,
 			}}
 		}
 
 		if v := apiObject.SecurityContext; v != nil {
-			tfMap["security_context"] = []map[string]interface{}{{
+			tfMap["security_context"] = []map[string]any{{
 				"privileged":                 aws.ToBool(v.Privileged),
 				"read_only_root_file_system": aws.ToBool(v.ReadOnlyRootFilesystem),
 				"run_as_group":               aws.ToInt64(v.RunAsGroup),
@@ -1667,11 +1664,11 @@ func flattenEKSContainers(apiObjects []awstypes.EksContainer) []interface{} {
 	return tfList
 }
 
-func flattenEKSContainerEnvironmentVariables(apiObjects []awstypes.EksContainerEnvironmentVariable) []interface{} {
-	var tfList []interface{}
+func flattenEKSContainerEnvironmentVariables(apiObjects []awstypes.EksContainerEnvironmentVariable) []any {
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{}
+		tfMap := map[string]any{}
 
 		if v := apiObject.Name; v != nil {
 			tfMap[names.AttrName] = aws.ToString(v)
@@ -1687,11 +1684,11 @@ func flattenEKSContainerEnvironmentVariables(apiObjects []awstypes.EksContainerE
 	return tfList
 }
 
-func flattenEKSContainerVolumeMounts(apiObjects []awstypes.EksContainerVolumeMount) []interface{} {
-	var tfList []interface{}
+func flattenEKSContainerVolumeMounts(apiObjects []awstypes.EksContainerVolumeMount) []any {
+	var tfList []any
 
 	for _, v := range apiObjects {
-		tfMap := map[string]interface{}{}
+		tfMap := map[string]any{}
 
 		if v := v.MountPath; v != nil {
 			tfMap["mount_path"] = aws.ToString(v)
@@ -1711,21 +1708,21 @@ func flattenEKSContainerVolumeMounts(apiObjects []awstypes.EksContainerVolumeMou
 	return tfList
 }
 
-func flattenEKSVolumes(apiObjects []awstypes.EksVolume) []interface{} {
-	var tfList []interface{}
+func flattenEKSVolumes(apiObjects []awstypes.EksVolume) []any {
+	var tfList []any
 
 	for _, v := range apiObjects {
-		tfMap := map[string]interface{}{}
+		tfMap := map[string]any{}
 
 		if v := v.EmptyDir; v != nil {
-			tfMap["empty_dir"] = []map[string]interface{}{{
+			tfMap["empty_dir"] = []map[string]any{{
 				"medium":     aws.ToString(v.Medium),
 				"size_limit": aws.ToString(v.SizeLimit),
 			}}
 		}
 
 		if v := v.HostPath; v != nil {
-			tfMap["host_path"] = []map[string]interface{}{{
+			tfMap["host_path"] = []map[string]any{{
 				names.AttrPath: aws.ToString(v.Path),
 			}}
 		}
@@ -1735,7 +1732,7 @@ func flattenEKSVolumes(apiObjects []awstypes.EksVolume) []interface{} {
 		}
 
 		if v := v.Secret; v != nil {
-			tfMap["secret"] = []map[string]interface{}{{
+			tfMap["secret"] = []map[string]any{{
 				"optional":    aws.ToBool(v.Optional),
 				"secret_name": aws.ToString(v.SecretName),
 			}}

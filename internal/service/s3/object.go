@@ -11,6 +11,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"slices"
 	"strings"
 	"time"
 
@@ -58,11 +59,11 @@ func resourceObject() *schema.Resource {
 
 		CustomizeDiff: customdiff.Sequence(
 			resourceObjectCustomizeDiff,
-			func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
+			func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
 				if ignoreProviderDefaultTags(ctx, d) {
 					return d.SetNew(names.AttrTagsAll, d.Get(names.AttrTags))
 				}
-				return verify.SetTagsDiff(ctx, d, meta)
+				return nil
 			},
 		),
 
@@ -102,6 +103,10 @@ func resourceObject() *schema.Resource {
 				Computed: true,
 			},
 			"checksum_crc32c": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"checksum_crc64nvme": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -246,12 +251,12 @@ func resourceObject() *schema.Resource {
 	}
 }
 
-func resourceObjectCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceObjectCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	return append(diags, resourceObjectUpload(ctx, d, meta)...)
 }
 
-func resourceObjectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceObjectRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
@@ -289,6 +294,7 @@ func resourceObjectRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("cache_control", output.CacheControl)
 	d.Set("checksum_crc32", output.ChecksumCRC32)
 	d.Set("checksum_crc32c", output.ChecksumCRC32C)
+	d.Set("checksum_crc64nvme", output.ChecksumCRC64NVME)
 	d.Set("checksum_sha1", output.ChecksumSHA1)
 	d.Set("checksum_sha256", output.ChecksumSHA256)
 	d.Set("content_disposition", output.ContentDisposition)
@@ -317,7 +323,7 @@ func resourceObjectRead(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func resourceObjectUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceObjectUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	if hasObjectContentChanges(d) {
 		return append(diags, resourceObjectUpload(ctx, d, meta)...)
@@ -398,7 +404,7 @@ func resourceObjectUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceObjectRead(ctx, d, meta)...)
 }
 
-func resourceObjectDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceObjectDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
@@ -429,7 +435,7 @@ func resourceObjectDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func resourceObjectImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceObjectImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	id := d.Id()
 	id = strings.TrimPrefix(id, "s3://")
 	parts := strings.Split(id, "/")
@@ -448,7 +454,7 @@ func resourceObjectImport(ctx context.Context, d *schema.ResourceData, meta inte
 	return []*schema.ResourceData{d}, nil
 }
 
-func resourceObjectUpload(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceObjectUpload(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
@@ -541,7 +547,7 @@ func resourceObjectUpload(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if v, ok := d.GetOk("metadata"); ok {
-		input.Metadata = flex.ExpandStringValueMap(v.(map[string]interface{}))
+		input.Metadata = flex.ExpandStringValueMap(v.(map[string]any))
 	}
 
 	if v, ok := d.GetOk("object_lock_legal_hold_status"); ok {
@@ -600,8 +606,8 @@ func resourceObjectUpload(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceObjectRead(ctx, d, meta)...)
 }
 
-func validateMetadataIsLowerCase(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(map[string]interface{})
+func validateMetadataIsLowerCase(v any, k string) (ws []string, errors []error) {
+	value := v.(map[string]any)
 
 	for k := range value {
 		if k != strings.ToLower(k) {
@@ -612,7 +618,7 @@ func validateMetadataIsLowerCase(v interface{}, k string) (ws []string, errors [
 	return
 }
 
-func resourceObjectCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+func resourceObjectCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta any) error {
 	if hasObjectContentChanges(d) {
 		return d.SetNewComputed("version_id")
 	}
@@ -626,7 +632,7 @@ func resourceObjectCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta
 }
 
 func hasObjectContentChanges(d sdkv2.ResourceDiffer) bool {
-	for _, key := range []string{
+	return slices.ContainsFunc([]string{
 		"bucket_key_enabled",
 		"cache_control",
 		"checksum_algorithm",
@@ -644,12 +650,7 @@ func hasObjectContentChanges(d sdkv2.ResourceDiffer) bool {
 		"source_hash",
 		names.AttrStorageClass,
 		"website_redirect",
-	} {
-		if d.HasChange(key) {
-			return true
-		}
-	}
-	return false
+	}, d.HasChange)
 }
 
 func findObjectByBucketAndKey(ctx context.Context, conn *s3.Client, bucket, key, etag, checksumAlgorithm string, optFns ...func(*s3.Options)) (*s3.HeadObjectOutput, error) {
@@ -720,8 +721,8 @@ func sdkv1CompatibleCleanKey(key string) string {
 }
 
 func ignoreProviderDefaultTags(ctx context.Context, d sdkv2.ResourceDiffer) bool {
-	if v, ok := d.GetOk("override_provider"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		if data := expandOverrideProviderModel(ctx, v.([]interface{})[0].(map[string]interface{})); data != nil && data.DefaultTagsConfig != nil {
+	if v, ok := d.GetOk("override_provider"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		if data := expandOverrideProviderModel(ctx, v.([]any)[0].(map[string]any)); data != nil && data.DefaultTagsConfig != nil {
 			return len(data.DefaultTagsConfig.Tags) == 0
 		}
 	}
@@ -733,33 +734,33 @@ type overrideProviderModel struct {
 	DefaultTagsConfig *tftags.DefaultConfig
 }
 
-func expandOverrideProviderModel(ctx context.Context, tfMap map[string]interface{}) *overrideProviderModel {
+func expandOverrideProviderModel(ctx context.Context, tfMap map[string]any) *overrideProviderModel {
 	if tfMap == nil {
 		return nil
 	}
 
 	data := &overrideProviderModel{}
 
-	if v, ok := tfMap["default_tags"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["default_tags"].([]any); ok && len(v) > 0 {
 		if v[0] != nil {
-			data.DefaultTagsConfig = expandDefaultTags(ctx, v[0].(map[string]interface{}))
+			data.DefaultTagsConfig = expandDefaultTags(ctx, v[0].(map[string]any))
 		} else {
 			// Ensure that DefaultTagsConfig is not nil as it's checked in ignoreProviderDefaultTags.
-			data.DefaultTagsConfig = expandDefaultTags(ctx, map[string]interface{}{})
+			data.DefaultTagsConfig = expandDefaultTags(ctx, map[string]any{})
 		}
 	}
 
 	return data
 }
 
-func expandDefaultTags(ctx context.Context, tfMap map[string]interface{}) *tftags.DefaultConfig {
+func expandDefaultTags(ctx context.Context, tfMap map[string]any) *tftags.DefaultConfig {
 	if tfMap == nil {
 		return nil
 	}
 
 	data := &tftags.DefaultConfig{}
 
-	if v, ok := tfMap[names.AttrTags].(map[string]interface{}); ok {
+	if v, ok := tfMap[names.AttrTags].(map[string]any); ok {
 		data.Tags = tftags.New(ctx, v)
 	}
 

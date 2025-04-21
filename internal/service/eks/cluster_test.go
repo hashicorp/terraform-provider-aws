@@ -28,6 +28,9 @@ import (
 const (
 	clusterVersionUpgradeInitial = "1.27"
 	clusterVersionUpgradeUpdated = "1.28"
+
+	clusterVersionUpgradeForceInitial = "1.30"
+	clusterVersionUpgradeForceUpdated = "1.31"
 )
 
 func TestAccEKSCluster_basic(t *testing.T) {
@@ -430,7 +433,7 @@ func TestAccEKSCluster_ComputeConfig_OnUpdate(t *testing.T) {
 
 func TestAccEKSCluster_ComputeConfig_ModifyARN(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster1, cluster2 types.Cluster
+	var cluster types.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_cluster.test"
 
@@ -443,7 +446,7 @@ func TestAccEKSCluster_ComputeConfig_ModifyARN(t *testing.T) {
 			{
 				Config: testAccClusterConfig_computeConfig(rName, true, "aws_iam_role.node.arn"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster1),
+					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "compute_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "compute_config.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "compute_config.0.node_pools.#", "1"),
@@ -456,12 +459,16 @@ func TestAccEKSCluster_ComputeConfig_ModifyARN(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.block_storage.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.block_storage.0.enabled", acctest.CtTrue),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				Config: testAccClusterConfig_computeConfig(rName, true, "aws_iam_role.node2.arn"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster2),
-					testAccCheckClusterRecreated(&cluster1, &cluster2),
+					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "compute_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "compute_config.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "compute_config.0.node_pools.#", "1"),
@@ -474,6 +481,69 @@ func TestAccEKSCluster_ComputeConfig_ModifyARN(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.block_storage.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.block_storage.0.enabled", acctest.CtTrue),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
+			},
+		},
+	})
+}
+
+func TestAccEKSCluster_ComputeConfig_AddARN(t *testing.T) {
+	ctx := acctest.Context(t)
+	var cluster types.Cluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_eks_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_computeConfig_nodePoolsSetup(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "compute_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "compute_config.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.0.elastic_load_balancing.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.0.elastic_load_balancing.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.block_storage.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.block_storage.0.enabled", acctest.CtTrue),
+				),
+			},
+			{
+				Config: testAccClusterConfig_computeConfig(rName, true, "aws_iam_role.node.arn"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "compute_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "compute_config.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "compute_config.0.node_pools.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "compute_config.0.node_pools.0", "general-purpose"),
+					resource.TestCheckResourceAttrPair(resourceName, "compute_config.0.node_role_arn", "aws_iam_role.node", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.0.elastic_load_balancing.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.0.elastic_load_balancing.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.block_storage.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.block_storage.0.enabled", acctest.CtTrue),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -606,9 +676,55 @@ func TestAccEKSCluster_Encryption_versionUpdate(t *testing.T) {
 	})
 }
 
+func TestAccEKSCluster_forceUpdateVersion(t *testing.T) {
+	ctx := acctest.Context(t)
+	var cluster types.Cluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_eks_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_preForceUpdateVersion(rName, clusterVersionUpgradeForceInitial),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, clusterVersionUpgradeForceInitial),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
+			},
+			{
+				Config: testAccClusterConfig_forceUpdateVersion(rName, clusterVersionUpgradeForceUpdated),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, clusterVersionUpgradeForceUpdated),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
 func TestAccEKSCluster_version(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster1, cluster2 types.Cluster
+	var cluster types.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_cluster.test"
 
@@ -621,9 +737,14 @@ func TestAccEKSCluster_version(t *testing.T) {
 			{
 				Config: testAccClusterConfig_version(rName, clusterVersionUpgradeInitial),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster1),
+					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, clusterVersionUpgradeInitial),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -634,10 +755,14 @@ func TestAccEKSCluster_version(t *testing.T) {
 			{
 				Config: testAccClusterConfig_version(rName, clusterVersionUpgradeUpdated),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster2),
-					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
+					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, clusterVersionUpgradeUpdated),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -946,7 +1071,7 @@ func TestAccEKSCluster_VPC_publicAccessCIDRs(t *testing.T) {
 
 func TestAccEKSCluster_Network_serviceIPv4CIDR(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster1, cluster2 types.Cluster
+	var cluster types.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_cluster.test"
 
@@ -979,10 +1104,15 @@ func TestAccEKSCluster_Network_serviceIPv4CIDR(t *testing.T) {
 			{
 				Config: testAccClusterConfig_networkServiceIPv4CIDR(rName, `"192.168.0.0/24"`),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster1),
+					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.0.service_ipv4_cidr", "192.168.0.0/24"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -998,11 +1128,15 @@ func TestAccEKSCluster_Network_serviceIPv4CIDR(t *testing.T) {
 			{
 				Config: testAccClusterConfig_networkServiceIPv4CIDR(rName, `"192.168.1.0/24"`),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster2),
-					testAccCheckClusterRecreated(&cluster1, &cluster2),
+					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.0.service_ipv4_cidr", "192.168.1.0/24"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
 			},
 		},
 	})
@@ -1010,7 +1144,7 @@ func TestAccEKSCluster_Network_serviceIPv4CIDR(t *testing.T) {
 
 func TestAccEKSCluster_Network_ipFamily(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster1, cluster2 types.Cluster
+	var cluster types.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_cluster.test"
 
@@ -1023,10 +1157,15 @@ func TestAccEKSCluster_Network_ipFamily(t *testing.T) {
 			{
 				Config: testAccClusterConfig_networkIPFamily(rName, `"ipv6"`),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster1),
+					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.0.ip_family", "ipv6"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -1042,11 +1181,15 @@ func TestAccEKSCluster_Network_ipFamily(t *testing.T) {
 			{
 				Config: testAccClusterConfig_networkIPFamily(rName, `"ipv4"`),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster2),
-					testAccCheckClusterRecreated(&cluster1, &cluster2),
+					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.0.ip_family", "ipv4"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
 			},
 		},
 	})
@@ -1313,16 +1456,6 @@ func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			return fmt.Errorf("EKS Cluster %s still exists", rs.Primary.ID)
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckClusterRecreated(i, j *types.Cluster) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if aws.ToTime(i.CreatedAt).Equal(aws.ToTime(j.CreatedAt)) {
-			return errors.New("EKS Cluster was not recreated")
 		}
 
 		return nil
@@ -1648,6 +1781,51 @@ resource "aws_eks_cluster" "test" {
 `, rName, enabled, role))
 }
 
+func testAccClusterConfig_computeConfig_nodePoolsSetup(rName string, enabled bool) string {
+	return acctest.ConfigCompose(testAccClusterConfig_computeConfigBase(rName), fmt.Sprintf(`
+resource "aws_eks_cluster" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.cluster.arn
+
+  access_config {
+    # Either "API" or "API_AND_CONFIG_MAP" is required with compute config
+    authentication_mode                         = "API"
+    bootstrap_cluster_creator_admin_permissions = true
+  }
+
+  bootstrap_self_managed_addons = false
+
+  compute_config {
+    enabled = %[2]t
+  }
+
+  kubernetes_network_config {
+    elastic_load_balancing {
+      enabled = %[2]t
+    }
+  }
+
+  storage_config {
+    block_storage {
+      enabled = %[2]t
+    }
+  }
+
+  vpc_config {
+    subnet_ids = aws_subnet.test[*].id
+  }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.cluster_AmazonEKSClusterPolicy,
+    aws_iam_role_policy_attachment.cluster_AmazonEKSComputePolicy,
+    aws_iam_role_policy_attachment.cluster_AmazonEKSBlockStoragePolicy,
+    aws_iam_role_policy_attachment.cluster_AmazonEKSLoadBalancingPolicy,
+    aws_iam_role_policy_attachment.cluster_AmazonEKSNetworkingPolicy,
+  ]
+}
+`, rName, enabled))
+}
+
 func testAccClusterConfig_computeConfig_onUpdateSetup(rName string) string {
 	return acctest.ConfigCompose(testAccClusterConfig_computeConfigBase(rName), fmt.Sprintf(`
 resource "aws_eks_cluster" "test" {
@@ -1683,6 +1861,39 @@ resource "aws_eks_cluster" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.cluster.arn
   version  = %[2]q
+
+  vpc_config {
+    subnet_ids = aws_subnet.test[*].id
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.cluster_AmazonEKSClusterPolicy]
+}
+`, rName, version))
+}
+
+func testAccClusterConfig_preForceUpdateVersion(rName, version string) string {
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
+resource "aws_eks_cluster" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.cluster.arn
+  version  = %[2]q
+
+  vpc_config {
+    subnet_ids = aws_subnet.test[*].id
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.cluster_AmazonEKSClusterPolicy]
+}
+`, rName, version))
+}
+
+func testAccClusterConfig_forceUpdateVersion(rName, version string) string {
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
+resource "aws_eks_cluster" "test" {
+  name                 = %[1]q
+  role_arn             = aws_iam_role.cluster.arn
+  version              = %[2]q
+  force_update_version = true
 
   vpc_config {
     subnet_ids = aws_subnet.test[*].id

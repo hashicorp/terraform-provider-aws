@@ -57,10 +57,6 @@ type resourceIntent struct {
 	framework.WithTimeouts
 }
 
-func (r *resourceIntent) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_lexv2models_intent"
-}
-
 func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	slotPriorityLNB := schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[SlotPriority](ctx),
@@ -1189,7 +1185,7 @@ func waitIntentDeleted(ctx context.Context, conn *lexmodelsv2.Client, intentID, 
 }
 
 func statusIntent(ctx context.Context, conn *lexmodelsv2.Client, intentID, botID, botVersion, localeID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := findIntentByIDs(ctx, conn, intentID, botID, botVersion, localeID)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
