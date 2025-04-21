@@ -2343,7 +2343,7 @@ func expandServerlessV2ScalingConfiguration(tfMap map[string]any) *types.Serverl
 		apiObject.MinCapacity = aws.Float64(v)
 	}
 
-	if v, ok := tfMap["seconds_until_auto_pause"].(int); ok {
+	if v, ok := tfMap["seconds_until_auto_pause"].(int); ok && v != 0 {
 		if min, ok := tfMap["min_capacity"].(float64); ok && min == 0.0 {
 			apiObject.SecondsUntilAutoPause = aws.Int32(int32(v))
 		}
