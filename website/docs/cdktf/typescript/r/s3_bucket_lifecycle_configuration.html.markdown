@@ -592,7 +592,9 @@ The `and` configuration block supports the following arguments:
 * `objectSizeGreaterThan` - (Optional) Minimum object size to which the rule applies. Value must be at least `0` if specified. Defaults to 128000 (128 KB) for all `storageClass` values unless `transitionDefaultMinimumObjectSize` specifies otherwise.
 * `objectSizeLessThan` - (Optional) Maximum object size to which the rule applies. Value must be at least `1` if specified.
 * `prefix` - (Optional) Prefix identifying one or more objects to which the rule applies.
-* `tags` - (Optional) Key-value map of resource tags. All of these tags must exist in the object's tag set in order for the rule to apply.
+* `tags` - (Optional) Key-value map of resource tags.
+  All of these tags must exist in the object's tag set in order for the rule to apply.
+  If set, must contain at least one key-value pair.
 
 ### tag
 
@@ -673,4 +675,4 @@ If the owner (account ID) of the source bucket differs from the account used to 
 % terraform import aws_s3_bucket_lifecycle_configuration.example bucket-name,123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-f473b59bf9cf5e5ef5a2535fe96ac627fb281b7408eeb3959c1f336653e8e087 -->
+<!-- cache-key: cdktf-0.20.8 input-0d372dca2d3f39b30f3f701e0194d2114ccebccece26beba7e16ae8a2c88e3f8 -->
