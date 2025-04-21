@@ -1,9 +1,22 @@
 ## 5.96.0 (Unreleased)
 
+FEATURES:
+
+* **New Data Source:** `aws_fis_experiment_templates` ([#37060](https://github.com/hashicorp/terraform-provider-aws/issues/37060))
+
 ENHANCEMENTS:
 
+* data-source/aws_api_gateway_domain_name: Add `endpoint_configuration.ip_address_type` attribute ([#42146](https://github.com/hashicorp/terraform-provider-aws/issues/42146))
+* data-source/aws_api_gateway_rest_api: Add `endpoint_configuration.ip_address_type` attribute ([#42146](https://github.com/hashicorp/terraform-provider-aws/issues/42146))
+* data-source/aws_apigatewayv2_api: Add `ip_address_type` attribute ([#42145](https://github.com/hashicorp/terraform-provider-aws/issues/42145))
 * data-source/aws_dms_endpoint: Add `kinesis_settings.use_large_integer_value` attribute ([#42300](https://github.com/hashicorp/terraform-provider-aws/issues/42300))
+* resource/aws_api_gateway_domain_name: Add `endpoint_configuration.ip_address_type` argument to support dual-stack (IPv4 and IPv6) endpoints ([#42146](https://github.com/hashicorp/terraform-provider-aws/issues/42146))
+* resource/aws_api_gateway_rest_api: Add `endpoint_configuration.ip_address_type` argument to support dual-stack (IPv4 and IPv6) endpoints ([#42146](https://github.com/hashicorp/terraform-provider-aws/issues/42146))
+* resource/aws_apigatewayv2_api: Add `ip_address_type` argument to support dual-stack (IPv4 and IPv6) endpoints ([#42145](https://github.com/hashicorp/terraform-provider-aws/issues/42145))
+* resource/aws_apigatewayv2_domain_name: Add `domain_name_configuration.ip_address_type` argument to support dual-stack (IPv4 and IPv6) endpoints ([#42145](https://github.com/hashicorp/terraform-provider-aws/issues/42145))
 * resource/aws_dms_endpoint: Add `kinesis_settings.use_large_integer_value` argument ([#42300](https://github.com/hashicorp/terraform-provider-aws/issues/42300))
+* resource/aws_fis_experiment_template: Add `experiment_report_configuration` argument ([#41120](https://github.com/hashicorp/terraform-provider-aws/issues/41120))
+* resource/aws_rds_cluster: Fix `InvalidParameterValue: SecondsUntilAutoPause can only be specified when minimum capacity is 0` errors when removing `serverlessv2_scaling_configuration.seconds_until_auto_pause` ([#41180](https://github.com/hashicorp/terraform-provider-aws/issues/41180))
 
 ## 5.95.0 (April 17, 2025)
 
