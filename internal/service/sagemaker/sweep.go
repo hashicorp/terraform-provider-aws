@@ -4,6 +4,7 @@
 package sagemaker
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -15,6 +16,7 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/sdk"
@@ -36,10 +38,7 @@ func RegisterSweepers() {
 		F:    sweepCodeRepositories,
 	})
 
-	resource.AddTestSweepers("aws_sagemaker_device_fleet", &resource.Sweeper{
-		Name: "aws_sagemaker_device_fleet",
-		F:    sweepDeviceFleets,
-	})
+	awsv2.Register("aws_sagemaker_device_fleet", sweepDeviceFleets)
 
 	resource.AddTestSweepers("aws_sagemaker_domain", &resource.Sweeper{
 		Name: "aws_sagemaker_domain",
@@ -341,46 +340,29 @@ func sweepCodeRepositories(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func sweepDeviceFleets(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("getting client: %s", err)
-	}
+func sweepDeviceFleets(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.SageMakerClient(ctx)
-
+	var input sagemaker.ListDeviceFleetsInput
 	sweepResources := make([]sweep.Sweepable, 0)
-	var sweeperErrs *multierror.Error
 
-	pages := sagemaker.NewListDeviceFleetsPaginator(conn, &sagemaker.ListDeviceFleetsInput{})
+	pages := sagemaker.NewListDeviceFleetsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping SageMaker Device Fleet sweep for %s: %s", region, err)
-			return sweeperErrs.ErrorOrNil()
-		}
-
 		if err != nil {
-			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("retrieving SageMaker Device Fleets: %w", err))
+			return nil, err
 		}
 
-		for _, deviceFleet := range page.DeviceFleetSummaries {
-			name := aws.ToString(deviceFleet.DeviceFleetName)
-
+		for _, v := range page.DeviceFleetSummaries {
 			r := resourceDeviceFleet()
 			d := r.Data(nil)
-			d.SetId(name)
+			d.SetId(aws.ToString(v.DeviceFleetName))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 	}
 
-	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("sweeping SageMaker Device Fleets: %w", err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
+	return sweepResources, nil
 }
 
 func sweepDomains(region string) error {
