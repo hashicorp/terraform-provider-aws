@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 )
 
 // Implemented by (Config|Plan|State).GetAttribute().
@@ -60,6 +61,17 @@ func (w *wrappedDataSource) Schema(ctx context.Context, request datasource.Schem
 		return response.Diagnostics
 	}
 	response.Diagnostics.Append(interceptedHandler(w.opts.interceptors.dataSourceSchema(), f, w.meta)(ctx, &request, response)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	// Validate the data source's model against the schema.
+	if v, ok := w.inner.(framework.DataSourceValidateModel); ok {
+		response.Diagnostics.Append(v.ValidateModel(ctx, &response.Schema)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+	}
 }
 
 func (w *wrappedDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
