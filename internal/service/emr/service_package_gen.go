@@ -19,7 +19,7 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
 	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:  newDataSourceSupportedInstanceTypes,
+			Factory:  newSupportedInstanceTypesDataSource,
 			TypeName: "aws_emr_supported_instance_types",
 			Name:     "Supported Instance Types",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{

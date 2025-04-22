@@ -20,19 +20,21 @@ import (
 )
 
 // @FrameworkDataSource("aws_emr_supported_instance_types", name="Supported Instance Types")
-func newDataSourceSupportedInstanceTypes(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceSupportedInstanceTypes{}, nil
+func newSupportedInstanceTypesDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &supportedInstanceTypesDataSource{}, nil
 }
 
 const (
 	DSNameSupportedInstanceTypes = "Supported Instance Types Data Source"
 )
 
-type dataSourceSupportedInstanceTypes struct {
+type supportedInstanceTypesDataSource struct {
 	framework.DataSourceWithConfigure
+	// TODO REGION Use DataSourceComputedListOfObjectAttribute.
+	//framework.DataSourceWithModel[supportedInstanceTypesDataSourceModel]
 }
 
-func (d *dataSourceSupportedInstanceTypes) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *supportedInstanceTypesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: framework.IDAttribute(),
@@ -83,10 +85,10 @@ func (d *dataSourceSupportedInstanceTypes) Schema(ctx context.Context, req datas
 		},
 	}
 }
-func (d *dataSourceSupportedInstanceTypes) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *supportedInstanceTypesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().EMRClient(ctx)
 
-	var data dataSourceSupportedInstanceTypesData
+	var data supportedInstanceTypesDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -118,7 +120,8 @@ func (d *dataSourceSupportedInstanceTypes) Read(ctx context.Context, req datasou
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-type dataSourceSupportedInstanceTypesData struct {
+type supportedInstanceTypesDataSourceModel struct {
+	framework.WithRegionModel
 	ID                     types.String `tfsdk:"id"`
 	ReleaseLabel           types.String `tfsdk:"release_label"`
 	SupportedInstanceTypes types.List   `tfsdk:"supported_instance_types"`
