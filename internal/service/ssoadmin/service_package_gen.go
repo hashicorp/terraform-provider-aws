@@ -19,7 +19,7 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
 	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:  newDataSourceApplication,
+			Factory:  newApplicationDataSource,
 			TypeName: "aws_ssoadmin_application",
 			Name:     "Application",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
@@ -28,7 +28,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			}),
 		},
 		{
-			Factory:  newDataSourceApplicationAssignments,
+			Factory:  newApplicationAssignmentsDataSource,
 			TypeName: "aws_ssoadmin_application_assignments",
 			Name:     "Application Assignments",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
@@ -37,7 +37,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			}),
 		},
 		{
-			Factory:  newDataSourceApplicationProviders,
+			Factory:  newApplicationProvidersDataSource,
 			TypeName: "aws_ssoadmin_application_providers",
 			Name:     "Application Providers",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
@@ -55,7 +55,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			}),
 		},
 		{
-			Factory:  newDataSourcePrincipalApplicationAssignments,
+			Factory:  newPrincipalApplicationAssignmentsDataSource,
 			TypeName: "aws_ssoadmin_principal_application_assignments",
 			Name:     "Principal Application Assignments",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{

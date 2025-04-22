@@ -20,19 +20,21 @@ import (
 )
 
 // @FrameworkDataSource("aws_ssoadmin_application_providers", name="Application Providers")
-func newDataSourceApplicationProviders(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceApplicationProviders{}, nil
+func newApplicationProvidersDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &applicationProvidersDataSource{}, nil
 }
 
 const (
 	DSNameApplicationProviders = "Application Providers Data Source"
 )
 
-type dataSourceApplicationProviders struct {
+type applicationProvidersDataSource struct {
 	framework.DataSourceWithConfigure
+	// TODO REGION Use DataSourceComputedListOfObjectAttribute.
+	// framework.DataSourceWithModel[applicationProvidersDataSourceModel]
 }
 
-func (d *dataSourceApplicationProviders) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *applicationProvidersDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: framework.IDAttribute(),
@@ -69,10 +71,10 @@ func (d *dataSourceApplicationProviders) Schema(ctx context.Context, req datasou
 	}
 }
 
-func (d *dataSourceApplicationProviders) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *applicationProvidersDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().SSOAdminClient(ctx)
 
-	var data dataSourceApplicationProvidersData
+	var data applicationProvidersDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -104,7 +106,8 @@ func (d *dataSourceApplicationProviders) Read(ctx context.Context, req datasourc
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-type dataSourceApplicationProvidersData struct {
+type applicationProvidersDataSourceModel struct {
+	framework.WithRegionModel
 	ApplicationProviders types.List   `tfsdk:"application_providers"`
 	ID                   types.String `tfsdk:"id"`
 }

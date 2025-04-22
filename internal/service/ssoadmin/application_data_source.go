@@ -17,19 +17,21 @@ import (
 )
 
 // @FrameworkDataSource("aws_ssoadmin_application", name="Application")
-func newDataSourceApplication(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceApplication{}, nil
+func newApplicationDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &applicationDataSource{}, nil
 }
 
 const (
 	DSNameApplication = "Application Data Source"
 )
 
-type dataSourceApplication struct {
+type applicationDataSource struct {
 	framework.DataSourceWithConfigure
+	// TODO REGION Use DataSourceComputedListOfObjectAttribute.
+	// framework.DataSourceWithModel[applicationDataSourceModel]
 }
 
-func (d *dataSourceApplication) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *applicationDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"application_account": schema.StringAttribute{
@@ -86,10 +88,10 @@ func (d *dataSourceApplication) Schema(ctx context.Context, req datasource.Schem
 	}
 }
 
-func (d *dataSourceApplication) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *applicationDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().SSOAdminClient(ctx)
 
-	var data dataSourceApplicationData
+	var data applicationDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -120,7 +122,8 @@ func (d *dataSourceApplication) Read(ctx context.Context, req datasource.ReadReq
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-type dataSourceApplicationData struct {
+type applicationDataSourceModel struct {
+	framework.ResourceWithConfigure
 	ApplicationAccount     types.String `tfsdk:"application_account"`
 	ApplicationARN         fwtypes.ARN  `tfsdk:"application_arn"`
 	ApplicationProviderARN fwtypes.ARN  `tfsdk:"application_provider_arn"`
