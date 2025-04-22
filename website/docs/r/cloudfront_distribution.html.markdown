@@ -272,7 +272,7 @@ resource "aws_s3_bucket" "example" {
 resource "aws_cloudwatch_log_delivery_destination" "example" {
   provider = aws.us_east_1
 
-  name          = "s3-destionation"
+  name          = "s3-destination"
   output_format = "parquet"
 
   delivery_destination_configuration {
