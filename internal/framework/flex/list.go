@@ -169,7 +169,7 @@ func FlattenFrameworkStringValueList[T ~string](ctx context.Context, v []T) type
 	return output
 }
 
-func FlattenFrameworkStringValueListOfString(ctx context.Context, vs []string) fwtypes.ListValueOf[basetypes.StringValue] {
+func FlattenFrameworkStringValueListOfString(ctx context.Context, vs []string) fwtypes.ListOfString {
 	return fwtypes.ListValueOf[basetypes.StringValue]{ListValue: FlattenFrameworkStringValueList(ctx, vs)}
 }
 
@@ -185,6 +185,6 @@ func FlattenFrameworkStringValueListLegacy[T ~string](_ context.Context, vs []T)
 	return types.ListValueMust(types.StringType, elems)
 }
 
-func FlattenFrameworkStringValueListOfStringLegacy(ctx context.Context, vs []string) fwtypes.ListValueOf[basetypes.StringValue] {
+func FlattenFrameworkStringValueListOfStringLegacy(ctx context.Context, vs []string) fwtypes.ListOfString {
 	return fwtypes.ListValueOf[basetypes.StringValue]{ListValue: FlattenFrameworkStringValueListLegacy(ctx, vs)}
 }

@@ -9,8 +9,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 func ExpandFrameworkInt32Set(ctx context.Context, v basetypes.SetValuable) []*int32 {
@@ -53,7 +54,7 @@ func ExpandFrameworkStringSet(ctx context.Context, v basetypes.SetValuable) []*s
 	return output
 }
 
-func ExpandFrameworkStringValueSet(ctx context.Context, v basetypes.SetValuable) itypes.Set[string] {
+func ExpandFrameworkStringValueSet(ctx context.Context, v basetypes.SetValuable) inttypes.Set[string] {
 	var output []string
 
 	must(Expand(ctx, v, &output))
@@ -61,7 +62,7 @@ func ExpandFrameworkStringValueSet(ctx context.Context, v basetypes.SetValuable)
 	return output
 }
 
-func ExpandFrameworkStringyValueSet[T ~string](ctx context.Context, v basetypes.SetValuable) itypes.Set[T] {
+func ExpandFrameworkStringyValueSet[T ~string](ctx context.Context, v basetypes.SetValuable) inttypes.Set[T] {
 	vs := ExpandFrameworkStringValueSet(ctx, v)
 	if vs == nil {
 		return nil
@@ -163,6 +164,10 @@ func FlattenFrameworkStringValueSet[T ~string](ctx context.Context, v []T) types
 	must(Flatten(ctx, v, &output))
 
 	return output
+}
+
+func FlattenFrameworkStringValueSetOfString(ctx context.Context, vs []string) fwtypes.SetOfString {
+	return fwtypes.SetValueOf[basetypes.StringValue]{SetValue: FlattenFrameworkStringValueSet(ctx, vs)}
 }
 
 // FlattenFrameworkStringValueSetLegacy is the Plugin Framework variant of FlattenStringValueSet.
