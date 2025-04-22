@@ -19,7 +19,7 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
 	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:  newDataSourceSlackWorkspace,
+			Factory:  newSlackWorkspaceDataSource,
 			TypeName: "aws_chatbot_slack_workspace",
 			Name:     "Slack Workspace",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
