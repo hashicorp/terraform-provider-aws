@@ -25,17 +25,17 @@ from cdktf import TerraformStack
 #
 from imports.aws.backup_restore_testing_plan import BackupRestoreTestingPlan
 class MyConvertedCode(TerraformStack):
-    def __init__(self, scope, name, *, name):
+    def __init__(self, scope, name):
         super().__init__(scope, name)
         BackupRestoreTestingPlan(self, "example",
+            name="example_restore_testing_plan",
             recovery_point_selection=[BackupRestoreTestingPlanRecoveryPointSelection(
                 algorithm="LATEST_WITHIN_WINDOW",
                 include_vaults=["*"],
                 recovery_point_types=["CONTINUOUS"]
             )
             ],
-            schedule_expression="cron(0 12 ? * * *)",
-            name=name
+            schedule_expression="cron(0 12 ? * * *)"
         )
 ```
 
@@ -89,4 +89,4 @@ Using `terraform import`, import Backup Restore Testing Plan using the `name`. F
 % terraform import aws_backup_restore_testing_plan.example my_testing_plan
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-98db3ae18382b6c8b94d2b7f18b80388610b87baff76a2f102ab07a4c96f6a9e -->
+<!-- cache-key: cdktf-0.20.8 input-49a768bc1aad7c0da28c06537c069dfe011156513181947cebfbec5c52c34c43 -->

@@ -65,6 +65,12 @@ func resourceUserPoolDomain() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 63),
 			},
+			"managed_login_version": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.IntInSlice([]int{1, 2}),
+			},
 			names.AttrS3Bucket: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -93,7 +99,7 @@ func resourceUserPoolDomainCreate(ctx context.Context, d *schema.ResourceData, m
 
 	domain := d.Get(names.AttrDomain).(string)
 	timeout := 1 * time.Minute
-	input := &cognitoidentityprovider.CreateUserPoolDomainInput{
+	input := cognitoidentityprovider.CreateUserPoolDomainInput{
 		Domain:     aws.String(domain),
 		UserPoolId: aws.String(d.Get(names.AttrUserPoolID).(string)),
 	}
@@ -105,7 +111,11 @@ func resourceUserPoolDomainCreate(ctx context.Context, d *schema.ResourceData, m
 		timeout = 60 * time.Minute // Custom domains take more time to become active.
 	}
 
-	_, err := conn.CreateUserPoolDomain(ctx, input)
+	if v, ok := d.GetOk("managed_login_version"); ok {
+		input.ManagedLoginVersion = aws.Int32(int32(v.(int)))
+	}
+
+	_, err := conn.CreateUserPoolDomain(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Cognito User Pool Domain (%s): %s", domain, err)
@@ -145,6 +155,7 @@ func resourceUserPoolDomainRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("cloudfront_distribution_arn", desc.CloudFrontDistribution)
 	d.Set("cloudfront_distribution_zone_id", meta.(*conns.AWSClient).CloudFrontDistributionHostedZoneID(ctx))
 	d.Set(names.AttrDomain, d.Id())
+	d.Set("managed_login_version", desc.ManagedLoginVersion)
 	d.Set(names.AttrS3Bucket, desc.S3Bucket)
 	d.Set(names.AttrUserPoolID, desc.UserPoolId)
 	d.Set(names.AttrVersion, desc.Version)
@@ -156,23 +167,29 @@ func resourceUserPoolDomainUpdate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 
-	input := &cognitoidentityprovider.UpdateUserPoolDomainInput{
-		CustomDomainConfig: &awstypes.CustomDomainConfigType{
-			CertificateArn: aws.String(d.Get(names.AttrCertificateARN).(string)),
-		},
+	timeout := 5 * time.Minute
+	input := cognitoidentityprovider.UpdateUserPoolDomainInput{
 		Domain:     aws.String(d.Id()),
 		UserPoolId: aws.String(d.Get(names.AttrUserPoolID).(string)),
 	}
 
-	_, err := conn.UpdateUserPoolDomain(ctx, input)
+	if d.HasChange(names.AttrCertificateARN) {
+		timeout = 60 * time.Minute // Certificate ARN updates on custom domains take more time to become active.
+		input.CustomDomainConfig = &awstypes.CustomDomainConfigType{
+			CertificateArn: aws.String(d.Get(names.AttrCertificateARN).(string)),
+		}
+	}
+
+	if d.HasChange("managed_login_version") {
+		input.ManagedLoginVersion = aws.Int32(int32(d.Get("managed_login_version").(int)))
+	}
+
+	_, err := conn.UpdateUserPoolDomain(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Cognito User Pool Domain (%s): %s", d.Id(), err)
 	}
 
-	const (
-		timeout = 60 * time.Minute // Update is only for cert arns on custom domains, which take more time to become active.
-	)
 	if _, err := waitUserPoolDomainUpdated(ctx, conn, d.Id(), timeout); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Cognito User Pool Domain (%s) update: %s", d.Id(), err)
 	}
