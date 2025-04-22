@@ -40,7 +40,7 @@ Associations blocks (for `associations`) support the following attributes:
 * `associated_resource_arn` - ARN of the resource for this association.
 * `dns_entry` - DNS entries for the Association. [DNS entry blocks are documented below](#dns_entry-block).
 * `private_dns_entry` - DNS entries for the Association. [Private DNS entry blocks are documented below](#private_dns_entry-block).
-* `resource_configuration_group_arn` - ARN of the Resource Group if the Resource is a member of a group
+* `resource_configuration_group_arn` - ARN of the Resource Group if the Resource is a member of a group.
 * `service_network_arn` - Service Network ARN. Applicable for endpoints of type `ServiceNetwork`.
 * `service_network_name` - Service Network Name. Applicable for endpoints of type `ServiceNetwork`.
 * `tags` - Tags of the association.
