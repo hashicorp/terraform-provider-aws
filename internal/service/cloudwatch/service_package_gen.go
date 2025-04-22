@@ -19,7 +19,7 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
 	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:  newDataSourceContributorManagedInsightRules,
+			Factory:  newContributorManagedInsightRulesDataSource,
 			TypeName: "aws_cloudwatch_contributor_managed_insight_rules",
 			Name:     "Contributor Managed Insight Rules",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
