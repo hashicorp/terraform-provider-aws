@@ -109,7 +109,7 @@ func dataSourceUser() *schema.Resource {
 						},
 					},
 				},
-				ConflictsWith: []string{names.AttrFilter, "user_id"},
+				ConflictsWith: []string{"user_id"},
 			},
 			names.AttrDisplayName: {
 				Type:     schema.TypeString,
@@ -147,26 +147,6 @@ func dataSourceUser() *schema.Resource {
 						names.AttrIssuer: {
 							Type:     schema.TypeString,
 							Computed: true,
-						},
-					},
-				},
-			},
-			names.AttrFilter: {
-				Deprecated:    "filter is deprecated. Use alternate_identifier instead.",
-				Type:          schema.TypeList,
-				Optional:      true,
-				MaxItems:      1,
-				AtLeastOneOf:  []string{"alternate_identifier", names.AttrFilter, "user_id"},
-				ConflictsWith: []string{"alternate_identifier"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"attribute_path": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"attribute_value": {
-							Type:     schema.TypeString,
-							Required: true,
 						},
 					},
 				},
@@ -263,7 +243,7 @@ func dataSourceUser() *schema.Resource {
 					validation.StringLenBetween(1, 47),
 					validation.StringMatch(regexache.MustCompile(`^([0-9a-f]{10}-|)[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}$`), "must match ([0-9a-f]{10}-|)[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}"),
 				),
-				AtLeastOneOf:  []string{"alternate_identifier", names.AttrFilter, "user_id"},
+				AtLeastOneOf:  []string{"alternate_identifier", "user_id"},
 				ConflictsWith: []string{"alternate_identifier"},
 			},
 			names.AttrUserName: {
