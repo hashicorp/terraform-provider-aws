@@ -54,7 +54,7 @@ DNS blocks (for `dns_entry`) support the following attributes:
 
 ### `private_dns_entry` Block
 
-DNS blocks (for `dns_entry`) support the following attributes:
+DNS blocks (for `private_dns_entry`) support the following attributes:
 
 * `dns_name` - DNS name.
 * `hosted_zone_id` - ID of the private hosted zone.
