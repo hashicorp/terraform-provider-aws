@@ -33,7 +33,7 @@ func (p *servicePackage) EphemeralResources(ctx context.Context) []*inttypes.Ser
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
 	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:  newDataSourceClusterVersions,
+			Factory:  newClusterVersionsDataSource,
 			TypeName: "aws_eks_cluster_versions",
 			Name:     "Cluster Versions",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
