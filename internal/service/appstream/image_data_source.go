@@ -33,7 +33,7 @@ func newImageDataSource(context.Context) (datasource.DataSourceWithConfigure, er
 }
 
 type imageDataSource struct {
-	framework.DataSourceWithConfigure
+	framework.DataSourceWithModel[imageDataSourceModel]
 }
 
 func (d *imageDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -207,6 +207,7 @@ func findImages(ctx context.Context, conn *appstream.Client, input *appstream.De
 }
 
 type imageDataSourceModel struct {
+	framework.WithRegionModel
 	Applications                fwtypes.ListNestedObjectValueOf[applicationModel]            `tfsdk:"applications"`
 	AppStreamAgentVersion       types.String                                                 `tfsdk:"appstream_agent_version"`
 	ARN                         fwtypes.ARN                                                  `tfsdk:"arn"`
