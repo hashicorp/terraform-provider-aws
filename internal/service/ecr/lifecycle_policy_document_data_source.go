@@ -28,7 +28,7 @@ func newLifecyclePolicyDocumentDataSource(context.Context) (datasource.DataSourc
 }
 
 type lifecyclePolicyDocumentDataSource struct {
-	framework.DataSourceWithConfigure
+	framework.DataSourceWithModel[lifecyclePolicyDocumentDataSourceModel]
 }
 
 func (d *lifecyclePolicyDocumentDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
