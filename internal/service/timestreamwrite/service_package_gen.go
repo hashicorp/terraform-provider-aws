@@ -19,7 +19,7 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
 	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:  newDataSourceDatabase,
+			Factory:  newDatabaseDataSource,
 			TypeName: "aws_timestreamwrite_database",
 			Name:     "Database",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
@@ -28,7 +28,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			}),
 		},
 		{
-			Factory:  newDataSourceTable,
+			Factory:  newTableDataSource,
 			TypeName: "aws_timestreamwrite_table",
 			Name:     "Table",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
