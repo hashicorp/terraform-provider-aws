@@ -20,7 +20,7 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
 	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:  newDataSourceProtection,
+			Factory:  newProtectionDataSource,
 			TypeName: "aws_shield_protection",
 			Name:     "Protection",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
