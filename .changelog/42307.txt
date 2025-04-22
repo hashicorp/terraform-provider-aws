@@ -1,0 +1,3 @@
+```release-note:breaking-change
+resource/aws_bedrock_model_invocation_logging_configuration: `logging_config`, `logging_config.cloudwatch_config`, `logging_config.cloudwatch_config.large_data_delivery_s3_config`, and `logging_config.s3_config` are now list nested blocks instead of single nested blocks
+```
