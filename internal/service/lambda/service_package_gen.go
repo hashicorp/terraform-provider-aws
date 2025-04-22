@@ -19,7 +19,7 @@ type servicePackage struct{}
 func (p *servicePackage) EphemeralResources(ctx context.Context) []*inttypes.ServicePackageEphemeralResource {
 	return []*inttypes.ServicePackageEphemeralResource{
 		{
-			Factory:  newEphemeralInvocation,
+			Factory:  newInvocationEphemeralResource,
 			TypeName: "aws_lambda_invocation",
 			Name:     "Invocation",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
