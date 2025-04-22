@@ -20,15 +20,15 @@ const (
 )
 
 // @EphemeralResource(aws_eks_cluster_auth, name="ClusterAuth")
-func newEphemeralClusterAuth(_ context.Context) (ephemeral.EphemeralResourceWithConfigure, error) {
-	return &ephemeralClusterAuth{}, nil
+func newClusterAuthEphemeralResource(_ context.Context) (ephemeral.EphemeralResourceWithConfigure, error) {
+	return &clusterAuthEphemeralResource{}, nil
 }
 
-type ephemeralClusterAuth struct {
-	framework.EphemeralResourceWithConfigure
+type clusterAuthEphemeralResource struct {
+	framework.EphemeralResourceWithModel[clusterAuthEphemeralResourceModel]
 }
 
-func (e *ephemeralClusterAuth) Schema(ctx context.Context, _ ephemeral.SchemaRequest, response *ephemeral.SchemaResponse) {
+func (e *clusterAuthEphemeralResource) Schema(ctx context.Context, _ ephemeral.SchemaRequest, response *ephemeral.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrName: schema.StringAttribute{
@@ -42,9 +42,9 @@ func (e *ephemeralClusterAuth) Schema(ctx context.Context, _ ephemeral.SchemaReq
 	}
 }
 
-func (e *ephemeralClusterAuth) Open(ctx context.Context, request ephemeral.OpenRequest, response *ephemeral.OpenResponse) {
+func (e *clusterAuthEphemeralResource) Open(ctx context.Context, request ephemeral.OpenRequest, response *ephemeral.OpenResponse) {
 	conn := e.Meta().STSClient(ctx)
-	data := epClusterAuthData{}
+	data := clusterAuthEphemeralResourceModel{}
 
 	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
@@ -77,7 +77,8 @@ func (e *ephemeralClusterAuth) Open(ctx context.Context, request ephemeral.OpenR
 	response.Diagnostics.Append(response.Result.Set(ctx, &data)...)
 }
 
-type epClusterAuthData struct {
+type clusterAuthEphemeralResourceModel struct {
+	framework.WithRegionModel
 	Name  types.String `tfsdk:"name"`
 	Token types.String `tfsdk:"token"`
 }

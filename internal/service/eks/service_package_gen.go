@@ -19,7 +19,7 @@ type servicePackage struct{}
 func (p *servicePackage) EphemeralResources(ctx context.Context) []*inttypes.ServicePackageEphemeralResource {
 	return []*inttypes.ServicePackageEphemeralResource{
 		{
-			Factory:  newEphemeralClusterAuth,
+			Factory:  newClusterAuthEphemeralResource,
 			TypeName: "aws_eks_cluster_auth",
 			Name:     "ClusterAuth",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
