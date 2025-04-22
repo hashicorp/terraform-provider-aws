@@ -19,7 +19,7 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
 	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:  newDataSourceNotificationChannel,
+			Factory:  newNotificationChannelDataSource,
 			TypeName: "aws_devopsguru_notification_channel",
 			Name:     "Notification Channel",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
@@ -28,7 +28,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			}),
 		},
 		{
-			Factory:  newDataSourceResourceCollection,
+			Factory:  newResourceCollectionDataSource,
 			TypeName: "aws_devopsguru_resource_collection",
 			Name:     "Resource Collection",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{

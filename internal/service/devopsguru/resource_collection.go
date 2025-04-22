@@ -301,7 +301,7 @@ type resourceResourceCollectionData struct {
 }
 
 type cloudformationData struct {
-	StackNames fwtypes.ListValueOf[types.String] `tfsdk:"stack_names"`
+	StackNames fwtypes.ListOfString `tfsdk:"stack_names"`
 }
 
 type tagsData struct {
