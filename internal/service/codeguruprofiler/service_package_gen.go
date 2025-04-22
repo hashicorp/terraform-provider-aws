@@ -19,7 +19,7 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
 	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:  newDataSourceProfilingGroup,
+			Factory:  newProfilingGroupDataSource,
 			TypeName: "aws_codeguruprofiler_profiling_group",
 			Name:     "Profiling Group",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
