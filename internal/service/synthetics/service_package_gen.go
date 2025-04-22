@@ -19,7 +19,7 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
 	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:  newDataSourceRuntimeVersion,
+			Factory:  newRuntimeVersionDataSource,
 			TypeName: "aws_synthetics_runtime_version",
 			Name:     "Runtime Version",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
@@ -28,7 +28,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			}),
 		},
 		{
-			Factory:  newDataSourceRuntimeVersions,
+			Factory:  newRuntimeVersionsDataSource,
 			TypeName: "aws_synthetics_runtime_versions",
 			Name:     "Runtime Versions",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
