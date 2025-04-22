@@ -19,7 +19,7 @@ type servicePackage struct{}
 func (p *servicePackage) EphemeralResources(ctx context.Context) []*inttypes.ServicePackageEphemeralResource {
 	return []*inttypes.ServicePackageEphemeralResource{
 		{
-			Factory:  newEphemeralParameter,
+			Factory:  newParameterEphemeralResource,
 			TypeName: "aws_ssm_parameter",
 			Name:     "Parameter",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
