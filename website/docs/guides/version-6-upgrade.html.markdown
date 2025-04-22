@@ -20,6 +20,7 @@ Upgrade topics:
 - [Dropping Support For Amazon Worklink](#dropping-support-for-amazon-worklink)
 - [AWS OpsWorks Stacks End of Life](#aws-opsworks-stacks-end-of-life)
 - [AWS CloudWatch Evidently Deprecation](#aws-cloudwatch-evidently-deprecation)
+- [Amazon Elastic Transcoder Deprecation](#amazon-elastic-transcoder-deprecation)
 - [data-source/aws_ami](#data-sourceaws_ami)
 - [data-source/aws_batch_compute_environment](#data-sourceaws_batch_compute_environment)
 - [data-source/aws_ecs_task_definition](#data-sourceaws_ecs_task_definition)
@@ -151,6 +152,16 @@ The following resources have been deprecated and will be removed in a future maj
 * `aws_evidently_segment`
 
 Use [AWS AppConfig Feature Flags](https://aws.amazon.com/blogs/mt/using-aws-appconfig-feature-flags/) instead.
+
+## Amazon Elastic Transcoder Deprecation
+
+AWS has made the decision to [discontinue Amazon Elastic Transcoder](https://aws.amazon.com/blogs/media/support-for-amazon-elastic-transcoder-ending-soon/), effective November 13, 2025.
+The following resources have been deprecated and will be removed in a future major version.
+
+* `aws_elastictranscoder_pipeline`
+* `aws_elastictranscoder_preset`
+
+Use [AWS Elemental MediaConvert](https://aws.amazon.com/blogs/media/migrating-workflows-from-amazon-elastic-transcoder-to-aws-elemental-mediaconvert/) instead.
 
 ## data-source/aws_ami
 
