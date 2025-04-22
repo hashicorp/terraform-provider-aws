@@ -19,7 +19,7 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
 	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:  newDataSourceSearch,
+			Factory:  newSearchDataSource,
 			TypeName: "aws_resourceexplorer2_search",
 			Name:     "Search",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
