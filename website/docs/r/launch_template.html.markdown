@@ -42,10 +42,6 @@ resource "aws_launch_template" "foo" {
 
   ebs_optimized = true
 
-  elastic_gpu_specifications {
-    type = "test"
-  }
-
   iam_instance_profile {
     name = "test"
   }
@@ -119,8 +115,6 @@ This resource supports the following arguments:
 * `disable_api_termination` - (Optional) If `true`, enables [EC2 Instance
   Termination Protection](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Using_ChangingDisableAPITermination.html)
 * `ebs_optimized` - (Optional) If `true`, the launched EC2 instance will be EBS-optimized.
-* `elastic_gpu_specifications` - (Optional) **DEPRECATED** The elastic GPU to attach to the instance. See [Elastic GPU](#elastic-gpu)
-  below for more details.
 * `enclave_options` - (Optional) Enable Nitro Enclaves on launched instances. See [Enclave Options](#enclave-options) below for more details.
 * `hibernation_options` - (Optional) The hibernation options for the instance. See [Hibernation Options](#hibernation-options) below for more details.
 * `iam_instance_profile` - (Optional) The IAM Instance Profile to launch the instance with. See [Instance Profile](#instance-profile)
@@ -220,14 +214,6 @@ The `credit_specification` block supports the following:
   Can be `standard` or `unlimited`.
   T3 instances are launched as `unlimited` by default.
   T2 instances are launched as `standard` by default.
-
-### Elastic GPU
-
-Attach an elastic GPU the instance.
-
-The `elastic_gpu_specifications` block supports the following:
-
-* `type` - The [Elastic GPU Type](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/elastic-graphics.html#elastic-graphics-basics)
 
 ### Enclave Options
 

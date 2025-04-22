@@ -210,6 +210,8 @@ For example, `action[0].authenticate_cognito.scope` would now be referenced as `
 
 ## data-source/aws_launch_template
 
+Remove `elastic_gpu_specifications` from your configuration—it no longer exists. Amazon Elastic Graphics reached end of life in January 2024.
+
 Remove `elastic_inference_accelerator` from your configuration—it no longer exists. Amazon Elastic Inference reached end of life in April 2024.
 
 ## data-source/aws_opensearch_domain
@@ -286,6 +288,8 @@ The `etag` argument is now computed only.
 Remove `inference_accelerator` from your configuration—it no longer exists. Amazon Elastic Inference reached end of life in April 2024.
 
 ## resource/aws_launch_template
+
+Remove `elastic_gpu_specifications` from your configuration—it no longer exists. Amazon Elastic Graphics reached end of life in January 2024.
 
 Remove `elastic_inference_accelerator` from your configuration—it no longer exists. Amazon Elastic Inference reached end of life in April 2024.
 
