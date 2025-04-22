@@ -42,7 +42,7 @@ func (p *servicePackage) EphemeralResources(ctx context.Context) []*inttypes.Ser
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
 	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:  newDataSourceSecretVersions,
+			Factory:  newSecretVersionsDataSource,
 			TypeName: "aws_secretsmanager_secret_versions",
 			Name:     "Secret Versions",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
