@@ -30,7 +30,7 @@ The following arguments are required:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `associations` - Associations for the VPC Endpoint. [Association blocks are documented below](#associations-block)
+* `associations` - Associations for the VPC Endpoint. [Association blocks are documented below](#associations-block).
 
 ### `associations` Block
 
