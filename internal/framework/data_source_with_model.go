@@ -13,8 +13,9 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
 
-// DataSourceWithConfigure is a structure to be embedded within a DataSource that has a corresponding model.
+// DataSourceWithModel is a structure to be embedded within a DataSource that has a corresponding model.
 type DataSourceWithModel[T any] struct {
+	withModel[T]
 	DataSourceWithConfigure
 }
 
@@ -25,6 +26,22 @@ func (d *DataSourceWithModel[T]) ValidateModel(ctx context.Context, schema *sche
 		Raw:    tftypes.NewValue(schema.Type().TerraformType(ctx), nil),
 		Schema: schema,
 	}
+
+	diags.Append(d.validateModel(ctx, &state)...)
+
+	return diags
+}
+
+type DataSourceValidateModel interface {
+	ValidateModel(ctx context.Context, schema *schema.Schema) diag.Diagnostics
+}
+
+// withModel is a structure to be embedded within a DataSource, EphemeralResource, or Resource that has a corresponding model.
+type withModel[T any] struct{}
+
+// validateModel validates the data source's model against a schema.
+func (d *withModel[T]) validateModel(ctx context.Context, state *tfsdk.State) diag.Diagnostics {
+	var diags diag.Diagnostics
 	var data T
 
 	diags.Append(fwtypes.NullOutObjectPtrFields(ctx, &data)...)
@@ -34,8 +51,4 @@ func (d *DataSourceWithModel[T]) ValidateModel(ctx context.Context, schema *sche
 	diags.Append(state.Set(ctx, &data)...)
 
 	return diags
-}
-
-type DataSourceValidateModel interface {
-	ValidateModel(ctx context.Context, schema *schema.Schema) diag.Diagnostics
 }

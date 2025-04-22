@@ -69,9 +69,13 @@ func (w *wrappedDataSource) Schema(ctx context.Context, request datasource.Schem
 	if v, ok := w.inner.(framework.DataSourceValidateModel); ok {
 		response.Diagnostics.Append(v.ValidateModel(ctx, &response.Schema)...)
 		if response.Diagnostics.HasError() {
+			// response.Diagnostics.AddError("data source model validation error", w.opts.typeName)
 			return
 		}
 	}
+	// else {
+	// 	response.Diagnostics.AddError("missing framework.DataSourceValidateModel", w.opts.typeName)
+	// }
 }
 
 func (w *wrappedDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
@@ -170,6 +174,17 @@ func (w *wrappedEphemeralResource) Schema(ctx context.Context, request ephemeral
 		return response.Diagnostics
 	}
 	response.Diagnostics.Append(interceptedHandler(w.opts.interceptors.ephemeralResourceSchema(), f, w.meta)(ctx, &request, response)...)
+
+	// Validate the ephemeral resource's model against the schema.
+	if v, ok := w.inner.(framework.EphemeralResourceValidateModel); ok {
+		response.Diagnostics.Append(v.ValidateModel(ctx, &response.Schema)...)
+		if response.Diagnostics.HasError() {
+			// response.Diagnostics.AddError("ephemeral resource model validation error", w.opts.typeName)
+			return
+		}
+	} else {
+		response.Diagnostics.AddError("missing framework.EphemeralResourceValidateModel", w.opts.typeName)
+	}
 }
 
 func (w *wrappedEphemeralResource) Open(ctx context.Context, request ephemeral.OpenRequest, response *ephemeral.OpenResponse) {
