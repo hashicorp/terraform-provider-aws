@@ -227,25 +227,6 @@ func TestAccAppStreamImageBuilder_imageARN(t *testing.T) {
 	})
 }
 
-func testAccCheckImageBuilderExists(ctx context.Context, n string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No AppStream ImageBuilder ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamClient(ctx)
-
-		_, err := tfappstream.FindImageBuilderByName(ctx, conn, rs.Primary.ID)
-
-		return err
-	}
-}
-
 func testAccCheckImageBuilderDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamClient(ctx)
@@ -255,7 +236,7 @@ func testAccCheckImageBuilderDestroy(ctx context.Context) resource.TestCheckFunc
 				continue
 			}
 
-			_, err := tfappstream.FindImageBuilderByName(ctx, conn, rs.Primary.ID)
+			_, err := tfappstream.FindImageBuilderByID(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -269,6 +250,21 @@ func testAccCheckImageBuilderDestroy(ctx context.Context) resource.TestCheckFunc
 		}
 
 		return nil
+	}
+}
+
+func testAccCheckImageBuilderExists(ctx context.Context, n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamClient(ctx)
+
+		_, err := tfappstream.FindImageBuilderByID(ctx, conn, rs.Primary.ID)
+
+		return err
 	}
 }
 

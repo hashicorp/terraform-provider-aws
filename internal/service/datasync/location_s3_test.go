@@ -211,6 +211,53 @@ func testAccCheckLocationS3Exists(ctx context.Context, n string, v *datasync.Des
 	}
 }
 
+func testAccLocationS3Config_base2(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "test2" {
+  name = %[1]q
+
+  assume_role_policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "datasync.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_iam_role_policy" "test2" {
+  role   = aws_iam_role.test2.id
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Action": [
+      "s3:*"
+    ],
+    "Effect": "Allow",
+    "Resource": [
+      "${aws_s3_bucket.test2.arn}",
+      "${aws_s3_bucket.test2.arn}/*"
+    ]
+  }]
+}
+POLICY
+}
+
+resource "aws_s3_bucket" "test2" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+`, rName)
+}
+
 func testAccLocationS3Config_base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {

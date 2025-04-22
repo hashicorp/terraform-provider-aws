@@ -74,7 +74,8 @@ func resourceCluster() *schema.Resource {
 				oldRoleARN := aws.ToString(oldComputeConfig.NodeRoleArn)
 				newRoleARN := aws.ToString(newComputeConfig.NodeRoleArn)
 
-				if oldRoleARN != newRoleARN {
+				// only force new if an existing role has changed, not if a new role is added
+				if oldRoleARN != "" && oldRoleARN != newRoleARN {
 					if err := rd.ForceNew("compute_config.0.node_role_arn"); err != nil {
 						return err
 					}
@@ -209,6 +210,10 @@ func resourceCluster() *schema.Resource {
 			names.AttrEndpoint: {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"force_update_version": {
+				Type:     schema.TypeBool,
+				Optional: true,
 			},
 			"identity": {
 				Type:     schema.TypeList,
@@ -690,6 +695,10 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 		input := &eks.UpdateClusterVersionInput{
 			Name:    aws.String(d.Id()),
 			Version: aws.String(d.Get(names.AttrVersion).(string)),
+		}
+
+		if v, ok := d.GetOk("force_update_version"); ok {
+			input.Force = v.(bool)
 		}
 
 		output, err := conn.UpdateClusterVersion(ctx, input)

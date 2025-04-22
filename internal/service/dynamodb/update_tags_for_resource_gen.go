@@ -44,7 +44,7 @@ func updateTagsResource(ctx context.Context, conn *dynamodb.Client, identifier s
 	if len(updatedTags) > 0 {
 		input := dynamodb.TagResourceInput{
 			ResourceArn: aws.String(identifier),
-			Tags:        Tags(updatedTags),
+			Tags:        svcTags(updatedTags),
 		}
 
 		_, err := conn.TagResource(ctx, &input, optFns...)

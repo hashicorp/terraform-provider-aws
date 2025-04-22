@@ -70,7 +70,7 @@ func bucketListTags(ctx context.Context, client *lightsail.Client, id string) (t
 		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(ctx, out.Tags), nil
+	return keyValueTags(ctx, out.Tags), nil
 }
 
 func certificateListTags(ctx context.Context, client *lightsail.Client, id string) (tftags.KeyValueTags, error) {
@@ -80,7 +80,7 @@ func certificateListTags(ctx context.Context, client *lightsail.Client, id strin
 		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(ctx, out.Tags), nil
+	return keyValueTags(ctx, out.Tags), nil
 }
 
 func containerServiceListTags(ctx context.Context, client *lightsail.Client, id string) (tftags.KeyValueTags, error) {
@@ -90,7 +90,7 @@ func containerServiceListTags(ctx context.Context, client *lightsail.Client, id 
 		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(ctx, out.Tags), nil
+	return keyValueTags(ctx, out.Tags), nil
 }
 
 func databaseListTags(ctx context.Context, client *lightsail.Client, id string) (tftags.KeyValueTags, error) {
@@ -100,7 +100,7 @@ func databaseListTags(ctx context.Context, client *lightsail.Client, id string) 
 		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(ctx, out.Tags), nil
+	return keyValueTags(ctx, out.Tags), nil
 }
 
 func diskListTags(ctx context.Context, client *lightsail.Client, id string) (tftags.KeyValueTags, error) {
@@ -110,7 +110,7 @@ func diskListTags(ctx context.Context, client *lightsail.Client, id string) (tft
 		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(ctx, out.Tags), nil
+	return keyValueTags(ctx, out.Tags), nil
 }
 
 func distributionListTags(ctx context.Context, client *lightsail.Client, id string) (tftags.KeyValueTags, error) {
@@ -120,7 +120,7 @@ func distributionListTags(ctx context.Context, client *lightsail.Client, id stri
 		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(ctx, out.Tags), nil
+	return keyValueTags(ctx, out.Tags), nil
 }
 
 func instanceListTags(ctx context.Context, client *lightsail.Client, id string) (tftags.KeyValueTags, error) {
@@ -130,7 +130,7 @@ func instanceListTags(ctx context.Context, client *lightsail.Client, id string) 
 		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(ctx, out.Tags), nil
+	return keyValueTags(ctx, out.Tags), nil
 }
 
 func keyPairListTags(ctx context.Context, client *lightsail.Client, id string) (tftags.KeyValueTags, error) {
@@ -140,7 +140,7 @@ func keyPairListTags(ctx context.Context, client *lightsail.Client, id string) (
 		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(ctx, out.Tags), nil
+	return keyValueTags(ctx, out.Tags), nil
 }
 
 func lbListTags(ctx context.Context, client *lightsail.Client, id string) (tftags.KeyValueTags, error) {
@@ -150,5 +150,5 @@ func lbListTags(ctx context.Context, client *lightsail.Client, id string) (tftag
 		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(ctx, out.Tags), nil
+	return keyValueTags(ctx, out.Tags), nil
 }
