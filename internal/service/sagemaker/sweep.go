@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
@@ -21,7 +20,6 @@ func RegisterSweepers() {
 	awsv2.Register("aws_sagemaker_app_image_config", sweepAppImagesConfig)
 	awsv2.Register("aws_sagemaker_app", sweepApps)
 	awsv2.Register("aws_sagemaker_code_repository", sweepCodeRepositories)
-	awsv2.Register("aws_sagemaker_device_fleet", sweepDeviceFleets)
 	awsv2.Register("aws_sagemaker_domain", sweepDomains,
 		"aws_efs_mount_target",
 		"aws_efs_file_system",
@@ -155,35 +153,6 @@ func sweepCodeRepositories(ctx context.Context, client *conns.AWSClient) ([]swee
 			r := resourceCodeRepository()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.CodeRepositoryName))
-
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-		}
-	}
-
-	return sweepResources, nil
-}
-
-func sweepDeviceFleets(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	if partition := client.Partition(ctx); partition == endpoints.AwsUsGovPartitionID {
-		log.Printf("[WARN] Skipping SageMaker AI Device Fleet sweep for: %s", partition)
-		return nil, nil
-	}
-	conn := client.SageMakerClient(ctx)
-	var input sagemaker.ListDeviceFleetsInput
-	sweepResources := make([]sweep.Sweepable, 0)
-
-	pages := sagemaker.NewListDeviceFleetsPaginator(conn, &input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if err != nil {
-			return nil, err
-		}
-
-		for _, v := range page.DeviceFleetSummaries {
-			r := resourceDeviceFleet()
-			d := r.Data(nil)
-			d.SetId(aws.ToString(v.DeviceFleetName))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
