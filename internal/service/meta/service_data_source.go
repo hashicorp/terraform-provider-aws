@@ -19,6 +19,7 @@ import (
 )
 
 // @FrameworkDataSource("aws_service", name="Service")
+// @Region(overrideEnabled=false)
 func newServiceDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &serviceDataSource{}
 
@@ -26,7 +27,7 @@ func newServiceDataSource(context.Context) (datasource.DataSourceWithConfigure, 
 }
 
 type serviceDataSource struct {
-	framework.DataSourceWithConfigure
+	framework.DataSourceWithModel[serviceDataSourceModel]
 }
 
 func (d *serviceDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -41,6 +42,9 @@ func (d *serviceDataSource) Schema(ctx context.Context, request datasource.Schem
 				Computed: true,
 			},
 			"partition": schema.StringAttribute{
+				Computed: true,
+			},
+			names.AttrRegion: schema.StringAttribute{
 				Computed: true,
 			},
 			"reverse_dns_name": schema.StringAttribute{
