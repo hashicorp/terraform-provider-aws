@@ -33,7 +33,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newResourceDefaultAutoScalingConfigurationVersion,
+			Factory:  newDefaultAutoScalingConfigurationVersionResource,
 			TypeName: "aws_apprunner_default_auto_scaling_configuration_version",
 			Name:     "Default AutoScaling Configuration Version",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
