@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -23,9 +24,6 @@ import (
 
 func TestAccEC2VPCRouteServer_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 	resourceName := "aws_vpc_route_server.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rAsn := sdkacctest.RandIntRange(64512, 65534)
@@ -38,13 +36,14 @@ func TestAccEC2VPCRouteServer_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRouteTableDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCRouteServerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCRouterServerConfig_basic(rName, rAsn),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCRouteServerExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "amazon_side_asn", fmt.Sprintf("%d", rAsn)),
+					resource.TestCheckResourceAttr(resourceName, "persist_routes", "disable"),
 				),
 			},
 			{
@@ -58,9 +57,6 @@ func TestAccEC2VPCRouteServer_basic(t *testing.T) {
 
 func TestAccEC2VPCRouteServer_persistRoutes(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 	resourceName := "aws_vpc_route_server.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rAsn := sdkacctest.RandIntRange(64512, 65534)
@@ -74,7 +70,7 @@ func TestAccEC2VPCRouteServer_persistRoutes(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRouteTableDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCRouteServerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCRouterServerConfig_persistRoutes(rName, rAsn, rPersistRoutes),
@@ -94,12 +90,51 @@ func TestAccEC2VPCRouteServer_persistRoutes(t *testing.T) {
 	})
 }
 
+func TestAccEC2VPCRouteServer_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_vpc_route_server.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rAsn := sdkacctest.RandIntRange(64512, 65534)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.EC2)
+			testAccVPCRouterServerPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCRouteServerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCRouterServerConfig_persistRoutes(rName, rAsn, "enable"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVPCRouteServerExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "amazon_side_asn", fmt.Sprintf("%d", rAsn)),
+					resource.TestCheckResourceAttr(resourceName, "persist_routes", "enable"),
+					resource.TestCheckResourceAttr(resourceName, "persist_routes_duration", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccVPCRouterServerConfig_persistRoutesUpdate(rName, rAsn, "disable"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVPCRouteServerExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "amazon_side_asn", fmt.Sprintf("%d", rAsn)),
+					resource.TestCheckResourceAttr(resourceName, "persist_routes", "disable"),
+					resource.TestCheckResourceAttrSet(resourceName, "sns_topic_arn"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccEC2VPCRouteServer_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpc_route_server.test"
 	rAsn := sdkacctest.RandIntRange(64512, 65534)
@@ -134,8 +169,11 @@ func testAccCheckVPCRouteServerDestroy(ctx context.Context) resource.TestCheckFu
 				continue
 			}
 
-			_, err := tfec2.FindVPCRouteServerByID(ctx, conn, rs.Primary.ID)
+			out, err := tfec2.FindVPCRouteServerByID(ctx, conn, rs.Primary.ID)
 			if tfresource.NotFound(err) {
+				return nil
+			}
+			if out.State == awstypes.RouteServerStateDeleted || out.State == awstypes.RouteServerStateDeleting {
 				return nil
 			}
 			if err != nil {
@@ -169,6 +207,9 @@ func testAccCheckVPCRouteServerExists(ctx context.Context, name string) resource
 		if resp == nil {
 			return create.Error(names.EC2, create.ErrActionCheckingExistence, tfec2.ResNameVPCRouteServer, rs.Primary.ID, errors.New("not found"))
 		}
+		if resp.State == awstypes.RouteServerStateDeleted || resp.State == awstypes.RouteServerStateDeleting {
+			return create.Error(names.EC2, create.ErrActionCheckingExistence, tfec2.ResNameVPCRouteServer, rs.Primary.ID, errors.New("not found"))
+		}
 		return nil
 	}
 }
@@ -191,7 +232,7 @@ func testAccVPCRouterServerPreCheck(ctx context.Context, t *testing.T) {
 func testAccVPCRouterServerConfig_basic(rName string, rAsn int) string {
 	return fmt.Sprintf(`
 resource "aws_vpc_route_server" "test" {
-  amazon_side_asn           = %[2]d
+  amazon_side_asn = %[2]d
   tags = {
 	Name = %[1]q
   }
@@ -205,6 +246,19 @@ resource "aws_vpc_route_server" "test" {
   amazon_side_asn = %[2]d
   persist_routes  = %[3]q
   persist_routes_duration = 2
+  tags = {
+	Name = %[1]q
+  }
+}
+`, rName, rAsn, rPersistRoutes)
+}
+
+func testAccVPCRouterServerConfig_persistRoutesUpdate(rName string, rAsn int, rPersistRoutes string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc_route_server" "test" {
+  amazon_side_asn = %[2]d
+  persist_routes  = %[3]q
+  sns_notifications_enabled = true
   tags = {
 	Name = %[1]q
   }

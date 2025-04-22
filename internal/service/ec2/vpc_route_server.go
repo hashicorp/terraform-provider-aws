@@ -6,6 +6,7 @@ package ec2
 import (
 	"context"
 	"errors"
+	"slices"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -69,8 +70,8 @@ func (r *resourceVPCRouteServer) Schema(ctx context.Context, req resource.Schema
 				},
 			},
 			"persist_routes": schema.StringAttribute{
-				Optional: true,
 				Computed: true,
+				Optional: true,
 				Validators: []validator.String{
 					enum.FrameworkValidate[awstypes.RouteServerPersistRoutesAction](),
 				},
@@ -85,17 +86,11 @@ func (r *resourceVPCRouteServer) Schema(ctx context.Context, req resource.Schema
 					int64validator.Between(1, 5),
 				},
 			},
-			"persist_routes_state": schema.StringAttribute{
-				Computed: true,
-			},
 			"sns_notifications_enabled": schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
 			},
 			"sns_topic_arn": schema.StringAttribute{
-				Computed: true,
-			},
-			"state": schema.StringAttribute{
 				Computed: true,
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
@@ -115,6 +110,7 @@ func (r *resourceVPCRouteServer) Create(ctx context.Context, req resource.Create
 	conn := r.Meta().EC2Client(ctx)
 
 	var plan resourceVPCRouteServerModel
+	var routeServerAfterPesistRoutesState *awstypes.RouteServer
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -145,13 +141,22 @@ func (r *resourceVPCRouteServer) Create(ctx context.Context, req resource.Create
 		)
 		return
 	}
+	// Wait for the persist routes to be enabled or disabled before updating the state
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out.RouteServer, &plan)...)
+	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
+	routeServerAfterPesistRoutesState, err = waitVPCRouteServerPersistRoutes(ctx, conn, aws.ToString(out.RouteServer.RouteServerId), createTimeout)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.EC2, create.ErrActionWaitingForCreation, ResNameVPCRouteServer, plan.RouteServerId.String(), err),
+			err.Error(),
+		)
+		return
+	}
+	resp.Diagnostics.Append(flex.Flatten(ctx, routeServerAfterPesistRoutesState, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
+	setVPCRouteServerPersistRouteFromState(ctx, &plan, routeServerAfterPesistRoutesState)
 	_, err = waitVPCRouteServerCreated(ctx, conn, plan.RouteServerId.ValueString(), createTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -191,7 +196,7 @@ func (r *resourceVPCRouteServer) Read(ctx context.Context, req resource.ReadRequ
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
+	setVPCRouteServerPersistRouteFromState(ctx, &state, out)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
@@ -199,6 +204,8 @@ func (r *resourceVPCRouteServer) Update(ctx context.Context, req resource.Update
 	conn := r.Meta().EC2Client(ctx)
 
 	var plan, state resourceVPCRouteServerModel
+	var routeServerAfterPesistRoutesState *awstypes.RouteServer
+
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -210,6 +217,7 @@ func (r *resourceVPCRouteServer) Update(ctx context.Context, req resource.Update
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	routeServerId := flex.StringValueFromFramework(ctx, plan.RouteServerId)
 
 	if diff.HasChanges() {
 		var input ec2.ModifyRouteServerInput
@@ -234,15 +242,27 @@ func (r *resourceVPCRouteServer) Update(ctx context.Context, req resource.Update
 			)
 			return
 		}
+		// Wait for the persist routes to be enabled or disabled before updating the state
 
-		resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
+		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
+		routeServerAfterPesistRoutesState, err = waitVPCRouteServerPersistRoutes(ctx, conn, routeServerId, updateTimeout)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.EC2, create.ErrActionWaitingForUpdate, ResNameVPCRouteServer, plan.RouteServerId.String(), err),
+				err.Error(),
+			)
+			return
+		}
+
+		resp.Diagnostics.Append(flex.Flatten(ctx, routeServerAfterPesistRoutesState, &plan)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
+		setVPCRouteServerPersistRouteFromState(ctx, &plan, routeServerAfterPesistRoutesState)
 	}
 
 	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	_, err := waitVPCRouteServerUpdated(ctx, conn, plan.RouteServerId.ValueString(), updateTimeout)
+	_, err := waitVPCRouteServerUpdated(ctx, conn, routeServerId, updateTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.EC2, create.ErrActionWaitingForUpdate, ResNameVPCRouteServer, plan.RouteServerId.String(), err),
@@ -263,6 +283,11 @@ func (r *resourceVPCRouteServer) Delete(ctx context.Context, req resource.Delete
 		return
 	}
 
+	out, _ := findVPCRouteServerByID(ctx, conn, state.RouteServerId.ValueString())
+	if out != nil && out.State == awstypes.RouteServerStateDeleted {
+		return
+	}
+
 	input := ec2.DeleteRouteServerInput{
 		RouteServerId: state.RouteServerId.ValueStringPointer(),
 	}
@@ -272,7 +297,6 @@ func (r *resourceVPCRouteServer) Delete(ctx context.Context, req resource.Delete
 		if tfresource.NotFound(err) {
 			return
 		}
-
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.EC2, create.ErrActionDeleting, ResNameVPCRouteServer, state.RouteServerId.String(), err),
 			err.Error(),
@@ -296,6 +320,7 @@ func (r *resourceVPCRouteServer) ImportState(ctx context.Context, req resource.I
 }
 
 func waitVPCRouteServerCreated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.RouteServer, error) {
+
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.RouteServerStatePending),
 		Target:                    enum.Slice(awstypes.RouteServerStateAvailable),
@@ -306,8 +331,8 @@ func waitVPCRouteServerCreated(ctx context.Context, conn *ec2.Client, id string,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*ec2.CreateRouteServerOutput); ok {
-		return out.RouteServer, err
+	if out, ok := outputRaw.(*awstypes.RouteServer); ok {
+		return out, err
 	}
 
 	return nil, err
@@ -324,8 +349,8 @@ func waitVPCRouteServerUpdated(ctx context.Context, conn *ec2.Client, id string,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*ec2.ModifyRouteServerOutput); ok {
-		return out.RouteServer, err
+	if out, ok := outputRaw.(*awstypes.RouteServer); ok {
+		return out, err
 	}
 
 	return nil, err
@@ -334,14 +359,14 @@ func waitVPCRouteServerUpdated(ctx context.Context, conn *ec2.Client, id string,
 func waitVPCRouteServerDeleted(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.RouteServer, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.RouteServerStateDeleting),
-		Target:  enum.Slice(awstypes.RouteServerStateDeleted),
+		Target:  slices.Concat(enum.Slice(awstypes.RouteServerStateDeleted), []string{}),
 		Refresh: statusVPCRouteServer(ctx, conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*ec2.DeleteRouteServerOutput); ok {
-		return out.RouteServer, err
+	if out, ok := outputRaw.(*awstypes.RouteServer); ok {
+		return out, err
 	}
 
 	return nil, err
@@ -359,6 +384,39 @@ func statusVPCRouteServer(ctx context.Context, conn *ec2.Client, id string) retr
 		}
 
 		return out, aws.ToString((*string)(&out.State)), nil
+	}
+}
+
+func waitVPCRouteServerPersistRoutes(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.RouteServer, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   enum.Slice(awstypes.RouteServerPersistRoutesStateEnabling, awstypes.RouteServerPersistRoutesStateDisabling, awstypes.RouteServerPersistRoutesStateModifying, awstypes.RouteServerPersistRoutesStateResetting),
+		Target:                    enum.Slice(awstypes.RouteServerPersistRoutesStateEnabled, awstypes.RouteServerPersistRoutesStateDisabled),
+		Refresh:                   statusVPCRouteServerPersistRoutes(ctx, conn, id),
+		Timeout:                   timeout,
+		NotFoundChecks:            20,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*awstypes.RouteServer); ok {
+		return out, err
+	}
+
+	return nil, err
+}
+
+func statusVPCRouteServerPersistRoutes(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
+		out, err := findVPCRouteServerByID(ctx, conn, id)
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return out, aws.ToString((*string)(&out.PersistRoutesState)), nil
 	}
 }
 
@@ -386,44 +444,29 @@ func findVPCRouteServerByID(ctx context.Context, conn *ec2.Client, id string) (*
 	return &routeServers[0], nil
 }
 
-// func findVPCRouteServerByName(ctx context.Context, conn *ec2.Client, name string) (*awstypes.RouteServer, error) {
-// 	input := ec2.DescribeRouteServersInput{
-// 		Filters: []awstypes.Filter{
-// 			{
-// 				Name:   aws.String("tag:Name"),
-// 				Values: []string{name},
-// 			},
-// 		},
-// 	}
-// 	var routeServers []awstypes.RouteServer
-// 	paginator := ec2.NewDescribeRouteServersPaginator(conn, &input)
-// 	for paginator.HasMorePages() {
-// 		page, err := paginator.NextPage(ctx)
-// 		if err != nil {
-// 			if tfresource.NotFound(err) {
-// 				return nil, &retry.NotFoundError{
-// 					LastError:   err,
-// 					LastRequest: &input,
-// 				}
-// 			}
-// 			return nil, err
-// 		}
-// 		if page != nil && len(page.RouteServers) > 0 {
-// 			routeServers = append(routeServers, page.RouteServers...)
-// 		}
-// 	}
-// 	return &routeServers[0], nil
-// }
+// the API does not return the persist route action, but only the state. This function will set the persist route action based on the state for seemless experiece.
+func setVPCRouteServerPersistRouteFromState(ctx context.Context, data *resourceVPCRouteServerModel, routeServer *awstypes.RouteServer) {
+
+	var persistRoutes string
+	if routeServer.PersistRoutesState == awstypes.RouteServerPersistRoutesStateEnabled {
+		persistRoutes = string(awstypes.RouteServerPersistRoutesActionEnable)
+	} else {
+		persistRoutes = string(awstypes.RouteServerPersistRoutesActionDisable)
+	}
+
+	if data.PersistRoutes.IsNull() || data.PersistRoutes.IsUnknown() {
+		data.PersistRoutes = flex.StringToFramework(ctx, &persistRoutes)
+	}
+
+}
 
 type resourceVPCRouteServerModel struct {
 	AmazonSideAsn           types.Int64    `tfsdk:"amazon_side_asn"`
 	RouteServerId           types.String   `tfsdk:"id"`
 	PersistRoutes           types.String   `tfsdk:"persist_routes"`
 	PersistRoutesDuration   types.Int64    `tfsdk:"persist_routes_duration"`
-	PersistRoutesState      types.String   `tfsdk:"persist_routes_state"`
 	SnsNotificationsEnabled types.Bool     `tfsdk:"sns_notifications_enabled"`
 	SnsTopicArn             types.String   `tfsdk:"sns_topic_arn"`
-	State                   types.String   `tfsdk:"state"`
 	Tags                    tftags.Map     `tfsdk:"tags"`
 	TagsAll                 tftags.Map     `tfsdk:"tags_all"`
 	Timeouts                timeouts.Value `tfsdk:"timeouts"`
