@@ -253,7 +253,7 @@ provider "aws" {
 resource "aws_cloudfront_distribution" "example" {
   provider = aws.us_east_1
 
-  // other config...
+  # other config...
 }
 
 resource "aws_cloudwatch_log_delivery_source" "example" {
