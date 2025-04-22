@@ -181,3 +181,7 @@ func FlattenFrameworkStringValueSetLegacy[T ~string](_ context.Context, vs []T) 
 
 	return types.SetValueMust(types.StringType, elems)
 }
+
+func FlattenFrameworkStringValueSetOfStringLegacy(ctx context.Context, vs []string) fwtypes.SetOfString {
+	return fwtypes.SetValueOf[basetypes.StringValue]{SetValue: FlattenFrameworkStringValueSetLegacy(ctx, vs)}
+}
