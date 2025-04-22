@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/service/guardduty/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -23,7 +24,7 @@ func testAccOrganizationConfigurationFeature_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckOrganizationsAccount(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 			testAccPreCheckDetectorNotExists(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
@@ -51,7 +52,7 @@ func testAccOrganizationConfigurationFeature_additionalConfiguration(t *testing.
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckOrganizationsAccount(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 			testAccPreCheckDetectorNotExists(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
@@ -93,7 +94,7 @@ func testAccOrganizationConfigurationFeature_multiple(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckOrganizationsAccount(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 			testAccPreCheckDetectorNotExists(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
@@ -170,17 +171,12 @@ func testAccOrganizationConfigurationFeatureExists(ctx context.Context, n string
 	}
 }
 
-var testAccOrganizationConfigurationFeatureConfig_base = acctest.ConfigCompose(testAccOrganizationConfigurationConfig_base, `
-resource "aws_guardduty_organization_configuration" "test" {
-  depends_on = [aws_guardduty_organization_admin_account.test]
-
-  auto_enable_organization_members = "ALL"
-  detector_id                      = aws_guardduty_detector.test.id
-}
-`)
+var testAccOrganizationConfigurationFeatureConfig_base = testAccOrganizationConfigurationConfig_autoEnableOrganizationMembers(types.AutoEnableMembersNone)
 
 func testAccOrganizationConfigurationFeatureConfig_basic(name, autoEnable string) string {
-	return acctest.ConfigCompose(testAccOrganizationConfigurationFeatureConfig_base, fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccOrganizationConfigurationFeatureConfig_base,
+		fmt.Sprintf(`
 resource "aws_guardduty_organization_configuration_feature" "test" {
   depends_on = [aws_guardduty_organization_configuration.test]
 
@@ -192,7 +188,9 @@ resource "aws_guardduty_organization_configuration_feature" "test" {
 }
 
 func testAccOrganizationConfigurationFeatureConfig_additionalConfiguration(featureAutoEnable, additionalConfigurationAutoEnable string) string {
-	return acctest.ConfigCompose(testAccOrganizationConfigurationFeatureConfig_base, fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccOrganizationConfigurationFeatureConfig_base,
+		fmt.Sprintf(`
 resource "aws_guardduty_organization_configuration_feature" "test" {
   depends_on = [aws_guardduty_organization_configuration.test]
 
@@ -209,7 +207,9 @@ resource "aws_guardduty_organization_configuration_feature" "test" {
 }
 
 func testAccOrganizationConfigurationFeatureConfig_multiple(autoEnable1, autoEnable2, autoEnable3 string) string {
-	return acctest.ConfigCompose(testAccOrganizationConfigurationFeatureConfig_base, fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccOrganizationConfigurationFeatureConfig_base,
+		fmt.Sprintf(`
 resource "aws_guardduty_organization_configuration_feature" "test1" {
   depends_on = [aws_guardduty_organization_configuration.test]
 

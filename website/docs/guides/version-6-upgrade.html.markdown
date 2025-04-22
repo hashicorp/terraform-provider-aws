@@ -37,6 +37,7 @@ Upgrade topics:
 - [resource/aws_cloudfront_key_value_store](#resourceaws_cloudfront_key_value_store)
 - [resource/aws_cloudfront_response_headers_policy](#resourceaws_cloudfront_response_headers_policy)
 - [resource/aws_ecs_task_definition](#resourceaws_ecs_task_definition)
+- [resource/aws_guardduty_organization_configuration](#resourceaws_guardduty_organization_configuration)
 - [resource/aws_instance](#resourceaws_instance)
 - [resource/aws_kinesis_analytics_application](#resourceaws_kinesis_analytics_application)
 - [resource/aws_launch_template](#resourceaws_launch_template)
@@ -286,6 +287,12 @@ The `etag` argument is now computed only.
 ## resource/aws_ecs_task_definition
 
 Remove `inference_accelerator` from your configuration—it no longer exists. Amazon Elastic Inference reached end of life in April 2024.
+
+## resource/aws_guardduty_organization_configuration
+
+The `auto_enable` attribute has been removed and the `auto_enable_organization_members` attribute is now required.
+
+`datasources` now returns a deprecation warning.
 
 ## resource/aws_launch_template
 
