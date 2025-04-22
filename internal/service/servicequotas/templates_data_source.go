@@ -27,7 +27,7 @@ func newTemplatesDataSource(context.Context) (datasource.DataSourceWithConfigure
 }
 
 type dataSourceTemplates struct {
-	framework.DataSourceWithConfigure
+	framework.DataSourceWithModel[templatesDataSourceModel]
 }
 
 func (d *dataSourceTemplates) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
