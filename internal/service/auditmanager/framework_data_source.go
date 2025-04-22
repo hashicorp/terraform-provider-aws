@@ -24,15 +24,17 @@ import (
 )
 
 // @FrameworkDataSource("aws_auditmanager_framework", name="Framework")
-func newDataSourceFramework(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceFramework{}, nil
+func newFrameworkDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &frameworkDataSource{}, nil
 }
 
-type dataSourceFramework struct {
+type frameworkDataSource struct {
 	framework.DataSourceWithConfigure
+	// TODO REGION Use DataSourceComputedListOfObjectAttribute.
+	// framework.DataSourceWithModel[frameworkDataSourceModel]
 }
 
-func (d *dataSourceFramework) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *frameworkDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
@@ -80,10 +82,10 @@ func (d *dataSourceFramework) Schema(ctx context.Context, req datasource.SchemaR
 	}
 }
 
-func (d *dataSourceFramework) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *frameworkDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().AuditManagerClient(ctx)
 
-	var data dataSourceFrameworkData
+	var data frameworkDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -131,7 +133,8 @@ func FindFrameworkByName(ctx context.Context, conn *auditmanager.Client, name, f
 	}
 }
 
-type dataSourceFrameworkData struct {
+type frameworkDataSourceModel struct {
+	framework.WithRegionModel
 	ARN            types.String `tfsdk:"arn"`
 	ComplianceType types.String `tfsdk:"compliance_type"`
 	ControlSets    types.Set    `tfsdk:"control_sets"`
@@ -143,7 +146,7 @@ type dataSourceFrameworkData struct {
 }
 
 // refreshFromOutput writes state data from an AWS response object
-func (rd *dataSourceFrameworkData) refreshFromOutput(ctx context.Context, meta *conns.AWSClient, out *awstypes.Framework) diag.Diagnostics {
+func (rd *frameworkDataSourceModel) refreshFromOutput(ctx context.Context, meta *conns.AWSClient, out *awstypes.Framework) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	if out == nil {

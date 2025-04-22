@@ -26,15 +26,17 @@ import (
 )
 
 // @FrameworkDataSource("aws_auditmanager_control", name="Control")
-func newDataSourceControl(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceControl{}, nil
+func newControlDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &controlDataSource{}, nil
 }
 
-type dataSourceControl struct {
+type controlDataSource struct {
 	framework.DataSourceWithConfigure
+	// TODO REGION Use DataSourceComputedListOfObjectAttribute.
+	// framework.DataSourceWithModel[controlDataSourceModel]
 }
 
-func (d *dataSourceControl) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *controlDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"action_plan_instructions": schema.StringAttribute{
@@ -112,10 +114,10 @@ func (d *dataSourceControl) Schema(ctx context.Context, req datasource.SchemaReq
 	}
 }
 
-func (d *dataSourceControl) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *controlDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().AuditManagerClient(ctx)
 
-	var data dataSourceControlData
+	var data controlDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -163,7 +165,8 @@ func FindControlByName(ctx context.Context, conn *auditmanager.Client, name, con
 	}
 }
 
-type dataSourceControlData struct {
+type controlDataSourceModel struct {
+	framework.WithRegionModel
 	ActionPlanInstructions types.String `tfsdk:"action_plan_instructions"`
 	ActionPlanTitle        types.String `tfsdk:"action_plan_title"`
 	ARN                    types.String `tfsdk:"arn"`
@@ -177,7 +180,7 @@ type dataSourceControlData struct {
 }
 
 // refreshFromOutput writes state data from an AWS response object
-func (rd *dataSourceControlData) refreshFromOutput(ctx context.Context, meta *conns.AWSClient, out *awstypes.Control) diag.Diagnostics {
+func (rd *controlDataSourceModel) refreshFromOutput(ctx context.Context, meta *conns.AWSClient, out *awstypes.Control) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	if out == nil {
