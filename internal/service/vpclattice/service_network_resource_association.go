@@ -45,7 +45,7 @@ func newServiceNetworkResourceAssociationResource(_ context.Context) (resource.R
 }
 
 type serviceNetworkResourceAssociationResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[serviceNetworkResourceAssociationResourceModel]
 	framework.WithNoOpUpdate[serviceNetworkResourceAssociationResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
@@ -275,6 +275,7 @@ func waitServiceNetworkResourceAssociationDeleted(ctx context.Context, conn *vpc
 }
 
 type serviceNetworkResourceAssociationResourceModel struct {
+	framework.WithRegionModel
 	ARN                     types.String                                   `tfsdk:"arn"`
 	ID                      types.String                                   `tfsdk:"id"`
 	DNSEntry                fwtypes.ListNestedObjectValueOf[dnsEntryModel] `tfsdk:"dns_entry"`
