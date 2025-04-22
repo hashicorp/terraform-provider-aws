@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/acmpca"
 	acmpca_types "github.com/aws/aws-sdk-go-v2/service/acmpca/types"
@@ -50,7 +49,7 @@ func testAccFilter_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrAction, "ARCHIVE"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "rank", "1"),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "guardduty", regexache.MustCompile("detector/[0-9a-z]{32}/filter/test-filter$")),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "guardduty", "detector/{detector_id}/filter/{name}"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, "finding_criteria.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.#", "3"),

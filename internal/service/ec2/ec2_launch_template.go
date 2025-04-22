@@ -219,19 +219,6 @@ func resourceLaunchTemplate() *schema.Resource {
 				DiffSuppressFunc: nullable.DiffSuppressNullableBool,
 				ValidateFunc:     nullable.ValidateTypeStringNullableBool,
 			},
-			"elastic_gpu_specifications": {
-				Deprecated: "elastic_gpu_specifications is deprecated. AWS no longer supports the Elastic Graphics service.",
-				Type:       schema.TypeList,
-				Optional:   true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrType: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-					},
-				},
-			},
 			"enclave_options": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -1124,7 +1111,6 @@ func resourceLaunchTemplateUpdate(ctx context.Context, d *schema.ResourceData, m
 		"disable_api_stop",
 		"disable_api_termination",
 		"ebs_optimized",
-		"elastic_gpu_specifications",
 		"enclave_options",
 		"hibernation_options",
 		"iam_instance_profile",
@@ -1312,10 +1298,6 @@ func expandRequestLaunchTemplateData(ctx context.Context, conn *ec2.Client, d *s
 
 	if v, null, _ := nullable.Bool(d.Get("ebs_optimized").(string)).ValueBool(); !null {
 		apiObject.EbsOptimized = aws.Bool(v)
-	}
-
-	if v, ok := d.GetOk("elastic_gpu_specifications"); ok && len(v.([]any)) > 0 {
-		apiObject.ElasticGpuSpecifications = expandElasticGpuSpecifications(v.([]any))
 	}
 
 	if v, ok := d.GetOk("enclave_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
@@ -1535,36 +1517,6 @@ func expandLaunchTemplateCPUOptionsRequest(tfMap map[string]any) *awstypes.Launc
 	}
 
 	return apiObject
-}
-
-func expandElasticGpuSpecification(tfMap map[string]any) awstypes.ElasticGpuSpecification {
-	apiObject := awstypes.ElasticGpuSpecification{}
-
-	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
-		apiObject.Type = aws.String(v)
-	}
-
-	return apiObject
-}
-
-func expandElasticGpuSpecifications(tfList []any) []awstypes.ElasticGpuSpecification {
-	if len(tfList) == 0 {
-		return nil
-	}
-
-	var apiObjects []awstypes.ElasticGpuSpecification
-
-	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]any)
-
-		if !ok {
-			continue
-		}
-
-		apiObjects = append(apiObjects, expandElasticGpuSpecification(tfMap))
-	}
-
-	return apiObjects
 }
 
 func expandLaunchTemplateIAMInstanceProfileSpecificationRequest(tfMap map[string]any) *awstypes.LaunchTemplateIamInstanceProfileSpecificationRequest {
@@ -2258,9 +2210,6 @@ func flattenResponseLaunchTemplateData(ctx context.Context, conn *ec2.Client, d 
 	} else {
 		d.Set("ebs_optimized", "")
 	}
-	if err := d.Set("elastic_gpu_specifications", flattenElasticGpuSpecificationResponses(apiObject.ElasticGpuSpecifications)); err != nil {
-		return fmt.Errorf("setting elastic_gpu_specifications: %w", err)
-	}
 	if apiObject.EnclaveOptions != nil {
 		tfMap := map[string]any{
 			names.AttrEnabled: aws.ToBool(apiObject.EnclaveOptions.Enabled),
@@ -2495,30 +2444,6 @@ func flattenCreditSpecification(apiObject *awstypes.CreditSpecification) map[str
 	}
 
 	return tfMap
-}
-
-func flattenElasticGpuSpecificationResponse(apiObject awstypes.ElasticGpuSpecificationResponse) map[string]any {
-	tfMap := map[string]any{}
-
-	if v := apiObject.Type; v != nil {
-		tfMap[names.AttrType] = aws.ToString(v)
-	}
-
-	return tfMap
-}
-
-func flattenElasticGpuSpecificationResponses(apiObjects []awstypes.ElasticGpuSpecificationResponse) []any {
-	if len(apiObjects) == 0 {
-		return nil
-	}
-
-	var tfList []any
-
-	for _, apiObject := range apiObjects {
-		tfList = append(tfList, flattenElasticGpuSpecificationResponse(apiObject))
-	}
-
-	return tfList
 }
 
 func flattenLaunchTemplateIAMInstanceProfileSpecification(apiObject *awstypes.LaunchTemplateIamInstanceProfileSpecification) map[string]any {

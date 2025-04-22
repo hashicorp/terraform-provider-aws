@@ -60,6 +60,18 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 		},
 		{
+			Factory:  newIntegrationResource,
+			TypeName: "aws_redshift_integration",
+			Name:     "Integration",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
+			}),
+		},
+		{
 			Factory:  newResourceLogging,
 			TypeName: "aws_redshift_logging",
 			Name:     "Logging",

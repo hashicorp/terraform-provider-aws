@@ -287,6 +287,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceNotebookInstanceLifeCycleConfiguration,
 			TypeName: "aws_sagemaker_notebook_instance_lifecycle_configuration",
 			Name:     "Notebook Instance Lifecycle Configuration",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
