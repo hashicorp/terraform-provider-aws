@@ -23,7 +23,7 @@ func newInferenceProfilesDataSource(context.Context) (datasource.DataSourceWithC
 }
 
 type inferenceProfilesDataSource struct {
-	framework.DataSourceWithConfigure
+	framework.DataSourceWithModel[inferenceProfilesDataSourceModel]
 }
 
 func (d *inferenceProfilesDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -85,6 +85,7 @@ func findInferenceProfiles(ctx context.Context, conn *bedrock.Client, input *bed
 }
 
 type inferenceProfilesDataSourceModel struct {
+	framework.WithRegionModel
 	InferenceProfileSummaries fwtypes.ListNestedObjectValueOf[inferenceProfileSummaryModel] `tfsdk:"inference_profile_summaries"`
 }
 
