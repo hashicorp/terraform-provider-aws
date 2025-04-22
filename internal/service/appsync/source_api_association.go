@@ -54,7 +54,7 @@ const (
 )
 
 type sourceAPIAssociationResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[sourceAPIAssociationResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }
@@ -154,44 +154,44 @@ func (r *sourceAPIAssociationResource) Create(ctx context.Context, request resou
 		return
 	}
 
-	if !plan.SourceAPIId.IsNull() && !plan.SourceAPIId.IsUnknown() {
-		in.SourceApiIdentifier = flex.StringFromFramework(ctx, plan.SourceAPIId)
+	if !plan.SourceAPIID.IsNull() && !plan.SourceAPIID.IsUnknown() {
+		in.SourceApiIdentifier = flex.StringFromFramework(ctx, plan.SourceAPIID)
 	}
 
-	if !plan.SourceAPIArn.IsNull() && !plan.SourceAPIArn.IsUnknown() {
-		in.SourceApiIdentifier = flex.StringFromFramework(ctx, plan.SourceAPIArn)
+	if !plan.SourceAPIARN.IsNull() && !plan.SourceAPIARN.IsUnknown() {
+		in.SourceApiIdentifier = flex.StringFromFramework(ctx, plan.SourceAPIARN)
 	}
 
-	if !plan.MergedAPIId.IsNull() && !plan.MergedAPIId.IsUnknown() {
-		in.MergedApiIdentifier = flex.StringFromFramework(ctx, plan.MergedAPIId)
+	if !plan.MergedAPIID.IsNull() && !plan.MergedAPIID.IsUnknown() {
+		in.MergedApiIdentifier = flex.StringFromFramework(ctx, plan.MergedAPIID)
 	}
 
-	if !plan.MergedAPIArn.IsNull() && !plan.MergedAPIArn.IsUnknown() {
-		in.MergedApiIdentifier = flex.StringFromFramework(ctx, plan.MergedAPIArn)
+	if !plan.MergedAPIARN.IsNull() && !plan.MergedAPIARN.IsUnknown() {
+		in.MergedApiIdentifier = flex.StringFromFramework(ctx, plan.MergedAPIARN)
 	}
 
 	out, err := conn.AssociateSourceGraphqlApi(ctx, in)
 	if err != nil {
 		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AppSync, create.ErrActionCreating, resNameSourceAPIAssociation, plan.MergedAPIId.String(), err),
+			create.ProblemStandardMessage(names.AppSync, create.ErrActionCreating, resNameSourceAPIAssociation, plan.MergedAPIID.String(), err),
 			err.Error(),
 		)
 		return
 	}
 	if out == nil || out.SourceApiAssociation == nil {
 		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AppSync, create.ErrActionCreating, resNameSourceAPIAssociation, plan.MergedAPIId.String(), nil),
+			create.ProblemStandardMessage(names.AppSync, create.ErrActionCreating, resNameSourceAPIAssociation, plan.MergedAPIID.String(), nil),
 			errors.New("empty output").Error(),
 		)
 		return
 	}
 
-	plan.AssociationId = flex.StringToFramework(ctx, out.SourceApiAssociation.AssociationId)
-	plan.MergedAPIId = flex.StringToFramework(ctx, out.SourceApiAssociation.MergedApiId)
+	plan.AssociationID = flex.StringToFramework(ctx, out.SourceApiAssociation.AssociationId)
+	plan.MergedAPIID = flex.StringToFramework(ctx, out.SourceApiAssociation.MergedApiId)
 	id, err := plan.setID()
 	if err != nil {
 		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AppSync, create.ErrActionFlatteningResourceId, resNameSourceAPIAssociation, plan.MergedAPIId.String(), err),
+			create.ProblemStandardMessage(names.AppSync, create.ErrActionFlatteningResourceId, resNameSourceAPIAssociation, plan.MergedAPIID.String(), err),
 			err.Error(),
 		)
 		return
@@ -199,10 +199,10 @@ func (r *sourceAPIAssociationResource) Create(ctx context.Context, request resou
 	plan.ID = types.StringValue(id)
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	_, err = waitSourceAPIAssociationCreated(ctx, conn, plan.AssociationId.ValueString(), aws.ToString(out.SourceApiAssociation.MergedApiArn), createTimeout)
+	_, err = waitSourceAPIAssociationCreated(ctx, conn, plan.AssociationID.ValueString(), aws.ToString(out.SourceApiAssociation.MergedApiArn), createTimeout)
 	if err != nil {
 		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AppSync, create.ErrActionWaitingForCreation, resNameSourceAPIAssociation, plan.MergedAPIId.String(), err),
+			create.ProblemStandardMessage(names.AppSync, create.ErrActionWaitingForCreation, resNameSourceAPIAssociation, plan.MergedAPIID.String(), err),
 			err.Error(),
 		)
 		return
@@ -231,7 +231,7 @@ func (r *sourceAPIAssociationResource) Read(ctx context.Context, request resourc
 		return
 	}
 
-	out, err := findSourceAPIAssociationByTwoPartKey(ctx, conn, state.AssociationId.ValueString(), state.MergedAPIId.ValueString())
+	out, err := findSourceAPIAssociationByTwoPartKey(ctx, conn, state.AssociationID.ValueString(), state.MergedAPIID.ValueString())
 	if tfresource.NotFound(err) {
 		response.State.RemoveResource(ctx)
 		return
@@ -265,8 +265,8 @@ func (r *sourceAPIAssociationResource) Update(ctx context.Context, request resou
 	if !plan.Description.Equal(state.Description) ||
 		!plan.SourceAPIAssociationConfig.Equal(state.SourceAPIAssociationConfig) {
 		in := &appsync.UpdateSourceApiAssociationInput{
-			AssociationId:       flex.StringFromFramework(ctx, plan.AssociationId),
-			MergedApiIdentifier: flex.StringFromFramework(ctx, plan.MergedAPIArn),
+			AssociationId:       flex.StringFromFramework(ctx, plan.AssociationID),
+			MergedApiIdentifier: flex.StringFromFramework(ctx, plan.MergedAPIARN),
 		}
 
 		if !plan.Description.Equal(state.Description) {
@@ -304,7 +304,7 @@ func (r *sourceAPIAssociationResource) Update(ctx context.Context, request resou
 	}
 
 	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	_, err := waitSourceAPIAssociationUpdated(ctx, conn, plan.AssociationId.ValueString(), plan.MergedAPIArn.ValueString(), updateTimeout)
+	_, err := waitSourceAPIAssociationUpdated(ctx, conn, plan.AssociationID.ValueString(), plan.MergedAPIARN.ValueString(), updateTimeout)
 	if err != nil {
 		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.AppSync, create.ErrActionWaitingForUpdate, resNameSourceAPIAssociation, plan.ID.String(), err),
@@ -326,8 +326,8 @@ func (r *sourceAPIAssociationResource) Delete(ctx context.Context, request resou
 	}
 
 	in := appsync.DisassociateSourceGraphqlApiInput{
-		AssociationId:       state.AssociationId.ValueStringPointer(),
-		MergedApiIdentifier: state.MergedAPIArn.ValueStringPointer(),
+		AssociationId:       state.AssociationID.ValueStringPointer(),
+		MergedApiIdentifier: state.MergedAPIARN.ValueStringPointer(),
 	}
 
 	_, err := conn.DisassociateSourceGraphqlApi(ctx, &in)
@@ -346,7 +346,7 @@ func (r *sourceAPIAssociationResource) Delete(ctx context.Context, request resou
 
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
 
-	_, err = waitSourceAPIAssociationDeleted(ctx, conn, state.AssociationId.ValueString(), state.MergedAPIArn.ValueString(), deleteTimeout)
+	_, err = waitSourceAPIAssociationDeleted(ctx, conn, state.AssociationID.ValueString(), state.MergedAPIARN.ValueString(), deleteTimeout)
 	if err != nil {
 		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.AppSync, create.ErrActionWaitingForDeletion, resNameSourceAPIAssociation, state.ID.String(), err),
@@ -460,15 +460,16 @@ func waitSourceAPIAssociationDeleted(ctx context.Context, conn *appsync.Client, 
 }
 
 type sourceAPIAssociationResourceModel struct {
-	AssociationArn             types.String                                                     `tfsdk:"arn"`
-	AssociationId              types.String                                                     `tfsdk:"association_id"`
+	framework.WithRegionModel
+	AssociationARN             types.String                                                     `tfsdk:"arn"`
+	AssociationID              types.String                                                     `tfsdk:"association_id"`
 	ID                         types.String                                                     `tfsdk:"id"`
 	Description                types.String                                                     `tfsdk:"description"`
-	MergedAPIArn               fwtypes.ARN                                                      `tfsdk:"merged_api_arn"`
-	MergedAPIId                types.String                                                     `tfsdk:"merged_api_id"`
-	SourceAPIArn               fwtypes.ARN                                                      `tfsdk:"source_api_arn"`
+	MergedAPIARN               fwtypes.ARN                                                      `tfsdk:"merged_api_arn"`
+	MergedAPIID                types.String                                                     `tfsdk:"merged_api_id"`
+	SourceAPIARN               fwtypes.ARN                                                      `tfsdk:"source_api_arn"`
 	SourceAPIAssociationConfig fwtypes.ListNestedObjectValueOf[sourceAPIAssociationConfigModel] `tfsdk:"source_api_association_config"`
-	SourceAPIId                types.String                                                     `tfsdk:"source_api_id"`
+	SourceAPIID                types.String                                                     `tfsdk:"source_api_id"`
 	Timeouts                   timeouts.Value                                                   `tfsdk:"timeouts"`
 }
 
@@ -484,15 +485,15 @@ func (m *sourceAPIAssociationResourceModel) InitFromID() error {
 		return err
 	}
 
-	m.MergedAPIId = types.StringValue(parts[0])
-	m.AssociationId = types.StringValue(parts[1])
+	m.MergedAPIID = types.StringValue(parts[0])
+	m.AssociationID = types.StringValue(parts[1])
 	return nil
 }
 
 func (m *sourceAPIAssociationResourceModel) setID() (string, error) {
 	parts := []string{
-		m.MergedAPIId.ValueString(),
-		m.AssociationId.ValueString(),
+		m.MergedAPIID.ValueString(),
+		m.AssociationID.ValueString(),
 	}
 
 	return autoflex.FlattenResourceId(parts, sourceAPIAssociationIDPartCount, false)
