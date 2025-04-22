@@ -220,7 +220,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 		},
 		{
-			Factory:  newResourceSecurityGroupVPCAssociation,
+			Factory:  newSecurityGroupVPCAssociationResource,
 			TypeName: "aws_vpc_security_group_vpc_association",
 			Name:     "Security Group VPC Association",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
