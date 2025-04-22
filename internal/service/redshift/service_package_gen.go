@@ -19,7 +19,7 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
 	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:  newDataSourceDataShares,
+			Factory:  newDataSharesDataSource,
 			TypeName: "aws_redshift_data_shares",
 			Name:     "Data Shares",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
@@ -28,7 +28,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			}),
 		},
 		{
-			Factory:  newDataSourceProducerDataShares,
+			Factory:  newProducerDataSharesDataSource,
 			TypeName: "aws_redshift_producer_data_shares",
 			Name:     "Producer Data Shares",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
