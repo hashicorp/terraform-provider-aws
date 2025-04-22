@@ -38,7 +38,7 @@ func newHostedZoneIDDataSource(context.Context) (datasource.DataSourceWithConfig
 }
 
 type hostedZoneIDDataSource struct {
-	framework.DataSourceWithConfigure
+	framework.DataSourceWithModel[hostedZoneIDDataSourceModel]
 }
 
 func (d *hostedZoneIDDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
