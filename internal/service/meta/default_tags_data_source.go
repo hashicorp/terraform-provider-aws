@@ -16,6 +16,7 @@ import (
 )
 
 // @FrameworkDataSource("aws_default_tags", name="Default Tags")
+// @Region(overrideEnabled=false)
 func newDefaultTagsDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &defaultTagsDataSource{}
 
