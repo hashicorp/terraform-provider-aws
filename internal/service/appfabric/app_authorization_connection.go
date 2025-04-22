@@ -43,7 +43,7 @@ func newAppAuthorizationConnectionResource(_ context.Context) (resource.Resource
 }
 
 type appAuthorizationConnectionResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[appAuthorizationConnectionResourceModel]
 	framework.WithNoUpdate
 	framework.WithNoOpDelete
 	framework.WithTimeouts
@@ -259,6 +259,7 @@ func waitConnectAppAuthorizationCreated(ctx context.Context, conn *appfabric.Cli
 }
 
 type appAuthorizationConnectionResourceModel struct {
+	framework.WithRegionModel
 	App                 types.String                                      `tfsdk:"app"`
 	AppAuthorizationARN fwtypes.ARN                                       `tfsdk:"app_authorization_arn"`
 	AppBundleARN        fwtypes.ARN                                       `tfsdk:"app_bundle_arn"`

@@ -39,7 +39,7 @@ func newAppBundleResource(context.Context) (resource.ResourceWithConfigure, erro
 }
 
 type appBundleResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[appBundleResourceModel]
 	framework.WithNoOpUpdate[appBundleResourceModel]
 	framework.WithImportByID
 }
