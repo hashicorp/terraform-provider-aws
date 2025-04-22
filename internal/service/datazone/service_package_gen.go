@@ -19,7 +19,7 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
 	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:  newDataSourceDomain,
+			Factory:  newDomainDataSource,
 			TypeName: "aws_datazone_domain",
 			Name:     "Domain",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
@@ -28,7 +28,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			}),
 		},
 		{
-			Factory:  newDataSourceEnvironmentBlueprint,
+			Factory:  newEnvironmentBlueprintDataSource,
 			TypeName: "aws_datazone_environment_blueprint",
 			Name:     "Environment Blueprint",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
