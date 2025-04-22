@@ -19,7 +19,7 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
 	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:  newDataSourcePolicyStore,
+			Factory:  newPolicyStoreDataSource,
 			TypeName: "aws_verifiedpermissions_policy_store",
 			Name:     "Policy Store",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
