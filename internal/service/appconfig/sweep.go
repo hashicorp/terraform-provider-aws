@@ -183,7 +183,7 @@ func sweepExtensions(ctx context.Context, client *conns.AWSClient) ([]sweep.Swee
 		for _, v := range page.Items {
 			id := aws.ToString(v.Id)
 
-			if strings.HasPrefix(id, "AWS.AppConfig.") {
+			if strings.HasPrefix(id, "AWS.") {
 				log.Printf("[INFO] Skipping AppConfig Extension %s", id)
 				continue
 			}
