@@ -184,3 +184,7 @@ func FlattenFrameworkStringValueListLegacy[T ~string](_ context.Context, vs []T)
 
 	return types.ListValueMust(types.StringType, elems)
 }
+
+func FlattenFrameworkStringValueListOfStringLegacy(ctx context.Context, vs []string) fwtypes.ListValueOf[basetypes.StringValue] {
+	return fwtypes.ListValueOf[basetypes.StringValue]{ListValue: FlattenFrameworkStringValueListLegacy(ctx, vs)}
+}
