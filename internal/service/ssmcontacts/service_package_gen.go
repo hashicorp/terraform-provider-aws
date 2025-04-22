@@ -19,7 +19,7 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
 	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:  newDataSourceRotation,
+			Factory:  newRotationDataSource,
 			TypeName: "aws_ssmcontacts_rotation",
 			Name:     "Rotation",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
