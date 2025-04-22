@@ -1,0 +1,6 @@
+```release-note:breaking-change
+resource/aws_launch_template: `elastic_gpu_specifications` has been removed
+```
+```release-note:breaking-change
+data-source/aws_launch_template: `elastic_gpu_specifications` has been removed
+```
