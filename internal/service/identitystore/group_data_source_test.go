@@ -29,7 +29,7 @@ func TestAccIdentityStoreGroupDataSource_filterDisplayName(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupDataSourceConfig_filterDisplayName(name),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDisplayName, resourceName, names.AttrDisplayName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "group_id", resourceName, "group_id"),
@@ -56,7 +56,7 @@ func TestAccIdentityStoreGroupDataSource_uniqueAttributeDisplayName(t *testing.T
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupDataSourceConfig_uniqueAttributeDisplayName(name),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDisplayName, resourceName, names.AttrDisplayName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "group_id", resourceName, "group_id"),
@@ -83,7 +83,7 @@ func TestAccIdentityStoreGroupDataSource_filterDisplayNameAndGroupID(t *testing.
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupDataSourceConfig_filterDisplayNameAndGroupID(name),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDisplayName, resourceName, names.AttrDisplayName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "group_id", resourceName, "group_id"),
