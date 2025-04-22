@@ -19,7 +19,7 @@ type servicePackage struct{}
 func (p *servicePackage) EphemeralResources(ctx context.Context) []*inttypes.ServicePackageEphemeralResource {
 	return []*inttypes.ServicePackageEphemeralResource{
 		{
-			Factory:  newEphemeralRandomPassword,
+			Factory:  newRandomPasswordEphemeralResource,
 			TypeName: "aws_secretsmanager_random_password",
 			Name:     "Random Password",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
@@ -28,7 +28,7 @@ func (p *servicePackage) EphemeralResources(ctx context.Context) []*inttypes.Ser
 			}),
 		},
 		{
-			Factory:  newEphemeralSecretVersion,
+			Factory:  newSecretVersionEphemeralResource,
 			TypeName: "aws_secretsmanager_secret_version",
 			Name:     "Secret Version",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
