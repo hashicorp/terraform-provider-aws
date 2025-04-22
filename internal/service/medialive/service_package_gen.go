@@ -19,7 +19,7 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
 	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:  newDataSourceInput,
+			Factory:  newInputDataSource,
 			TypeName: "aws_medialive_input",
 			Name:     "Input",
 			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
