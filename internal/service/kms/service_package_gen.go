@@ -19,7 +19,7 @@ type servicePackage struct{}
 func (p *servicePackage) EphemeralResources(ctx context.Context) []*inttypes.ServicePackageEphemeralResource {
 	return []*inttypes.ServicePackageEphemeralResource{
 		{
-			Factory:  newEphemeralSecrets,
+			Factory:  newSecretsEphemeralResource,
 			TypeName: "aws_kms_secrets",
 			Name:     "Secrets",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
