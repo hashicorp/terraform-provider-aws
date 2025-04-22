@@ -19,7 +19,7 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
 	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:  newDataSourceAccessPolicy,
+			Factory:  newAccessPolicyDataSource,
 			TypeName: "aws_opensearchserverless_access_policy",
 			Name:     "Access Policy",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
@@ -28,7 +28,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			}),
 		},
 		{
-			Factory:  newDataSourceCollection,
+			Factory:  newCollectionDataSource,
 			TypeName: "aws_opensearchserverless_collection",
 			Name:     "Collection",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
@@ -40,7 +40,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			}),
 		},
 		{
-			Factory:  newDataSourceLifecyclePolicy,
+			Factory:  newLifecyclePolicyDataSource,
 			TypeName: "aws_opensearchserverless_lifecycle_policy",
 			Name:     "Lifecycle Policy",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
@@ -49,7 +49,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			}),
 		},
 		{
-			Factory:  newDataSourceSecurityConfig,
+			Factory:  newSecurityConfigDataSource,
 			TypeName: "aws_opensearchserverless_security_config",
 			Name:     "Security Config",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
