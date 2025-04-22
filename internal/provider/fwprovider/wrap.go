@@ -179,7 +179,7 @@ func (w *wrappedEphemeralResource) Schema(ctx context.Context, request ephemeral
 	if v, ok := w.inner.(framework.EphemeralResourceValidateModel); ok {
 		response.Diagnostics.Append(v.ValidateModel(ctx, &response.Schema)...)
 		if response.Diagnostics.HasError() {
-			// response.Diagnostics.AddError("ephemeral resource model validation error", w.opts.typeName)
+			response.Diagnostics.AddError("ephemeral resource model validation error", w.opts.typeName)
 			return
 		}
 	} else {
@@ -315,6 +315,18 @@ func (w *wrappedResource) Schema(ctx context.Context, request resource.SchemaReq
 		return response.Diagnostics
 	}
 	response.Diagnostics.Append(interceptedHandler(w.opts.interceptors.resourceSchema(), f, w.meta)(ctx, &request, response)...)
+
+	// Validate the resource's model against the schema.
+	if v, ok := w.inner.(framework.ResourceValidateModel); ok {
+		response.Diagnostics.Append(v.ValidateModel(ctx, &response.Schema)...)
+		if response.Diagnostics.HasError() {
+			response.Diagnostics.AddError("resource model validation error", w.opts.typeName)
+			return
+		}
+	}
+	// else {
+	// 	response.Diagnostics.AddError("missing framework.ResourceValidateModel", w.opts.typeName)
+	// }
 }
 
 func (w *wrappedResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
