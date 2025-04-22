@@ -15,6 +15,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkDataSource("aws_vpc_endpoint_associations", name="VPC Endpoint Associations")
@@ -30,7 +31,7 @@ func (d *vpcEndpointAssociationsDataSource) Schema(ctx context.Context, request 
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"associations": framework.DataSourceComputedListOfObjectAttribute[vpcEndpointAssociationModel](ctx),
-			"vpc_endpoint_id": schema.StringAttribute{
+			names.AttrVPCEndpointID: schema.StringAttribute{
 				Required: true,
 			},
 		},

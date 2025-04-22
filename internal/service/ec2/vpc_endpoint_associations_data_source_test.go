@@ -29,7 +29,7 @@ func TestAccVPCEndpointAssociationsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccVPCEndpointAssociationsDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "vpc_endpoint_id", resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrVPCEndpointID, resourceName, names.AttrID),
 					resource.TestCheckResourceAttr(datasourceName, "associations.#", "1"),
 					resource.TestCheckResourceAttrSet(datasourceName, "associations.0.associated_resource_arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "associations.0.associated_resource_arn", resourceConfigName, names.AttrARN),
@@ -59,7 +59,7 @@ func TestAccVPCEndpointAssociationsDataSource_serviceNetwork(t *testing.T) {
 			{
 				Config: testAccVPCEndpointAssociationsDataSourceConfig_serviceNetwork(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "vpc_endpoint_id", resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrVPCEndpointID, resourceName, names.AttrID),
 					resource.TestCheckResourceAttr(datasourceName, "associations.#", "1"),
 					resource.TestCheckResourceAttrPair(datasourceName, "associations.0.service_network_arn", resourceServiceNetwork, names.AttrARN),
 					resource.TestCheckResourceAttrPair(datasourceName, "associations.0.associated_resource_arn", resourceConfigName, names.AttrARN),
