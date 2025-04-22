@@ -31,8 +31,8 @@ import (
 
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource("aws_api_gateway_rest_api_put", name="Rest API Put")
-func newResourceRestAPIPut(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceRestAPIPut{}
+func newRestAPIPutResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &restAPIPutResource{}
 
 	r.SetDefaultCreateTimeout(5 * time.Minute)
 
@@ -43,14 +43,14 @@ const (
 	ResNameRestAPIPut = "Rest API Put"
 )
 
-type resourceRestAPIPut struct {
-	framework.ResourceWithConfigure
+type restAPIPutResource struct {
+	framework.ResourceWithModel[restAPIPutResourceModel]
 	framework.WithTimeouts
 	framework.WithNoOpDelete
 	framework.WithNoUpdate
 }
 
-func (r *resourceRestAPIPut) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *restAPIPutResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"body": schema.StringAttribute{
@@ -97,10 +97,10 @@ func (r *resourceRestAPIPut) Schema(ctx context.Context, req resource.SchemaRequ
 	}
 }
 
-func (r *resourceRestAPIPut) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *restAPIPutResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().APIGatewayClient(ctx)
 
-	var plan resourceRestAPIPutModel
+	var plan restAPIPutResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -148,8 +148,8 @@ func (r *resourceRestAPIPut) Create(ctx context.Context, req resource.CreateRequ
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceRestAPIPut) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state resourceRestAPIPutModel
+func (r *restAPIPutResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var state restAPIPutResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -179,7 +179,7 @@ func (r *resourceRestAPIPut) Read(ctx context.Context, req resource.ReadRequest,
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceRestAPIPut) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *restAPIPutResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("rest_api_id"), req, resp)
 }
 
@@ -223,7 +223,8 @@ func statusRestAPIPut(ctx context.Context, conn *apigateway.Client, id string) r
 	}
 }
 
-type resourceRestAPIPutModel struct {
+type restAPIPutResourceModel struct {
+	framework.WithRegionModel
 	Body           types.String        `tfsdk:"body"`
 	FailOnWarnings types.Bool          `tfsdk:"fail_on_warnings"`
 	Parameters     fwtypes.MapOfString `tfsdk:"parameters"`

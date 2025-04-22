@@ -26,18 +26,18 @@ import (
 )
 
 // @FrameworkResource("aws_api_gateway_account", name="Account")
-func newResourceAccount(context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceAccount{}
+func newAccountResource(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &accountResource{}
 
 	return r, nil
 }
 
-type resourceAccount struct {
-	framework.ResourceWithConfigure
+type accountResource struct {
+	framework.ResourceWithModel[accountResourceModel]
 	framework.WithImportByID
 }
 
-func (r *resourceAccount) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+func (r *accountResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"api_key_version": schema.StringAttribute{
@@ -55,6 +55,7 @@ func (r *resourceAccount) Schema(ctx context.Context, request resource.SchemaReq
 				Default: stringdefault.StaticString(""), // Needed for backwards compatibility with SDK resource
 			},
 			"features": schema.SetAttribute{
+				CustomType:  fwtypes.SetOfStringType,
 				ElementType: types.StringType,
 				Computed:    true,
 			},
@@ -66,8 +67,8 @@ func (r *resourceAccount) Schema(ctx context.Context, request resource.SchemaReq
 	response.Schema = s
 }
 
-func (r *resourceAccount) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
-	var data resourceAccountModel
+func (r *accountResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data accountResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -120,8 +121,8 @@ func (r *resourceAccount) Create(ctx context.Context, request resource.CreateReq
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceAccount) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
-	var data resourceAccountModel
+func (r *accountResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data accountResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -145,8 +146,8 @@ func (r *resourceAccount) Read(ctx context.Context, request resource.ReadRequest
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceAccount) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	var state, plan resourceAccountModel
+func (r *accountResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var state, plan accountResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -211,8 +212,8 @@ func (r *resourceAccount) Update(ctx context.Context, request resource.UpdateReq
 	response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceAccount) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
-	var data resourceAccountModel
+func (r *accountResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data accountResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -234,10 +235,11 @@ func (r *resourceAccount) Delete(ctx context.Context, request resource.DeleteReq
 	}
 }
 
-type resourceAccountModel struct {
+type accountResourceModel struct {
+	framework.WithRegionModel
 	ApiKeyVersion     types.String                                           `tfsdk:"api_key_version"`
 	CloudwatchRoleARN types.String                                           `tfsdk:"cloudwatch_role_arn" autoflex:",legacy"`
-	Features          types.Set                                              `tfsdk:"features"`
+	Features          fwtypes.SetOfString                                    `tfsdk:"features"`
 	ID                types.String                                           `tfsdk:"id"`
 	ThrottleSettings  fwtypes.ListNestedObjectValueOf[throttleSettingsModel] `tfsdk:"throttle_settings"`
 }

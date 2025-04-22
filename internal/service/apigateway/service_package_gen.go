@@ -33,7 +33,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newResourceAccount,
+			Factory:  newAccountResource,
 			TypeName: "aws_api_gateway_account",
 			Name:     "Account",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
@@ -54,7 +54,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 		},
 		{
-			Factory:  newResourceRestAPIPut,
+			Factory:  newRestAPIPutResource,
 			TypeName: "aws_api_gateway_rest_api_put",
 			Name:     "Rest API Put",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
