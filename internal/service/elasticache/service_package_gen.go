@@ -19,7 +19,7 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
 	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:  newDataSourceReservedCacheNodeOffering,
+			Factory:  newReservedCacheNodeOfferingDataSource,
 			TypeName: "aws_elasticache_reserved_cache_node_offering",
 			Name:     "Reserved Cache Node Offering",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
@@ -28,7 +28,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			}),
 		},
 		{
-			Factory:  newDataSourceServerlessCache,
+			Factory:  newServerlessCacheDataSource,
 			TypeName: "aws_elasticache_serverless_cache",
 			Name:     "Serverless Cache",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
