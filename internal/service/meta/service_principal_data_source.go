@@ -25,7 +25,7 @@ func newServicePrincipalDataSource(context.Context) (datasource.DataSourceWithCo
 }
 
 type servicePrincipalDataSource struct {
-	framework.DataSourceWithConfigure
+	framework.DataSourceWithModel[servicePrincipalDataSourceModel]
 }
 
 func (d *servicePrincipalDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {

@@ -31,7 +31,7 @@ func newRegionDataSource(context.Context) (datasource.DataSourceWithConfigure, e
 }
 
 type regionDataSource struct {
-	framework.DataSourceWithConfigure
+	framework.DataSourceWithModel[regionDataSourceModel]
 }
 
 func (d *regionDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {

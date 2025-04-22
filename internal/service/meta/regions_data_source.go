@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -28,7 +29,7 @@ func newRegionsDataSource(context.Context) (datasource.DataSourceWithConfigure, 
 }
 
 type regionsDataSource struct {
-	framework.DataSourceWithConfigure
+	framework.DataSourceWithModel[regionsDataSourceModel]
 }
 
 func (d *regionsDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -42,12 +43,13 @@ func (d *regionsDataSource) Schema(ctx context.Context, request datasource.Schem
 				Computed: true,
 			},
 			names.AttrNames: schema.SetAttribute{
+				CustomType:  fwtypes.SetOfStringType,
 				ElementType: types.StringType,
 				Computed:    true,
 			},
 		},
 		Blocks: map[string]schema.Block{
-			names.AttrFilter: tfec2.CustomFiltersBlock(),
+			names.AttrFilter: tfec2.CustomFiltersBlock(ctx),
 		},
 	}
 }
@@ -78,14 +80,14 @@ func (d *regionsDataSource) Read(ctx context.Context, request datasource.ReadReq
 	names := tfslices.ApplyToAll(output.Regions, func(v awstypes.Region) string {
 		return aws.ToString(v.RegionName)
 	})
-	data.Names = fwflex.FlattenFrameworkStringValueSetLegacy(ctx, names)
+	data.Names = fwflex.FlattenFrameworkStringValueSetOfStringLegacy(ctx, names)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
 type regionsDataSourceModel struct {
-	AllRegions types.Bool   `tfsdk:"all_regions"`
-	Filters    types.Set    `tfsdk:"filter"`
-	ID         types.String `tfsdk:"id"`
-	Names      types.Set    `tfsdk:"names"`
+	AllRegions types.Bool          `tfsdk:"all_regions"`
+	Filters    tfec2.CustomFilters `tfsdk:"filter"`
+	ID         types.String        `tfsdk:"id"`
+	Names      fwtypes.SetOfString `tfsdk:"names"`
 }

@@ -23,7 +23,7 @@ func newPartitionDataSource(context.Context) (datasource.DataSourceWithConfigure
 }
 
 type partitionDataSource struct {
-	framework.DataSourceWithConfigure
+	framework.DataSourceWithModel[partitionDataSourceModel]
 }
 
 func (d *partitionDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {

@@ -26,7 +26,7 @@ func newServiceDataSource(context.Context) (datasource.DataSourceWithConfigure, 
 }
 
 type serviceDataSource struct {
-	framework.DataSourceWithConfigure
+	framework.DataSourceWithModel[serviceDataSourceModel]
 }
 
 func (d *serviceDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {

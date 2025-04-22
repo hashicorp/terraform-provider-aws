@@ -24,7 +24,7 @@ func newDefaultTagsDataSource(context.Context) (datasource.DataSourceWithConfigu
 }
 
 type defaultTagsDataSource struct {
-	framework.DataSourceWithConfigure
+	framework.DataSourceWithModel[defaultTagsDataSourceModel]
 }
 
 func (d *defaultTagsDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
