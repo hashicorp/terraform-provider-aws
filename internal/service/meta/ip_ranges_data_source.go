@@ -24,6 +24,7 @@ import (
 )
 
 // @FrameworkDataSource("aws_ip_ranges", name="IP Ranges")
+// @Region(overrideEnabled=false)
 func newIPRangesDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &ipRangesDataSource{}
 
@@ -31,7 +32,7 @@ func newIPRangesDataSource(context.Context) (datasource.DataSourceWithConfigure,
 }
 
 type ipRangesDataSource struct {
-	framework.DataSourceWithConfigure
+	framework.DataSourceWithModel[ipRangesDataSourceModel]
 }
 
 func (d *ipRangesDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
