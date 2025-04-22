@@ -3,6 +3,7 @@
 FEATURES:
 
 * **New Data Source:** `aws_fis_experiment_templates` ([#37060](https://github.com/hashicorp/terraform-provider-aws/issues/37060))
+* **New Data Source:** `aws_vpc_endpoint_associations` ([#41918](https://github.com/hashicorp/terraform-provider-aws/issues/41918))
 
 ENHANCEMENTS:
 
