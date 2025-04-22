@@ -29,10 +29,10 @@ func TestAccVPCEndpointAssociationsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccVPCEndpointAssociationsDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, names.AttrID, resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(datasourceName, "vpc_endpoint_id", resourceName, names.AttrID),
 					resource.TestCheckResourceAttr(datasourceName, "associations.#", "1"),
-					resource.TestCheckResourceAttrSet(datasourceName, "associations.0.resource_arn"),
-					resource.TestCheckResourceAttrPair(datasourceName, "associations.0.resource_arn", resourceConfigName, names.AttrARN),
+					resource.TestCheckResourceAttrSet(datasourceName, "associations.0.associated_resource_arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, "associations.0.associated_resource_arn", resourceConfigName, names.AttrARN),
 					resource.TestCheckResourceAttr(datasourceName, "associations.0.dns_entry.#", "1"),
 					resource.TestCheckResourceAttrSet(datasourceName, "associations.0.dns_entry.0.dns_name"),
 					resource.TestCheckResourceAttrSet(datasourceName, "associations.0.dns_entry.0.hosted_zone_id"),
@@ -59,10 +59,10 @@ func TestAccVPCEndpointAssociationsDataSource_serviceNetwork(t *testing.T) {
 			{
 				Config: testAccVPCEndpointAssociationsDataSourceConfig_serviceNetwork(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, names.AttrID, resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(datasourceName, "vpc_endpoint_id", resourceName, names.AttrID),
 					resource.TestCheckResourceAttr(datasourceName, "associations.#", "1"),
 					resource.TestCheckResourceAttrPair(datasourceName, "associations.0.service_network_arn", resourceServiceNetwork, names.AttrARN),
-					resource.TestCheckResourceAttrPair(datasourceName, "associations.0.resource_arn", resourceConfigName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(datasourceName, "associations.0.associated_resource_arn", resourceConfigName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(datasourceName, "associations.0.service_network_name"),
 					resource.TestCheckResourceAttr(datasourceName, "associations.0.dns_entry.#", "1"),
 					resource.TestCheckResourceAttrSet(datasourceName, "associations.0.dns_entry.0.dns_name"),
@@ -77,10 +77,9 @@ func testAccVPCEndpointAssociationsDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccVPCEndpointConfig_resourceConfiguration(rName),
 		`
 data "aws_vpc_endpoint_associations" "test" {
-  id = aws_vpc_endpoint.test.id
+  vpc_endpoint_id = aws_vpc_endpoint.test.id
 }
-`,
-	)
+`)
 }
 
 func testAccVPCEndpointAssociationsDataSourceConfig_serviceNetwork(rName string) string {
@@ -119,8 +118,7 @@ resource "aws_vpclattice_service_network_resource_association" "test" {
 
 
 data "aws_vpc_endpoint_associations" "test" {
-  id = aws_vpc_endpoint.test.id
+  vpc_endpoint_id = aws_vpc_endpoint.test.id
 }
-`, rName),
-	)
+`, rName))
 }
