@@ -19,7 +19,7 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
 	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:  newDataSourceProfiles,
+			Factory:  newProfilesDataSource,
 			TypeName: "aws_route53profiles_profiles",
 			Name:     "Profiles",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
