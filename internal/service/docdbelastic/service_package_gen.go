@@ -23,7 +23,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newResourceCluster,
+			Factory:  newClusterResource,
 			TypeName: "aws_docdbelastic_cluster",
 			Name:     "Cluster",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
