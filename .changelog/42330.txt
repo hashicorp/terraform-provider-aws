@@ -1,0 +1,7 @@
+```release-note:enhancement
+data-source/aws_workspaces_directory: added attributes `active_directory_config`, `user_identity_type`, `workspace_directory_description`, `workspace_directory_name`, and `workspace_type`.
+```
+
+```release-note:enhancement
+resource/aws_workspaces_directory: Added support for creating WorkSpaces pool directories, including new attributes `active_directory_config`, `user_identity_type`, `workspace_directory_description`, `workspace_directory_name`, and `workspace_type`.
+```
