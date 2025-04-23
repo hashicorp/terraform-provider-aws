@@ -43,10 +43,6 @@ type resourceDefaultCreditSpecification struct {
 	framework.WithTimeouts
 }
 
-func (r *resourceDefaultCreditSpecification) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_ec2_instance_default_credit_specification"
-}
-
 func (r *resourceDefaultCreditSpecification) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -195,7 +191,7 @@ func (r *resourceDefaultCreditSpecification) Delete(ctx context.Context, req res
 }
 
 func (r *resourceDefaultCreditSpecification) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 const (
@@ -223,13 +219,6 @@ func waitDefaultCreditSpecificationCreated(ctx context.Context, conn *ec2.Client
 	return nil, err
 }
 
-// TIP: ==== STATUS ====
-// The status function can return an actual status when that field is
-// available from the API (e.g., out.Status). Otherwise, you can use custom
-// statuses to communicate the states of the resource.
-//
-// Waiters consume the values returned by status functions. Design status so
-// that it can be reused by a create, update, and delete waiter, if possible.
 func statusDefaultCreditSpecification(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		out, err := findDefaultCreditSpecificationByID(ctx, conn, id)
@@ -246,11 +235,11 @@ func statusDefaultCreditSpecification(ctx context.Context, conn *ec2.Client, id 
 }
 
 func findDefaultCreditSpecificationByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.InstanceFamilyCreditSpecification, error) {
-	in := &ec2.GetDefaultCreditSpecificationInput{
+	in := ec2.GetDefaultCreditSpecificationInput{
 		InstanceFamily: awstypes.UnlimitedSupportedInstanceFamily(id),
 	}
 
-	out, err := conn.GetDefaultCreditSpecification(ctx, in)
+	out, err := conn.GetDefaultCreditSpecification(ctx, &in)
 	if err != nil {
 		return nil, err
 	}

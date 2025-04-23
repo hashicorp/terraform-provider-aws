@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -49,34 +48,10 @@ func TestAccEC2DefaultCreditSpecification_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
 			},
 		},
 	})
-}
-
-func testAccCheckDefaultCreditSpecificationDestroy(ctx context.Context) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
-
-		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_ec2_instance_default_credit_specification" {
-				continue
-			}
-
-			_, err := tfec2.FindDefaultCreditSpecificationByID(ctx, conn, rs.Primary.ID)
-			if tfresource.NotFound(err) {
-				return nil
-			}
-			if err != nil {
-				return create.Error(names.EC2, create.ErrActionCheckingDestroyed, tfec2.ResNameDefaultCreditSpecification, rs.Primary.ID, err)
-			}
-
-			return create.Error(names.EC2, create.ErrActionCheckingDestroyed, tfec2.ResNameDefaultCreditSpecification, rs.Primary.ID, errors.New("not destroyed"))
-		}
-
-		return nil
-	}
 }
 
 func testAccCheckDefaultCreditSpecificationExists(ctx context.Context, name string, defaultcreditspecification *awstypes.InstanceFamilyCreditSpecification) resource.TestCheckFunc {

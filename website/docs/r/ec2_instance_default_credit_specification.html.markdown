@@ -26,6 +26,10 @@ The following arguments are required:
 
 * `instance_family` - (Required) Instance family. Valid values are `t2`, `t3`, `t3a`, `t4g`.
 
+## Attribute Reference
+
+This data source exports no additional attributes.
+
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
