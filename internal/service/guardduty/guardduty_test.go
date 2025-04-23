@@ -36,7 +36,7 @@ func TestAccGuardDuty_serial(t *testing.T) {
 		"Filter": {
 			acctest.CtBasic:      testAccFilter_basic,
 			"update":             testAccFilter_update,
-			"tags":               testAccFilter_tags,
+			"tags":               testAccGuardDutyFilter_tagsSerial,
 			acctest.CtDisappears: testAccFilter_disappears,
 		},
 		"FindingIDs": {
