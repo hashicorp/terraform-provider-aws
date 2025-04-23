@@ -57,7 +57,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newResourceApplication,
+			Factory:  newApplicationResource,
 			TypeName: "aws_servicecatalogappregistry_application",
 			Name:     "Application",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
@@ -69,7 +69,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 		},
 		{
-			Factory:  newResourceAttributeGroup,
+			Factory:  newAttributeGroupResource,
 			TypeName: "aws_servicecatalogappregistry_attribute_group",
 			Name:     "Attribute Group",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
@@ -81,7 +81,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 		},
 		{
-			Factory:  newResourceAttributeGroupAssociation,
+			Factory:  newAttributeGroupAssociationResource,
 			TypeName: "aws_servicecatalogappregistry_attribute_group_association",
 			Name:     "Attribute Group Association",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
