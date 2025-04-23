@@ -26,19 +26,19 @@ import (
 )
 
 // @FrameworkResource("aws_s3tables_table_policy", name="Table Policy")
-func newResourceTablePolicy(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceTablePolicy{}, nil
+func newTablePolicyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &tablePolicyResource{}, nil
 }
 
 const (
 	ResNameTablePolicy = "Table Policy"
 )
 
-type resourceTablePolicy struct {
-	framework.ResourceWithConfigure
+type tablePolicyResource struct {
+	framework.ResourceWithModel[tablePolicyResourceModel]
 }
 
-func (r *resourceTablePolicy) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *tablePolicyResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrName: schema.StringAttribute{
@@ -70,10 +70,10 @@ func (r *resourceTablePolicy) Schema(ctx context.Context, req resource.SchemaReq
 	}
 }
 
-func (r *resourceTablePolicy) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *tablePolicyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().S3TablesClient(ctx)
 
-	var plan resourceTablePolicyModel
+	var plan tablePolicyResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -111,10 +111,10 @@ func (r *resourceTablePolicy) Create(ctx context.Context, req resource.CreateReq
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceTablePolicy) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *tablePolicyResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().S3TablesClient(ctx)
 
-	var state resourceTablePolicyModel
+	var state tablePolicyResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -141,10 +141,10 @@ func (r *resourceTablePolicy) Read(ctx context.Context, req resource.ReadRequest
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceTablePolicy) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *tablePolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().S3TablesClient(ctx)
 
-	var plan resourceTablePolicyModel
+	var plan tablePolicyResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -182,10 +182,10 @@ func (r *resourceTablePolicy) Update(ctx context.Context, req resource.UpdateReq
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceTablePolicy) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *tablePolicyResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().S3TablesClient(ctx)
 
-	var state resourceTablePolicyModel
+	var state tablePolicyResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -211,7 +211,7 @@ func (r *resourceTablePolicy) Delete(ctx context.Context, req resource.DeleteReq
 	}
 }
 
-func (r *resourceTablePolicy) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *tablePolicyResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	identifier, err := parseTableIdentifier(req.ID)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -251,7 +251,8 @@ func findTablePolicy(ctx context.Context, conn *s3tables.Client, bucketARN, name
 	return out, nil
 }
 
-type resourceTablePolicyModel struct {
+type tablePolicyResourceModel struct {
+	framework.WithRegionModel
 	Name           types.String      `tfsdk:"name"`
 	Namespace      types.String      `tfsdk:"namespace"`
 	ResourcePolicy fwtypes.IAMPolicy `tfsdk:"resource_policy"`

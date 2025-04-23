@@ -23,7 +23,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newResourceNamespace,
+			Factory:  newNamespaceResource,
 			TypeName: "aws_s3tables_namespace",
 			Name:     "Namespace",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
@@ -32,7 +32,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 		},
 		{
-			Factory:  newResourceTable,
+			Factory:  newTableResource,
 			TypeName: "aws_s3tables_table",
 			Name:     "Table",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
@@ -41,7 +41,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 		},
 		{
-			Factory:  newResourceTableBucket,
+			Factory:  newTableBucketResource,
 			TypeName: "aws_s3tables_table_bucket",
 			Name:     "Table Bucket",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
@@ -50,7 +50,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 		},
 		{
-			Factory:  newResourceTableBucketPolicy,
+			Factory:  newTableBucketPolicyResource,
 			TypeName: "aws_s3tables_table_bucket_policy",
 			Name:     "Table Bucket Policy",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
@@ -59,7 +59,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 		},
 		{
-			Factory:  newResourceTablePolicy,
+			Factory:  newTablePolicyResource,
 			TypeName: "aws_s3tables_table_policy",
 			Name:     "Table Policy",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
