@@ -125,7 +125,7 @@ func upgradeResiliencyPolicyStateFromV0(ctx context.Context, request resource.Up
 		return
 	}
 
-	resiliencyPolicyDataV1 := resourceResiliencyPolicyData{
+	resiliencyPolicyDataV1 := resiliencyPolicyResourceModel{
 		DataLocationConstraint: resiliencyPolicyDataV0.DataLocationConstraint,
 		EstimatedCostTier:      resiliencyPolicyDataV0.EstimatedCostTier,
 		Policy:                 upgradePolicyStateFromV0(ctx, resiliencyPolicyDataV0.Policy, &response.Diagnostics),

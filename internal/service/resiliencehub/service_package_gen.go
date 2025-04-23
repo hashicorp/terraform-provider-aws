@@ -23,7 +23,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newResourceResiliencyPolicy,
+			Factory:  newResiliencyPolicyResource,
 			TypeName: "aws_resiliencehub_resiliency_policy",
 			Name:     "Resiliency Policy",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
