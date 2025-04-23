@@ -71,7 +71,7 @@ func TestAccGuardDuty_serial(t *testing.T) {
 		},
 		"ThreatIntelSet": {
 			acctest.CtBasic: testAccThreatIntelSet_basic,
-			"tags":          testAccThreatIntelSet_tags,
+			"tags":          testAccGuardDutyThreatIntelSet_tagsSerial,
 		},
 		"Member": {
 			acctest.CtBasic:      testAccMember_basic,
