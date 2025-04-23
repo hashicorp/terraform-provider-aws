@@ -312,7 +312,7 @@ jobs:
           steps.maintainer_editability.outcome != 'skipped'
           || steps.dependencies.outcome != 'skipped'
           || steps.changelog.outcome != 'skipped'
-          || steps.changelog-update-needed.outcome != 'skipped'
+          || steps.needs-changelog-entry.outcome != 'skipped'
         shell: bash
         run: |
           { echo $START_TEXT; echo ; cat note.md; } > tmpnote && mv tmpnote note.md
