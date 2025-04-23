@@ -381,7 +381,7 @@ func statusVPCRouteServer(ctx context.Context, conn *ec2.Client, id string) retr
 			return nil, "", err
 		}
 
-		return out, aws.ToString((*string)(&out.State)), nil
+		return out, string(out.State), nil
 	}
 }
 
@@ -414,7 +414,7 @@ func statusVPCRouteServerPersistRoutes(ctx context.Context, conn *ec2.Client, id
 			return nil, "", err
 		}
 
-		return out, aws.ToString((*string)(&out.PersistRoutesState)), nil
+		return out, string(out.PersistRoutesState), nil
 	}
 }
 
