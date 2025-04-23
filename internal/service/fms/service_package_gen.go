@@ -23,7 +23,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newResourceResourceSet,
+			Factory:  newResourceSetResource,
 			TypeName: "aws_fms_resource_set",
 			Name:     "Resource Set",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
