@@ -30,6 +30,7 @@ import (
 
 // @SDKResource("aws_guardduty_filter", name="Filter")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func ResourceFilter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFilterCreate,
