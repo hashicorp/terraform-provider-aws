@@ -39,7 +39,7 @@ func newCrossAccountAttachmentResource(_ context.Context) (resource.ResourceWith
 }
 
 type crossAccountAttachmentResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[crossAccountAttachmentResourceModel]
 	framework.WithImportByID
 }
 
