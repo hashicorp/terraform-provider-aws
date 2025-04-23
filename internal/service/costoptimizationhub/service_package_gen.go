@@ -24,7 +24,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newResourceEnrollmentStatus,
+			Factory:  newEnrollmentStatusResource,
 			TypeName: "aws_costoptimizationhub_enrollment_status",
 			Name:     "Enrollment Status",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
@@ -33,7 +33,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 		},
 		{
-			Factory:  newResourcePreferences,
+			Factory:  newPreferencesResource,
 			TypeName: "aws_costoptimizationhub_preferences",
 			Name:     "Preferences",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{

@@ -5,8 +5,8 @@ package costoptimizationhub
 
 // Exports for use in tests only.
 var (
-	ResourceEnrollmentStatus = newResourceEnrollmentStatus
-	ResourcePreferences      = newResourcePreferences
+	ResourceEnrollmentStatus = newEnrollmentStatusResource
+	ResourcePreferences      = newPreferencesResource
 
 	FindPreferences = findPreferences
 )
