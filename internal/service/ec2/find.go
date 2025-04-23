@@ -1694,6 +1694,18 @@ func findNATGatewayAddressByNATGatewayIDAndPrivateIP(ctx context.Context, conn *
 	}))
 }
 
+func findNATGatewayAddressByNATGatewayIDAndCountID(ctx context.Context, conn *ec2.Client, natGatewayID string, countID int) (*awstypes.NatGatewayAddress, error) {
+	output, err := findNATGatewayByID(ctx, conn, natGatewayID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	NatGatewayAddress := &output.NatGatewayAddresses[countID]
+
+	return NatGatewayAddress, nil
+}
+
 func findNetworkACLByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.NetworkAcl, error) {
 	input := ec2.DescribeNetworkAclsInput{
 		NetworkAclIds: []string{id},
