@@ -43,7 +43,7 @@ func newViewResource(context.Context) (resource.ResourceWithConfigure, error) {
 }
 
 type viewResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[viewResourceModel]
 	framework.WithImportByID
 }
 
@@ -315,6 +315,7 @@ func (r *viewResource) Delete(ctx context.Context, request resource.DeleteReques
 
 // See https://docs.aws.amazon.com/resource-explorer/latest/apireference/API_View.html.
 type viewResourceModel struct {
+	framework.WithRegionModel
 	DefaultView        types.Bool                                             `tfsdk:"default_view"`
 	Filters            fwtypes.ListNestedObjectValueOf[searchFilterModel]     `tfsdk:"filters"`
 	ID                 types.String                                           `tfsdk:"id"`
