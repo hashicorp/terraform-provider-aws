@@ -26,7 +26,7 @@ func dataSourceDirectory() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"domain_name": {
+						names.AttrDomainName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},

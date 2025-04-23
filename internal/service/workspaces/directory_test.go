@@ -999,7 +999,7 @@ func testAccDirectory_poolsADConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "user_identity_type", "CUSTOMER_MANAGED"),
 					resource.TestCheckResourceAttr(resourceName, "active_directory_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "active_directory_config.0.domain_name", domain),
-					resource.TestCheckResourceAttrPair(resourceName, "active_directory_config.0.service_account_secret_arn", "aws_secretsmanager_secret.main", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "active_directory_config.0.service_account_secret_arn", "aws_secretsmanager_secret.main", names.AttrARN),
 				),
 			},
 			{

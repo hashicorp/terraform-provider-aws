@@ -48,7 +48,7 @@ func resourceDirectory() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"domain_name": {
+						names.AttrDomainName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -346,7 +346,7 @@ func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta a
 
 	if workspaceType == string(types.WorkspaceTypePersonal) {
 		if _, ok := d.GetOk("directory_id"); !ok {
-			return diag.Errorf("`directory_id` must be set when `workspace_type` is `PERSONAL`")
+			return sdkdiag.AppendErrorf(diags, "`directory_id` must be set when `workspace_type` is `PERSONAL`")
 		}
 	}
 
@@ -816,8 +816,8 @@ func expandActiveDirectoryConfig(tfList []any) *types.ActiveDirectoryConfig {
 	tfMap := tfList[0].(map[string]any)
 	apiObject := &types.ActiveDirectoryConfig{}
 
-	if tfMap["domain_name"].(string) != "" {
-		apiObject.DomainName = aws.String(tfMap["domain_name"].(string))
+	if tfMap[names.AttrDomainName].(string) != "" {
+		apiObject.DomainName = aws.String(tfMap[names.AttrDomainName].(string))
 	}
 
 	if tfMap["service_account_secret_arn"].(string) != "" {
@@ -957,7 +957,7 @@ func flattenActiveDirectoryConfig(apiObject *types.ActiveDirectoryConfig) []any 
 
 	return []any{
 		map[string]any{
-			"domain_name":                aws.ToString(apiObject.DomainName),
+			names.AttrDomainName:         aws.ToString(apiObject.DomainName),
 			"service_account_secret_arn": aws.ToString(apiObject.ServiceAccountSecretArn),
 		},
 	}
