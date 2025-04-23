@@ -50,7 +50,7 @@ const (
 )
 
 type connectionResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[connectionResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }
@@ -341,6 +341,7 @@ func findConnectionByARN(ctx context.Context, conn *codeconnections.Client, arn 
 }
 
 type connectionResourceModel struct {
+	framework.WithRegionModel
 	ConnectionArn    types.String                                  `tfsdk:"arn"`
 	ConnectionName   types.String                                  `tfsdk:"name"`
 	ConnectionStatus fwtypes.StringEnum[awstypes.ConnectionStatus] `tfsdk:"connection_status"`
