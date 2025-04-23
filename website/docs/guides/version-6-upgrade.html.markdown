@@ -53,6 +53,7 @@ Upgrade topics:
 - [resource/aws_elasticache_user_group](#resourceaws_elasticache_user_group)
 - [resource/aws_eks_addon](#resourceaws_eks_addon)
 - [resource/aws_flow_log](#resourceaws_flow_log)
+- [resource/aws_guardduty_detector](#resourceaws_guardduty_detector)
 - [resource/aws_guardduty_organization_configuration](#resourceaws_guardduty_organization_configuration)
 - [resource/aws_instance](#resourceaws_instance)
 - [resource/aws_kinesis_analytics_application](#resourceaws_kinesis_analytics_application)
@@ -391,6 +392,11 @@ In `v7.0.0`, plan-time validation of the `engine` argument will require an entir
 ## resource/aws_eks_addon
 
 The `resolve_conflicts` argument has been removed. Use `resolve_conflicts_on_create` and `resolve_conflicts_on_update` instead.
+
+## resource/aws_guardduty_detector
+
+`datasources` is deprecated.
+Use `aws_guardduty_detector_feature` resources instead.
 
 ## resource/aws_guardduty_organization_configuration
 
