@@ -40,6 +40,7 @@ Upgrade topics:
 - [resource/aws_cloudfront_response_headers_policy](#resourceaws_cloudfront_response_headers_policy)
 - [resource/aws_dx_gateway_association](#resourceaws_dx_gateway_association)
 - [resource/aws_ecs_task_definition](#resourceaws_ecs_task_definition)
+- [resource/aws_eip](#resourceaws_eip)
 - [resource/aws_elasticache_replication_group](#resourceaws_elasticache_replication_group)
 - [resource/aws_eks_addon](#resourceaws_eks_addon)
 - [resource/aws_guardduty_organization_configuration](#resourceaws_guardduty_organization_configuration)
@@ -319,6 +320,11 @@ Use the `associated_gateway_id` attribute instead.
 ## resource/aws_ecs_task_definition
 
 Remove `inference_accelerator` from your configuration—it no longer exists. Amazon Elastic Inference reached end of life in April 2024.
+
+## resource/aws_eip
+
+The `vpc` argument has been removed.
+Use `domain` instead.
 
 ## resource/aws_elasticache_replication_group
 
