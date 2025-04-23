@@ -33,7 +33,7 @@ func newOrganizationDelegatedAdminAccountResource(_ context.Context) (resource.R
 }
 
 type organizationDelegatedAdminAccountResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[organizationDelegatedAdminAccountResourceModel]
 	framework.WithNoUpdate
 	framework.WithImportByID
 }
