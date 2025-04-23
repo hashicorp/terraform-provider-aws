@@ -23,7 +23,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newResourceMembership,
+			Factory:  newMembershipResource,
 			TypeName: "aws_cleanrooms_membership",
 			Name:     "Membership",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
