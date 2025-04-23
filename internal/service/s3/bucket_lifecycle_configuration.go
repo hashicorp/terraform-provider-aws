@@ -52,8 +52,9 @@ import (
 )
 
 // @FrameworkResource("aws_s3_bucket_lifecycle_configuration", name="Bucket Lifecycle Configuration")
-func newResourceBucketLifecycleConfiguration(context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceBucketLifecycleConfiguration{}
+func newBucketLifecycleConfigurationResource(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &bucketLifecycleConfigurationResource{}
+
 	r.SetDefaultCreateTimeout(3 * time.Minute)
 	r.SetDefaultUpdateTimeout(3 * time.Minute)
 
@@ -61,16 +62,16 @@ func newResourceBucketLifecycleConfiguration(context.Context) (resource.Resource
 }
 
 var (
-	_ resource.ResourceWithUpgradeState = &resourceBucketLifecycleConfiguration{}
+	_ resource.ResourceWithUpgradeState = &bucketLifecycleConfigurationResource{}
 )
 
-type resourceBucketLifecycleConfiguration struct {
-	framework.ResourceWithConfigure
+type bucketLifecycleConfigurationResource struct {
+	framework.ResourceWithModel[bucketLifecycleConfigurationResourceModel]
 	framework.WithTimeouts
 }
 
 // Schema returns the schema for this resource.
-func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+func (r *bucketLifecycleConfigurationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Version: 1,
 		Attributes: map[string]schema.Attribute{
@@ -394,8 +395,8 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 	}
 }
 
-func (r *resourceBucketLifecycleConfiguration) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
-	var data resourceBucketLifecycleConfigurationModel
+func (r *bucketLifecycleConfigurationResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data bucketLifecycleConfigurationResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -452,8 +453,8 @@ func (r *resourceBucketLifecycleConfiguration) Create(ctx context.Context, reque
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceBucketLifecycleConfiguration) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
-	var data resourceBucketLifecycleConfigurationModel
+func (r *bucketLifecycleConfigurationResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data bucketLifecycleConfigurationResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -507,8 +508,8 @@ func (r *resourceBucketLifecycleConfiguration) Read(ctx context.Context, request
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceBucketLifecycleConfiguration) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	var old, new resourceBucketLifecycleConfigurationModel
+func (r *bucketLifecycleConfigurationResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var old, new bucketLifecycleConfigurationResourceModel
 
 	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
 	if response.Diagnostics.HasError() {
@@ -568,8 +569,8 @@ func (r *resourceBucketLifecycleConfiguration) Update(ctx context.Context, reque
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
-func (r *resourceBucketLifecycleConfiguration) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
-	var data resourceBucketLifecycleConfigurationModel
+func (r *bucketLifecycleConfigurationResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data bucketLifecycleConfigurationResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -607,7 +608,7 @@ func (r *resourceBucketLifecycleConfiguration) Delete(ctx context.Context, reque
 	}
 }
 
-func (r *resourceBucketLifecycleConfiguration) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+func (r *bucketLifecycleConfigurationResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	bucket, expectedBucketOwner, err := parseResourceID(request.ID)
 	if err != nil {
 		response.Diagnostics.AddError("Resource Import Invalid ID", err.Error())
@@ -620,7 +621,7 @@ func (r *resourceBucketLifecycleConfiguration) ImportState(ctx context.Context, 
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), request, response)
 }
 
-func (r *resourceBucketLifecycleConfiguration) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
+func (r *bucketLifecycleConfigurationResource) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
 	schemaV0 := bucketLifeCycleConfigurationSchemaV0(ctx)
 
 	return map[int64]resource.StateUpgrader{
@@ -727,7 +728,8 @@ func lifecycleRuleStatus_Values() []string {
 	}
 }
 
-type resourceBucketLifecycleConfigurationModel struct {
+type bucketLifecycleConfigurationResourceModel struct {
+	framework.WithRegionModel
 	Bucket                             types.String                                                    `tfsdk:"bucket"`
 	ExpectedBucketOwner                types.String                                                    `tfsdk:"expected_bucket_owner" autoflex:",legacy"`
 	ID                                 types.String                                                    `tfsdk:"id"`
