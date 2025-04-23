@@ -191,11 +191,10 @@ func resourceInstance() *schema.Resource {
 				ConflictsWith: []string{
 					"replicate_source_db",
 					"s3_import",
+					"snapshot_identifier",
 				},
 				DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
 					for _, conflictAttr := range []string{
-						// s3_import is handled by the schema ConflictsWith
-						"snapshot_identifier",
 						"restore_to_point_in_time",
 					} {
 						if _, ok := d.GetOk(conflictAttr); ok {
@@ -774,8 +773,6 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 	if _, ok := d.GetOk("character_set_name"); ok {
 		charSetPath := cty.GetAttrPath("character_set_name")
 		for _, conflictAttr := range []string{
-			// s3_import is handled by the schema ConflictsWith
-			"snapshot_identifier",
 			"restore_to_point_in_time",
 		} {
 			if _, ok := d.GetOk(conflictAttr); ok {
