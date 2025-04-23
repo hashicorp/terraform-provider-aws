@@ -24,7 +24,7 @@ func TestAccGuardDuty_serial(t *testing.T) {
 			"datasources_kubernetes_audit_logs": testAccDetector_datasources_kubernetes_audit_logs,
 			"datasources_malware_protection":    testAccDetector_datasources_malware_protection,
 			"datasources_all":                   testAccDetector_datasources_all,
-			"tags":                              testAccDetector_tags,
+			"tags":                              testAccGuardDutyDetector_tagsSerial,
 			"datasource_basic":                  testAccDetectorDataSource_basic,
 			"datasource_id":                     testAccDetectorDataSource_ID,
 		},
