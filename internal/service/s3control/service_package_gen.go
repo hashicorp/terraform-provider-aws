@@ -79,6 +79,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Access Point Policy",
 		},
 		{
+			Factory:  resourceAccessPointForDirectoryBucket,
+			TypeName: "aws_s3_directory_access_point",
+			Name:     "Directory Access Point",
+		},
+		{
 			Factory:  resourceBucket,
 			TypeName: "aws_s3control_bucket",
 			Name:     "Bucket",
@@ -93,6 +98,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceBucketPolicy,
 			TypeName: "aws_s3control_bucket_policy",
 			Name:     "Bucket Policy",
+		},
+		{
+			Factory:  resourceAccessPointForDirectoryBucketScope,
+			TypeName: "aws_s3control_directory_access_point_scope",
+			Name:     "Directory Access Point Scope",
 		},
 		{
 			Factory:  resourceMultiRegionAccessPoint,

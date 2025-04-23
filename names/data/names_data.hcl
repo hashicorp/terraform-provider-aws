@@ -6922,12 +6922,12 @@ service "s3control" {
   }
 
   resource_prefix {
-    actual  = "aws_(s3_account_|s3control_|s3_access_)"
+    actual  = "aws_(s3_account_|s3control_|s3_access_|s3_directory_access_)"
     correct = "aws_s3control_"
   }
 
   provider_package_correct = "s3control"
-  doc_prefix               = ["s3control", "s3_account_", "s3_access_"]
+  doc_prefix               = ["s3control", "s3_account_", "s3_access_", "s3_directory_access_"]
   brand                    = "AWS"
 }
 
