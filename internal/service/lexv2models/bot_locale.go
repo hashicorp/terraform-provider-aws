@@ -33,8 +33,8 @@ import (
 )
 
 // @FrameworkResource("aws_lexv2models_bot_locale", name="Bot Locale")
-func newResourceBotLocale(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceBotLocale{}
+func newBotLocaleResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &botLocaleResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
@@ -47,13 +47,15 @@ const (
 	ResNameBotLocale = "Bot Locale"
 )
 
-type resourceBotLocale struct {
+type botLocaleResource struct {
 	framework.ResourceWithConfigure
+	// TODO REGION Use AutoFlEx.
+	// framework.ResourceWithModel[botLocaleResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }
 
-func (r *resourceBotLocale) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *botLocaleResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrDescription: schema.StringAttribute{
@@ -125,10 +127,10 @@ const (
 	botLocaleIDPartCount = 3
 )
 
-func (r *resourceBotLocale) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *botLocaleResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().LexV2ModelsClient(ctx)
 
-	var plan resourceBotLocaleData
+	var plan botLocaleResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -212,9 +214,9 @@ func (r *resourceBotLocale) Create(ctx context.Context, req resource.CreateReque
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
 }
 
-func (r *resourceBotLocale) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *botLocaleResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().LexV2ModelsClient(ctx)
-	var state resourceBotLocaleData
+	var state botLocaleResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -249,10 +251,10 @@ func (r *resourceBotLocale) Read(ctx context.Context, req resource.ReadRequest, 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceBotLocale) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *botLocaleResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().LexV2ModelsClient(ctx)
 
-	var plan, state resourceBotLocaleData
+	var plan, state botLocaleResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -317,10 +319,10 @@ func (r *resourceBotLocale) Update(ctx context.Context, req resource.UpdateReque
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceBotLocale) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *botLocaleResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().LexV2ModelsClient(ctx)
 
-	var state resourceBotLocaleData
+	var state botLocaleResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -487,7 +489,8 @@ func expandVoiceSettings(ctx context.Context, tfList []voiceSettingsData) *awsty
 	}
 }
 
-type resourceBotLocaleData struct {
+type botLocaleResourceModel struct {
+	framework.WithRegionModel
 	BotID                        types.String   `tfsdk:"bot_id"`
 	BotVersion                   types.String   `tfsdk:"bot_version"`
 	LocaleID                     types.String   `tfsdk:"locale_id"`
@@ -510,7 +513,7 @@ var voiceSettingsAttrTypes = map[string]attr.Type{
 }
 
 // refreshFromOutput writes state data from an AWS response object
-func (rd *resourceBotLocaleData) refreshFromOutput(ctx context.Context, out *lexmodelsv2.DescribeBotLocaleOutput) diag.Diagnostics {
+func (rd *botLocaleResourceModel) refreshFromOutput(ctx context.Context, out *lexmodelsv2.DescribeBotLocaleOutput) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	if out == nil {

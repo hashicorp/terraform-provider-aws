@@ -5,12 +5,12 @@ package lexv2models
 
 // Exports for use in tests only.
 var (
-	ResourceBot        = newResourceBot
-	ResourceBotLocale  = newResourceBotLocale
-	ResourceBotVersion = newResourceBotVersion
-	ResourceIntent     = newResourceIntent
-	ResourceSlot       = newResourceSlot
-	ResourceSlotType   = newResourceSlotType
+	ResourceBot        = newBotResource
+	ResourceBotLocale  = newBotLocaleResource
+	ResourceBotVersion = newBotVersionResource
+	ResourceIntent     = newIntentResource
+	ResourceSlot       = newSlotResource
+	ResourceSlotType   = newSlotTypeResource
 
 	FindSlotByID = findSlotByID
 

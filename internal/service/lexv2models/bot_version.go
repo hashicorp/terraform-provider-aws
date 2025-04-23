@@ -31,8 +31,8 @@ import (
 )
 
 // @FrameworkResource("aws_lexv2models_bot_version", name="Bot Version")
-func newResourceBotVersion(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceBotVersion{}
+func newBotVersionResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &botVersionResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultDeleteTimeout(30 * time.Minute)
@@ -44,13 +44,15 @@ const (
 	ResNameBotVersion = "Bot Version"
 )
 
-type resourceBotVersion struct {
+type botVersionResource struct {
 	framework.ResourceWithConfigure
+	// TODO REGION Use AutoFlEx.
+	// framework.ResourceWithModel[botVersionResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }
 
-func (r *resourceBotVersion) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *botVersionResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrDescription: schema.StringAttribute{
@@ -95,10 +97,10 @@ const (
 	botVersionIDPartCount = 2
 )
 
-func (r *resourceBotVersion) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *botVersionResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().LexV2ModelsClient(ctx)
 
-	var plan resourceBotVersionData
+	var plan botVersionResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -166,10 +168,10 @@ func (r *resourceBotVersion) Create(ctx context.Context, req resource.CreateRequ
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
 }
 
-func (r *resourceBotVersion) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *botVersionResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().LexV2ModelsClient(ctx)
 
-	var state resourceBotVersionData
+	var state botVersionResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -195,15 +197,15 @@ func (r *resourceBotVersion) Read(ctx context.Context, req resource.ReadRequest,
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceBotVersion) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *botVersionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	// No-op update
 
 }
 
-func (r *resourceBotVersion) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *botVersionResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().LexV2ModelsClient(ctx)
 
-	var state resourceBotVersionData
+	var state botVersionResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -329,7 +331,8 @@ func expandLocalSpecification(tfMap map[string]versionLocaleDetailsData) map[str
 	return tfObj
 }
 
-type resourceBotVersionData struct {
+type botVersionResourceModel struct {
+	framework.WithRegionModel
 	LocaleSpecification types.Map      `tfsdk:"locale_specification"`
 	Description         types.String   `tfsdk:"description"`
 	BotID               types.String   `tfsdk:"bot_id"`

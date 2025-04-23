@@ -23,7 +23,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newResourceBot,
+			Factory:  newBotResource,
 			TypeName: "aws_lexv2models_bot",
 			Name:     "Bot",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
@@ -35,7 +35,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 		},
 		{
-			Factory:  newResourceBotLocale,
+			Factory:  newBotLocaleResource,
 			TypeName: "aws_lexv2models_bot_locale",
 			Name:     "Bot Locale",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
@@ -44,7 +44,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 		},
 		{
-			Factory:  newResourceBotVersion,
+			Factory:  newBotVersionResource,
 			TypeName: "aws_lexv2models_bot_version",
 			Name:     "Bot Version",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
@@ -53,7 +53,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 		},
 		{
-			Factory:  newResourceIntent,
+			Factory:  newIntentResource,
 			TypeName: "aws_lexv2models_intent",
 			Name:     "Intent",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
@@ -62,7 +62,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 		},
 		{
-			Factory:  newResourceSlot,
+			Factory:  newSlotResource,
 			TypeName: "aws_lexv2models_slot",
 			Name:     "Slot",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
@@ -71,7 +71,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 		},
 		{
-			Factory:  newResourceSlotType,
+			Factory:  newSlotTypeResource,
 			TypeName: "aws_lexv2models_slot_type",
 			Name:     "Slot Type",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{

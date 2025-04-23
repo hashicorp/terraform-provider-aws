@@ -36,8 +36,8 @@ import (
 
 // @FrameworkResource("aws_lexv2models_bot", name="Bot")
 // @Tags(identifierAttribute="arn")
-func newResourceBot(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceBot{}
+func newBotResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &botResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
@@ -50,13 +50,15 @@ const (
 	ResNameBot = "Bot"
 )
 
-type resourceBot struct {
+type botResource struct {
 	framework.ResourceWithConfigure
+	// TODO REGION Use AutoFlEx.
+	// framework.ResourceWithModel[botResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }
 
-func (r *resourceBot) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *botResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
@@ -137,10 +139,10 @@ func (r *resourceBot) Schema(ctx context.Context, req resource.SchemaRequest, re
 	}
 }
 
-func (r *resourceBot) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *botResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().LexV2ModelsClient(ctx)
 
-	var plan resourceBotData
+	var plan botResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -214,9 +216,9 @@ func (r *resourceBot) Create(ctx context.Context, req resource.CreateRequest, re
 	}
 }
 
-func (r *resourceBot) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *botResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().LexV2ModelsClient(ctx)
-	var state resourceBotData
+	var state botResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -260,10 +262,10 @@ func (r *resourceBot) Read(ctx context.Context, req resource.ReadRequest, resp *
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceBot) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *botResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().LexV2ModelsClient(ctx)
 
-	var plan, state resourceBotData
+	var plan, state botResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -339,10 +341,10 @@ func (r *resourceBot) Update(ctx context.Context, req resource.UpdateRequest, re
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceBot) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *botResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().LexV2ModelsClient(ctx)
 
-	var state resourceBotData
+	var state botResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -549,7 +551,7 @@ func expandMembers(ctx context.Context, tfList []membersData) []awstypes.BotMemb
 	return mb
 }
 
-func (rd *resourceBotData) refreshFromOutput(ctx context.Context, out *lexmodelsv2.DescribeBotOutput) diag.Diagnostics {
+func (rd *botResourceModel) refreshFromOutput(ctx context.Context, out *lexmodelsv2.DescribeBotOutput) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	if out == nil {
@@ -569,7 +571,8 @@ func (rd *resourceBotData) refreshFromOutput(ctx context.Context, out *lexmodels
 	return diags
 }
 
-type resourceBotData struct {
+type botResourceModel struct {
+	framework.WithRegionModel
 	ARN                     types.String   `tfsdk:"arn"`
 	DataPrivacy             types.List     `tfsdk:"data_privacy"`
 	Description             types.String   `tfsdk:"description"`
