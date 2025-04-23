@@ -18,7 +18,7 @@ var (
 	ResourceIngestion           = newIngestionResource
 	ResourceNamespace           = newNamespaceResource
 	ResourceRefreshSchedule     = newRefreshScheduleResource
-	ResourceRoleMembership      = newResourceRoleMembership
+	ResourceRoleMembership      = newRoleMembershipResource
 	ResourceTemplate            = resourceTemplate
 	ResourceTemplateAlias       = newTemplateAliasResource
 	ResourceTheme               = resourceTheme

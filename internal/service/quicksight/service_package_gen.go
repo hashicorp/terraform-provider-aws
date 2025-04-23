@@ -71,7 +71,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 		},
 		{
-			Factory:  newResourceRoleMembership,
+			Factory:  newRoleMembershipResource,
 			TypeName: "aws_quicksight_role_membership",
 			Name:     "Role Membership",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{

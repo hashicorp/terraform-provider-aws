@@ -28,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -47,6 +48,8 @@ const (
 
 type iamPolicyAssignmentResource struct {
 	framework.ResourceWithConfigure
+	// TODO REGION Use AutoFlEx.
+	// framework.ResourceWithModel[iamPolicyAssignmentResourceModel]
 	framework.WithImportByID
 }
 
@@ -97,10 +100,12 @@ func (r *iamPolicyAssignmentResource) Schema(ctx context.Context, req resource.S
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"user": schema.SetAttribute{
+							CustomType:  fwtypes.SetOfStringType,
 							Optional:    true,
 							ElementType: types.StringType,
 						},
 						"group": schema.SetAttribute{
+							CustomType:  fwtypes.SetOfStringType,
 							Optional:    true,
 							ElementType: types.StringType,
 						},
@@ -114,7 +119,7 @@ func (r *iamPolicyAssignmentResource) Schema(ctx context.Context, req resource.S
 func (r *iamPolicyAssignmentResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().QuickSightClient(ctx)
 
-	var plan resourceIAMPolicyAssignmentData
+	var plan iamPolicyAssignmentResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -180,7 +185,7 @@ func (r *iamPolicyAssignmentResource) Create(ctx context.Context, req resource.C
 func (r *iamPolicyAssignmentResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().QuickSightClient(ctx)
 
-	var state resourceIAMPolicyAssignmentData
+	var state iamPolicyAssignmentResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -223,7 +228,7 @@ func (r *iamPolicyAssignmentResource) Read(ctx context.Context, req resource.Rea
 func (r *iamPolicyAssignmentResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().QuickSightClient(ctx)
 
-	var plan, state resourceIAMPolicyAssignmentData
+	var plan, state iamPolicyAssignmentResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -276,7 +281,7 @@ func (r *iamPolicyAssignmentResource) Update(ctx context.Context, req resource.U
 func (r *iamPolicyAssignmentResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().QuickSightClient(ctx)
 
-	var state resourceIAMPolicyAssignmentData
+	var state iamPolicyAssignmentResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -377,7 +382,8 @@ var (
 	}
 )
 
-type resourceIAMPolicyAssignmentData struct {
+type iamPolicyAssignmentResourceModel struct {
+	framework.WithRegionModel
 	AssignmentID     types.String `tfsdk:"assignment_id"`
 	AssignmentName   types.String `tfsdk:"assignment_name"`
 	AssignmentStatus types.String `tfsdk:"assignment_status"`
@@ -389,8 +395,8 @@ type resourceIAMPolicyAssignmentData struct {
 }
 
 type identitiesData struct {
-	User  types.Set `tfsdk:"user"`
-	Group types.Set `tfsdk:"group"`
+	User  fwtypes.SetOfString `tfsdk:"user"`
+	Group fwtypes.SetOfString `tfsdk:"group"`
 }
 
 func expandIdentities(ctx context.Context, tfList []identitiesData) map[string][]string {
