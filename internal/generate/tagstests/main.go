@@ -671,14 +671,17 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					}
 				}
 				if attr, ok := args.Keyword["preCheck"]; ok {
-					if b, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid preCheck value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					if code, importSpec, err := parseIdentifierSpec(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("%s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
 						continue
-					} else if b {
+					} else {
 						d.PreChecks = []codeBlock{
 							{
-								Code: "testAccPreCheck(ctx, t)",
+								Code: fmt.Sprintf("%s(ctx, t)", code),
 							},
+						}
+						if importSpec != nil {
+							d.GoImports = append(d.GoImports, *importSpec)
 						}
 					}
 				}
