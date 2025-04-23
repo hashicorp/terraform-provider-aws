@@ -105,7 +105,7 @@ func resourceAnalyzer() *schema.Resource {
 																	ValidateFunc: validation.StringMatch(regexache.MustCompile(`^\d{12}$`), "Must be a 12-digit account ID"),
 																},
 															},
-															"resource_tags": {
+															names.AttrResourceTags: {
 																Type:     schema.TypeList,
 																Optional: true,
 																ForceNew: true,
@@ -343,7 +343,7 @@ func expandExclusion(tfMap map[string]any) *types.AnalysisRuleCriteria {
 		}
 	}
 
-	if v, ok := tfMap["resource_tags"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrResourceTags].([]any); ok && len(v) > 0 {
 		for _, resourceTag := range v {
 			resourceTagMap := flex.ExpandStringValueMap(resourceTag.(map[string]any))
 			apiObject.ResourceTags = append(apiObject.ResourceTags, resourceTagMap)
@@ -427,7 +427,7 @@ func flattenExclusion(apiObject *types.AnalysisRuleCriteria) map[string]any {
 	}
 
 	if v := apiObject.ResourceTags; len(v) > 0 {
-		tfMap["resource_tags"] = v
+		tfMap[names.AttrResourceTags] = v
 	}
 
 	return tfMap
