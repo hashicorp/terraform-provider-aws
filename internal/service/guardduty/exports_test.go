@@ -10,6 +10,7 @@ var (
 	ResourceMalwareProtectionPlan = newResourceMalwareProtectionPlan
 	ResourcePublishingDestination = resourcePublishingDestination
 
+	FindMalwareProtectionPlanByID           = findMalwareProtectionPlanByID
 	FindMemberDetectorFeatureByThreePartKey = findMemberDetectorFeatureByThreePartKey
 
 	GetOrganizationAdminAccount = getOrganizationAdminAccount
