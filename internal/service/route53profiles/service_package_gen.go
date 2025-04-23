@@ -33,7 +33,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newResourceAssociation,
+			Factory:  newAssociationResource,
 			TypeName: "aws_route53profiles_association",
 			Name:     "Association",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
@@ -45,7 +45,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 		},
 		{
-			Factory:  newResourceProfile,
+			Factory:  newProfileResource,
 			TypeName: "aws_route53profiles_profile",
 			Name:     "Profile",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
@@ -57,7 +57,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 		},
 		{
-			Factory:  newResourceResourceAssociation,
+			Factory:  newResourceAssociationResource,
 			TypeName: "aws_route53profiles_resource_association",
 			Name:     "ResourceAssociation",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
