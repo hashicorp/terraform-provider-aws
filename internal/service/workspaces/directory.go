@@ -6,6 +6,7 @@ package workspaces
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"time"
 
@@ -280,22 +281,63 @@ func resourceDirectory() *schema.Resource {
 				ValidateDiagFunc: enum.Validate[types.WorkspaceType](),
 			},
 		},
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
+			workspaceType := d.Get("workspace_type").(string)
+
+			switch workspaceType {
+			case string(types.WorkspaceTypePools):
+				if _, ok := d.GetOk("workspace_directory_description"); !ok {
+					return fmt.Errorf("`workspace_directory_description` is required when `workspace_type` is set to `POOLS`")
+				}
+				if _, ok := d.GetOk("workspace_directory_name"); !ok {
+					return fmt.Errorf("`workspace_directory_name` is required when `workspace_type` is set to `POOLS`")
+				}
+				if d.HasChange("directory_id") {
+					return fmt.Errorf("`directory_id` cannot be set manually when `workspace_type` is set to `POOLS`")
+				}
+			case string(types.WorkspaceTypePersonal):
+				if _, ok := d.GetOk("workspace_directory_description"); ok {
+					return fmt.Errorf("`workspace_directory_description` cannot be set when `workspace_type` is set to `PERSONAL`")
+				}
+				if _, ok := d.GetOk("workspace_directory_name"); ok {
+					return fmt.Errorf("`workspace_directory_name` cannot be set when `workspace_type` is set to `PERSONAL`")
+				}
+			}
+			if workspaceType == string(types.WorkspaceTypePools) {
+				if v, ok := d.GetOk("workspace_creation_properties"); ok {
+					creationProps := v.([]interface{})
+					if len(creationProps) > 0 {
+						props := creationProps[0].(map[string]interface{})
+						if props["enable_maintenance_mode"].(bool) {
+							return fmt.Errorf("`enable_maintenance_mode` is not supported when `workspace_type` is set to `pools`")
+						}
+						if props["user_enabled_as_local_administrator"].(bool) {
+							return fmt.Errorf("`user_enabled_as_local_administrator` is not supported when `workspace_type` is set to `pools`")
+						}
+					}
+				}
+			}
+
+			return nil
+		},
 	}
-	//TODO: CustomizeDiff for validation
 }
 
 func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WorkSpacesClient(ctx)
-	//TODO: add validation for directory_id if workspace_type is personal
-	//TODO: add validation to ensure resource specific values are set
-	//TODO: IF NOT CustomizeDiff or separate resource - workspace properties validation properties for pools - unsupported extra values
 
 	directoryID := d.Get("directory_id").(string)
 	workspaceType := d.Get("workspace_type").(string)
 	userIdentityType := d.Get("user_identity_type").(string)
 	workspaceDirectoryName := d.Get("workspace_directory_name").(string)
 	workspaceDirectoryDescription := d.Get("workspace_directory_description").(string)
+
+	if workspaceType == string(types.WorkspaceTypePersonal) {
+		if _, ok := d.GetOk("directory_id"); !ok {
+			return diag.Errorf("`directory_id` must be set when `workspace_type` is `PERSONAL`")
+		}
+	}
 
 	input := &workspaces.RegisterWorkspaceDirectoryInput{
 		Tenancy:       types.TenancyShared,
