@@ -34,7 +34,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newResourceMultiplexProgram,
+			Factory:  newMultiplexProgramResource,
 			TypeName: "aws_medialive_multiplex_program",
 			Name:     "Multiplex Program",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
