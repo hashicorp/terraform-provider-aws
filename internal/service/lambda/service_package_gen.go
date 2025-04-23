@@ -37,7 +37,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newResourceFunctionRecursionConfig,
+			Factory:  newFunctionRecursionConfigResource,
 			TypeName: "aws_lambda_function_recursion_config",
 			Name:     "Function Recursion Config",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
@@ -46,7 +46,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 		},
 		{
-			Factory:  newResourceRuntimeManagementConfig,
+			Factory:  newRuntimeManagementConfigResource,
 			TypeName: "aws_lambda_runtime_management_config",
 			Name:     "Runtime Management Config",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
