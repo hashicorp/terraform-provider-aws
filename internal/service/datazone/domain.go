@@ -38,8 +38,8 @@ import (
 
 // @FrameworkResource( "aws_datazone_domain", name="Domain")
 // @Tags(identifierAttribute="arn")
-func newResourceDomain(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceDomain{}
+func newDomainResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &domainResource{}
 
 	r.SetDefaultCreateTimeout(10 * time.Minute)
 	r.SetDefaultDeleteTimeout(10 * time.Minute)
@@ -52,13 +52,15 @@ const (
 	CreateDomainRetryTimeout = 30 * time.Second
 )
 
-type resourceDomain struct {
+type domainResource struct {
 	framework.ResourceWithConfigure
+	// TODO REGION Use AutoFlEx.
+	// framework.ResourceWithModel[domainResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }
 
-func (r *resourceDomain) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *domainResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
@@ -136,7 +138,7 @@ func (r *resourceDomain) Schema(ctx context.Context, req resource.SchemaRequest,
 	}
 }
 
-func (r *resourceDomain) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *domainResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
 
 	var plan domainResourceModel
@@ -208,7 +210,7 @@ func (r *resourceDomain) Create(ctx context.Context, req resource.CreateRequest,
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceDomain) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *domainResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
 
 	var state domainResourceModel
@@ -251,7 +253,7 @@ func (r *resourceDomain) Read(ctx context.Context, req resource.ReadRequest, res
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceDomain) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *domainResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
 
 	var plan, state domainResourceModel
@@ -314,7 +316,7 @@ func (r *resourceDomain) Update(ctx context.Context, req resource.UpdateRequest,
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceDomain) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *domainResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
 
 	var state domainResourceModel
@@ -468,6 +470,7 @@ func expandSingleSignOn(tfList []singleSignOnModel) *awstypes.SingleSignOn {
 }
 
 type domainResourceModel struct {
+	framework.WithRegionModel
 	ARN                 types.String   `tfsdk:"arn"`
 	Description         types.String   `tfsdk:"description"`
 	DomainExecutionRole fwtypes.ARN    `tfsdk:"domain_execution_role"`

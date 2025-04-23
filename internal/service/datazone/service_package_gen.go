@@ -42,7 +42,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newResourceAssetType,
+			Factory:  newAssetTypeResource,
 			TypeName: "aws_datazone_asset_type",
 			Name:     "Asset Type",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
@@ -51,7 +51,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 		},
 		{
-			Factory:  newResourceDomain,
+			Factory:  newDomainResource,
 			TypeName: "aws_datazone_domain",
 			Name:     "Domain",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
@@ -63,7 +63,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 		},
 		{
-			Factory:  newResourceEnvironment,
+			Factory:  newEnvironmentResource,
 			TypeName: "aws_datazone_environment",
 			Name:     "Environment",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
@@ -72,7 +72,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 		},
 		{
-			Factory:  newResourceEnvironmentBlueprintConfiguration,
+			Factory:  newEnvironmentBlueprintConfigurationResource,
 			TypeName: "aws_datazone_environment_blueprint_configuration",
 			Name:     "Environment Blueprint Configuration",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
@@ -81,7 +81,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 		},
 		{
-			Factory:  newResourceEnvironmentProfile,
+			Factory:  newEnvironmentProfileResource,
 			TypeName: "aws_datazone_environment_profile",
 			Name:     "Environment Profile",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
@@ -90,7 +90,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 		},
 		{
-			Factory:  newResourceFormType,
+			Factory:  newFormTypeResource,
 			TypeName: "aws_datazone_form_type",
 			Name:     "Form Type",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
@@ -99,7 +99,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 		},
 		{
-			Factory:  newResourceGlossary,
+			Factory:  newGlossaryResource,
 			TypeName: "aws_datazone_glossary",
 			Name:     "Glossary",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
@@ -108,7 +108,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 		},
 		{
-			Factory:  newResourceGlossaryTerm,
+			Factory:  newGlossaryTermResource,
 			TypeName: "aws_datazone_glossary_term",
 			Name:     "Glossary Term",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
@@ -117,7 +117,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 		},
 		{
-			Factory:  newResourceProject,
+			Factory:  newProjectResource,
 			TypeName: "aws_datazone_project",
 			Name:     "Project",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
@@ -126,7 +126,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 		},
 		{
-			Factory:  newResourceUserProfile,
+			Factory:  newUserProfileResource,
 			TypeName: "aws_datazone_user_profile",
 			Name:     "User Profile",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
