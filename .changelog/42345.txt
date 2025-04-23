@@ -1,0 +1,3 @@
+```release-note:note
+resource/aws_ec2_instance_default_credit_specification: Add `aws_ec2_instance_default_credit_specification` resource.
+```
