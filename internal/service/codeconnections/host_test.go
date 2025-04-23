@@ -269,32 +269,3 @@ resource "aws_codeconnections_host" "test" {
 }
 `, rName))
 }
-
-func testAccHostConfig_tags1(rName string, tagKey1 string, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_codeconnections_host" "test" {
-  name              = %[1]q
-  provider_endpoint = "https://example.com"
-  provider_type     = "GitHubEnterpriseServer"
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1)
-}
-
-func testAccHostConfig_tags2(rName string, tagKey1 string, tagValue1 string, tagKey2 string, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_codeconnections_host" "test" {
-  name              = %[1]q
-  provider_endpoint = "https://example.com"
-  provider_type     = "GitHubEnterpriseServer"
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
-}

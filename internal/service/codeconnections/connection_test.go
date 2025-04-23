@@ -185,30 +185,3 @@ resource "aws_codeconnections_connection" "test" {
 }
 `, rName)
 }
-
-func testAccConnectionConfig_tags1(rName string, tagKey1 string, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_codeconnections_connection" "test" {
-  name          = %[1]q
-  provider_type = "Bitbucket"
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1)
-}
-
-func testAccConnectionConfig_tags2(rName string, tagKey1 string, tagValue1 string, tagKey2 string, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_codeconnections_connection" "test" {
-  name          = %[1]q
-  provider_type = "Bitbucket"
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
-}
