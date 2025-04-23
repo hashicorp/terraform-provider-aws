@@ -35,15 +35,17 @@ import (
 
 // @FrameworkResource("aws_opensearchserverless_collection", name="Collection")
 // @Tags(identifierAttribute="arn")
-func newResourceCollection(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := resourceCollection{}
+func newCollectionResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := collectionResource{}
+
 	r.SetDefaultCreateTimeout(20 * time.Minute)
 	r.SetDefaultDeleteTimeout(20 * time.Minute)
 
 	return &r, nil
 }
 
-type resourceCollectionData struct {
+type collectionResourceModel struct {
+	framework.WithRegionModel
 	ARN                types.String   `tfsdk:"arn"`
 	CollectionEndpoint types.String   `tfsdk:"collection_endpoint"`
 	DashboardEndpoint  types.String   `tfsdk:"dashboard_endpoint"`
@@ -62,13 +64,13 @@ const (
 	ResNameCollection = "Collection"
 )
 
-type resourceCollection struct {
-	framework.ResourceWithConfigure
+type collectionResource struct {
+	framework.ResourceWithModel[collectionResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }
 
-func (r *resourceCollection) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *collectionResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
@@ -142,8 +144,8 @@ func (r *resourceCollection) Schema(ctx context.Context, req resource.SchemaRequ
 	}
 }
 
-func (r *resourceCollection) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan resourceCollectionData
+func (r *collectionResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var plan collectionResourceModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 
@@ -195,10 +197,10 @@ func (r *resourceCollection) Create(ctx context.Context, req resource.CreateRequ
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceCollection) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *collectionResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().OpenSearchServerlessClient(ctx)
 
-	var state resourceCollectionData
+	var state collectionResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -228,10 +230,10 @@ func (r *resourceCollection) Read(ctx context.Context, req resource.ReadRequest,
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceCollection) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *collectionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().OpenSearchServerlessClient(ctx)
 
-	var plan, state resourceCollectionData
+	var plan, state collectionResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
@@ -269,10 +271,10 @@ func (r *resourceCollection) Update(ctx context.Context, req resource.UpdateRequ
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceCollection) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *collectionResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().OpenSearchServerlessClient(ctx)
 
-	var state resourceCollectionData
+	var state collectionResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return

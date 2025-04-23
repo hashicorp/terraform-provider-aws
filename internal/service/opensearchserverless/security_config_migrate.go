@@ -74,7 +74,7 @@ func upgradeSecurityConfigStateFromV0(ctx context.Context, request resource.Upgr
 		return
 	}
 
-	securityConfigDataV1 := resourceSecurityConfigData{
+	securityConfigDataV1 := securityConfigResourceModel{
 		ID:            securityConfigDataV0.ID,
 		ConfigVersion: securityConfigDataV0.ConfigVersion,
 		Description:   securityConfigDataV0.Description,

@@ -63,7 +63,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newResourceAccessPolicy,
+			Factory:  newAccessPolicyResource,
 			TypeName: "aws_opensearchserverless_access_policy",
 			Name:     "Access Policy",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
@@ -72,7 +72,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 		},
 		{
-			Factory:  newResourceCollection,
+			Factory:  newCollectionResource,
 			TypeName: "aws_opensearchserverless_collection",
 			Name:     "Collection",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
@@ -84,7 +84,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 		},
 		{
-			Factory:  newResourceLifecyclePolicy,
+			Factory:  newLifecyclePolicyResource,
 			TypeName: "aws_opensearchserverless_lifecycle_policy",
 			Name:     "Lifecycle Policy",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
@@ -93,7 +93,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 		},
 		{
-			Factory:  newResourceSecurityConfig,
+			Factory:  newSecurityConfigResource,
 			TypeName: "aws_opensearchserverless_security_config",
 			Name:     "Security Config",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
@@ -102,7 +102,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 		},
 		{
-			Factory:  newResourceSecurityPolicy,
+			Factory:  newSecurityPolicyResource,
 			TypeName: "aws_opensearchserverless_security_policy",
 			Name:     "Security Policy",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
