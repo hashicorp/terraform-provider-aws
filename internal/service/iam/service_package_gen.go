@@ -23,7 +23,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newResourceGroupPoliciesExclusive,
+			Factory:  newGroupPoliciesExclusiveResource,
 			TypeName: "aws_iam_group_policies_exclusive",
 			Name:     "Group Policies Exclusive",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
@@ -31,7 +31,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 		},
 		{
-			Factory:  newResourceGroupPolicyAttachmentsExclusive,
+			Factory:  newGroupPolicyAttachmentsExclusiveResource,
 			TypeName: "aws_iam_group_policy_attachments_exclusive",
 			Name:     "Group Policy Attachments Exclusive",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
@@ -47,7 +47,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 		},
 		{
-			Factory:  newResourceRolePoliciesExclusive,
+			Factory:  newRolePoliciesExclusiveResource,
 			TypeName: "aws_iam_role_policies_exclusive",
 			Name:     "Role Policies Exclusive",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
@@ -55,7 +55,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 		},
 		{
-			Factory:  newResourceRolePolicyAttachmentsExclusive,
+			Factory:  newRolePolicyAttachmentsExclusiveResource,
 			TypeName: "aws_iam_role_policy_attachments_exclusive",
 			Name:     "Role Policy Attachments Exclusive",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
@@ -63,7 +63,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 		},
 		{
-			Factory:  newResourceUserPoliciesExclusive,
+			Factory:  newUserPoliciesExclusiveResource,
 			TypeName: "aws_iam_user_policies_exclusive",
 			Name:     "User Policies Exclusive",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
@@ -71,7 +71,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 		},
 		{
-			Factory:  newResourceUserPolicyAttachmentsExclusive,
+			Factory:  newUserPolicyAttachmentsExclusiveResource,
 			TypeName: "aws_iam_user_policy_attachments_exclusive",
 			Name:     "User Policy Attachments Exclusive",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
