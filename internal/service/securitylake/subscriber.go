@@ -56,6 +56,8 @@ const (
 
 type subscriberResource struct {
 	framework.ResourceWithConfigure
+	// TODO REGION Use AutoFlEx.
+	// framework.ResourceWithModel[subscriberResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }
@@ -721,6 +723,7 @@ var (
 )
 
 type subscriberResourceModel struct {
+	framework.WithRegionModel
 	AccessTypes           types.String                                             `tfsdk:"access_type"`
 	SubscriberArn         types.String                                             `tfsdk:"arn"`
 	ID                    types.String                                             `tfsdk:"id"`

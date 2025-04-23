@@ -52,7 +52,7 @@ func newDataLakeResource(context.Context) (resource.ResourceWithConfigure, error
 }
 
 type dataLakeResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[dataLakeResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }
@@ -522,6 +522,7 @@ func regionFromARNString(s string) (string, error) {
 }
 
 type dataLakeResourceModel struct {
+	framework.WithRegionModel
 	Configurations          fwtypes.ListNestedObjectValueOf[dataLakeConfigurationModel] `tfsdk:"configuration"`
 	DataLakeARN             types.String                                                `tfsdk:"arn"`
 	ID                      types.String                                                `tfsdk:"id"`
