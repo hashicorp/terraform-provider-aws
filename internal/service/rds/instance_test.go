@@ -13751,7 +13751,7 @@ func testAccInstanceConfig_dedicatedLogVolumeEnabled(rName string, enabled bool)
 resource "aws_db_instance" "test" {
   # Dedicated log volumes do not support PG 16 instances.
   engine              = "postgres"
-  engine_version      = "15.6"
+  engine_version      = "15.12"
   identifier          = %[1]q
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
   password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
