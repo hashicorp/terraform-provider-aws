@@ -42,7 +42,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newResourceReservedCacheNode,
+			Factory:  newReservedCacheNodeResource,
 			TypeName: "aws_elasticache_reserved_cache_node",
 			Name:     "Reserved Cache Node",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
