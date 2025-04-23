@@ -33,7 +33,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newResourceIdentitySource,
+			Factory:  newIdentitySourceResource,
 			TypeName: "aws_verifiedpermissions_identity_source",
 			Name:     "Identity Source",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
@@ -42,7 +42,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 		},
 		{
-			Factory:  newResourcePolicy,
+			Factory:  newPolicyResource,
 			TypeName: "aws_verifiedpermissions_policy",
 			Name:     "Policy",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
@@ -51,7 +51,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 		},
 		{
-			Factory:  newResourcePolicyStore,
+			Factory:  newPolicyStoreResource,
 			TypeName: "aws_verifiedpermissions_policy_store",
 			Name:     "Policy Store",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
@@ -60,7 +60,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 		},
 		{
-			Factory:  newResourcePolicyTemplate,
+			Factory:  newPolicyTemplateResource,
 			TypeName: "aws_verifiedpermissions_policy_template",
 			Name:     "Policy Template",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
@@ -69,7 +69,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 		},
 		{
-			Factory:  newResourceSchema,
+			Factory:  newSchemaResource,
 			TypeName: "aws_verifiedpermissions_schema",
 			Name:     "Schema",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
