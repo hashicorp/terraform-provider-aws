@@ -47,7 +47,7 @@ func TestAccGuardDuty_serial(t *testing.T) {
 		},
 		"IPSet": {
 			acctest.CtBasic: testAccIPSet_basic,
-			"tags":          testAccIPSet_tags,
+			"tags":          testAccGuardDutyIPSet_tagsSerial,
 		},
 		"OrganizationAdminAccount": {
 			acctest.CtBasic: testAccOrganizationAdminAccount_basic,
