@@ -33,7 +33,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newResourceMalwareProtectionPlan,
+			Factory:  newMalwareProtectionPlanResource,
 			TypeName: "aws_guardduty_malware_protection_plan",
 			Name:     "Malware Protection Plan",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
