@@ -65,7 +65,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 		},
 		{
-			Factory:  newResourceSubscription,
+			Factory:  newSubscriptionResource,
 			TypeName: "aws_shield_subscription",
 			Name:     "Subscription",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{

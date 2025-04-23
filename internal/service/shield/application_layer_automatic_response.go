@@ -54,7 +54,7 @@ func newApplicationLayerAutomaticResponseResource(context.Context) (resource.Res
 }
 
 type applicationLayerAutomaticResponseResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[applicationLayerAutomaticResponseResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }
