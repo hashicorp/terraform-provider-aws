@@ -10,7 +10,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -61,6 +60,7 @@ func TestAccEC2VPCRouteServer_persistRoutes(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rAsn := sdkacctest.RandIntRange(64512, 65534)
 	rPersistRoutes := "enable"
+	rPersistRoutesDuration := 2
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -73,12 +73,12 @@ func TestAccEC2VPCRouteServer_persistRoutes(t *testing.T) {
 		CheckDestroy:             testAccCheckVPCRouteServerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCRouterServerConfig_persistRoutes(rName, rAsn, rPersistRoutes),
+				Config: testAccVPCRouterServerConfig_persistRoutes(rName, rAsn, rPersistRoutes, rPersistRoutesDuration),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCRouteServerExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "amazon_side_asn", fmt.Sprintf("%d", rAsn)),
 					resource.TestCheckResourceAttr(resourceName, "persist_routes", rPersistRoutes),
-					resource.TestCheckResourceAttr(resourceName, "persist_routes_duration", "2"),
+					resource.TestCheckResourceAttr(resourceName, "persist_routes_duration", fmt.Sprintf("%d", rPersistRoutesDuration)),
 				),
 			},
 			{
@@ -90,11 +90,13 @@ func TestAccEC2VPCRouteServer_persistRoutes(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCRouteServer_update(t *testing.T) {
+func TestAccEC2VPCRouteServer_updatePersitRoutesSNSNotification(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_route_server.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rAsn := sdkacctest.RandIntRange(64512, 65534)
+	rPersistRoutes := "enable"
+	rPersistRoutesDuration := 1
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -107,12 +109,12 @@ func TestAccEC2VPCRouteServer_update(t *testing.T) {
 		CheckDestroy:             testAccCheckVPCRouteServerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCRouterServerConfig_persistRoutes(rName, rAsn, "enable"),
+				Config: testAccVPCRouterServerConfig_persistRoutes(rName, rAsn, rPersistRoutes, rPersistRoutesDuration),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCRouteServerExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "amazon_side_asn", fmt.Sprintf("%d", rAsn)),
-					resource.TestCheckResourceAttr(resourceName, "persist_routes", "enable"),
-					resource.TestCheckResourceAttr(resourceName, "persist_routes_duration", "2"),
+					resource.TestCheckResourceAttr(resourceName, "persist_routes", rPersistRoutes),
+					resource.TestCheckResourceAttr(resourceName, "persist_routes_duration", fmt.Sprintf("%d", rPersistRoutesDuration)),
 				),
 			},
 			{
@@ -121,7 +123,7 @@ func TestAccEC2VPCRouteServer_update(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccVPCRouterServerConfig_persistRoutesUpdate(rName, rAsn, "disable"),
+				Config: testAccVPCRouterServerConfig_persistRoutesSNSNotification(rName, rAsn, "disable"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCRouteServerExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "amazon_side_asn", fmt.Sprintf("%d", rAsn)),
@@ -169,11 +171,8 @@ func testAccCheckVPCRouteServerDestroy(ctx context.Context) resource.TestCheckFu
 				continue
 			}
 
-			out, err := tfec2.FindVPCRouteServerByID(ctx, conn, rs.Primary.ID)
+			_, err := tfec2.FindVPCRouteServerByID(ctx, conn, rs.Primary.ID)
 			if tfresource.NotFound(err) {
-				return nil
-			}
-			if out.State == awstypes.RouteServerStateDeleted || out.State == awstypes.RouteServerStateDeleting {
 				return nil
 			}
 			if err != nil {
@@ -207,9 +206,6 @@ func testAccCheckVPCRouteServerExists(ctx context.Context, name string) resource
 		if resp == nil {
 			return create.Error(names.EC2, create.ErrActionCheckingExistence, tfec2.ResNameVPCRouteServer, rs.Primary.ID, errors.New("not found"))
 		}
-		if resp.State == awstypes.RouteServerStateDeleted || resp.State == awstypes.RouteServerStateDeleting {
-			return create.Error(names.EC2, create.ErrActionCheckingExistence, tfec2.ResNameVPCRouteServer, rs.Primary.ID, errors.New("not found"))
-		}
 		return nil
 	}
 }
@@ -240,20 +236,20 @@ resource "aws_vpc_route_server" "test" {
 `, rName, rAsn)
 }
 
-func testAccVPCRouterServerConfig_persistRoutes(rName string, rAsn int, rPersistRoutes string) string {
+func testAccVPCRouterServerConfig_persistRoutes(rName string, rAsn int, rPersistRoutes string, rPersistRoutesDuration int) string {
 	return fmt.Sprintf(`
 resource "aws_vpc_route_server" "test" {
   amazon_side_asn = %[2]d
   persist_routes  = %[3]q
-  persist_routes_duration = 2
+  persist_routes_duration = %[4]d
   tags = {
 	Name = %[1]q
   }
 }
-`, rName, rAsn, rPersistRoutes)
+`, rName, rAsn, rPersistRoutes, rPersistRoutesDuration)
 }
 
-func testAccVPCRouterServerConfig_persistRoutesUpdate(rName string, rAsn int, rPersistRoutes string) string {
+func testAccVPCRouterServerConfig_persistRoutesSNSNotification(rName string, rAsn int, rPersistRoutes string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc_route_server" "test" {
   amazon_side_asn = %[2]d

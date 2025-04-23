@@ -6,7 +6,6 @@ package ec2
 import (
 	"context"
 	"errors"
-	"slices"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -142,7 +141,6 @@ func (r *resourceVPCRouteServer) Create(ctx context.Context, req resource.Create
 		return
 	}
 	// Wait for the persist routes to be enabled or disabled before updating the state
-
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
 	routeServerAfterPesistRoutesState, err = waitVPCRouteServerPersistRoutes(ctx, conn, aws.ToString(out.RouteServer.RouteServerId), createTimeout)
 	if err != nil {
@@ -156,7 +154,7 @@ func (r *resourceVPCRouteServer) Create(ctx context.Context, req resource.Create
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	setVPCRouteServerPersistRouteFromState(ctx, &plan, routeServerAfterPesistRoutesState)
+	updateVPCRouteServerPersistRouteFromState(ctx, &plan, routeServerAfterPesistRoutesState)
 	_, err = waitVPCRouteServerCreated(ctx, conn, plan.RouteServerId.ValueString(), createTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -196,7 +194,7 @@ func (r *resourceVPCRouteServer) Read(ctx context.Context, req resource.ReadRequ
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	setVPCRouteServerPersistRouteFromState(ctx, &state, out)
+	updateVPCRouteServerPersistRouteFromState(ctx, &state, out)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
@@ -258,7 +256,7 @@ func (r *resourceVPCRouteServer) Update(ctx context.Context, req resource.Update
 		if resp.Diagnostics.HasError() {
 			return
 		}
-		setVPCRouteServerPersistRouteFromState(ctx, &plan, routeServerAfterPesistRoutesState)
+		updateVPCRouteServerPersistRouteFromState(ctx, &plan, routeServerAfterPesistRoutesState)
 	}
 
 	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
@@ -282,17 +280,17 @@ func (r *resourceVPCRouteServer) Delete(ctx context.Context, req resource.Delete
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	out, _ := findVPCRouteServerByID(ctx, conn, state.RouteServerId.ValueString())
-	if out != nil && out.State == awstypes.RouteServerStateDeleted {
+	_, err := findVPCRouteServerByID(ctx, conn, state.RouteServerId.ValueString())
+	if tfresource.NotFound(err) {
+		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		resp.State.RemoveResource(ctx)
 		return
 	}
-
 	input := ec2.DeleteRouteServerInput{
 		RouteServerId: state.RouteServerId.ValueStringPointer(),
 	}
 
-	_, err := conn.DeleteRouteServer(ctx, &input)
+	_, err = conn.DeleteRouteServer(ctx, &input)
 	if err != nil {
 		if tfresource.NotFound(err) {
 			return
@@ -359,7 +357,7 @@ func waitVPCRouteServerUpdated(ctx context.Context, conn *ec2.Client, id string,
 func waitVPCRouteServerDeleted(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.RouteServer, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.RouteServerStateDeleting),
-		Target:  slices.Concat(enum.Slice(awstypes.RouteServerStateDeleted), []string{}),
+		Target:  []string{},
 		Refresh: statusVPCRouteServer(ctx, conn, id),
 		Timeout: timeout,
 	}
@@ -422,7 +420,14 @@ func statusVPCRouteServerPersistRoutes(ctx context.Context, conn *ec2.Client, id
 
 func findVPCRouteServerByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.RouteServer, error) {
 	input := ec2.DescribeRouteServersInput{
-		RouteServerIds: []string{aws.ToString(aws.String(id))},
+		RouteServerIds: []string{id},
+		// The Filter attribute from DescribeRouteServers seems not yet implemented in the API
+		// 	Filters: []awstypes.Filter{
+		// 		{
+		// 			Name:   aws.String("state"),
+		// 			Values: enum.Slice(awstypes.RouteServerStateAvailable, awstypes.RouteServerStatePending, awstypes.RouteServerStateModifying, awstypes.RouteServerStateDeleting),
+		// 		},
+		// },
 	}
 	var routeServers []awstypes.RouteServer
 	paginator := ec2.NewDescribeRouteServersPaginator(conn, &input)
@@ -438,14 +443,28 @@ func findVPCRouteServerByID(ctx context.Context, conn *ec2.Client, id string) (*
 			return nil, err
 		}
 		if page != nil && len(page.RouteServers) > 0 {
-			routeServers = append(routeServers, page.RouteServers...)
+			// until filters are implemented by API, this will check if each routeServer in routeServers state is not deleted
+			for _, routeServer := range page.RouteServers {
+				if routeServer.State == awstypes.RouteServerStateDeleted {
+					continue
+				}
+				routeServers = append(routeServers, routeServer)
+			}
 		}
+
 	}
-	return &routeServers[0], nil
+	if len(routeServers) == 0 {
+		return nil, &retry.NotFoundError{
+			LastError:   errors.New("route server not found"),
+			LastRequest: &input,
+		}
+	} else {
+		return &routeServers[0], nil
+	}
 }
 
 // the API does not return the persist route action, but only the state. This function will set the persist route action based on the state for seemless experiece.
-func setVPCRouteServerPersistRouteFromState(ctx context.Context, data *resourceVPCRouteServerModel, routeServer *awstypes.RouteServer) {
+func updateVPCRouteServerPersistRouteFromState(ctx context.Context, data *resourceVPCRouteServerModel, routeServer *awstypes.RouteServer) {
 
 	var persistRoutes string
 	if routeServer.PersistRoutesState == awstypes.RouteServerPersistRoutesStateEnabled {
