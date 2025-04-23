@@ -11,6 +11,7 @@ var (
 	ResourcePublishingDestination = resourcePublishingDestination
 
 	FindDetectorByID                        = findDetectorByID
+	FindDetectorFeatureByTwoPartKey         = findDetectorFeatureByTwoPartKey
 	FindMalwareProtectionPlanByID           = findMalwareProtectionPlanByID
 	FindMemberDetectorFeatureByThreePartKey = findMemberDetectorFeatureByThreePartKey
 
