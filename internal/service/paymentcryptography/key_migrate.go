@@ -157,8 +157,8 @@ func upgradeKeyStateV0toV1(ctx context.Context, request resource.UpgradeStateReq
 		return
 	}
 
-	keyDataV1 := resourceKeyModel{
-		KeyArn:                 keyDataV0.KeyArn,
+	keyDataV1 := keyResourceModel{
+		KeyARN:                 keyDataV0.KeyArn,
 		DeletionWindowInDays:   keyDataV0.DeletionWindowInDays,
 		Enabled:                keyDataV0.Enabled,
 		Exportable:             keyDataV0.Exportable,

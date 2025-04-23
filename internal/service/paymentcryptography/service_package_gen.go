@@ -23,7 +23,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newResourceKey,
+			Factory:  newKeyResource,
 			TypeName: "aws_paymentcryptography_key",
 			Name:     "Key",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
@@ -35,7 +35,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 		},
 		{
-			Factory:  newResourceKeyAlias,
+			Factory:  newKeyAliasResource,
 			TypeName: "aws_paymentcryptography_key_alias",
 			Name:     "Key Alias",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
