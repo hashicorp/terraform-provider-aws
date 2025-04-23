@@ -67,9 +67,6 @@ func (r *resourceKeysExclusive) Schema(ctx context.Context, request resource.Sch
 						names.AttrKey: schema.StringAttribute{
 							Required:            true,
 							MarkdownDescription: "The key to put.",
-							PlanModifiers: []planmodifier.String{
-								stringplanmodifier.RequiresReplace(),
-							},
 						},
 						names.AttrValue: schema.StringAttribute{
 							Required:            true,
