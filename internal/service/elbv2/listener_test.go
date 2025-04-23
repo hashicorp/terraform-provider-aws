@@ -3900,7 +3900,7 @@ resource "aws_lb_listener" "test" {
 
   mutual_authentication {
     mode                             = "verify"
-	ignore_client_certificate_expiry = true
+    ignore_client_certificate_expiry = true
     trust_store_arn                  = aws_lb_trust_store.test.arn
   }
 }
