@@ -33,7 +33,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newResourceProfilingGroup,
+			Factory:  newProfilingGroupResource,
 			TypeName: "aws_codeguruprofiler_profiling_group",
 			Name:     "Profiling Group",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
