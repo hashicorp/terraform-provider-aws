@@ -125,12 +125,12 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	var groupID string
 
 	if v, ok := d.GetOk("alternate_identifier"); ok && len(v.([]any)) > 0 {
-		input := &identitystore.GetGroupIdInput{
+		input := identitystore.GetGroupIdInput{
 			AlternateIdentifier: expandAlternateIdentifier(v.([]any)[0].(map[string]any)),
 			IdentityStoreId:     aws.String(identityStoreID),
 		}
 
-		output, err := conn.GetGroupId(ctx, input)
+		output, err := conn.GetGroupId(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading IdentityStore Group (%s): %s", identityStoreID, err)

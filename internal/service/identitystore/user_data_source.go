@@ -265,12 +265,12 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	var userID string
 
 	if v, ok := d.GetOk("alternate_identifier"); ok && len(v.([]any)) > 0 {
-		input := &identitystore.GetUserIdInput{
+		input := identitystore.GetUserIdInput{
 			AlternateIdentifier: expandAlternateIdentifier(v.([]any)[0].(map[string]any)),
 			IdentityStoreId:     aws.String(identityStoreID),
 		}
 
-		output, err := conn.GetUserId(ctx, input)
+		output, err := conn.GetUserId(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading IdentityStore User (%s): %s", identityStoreID, err)
