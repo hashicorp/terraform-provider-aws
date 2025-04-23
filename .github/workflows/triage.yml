@@ -234,10 +234,10 @@ jobs:
         with:
           predicate-quantifier: 'every'
           filters: |
-            needs
+            needs:
               - 'internal/service/**'
               - '!internal/service/**/*_test.go'
-            has
+            has:
               - '.changelog/**'
 
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
