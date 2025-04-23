@@ -42,7 +42,7 @@ func newProbeResource(context.Context) (resource.ResourceWithConfigure, error) {
 }
 
 type probeResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[probeResourceModel]
 	framework.WithImportByID
 }
 
@@ -391,6 +391,7 @@ func waitProbeDeleted(ctx context.Context, conn *networkmonitor.Client, monitorN
 }
 
 type probeResourceModel struct {
+	framework.WithRegionModel
 	AddressFamily   fwtypes.StringEnum[awstypes.AddressFamily] `tfsdk:"address_family"`
 	Destination     types.String                               `tfsdk:"destination"`
 	DestinationPort types.Int64                                `tfsdk:"destination_port"`
