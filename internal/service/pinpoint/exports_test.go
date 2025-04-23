@@ -7,7 +7,7 @@ package pinpoint
 var (
 	ResourceApp           = resourceApp
 	ResourceEmailChannel  = resourceEmailChannel
-	ResourceEmailTemplate = newResourceEmailTemplate
+	ResourceEmailTemplate = newEmailTemplateResource
 	ResourceEventStream   = resourceEventStream
 	ResourceSMSChannel    = resourceSMSChannel
 
