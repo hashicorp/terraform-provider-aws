@@ -39,7 +39,7 @@ const (
 )
 
 type templateResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[templateResourceModel]
 	framework.WithImportByID
 }
 
