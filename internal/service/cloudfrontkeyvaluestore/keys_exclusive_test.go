@@ -11,10 +11,10 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfrontkeyvaluestore"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfrontkeyvaluestore/types"
-	"github.com/aws/aws-sdk-go/aws"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -90,7 +90,7 @@ func TestAccCloudFrontKeyValueStoreKeysExclusive_disappears_KeyValueStore(t *tes
 				Config: testAccKeysExclusiveConfig_basic([]string{key}, []string{value}, rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckKeysExclusiveExists(ctx, resourceName),
-					testAccCheckKeyValueStoreDestroy(ctx, resourceName, rName),
+					testAccCheckStoreDestroy(ctx, resourceName, rName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -127,7 +127,7 @@ func TestAccCloudFrontKeyValueStoreKeysExclusive_outOfBandAddition(t *testing.T)
 				Config: testAccKeysExclusiveConfig_basic([]string{key}, []string{value}, rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckKeysExclusiveExists(ctx, resourceName),
-					testAccCheckCloudFrontKeyValueStoreKeysExclusiveUpdate(ctx, resourceName, []types.DeleteKeyRequestListItem{}, putKeys),
+					testAccCheckKeyValueStoreKeysExclusiveUpdate(ctx, resourceName, []types.DeleteKeyRequestListItem{}, putKeys),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -175,7 +175,7 @@ func TestAccCloudFrontKeyValueStoreKeysExclusive_outOfBandRemoval(t *testing.T) 
 				Config: testAccKeysExclusiveConfig_basic([]string{key}, []string{value}, rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckKeysExclusiveExists(ctx, resourceName),
-					testAccCheckCloudFrontKeyValueStoreKeysExclusiveUpdate(ctx, resourceName, deleteKeys, []types.PutKeyRequestListItem{}),
+					testAccCheckKeyValueStoreKeysExclusiveUpdate(ctx, resourceName, deleteKeys, []types.PutKeyRequestListItem{}),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -333,7 +333,7 @@ func testAccCheckKeysExclusiveExists(ctx context.Context, n string) resource.Tes
 	}
 }
 
-func testAccCheckKeyValueStoreDestroy(ctx context.Context, n, rName string) resource.TestCheckFunc {
+func testAccCheckStoreDestroy(ctx context.Context, n, rName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -350,7 +350,9 @@ func testAccCheckKeyValueStoreDestroy(ctx context.Context, n, rName string) reso
 		conns.GlobalMutexKV.Lock(mutexKey)
 		defer conns.GlobalMutexKV.Unlock(mutexKey)
 
-		resp, err := conn.DescribeKeyValueStore(ctx, &cloudfront.DescribeKeyValueStoreInput{Name: aws.String(rName)})
+		input := &cloudfront.DescribeKeyValueStoreInput{Name: aws.String(rName)}
+
+		resp, err := conn.DescribeKeyValueStore(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("error finding Cloudfront KeyValueStore in disappear test")
@@ -369,7 +371,7 @@ func testAccCheckKeyValueStoreDestroy(ctx context.Context, n, rName string) reso
 	}
 }
 
-func testAccCheckCloudFrontKeyValueStoreKeysExclusiveUpdate(ctx context.Context, n string, deletes []types.DeleteKeyRequestListItem, puts []types.PutKeyRequestListItem) resource.TestCheckFunc {
+func testAccCheckKeyValueStoreKeysExclusiveUpdate(ctx context.Context, n string, deletes []types.DeleteKeyRequestListItem, puts []types.PutKeyRequestListItem) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
