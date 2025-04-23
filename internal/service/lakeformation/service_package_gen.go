@@ -23,7 +23,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newResourceDataCellsFilter,
+			Factory:  newDataCellsFilterResource,
 			TypeName: "aws_lakeformation_data_cells_filter",
 			Name:     "Data Cells Filter",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
@@ -32,7 +32,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 		},
 		{
-			Factory:  newResourceOptIn,
+			Factory:  newOptInResource,
 			TypeName: "aws_lakeformation_opt_in",
 			Name:     "Opt In",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
@@ -41,7 +41,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 		},
 		{
-			Factory:  newResourceResourceLFTag,
+			Factory:  newResourceLFTagResource,
 			TypeName: "aws_lakeformation_resource_lf_tag",
 			Name:     "Resource LF Tag",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
