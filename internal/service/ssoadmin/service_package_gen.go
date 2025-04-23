@@ -69,7 +69,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newResourceApplication,
+			Factory:  newApplicationResource,
 			TypeName: "aws_ssoadmin_application",
 			Name:     "Application",
 			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
@@ -79,7 +79,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 		},
 		{
-			Factory:  newResourceApplicationAccessScope,
+			Factory:  newApplicationAccessScopeResource,
 			TypeName: "aws_ssoadmin_application_access_scope",
 			Name:     "Application Access Scope",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
@@ -88,7 +88,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 		},
 		{
-			Factory:  newResourceApplicationAssignment,
+			Factory:  newApplicationAssignmentResource,
 			TypeName: "aws_ssoadmin_application_assignment",
 			Name:     "Application Assignment",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
@@ -97,7 +97,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 		},
 		{
-			Factory:  newResourceApplicationAssignmentConfiguration,
+			Factory:  newApplicationAssignmentConfigurationResource,
 			TypeName: "aws_ssoadmin_application_assignment_configuration",
 			Name:     "Application Assignment Configuration",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
@@ -106,7 +106,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 		},
 		{
-			Factory:  newResourceTrustedTokenIssuer,
+			Factory:  newTrustedTokenIssuerResource,
 			TypeName: "aws_ssoadmin_trusted_token_issuer",
 			Name:     "Trusted Token Issuer",
 			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),

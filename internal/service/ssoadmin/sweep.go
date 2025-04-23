@@ -179,7 +179,7 @@ func sweepApplications(region string) error {
 				applicationARN := aws.ToString(application.ApplicationArn)
 				log.Printf("[INFO] Deleting SSO Application: %s", applicationARN)
 
-				sweepResources = append(sweepResources, framework.NewSweepResource(newResourceApplication, client, framework.NewAttribute("application_arn", applicationARN)))
+				sweepResources = append(sweepResources, framework.NewSweepResource(newApplicationResource, client, framework.NewAttribute("application_arn", applicationARN)))
 			}
 		}
 	}

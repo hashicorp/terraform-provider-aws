@@ -37,20 +37,22 @@ import (
 
 // @FrameworkResource("aws_ssoadmin_trusted_token_issuer", name="Trusted Token Issuer")
 // @Tags
-func newResourceTrustedTokenIssuer(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceTrustedTokenIssuer{}, nil
+func newTrustedTokenIssuerResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &trustedTokenIssuerResource{}, nil
 }
 
 const (
 	ResNameTrustedTokenIssuer = "Trusted Token Issuer"
 )
 
-type resourceTrustedTokenIssuer struct {
+type trustedTokenIssuerResource struct {
 	framework.ResourceWithConfigure
+	// TODO REGION Use AutoFlEx.
+	// framework.ResourceWithModel[trustedTokenIssuerResourceModel]
 	framework.WithImportByID
 }
 
-func (r *resourceTrustedTokenIssuer) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *trustedTokenIssuerResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
@@ -127,10 +129,10 @@ func (r *resourceTrustedTokenIssuer) Schema(ctx context.Context, req resource.Sc
 	}
 }
 
-func (r *resourceTrustedTokenIssuer) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *trustedTokenIssuerResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().SSOAdminClient(ctx)
 
-	var plan resourceTrustedTokenIssuerData
+	var plan trustedTokenIssuerResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -185,10 +187,10 @@ func (r *resourceTrustedTokenIssuer) Create(ctx context.Context, req resource.Cr
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceTrustedTokenIssuer) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *trustedTokenIssuerResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().SSOAdminClient(ctx)
 
-	var state resourceTrustedTokenIssuerData
+	var state trustedTokenIssuerResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -234,10 +236,10 @@ func (r *resourceTrustedTokenIssuer) Read(ctx context.Context, req resource.Read
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceTrustedTokenIssuer) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *trustedTokenIssuerResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().SSOAdminClient(ctx)
 
-	var plan, state resourceTrustedTokenIssuerData
+	var plan, state trustedTokenIssuerResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -300,10 +302,10 @@ func (r *resourceTrustedTokenIssuer) Update(ctx context.Context, req resource.Up
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceTrustedTokenIssuer) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *trustedTokenIssuerResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().SSOAdminClient(ctx)
 
-	var state resourceTrustedTokenIssuerData
+	var state trustedTokenIssuerResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -484,7 +486,8 @@ func TrustedTokenIssuerParseInstanceARN(ctx context.Context, c *conns.AWSClient,
 	return "", diags
 }
 
-type resourceTrustedTokenIssuerData struct {
+type trustedTokenIssuerResourceModel struct {
+	framework.WithRegionModel
 	ARN                             types.String `tfsdk:"arn"`
 	ClientToken                     types.String `tfsdk:"client_token"`
 	ID                              types.String `tfsdk:"id"`

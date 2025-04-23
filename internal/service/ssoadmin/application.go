@@ -35,20 +35,22 @@ import (
 
 // @FrameworkResource("aws_ssoadmin_application", name="Application")
 // @Tags
-func newResourceApplication(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceApplication{}, nil
+func newApplicationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &applicationResource{}, nil
 }
 
 const (
 	ResNameApplication = "Application"
 )
 
-type resourceApplication struct {
+type applicationResource struct {
 	framework.ResourceWithConfigure
+	// TODO REGION Use AutoFlEx.
+	// framework.ResourceWithModel[applicationResourceModel]
 	framework.WithImportByID
 }
 
-func (r *resourceApplication) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *applicationResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"application_account": schema.StringAttribute{
@@ -145,10 +147,10 @@ func (r *resourceApplication) Schema(ctx context.Context, req resource.SchemaReq
 	}
 }
 
-func (r *resourceApplication) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *applicationResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().SSOAdminClient(ctx)
 
-	var plan resourceApplicationData
+	var plan applicationResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -219,10 +221,10 @@ func (r *resourceApplication) Create(ctx context.Context, req resource.CreateReq
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceApplication) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *applicationResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().SSOAdminClient(ctx)
 
-	var state resourceApplicationData
+	var state applicationResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -269,10 +271,10 @@ func (r *resourceApplication) Read(ctx context.Context, req resource.ReadRequest
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceApplication) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *applicationResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().SSOAdminClient(ctx)
 
-	var plan, state resourceApplicationData
+	var plan, state applicationResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -343,10 +345,10 @@ func (r *resourceApplication) Update(ctx context.Context, req resource.UpdateReq
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceApplication) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *applicationResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().SSOAdminClient(ctx)
 
-	var state resourceApplicationData
+	var state applicationResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -499,7 +501,8 @@ func expandSignInOptions(tfList []signInOptionsData) *awstypes.SignInOptions {
 	return apiObject
 }
 
-type resourceApplicationData struct {
+type applicationResourceModel struct {
+	framework.WithRegionModel
 	ApplicationAccount     types.String `tfsdk:"application_account"`
 	ApplicationARN         fwtypes.ARN  `tfsdk:"application_arn"`
 	ApplicationProviderARN fwtypes.ARN  `tfsdk:"application_provider_arn"`
