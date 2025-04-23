@@ -69,7 +69,7 @@ func (w *wrappedDataSource) Schema(ctx context.Context, request datasource.Schem
 	if v, ok := w.inner.(framework.DataSourceValidateModel); ok {
 		response.Diagnostics.Append(v.ValidateModel(ctx, &response.Schema)...)
 		if response.Diagnostics.HasError() {
-			// response.Diagnostics.AddError("data source model validation error", w.opts.typeName)
+			response.Diagnostics.AddError("data source model validation error", w.opts.typeName)
 			return
 		}
 	}
