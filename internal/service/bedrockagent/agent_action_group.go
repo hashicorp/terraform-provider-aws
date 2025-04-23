@@ -47,7 +47,7 @@ func newAgentActionGroupResource(context.Context) (resource.ResourceWithConfigur
 }
 
 type agentActionGroupResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[agentActionGroupResourceModel]
 	framework.WithTimeouts
 }
 
@@ -435,6 +435,7 @@ func findAgentActionGroupByThreePartKey(ctx context.Context, conn *bedrockagent.
 }
 
 type agentActionGroupResourceModel struct {
+	framework.WithRegionModel
 	ActionGroupID              types.String                                              `tfsdk:"action_group_id"`
 	ActionGroupExecutor        fwtypes.ListNestedObjectValueOf[actionGroupExecutorModel] `tfsdk:"action_group_executor"`
 	ActionGroupName            types.String                                              `tfsdk:"action_group_name"`
