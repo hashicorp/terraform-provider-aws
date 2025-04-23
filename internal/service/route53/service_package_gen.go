@@ -57,7 +57,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 		},
 		{
-			Factory:  newResourceRecordsExclusive,
+			Factory:  newRecordsExclusiveResource,
 			TypeName: "aws_route53_records_exclusive",
 			Name:     "Records Exclusive",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
