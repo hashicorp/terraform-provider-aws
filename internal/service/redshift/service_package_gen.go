@@ -42,7 +42,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newResourceDataShareAuthorization,
+			Factory:  newDataShareAuthorizationResource,
 			TypeName: "aws_redshift_data_share_authorization",
 			Name:     "Data Share Authorization",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
@@ -51,7 +51,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 		},
 		{
-			Factory:  newResourceDataShareConsumerAssociation,
+			Factory:  newDataShareConsumerAssociationResource,
 			TypeName: "aws_redshift_data_share_consumer_association",
 			Name:     "Data Share Consumer Association",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
@@ -72,7 +72,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 		},
 		{
-			Factory:  newResourceLogging,
+			Factory:  newLoggingResource,
 			TypeName: "aws_redshift_logging",
 			Name:     "Logging",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
@@ -81,7 +81,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 		},
 		{
-			Factory:  newResourceSnapshotCopy,
+			Factory:  newSnapshotCopyResource,
 			TypeName: "aws_redshift_snapshot_copy",
 			Name:     "Snapshot Copy",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
