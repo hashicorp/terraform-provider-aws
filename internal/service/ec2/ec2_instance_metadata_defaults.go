@@ -38,7 +38,7 @@ func newInstanceMetadataDefaultsResource(_ context.Context) (resource.ResourceWi
 }
 
 type instanceMetadataDefaultsResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[instanceMetadataDefaultsResourceModel]
 }
 
 func (r *instanceMetadataDefaultsResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -232,6 +232,7 @@ func findInstanceMetadataDefaults(ctx context.Context, conn *ec2.Client) (*awsty
 }
 
 type instanceMetadataDefaultsResourceModel struct {
+	framework.WithRegionModel
 	HttpEndpoint            fwtypes.StringEnum[awstypes.DefaultInstanceMetadataEndpointState] `tfsdk:"http_endpoint"`
 	HttpPutResponseHopLimit types.Int64                                                       `tfsdk:"http_put_response_hop_limit"`
 	HttpTokens              fwtypes.StringEnum[awstypes.MetadataDefaultHttpTokensState]       `tfsdk:"http_tokens"`
