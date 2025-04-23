@@ -104,7 +104,7 @@ func testAccAccessPointForDirectoryBucketScopeConfig_basic(rName string) string 
 data "aws_caller_identity" "current" {}
 
 resource "aws_s3_directory_bucket" "test_bucket" {
-  bucket = "terraformbucket-revv--apse1-sggov-sin2-az1--x-s3"
+  bucket = "terraformbucket1--apse1-sggov-sin2-az1--x-s3"
 
   location {
     name = "apse1-sggov-sin2-az1"
@@ -123,7 +123,7 @@ resource "aws_s3control_directory_access_point_scope" "test_scope" {
   account_id = data.aws_caller_identity.current.account_id
 
   scope {
-    permissions = ["s3:GetObject", "s3:PutObject"]
+    permissions = ["GetObject", "PutObject"]
     prefixes    = ["prefix1/", "prefix2-*-*"]
   }
 }
