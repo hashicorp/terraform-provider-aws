@@ -42,7 +42,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newResourceEventSourcesConfig,
+			Factory:  newEventSourcesConfigResource,
 			TypeName: "aws_devopsguru_event_sources_config",
 			Name:     "Event Sources Config",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
@@ -51,7 +51,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 		},
 		{
-			Factory:  newResourceNotificationChannel,
+			Factory:  newNotificationChannelResource,
 			TypeName: "aws_devopsguru_notification_channel",
 			Name:     "Notification Channel",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
@@ -60,7 +60,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 		},
 		{
-			Factory:  newResourceResourceCollection,
+			Factory:  newResourceCollectionResource,
 			TypeName: "aws_devopsguru_resource_collection",
 			Name:     "Resource Collection",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
@@ -69,7 +69,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 		},
 		{
-			Factory:  newResourceServiceIntegration,
+			Factory:  newServiceIntegrationResource,
 			TypeName: "aws_devopsguru_service_integration",
 			Name:     "Service Integration",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
