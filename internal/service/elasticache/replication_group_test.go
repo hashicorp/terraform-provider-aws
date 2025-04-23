@@ -276,7 +276,7 @@ func TestAccElastiCacheReplicationGroup_OutOfBandUpgrade(t *testing.T) {
 				ExpectNonEmptyPlan: true,
 			},
 			{
-				Config: testAccReplicationGroupConfig_v7(rName),
+				Config: testAccReplicationGroupConfig_v7_upgraded(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &replicationGroup),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "redis"),
