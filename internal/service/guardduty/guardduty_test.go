@@ -27,6 +27,7 @@ func TestAccGuardDuty_serial(t *testing.T) {
 			"tags":                              testAccGuardDutyDetector_tagsSerial,
 			"datasource_basic":                  testAccDetectorDataSource_basic,
 			"datasource_id":                     testAccDetectorDataSource_ID,
+			"datasource_tags":                   testAccGuardDutyDetectorDataSource_tagsSerial,
 		},
 		"DetectorFeature": {
 			acctest.CtBasic:            testAccDetectorFeature_basic,

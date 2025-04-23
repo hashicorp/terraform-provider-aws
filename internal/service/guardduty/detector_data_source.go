@@ -5,16 +5,23 @@ package guardduty
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_guardduty_detector", name="Detector")
+// @Tags
+// @Testing(serialize=true)
+// @Testing(generator=false)
+// @Testing(tagsIdentifierAttribute="arn")
 func DataSourceDetector() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDetectorRead,
@@ -73,6 +80,7 @@ func DataSourceDetector() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -118,6 +126,8 @@ func dataSourceDetectorRead(ctx context.Context, d *schema.ResourceData, meta an
 	d.Set("finding_publishing_frequency", gdo.FindingPublishingFrequency)
 	d.Set(names.AttrServiceRoleARN, gdo.ServiceRole)
 	d.Set(names.AttrStatus, gdo.Status)
+
+	setTagsOut(ctx, gdo.Tags)
 
 	return diags
 }
