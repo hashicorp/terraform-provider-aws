@@ -645,9 +645,9 @@ resource "aws_cloudwatch_log_group" "test" {
 }
 
 resource "aws_flow_log" "test" {
-  iam_role_arn   = aws_iam_role.test.arn
-  traffic_type   = "ALL"
-  vpc_id         = aws_vpc.test.id
+  iam_role_arn = aws_iam_role.test.arn
+  traffic_type = "ALL"
+  vpc_id       = aws_vpc.test.id
 }
 `, rName))
 }
@@ -886,9 +886,9 @@ resource "aws_cloudwatch_log_group" "test" {
 }
 
 resource "aws_flow_log" "test" {
-  iam_role_arn   = aws_iam_role.test.arn
-  subnet_id      = aws_subnet.test[0].id
-  traffic_type   = "ALL"
+  iam_role_arn = aws_iam_role.test.arn
+  subnet_id    = aws_subnet.test[0].id
+  traffic_type = "ALL"
 
   tags = {
     Name = %[1]q
@@ -979,9 +979,9 @@ resource "aws_cloudwatch_log_group" "test" {
 }
 
 resource "aws_flow_log" "test" {
-  iam_role_arn   = aws_iam_role.test.arn
-  traffic_type   = "ALL"
-  vpc_id         = aws_vpc.test.id
+  iam_role_arn = aws_iam_role.test.arn
+  traffic_type = "ALL"
+  vpc_id       = aws_vpc.test.id
 
   tags = {
     %[2]q = %[3]q
@@ -1022,9 +1022,9 @@ resource "aws_cloudwatch_log_group" "test" {
 }
 
 resource "aws_flow_log" "test" {
-  iam_role_arn   = aws_iam_role.test.arn
-  traffic_type   = "ALL"
-  vpc_id         = aws_vpc.test.id
+  iam_role_arn = aws_iam_role.test.arn
+  traffic_type = "ALL"
+  vpc_id       = aws_vpc.test.id
 
   tags = {
     %[2]q = %[3]q
@@ -1066,9 +1066,9 @@ resource "aws_cloudwatch_log_group" "test" {
 }
 
 resource "aws_flow_log" "test" {
-  iam_role_arn   = aws_iam_role.test.arn
-  traffic_type   = "ALL"
-  vpc_id         = aws_vpc.test.id
+  iam_role_arn = aws_iam_role.test.arn
+  traffic_type = "ALL"
+  vpc_id       = aws_vpc.test.id
 
   max_aggregation_interval = 60
 
