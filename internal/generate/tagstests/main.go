@@ -675,11 +675,9 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						v.errs = append(v.errs, fmt.Errorf("%s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
 						continue
 					} else {
-						d.PreChecks = []codeBlock{
-							{
-								Code: fmt.Sprintf("%s(ctx, t)", code),
-							},
-						}
+						d.PreChecks = append(d.PreChecks, codeBlock{
+							Code: fmt.Sprintf("%s(ctx, t)", code),
+						})
 						if importSpec != nil {
 							d.GoImports = append(d.GoImports, *importSpec)
 						}
