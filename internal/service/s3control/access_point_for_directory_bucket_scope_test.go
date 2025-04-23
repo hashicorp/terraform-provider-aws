@@ -104,17 +104,17 @@ func testAccAccessPointForDirectoryBucketScopeConfig_basic(rName string) string 
 data "aws_caller_identity" "current" {}
 
 resource "aws_s3_directory_bucket" "test_bucket" {
-  bucket = "terraformbucket1--apse1-sggov-sin2-az1--x-s3"
+  bucket = "terraformbucket1--az-id--x-s3"
 
   location {
-    name = "apse1-sggov-sin2-az1"
+    name = "az-id"
     type = "LocalZone"
   }
 }
 
 resource "aws_s3_directory_access_point" "test_ap" {
   bucket     = aws_s3_directory_bucket.test_bucket.id
-  name       = "%[1]s--apse1-sggov-sin2-az1--xa-s3"
+  name       = "%[1]s--az-id--xa-s3"
   account_id = data.aws_caller_identity.current.account_id
 }
 
