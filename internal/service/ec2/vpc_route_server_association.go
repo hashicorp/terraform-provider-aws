@@ -265,7 +265,7 @@ func statusVPCRouteServerAssociation(ctx context.Context, conn *ec2.Client, id s
 			return nil, "", err
 		}
 
-		return out, aws.ToString((*string)(&out.State)), nil
+		return out, string(out.State), nil
 	}
 }
 
