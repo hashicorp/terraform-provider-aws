@@ -51,7 +51,7 @@ func newPhoneNumberResource(context.Context) (resource.ResourceWithConfigure, er
 }
 
 type phoneNumberResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[phoneNumberResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }
@@ -337,23 +337,24 @@ func (r *phoneNumberResource) Delete(ctx context.Context, request resource.Delet
 }
 
 type phoneNumberResourceModel struct {
-	DeletionProtectionEnabled types.Bool                                                        `tfsdk:"deletion_protection_enabled"`
-	ISOCountryCode            types.String                                                      `tfsdk:"iso_country_code"`
-	MessageType               fwtypes.StringEnum[awstypes.MessageType]                          `tfsdk:"message_type"`
-	MonthlyLeasingPrice       types.String                                                      `tfsdk:"monthly_leasing_price"`
-	NumberCapabilities        fwtypes.SetValueOf[fwtypes.StringEnum[awstypes.NumberCapability]] `tfsdk:"number_capabilities"`
-	NumberType                fwtypes.StringEnum[awstypes.RequestableNumberType]                `tfsdk:"number_type"`
-	OptOutListName            types.String                                                      `tfsdk:"opt_out_list_name"`
-	PhoneNumber               types.String                                                      `tfsdk:"phone_number"`
-	PhoneNumberARN            types.String                                                      `tfsdk:"arn"`
-	PhoneNumberID             types.String                                                      `tfsdk:"id"`
-	RegistrationID            types.String                                                      `tfsdk:"registration_id"`
-	SelfManagedOptOutsEnabled types.Bool                                                        `tfsdk:"self_managed_opt_outs_enabled"`
-	Tags                      tftags.Map                                                        `tfsdk:"tags"`
-	TagsAll                   tftags.Map                                                        `tfsdk:"tags_all"`
-	Timeouts                  timeouts.Value                                                    `tfsdk:"timeouts"`
-	TwoWayChannelARN          fwtypes.ARN                                                       `tfsdk:"two_way_channel_arn"`
-	TwoWayEnabled             types.Bool                                                        `tfsdk:"two_way_channel_enabled"`
+	framework.WithRegionModel
+	DeletionProtectionEnabled types.Bool                                         `tfsdk:"deletion_protection_enabled"`
+	ISOCountryCode            types.String                                       `tfsdk:"iso_country_code"`
+	MessageType               fwtypes.StringEnum[awstypes.MessageType]           `tfsdk:"message_type"`
+	MonthlyLeasingPrice       types.String                                       `tfsdk:"monthly_leasing_price"`
+	NumberCapabilities        fwtypes.SetOfStringEnum[awstypes.NumberCapability] `tfsdk:"number_capabilities"`
+	NumberType                fwtypes.StringEnum[awstypes.RequestableNumberType] `tfsdk:"number_type"`
+	OptOutListName            types.String                                       `tfsdk:"opt_out_list_name"`
+	PhoneNumber               types.String                                       `tfsdk:"phone_number"`
+	PhoneNumberARN            types.String                                       `tfsdk:"arn"`
+	PhoneNumberID             types.String                                       `tfsdk:"id"`
+	RegistrationID            types.String                                       `tfsdk:"registration_id"`
+	SelfManagedOptOutsEnabled types.Bool                                         `tfsdk:"self_managed_opt_outs_enabled"`
+	Tags                      tftags.Map                                         `tfsdk:"tags"`
+	TagsAll                   tftags.Map                                         `tfsdk:"tags_all"`
+	Timeouts                  timeouts.Value                                     `tfsdk:"timeouts"`
+	TwoWayChannelARN          fwtypes.ARN                                        `tfsdk:"two_way_channel_arn"`
+	TwoWayEnabled             types.Bool                                         `tfsdk:"two_way_channel_enabled"`
 }
 
 func findPhoneNumberByID(ctx context.Context, conn *pinpointsmsvoicev2.Client, id string) (*awstypes.PhoneNumberInformation, error) {
