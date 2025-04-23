@@ -89,7 +89,7 @@ func dataSourceDetectorRead(ctx context.Context, d *schema.ResourceData, meta an
 		detectorID = aws.ToString(output)
 	}
 
-	gdo, err := FindDetectorByID(ctx, conn, detectorID)
+	gdo, err := findDetectorByID(ctx, conn, detectorID)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading GuardDuty Detector (%s): %s", detectorID, err)
