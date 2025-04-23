@@ -5,6 +5,7 @@ package accessanalyzer
 
 import (
 	"context"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"log"
 	"time"
 
@@ -80,6 +81,47 @@ func resourceAnalyzer() *schema.Resource {
 										Type:     schema.TypeInt,
 										Optional: true,
 										ForceNew: true,
+									},
+									"analysis_rule": {
+										Type:     schema.TypeList,
+										Optional: true,
+										ForceNew: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"exclusion": {
+													Type:     schema.TypeList,
+													Optional: true,
+													ForceNew: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"account_ids": {
+																Type:     schema.TypeList,
+																Optional: true,
+																ForceNew: true,
+																MaxItems: 2000,
+																Elem: &schema.Schema{
+																	Type:         schema.TypeString,
+																	ValidateFunc: validation.StringMatch(regexache.MustCompile(`^\d{12}$`), "Must be a 12-digit account ID"),
+																},
+															},
+															"resource_tags": {
+																Type:     schema.TypeList,
+																Optional: true,
+																ForceNew: true,
+																Elem: &schema.Schema{
+																	Type: schema.TypeMap,
+																	Elem: &schema.Schema{
+																		Type:         schema.TypeString,
+																		ValidateFunc: validation.StringLenBetween(0, 256),
+																	},
+																},
+															},
+														},
+													},
+												},
+											},
+										},
 									},
 								},
 							},
@@ -241,6 +283,73 @@ func expandUnusedAccess(tfMap map[string]any) types.UnusedAccessConfiguration {
 		apiObject.UnusedAccessAge = aws.Int32(int32(v))
 	}
 
+	if v, ok := tfMap["analysis_rule"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.AnalysisRule = expandAnalysisRule(v[0].(map[string]any))
+	}
+
+	return apiObject
+}
+
+func expandAnalysisRule(tfMap map[string]any) *types.AnalysisRule {
+	apiObject := &types.AnalysisRule{}
+
+	if v, ok := tfMap["exclusion"].([]any); ok && len(v) > 0 {
+		apiObject.Exclusions = expandExclusions(v)
+	}
+
+	return apiObject
+}
+
+func expandExclusions(tfList []any) []types.AnalysisRuleCriteria {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []types.AnalysisRuleCriteria
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+
+		if !ok {
+			continue
+		}
+
+		apiObject := expandExclusion(tfMap)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, *apiObject)
+	}
+
+	return apiObjects
+}
+
+func expandExclusion(tfMap map[string]any) *types.AnalysisRuleCriteria {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.AnalysisRuleCriteria{}
+
+	if v, ok := tfMap["account_ids"].([]any); ok && len(v) > 0 {
+		for _, accountId := range v {
+			accountId, ok := accountId.(string)
+			if !ok {
+				continue
+			}
+			apiObject.AccountIds = append(apiObject.AccountIds, accountId)
+		}
+	}
+
+	if v, ok := tfMap["resource_tags"].([]any); ok && len(v) > 0 {
+		for _, resourceTag := range v {
+			resourceTagMap := flex.ExpandStringValueMap(resourceTag.(map[string]any))
+			apiObject.ResourceTags = append(apiObject.ResourceTags, resourceTagMap)
+		}
+	}
+
 	return apiObject
 }
 
@@ -268,6 +377,57 @@ func flattenUnusedAccessConfiguration(apiObject *types.UnusedAccessConfiguration
 
 	if v := apiObject.UnusedAccessAge; v != nil {
 		tfMap["unused_access_age"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.AnalysisRule; v != nil {
+		tfMap["analysis_rule"] = []any{flattenAnalysisRule(v)}
+	}
+	return tfMap
+}
+
+func flattenAnalysisRule(apiObject *types.AnalysisRule) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.Exclusions; v != nil {
+		tfMap["exclusion"] = flattenExclusions(v)
+	}
+
+	return tfMap
+}
+
+func flattenExclusions(apiObjects []types.AnalysisRuleCriteria) []any {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []any
+
+	for _, apiObject := range apiObjects {
+		tfMap := flattenExclusion(&apiObject)
+		if tfMap != nil {
+			tfList = append(tfList, tfMap)
+		}
+	}
+
+	return tfList
+}
+func flattenExclusion(apiObject *types.AnalysisRuleCriteria) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.AccountIds; len(v) > 0 {
+		tfMap["account_ids"] = v
+	}
+
+	if v := apiObject.ResourceTags; len(v) > 0 {
+		tfMap["resource_tags"] = v
 	}
 
 	return tfMap

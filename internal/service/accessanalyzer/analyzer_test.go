@@ -141,6 +141,44 @@ func testAccAnalyzer_configuration(t *testing.T) {
 	})
 }
 
+func testAccAnalyzer_organizationUnusedAccess(t *testing.T) {
+	ctx := acctest.Context(t)
+	var analyzer types.AnalyzerSummary
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_accessanalyzer_analyzer.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AccessAnalyzerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAnalyzerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAnalyzerConfig_organizationUnusedAccess(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAnalyzerExists(ctx, resourceName, &analyzer),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.unused_access.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.unused_access.0.unused_access_age", "180"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.unused_access.0.analysis_rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.unused_access.0.analysis_rule.0.exclusion.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.unused_access.0.analysis_rule.0.exclusion.0.account_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.unused_access.0.analysis_rule.0.exclusion.0.account_ids.0", "123456789012"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.unused_access.0.analysis_rule.0.exclusion.1.resource_tags.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.unused_access.0.analysis_rule.0.exclusion.1.resource_tags.0.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.unused_access.0.analysis_rule.0.exclusion.1.resource_tags.1.key2", "value2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAnalyzerDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AccessAnalyzerClient(ctx)
@@ -226,6 +264,32 @@ resource "aws_accessanalyzer_analyzer" "test" {
   configuration {
     unused_access {
       unused_access_age = 180
+    }
+  }
+}
+`, rName)
+}
+
+func testAccAnalyzerConfig_organizationUnusedAccess(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_accessanalyzer_analyzer" "test" {
+  analyzer_name = %[1]q
+  type          = "ORGANIZATION_UNUSED_ACCESS"
+
+  configuration {
+    unused_access {
+      unused_access_age = 180
+      analysis_rule {
+	    exclusion {
+		  account_ids = ["123456789012"]
+	    }
+        exclusion {
+		  resource_tags = [
+		    {key1 = "value1"},
+		    {key2 = "value2"},
+		  ]
+        }
+	  }
     }
   }
 }
