@@ -90,7 +90,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 		},
 		{
-			Factory:  newResourceGuardrail,
+			Factory:  newGuardrailResource,
 			TypeName: "aws_bedrock_guardrail",
 			Name:     "Guardrail",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
@@ -111,7 +111,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 		},
 		{
-			Factory:  newResourceInferenceProfile,
+			Factory:  newInferenceProfileResource,
 			TypeName: "aws_bedrock_inference_profile",
 			Name:     "Inference Profile",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{

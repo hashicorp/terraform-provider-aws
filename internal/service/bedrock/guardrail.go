@@ -44,8 +44,8 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bedrock;bedrock.GetGuardrailOutput")
 // @Testing(importStateIdFunc="testAccGuardrailImportStateIDFunc")
 // @Testing(importStateIdAttribute="guardrail_id")
-func newResourceGuardrail(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceGuardrail{}
+func newGuardrailResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &guardrailResource{}
 
 	r.SetDefaultCreateTimeout(5 * time.Minute)
 	r.SetDefaultUpdateTimeout(5 * time.Minute)
@@ -58,12 +58,12 @@ const (
 	ResNameGuardrail = "Guardrail"
 )
 
-type resourceGuardrail struct {
-	framework.ResourceWithConfigure
+type guardrailResource struct {
+	framework.ResourceWithModel[guardrailResourceModel]
 	framework.WithTimeouts
 }
 
-func (r *resourceGuardrail) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *guardrailResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"blocked_input_messaging": schema.StringAttribute{
@@ -348,10 +348,10 @@ var (
 	topicsConfigNameRegex = regexache.MustCompile("^[0-9a-zA-Z-_ !?.]+$")
 )
 
-func (r *resourceGuardrail) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *guardrailResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().BedrockClient(ctx)
 
-	var plan resourceGuardrailData
+	var plan guardrailResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -401,10 +401,10 @@ func (r *resourceGuardrail) Create(ctx context.Context, req resource.CreateReque
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceGuardrail) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *guardrailResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().BedrockClient(ctx)
 
-	var state resourceGuardrailData
+	var state guardrailResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -431,10 +431,10 @@ func (r *resourceGuardrail) Read(ctx context.Context, req resource.ReadRequest, 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceGuardrail) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *guardrailResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().BedrockClient(ctx)
 
-	var plan, state resourceGuardrailData
+	var plan, state guardrailResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -500,10 +500,10 @@ func (r *resourceGuardrail) Update(ctx context.Context, req resource.UpdateReque
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceGuardrail) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *guardrailResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().BedrockClient(ctx)
 
-	var state resourceGuardrailData
+	var state guardrailResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -533,7 +533,7 @@ func (r *resourceGuardrail) Delete(ctx context.Context, req resource.DeleteReque
 	}
 }
 
-func (r *resourceGuardrail) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *guardrailResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	parts, err := intflex.ExpandResourceId(req.ID, guardrailIDParts, false)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -640,7 +640,8 @@ func findGuardrailByTwoPartKey(ctx context.Context, conn *bedrock.Client, id, ve
 	return output, nil
 }
 
-type resourceGuardrailData struct {
+type guardrailResourceModel struct {
+	framework.WithRegionModel
 	BlockedInputMessaging      types.String                                                      `tfsdk:"blocked_input_messaging"`
 	BlockedOutputsMessaging    types.String                                                      `tfsdk:"blocked_outputs_messaging"`
 	ContentPolicy              fwtypes.ListNestedObjectValueOf[contentPolicyConfig]              `tfsdk:"content_policy_config"`
