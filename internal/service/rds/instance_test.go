@@ -8718,8 +8718,6 @@ resource "aws_db_instance" "test" {
   username                   = "tfacctest"
   backup_retention_period    = 0
 
-  character_set_name = "WE8ISO8859P15"
-
   parameter_group_name = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
   skip_final_snapshot  = true
   multi_az             = false
