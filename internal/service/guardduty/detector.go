@@ -26,6 +26,7 @@ import (
 // @SDKResource("aws_guardduty_detector", name="Detector")
 // @Tags(identifierAttribute="arn")
 // @Testing(serialize=true)
+// @Testing(preCheck="testAccPreCheckDetectorNotExists")
 func ResourceDetector() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDetectorCreate,
