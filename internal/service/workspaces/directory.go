@@ -50,11 +50,11 @@ func resourceDirectory() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"domain_name": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Required: true,
 						},
 						"service_account_secret_arn": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Required: true,
 						},
 					},
 				},
@@ -316,6 +316,14 @@ func resourceDirectory() *schema.Resource {
 						}
 						if props["user_enabled_as_local_administrator"].(bool) {
 							return fmt.Errorf("`user_enabled_as_local_administrator` is not supported when `workspace_type` is set to `pools`")
+						}
+					}
+					if _, ok := d.GetOk("active_directory_config"); !ok {
+						if len(creationProps) > 0 {
+							props := creationProps[0].(map[string]interface{})
+							if props["default_ou"].(string) != "" {
+								return fmt.Errorf("`default_ou` can only be set if `active_directory_config` is provided and `workspace_type` is set to `POOLS`")
+							}
 						}
 					}
 				}
