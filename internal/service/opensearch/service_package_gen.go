@@ -23,7 +23,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newResourceAuthorizeVPCEndpointAccess,
+			Factory:  newAuthorizeVPCEndpointAccessResource,
 			TypeName: "aws_opensearch_authorize_vpc_endpoint_access",
 			Name:     "Authorize VPC Endpoint Access",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
