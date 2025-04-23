@@ -33,7 +33,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newResourceClusterSnapshotCopy,
+			Factory:  newClusterSnapshotCopyResource,
 			TypeName: "aws_rds_cluster_snapshot_copy",
 			Name:     "Cluster Snapshot Copy",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
@@ -45,7 +45,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 		},
 		{
-			Factory:  newResourceExportTask,
+			Factory:  newExportTaskResource,
 			TypeName: "aws_rds_export_task",
 			Name:     "Export Task",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
@@ -54,7 +54,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 		},
 		{
-			Factory:  newResourceInstanceState,
+			Factory:  newInstanceStateResource,
 			TypeName: "aws_rds_instance_state",
 			Name:     "Instance State",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{

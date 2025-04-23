@@ -24,13 +24,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_rds_export_task", name="Export Task")
-func newResourceExportTask(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceExportTask{}
+func newExportTaskResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &exportTaskResource{}
+
 	r.SetDefaultCreateTimeout(60 * time.Minute)
 	r.SetDefaultDeleteTimeout(20 * time.Minute)
 
@@ -49,16 +51,17 @@ const (
 	StatusStarting   = "STARTING"
 )
 
-type resourceExportTask struct {
-	framework.ResourceWithConfigure
+type exportTaskResource struct {
+	framework.ResourceWithModel[exportTaskResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }
 
-func (r *resourceExportTask) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *exportTaskResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"export_only": schema.ListAttribute{
+				CustomType:  fwtypes.ListOfStringType,
 				Optional:    true,
 				ElementType: types.StringType,
 				PlanModifiers: []planmodifier.List{
@@ -138,10 +141,10 @@ func (r *resourceExportTask) Schema(ctx context.Context, req resource.SchemaRequ
 	}
 }
 
-func (r *resourceExportTask) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *exportTaskResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().RDSClient(ctx)
 
-	var plan resourceExportTaskData
+	var plan exportTaskResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -192,10 +195,10 @@ func (r *resourceExportTask) Create(ctx context.Context, req resource.CreateRequ
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
 }
 
-func (r *resourceExportTask) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *exportTaskResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().RDSClient(ctx)
 
-	var state resourceExportTaskData
+	var state exportTaskResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -223,13 +226,13 @@ func (r *resourceExportTask) Read(ctx context.Context, req resource.ReadRequest,
 }
 
 // There is no update API, so this method is a no-op
-func (r *resourceExportTask) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *exportTaskResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 }
 
-func (r *resourceExportTask) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *exportTaskResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().RDSClient(ctx)
 
-	var state resourceExportTaskData
+	var state exportTaskResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -332,34 +335,35 @@ func waitExportTaskDeleted(ctx context.Context, conn *rds.Client, id string, tim
 	return nil, err
 }
 
-type resourceExportTaskData struct {
-	ExportOnly           types.List     `tfsdk:"export_only"`
-	ExportTaskIdentifier types.String   `tfsdk:"export_task_identifier"`
-	FailureCause         types.String   `tfsdk:"failure_cause"`
-	IAMRoleArn           types.String   `tfsdk:"iam_role_arn"`
-	ID                   types.String   `tfsdk:"id"`
-	KMSKeyID             types.String   `tfsdk:"kms_key_id"`
-	PercentProgress      types.Int64    `tfsdk:"percent_progress"`
-	S3BucketName         types.String   `tfsdk:"s3_bucket_name"`
-	S3Prefix             types.String   `tfsdk:"s3_prefix"`
-	SnapshotTime         types.String   `tfsdk:"snapshot_time"`
-	SourceArn            types.String   `tfsdk:"source_arn"`
-	SourceType           types.String   `tfsdk:"source_type"`
-	Status               types.String   `tfsdk:"status"`
-	TaskEndTime          types.String   `tfsdk:"task_end_time"`
-	TaskStartTime        types.String   `tfsdk:"task_start_time"`
-	Timeouts             timeouts.Value `tfsdk:"timeouts"`
-	WarningMessage       types.String   `tfsdk:"warning_message"`
+type exportTaskResourceModel struct {
+	framework.WithRegionModel
+	ExportOnly           fwtypes.ListOfString `tfsdk:"export_only"`
+	ExportTaskIdentifier types.String         `tfsdk:"export_task_identifier"`
+	FailureCause         types.String         `tfsdk:"failure_cause"`
+	IAMRoleArn           types.String         `tfsdk:"iam_role_arn"`
+	ID                   types.String         `tfsdk:"id"`
+	KMSKeyID             types.String         `tfsdk:"kms_key_id"`
+	PercentProgress      types.Int64          `tfsdk:"percent_progress"`
+	S3BucketName         types.String         `tfsdk:"s3_bucket_name"`
+	S3Prefix             types.String         `tfsdk:"s3_prefix"`
+	SnapshotTime         types.String         `tfsdk:"snapshot_time"`
+	SourceArn            types.String         `tfsdk:"source_arn"`
+	SourceType           types.String         `tfsdk:"source_type"`
+	Status               types.String         `tfsdk:"status"`
+	TaskEndTime          types.String         `tfsdk:"task_end_time"`
+	TaskStartTime        types.String         `tfsdk:"task_start_time"`
+	Timeouts             timeouts.Value       `tfsdk:"timeouts"`
+	WarningMessage       types.String         `tfsdk:"warning_message"`
 }
 
 // refreshFromOutput writes state data from an AWS response object
-func (rd *resourceExportTaskData) refreshFromOutput(ctx context.Context, out *awstypes.ExportTask) {
+func (rd *exportTaskResourceModel) refreshFromOutput(ctx context.Context, out *awstypes.ExportTask) {
 	if out == nil {
 		return
 	}
 
 	rd.ID = flex.StringToFramework(ctx, out.ExportTaskIdentifier)
-	rd.ExportOnly = flex.FlattenFrameworkStringValueList(ctx, out.ExportOnly)
+	rd.ExportOnly = flex.FlattenFrameworkStringValueListOfString(ctx, out.ExportOnly)
 	rd.ExportTaskIdentifier = flex.StringToFramework(ctx, out.ExportTaskIdentifier)
 	rd.FailureCause = flex.StringToFramework(ctx, out.FailureCause)
 	rd.IAMRoleArn = flex.StringToFramework(ctx, out.IamRoleArn)
