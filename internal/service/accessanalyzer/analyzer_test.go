@@ -163,8 +163,9 @@ func testAccAnalyzer_organizationUnusedAccess(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.unused_access.0.unused_access_age", "180"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.unused_access.0.analysis_rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.unused_access.0.analysis_rule.0.exclusion.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.unused_access.0.analysis_rule.0.exclusion.0.account_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.unused_access.0.analysis_rule.0.exclusion.0.account_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.unused_access.0.analysis_rule.0.exclusion.0.account_ids.0", "123456789012"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.unused_access.0.analysis_rule.0.exclusion.0.account_ids.1", "234567890123"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.unused_access.0.analysis_rule.0.exclusion.1.resource_tags.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.unused_access.0.analysis_rule.0.exclusion.1.resource_tags.0.key1", "value1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.unused_access.0.analysis_rule.0.exclusion.1.resource_tags.1.key2", "value2"),
@@ -280,16 +281,19 @@ resource "aws_accessanalyzer_analyzer" "test" {
     unused_access {
       unused_access_age = 180
       analysis_rule {
-	    exclusion {
-		  account_ids = ["123456789012"]
-	    }
         exclusion {
-		  resource_tags = [
-		    {key1 = "value1"},
-		    {key2 = "value2"},
-		  ]
+          account_ids = [
+            "123456789012",
+            "234567890123",
+          ]
         }
-	  }
+        exclusion {
+          resource_tags = [
+            { key1 = "value1" },
+            { key2 = "value2" },
+          ]
+        }
+      }
     }
   }
 }
