@@ -43,7 +43,7 @@ func newDeliveryResource(context.Context) (resource.ResourceWithConfigure, error
 }
 
 type deliveryResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[deliveryResourceModel]
 	framework.WithImportByID
 }
 
@@ -372,6 +372,7 @@ func findDelivery(ctx context.Context, conn *cloudwatchlogs.Client, input *cloud
 }
 
 type deliveryResourceModel struct {
+	framework.WithRegionModel
 	ARN                     types.String                                                  `tfsdk:"arn"`
 	DeliveryDestinationARN  fwtypes.ARN                                                   `tfsdk:"delivery_destination_arn"`
 	DeliverySourceName      types.String                                                  `tfsdk:"delivery_source_name"`
