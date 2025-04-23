@@ -38,6 +38,7 @@ Upgrade topics:
 - [resource/aws_bedrock_model_invocation_logging_configuration](#resourceaws_bedrock_model_invocation_logging_configuration)
 - [resource/aws_cloudfront_key_value_store](#resourceaws_cloudfront_key_value_store)
 - [resource/aws_cloudfront_response_headers_policy](#resourceaws_cloudfront_response_headers_policy)
+- [resource/aws_dx_gateway_association](#resourceaws_dx_gateway_association)
 - [resource/aws_ecs_task_definition](#resourceaws_ecs_task_definition)
 - [resource/aws_eks_addon](#resourceaws_eks_addon)
 - [resource/aws_guardduty_organization_configuration](#resourceaws_guardduty_organization_configuration)
@@ -308,6 +309,11 @@ For the name, use the `name` attribute.
 ## resource/aws_cloudfront_response_headers_policy
 
 The `etag` argument is now computed only.
+
+## resource/aws_dx_gateway_association
+
+The `vpn_gateway_id` attribute has been removed.
+Use the `associated_gateway_id` attribute instead.
 
 ## resource/aws_ecs_task_definition
 
