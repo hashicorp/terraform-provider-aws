@@ -28,7 +28,7 @@ import (
 // @Testing(serialize=true)
 // @Testing(preCheck="testAccPreCheckDetectorNotExists")
 // @Testing(generator=false)
-func ResourceDetector() *schema.Resource {
+func resourceDetector() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDetectorCreate,
 		ReadWithoutTimeout:   resourceDetectorRead,

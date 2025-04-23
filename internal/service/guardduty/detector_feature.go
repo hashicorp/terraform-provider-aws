@@ -23,7 +23,7 @@ import (
 )
 
 // @SDKResource("aws_guardduty_detector_feature", name="Detector Feature")
-func ResourceDetectorFeature() *schema.Resource {
+func resourceDetectorFeature() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDetectorFeaturePut,
 		ReadWithoutTimeout:   resourceDetectorFeatureRead,

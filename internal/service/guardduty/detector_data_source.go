@@ -22,7 +22,7 @@ import (
 // @Testing(serialize=true)
 // @Testing(generator=false)
 // @Testing(tagsIdentifierAttribute="arn")
-func DataSourceDetector() *schema.Resource {
+func dataSourceDetector() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDetectorRead,
 
