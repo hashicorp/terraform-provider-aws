@@ -20,6 +20,10 @@ func DataSourceDetector() *schema.Resource {
 		ReadWithoutTimeout: dataSourceDetectorRead,
 
 		Schema: map[string]*schema.Schema{
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"features": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -103,6 +107,14 @@ func dataSourceDetectorRead(ctx context.Context, d *schema.ResourceData, meta an
 	} else {
 		d.Set("features", nil)
 	}
+	arn := arn.ARN{
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		Service:   "guardduty",
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
+		Resource:  fmt.Sprintf("detector/%s", detectorID),
+	}.String()
+	d.Set(names.AttrARN, arn)
 	d.Set("finding_publishing_frequency", gdo.FindingPublishingFrequency)
 	d.Set(names.AttrServiceRoleARN, gdo.ServiceRole)
 	d.Set(names.AttrStatus, gdo.Status)

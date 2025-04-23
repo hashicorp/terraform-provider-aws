@@ -24,6 +24,7 @@ data "aws_guardduty_detector" "example" {}
 
 This data source exports the following attributes in addition to the arguments above:
 
+* `arn` - ARN of the detector.
 * `features` - Current configuration of the detector features.
     * `additional_configuration` - Additional feature configuration.
         * `name` - The name of the additional configuration.
