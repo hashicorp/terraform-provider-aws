@@ -135,12 +135,10 @@ func resourceAccelerator() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceAcceleratorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAcceleratorCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorClient(ctx)
 
@@ -156,8 +154,8 @@ func resourceAcceleratorCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.IpAddressType = awstypes.IpAddressType(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrIPAddresses); ok && len(v.([]interface{})) > 0 {
-		input.IpAddresses = flex.ExpandStringValueList(v.([]interface{}))
+	if v, ok := d.GetOk(names.AttrIPAddresses); ok && len(v.([]any)) > 0 {
+		input.IpAddresses = flex.ExpandStringValueList(v.([]any))
 	}
 
 	output, err := conn.CreateAccelerator(ctx, input)
@@ -172,8 +170,8 @@ func resourceAcceleratorCreate(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "waiting for Global Accelerator Accelerator (%s) deploy: %s", d.Id(), err)
 	}
 
-	if v, ok := d.GetOk(names.AttrAttributes); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input := expandUpdateAcceleratorAttributesInput(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk(names.AttrAttributes); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input := expandUpdateAcceleratorAttributesInput(v.([]any)[0].(map[string]any))
 		input.AcceleratorArn = aws.String(d.Id())
 
 		_, err := conn.UpdateAcceleratorAttributes(ctx, input)
@@ -190,7 +188,7 @@ func resourceAcceleratorCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceAcceleratorRead(ctx, d, meta)...)
 }
 
-func resourceAcceleratorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAcceleratorRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorClient(ctx)
 
@@ -223,14 +221,14 @@ func resourceAcceleratorRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading Global Accelerator Accelerator (%s) attributes: %s", d.Id(), err)
 	}
 
-	if err := d.Set(names.AttrAttributes, []interface{}{flattenAcceleratorAttributes(acceleratorAttributes)}); err != nil {
+	if err := d.Set(names.AttrAttributes, []any{flattenAcceleratorAttributes(acceleratorAttributes)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting attributes: %s", err)
 	}
 
 	return diags
 }
 
-func resourceAcceleratorUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAcceleratorUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorClient(ctx)
 
@@ -258,11 +256,11 @@ func resourceAcceleratorUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 	if d.HasChange(names.AttrAttributes) {
 		o, n := d.GetChange(names.AttrAttributes)
-		if len(o.([]interface{})) > 0 && o.([]interface{})[0] != nil {
-			if len(n.([]interface{})) > 0 && n.([]interface{})[0] != nil {
-				oInput := expandUpdateAcceleratorAttributesInput(o.([]interface{})[0].(map[string]interface{}))
+		if len(o.([]any)) > 0 && o.([]any)[0] != nil {
+			if len(n.([]any)) > 0 && n.([]any)[0] != nil {
+				oInput := expandUpdateAcceleratorAttributesInput(o.([]any)[0].(map[string]any))
 				oInput.AcceleratorArn = aws.String(d.Id())
-				nInput := expandUpdateAcceleratorAttributesInput(n.([]interface{})[0].(map[string]interface{}))
+				nInput := expandUpdateAcceleratorAttributesInput(n.([]any)[0].(map[string]any))
 				nInput.AcceleratorArn = aws.String(d.Id())
 
 				// To change flow logs bucket and prefix attributes while flows are enabled, first disable flow logs.
@@ -296,7 +294,7 @@ func resourceAcceleratorUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceAcceleratorRead(ctx, d, meta)...)
 }
 
-func resourceAcceleratorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAcceleratorDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorClient(ctx)
 
@@ -386,7 +384,7 @@ func findAcceleratorAttributesByARN(ctx context.Context, conn *globalaccelerator
 }
 
 func statusAccelerator(ctx context.Context, conn *globalaccelerator.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		accelerator, err := findAcceleratorByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
@@ -418,7 +416,7 @@ func waitAcceleratorDeployed(ctx context.Context, conn *globalaccelerator.Client
 	return nil, err
 }
 
-func expandUpdateAcceleratorAttributesInput(tfMap map[string]interface{}) *globalaccelerator.UpdateAcceleratorAttributesInput {
+func expandUpdateAcceleratorAttributesInput(tfMap map[string]any) *globalaccelerator.UpdateAcceleratorAttributesInput {
 	if tfMap == nil {
 		return nil
 	}
@@ -440,12 +438,12 @@ func expandUpdateAcceleratorAttributesInput(tfMap map[string]interface{}) *globa
 	return apiObject
 }
 
-func flattenIPSet(apiObject *awstypes.IpSet) map[string]interface{} {
+func flattenIPSet(apiObject *awstypes.IpSet) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.IpAddresses; v != nil {
 		tfMap[names.AttrIPAddresses] = v
@@ -458,12 +456,12 @@ func flattenIPSet(apiObject *awstypes.IpSet) map[string]interface{} {
 	return tfMap
 }
 
-func flattenIPSets(apiObjects []awstypes.IpSet) []interface{} {
+func flattenIPSets(apiObjects []awstypes.IpSet) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenIPSet(&apiObject))
@@ -472,12 +470,12 @@ func flattenIPSets(apiObjects []awstypes.IpSet) []interface{} {
 	return tfList
 }
 
-func flattenAcceleratorAttributes(apiObject *awstypes.AcceleratorAttributes) map[string]interface{} {
+func flattenAcceleratorAttributes(apiObject *awstypes.AcceleratorAttributes) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.FlowLogsEnabled; v != nil {
 		tfMap["flow_logs_enabled"] = aws.ToBool(v)

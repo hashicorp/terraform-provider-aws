@@ -147,7 +147,7 @@ func resourceClusterInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					if v != nil {
 						value := v.(string)
 						return strings.ToLower(value)
@@ -177,12 +177,10 @@ func resourceClusterInstance() *schema.Resource {
 				Computed: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DocDBClient(ctx)
 
@@ -221,7 +219,7 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 		input.PreferredMaintenanceWindow = aws.String(v.(string))
 	}
 
-	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (any, error) {
 		return conn.CreateDBInstance(ctx, input)
 	}, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions")
 
@@ -238,7 +236,7 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceClusterInstanceRead(ctx, d, meta)...)
 }
 
-func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DocDBClient(ctx)
 
@@ -301,7 +299,7 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DocDBClient(ctx)
 
@@ -343,7 +341,7 @@ func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, 
 			input.PromotionTier = aws.Int32(int32(d.Get("promotion_tier").(int)))
 		}
 
-		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (any, error) {
 			return conn.ModifyDBInstance(ctx, input)
 		}, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions")
 
@@ -359,14 +357,15 @@ func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceClusterInstanceRead(ctx, d, meta)...)
 }
 
-func resourceClusterInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterInstanceDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DocDBClient(ctx)
 
 	log.Printf("[DEBUG] Deleting DocumentDB Cluster Instance: %s", d.Id())
-	_, err := conn.DeleteDBInstance(ctx, &docdb.DeleteDBInstanceInput{
+	input := docdb.DeleteDBInstanceInput{
 		DBInstanceIdentifier: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteDBInstance(ctx, &input)
 
 	if errs.IsA[*awstypes.DBInstanceNotFoundFault](err) {
 		return diags
@@ -438,7 +437,7 @@ func findDBInstances(ctx context.Context, conn *docdb.Client, input *docdb.Descr
 }
 
 func statusDBInstance(ctx context.Context, conn *docdb.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findDBInstanceByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

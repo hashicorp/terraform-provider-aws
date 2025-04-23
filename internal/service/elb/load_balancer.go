@@ -50,7 +50,7 @@ func resourceLoadBalancer() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			customdiff.ForceNewIfChange(names.AttrSubnets, func(_ context.Context, o, n, meta interface{}) bool {
+			customdiff.ForceNewIfChange(names.AttrSubnets, func(_ context.Context, o, n, meta any) bool {
 				// Force new if removing all current subnets.
 				os := o.(*schema.Set)
 				ns := n.(*schema.Set)
@@ -59,7 +59,6 @@ func resourceLoadBalancer() *schema.Resource {
 
 				return removed.Equal(os)
 			}),
-			verify.SetTagsDiff,
 		),
 
 		Timeouts: &schema.ResourceTimeout{
@@ -269,7 +268,7 @@ func resourceLoadBalancer() *schema.Resource {
 	}
 }
 
-func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBClient(ctx)
 
@@ -305,7 +304,7 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 		input.Subnets = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	_, err = tfresource.RetryWhenIsA[*awstypes.CertificateNotFoundException](ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+	_, err = tfresource.RetryWhenIsA[*awstypes.CertificateNotFoundException](ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
 		return conn.CreateLoadBalancer(ctx, input)
 	})
 
@@ -318,7 +317,7 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceLoadBalancerUpdate(ctx, d, meta)...)
 }
 
-func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBClient(ctx)
 
@@ -403,7 +402,7 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 		// See https://github.com/hashicorp/terraform/issues/10138
 		_, n := d.GetChange("access_logs")
 		accessLog := lbAttrs.AccessLog
-		if len(n.([]interface{})) == 0 && !accessLog.Enabled {
+		if len(n.([]any)) == 0 && !accessLog.Enabled {
 			accessLog = nil
 		}
 		if err := d.Set("access_logs", flattenAccessLog(accessLog)); err != nil {
@@ -429,7 +428,7 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBClient(ctx)
 
@@ -470,7 +469,7 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 			// Occasionally AWS will error with a 'duplicate listener', without any
 			// other listeners on the ELB. Retry here to eliminate that.
 			_, err := tfresource.RetryWhen(ctx, d.Timeout(schema.TimeoutUpdate),
-				func() (interface{}, error) {
+				func() (any, error) {
 					return conn.CreateLoadBalancerListeners(ctx, input)
 				},
 				func(err error) (bool, error) {
@@ -544,8 +543,8 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 			LoadBalancerName: aws.String(d.Id()),
 		}
 
-		if v := d.Get("access_logs").([]interface{}); len(v) == 1 {
-			tfMap := v[0].(map[string]interface{})
+		if v := d.Get("access_logs").([]any); len(v) == 1 {
+			tfMap := v[0].(map[string]any)
 			input.LoadBalancerAttributes.AccessLog = &awstypes.AccessLog{
 				Enabled:        tfMap[names.AttrEnabled].(bool),
 				EmitInterval:   aws.Int32(int32(tfMap[names.AttrInterval].(int))),
@@ -611,8 +610,8 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if d.HasChange(names.AttrHealthCheck) {
-		if v := d.Get(names.AttrHealthCheck).([]interface{}); len(v) > 0 {
-			tfMap := v[0].(map[string]interface{})
+		if v := d.Get(names.AttrHealthCheck).([]any); len(v) > 0 {
+			tfMap := v[0].(map[string]any)
 			input := &elasticloadbalancing.ConfigureHealthCheckInput{
 				HealthCheck: &awstypes.HealthCheck{
 					HealthyThreshold:   aws.Int32(int32(tfMap["healthy_threshold"].(int))),
@@ -700,7 +699,7 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 				Subnets:          add,
 			}
 
-			_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidConfigurationRequestException](ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
+			_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidConfigurationRequestException](ctx, d.Timeout(schema.TimeoutUpdate), func() (any, error) {
 				return conn.AttachLoadBalancerToSubnets(ctx, input)
 			}, "cannot be attached to multiple subnets in the same AZ")
 
@@ -713,7 +712,7 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceLoadBalancerRead(ctx, d, meta)...)
 }
 
-func resourceLoadBalancerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLoadBalancerDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBClient(ctx)
 
@@ -781,9 +780,9 @@ func findLoadBalancerAttributesByName(ctx context.Context, conn *elasticloadbala
 	return output.LoadBalancerAttributes, nil
 }
 
-func listenerHash(v interface{}) int {
+func listenerHash(v any) int {
 	var buf bytes.Buffer
-	m := v.(map[string]interface{})
+	m := v.(map[string]any)
 	buf.WriteString(fmt.Sprintf("%d-", m["instance_port"].(int)))
 	buf.WriteString(fmt.Sprintf("%s-", strings.ToLower(m["instance_protocol"].(string))))
 	buf.WriteString(fmt.Sprintf("%d-", m["lb_port"].(int)))
@@ -796,7 +795,7 @@ func listenerHash(v interface{}) int {
 	return create.StringHashcode(buf.String())
 }
 
-func validAccessLogsInterval(v interface{}, k string) (ws []string, errors []error) {
+func validAccessLogsInterval(v any, k string) (ws []string, errors []error) {
 	value := v.(int)
 
 	// Check if the value is either 5 or 60 (minutes).
@@ -809,14 +808,14 @@ func validAccessLogsInterval(v interface{}, k string) (ws []string, errors []err
 	return
 }
 
-func validHeathCheckTarget(v interface{}, k string) (ws []string, errors []error) {
+func validHeathCheckTarget(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 
 	// Parse the Health Check target value.
 	matches := regexache.MustCompile(`\A(\w+):(\d+)(.+)?\z`).FindStringSubmatch(value)
 
 	// Check if the value contains a valid target.
-	if matches == nil || len(matches) < 1 {
+	if len(matches) < 1 {
 		errors = append(errors, fmt.Errorf(
 			"%q contains an invalid Health Check: %s",
 			k, value))

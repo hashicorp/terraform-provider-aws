@@ -2042,6 +2042,67 @@ rules:
           patterns:
             - pattern-regex: "(?i)MediaPackageV2"
     severity: WARNING
+  - id: mediapackagevod-in-func-name
+    languages:
+      - go
+    message: Do not use "MediaPackageVOD" in func name inside mediapackagevod package
+    paths:
+      include:
+        - internal/service/mediapackagevod
+      exclude:
+        - internal/service/mediapackagevod/list_pages_gen.go
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)MediaPackageVOD"
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
+    severity: WARNING
+  - id: mediapackagevod-in-test-name
+    languages:
+      - go
+    message: Include "MediaPackageVOD" in test name
+    paths:
+      include:
+        - internal/service/mediapackagevod/*_test.go
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccMediaPackageVOD"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: mediapackagevod-in-const-name
+    languages:
+      - go
+    message: Do not use "MediaPackageVOD" in const name inside mediapackagevod package
+    paths:
+      include:
+        - internal/service/mediapackagevod
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)MediaPackageVOD"
+    severity: WARNING
+  - id: mediapackagevod-in-var-name
+    languages:
+      - go
+    message: Do not use "MediaPackageVOD" in var name inside mediapackagevod package
+    paths:
+      include:
+        - internal/service/mediapackagevod
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)MediaPackageVOD"
+    severity: WARNING
   - id: mediastore-in-func-name
     languages:
       - go
@@ -4354,33 +4415,4 @@ rules:
             - pattern-regex: "(?i)RedshiftData"
       - focus-metavariable: $NAME
       - pattern-not: func $NAME($T *testing.T)
-    severity: WARNING
-  - id: redshiftdata-in-test-name
-    languages:
-      - go
-    message: Include "RedshiftData" in test name
-    paths:
-      include:
-        - internal/service/redshiftdata/*_test.go
-    patterns:
-      - pattern: func $NAME( ... )
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-not-regex: "^TestAccRedshiftData"
-            - pattern-regex: ^TestAcc.*
-    severity: WARNING
-  - id: redshiftdata-in-const-name
-    languages:
-      - go
-    message: Do not use "RedshiftData" in const name inside redshiftdata package
-    paths:
-      include:
-        - internal/service/redshiftdata
-    patterns:
-      - pattern: const $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)RedshiftData"
     severity: WARNING

@@ -61,10 +61,6 @@ type integrationResource struct {
 	framework.WithTimeouts
 }
 
-func (*integrationResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_rds_integration"
-}
-
 func (r *integrationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -231,7 +227,7 @@ func (r *integrationResource) Delete(ctx context.Context, request resource.Delet
 	conn := r.Meta().RDSClient(ctx)
 
 	_, err := conn.DeleteIntegration(ctx, &rds.DeleteIntegrationInput{
-		IntegrationIdentifier: data.ID.ValueStringPointer(),
+		IntegrationIdentifier: fwflex.StringFromFramework(ctx, data.ID),
 	})
 
 	if errs.IsA[*awstypes.IntegrationNotFoundFault](err) {
@@ -249,10 +245,6 @@ func (r *integrationResource) Delete(ctx context.Context, request resource.Delet
 
 		return
 	}
-}
-
-func (r *integrationResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func findIntegrationByARN(ctx context.Context, conn *rds.Client, arn string) (*awstypes.Integration, error) {
@@ -302,7 +294,7 @@ func findIntegrations(ctx context.Context, conn *rds.Client, input *rds.Describe
 }
 
 func statusIntegration(ctx context.Context, conn *rds.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findIntegrationByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {

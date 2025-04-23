@@ -23,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -103,12 +102,10 @@ func resourceParameterGroup() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
 
@@ -137,7 +134,7 @@ func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceParameterGroupRead(ctx, d, meta)...)
 }
 
-func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
 
@@ -178,7 +175,7 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
 
@@ -203,12 +200,12 @@ func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceParameterGroupRead(ctx, d, meta)...)
 }
 
-func resourceParameterGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceParameterGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Neptune Parameter Group: %s", d.Id())
-	_, err := tfresource.RetryWhenIsA[*awstypes.InvalidDBParameterGroupStateFault](ctx, dbParameterGroupDeleteRetryTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsA[*awstypes.InvalidDBParameterGroupStateFault](ctx, dbParameterGroupDeleteRetryTimeout, func() (any, error) {
 		return conn.DeleteDBParameterGroup(ctx, &neptune.DeleteDBParameterGroupInput{
 			DBParameterGroupName: aws.String(d.Id()),
 		})
@@ -249,7 +246,7 @@ func delDBParameterGroupParameters(ctx context.Context, conn *neptune.Client, na
 			Parameters:           chunk,
 		}
 
-		_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidDBParameterGroupStateFault](ctx, dbParameterGroupParametersDeleteRetryTimeout, func() (interface{}, error) {
+		_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidDBParameterGroupStateFault](ctx, dbParameterGroupParametersDeleteRetryTimeout, func() (any, error) {
 			return conn.ResetDBParameterGroup(ctx, input)
 		}, "has pending changes")
 

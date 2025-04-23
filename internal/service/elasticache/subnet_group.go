@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/elasticache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -23,7 +22,6 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -54,7 +52,7 @@ func resourceSubnetGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
-				StateFunc: func(val interface{}) string {
+				StateFunc: func(val any) string {
 					// ElastiCache normalizes subnet names to lowercase,
 					// so we have to do this too or else we can end up
 					// with non-converging diffs.
@@ -74,14 +72,11 @@ func resourceSubnetGroup() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: customdiff.All(
-			resourceSubnetGroupCustomizeDiff,
-			verify.SetTagsDiff,
-		),
+		CustomizeDiff: resourceSubnetGroupCustomizeDiff,
 	}
 }
 
-func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheClient(ctx)
 	partition := meta.(*conns.AWSClient).Partition(ctx)
@@ -118,7 +113,7 @@ func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 		err := createTags(ctx, conn, aws.ToString(output.CacheSubnetGroup.ARN), tags)
 
 		// If default tags only, continue. Otherwise, error.
-		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err) {
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]any)) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err) {
 			return append(diags, resourceSubnetGroupRead(ctx, d, meta)...)
 		}
 
@@ -130,7 +125,7 @@ func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceSubnetGroupRead(ctx, d, meta)...)
 }
 
-func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheClient(ctx)
 
@@ -157,7 +152,7 @@ func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceSubnetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSubnetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheClient(ctx)
 
@@ -178,12 +173,12 @@ func resourceSubnetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceSubnetGroupRead(ctx, d, meta)...)
 }
 
-func resourceSubnetGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSubnetGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheClient(ctx)
 
 	log.Printf("[DEBUG] Deleting ElastiCache Subnet Group: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 5*time.Minute, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 5*time.Minute, func() (any, error) {
 		return conn.DeleteCacheSubnetGroup(ctx, &elasticache.DeleteCacheSubnetGroupInput{
 			CacheSubnetGroupName: aws.String(d.Id()),
 		})
@@ -200,7 +195,7 @@ func resourceSubnetGroupDelete(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func resourceSubnetGroupCustomizeDiff(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+func resourceSubnetGroupCustomizeDiff(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
 	// Reserved ElastiCache Subnet Groups with the name "default" do not support tagging,
 	// thus we must suppress the diff originating from the provider-level default_tags configuration.
 	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/19213.

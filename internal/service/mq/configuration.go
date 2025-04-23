@@ -23,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -41,7 +40,7 @@ func resourceConfiguration() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+			func(_ context.Context, diff *schema.ResourceDiff, v any) error {
 				if diff.HasChange(names.AttrDescription) {
 					return diff.SetNewComputed("latest_revision")
 				}
@@ -55,7 +54,6 @@ func resourceConfiguration() *schema.Resource {
 				}
 				return nil
 			},
-			verify.SetTagsDiff,
 		),
 
 		Schema: map[string]*schema.Schema{
@@ -105,7 +103,7 @@ func resourceConfiguration() *schema.Resource {
 	}
 }
 
-func resourceConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).MQClient(ctx)
@@ -150,7 +148,7 @@ func resourceConfigurationCreate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConfigurationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).MQClient(ctx)
@@ -198,7 +196,7 @@ func resourceConfigurationRead(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func resourceConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).MQClient(ctx)

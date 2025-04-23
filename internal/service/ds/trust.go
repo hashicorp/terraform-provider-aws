@@ -47,10 +47,6 @@ type trustResource struct {
 	framework.ResourceWithConfigure
 }
 
-func (*trustResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_directory_service_trust"
-}
-
 func (r *trustResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	trustType := fwtypes.StringEnumType[awstypes.TrustType]()
 
@@ -350,10 +346,11 @@ func (r *trustResource) Delete(ctx context.Context, request resource.DeleteReque
 
 	conn := r.Meta().DSClient(ctx)
 
-	_, err := conn.DeleteTrust(ctx, &directoryservice.DeleteTrustInput{
+	input := directoryservice.DeleteTrustInput{
 		DeleteAssociatedConditionalForwarder: data.DeleteAssociatedConditionalForwarder.ValueBool(),
 		TrustId:                              fwflex.StringFromFramework(ctx, data.ID),
-	})
+	}
+	_, err := conn.DeleteTrust(ctx, &input)
 
 	if errs.IsA[*awstypes.EntityDoesNotExistException](err) {
 		return
@@ -471,7 +468,7 @@ func findTrustByDomain(ctx context.Context, conn *directoryservice.Client, direc
 }
 
 func statusTrust(ctx context.Context, conn *directoryservice.Client, directoryID, trustID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findTrustByTwoPartKey(ctx, conn, directoryID, trustID)
 
 		if tfresource.NotFound(err) {

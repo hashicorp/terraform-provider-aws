@@ -73,7 +73,7 @@ func resourceAMILaunchPermission() *schema.Resource {
 	}
 }
 
-func resourceAMILaunchPermissionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAMILaunchPermissionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
@@ -84,7 +84,7 @@ func resourceAMILaunchPermissionCreate(ctx context.Context, d *schema.ResourceDa
 	organizationARN := d.Get("organization_arn").(string)
 	organizationalUnitARN := d.Get("organizational_unit_arn").(string)
 	id := amiLaunchPermissionCreateResourceID(imageID, accountID, group, organizationARN, organizationalUnitARN)
-	input := &ec2.ModifyImageAttributeInput{
+	input := ec2.ModifyImageAttributeInput{
 		Attribute: aws.String(string(awstypes.ImageAttributeNameLaunchPermission)),
 		ImageId:   aws.String(imageID),
 		LaunchPermission: &awstypes.LaunchPermissionModifications{
@@ -92,7 +92,7 @@ func resourceAMILaunchPermissionCreate(ctx context.Context, d *schema.ResourceDa
 		},
 	}
 
-	_, err := conn.ModifyImageAttribute(ctx, input)
+	_, err := conn.ModifyImageAttribute(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating AMI Launch Permission (%s): %s", id, err)
@@ -103,7 +103,7 @@ func resourceAMILaunchPermissionCreate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceAMILaunchPermissionRead(ctx, d, meta)...)
 }
 
-func resourceAMILaunchPermissionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAMILaunchPermissionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -133,7 +133,7 @@ func resourceAMILaunchPermissionRead(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func resourceAMILaunchPermissionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAMILaunchPermissionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -142,7 +142,7 @@ func resourceAMILaunchPermissionDelete(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	input := &ec2.ModifyImageAttributeInput{
+	input := ec2.ModifyImageAttributeInput{
 		Attribute: aws.String(string(awstypes.ImageAttributeNameLaunchPermission)),
 		ImageId:   aws.String(imageID),
 		LaunchPermission: &awstypes.LaunchPermissionModifications{
@@ -151,7 +151,7 @@ func resourceAMILaunchPermissionDelete(ctx context.Context, d *schema.ResourceDa
 	}
 
 	log.Printf("[INFO] Deleting AMI Launch Permission: %s", d.Id())
-	_, err = conn.ModifyImageAttribute(ctx, input)
+	_, err = conn.ModifyImageAttribute(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidAMIIDNotFound, errCodeInvalidAMIIDUnavailable) {
 		return diags
@@ -164,7 +164,7 @@ func resourceAMILaunchPermissionDelete(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func resourceAMILaunchPermissionImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceAMILaunchPermissionImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	const importIDSeparator = "/"
 	parts := strings.Split(d.Id(), importIDSeparator)
 

@@ -43,8 +43,6 @@ func resourcePolicy() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		SchemaFunc: func() map[string]*schema.Schema {
 			networkACLEntrySetNestedBlock := func() *schema.Schema {
 				return &schema.Schema{
@@ -231,7 +229,7 @@ func resourcePolicy() *schema.Resource {
 								ValidateFunc:          validation.StringIsJSON,
 								DiffSuppressFunc:      suppressEquivalentManagedServiceDataJSON,
 								DiffSuppressOnRefresh: true,
-								StateFunc: func(v interface{}) string {
+								StateFunc: func(v any) string {
 									json, _ := structure.NormalizeJsonString(v)
 									return json
 								},
@@ -315,7 +313,7 @@ func resourcePolicy() *schema.Resource {
 	}
 }
 
-func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FMSClient(ctx)
 
@@ -330,7 +328,7 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	const (
 		timeout = 1 * time.Minute
 	)
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.InternalErrorException](ctx, timeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.InternalErrorException](ctx, timeout, func() (any, error) {
 		return conn.PutPolicy(ctx, input)
 	})
 
@@ -343,7 +341,7 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourcePolicyRead(ctx, d, meta)...)
 }
 
-func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FMSClient(ctx)
 
@@ -380,7 +378,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set(names.AttrResourceType, policy.ResourceType)
 	d.Set("resource_type_list", policy.ResourceTypeList)
 	d.Set("resource_set_ids", policy.ResourceSetIds)
-	securityServicePolicy := []map[string]interface{}{{
+	securityServicePolicy := []map[string]any{{
 		names.AttrType:         string(policy.SecurityServicePolicyData.Type),
 		"managed_service_data": aws.ToString(policy.SecurityServicePolicyData.ManagedServiceData),
 		"policy_option":        flattenPolicyOption(policy.SecurityServicePolicyData.PolicyOption),
@@ -392,7 +390,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FMSClient(ctx)
 
@@ -407,7 +405,7 @@ func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		const (
 			timeout = 1 * time.Minute
 		)
-		_, err := tfresource.RetryWhenIsA[*awstypes.InternalErrorException](ctx, timeout, func() (interface{}, error) {
+		_, err := tfresource.RetryWhenIsA[*awstypes.InternalErrorException](ctx, timeout, func() (any, error) {
 			return conn.PutPolicy(ctx, input)
 		})
 
@@ -419,7 +417,7 @@ func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourcePolicyRead(ctx, d, meta)...)
 }
 
-func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FMSClient(ctx)
 
@@ -473,9 +471,9 @@ func expandPolicy(d *schema.ResourceData) *awstypes.Policy {
 
 	apiObject := &awstypes.Policy{
 		DeleteUnusedFMManagedResources: d.Get("delete_unused_fm_managed_resources").(bool),
-		ExcludeMap:                     expandPolicyMap(d.Get("exclude_map").([]interface{})),
+		ExcludeMap:                     expandPolicyMap(d.Get("exclude_map").([]any)),
 		ExcludeResourceTags:            d.Get("exclude_resource_tags").(bool),
-		IncludeMap:                     expandPolicyMap(d.Get("include_map").([]interface{})),
+		IncludeMap:                     expandPolicyMap(d.Get("include_map").([]any)),
 		PolicyDescription:              aws.String(d.Get(names.AttrDescription).(string)),
 		PolicyName:                     aws.String(d.Get(names.AttrName).(string)),
 		RemediationEnabled:             d.Get("remediation_enabled").(bool),
@@ -489,8 +487,8 @@ func expandPolicy(d *schema.ResourceData) *awstypes.Policy {
 		apiObject.PolicyUpdateToken = aws.String(d.Get("policy_update_token").(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrResourceTags); ok && len(v.(map[string]interface{})) > 0 {
-		for k, v := range flex.ExpandStringValueMap(v.(map[string]interface{})) {
+	if v, ok := d.GetOk(names.AttrResourceTags); ok && len(v.(map[string]any)) > 0 {
+		for k, v := range flex.ExpandStringValueMap(v.(map[string]any)) {
 			apiObject.ResourceTags = append(apiObject.ResourceTags, awstypes.ResourceTag{
 				Key:   aws.String(k),
 				Value: aws.String(v),
@@ -498,56 +496,56 @@ func expandPolicy(d *schema.ResourceData) *awstypes.Policy {
 		}
 	}
 
-	tfMap := d.Get("security_service_policy_data").([]interface{})[0].(map[string]interface{})
+	tfMap := d.Get("security_service_policy_data").([]any)[0].(map[string]any)
 	apiObject.SecurityServicePolicyData = &awstypes.SecurityServicePolicyData{
 		ManagedServiceData: aws.String(tfMap["managed_service_data"].(string)),
 		Type:               awstypes.SecurityServiceType(tfMap[names.AttrType].(string)),
 	}
 
-	if v, ok := tfMap["policy_option"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.SecurityServicePolicyData.PolicyOption = expandPolicyOption(v[0].(map[string]interface{}))
+	if v, ok := tfMap["policy_option"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.SecurityServicePolicyData.PolicyOption = expandPolicyOption(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandPolicyOption(tfMap map[string]interface{}) *awstypes.PolicyOption {
+func expandPolicyOption(tfMap map[string]any) *awstypes.PolicyOption {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.PolicyOption{}
 
-	if v, ok := tfMap["network_acl_common_policy"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.NetworkAclCommonPolicy = expandNetworkACLCommonPolicy(v[0].(map[string]interface{}))
+	if v, ok := tfMap["network_acl_common_policy"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.NetworkAclCommonPolicy = expandNetworkACLCommonPolicy(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["network_firewall_policy"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.NetworkFirewallPolicy = expandNetworkFirewallPolicy(v[0].(map[string]interface{}))
+	if v, ok := tfMap["network_firewall_policy"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.NetworkFirewallPolicy = expandNetworkFirewallPolicy(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["third_party_firewall_policy"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.ThirdPartyFirewallPolicy = expandThirdPartyFirewallPolicy(v[0].(map[string]interface{}))
+	if v, ok := tfMap["third_party_firewall_policy"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.ThirdPartyFirewallPolicy = expandThirdPartyFirewallPolicy(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandNetworkACLCommonPolicy(tfMap map[string]interface{}) *awstypes.NetworkAclCommonPolicy {
+func expandNetworkACLCommonPolicy(tfMap map[string]any) *awstypes.NetworkAclCommonPolicy {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.NetworkAclCommonPolicy{}
 
-	if v, ok := tfMap["network_acl_entry_set"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.NetworkAclEntrySet = expandNetworkACLEntrySet(v[0].(map[string]interface{}))
+	if v, ok := tfMap["network_acl_entry_set"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.NetworkAclEntrySet = expandNetworkACLEntrySet(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandNetworkACLEntrySet(tfMap map[string]interface{}) *awstypes.NetworkAclEntrySet {
+func expandNetworkACLEntrySet(tfMap map[string]any) *awstypes.NetworkAclEntrySet {
 	if tfMap == nil {
 		return nil
 	}
@@ -573,7 +571,7 @@ func expandNetworkACLEntrySet(tfMap map[string]interface{}) *awstypes.NetworkAcl
 	return apiObject
 }
 
-func expandNetworkACLEntries(tfList []interface{}) []awstypes.NetworkAclEntry {
+func expandNetworkACLEntries(tfList []any) []awstypes.NetworkAclEntry {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -581,7 +579,7 @@ func expandNetworkACLEntries(tfList []interface{}) []awstypes.NetworkAclEntry {
 	apiObjects := []awstypes.NetworkAclEntry{}
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -592,7 +590,7 @@ func expandNetworkACLEntries(tfList []interface{}) []awstypes.NetworkAclEntry {
 	return apiObjects
 }
 
-func expandNetworkACLEntry(tfMap map[string]interface{}) awstypes.NetworkAclEntry {
+func expandNetworkACLEntry(tfMap map[string]any) awstypes.NetworkAclEntry {
 	apiObject := awstypes.NetworkAclEntry{}
 
 	if v, ok := tfMap[names.AttrCIDRBlock].(string); ok && v != "" {
@@ -603,16 +601,16 @@ func expandNetworkACLEntry(tfMap map[string]interface{}) awstypes.NetworkAclEntr
 		apiObject.Egress = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["icmp_type_code"].([]interface{}); ok && len(v) > 0 {
-		apiObject.IcmpTypeCode = expandNetworkACLIcmpTypeCode(v[0].(map[string]interface{}))
+	if v, ok := tfMap["icmp_type_code"].([]any); ok && len(v) > 0 {
+		apiObject.IcmpTypeCode = expandNetworkACLIcmpTypeCode(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["ipv6_cidr_block"].(string); ok && v != "" {
 		apiObject.Ipv6CidrBlock = aws.String(v)
 	}
 
-	if v, ok := tfMap["port_range"].([]interface{}); ok && len(v) > 0 {
-		apiObject.PortRange = expandNetworkACLPortRange(v[0].(map[string]interface{}))
+	if v, ok := tfMap["port_range"].([]any); ok && len(v) > 0 {
+		apiObject.PortRange = expandNetworkACLPortRange(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap[names.AttrProtocol].(string); ok && v != "" {
@@ -626,7 +624,7 @@ func expandNetworkACLEntry(tfMap map[string]interface{}) awstypes.NetworkAclEntr
 	return apiObject
 }
 
-func expandNetworkACLIcmpTypeCode(tfMap map[string]interface{}) *awstypes.NetworkAclIcmpTypeCode {
+func expandNetworkACLIcmpTypeCode(tfMap map[string]any) *awstypes.NetworkAclIcmpTypeCode {
 	if tfMap == nil {
 		return nil
 	}
@@ -639,7 +637,7 @@ func expandNetworkACLIcmpTypeCode(tfMap map[string]interface{}) *awstypes.Networ
 	return apiObject
 }
 
-func expandNetworkACLPortRange(tfMap map[string]interface{}) *awstypes.NetworkAclPortRange {
+func expandNetworkACLPortRange(tfMap map[string]any) *awstypes.NetworkAclPortRange {
 	if tfMap == nil {
 		return nil
 	}
@@ -652,7 +650,7 @@ func expandNetworkACLPortRange(tfMap map[string]interface{}) *awstypes.NetworkAc
 	return apiObject
 }
 
-func expandNetworkFirewallPolicy(tfMap map[string]interface{}) *awstypes.NetworkFirewallPolicy {
+func expandNetworkFirewallPolicy(tfMap map[string]any) *awstypes.NetworkFirewallPolicy {
 	if tfMap == nil {
 		return nil
 	}
@@ -666,7 +664,7 @@ func expandNetworkFirewallPolicy(tfMap map[string]interface{}) *awstypes.Network
 	return apiObject
 }
 
-func expandThirdPartyFirewallPolicy(tfMap map[string]interface{}) *awstypes.ThirdPartyFirewallPolicy {
+func expandThirdPartyFirewallPolicy(tfMap map[string]any) *awstypes.ThirdPartyFirewallPolicy {
 	if tfMap == nil {
 		return nil
 	}
@@ -680,12 +678,12 @@ func expandThirdPartyFirewallPolicy(tfMap map[string]interface{}) *awstypes.Thir
 	return apiObject
 }
 
-func expandPolicyMap(tfList []interface{}) map[string][]string {
+func expandPolicyMap(tfList []any) map[string][]string {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
 	if tfMap == nil {
 		return nil
@@ -705,8 +703,8 @@ func expandPolicyMap(tfList []interface{}) map[string][]string {
 	return apiObject
 }
 
-func flattenPolicyMap(apiObject map[string][]string) []interface{} {
-	tfMap := map[string]interface{}{}
+func flattenPolicyMap(apiObject map[string][]string) []any {
+	tfMap := map[string]any{}
 
 	for k, v := range apiObject {
 		switch k {
@@ -717,15 +715,15 @@ func flattenPolicyMap(apiObject map[string][]string) []interface{} {
 		}
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenPolicyOption(apiObject *awstypes.PolicyOption) []interface{} {
+func flattenPolicyOption(apiObject *awstypes.PolicyOption) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.NetworkAclCommonPolicy; v != nil {
 		tfMap["network_acl_common_policy"] = flattenNetworkACLCommonPolicy(apiObject.NetworkAclCommonPolicy)
@@ -739,29 +737,29 @@ func flattenPolicyOption(apiObject *awstypes.PolicyOption) []interface{} {
 		tfMap["third_party_firewall_policy"] = flattenThirdPartyFirewallPolicy(apiObject.ThirdPartyFirewallPolicy)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenNetworkACLCommonPolicy(apiObject *awstypes.NetworkAclCommonPolicy) []interface{} {
+func flattenNetworkACLCommonPolicy(apiObject *awstypes.NetworkAclCommonPolicy) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.NetworkAclEntrySet; v != nil {
 		tfMap["network_acl_entry_set"] = flattenNetworkACLEntrySet(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenNetworkACLEntrySet(apiObject *awstypes.NetworkAclEntrySet) []interface{} {
+func flattenNetworkACLEntrySet(apiObject *awstypes.NetworkAclEntrySet) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.FirstEntries; v != nil {
 		tfMap["first_entry"] = flattenNetworkACLEntries(v)
@@ -779,15 +777,15 @@ func flattenNetworkACLEntrySet(apiObject *awstypes.NetworkAclEntrySet) []interfa
 		tfMap["last_entry"] = flattenNetworkACLEntries(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenNetworkACLEntries(apiObjects []awstypes.NetworkAclEntry) []interface{} {
+func flattenNetworkACLEntries(apiObjects []awstypes.NetworkAclEntry) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, networkAclEntry := range apiObjects {
 		tfList = append(tfList, flattenNetworkACLEntry(networkAclEntry))
@@ -796,8 +794,8 @@ func flattenNetworkACLEntries(apiObjects []awstypes.NetworkAclEntry) []interface
 	return tfList
 }
 
-func flattenNetworkACLEntry(apiObject awstypes.NetworkAclEntry) interface{} {
-	tfMap := map[string]interface{}{}
+func flattenNetworkACLEntry(apiObject awstypes.NetworkAclEntry) any {
+	tfMap := map[string]any{}
 
 	if v := apiObject.CidrBlock; v != nil {
 		tfMap[names.AttrCIDRBlock] = aws.ToString(v)
@@ -808,7 +806,7 @@ func flattenNetworkACLEntry(apiObject awstypes.NetworkAclEntry) interface{} {
 	}
 
 	if v := apiObject.IcmpTypeCode; v != nil {
-		tfMap["icmp_type_code"] = []interface{}{map[string]interface{}{
+		tfMap["icmp_type_code"] = []any{map[string]any{
 			"code":         aws.ToInt32(v.Code),
 			names.AttrType: aws.ToInt32(v.Type),
 		}}
@@ -819,7 +817,7 @@ func flattenNetworkACLEntry(apiObject awstypes.NetworkAclEntry) interface{} {
 	}
 
 	if v := apiObject.PortRange; v != nil {
-		tfMap["port_range"] = []interface{}{map[string]interface{}{
+		tfMap["port_range"] = []any{map[string]any{
 			"from": aws.ToInt32(v.From),
 			"to":   aws.ToInt32(v.To),
 		}}
@@ -834,32 +832,32 @@ func flattenNetworkACLEntry(apiObject awstypes.NetworkAclEntry) interface{} {
 	return tfMap
 }
 
-func flattenNetworkFirewallPolicy(apiObject *awstypes.NetworkFirewallPolicy) []interface{} {
+func flattenNetworkFirewallPolicy(apiObject *awstypes.NetworkFirewallPolicy) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	tfMap["firewall_deployment_model"] = apiObject.FirewallDeploymentModel
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenThirdPartyFirewallPolicy(apiObject *awstypes.ThirdPartyFirewallPolicy) []interface{} {
+func flattenThirdPartyFirewallPolicy(apiObject *awstypes.ThirdPartyFirewallPolicy) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	tfMap["firewall_deployment_model"] = apiObject.FirewallDeploymentModel
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenResourceTags(apiObjects []awstypes.ResourceTag) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenResourceTags(apiObjects []awstypes.ResourceTag) map[string]any {
+	tfMap := map[string]any{}
 
 	for _, v := range apiObjects {
 		tfMap[aws.ToString(v.Key)] = aws.ToString(v.Value)

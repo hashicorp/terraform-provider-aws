@@ -22,6 +22,7 @@ import (
 // @SDKResource("aws_opsworks_user_profile", name="Profile")
 func resourceUserProfile() *schema.Resource {
 	return &schema.Resource{
+		DeprecationMessage:   "This resource is deprecated and will be removed in the next major version of the AWS Provider. Consider the AWS Systems Manager service instead.",
 		CreateWithoutTimeout: resourceUserProfileCreate,
 		ReadWithoutTimeout:   resourceUserProfileRead,
 		UpdateWithoutTimeout: resourceUserProfileUpdate,
@@ -50,7 +51,7 @@ func resourceUserProfile() *schema.Resource {
 	}
 }
 
-func resourceUserProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserProfileCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpsWorksClient(ctx)
 
@@ -76,7 +77,7 @@ func resourceUserProfileCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceUserProfileUpdate(ctx, d, meta)...)
 }
 
-func resourceUserProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserProfileRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpsWorksClient(ctx)
 
@@ -100,7 +101,7 @@ func resourceUserProfileRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceUserProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserProfileUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpsWorksClient(ctx)
 
@@ -120,7 +121,7 @@ func resourceUserProfileUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceUserProfileRead(ctx, d, meta)...)
 }
 
-func resourceUserProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserProfileDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpsWorksClient(ctx)
 

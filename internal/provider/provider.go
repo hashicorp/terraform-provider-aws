@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"maps"
 	"os"
 	"strings"
 	"time"
@@ -264,7 +265,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 		ResourcesMap:   make(map[string]*schema.Resource),
 	}
 
-	provider.ConfigureContextFunc = func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
+	provider.ConfigureContextFunc = func(ctx context.Context, d *schema.ResourceData) (any, diag.Diagnostics) {
 		return configure(ctx, provider, d)
 	}
 
@@ -291,18 +292,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				continue
 			}
 
-			// bootstrapContext is run on all wrapped methods before any interceptors.
-			bootstrapContext := func(ctx context.Context, meta any) context.Context {
-				ctx = conns.NewDataSourceContext(ctx, servicePackageName, v.Name)
-				if v, ok := meta.(*conns.AWSClient); ok {
-					ctx = tftags.NewContext(ctx, v.DefaultTagsConfig(ctx), v.IgnoreTagsConfig(ctx))
-					ctx = v.RegisterLogger(ctx)
-				}
-
-				return ctx
-			}
 			interceptors := interceptorItems{}
-
 			if v.Tags != nil {
 				schema := r.SchemaMap()
 
@@ -319,23 +309,28 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				}
 
 				interceptors = append(interceptors, interceptorItem{
-					when: Before | After,
-					why:  Read,
-					interceptor: tagsDataSourceInterceptor{
-						tags: v.Tags,
-					},
+					when:        Before | After,
+					why:         Read,
+					interceptor: newTagsDataSourceInterceptor(v.Tags),
 				})
 			}
 
-			ds := &wrappedDataSource{
-				bootstrapContext: bootstrapContext,
-				interceptors:     interceptors,
-			}
+			opts := wrappedDataSourceOptions{
+				bootstrapContext: func(ctx context.Context, _ getAttributeFunc, meta any) (context.Context, diag.Diagnostics) {
+					var diags diag.Diagnostics
 
-			if v := r.ReadWithoutTimeout; v != nil {
-				r.ReadWithoutTimeout = ds.Read(v)
-			}
+					ctx = conns.NewDataSourceContext(ctx, servicePackageName, v.Name)
+					if v, ok := meta.(*conns.AWSClient); ok {
+						ctx = tftags.NewContext(ctx, v.DefaultTagsConfig(ctx), v.IgnoreTagsConfig(ctx))
+						ctx = v.RegisterLogger(ctx)
+					}
 
+					return ctx, diags
+				},
+				interceptors: interceptors,
+				typeName:     typeName,
+			}
+			wrapDataSource(r, opts)
 			provider.DataSourcesMap[typeName] = r
 		}
 
@@ -367,18 +362,8 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				continue
 			}
 
-			// bootstrapContext is run on all wrapped methods before any interceptors.
-			bootstrapContext := func(ctx context.Context, meta any) context.Context {
-				ctx = conns.NewResourceContext(ctx, servicePackageName, v.Name)
-				if v, ok := meta.(*conns.AWSClient); ok {
-					ctx = tftags.NewContext(ctx, v.DefaultTagsConfig(ctx), v.IgnoreTagsConfig(ctx))
-					ctx = v.RegisterLogger(ctx)
-				}
-
-				return ctx
-			}
+			var customizeDiffFuncs []schema.CustomizeDiffFunc
 			interceptors := interceptorItems{}
-
 			if v.Tags != nil {
 				schema := r.SchemaMap()
 
@@ -403,48 +388,32 @@ func New(ctx context.Context) (*schema.Provider, error) {
 					continue
 				}
 
+				customizeDiffFuncs = append(customizeDiffFuncs, setTagsAll)
 				interceptors = append(interceptors, interceptorItem{
-					when: Before | After | Finally,
-					why:  Create | Read | Update,
-					interceptor: tagsResourceInterceptor{
-						tags:       v.Tags,
-						updateFunc: tagsUpdateFunc,
-						readFunc:   tagsReadFunc,
-					},
+					when:        Before | After | Finally,
+					why:         Create | Read | Update,
+					interceptor: newTagsResourceInterceptor(v.Tags),
 				})
 			}
 
-			rs := &wrappedResource{
-				bootstrapContext: bootstrapContext,
-				interceptors:     interceptors,
-			}
+			opts := wrappedResourceOptions{
+				// bootstrapContext is run on all wrapped methods before any interceptors.
+				bootstrapContext: func(ctx context.Context, _ getAttributeFunc, meta any) (context.Context, diag.Diagnostics) {
+					var diags diag.Diagnostics
 
-			if v := r.CreateWithoutTimeout; v != nil {
-				r.CreateWithoutTimeout = rs.Create(v)
-			}
-			if v := r.ReadWithoutTimeout; v != nil {
-				r.ReadWithoutTimeout = rs.Read(v)
-			}
-			if v := r.UpdateWithoutTimeout; v != nil {
-				r.UpdateWithoutTimeout = rs.Update(v)
-			}
-			if v := r.DeleteWithoutTimeout; v != nil {
-				r.DeleteWithoutTimeout = rs.Delete(v)
-			}
-			if v := r.Importer; v != nil {
-				if v := v.StateContext; v != nil {
-					r.Importer.StateContext = rs.State(v)
-				}
-			}
-			if v := r.CustomizeDiff; v != nil {
-				r.CustomizeDiff = rs.CustomizeDiff(v)
-			}
-			for _, stateUpgrader := range r.StateUpgraders {
-				if v := stateUpgrader.Upgrade; v != nil {
-					stateUpgrader.Upgrade = rs.StateUpgrade(v)
-				}
-			}
+					ctx = conns.NewResourceContext(ctx, servicePackageName, v.Name)
+					if v, ok := meta.(*conns.AWSClient); ok {
+						ctx = tftags.NewContext(ctx, v.DefaultTagsConfig(ctx), v.IgnoreTagsConfig(ctx))
+						ctx = v.RegisterLogger(ctx)
+					}
 
+					return ctx, diags
+				},
+				customizeDiffFuncs: customizeDiffFuncs,
+				interceptors:       interceptors,
+				typeName:           typeName,
+			}
+			wrapResource(r, opts)
 			provider.ResourcesMap[typeName] = r
 		}
 	}
@@ -456,14 +425,14 @@ func New(ctx context.Context) (*schema.Provider, error) {
 	// Set the provider Meta (instance data) here.
 	// It will be overwritten by the result of the call to ConfigureContextFunc,
 	// but can be used pre-configuration by other (non-primary) provider servers.
-	var meta *conns.AWSClient
+	var c *conns.AWSClient
 	if v, ok := provider.Meta().(*conns.AWSClient); ok {
-		meta = v
+		c = v
 	} else {
-		meta = new(conns.AWSClient)
+		c = new(conns.AWSClient)
 	}
-	meta.SetServicePackages(ctx, servicePackageMap)
-	provider.SetMeta(meta)
+	c.SetServicePackages(ctx, servicePackageMap)
+	provider.SetMeta(c)
 
 	return provider, nil
 }
@@ -551,16 +520,16 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 		}
 	}
 
-	if v, ok := d.GetOk("assume_role_with_web_identity"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		config.AssumeRoleWithWebIdentity = expandAssumeRoleWithWebIdentity(ctx, v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("assume_role_with_web_identity"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		config.AssumeRoleWithWebIdentity = expandAssumeRoleWithWebIdentity(ctx, v.([]any)[0].(map[string]any))
 		tflog.Info(ctx, "assume_role_with_web_identity configuration set", map[string]any{
 			"tf_aws.assume_role_with_web_identity.role_arn":     config.AssumeRoleWithWebIdentity.RoleARN,
 			"tf_aws.assume_role_with_web_identity.session_name": config.AssumeRoleWithWebIdentity.SessionName,
 		})
 	}
 
-	if v, ok := d.GetOk("default_tags"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		config.DefaultTagsConfig = expandDefaultTags(ctx, v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("default_tags"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		config.DefaultTagsConfig = expandDefaultTags(ctx, v.([]any)[0].(map[string]any))
 	} else {
 		config.DefaultTagsConfig = expandDefaultTags(ctx, nil)
 	}
@@ -592,8 +561,8 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 		config.NoProxy = v
 	}
 
-	if v, ok := d.GetOk("ignore_tags"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		config.IgnoreTagsConfig = expandIgnoreTags(ctx, v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("ignore_tags"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		config.IgnoreTagsConfig = expandIgnoreTags(ctx, v.([]any)[0].(map[string]any))
 	} else {
 		config.IgnoreTagsConfig = expandIgnoreTags(ctx, nil)
 	}
@@ -602,12 +571,12 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 		config.MaxRetries = v.(int)
 	}
 
-	if v, ok := d.GetOk("shared_credentials_files"); ok && len(v.([]interface{})) > 0 {
-		config.SharedCredentialsFiles = flex.ExpandStringValueList(v.([]interface{}))
+	if v, ok := d.GetOk("shared_credentials_files"); ok && len(v.([]any)) > 0 {
+		config.SharedCredentialsFiles = flex.ExpandStringValueList(v.([]any))
 	}
 
-	if v, ok := d.GetOk("shared_config_files"); ok && len(v.([]interface{})) > 0 {
-		config.SharedConfigFiles = flex.ExpandStringValueList(v.([]interface{}))
+	if v, ok := d.GetOk("shared_config_files"); ok && len(v.([]any)) > 0 {
+		config.SharedConfigFiles = flex.ExpandStringValueList(v.([]any))
 	}
 
 	if v, null, _ := nullable.Bool(d.Get("skip_metadata_api_check").(string)).ValueBool(); !null {
@@ -618,20 +587,20 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 		}
 	}
 
-	var meta *conns.AWSClient
+	var c *conns.AWSClient
 	if v, ok := provider.Meta().(*conns.AWSClient); ok {
-		meta = v
+		c = v
 	} else {
-		meta = new(conns.AWSClient)
+		c = new(conns.AWSClient)
 	}
-	meta, ds := config.ConfigureProvider(ctx, meta)
+	c, ds := config.ConfigureProvider(ctx, c)
 	diags = append(diags, ds...)
 
 	if diags.HasError() {
 		return nil, diags
 	}
 
-	return meta, diags
+	return c, diags
 }
 
 func assumeRoleSchema() *schema.Schema {
@@ -820,7 +789,7 @@ func expandAssumeRole(_ context.Context, path cty.Path, tfMap map[string]any) (r
 		result.SourceIdentity = v
 	}
 
-	if v, ok := tfMap["tags"].(map[string]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["tags"].(map[string]any); ok && len(v) > 0 {
 		result.Tags = flex.ExpandStringValueMap(v)
 	}
 
@@ -831,7 +800,7 @@ func expandAssumeRole(_ context.Context, path cty.Path, tfMap map[string]any) (r
 	return result, diags
 }
 
-func expandAssumeRoleWithWebIdentity(_ context.Context, tfMap map[string]interface{}) *awsbase.AssumeRoleWithWebIdentity {
+func expandAssumeRoleWithWebIdentity(_ context.Context, tfMap map[string]any) *awsbase.AssumeRoleWithWebIdentity {
 	if tfMap == nil {
 		return nil
 	}
@@ -870,8 +839,8 @@ func expandAssumeRoleWithWebIdentity(_ context.Context, tfMap map[string]interfa
 	return &assumeRole
 }
 
-func expandDefaultTags(ctx context.Context, tfMap map[string]interface{}) *tftags.DefaultConfig {
-	tags := make(map[string]interface{})
+func expandDefaultTags(ctx context.Context, tfMap map[string]any) *tftags.DefaultConfig {
+	tags := make(map[string]any)
 	for _, ev := range os.Environ() {
 		k, v, _ := strings.Cut(ev, "=")
 		if before, tk, ok := strings.Cut(k, tftags.DefaultTagsEnvVarPrefix); ok && before == "" {
@@ -879,10 +848,8 @@ func expandDefaultTags(ctx context.Context, tfMap map[string]interface{}) *tftag
 		}
 	}
 
-	if cfgTags, ok := tfMap["tags"].(map[string]interface{}); ok {
-		for k, v := range cfgTags {
-			tags[k] = v
-		}
+	if cfgTags, ok := tfMap["tags"].(map[string]any); ok {
+		maps.Copy(tags, cfgTags)
 	}
 
 	if len(tags) > 0 {
@@ -894,8 +861,8 @@ func expandDefaultTags(ctx context.Context, tfMap map[string]interface{}) *tftag
 	return nil
 }
 
-func expandIgnoreTags(ctx context.Context, tfMap map[string]interface{}) *tftags.IgnoreConfig {
-	var keys, keyPrefixes []interface{}
+func expandIgnoreTags(ctx context.Context, tfMap map[string]any) *tftags.IgnoreConfig {
+	var keys, keyPrefixes []any
 
 	if tfMap != nil {
 		if v, ok := tfMap["keys"].(*schema.Set); ok {

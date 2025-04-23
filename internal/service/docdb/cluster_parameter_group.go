@@ -24,7 +24,6 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -98,12 +97,10 @@ func resourceClusterParameterGroup() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceClusterParameterGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterParameterGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DocDBClient(ctx)
 
@@ -134,7 +131,7 @@ func resourceClusterParameterGroupCreate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceClusterParameterGroupRead(ctx, d, meta)...)
 }
 
-func resourceClusterParameterGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterParameterGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DocDBClient(ctx)
 
@@ -173,7 +170,7 @@ func resourceClusterParameterGroupRead(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func resourceClusterParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DocDBClient(ctx)
 
@@ -193,14 +190,15 @@ func resourceClusterParameterGroupUpdate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceClusterParameterGroupRead(ctx, d, meta)...)
 }
 
-func resourceClusterParameterGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterParameterGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DocDBClient(ctx)
 
 	log.Printf("[DEBUG] Deleting DocumentDB Cluster Parameter Group: %s", d.Id())
-	_, err := conn.DeleteDBClusterParameterGroup(ctx, &docdb.DeleteDBClusterParameterGroupInput{
+	input := docdb.DeleteDBClusterParameterGroupInput{
 		DBClusterParameterGroupName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteDBClusterParameterGroup(ctx, &input)
 
 	if errs.IsA[*awstypes.DBParameterGroupNotFoundFault](err) {
 		return diags
@@ -210,7 +208,7 @@ func resourceClusterParameterGroupDelete(ctx context.Context, d *schema.Resource
 		return sdkdiag.AppendErrorf(diags, "deleting DocumentDB Cluster Parameter Group (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, 10*time.Minute, func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, 10*time.Minute, func() (any, error) {
 		return findDBClusterParameterGroupByName(ctx, conn, d.Id())
 	})
 

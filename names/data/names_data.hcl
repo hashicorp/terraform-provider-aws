@@ -1451,7 +1451,7 @@ service "cloudwatch" {
   }
 
   provider_package_correct = "cloudwatch"
-  doc_prefix               = ["cloudwatch_dashboard", "cloudwatch_metric_", "cloudwatch_composite_"]
+  doc_prefix               = ["cloudwatch_dashboard", "cloudwatch_metric_", "cloudwatch_composite_", "cloudwatch_contributor_"]
   brand                    = "AWS"
 }
 
@@ -2708,6 +2708,29 @@ service "ds" {
   brand                    = "AWS"
 }
 
+service "dsql" {
+  sdk {
+    id = "DSQL"
+  }
+
+  names {
+    provider_name_upper = "DSQL"
+    human_friendly      = "DSQL"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListClusters"
+  }
+
+  resource_prefix {
+    correct = "aws_dsql_"
+  }
+
+  provider_package_correct = "dsql"
+  doc_prefix               = ["dsql_"]
+  brand                    = "AWS"
+}
+
 service "dax" {
   sdk {
     id = "DAX"
@@ -3259,6 +3282,10 @@ service "mediapackagevod" {
     human_friendly      = "Elemental MediaPackage VOD"
   }
 
+  endpoint_info {
+    endpoint_api_call = "ListPackagingGroups"
+  }
+
   resource_prefix {
     correct = "aws_mediapackagevod_"
   }
@@ -3266,7 +3293,6 @@ service "mediapackagevod" {
   provider_package_correct = "mediapackagevod"
   doc_prefix               = ["mediapackagevod_"]
   brand                    = "AWS"
-  not_implemented          = true
 }
 
 service "mediastore" {
@@ -6980,7 +7006,7 @@ service "sagemaker" {
 
   names {
     provider_name_upper = "SageMaker"
-    human_friendly      = "SageMaker"
+    human_friendly      = "SageMaker AI"
   }
 
   endpoint_info {
@@ -6993,7 +7019,7 @@ service "sagemaker" {
 
   provider_package_correct = "sagemaker"
   doc_prefix               = ["sagemaker_"]
-  brand                    = "AWS"
+  brand                    = "Amazon"
 }
 
 service "sagemakera2iruntime" {

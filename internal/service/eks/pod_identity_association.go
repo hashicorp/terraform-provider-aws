@@ -62,10 +62,6 @@ type podIdentityAssociationResource struct {
 	framework.ResourceWithConfigure
 }
 
-func (r *podIdentityAssociationResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_eks_pod_identity_association"
-}
-
 func (r *podIdentityAssociationResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -128,7 +124,7 @@ func (r *podIdentityAssociationResource) Create(ctx context.Context, req resourc
 	input.ClientRequestToken = aws.String(sdkid.UniqueId())
 	input.Tags = getTagsIn(ctx)
 
-	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidParameterException](ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidParameterException](ctx, propagationTimeout, func() (any, error) {
 		return conn.CreatePodIdentityAssociation(ctx, input)
 	}, "Role provided in the request does not exist")
 
@@ -210,7 +206,7 @@ func (r *podIdentityAssociationResource) Update(ctx context.Context, req resourc
 
 		input.ClientRequestToken = aws.String(sdkid.UniqueId())
 
-		_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidParameterException](ctx, propagationTimeout, func() (interface{}, error) {
+		_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidParameterException](ctx, propagationTimeout, func() (any, error) {
 			return conn.UpdatePodIdentityAssociation(ctx, input)
 		}, "Role provided in the request does not exist")
 
@@ -269,10 +265,6 @@ func (r *podIdentityAssociationResource) ImportState(ctx context.Context, req re
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), parts[1])...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrAssociationID), parts[1])...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrClusterName), parts[0])...)
-}
-
-func (r *podIdentityAssociationResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func findPodIdentityAssociationByTwoPartKey(ctx context.Context, conn *eks.Client, associationID, clusterName string) (*awstypes.PodIdentityAssociation, error) {

@@ -54,10 +54,6 @@ type agentAliasResource struct {
 	framework.WithTimeouts
 }
 
-func (*agentAliasResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_bedrockagent_agent_alias"
-}
-
 func (r *agentAliasResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -254,10 +250,11 @@ func (r *agentAliasResource) Delete(ctx context.Context, request resource.Delete
 
 	conn := r.Meta().BedrockAgentClient(ctx)
 
-	_, err := conn.DeleteAgentAlias(ctx, &bedrockagent.DeleteAgentAliasInput{
+	input := bedrockagent.DeleteAgentAliasInput{
 		AgentAliasId: fwflex.StringFromFramework(ctx, data.AgentAliasID),
 		AgentId:      fwflex.StringFromFramework(ctx, data.AgentID),
-	})
+	}
+	_, err := conn.DeleteAgentAlias(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
@@ -268,10 +265,6 @@ func (r *agentAliasResource) Delete(ctx context.Context, request resource.Delete
 
 		return
 	}
-}
-
-func (r *agentAliasResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func findAgentAliasByTwoPartKey(ctx context.Context, conn *bedrockagent.Client, agentAliasID, agentID string) (*awstypes.AgentAlias, error) {
@@ -301,7 +294,7 @@ func findAgentAliasByTwoPartKey(ctx context.Context, conn *bedrockagent.Client, 
 }
 
 func statusAgentAlias(ctx context.Context, conn *bedrockagent.Client, agentAliasID, agentID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findAgentAliasByTwoPartKey(ctx, conn, agentAliasID, agentID)
 
 		if tfresource.NotFound(err) {

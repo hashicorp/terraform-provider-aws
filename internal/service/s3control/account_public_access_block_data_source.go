@@ -45,7 +45,7 @@ func dataSourceAccountPublicAccessBlock() *schema.Resource {
 	}
 }
 
-func dataSourceAccountPublicAccessBlockRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceAccountPublicAccessBlockRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 

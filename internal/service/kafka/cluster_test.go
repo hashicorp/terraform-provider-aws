@@ -18,7 +18,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kafka/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
@@ -103,7 +107,7 @@ func TestAccKafkaCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrClusterName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "cluster_uuid"),
-					resource.TestCheckResourceAttr(resourceName, "configuration_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration_info.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_info.#", "1"),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "encryption_info.0.encryption_at_rest_kms_key_arn", "kms", regexache.MustCompile(`key/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.#", "1"),
@@ -1094,12 +1098,47 @@ func TestAccKafkaCluster_storageMode(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_storageMode(rName, "TIERED", "2.8.2.tiered"),
+				Config: testAccClusterConfig_storageMode(rName, "LOCAL", "3.7.x"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kafka", regexache.MustCompile(`cluster/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "storage_mode", "TIERED"),
+					resource.TestCheckResourceAttr(resourceName, "storage_mode", "LOCAL"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("storage_mode"), knownvalue.StringExact("LOCAL")),
+				},
+			},
+			{
+				Config: testAccClusterConfig_storageMode(rName, "TIERED", "3.7.x"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("storage_mode"), knownvalue.StringExact("TIERED")),
+				},
+			},
+			{
+				Config: testAccClusterConfig_storageMode(rName, "LOCAL", "3.7.x"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("storage_mode"), knownvalue.StringExact("LOCAL")),
+				},
 			},
 		},
 	})
@@ -2068,7 +2107,7 @@ resource "aws_msk_cluster" "test" {
 `, rName, enhancedMonitoring))
 }
 
-func testAccClusterConfig_storageMode(rName string, storageMode string, kafkaVersion string) string {
+func testAccClusterConfig_storageMode(rName, storageMode, kafkaVersion string) string {
 	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q

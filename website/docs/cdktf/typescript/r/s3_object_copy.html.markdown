@@ -87,7 +87,7 @@ The following arguments are optional:
 
 * `acl` - (Optional) [Canned ACL](https://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html#canned-acl) to apply. Valid values are `private`, `public-read`, `public-read-write`, `authenticated-read`, `aws-exec-read`, `bucket-owner-read`, and `bucket-owner-full-control`. Conflicts with `grant`.
 * `cacheControl` - (Optional) Specifies caching behavior along the request/reply chain Read [w3c cache_control](http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.9) for further details.
-* `checksumAlgorithm` - (Optional) Indicates the algorithm used to create the checksum for the object. If a value is specified and the object is encrypted with KMS, you must have permission to use the `kms:Decrypt` action. Valid values: `CRC32`, `CRC32C`, `SHA1`, `SHA256`.
+* `checksumAlgorithm` - (Optional) Indicates the algorithm used to create the checksum for the object. If a value is specified and the object is encrypted with KMS, you must have permission to use the `kms:Decrypt` action. Valid values: `CRC32`, `CRC32C`, `CRC64NVME` `SHA1`, `SHA256`.
 * `contentDisposition` - (Optional) Specifies presentational information for the object. Read [w3c content_disposition](http://www.w3.org/Protocols/rfc2616/rfc2616-sec19.html#sec19.5.1) for further information.
 * `contentEncoding` - (Optional) Specifies what content encodings have been applied to the object and thus what decoding mechanisms must be applied to obtain the media-type referenced by the Content-Type header field. Read [w3c content encoding](http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.11) for further information.
 * `contentLanguage` - (Optional) Language the content is in e.g., en-US or en-GB.
@@ -151,6 +151,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - ARN of the object.
 * `checksumCrc32` - The base64-encoded, 32-bit CRC32 checksum of the object.
 * `checksumCrc32C` - The base64-encoded, 32-bit CRC32C checksum of the object.
+* `checksumCrc64Nvme` - The base64-encoded, 64-bit CRC64NVME checksum of the object.
 * `checksumSha1` - The base64-encoded, 160-bit SHA-1 digest of the object.
 * `checksumSha256` - The base64-encoded, 256-bit SHA-256 digest of the object.
 * `etag` - ETag generated for the object (an MD5 sum of the object content). For plaintext objects or objects encrypted with an AWS-managed key, the hash is an MD5 digest of the object data. For objects encrypted with a KMS key or objects created by either the Multipart Upload or Part Copy operation, the hash is not an MD5 digest, regardless of the method of encryption. More information on possible values can be found on [Common Response Headers](https://docs.aws.amazon.com/AmazonS3/latest/API/RESTCommonResponseHeaders.html).
@@ -161,4 +162,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `versionId` - Version ID of the newly created copy.
 
-<!-- cache-key: cdktf-0.20.8 input-2e6085260e3c1b07a7e5b18ce3bef2425d03f6c8f52dd589e3f247961834a075 -->
+<!-- cache-key: cdktf-0.20.8 input-d2be2538c11fb87765411543de07456e8f074cdf723dc145ecbf9803faac0e96 -->

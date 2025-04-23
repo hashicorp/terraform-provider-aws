@@ -173,13 +173,14 @@ func testAccCheckAPIMappingCreateCertificate(ctx context.Context, t *testing.T, 
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMClient(ctx)
 
-		output, err := conn.ImportCertificate(ctx, &acm.ImportCertificateInput{
+		input := acm.ImportCertificateInput{
 			Certificate: []byte(certificate),
 			PrivateKey:  []byte(privateKey),
-			Tags: tfacm.Tags(tftags.New(ctx, map[string]interface{}{
+			Tags: tfacm.SvcTags(tftags.New(ctx, map[string]any{
 				"Name": rName,
 			}).IgnoreAWS()),
-		})
+		}
+		output, err := conn.ImportCertificate(ctx, &input)
 
 		if err != nil {
 			return err

@@ -26,10 +26,6 @@ type defaultTagsDataSource struct {
 	framework.DataSourceWithConfigure
 }
 
-func (*defaultTagsDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	response.TypeName = "aws_default_tags"
-}
-
 func (d *defaultTagsDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

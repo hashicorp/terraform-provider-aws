@@ -55,10 +55,6 @@ type connectionResource struct {
 	framework.WithTimeouts
 }
 
-func (r *connectionResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_codeconnections_connection"
-}
-
 func (r *connectionResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -269,10 +265,6 @@ func (r *connectionResource) Delete(ctx context.Context, req resource.DeleteRequ
 	}
 }
 
-func (r *connectionResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func (r *connectionResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
@@ -312,7 +304,7 @@ func waitConnectionDeleted(ctx context.Context, conn *codeconnections.Client, id
 }
 
 func statusConnection(ctx context.Context, conn *codeconnections.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := findConnectionByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {

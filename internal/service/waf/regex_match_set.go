@@ -8,10 +8,10 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"slices"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/waf"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/waf/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -62,7 +62,7 @@ func resourceRegexMatchSet() *schema.Resource {
 									"data": {
 										Type:     schema.TypeString,
 										Optional: true,
-										StateFunc: func(v interface{}) string {
+										StateFunc: func(v any) string {
 											return strings.ToLower(v.(string))
 										},
 									},
@@ -88,12 +88,12 @@ func resourceRegexMatchSet() *schema.Resource {
 	}
 }
 
-func resourceRegexMatchSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRegexMatchSetCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	output, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+	output, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (any, error) {
 		input := &waf.CreateRegexMatchSetInput{
 			ChangeToken: token,
 			Name:        aws.String(name),
@@ -111,7 +111,7 @@ func resourceRegexMatchSetCreate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceRegexMatchSetUpdate(ctx, d, meta)...)
 }
 
-func resourceRegexMatchSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRegexMatchSetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFClient(ctx)
 
@@ -127,13 +127,7 @@ func resourceRegexMatchSetRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "reading WAF Regex Match Set (%s): %s", d.Id(), err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   "waf",
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  "regexmatchset/" + d.Id(),
-	}
-	d.Set(names.AttrARN, arn.String())
+	d.Set(names.AttrARN, regexMatchSetARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	d.Set(names.AttrName, regexMatchSet.Name)
 	if err := d.Set("regex_match_tuple", flattenRegexMatchTuples(regexMatchSet.RegexMatchTuples)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting regex_match_tuple: %s", err)
@@ -142,7 +136,7 @@ func resourceRegexMatchSetRead(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func resourceRegexMatchSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRegexMatchSetUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFClient(ctx)
 
@@ -157,19 +151,19 @@ func resourceRegexMatchSetUpdate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceRegexMatchSetRead(ctx, d, meta)...)
 }
 
-func resourceRegexMatchSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRegexMatchSetDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFClient(ctx)
 
 	if oldTuples := d.Get("regex_match_tuple").(*schema.Set).List(); len(oldTuples) > 0 {
-		noTuples := []interface{}{}
+		noTuples := []any{}
 		if err := updateRegexMatchSet(ctx, conn, d.Id(), oldTuples, noTuples); err != nil && !errs.IsA[*awstypes.WAFNonexistentItemException](err) && !errs.IsA[*awstypes.WAFNonexistentContainerException](err) {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
 	log.Printf("[INFO] Deleting WAF Regex Match Set: %s", d.Id())
-	_, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+	_, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (any, error) {
 		input := &waf.DeleteRegexMatchSetInput{
 			ChangeToken:     token,
 			RegexMatchSetId: aws.String(d.Id()),
@@ -214,8 +208,8 @@ func findRegexMatchSetByID(ctx context.Context, conn *waf.Client, id string) (*a
 	return output.RegexMatchSet, nil
 }
 
-func updateRegexMatchSet(ctx context.Context, conn *waf.Client, id string, oldT, newT []interface{}) error {
-	_, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+func updateRegexMatchSet(ctx context.Context, conn *waf.Client, id string, oldT, newT []any) error {
+	_, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (any, error) {
 		input := &waf.UpdateRegexMatchSetInput{
 			ChangeToken:     token,
 			RegexMatchSetId: aws.String(id),
@@ -232,10 +226,10 @@ func updateRegexMatchSet(ctx context.Context, conn *waf.Client, id string, oldT,
 	return nil
 }
 
-func flattenRegexMatchTuples(tuples []awstypes.RegexMatchTuple) []interface{} {
-	out := make([]interface{}, len(tuples))
+func flattenRegexMatchTuples(tuples []awstypes.RegexMatchTuple) []any {
+	out := make([]any, len(tuples))
 	for i, t := range tuples {
-		m := make(map[string]interface{})
+		m := make(map[string]any)
 
 		if t.FieldToMatch != nil {
 			m["field_to_match"] = flattenFieldToMatch(t.FieldToMatch)
@@ -248,23 +242,23 @@ func flattenRegexMatchTuples(tuples []awstypes.RegexMatchTuple) []interface{} {
 	return out
 }
 
-func expandRegexMatchTuple(tuple map[string]interface{}) *awstypes.RegexMatchTuple {
-	ftm := tuple["field_to_match"].([]interface{})
+func expandRegexMatchTuple(tuple map[string]any) *awstypes.RegexMatchTuple {
+	ftm := tuple["field_to_match"].([]any)
 	return &awstypes.RegexMatchTuple{
-		FieldToMatch:       expandFieldToMatch(ftm[0].(map[string]interface{})),
+		FieldToMatch:       expandFieldToMatch(ftm[0].(map[string]any)),
 		RegexPatternSetId:  aws.String(tuple["regex_pattern_set_id"].(string)),
 		TextTransformation: awstypes.TextTransformation(tuple["text_transformation"].(string)),
 	}
 }
 
-func diffRegexMatchSetTuples(oldT, newT []interface{}) []awstypes.RegexMatchSetUpdate {
+func diffRegexMatchSetTuples(oldT, newT []any) []awstypes.RegexMatchSetUpdate {
 	updates := make([]awstypes.RegexMatchSetUpdate, 0)
 
 	for _, ot := range oldT {
-		tuple := ot.(map[string]interface{})
+		tuple := ot.(map[string]any)
 
 		if idx, contains := sliceContainsMap(newT, tuple); contains {
-			newT = append(newT[:idx], newT[idx+1:]...)
+			newT = slices.Delete(newT, idx, idx+1)
 			continue
 		}
 
@@ -275,7 +269,7 @@ func diffRegexMatchSetTuples(oldT, newT []interface{}) []awstypes.RegexMatchSetU
 	}
 
 	for _, nt := range newT {
-		tuple := nt.(map[string]interface{})
+		tuple := nt.(map[string]any)
 
 		updates = append(updates, awstypes.RegexMatchSetUpdate{
 			Action:          awstypes.ChangeActionInsert,
@@ -285,12 +279,12 @@ func diffRegexMatchSetTuples(oldT, newT []interface{}) []awstypes.RegexMatchSetU
 	return updates
 }
 
-func regexMatchSetTupleHash(v interface{}) int {
+func regexMatchSetTupleHash(v any) int {
 	var buf bytes.Buffer
-	m := v.(map[string]interface{})
+	m := v.(map[string]any)
 	if v, ok := m["field_to_match"]; ok {
-		ftms := v.([]interface{})
-		ftm := ftms[0].(map[string]interface{})
+		ftms := v.([]any)
+		ftm := ftms[0].(map[string]any)
 
 		if v, ok := ftm["data"]; ok {
 			buf.WriteString(fmt.Sprintf("%s-", strings.ToLower(v.(string))))
@@ -301,4 +295,9 @@ func regexMatchSetTupleHash(v interface{}) int {
 	buf.WriteString(fmt.Sprintf("%s-", m["text_transformation"].(string)))
 
 	return create.StringHashcode(buf.String())
+}
+
+// See https://docs.aws.amazon.com/service-authorization/latest/reference/list_awswaf.html#awswaf-resources-for-iam-policies.
+func regexMatchSetARN(ctx context.Context, c *conns.AWSClient, id string) string {
+	return c.GlobalARN(ctx, "waf", "regexmatchset/"+id)
 }

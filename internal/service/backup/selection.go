@@ -187,7 +187,7 @@ func resourceSelection() *schema.Resource {
 	}
 }
 
-func resourceSelectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSelectionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
@@ -207,7 +207,7 @@ func resourceSelectionCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 	// Retry for IAM eventual consistency.
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.CreateBackupSelection(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -235,7 +235,7 @@ func resourceSelectionCreate(ctx context.Context, d *schema.ResourceData, meta i
 		// Maximum amount of time to wait for Backup changes to propagate.
 		timeout = 2 * time.Minute
 	)
-	_, err = tfresource.RetryWhenNotFound(ctx, timeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, timeout, func() (any, error) {
 		return findSelectionByTwoPartKey(ctx, conn, planID, d.Id())
 	})
 
@@ -246,7 +246,7 @@ func resourceSelectionCreate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceSelectionRead(ctx, d, meta)...)
 }
 
-func resourceSelectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSelectionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
@@ -278,10 +278,10 @@ func resourceSelectionRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "setting resources: %s", err)
 	}
 	if v := output.ListOfTags; v != nil {
-		tfList := make([]interface{}, 0)
+		tfList := make([]any, 0)
 
 		for _, v := range v {
-			tfMap := make(map[string]interface{})
+			tfMap := make(map[string]any)
 
 			tfMap[names.AttrKey] = aws.ToString(v.ConditionKey)
 			tfMap[names.AttrType] = v.ConditionType
@@ -298,15 +298,16 @@ func resourceSelectionRead(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func resourceSelectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSelectionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Backup Selection: %s", d.Id())
-	_, err := conn.DeleteBackupSelection(ctx, &backup.DeleteBackupSelectionInput{
+	input := backup.DeleteBackupSelectionInput{
 		BackupPlanId: aws.String(d.Get("plan_id").(string)),
 		SelectionId:  aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteBackupSelection(ctx, &input)
 
 	if errs.IsA[*awstypes.InvalidParameterValueException](err) {
 		return diags
@@ -319,7 +320,7 @@ func resourceSelectionDelete(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceSelectionImportState(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceSelectionImportState(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	idParts := strings.Split(d.Id(), "|")
 	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
 		return nil, fmt.Errorf("unexpected format of ID (%q), expected <plan-id>|<selection-id>", d.Id())
@@ -360,11 +361,11 @@ func findSelection(ctx context.Context, conn *backup.Client, input *backup.GetBa
 	return output.BackupSelection, nil
 }
 
-func expandConditionTags(tfList []interface{}) []awstypes.Condition {
+func expandConditionTags(tfList []any) []awstypes.Condition {
 	apiObjects := []awstypes.Condition{}
 
 	for _, tfMapRaw := range tfList {
-		tfMap := tfMapRaw.(map[string]interface{})
+		tfMap := tfMapRaw.(map[string]any)
 		apiObject := awstypes.Condition{}
 
 		apiObject.ConditionKey = aws.String(tfMap[names.AttrKey].(string))
@@ -377,11 +378,11 @@ func expandConditionTags(tfList []interface{}) []awstypes.Condition {
 	return apiObjects
 }
 
-func expandConditions(tfList []interface{}) *awstypes.Conditions {
+func expandConditions(tfList []any) *awstypes.Conditions {
 	apiObject := &awstypes.Conditions{}
 
 	for _, tfMapRaw := range tfList {
-		tfMap := tfMapRaw.(map[string]interface{})
+		tfMap := tfMapRaw.(map[string]any)
 
 		if v := expandConditionParameters(tfMap["string_equals"].(*schema.Set).List()); len(v) > 0 {
 			apiObject.StringEquals = v
@@ -400,11 +401,11 @@ func expandConditions(tfList []interface{}) *awstypes.Conditions {
 	return apiObject
 }
 
-func expandConditionParameters(tfList []interface{}) []awstypes.ConditionParameter {
+func expandConditionParameters(tfList []any) []awstypes.ConditionParameter {
 	apiObjects := []awstypes.ConditionParameter{}
 
 	for _, tfMapRaw := range tfList {
-		tfMap := tfMapRaw.(map[string]interface{})
+		tfMap := tfMapRaw.(map[string]any)
 		apiObject := awstypes.ConditionParameter{}
 
 		apiObject.ConditionKey = aws.String(tfMap[names.AttrKey].(string))
@@ -416,26 +417,26 @@ func expandConditionParameters(tfList []interface{}) []awstypes.ConditionParamet
 	return apiObjects
 }
 
-func flattenConditions(apiObject *awstypes.Conditions) []interface{} {
-	tfMap := map[string]interface{}{}
+func flattenConditions(apiObject *awstypes.Conditions) []any {
+	tfMap := map[string]any{}
 
 	tfMap["string_equals"] = flattenConditionParameters(apiObject.StringEquals)
 	tfMap["string_not_equals"] = flattenConditionParameters(apiObject.StringNotEquals)
 	tfMap["string_like"] = flattenConditionParameters(apiObject.StringLike)
 	tfMap["string_not_like"] = flattenConditionParameters(apiObject.StringNotLike)
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenConditionParameters(apiObjects []awstypes.ConditionParameter) []interface{} {
+func flattenConditionParameters(apiObjects []awstypes.ConditionParameter) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			names.AttrKey:   aws.ToString(apiObject.ConditionKey),
 			names.AttrValue: aws.ToString(apiObject.ConditionValue),
 		}

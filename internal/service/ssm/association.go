@@ -26,7 +26,6 @@ import (
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -89,7 +88,7 @@ func resourceAssociation() *schema.Resource {
 				Type:       schema.TypeString,
 				ForceNew:   true,
 				Optional:   true,
-				Deprecated: "use 'targets' argument instead. https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_CreateAssociation.html#systemsmanager-CreateAssociation-request-InstanceId",
+				Deprecated: "instance_id is deprecated. Use targets instead.",
 			},
 			"max_concurrency": {
 				Type:         schema.TypeString,
@@ -174,12 +173,10 @@ func resourceAssociation() *schema.Resource {
 				Optional: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
@@ -222,11 +219,11 @@ func resourceAssociationCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if v, ok := d.GetOk("output_location"); ok {
-		input.OutputLocation = expandAssociationOutputLocation(v.([]interface{}))
+		input.OutputLocation = expandAssociationOutputLocation(v.([]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrParameters); ok {
-		input.Parameters = expandParameters(v.(map[string]interface{}))
+		input.Parameters = expandParameters(v.(map[string]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrScheduleExpression); ok {
@@ -238,7 +235,7 @@ func resourceAssociationCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if v, ok := d.GetOk("targets"); ok {
-		input.Targets = expandTargets(v.([]interface{}))
+		input.Targets = expandTargets(v.([]any))
 	}
 
 	output, err := conn.CreateAssociation(ctx, input)
@@ -259,7 +256,7 @@ func resourceAssociationCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceAssociationRead(ctx, d, meta)...)
 }
 
-func resourceAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
@@ -308,7 +305,7 @@ func resourceAssociationRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
@@ -347,11 +344,11 @@ func resourceAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		if v, ok := d.GetOk("output_location"); ok {
-			input.OutputLocation = expandAssociationOutputLocation(v.([]interface{}))
+			input.OutputLocation = expandAssociationOutputLocation(v.([]any))
 		}
 
 		if v, ok := d.GetOk(names.AttrParameters); ok {
-			input.Parameters = expandParameters(v.(map[string]interface{}))
+			input.Parameters = expandParameters(v.(map[string]any))
 		}
 
 		if v, ok := d.GetOk(names.AttrScheduleExpression); ok {
@@ -363,7 +360,7 @@ func resourceAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		if _, ok := d.GetOk("targets"); ok {
-			input.Targets = expandTargets(d.Get("targets").([]interface{}))
+			input.Targets = expandTargets(d.Get("targets").([]any))
 		}
 
 		_, err := conn.UpdateAssociation(ctx, input)
@@ -376,7 +373,7 @@ func resourceAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceAssociationRead(ctx, d, meta)...)
 }
 
-func resourceAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
@@ -422,7 +419,7 @@ func findAssociationByID(ctx context.Context, conn *ssm.Client, id string) (*aws
 }
 
 func statusAssociation(ctx context.Context, conn *ssm.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findAssociationByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
@@ -460,25 +457,25 @@ func waitAssociationCreated(ctx context.Context, conn *ssm.Client, id string, ti
 	return nil, err
 }
 
-func expandParameters(tfMap map[string]interface{}) map[string][]string {
-	return tfmaps.ApplyToAllValues(tfMap, func(v interface{}) []string {
+func expandParameters(tfMap map[string]any) map[string][]string {
+	return tfmaps.ApplyToAllValues(tfMap, func(v any) []string {
 		return []string{v.(string)}
 	})
 }
 
-func flattenParameters(apiObject map[string][]string) map[string]interface{} {
-	return tfmaps.ApplyToAllValues(apiObject, func(v []string) interface{} {
+func flattenParameters(apiObject map[string][]string) map[string]any {
+	return tfmaps.ApplyToAllValues(apiObject, func(v []string) any {
 		return strings.Join(v, ",")
 	})
 }
 
-func expandAssociationOutputLocation(tfList []interface{}) *awstypes.InstanceAssociationOutputLocation {
+func expandAssociationOutputLocation(tfList []any) *awstypes.InstanceAssociationOutputLocation {
 	if tfList == nil {
 		return nil
 	}
 
 	//We only allow 1 Item so we can grab the first in the list only
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
 	s3OutputLocation := &awstypes.S3OutputLocation{
 		OutputS3BucketName: aws.String(tfMap[names.AttrS3BucketName].(string)),
@@ -497,13 +494,13 @@ func expandAssociationOutputLocation(tfList []interface{}) *awstypes.InstanceAss
 	}
 }
 
-func flattenAssociationOutputLocation(apiObject *awstypes.InstanceAssociationOutputLocation) []interface{} {
+func flattenAssociationOutputLocation(apiObject *awstypes.InstanceAssociationOutputLocation) []any {
 	if apiObject == nil || apiObject.S3Location == nil {
 		return nil
 	}
 
-	tfList := make([]interface{}, 0)
-	tfMap := make(map[string]interface{})
+	tfList := make([]any, 0)
+	tfMap := make(map[string]any)
 
 	tfMap[names.AttrS3BucketName] = aws.ToString(apiObject.S3Location.OutputS3BucketName)
 

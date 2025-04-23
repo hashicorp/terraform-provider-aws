@@ -51,7 +51,7 @@ func dataSourceTransitGatewayDxGatewayAttachment() *schema.Resource {
 	}
 }
 
-func dataSourceTransitGatewayDxGatewayAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceTransitGatewayDxGatewayAttachmentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -67,7 +67,7 @@ func dataSourceTransitGatewayDxGatewayAttachmentRead(ctx context.Context, d *sch
 
 	if v, ok := d.GetOk(names.AttrTags); ok {
 		input.Filters = append(input.Filters, newTagFilterList(
-			Tags(tftags.New(ctx, v.(map[string]interface{}))),
+			svcTags(tftags.New(ctx, v.(map[string]any))),
 		)...)
 	}
 

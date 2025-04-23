@@ -26,10 +26,6 @@ type inferenceProfilesDataSource struct {
 	framework.DataSourceWithConfigure
 }
 
-func (*inferenceProfilesDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
-	response.TypeName = "aws_bedrock_inference_profiles"
-}
-
 func (d *inferenceProfilesDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

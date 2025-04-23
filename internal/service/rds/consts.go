@@ -251,6 +251,7 @@ func instanceExportableLogType_Values() []string {
 		exportableLogTypeDiagLog,
 		exportableLogTypeError,
 		exportableLogTypeGeneral,
+		exportableLogTypeIAMDBAuthError,
 		exportableLogTypeListener,
 		exportableLogTypeNotifyLog,
 		exportableLogTypeOEMAgent,

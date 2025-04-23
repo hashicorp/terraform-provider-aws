@@ -104,18 +104,16 @@ func resourceLocationS3() *schema.Resource {
 				Computed: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceLocationS3Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLocationS3Create(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
 	input := &datasync.CreateLocationS3Input{
 		S3BucketArn:  aws.String(d.Get("s3_bucket_arn").(string)),
-		S3Config:     expandS3Config(d.Get("s3_config").([]interface{})),
+		S3Config:     expandS3Config(d.Get("s3_config").([]any)),
 		Subdirectory: aws.String(d.Get("subdirectory").(string)),
 		Tags:         getTagsIn(ctx),
 	}
@@ -129,7 +127,7 @@ func resourceLocationS3Create(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.CreateLocationS3(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -157,7 +155,7 @@ func resourceLocationS3Create(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceLocationS3Read(ctx, d, meta)...)
 }
 
-func resourceLocationS3Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLocationS3Read(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
@@ -209,7 +207,7 @@ func resourceLocationS3Read(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourceLocationS3Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLocationS3Update(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Tags only.
@@ -217,14 +215,15 @@ func resourceLocationS3Update(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceLocationS3Read(ctx, d, meta)...)
 }
 
-func resourceLocationS3Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLocationS3Delete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
 	log.Printf("[DEBUG] Deleting DataSync Location S3: %s", d.Id())
-	_, err := conn.DeleteLocation(ctx, &datasync.DeleteLocationInput{
+	input := datasync.DeleteLocationInput{
 		LocationArn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteLocation(ctx, &input)
 
 	if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "not found") {
 		return diags
@@ -262,24 +261,24 @@ func findLocationS3ByARN(ctx context.Context, conn *datasync.Client, arn string)
 	return output, nil
 }
 
-func flattenS3Config(s3Config *awstypes.S3Config) []interface{} {
+func flattenS3Config(s3Config *awstypes.S3Config) []any {
 	if s3Config == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"bucket_access_role_arn": aws.ToString(s3Config.BucketAccessRoleArn),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func expandS3Config(l []interface{}) *awstypes.S3Config {
+func expandS3Config(l []any) *awstypes.S3Config {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	s3Config := &awstypes.S3Config{
 		BucketAccessRoleArn: aws.String(m["bucket_access_role_arn"].(string)),

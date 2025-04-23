@@ -23,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -149,8 +148,6 @@ func ResourceRule() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -158,13 +155,13 @@ const (
 	ResNameRule = "Rule"
 )
 
-func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RBinClient(ctx)
 
 	in := &rbin.CreateRuleInput{
 		ResourceType:    types.ResourceType(d.Get(names.AttrResourceType).(string)),
-		RetentionPeriod: expandRetentionPeriod(d.Get(names.AttrRetentionPeriod).([]interface{})),
+		RetentionPeriod: expandRetentionPeriod(d.Get(names.AttrRetentionPeriod).([]any)),
 		Tags:            getTagsIn(ctx),
 	}
 
@@ -194,7 +191,7 @@ func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	return append(diags, resourceRuleRead(ctx, d, meta)...)
 }
 
-func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RBinClient(ctx)
 
@@ -234,7 +231,7 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	return diags
 }
 
-func resourceRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRuleUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RBinClient(ctx)
 
@@ -255,7 +252,7 @@ func resourceRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if d.HasChanges(names.AttrRetentionPeriod) {
-		in.RetentionPeriod = expandRetentionPeriod(d.Get(names.AttrRetentionPeriod).([]interface{}))
+		in.RetentionPeriod = expandRetentionPeriod(d.Get(names.AttrRetentionPeriod).([]any))
 		update = true
 	}
 
@@ -276,7 +273,7 @@ func resourceRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	return append(diags, resourceRuleRead(ctx, d, meta)...)
 }
 
-func resourceRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRuleDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RBinClient(ctx)
 
@@ -354,7 +351,7 @@ func waitRuleDeleted(ctx context.Context, conn *rbin.Client, id string, timeout 
 }
 
 func statusRule(ctx context.Context, conn *rbin.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := findRuleByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -392,8 +389,8 @@ func findRuleByID(ctx context.Context, conn *rbin.Client, id string) (*rbin.GetR
 	return out, nil
 }
 
-func flattenResourceTag(rTag types.ResourceTag) map[string]interface{} {
-	m := map[string]interface{}{}
+func flattenResourceTag(rTag types.ResourceTag) map[string]any {
+	m := map[string]any{}
 
 	if v := rTag.ResourceTagKey; v != nil {
 		m["resource_tag_key"] = aws.ToString(v)
@@ -406,12 +403,12 @@ func flattenResourceTag(rTag types.ResourceTag) map[string]interface{} {
 	return m
 }
 
-func flattenResourceTags(rTags []types.ResourceTag) []interface{} {
+func flattenResourceTags(rTags []types.ResourceTag) []any {
 	if len(rTags) == 0 {
 		return nil
 	}
 
-	var l []interface{}
+	var l []any
 
 	for _, rTag := range rTags {
 		l = append(l, flattenResourceTag(rTag))
@@ -420,8 +417,8 @@ func flattenResourceTags(rTags []types.ResourceTag) []interface{} {
 	return l
 }
 
-func flattenRetentionPeriod(retPeriod *types.RetentionPeriod) []interface{} {
-	m := map[string]interface{}{}
+func flattenRetentionPeriod(retPeriod *types.RetentionPeriod) []any {
+	m := map[string]any{}
 
 	if v := retPeriod.RetentionPeriodUnit; v != "" {
 		m["retention_period_unit"] = string(v)
@@ -431,10 +428,10 @@ func flattenRetentionPeriod(retPeriod *types.RetentionPeriod) []interface{} {
 		m["retention_period_value"] = v
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func expandResourceTag(tfMap map[string]interface{}) *types.ResourceTag {
+func expandResourceTag(tfMap map[string]any) *types.ResourceTag {
 	if tfMap == nil {
 		return nil
 	}
@@ -452,7 +449,7 @@ func expandResourceTag(tfMap map[string]interface{}) *types.ResourceTag {
 	return a
 }
 
-func expandResourceTags(tfList []interface{}) []types.ResourceTag {
+func expandResourceTags(tfList []any) []types.ResourceTag {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -460,7 +457,7 @@ func expandResourceTags(tfList []interface{}) []types.ResourceTag {
 	var s []types.ResourceTag
 
 	for _, r := range tfList {
-		m, ok := r.(map[string]interface{})
+		m, ok := r.(map[string]any)
 
 		if !ok {
 			continue
@@ -478,11 +475,11 @@ func expandResourceTags(tfList []interface{}) []types.ResourceTag {
 	return s
 }
 
-func expandRetentionPeriod(tfList []interface{}) *types.RetentionPeriod {
+func expandRetentionPeriod(tfList []any) *types.RetentionPeriod {
 	if tfList == nil {
 		return nil
 	}
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
 	a := types.RetentionPeriod{}
 

@@ -37,7 +37,7 @@ func resourceControl() *schema.Resource {
 		DeleteWithoutTimeout: resourceControlDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 				conn := meta.(*conns.AWSClient).ControlTowerClient(ctx)
 
 				parts, err := flex.ExpandResourceId(d.Id(), controlResourceIDPartCount, false)
@@ -101,7 +101,7 @@ func resourceControl() *schema.Resource {
 	}
 }
 
-func resourceControlCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceControlCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ControlTowerClient(ctx)
@@ -143,7 +143,7 @@ func resourceControlCreate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceControlRead(ctx, d, meta)...)
 }
 
-func resourceControlRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceControlRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ControlTowerClient(ctx)
@@ -192,7 +192,7 @@ func resourceControlRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceControlUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceControlUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ControlTowerClient(ctx)
@@ -223,7 +223,7 @@ func resourceControlUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceControlRead(ctx, d, meta)...)
 }
 
-func resourceControlDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceControlDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ControlTowerClient(ctx)
@@ -236,10 +236,11 @@ func resourceControlDelete(ctx context.Context, d *schema.ResourceData, meta int
 	targetIdentifier, controlIdentifier := parts[0], parts[1]
 
 	log.Printf("[DEBUG] Deleting ControlTower Control: %s", d.Id())
-	output, err := conn.DisableControl(ctx, &controltower.DisableControlInput{
+	input := controltower.DisableControlInput{
 		ControlIdentifier: aws.String(controlIdentifier),
 		TargetIdentifier:  aws.String(targetIdentifier),
-	})
+	}
+	output, err := conn.DisableControl(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting ControlTower Control (%s): %s", d.Id(), err)
@@ -425,7 +426,7 @@ func findControlOperationByID(ctx context.Context, conn *controltower.Client, id
 }
 
 func statusControlOperation(ctx context.Context, conn *controltower.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findControlOperationByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
