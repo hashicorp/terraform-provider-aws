@@ -110,3 +110,104 @@ ephemeral "aws_secretsmanager_random_password" "test" {
 		})
 	}
 }
+
+func TestConfigRandomPasswordDataSource(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name      string
+		overrides []string
+		expected  string
+	}{
+		{
+			name:      "Default configuration",
+			overrides: nil,
+			expected: `
+data "aws_secretsmanager_random_password" "test" {
+  password_length     = 20
+  exclude_punctuation = true
+}
+`,
+		},
+		{
+			name:      "Override password_length",
+			overrides: []string{"password_length = 30"},
+			expected: `
+data "aws_secretsmanager_random_password" "test" {
+  password_length     = 30
+  exclude_punctuation = true
+}
+`,
+		},
+		{
+			name:      "Override exclude_punctuation",
+			overrides: []string{"exclude_punctuation = false"},
+			expected: `
+data "aws_secretsmanager_random_password" "test" {
+  password_length     = 20
+  exclude_punctuation = false
+}
+`,
+		},
+		{
+			name:      "Multiple overrides",
+			overrides: []string{"password_length = 25", "exclude_punctuation = false"},
+			expected: `
+data "aws_secretsmanager_random_password" "test" {
+  password_length     = 25
+  exclude_punctuation = false
+}
+`,
+		},
+		{
+			name:      "Optional keys",
+			overrides: []string{"exclude_characters = abcdef", "include_space = true"},
+			expected: `
+data "aws_secretsmanager_random_password" "test" {
+  password_length     = 20
+  exclude_punctuation = true
+  exclude_characters = "abcdef"
+  include_space = true
+}
+`,
+		},
+		{
+			name:      "Exclude characters with quotes",
+			overrides: []string{"exclude_characters = \"abcdef\"", "include_space = true"},
+			expected: `
+data "aws_secretsmanager_random_password" "test" {
+  password_length     = 20
+  exclude_punctuation = true
+  exclude_characters = "abcdef"
+  include_space = true
+}
+`,
+		},
+		{
+			name:      "Exclude characters including a quote",
+			overrides: []string{"exclude_characters = abc\"def", "include_space = true"},
+			expected: `
+data "aws_secretsmanager_random_password" "test" {
+  password_length     = 20
+  exclude_punctuation = true
+  exclude_characters = "abc\"def"
+  include_space = true
+}
+`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			result := acctest.ConfigRandomPasswordDataSource(tt.overrides...)
+			result = strings.TrimSpace(result)
+			expected := strings.TrimSpace(tt.expected)
+
+			if result != expected {
+				t.Errorf("unexpected result for %s:\nGot:\n%s\n\nExpected:\n%s", tt.name, result, expected)
+			}
+		})
+	}
+}
