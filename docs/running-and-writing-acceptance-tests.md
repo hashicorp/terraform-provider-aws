@@ -761,6 +761,11 @@ func TestAccExampleThing_disappears(t *testing.T) {
           acctest.CheckResourceDisappears(ctx, acctest.Provider, ResourceExampleThing(), resourceName),
         ),
         ExpectNonEmptyPlan: true,
+        ConfigPlanChecks: resource.ConfigPlanChecks{
+          PostApplyPostRefresh: []plancheck.PlanCheck{
+            plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+          },
+        },
       },
     },
   })
@@ -805,6 +810,12 @@ func TestAccExampleChildThing_disappears_ParentThing(t *testing.T) {
           acctest.CheckResourceDisappears(ctx, acctest.Provider, ResourceExampleParentThing(), parentResourceName),
         ),
         ExpectNonEmptyPlan: true,
+        ConfigPlanChecks: resource.ConfigPlanChecks{
+          PostApplyPostRefresh: []plancheck.PlanCheck{
+            plancheck.ExpectResourceAction(parentResourceName, plancheck.ResourceActionCreate),
+            plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+          },
+        },
       },
     },
   })

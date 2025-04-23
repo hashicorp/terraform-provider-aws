@@ -48,6 +48,123 @@ resource "aws_fis_experiment_template" "example" {
 }
 ```
 
+## Example Usage with Report Configuration
+
+```terraform
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "example" {
+  name = "example"
+
+  assume_role_policy = jsonencode({
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = [
+          "fis.${data.aws_partition.current.dns_suffix}",
+        ]
+      }
+    }]
+    Version = "2012-10-17"
+  })
+}
+
+data "aws_iam_policy_document" "report_access" {
+  version = "2012-10-17"
+
+  statement {
+    sid       = "logsDelivery"
+    effect    = "Allow"
+    actions   = ["logs:CreateLogDelivery"]
+    resources = ["*"]
+  }
+
+  statement {
+    sid       = "ReportsBucket"
+    effect    = "Allow"
+    actions   = ["s3:PutObject", "s3:GetObject"]
+    resources = ["*"]
+  }
+
+  statement {
+    sid       = "GetDashboard"
+    effect    = "Allow"
+    actions   = ["cloudwatch:GetDashboard"]
+    resources = ["*"]
+  }
+
+  statement {
+    sid       = "GetDashboardData"
+    effect    = "Allow"
+    actions   = ["cloudwatch:getMetricWidgetImage"]
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_policy" "report_access" {
+  name   = "report_access"
+  policy = data.aws_iam_policy_document.report_access.json
+}
+
+resource "aws_iam_role_policy_attachment" "report_access" {
+  role       = aws_iam_role.test.name
+  policy_arn = aws_iam_policy.report_access.arn
+}
+
+resource "aws_fis_experiment_template" "example" {
+  description = "example"
+  role_arn    = aws_iam_role.example.arn
+
+  stop_condition {
+    source = "none"
+  }
+
+  action {
+    name      = "example-action"
+    action_id = "aws:ec2:terminate-instances"
+
+    target {
+      key   = "Instances"
+      value = "example-target"
+    }
+  }
+
+  target {
+    name           = "example-target"
+    resource_type  = "aws:ec2:instance"
+    selection_mode = "COUNT(1)"
+
+    resource_tag {
+      key   = "env"
+      value = "example"
+    }
+  }
+
+  experiment_report_configuration {
+    data_sources {
+      cloudwatch_dashboard {
+        dashboard_arn = aws_cloudwatch_dashboard.example.dashboard_arn
+      }
+    }
+
+    outputs {
+      s3_configuration {
+        bucket_name = aws_s3_bucket.example.bucket
+        prefix      = "fis-example-reports"
+      }
+    }
+
+    post_experiment_duration = "PT10M"
+    pre_experiment_duration  = "PT10M"
+  }
+
+  tags = {
+    Name = "example"
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -63,6 +180,7 @@ The following arguments are optional:
 * `tags` - (Optional) Key-value mapping of tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `target` - (Optional) Target of an action. See below.
 * `log_configuration` - (Optional) The configuration for experiment logging. See below.
+* `experiment_report_configuration` - (Optional) The configuration for [experiment reporting](https://docs.aws.amazon.com/fis/latest/userguide/experiment-report-configuration.html). See below.
 
 ### experiment_options
 
@@ -130,6 +248,30 @@ For a list of parameters supported by each action, see [AWS FIS actions referenc
 #### `cloudwatch_logs_configuration`
 
 * `log_group_arn` - (Required) The Amazon Resource Name (ARN) of the destination Amazon CloudWatch Logs log group.
+
+#### `s3_configuration`
+
+* `bucket_name` - (Required) The name of the destination bucket.
+* `prefix` - (Optional) The bucket prefix.
+
+### `experiment_report_configuration`
+
+* `data_sources` - (Required) The data sources for the experiment report. See below.
+* `outputs` - (Required) The outputs for the experiment report. See below.
+* `post_experiment_duration` - (Optional) The duration of the post-experiment period. Defaults to `PT20M`.
+* `pre_experiment_duration` - (Optional) The duration of the pre-experiment period. Defaults to `PT20M`.
+
+#### `data_sources`
+
+* `cloudwatch_dashboard` - (Required) The data sources for the experiment report. See below.
+
+#### `cloudwatch_dashboard`
+
+* `dashboard_arn` - (Required) The ARN of the CloudWatch dashboard.
+
+#### `outputs`
+
+* `s3_configuration` - (Required) The data sources for the experiment report. See below.
 
 #### `s3_configuration`
 
