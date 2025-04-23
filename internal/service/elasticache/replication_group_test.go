@@ -233,6 +233,67 @@ func TestAccElastiCacheReplicationGroup_Redis_EngineVersion_v7(t *testing.T) {
 	})
 }
 
+func TestAccElastiCacheReplicationGroup_OutOfBandUpgrade(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var replicationGroup awstypes.ReplicationGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_replication_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationGroupConfig_v6(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, resourceName, &replicationGroup),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "redis"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "6.x"),
+				),
+			},
+			{
+				PreConfig: func() {
+					conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheClient(ctx)
+					timeout := 40 * time.Minute
+					engineVersion := "7.1"
+
+					// Upgrade to engine version 7.x
+					if err := resourceReplicationGroupUpgradeEngineVersion(ctx, conn, rName, engineVersion, timeout); err != nil {
+						t.Fatalf("error upgrading cluster: %s", err)
+					}
+				},
+				RefreshState: true,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, resourceName, &replicationGroup),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "7.x"),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				Config: testAccReplicationGroupConfig_v7(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, resourceName, &replicationGroup),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "redis"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "7.1"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						// sets engine_version 7.1 in state
+						// no-op on actual cluster
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
 func TestAccElastiCacheReplicationGroup_EngineVersion_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -3518,6 +3579,30 @@ resource "aws_elasticache_replication_group" "test" {
 `, rName)
 }
 
+func testAccReplicationGroupConfig_v6(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id = %[1]q
+  description          = "test description"
+  node_type            = "cache.t3.small"
+  engine_version       = "6.x"
+  engine               = "redis"
+}
+`, rName)
+}
+
+func testAccReplicationGroupConfig_v7_upgraded(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id = %[1]q
+  description          = "test description"
+  node_type            = "cache.t3.small"
+  engine_version       = "7.1"
+  engine               = "redis"
+}
+`, rName)
+}
+
 func testAccReplicationGroupConfig_v7(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
@@ -4938,6 +5023,14 @@ func resourceReplicationGroupSetPrimaryClusterID(ctx context.Context, conn *elas
 		ReplicationGroupId: aws.String(replicationGroupID),
 		ApplyImmediately:   aws.Bool(true),
 		PrimaryClusterId:   aws.String(primaryClusterID),
+	})
+}
+
+func resourceReplicationGroupUpgradeEngineVersion(ctx context.Context, conn *elasticache.Client, replicationGroupID, engineVersion string, timeout time.Duration) error {
+	return resourceReplicationGroupModify(ctx, conn, timeout, &elasticache.ModifyReplicationGroupInput{
+		ReplicationGroupId: aws.String(replicationGroupID),
+		ApplyImmediately:   aws.Bool(true),
+		EngineVersion:      aws.String(engineVersion),
 	})
 }
 
