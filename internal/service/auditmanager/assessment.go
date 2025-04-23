@@ -37,20 +37,22 @@ const iamPropagationTimeout = 2 * time.Minute
 
 // @FrameworkResource("aws_auditmanager_assessment", name="Assessment")
 // @Tags(identifierAttribute="arn")
-func newResourceAssessment(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceAssessment{}, nil
+func newAssessmentResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &assessmentResource{}, nil
 }
 
 const (
 	ResNameAssessment = "Assessment"
 )
 
-type resourceAssessment struct {
+type assessmentResource struct {
 	framework.ResourceWithConfigure
+	// TODO REGION Use AutoFlEx.
+	// framework.ResourceWithModel[assessmentResourceModel]
 	framework.WithImportByID
 }
 
-func (r *resourceAssessment) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *assessmentResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
@@ -151,10 +153,10 @@ func (r *resourceAssessment) Schema(ctx context.Context, req resource.SchemaRequ
 	}
 }
 
-func (r *resourceAssessment) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *assessmentResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().AuditManagerClient(ctx)
 
-	var plan resourceAssessmentData
+	var plan assessmentResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -234,10 +236,10 @@ func (r *resourceAssessment) Create(ctx context.Context, req resource.CreateRequ
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
 }
 
-func (r *resourceAssessment) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *assessmentResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().AuditManagerClient(ctx)
 
-	var state resourceAssessmentData
+	var state assessmentResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -264,10 +266,10 @@ func (r *resourceAssessment) Read(ctx context.Context, req resource.ReadRequest,
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceAssessment) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *assessmentResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().AuditManagerClient(ctx)
 
-	var plan, state resourceAssessmentData
+	var plan, state assessmentResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -337,10 +339,10 @@ func (r *resourceAssessment) Update(ctx context.Context, req resource.UpdateRequ
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceAssessment) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *assessmentResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().AuditManagerClient(ctx)
 
-	var state resourceAssessmentData
+	var state assessmentResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -410,7 +412,8 @@ var (
 	}
 )
 
-type resourceAssessmentData struct {
+type assessmentResourceModel struct {
+	framework.WithRegionModel
 	ARN                          types.String `tfsdk:"arn"`
 	AssessmentReportsDestination types.List   `tfsdk:"assessment_reports_destination"`
 	Description                  types.String `tfsdk:"description"`
@@ -449,7 +452,7 @@ type assessmentScopeAWSServicesData struct {
 }
 
 // refreshFromOutput writes state data from an AWS response object
-func (rd *resourceAssessmentData) refreshFromOutput(ctx context.Context, out *awstypes.Assessment) diag.Diagnostics {
+func (rd *assessmentResourceModel) refreshFromOutput(ctx context.Context, out *awstypes.Assessment) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	if out == nil || out.Metadata == nil {

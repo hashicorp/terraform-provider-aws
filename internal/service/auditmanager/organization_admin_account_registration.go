@@ -20,20 +20,20 @@ import (
 
 // @FrameworkResource("aws_auditmanager_organization_admin_account_registration", name="Organization Admin Account Registration")
 // @Region(overrideEnabled=false)
-func newResourceOrganizationAdminAccountRegistration(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceOrganizationAdminAccountRegistration{}, nil
+func newOrganizationAdminAccountRegistrationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &organizationAdminAccountRegistrationResource{}, nil
 }
 
 const (
 	ResNameOrganizationAdminAccountRegistration = "OrganizationAdminAccountRegistration"
 )
 
-type resourceOrganizationAdminAccountRegistration struct {
-	framework.ResourceWithConfigure
+type organizationAdminAccountRegistrationResource struct {
+	framework.ResourceWithModel[organizationAdminAccountRegistrationResourceModel]
 	framework.WithImportByID
 }
 
-func (r *resourceOrganizationAdminAccountRegistration) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *organizationAdminAccountRegistrationResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"admin_account_id": schema.StringAttribute{
@@ -50,10 +50,10 @@ func (r *resourceOrganizationAdminAccountRegistration) Schema(ctx context.Contex
 	}
 }
 
-func (r *resourceOrganizationAdminAccountRegistration) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *organizationAdminAccountRegistrationResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().AuditManagerClient(ctx)
 
-	var plan resourceOrganizationAdminAccountRegistrationData
+	var plan organizationAdminAccountRegistrationResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -78,10 +78,10 @@ func (r *resourceOrganizationAdminAccountRegistration) Create(ctx context.Contex
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
 }
 
-func (r *resourceOrganizationAdminAccountRegistration) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *organizationAdminAccountRegistrationResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().AuditManagerClient(ctx)
 
-	var state resourceOrganizationAdminAccountRegistrationData
+	var state organizationAdminAccountRegistrationResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -108,13 +108,13 @@ func (r *resourceOrganizationAdminAccountRegistration) Read(ctx context.Context,
 
 // Update is a no-op. Changing admin accounts requires the existing admin to
 // be deregisterd first (destroy and replace).
-func (r *resourceOrganizationAdminAccountRegistration) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *organizationAdminAccountRegistrationResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 }
 
-func (r *resourceOrganizationAdminAccountRegistration) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *organizationAdminAccountRegistrationResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().AuditManagerClient(ctx)
 
-	var state resourceOrganizationAdminAccountRegistrationData
+	var state organizationAdminAccountRegistrationResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -131,7 +131,7 @@ func (r *resourceOrganizationAdminAccountRegistration) Delete(ctx context.Contex
 	}
 }
 
-type resourceOrganizationAdminAccountRegistrationData struct {
+type organizationAdminAccountRegistrationResourceModel struct {
 	AdminAccountID types.String `tfsdk:"admin_account_id"`
 	ID             types.String `tfsdk:"id"`
 	OrganizationID types.String `tfsdk:"organization_id"`

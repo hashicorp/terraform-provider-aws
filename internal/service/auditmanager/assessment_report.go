@@ -28,20 +28,20 @@ import (
 const reportCompletionTimeout = 5 * time.Minute
 
 // @FrameworkResource("aws_auditmanager_assessment_report", name="Assessment Report")
-func newResourceAssessmentReport(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceAssessmentReport{}, nil
+func newAssessmentReportResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &assessmentReportResource{}, nil
 }
 
 const (
 	ResNameAssessmentReport = "AssessmentReport"
 )
 
-type resourceAssessmentReport struct {
-	framework.ResourceWithConfigure
+type assessmentReportResource struct {
+	framework.ResourceWithModel[assessmentReportResourceModel]
 	framework.WithImportByID
 }
 
-func (r *resourceAssessmentReport) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *assessmentReportResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"assessment_id": schema.StringAttribute{
@@ -73,10 +73,10 @@ func (r *resourceAssessmentReport) Schema(ctx context.Context, req resource.Sche
 	}
 }
 
-func (r *resourceAssessmentReport) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *assessmentReportResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().AuditManagerClient(ctx)
 
-	var plan resourceAssessmentReportData
+	var plan assessmentReportResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -111,10 +111,10 @@ func (r *resourceAssessmentReport) Create(ctx context.Context, req resource.Crea
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
 }
 
-func (r *resourceAssessmentReport) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *assessmentReportResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().AuditManagerClient(ctx)
 
-	var state resourceAssessmentReportData
+	var state assessmentReportResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -142,13 +142,13 @@ func (r *resourceAssessmentReport) Read(ctx context.Context, req resource.ReadRe
 }
 
 // There is no update API, so this method is a no-op
-func (r *resourceAssessmentReport) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *assessmentReportResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 }
 
-func (r *resourceAssessmentReport) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *assessmentReportResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().AuditManagerClient(ctx)
 
-	var state resourceAssessmentReportData
+	var state assessmentReportResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -209,7 +209,8 @@ func FindAssessmentReportByID(ctx context.Context, conn *auditmanager.Client, id
 	}
 }
 
-type resourceAssessmentReportData struct {
+type assessmentReportResourceModel struct {
+	framework.WithRegionModel
 	AssessmentID types.String `tfsdk:"assessment_id"`
 	Author       types.String `tfsdk:"author"`
 	Description  types.String `tfsdk:"description"`
@@ -222,7 +223,7 @@ type resourceAssessmentReportData struct {
 //
 // This variant of the refresh method is for use with the create operation
 // response type (AssesmentReport).
-func (rd *resourceAssessmentReportData) refreshFromOutput(ctx context.Context, out *awstypes.AssessmentReport) {
+func (rd *assessmentReportResourceModel) refreshFromOutput(ctx context.Context, out *awstypes.AssessmentReport) {
 	if out == nil {
 		return
 	}
@@ -239,7 +240,7 @@ func (rd *resourceAssessmentReportData) refreshFromOutput(ctx context.Context, o
 //
 // This variant of the refresh method is for use with the list operation
 // response type (AssesmentReportMetadata).
-func (rd *resourceAssessmentReportData) refreshFromOutputMetadata(ctx context.Context, out *awstypes.AssessmentReportMetadata) {
+func (rd *assessmentReportResourceModel) refreshFromOutputMetadata(ctx context.Context, out *awstypes.AssessmentReportMetadata) {
 	if out == nil {
 		return
 	}

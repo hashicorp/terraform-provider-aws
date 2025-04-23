@@ -42,7 +42,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newResourceAccountRegistration,
+			Factory:  newAccountRegistrationResource,
 			TypeName: "aws_auditmanager_account_registration",
 			Name:     "Account Registration",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
@@ -51,7 +51,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 		},
 		{
-			Factory:  newResourceAssessment,
+			Factory:  newAssessmentResource,
 			TypeName: "aws_auditmanager_assessment",
 			Name:     "Assessment",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
@@ -63,7 +63,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 		},
 		{
-			Factory:  newResourceAssessmentDelegation,
+			Factory:  newAssessmentDelegationResource,
 			TypeName: "aws_auditmanager_assessment_delegation",
 			Name:     "Assessment Delegation",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
@@ -72,7 +72,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 		},
 		{
-			Factory:  newResourceAssessmentReport,
+			Factory:  newAssessmentReportResource,
 			TypeName: "aws_auditmanager_assessment_report",
 			Name:     "Assessment Report",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
@@ -81,7 +81,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 		},
 		{
-			Factory:  newResourceControl,
+			Factory:  newControlResource,
 			TypeName: "aws_auditmanager_control",
 			Name:     "Control",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
@@ -93,7 +93,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 		},
 		{
-			Factory:  newResourceFramework,
+			Factory:  newFrameworkResource,
 			TypeName: "aws_auditmanager_framework",
 			Name:     "Framework",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
@@ -105,7 +105,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 		},
 		{
-			Factory:  newResourceFrameworkShare,
+			Factory:  newFrameworkShareResource,
 			TypeName: "aws_auditmanager_framework_share",
 			Name:     "Framework Share",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
@@ -114,7 +114,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 		},
 		{
-			Factory:  newResourceOrganizationAdminAccountRegistration,
+			Factory:  newOrganizationAdminAccountRegistrationResource,
 			TypeName: "aws_auditmanager_organization_admin_account_registration",
 			Name:     "Organization Admin Account Registration",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{

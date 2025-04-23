@@ -5,12 +5,12 @@ package auditmanager
 
 // Exports for use in tests only.
 var (
-	ResourceAccountRegistration                  = newResourceAccountRegistration
-	ResourceOrganizationAdminAccountRegistration = newResourceOrganizationAdminAccountRegistration
-	ResourceAssessment                           = newResourceAssessment
-	ResourceAssessmentDelegation                 = newResourceAssessmentDelegation
-	ResourceAssessmentReport                     = newResourceAssessmentReport
-	ResourceControl                              = newResourceControl
-	ResourceFramework                            = newResourceFramework
-	ResourceFrameworkShare                       = newResourceFrameworkShare
+	ResourceAccountRegistration                  = newAccountRegistrationResource
+	ResourceOrganizationAdminAccountRegistration = newOrganizationAdminAccountRegistrationResource
+	ResourceAssessment                           = newAssessmentResource
+	ResourceAssessmentDelegation                 = newAssessmentDelegationResource
+	ResourceAssessmentReport                     = newAssessmentReportResource
+	ResourceControl                              = newControlResource
+	ResourceFramework                            = newFrameworkResource
+	ResourceFrameworkShare                       = newFrameworkShareResource
 )

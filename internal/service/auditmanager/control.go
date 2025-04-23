@@ -33,20 +33,22 @@ import (
 
 // @FrameworkResource("aws_auditmanager_control", name="Control")
 // @Tags(identifierAttribute="arn")
-func newResourceControl(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceControl{}, nil
+func newControlResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &controlResource{}, nil
 }
 
 const (
 	ResNameControl = "Control"
 )
 
-type resourceControl struct {
+type controlResource struct {
 	framework.ResourceWithConfigure
+	// TODO REGION Use AutoFlEx.
+	// framework.ResourceWithModel[controlResourceModel]
 	framework.WithImportByID
 }
 
-func (r *resourceControl) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *controlResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"action_plan_instructions": schema.StringAttribute{
@@ -125,10 +127,10 @@ func (r *resourceControl) Schema(ctx context.Context, req resource.SchemaRequest
 	}
 }
 
-func (r *resourceControl) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *controlResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().AuditManagerClient(ctx)
 
-	var plan resourceControlData
+	var plan controlResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -185,10 +187,10 @@ func (r *resourceControl) Create(ctx context.Context, req resource.CreateRequest
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
 }
 
-func (r *resourceControl) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *controlResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().AuditManagerClient(ctx)
 
-	var state resourceControlData
+	var state controlResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -215,10 +217,10 @@ func (r *resourceControl) Read(ctx context.Context, req resource.ReadRequest, re
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceControl) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *controlResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().AuditManagerClient(ctx)
 
-	var plan, state resourceControlData
+	var plan, state controlResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -282,10 +284,10 @@ func (r *resourceControl) Update(ctx context.Context, req resource.UpdateRequest
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceControl) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *controlResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().AuditManagerClient(ctx)
 
-	var state resourceControlData
+	var state controlResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -306,9 +308,9 @@ func (r *resourceControl) Delete(ctx context.Context, req resource.DeleteRequest
 	}
 }
 
-func (r *resourceControl) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+func (r *controlResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
 	if !req.State.Raw.IsNull() && !req.Plan.Raw.IsNull() {
-		var plan resourceControlData
+		var plan controlResourceModel
 		resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 		if resp.Diagnostics.HasError() {
 			return
@@ -374,7 +376,8 @@ var (
 	}
 )
 
-type resourceControlData struct {
+type controlResourceModel struct {
+	framework.WithRegionModel
 	ActionPlanInstructions types.String `tfsdk:"action_plan_instructions"`
 	ActionPlanTitle        types.String `tfsdk:"action_plan_title"`
 	ARN                    types.String `tfsdk:"arn"`
@@ -405,7 +408,7 @@ type sourceKeywordData struct {
 }
 
 // refreshFromOutput writes state data from an AWS response object
-func (rd *resourceControlData) refreshFromOutput(ctx context.Context, out *awstypes.Control) diag.Diagnostics {
+func (rd *controlResourceModel) refreshFromOutput(ctx context.Context, out *awstypes.Control) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	if out == nil {

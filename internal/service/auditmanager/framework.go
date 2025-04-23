@@ -32,20 +32,22 @@ import (
 
 // @FrameworkResource("aws_auditmanager_framework", name="Framework")
 // @Tags(identifierAttribute="arn")
-func newResourceFramework(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceFramework{}, nil
+func newFrameworkResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &frameworkResource{}, nil
 }
 
 const (
 	ResNameFramework = "Framework"
 )
 
-type resourceFramework struct {
+type frameworkResource struct {
 	framework.ResourceWithConfigure
+	// TODO REGION Use AutoFlEx.
+	// framework.ResourceWithModel[frameworkResourceModel]
 	framework.WithImportByID
 }
 
-func (r *resourceFramework) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *frameworkResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
@@ -100,10 +102,10 @@ func (r *resourceFramework) Schema(ctx context.Context, req resource.SchemaReque
 	}
 }
 
-func (r *resourceFramework) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *frameworkResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().AuditManagerClient(ctx)
 
-	var plan resourceFrameworkData
+	var plan frameworkResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -155,10 +157,10 @@ func (r *resourceFramework) Create(ctx context.Context, req resource.CreateReque
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
 }
 
-func (r *resourceFramework) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *frameworkResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().AuditManagerClient(ctx)
 
-	var state resourceFrameworkData
+	var state frameworkResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -185,10 +187,10 @@ func (r *resourceFramework) Read(ctx context.Context, req resource.ReadRequest, 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceFramework) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *frameworkResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().AuditManagerClient(ctx)
 
-	var plan, state resourceFrameworkData
+	var plan, state frameworkResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -245,10 +247,10 @@ func (r *resourceFramework) Update(ctx context.Context, req resource.UpdateReque
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceFramework) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *frameworkResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().AuditManagerClient(ctx)
 
-	var state resourceFrameworkData
+	var state frameworkResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -269,9 +271,9 @@ func (r *resourceFramework) Delete(ctx context.Context, req resource.DeleteReque
 	}
 }
 
-func (r *resourceFramework) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+func (r *frameworkResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
 	if !req.State.Raw.IsNull() && !req.Plan.Raw.IsNull() {
-		var plan resourceFrameworkData
+		var plan frameworkResourceModel
 		resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 		if resp.Diagnostics.HasError() {
 			return
@@ -331,7 +333,8 @@ var (
 	}
 )
 
-type resourceFrameworkData struct {
+type frameworkResourceModel struct {
+	framework.WithRegionModel
 	ARN            types.String `tfsdk:"arn"`
 	ComplianceType types.String `tfsdk:"compliance_type"`
 	ControlSets    types.Set    `tfsdk:"control_sets"`
@@ -354,7 +357,7 @@ type frameworkControlSetsControlsData struct {
 }
 
 // refreshFromOutput writes state data from an AWS response object
-func (rd *resourceFrameworkData) refreshFromOutput(ctx context.Context, out *awstypes.Framework) diag.Diagnostics {
+func (rd *frameworkResourceModel) refreshFromOutput(ctx context.Context, out *awstypes.Framework) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	if out == nil {
