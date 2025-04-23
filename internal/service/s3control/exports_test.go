@@ -11,6 +11,7 @@ var (
 	ResourceAccessGrantsLocation               = newAccessGrantsLocationResource
 	ResourceAccessPoint                        = resourceAccessPoint
 	ResourceAccessPointPolicy                  = resourceAccessPointPolicy
+	ResourceAccessPointForDirectoryBucketScope = resourceAccessPointForDirectoryBucketScope
 	ResourceAccountPublicAccessBlock           = resourceAccountPublicAccessBlock
 	ResourceBucket                             = resourceBucket
 	ResourceBucketLifecycleConfiguration       = resourceBucketLifecycleConfiguration

@@ -30,7 +30,7 @@ func resourceAccessPointForDirectoryBucketScope() *schema.Resource {
 		DeleteWithoutTimeout: resourceAccessPointForDirectoryBucketScopeDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: resourceAccessPointPolicyImport,
+			StateContext: resourceAccessPointScopeImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -51,6 +51,8 @@ func resourceAccessPointForDirectoryBucketScope() *schema.Resource {
 			names.AttrScope: {
 				Type:     schema.TypeList,
 				Optional: true,
+				MinItems: 0,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"permissions": {
@@ -80,6 +82,9 @@ func resourceAccessPointForDirectoryBucketScopeCreate(ctx context.Context, d *sc
 	name := d.Get(names.AttrName).(string)
 	accountID := d.Get(names.AttrAccountID).(string)
 
+	d.Set(names.AttrName, name)
+	d.Set(names.AttrAccountID, accountID)
+
 	var scope *types.Scope
 	if v, ok := d.GetOk(names.AttrScope); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		scope = expandScope(v.([]any)[0].(map[string]any))
@@ -103,17 +108,20 @@ func resourceAccessPointForDirectoryBucketScopeCreate(ctx context.Context, d *sc
 	}
 	d.SetId(resourceID)
 
-	return append(diags, resourceAccessPointPolicyRead(ctx, d, meta)...)
+	return append(diags, resourceAccessPointForDirectoryBucketScopeRead(ctx, d, meta)...)
 }
 
 func resourceAccessPointForDirectoryBucketScopeRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
-	accountID, name, err := AccessPointForDirectoryBucketParseResourceID(d.Id())
+	name, accountID, err := AccessPointForDirectoryBucketParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
+
+	d.Set(names.AttrName, name)
+	d.Set(names.AttrAccountID, accountID)
 
 	scope, err := FindAccessPointScopeByTwoPartKey(ctx, conn, accountID, name)
 
@@ -127,7 +135,23 @@ func resourceAccessPointForDirectoryBucketScopeRead(ctx context.Context, d *sche
 		return sdkdiag.AppendErrorf(diags, "reading Directory S3 Access Point Scope (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrScope, scope)
+	if scope != nil {
+		flattened := flattenScope(scope)
+		if len(flattened) > 0 {
+			if err := d.Set(names.AttrScope, []any{flattened}); err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
+			}
+		} else {
+			if err := d.Set(names.AttrScope, []any{}); err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
+			}
+		}
+	} else {
+		if err := d.Set(names.AttrScope, []any{}); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+	}
+
 	return diags
 }
 
@@ -135,7 +159,7 @@ func resourceAccessPointForDirectoryBucketScopeUpdate(ctx context.Context, d *sc
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
-	accountID, name, err := AccessPointForDirectoryBucketParseResourceID(d.Id())
+	name, accountID, err := AccessPointForDirectoryBucketParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -164,7 +188,7 @@ func resourceAccessPointForDirectoryBucketScopeDelete(ctx context.Context, d *sc
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
-	accountID, name, err := AccessPointForDirectoryBucketParseResourceID(d.Id())
+	name, accountID, err := AccessPointForDirectoryBucketParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -184,4 +208,20 @@ func resourceAccessPointForDirectoryBucketScopeDelete(ctx context.Context, d *sc
 	}
 
 	return diags
+}
+
+func resourceAccessPointScopeImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+	name, accountID, err := AccessPointForDirectoryBucketParseResourceID(d.Id())
+
+	if err != nil {
+		return nil, err
+	}
+
+	resourceID, err := AccessPointForDirectoryBucketCreateResourceID(name, accountID)
+	if err != nil {
+		return nil, err
+	}
+
+	d.SetId(resourceID)
+	return []*schema.ResourceData{d}, nil
 }

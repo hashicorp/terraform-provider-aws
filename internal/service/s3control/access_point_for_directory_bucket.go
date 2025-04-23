@@ -164,6 +164,10 @@ func resourceAccessPointForDirectoryBucket() *schema.Resource {
 			names.AttrScope: {
 				Type:     schema.TypeList,
 				Optional: true,
+				MinItems: 0,
+				MaxItems: 1,
+				ForceNew: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"permissions": {
@@ -224,7 +228,7 @@ func resourceAccessPointForDirectoryBucketCreate(ctx context.Context, d *schema.
 		return sdkdiag.AppendErrorf(diags, "creating S3 Access Point for Directory Bucket (%s): %s", name, err)
 	}
 
-	resourceID, err := AccessPointForDirectoryBucketCreateResourceID(accountID, name)
+	resourceID, err := AccessPointForDirectoryBucketCreateResourceID(name, accountID)
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -245,7 +249,7 @@ func resourceAccessPointForDirectoryBucketCreate(ctx context.Context, d *schema.
 		_, err = conn.PutAccessPointPolicy(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "creating S3 Access Point (%s) policy: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "creating S3 Access Point for Directory Bucket (%s) policy: %s", d.Id(), err)
 		}
 	}
 
@@ -261,7 +265,7 @@ func resourceAccessPointForDirectoryBucketCreate(ctx context.Context, d *schema.
 		_, err = conn.PutAccessPointScope(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "creating S3 Access Point (%s) policy: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "creating S3 Access Point for Directory Bucket (%s) policy: %s", d.Id(), err)
 		}
 	}
 
@@ -272,7 +276,7 @@ func resourceAccessPointForDirectoryBucketRead(ctx context.Context, d *schema.Re
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
-	accountID, name, err := AccessPointForDirectoryBucketParseResourceID(d.Id())
+	name, accountID, err := AccessPointForDirectoryBucketParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -280,13 +284,13 @@ func resourceAccessPointForDirectoryBucketRead(ctx context.Context, d *schema.Re
 	output, err := findAccessPointByTwoPartKey(ctx, conn, accountID, name)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] S3 Access Point (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] S3 Access Point for Directory Bucket (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading S3 Access Point (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading S3 Directory Access Point (%s): %s", d.Id(), err)
 	}
 
 	accessPointARN := arn.ARN{
@@ -296,8 +300,8 @@ func resourceAccessPointForDirectoryBucketRead(ctx context.Context, d *schema.Re
 		AccountID: accountID,
 		Resource:  fmt.Sprintf("accesspoint/%s", aws.ToString(output.Name)),
 	}
-	d.Set(names.AttrARN, accessPointARN.String())
 
+	d.Set(names.AttrARN, accessPointARN.String())
 	d.Set(names.AttrAccountID, accountID)
 	d.Set(names.AttrAlias, output.Alias)
 	d.Set("bucket_account_id", output.BucketAccountId)
@@ -331,16 +335,21 @@ func resourceAccessPointForDirectoryBucketRead(ctx context.Context, d *schema.Re
 	} else if policy == "" || tfresource.NotFound(err) {
 		d.Set(names.AttrPolicy, nil)
 	} else {
-		return sdkdiag.AppendErrorf(diags, "reading S3 Access Point (%s) policy: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading S3 Directory Access Point (%s) policy: %s", d.Id(), err)
 	}
 
 	scope, err := FindAccessPointScopeByTwoPartKey(ctx, conn, accountID, name)
 	if err == nil && scope != nil {
-		d.Set(names.AttrScope, scope)
-	} else if scope == nil || tfresource.NotFound(err) {
-		d.Set(names.AttrScope, nil)
+		flattened := flattenScope(scope)
+		if err := d.Set(names.AttrScope, []any{flattened}); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+	} else if tfresource.NotFound(err) || scope == nil {
+		if err := d.Set(names.AttrScope, []any{}); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
 	} else {
-		return sdkdiag.AppendErrorf(diags, "reading S3 Access Point (%s) scope: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading S3 Directory Access Point (%s) scope: %s", d.Id(), err)
 	}
 
 	return diags
@@ -350,7 +359,7 @@ func resourceAccessPointForDirectoryBucketUpdate(ctx context.Context, d *schema.
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
-	accountID, name, err := AccessPointForDirectoryBucketParseResourceID(d.Id())
+	name, accountID, err := AccessPointForDirectoryBucketParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -423,7 +432,7 @@ func resourceAccessPointForDirectoryBucketDelete(ctx context.Context, d *schema.
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
-	accountID, name, err := AccessPointForDirectoryBucketParseResourceID(d.Id())
+	name, accountID, err := AccessPointForDirectoryBucketParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -450,19 +459,26 @@ func AccessPointForDirectoryBucketCreateResourceID(accessPointName string, accou
 	if accessPointName == "" || accountID == "" {
 		return "", fmt.Errorf("unexpected directory access point name: %s or accountID: %s", accessPointName, accountID)
 	}
-	parts := []string{accountID, accessPointName}
-	id := strings.Join(parts, accessPointResourceIDSeparator)
+	id := accessPointName + accessPointResourceIDSeparator + accountID
 	return id, nil
 }
 
 func AccessPointForDirectoryBucketParseResourceID(id string) (string, string, error) {
+	log.Printf("[DEBUG] Parsing Resource ID: %s", id)
+
 	parts := strings.Split(id, accessPointResourceIDSeparator)
+	log.Printf("[DEBUG] Split parts: %#v", parts)
 
 	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		log.Printf("[DEBUG] Parsed name: %s, accountID: %s", parts[0], parts[1])
 		return parts[0], parts[1], nil
 	}
 
-	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected account-id%[2]saccess-point-name", id, accessPointResourceIDSeparator)
+	log.Printf("[ERROR] Invalid resource ID format: %s", id)
+	return "", "", fmt.Errorf(
+		"unexpected format for ID (%[1]s), expected name%[2]saccount-id",
+		id, accessPointResourceIDSeparator,
+	)
 }
 
 func expandScope(tfMap map[string]any) *types.Scope {
@@ -470,51 +486,51 @@ func expandScope(tfMap map[string]any) *types.Scope {
 		return nil
 	}
 
-	apiObject := &types.Scope{}
+	scope := &types.Scope{}
 
-	if v, ok := tfMap["permissions"].([]any); ok && len(v) > 0 {
-		permissions := make([]types.ScopePermission, len(v))
-		for _, permission := range v {
-			if permission, ok := permission.(string); ok {
-				permissions = append(permissions, types.ScopePermission(permission))
+	if v, ok := tfMap["permissions"].([]any); ok {
+		for _, perm := range v {
+			if permStr, ok := perm.(string); ok {
+				scope.Permissions = append(scope.Permissions, types.ScopePermission(permStr))
 			}
 		}
-		apiObject.Permissions = permissions
 	}
 
-	if v, ok := tfMap["prefixes"].([]any); ok && len(v) > 0 {
-		prefixes := make([]string, len(v))
+	if v, ok := tfMap["prefixes"].([]any); ok {
 		for _, prefix := range v {
-			if prefix, ok := prefix.(string); ok {
-				prefixes = append(prefixes, prefix)
+			if prefixStr, ok := prefix.(string); ok {
+				scope.Prefixes = append(scope.Prefixes, prefixStr)
 			}
 		}
-		apiObject.Prefixes = prefixes
 	}
 
-	return apiObject
+	if len(scope.Permissions) == 0 && len(scope.Prefixes) == 0 {
+		return &types.Scope{
+			Permissions: []types.ScopePermission{},
+			Prefixes:    []string{},
+		}
+	}
+
+	return scope
 }
 
-func flattenScope(apiObject *types.Scope) map[string]any {
-	if apiObject == nil {
-		return nil
-	}
+func flattenScope(scope *types.Scope) map[string]any {
+	permissions := []string{}
+	prefixes := []string{}
 
-	tfMap := map[string]any{}
-
-	if v := apiObject.Permissions; len(v) > 0 {
-		permissions := make([]string, 0, len(v))
-		for _, permission := range v {
-			permissions = append(permissions, string(permission))
+	if scope != nil {
+		for _, p := range scope.Permissions {
+			permissions = append(permissions, string(p))
 		}
-		tfMap["permissions"] = permissions
+		for _, p := range scope.Prefixes {
+			prefixes = append(prefixes, p)
+		}
 	}
 
-	if v := apiObject.Prefixes; len(v) > 0 {
-		tfMap["prefixes"] = v
+	return map[string]any{
+		"permissions": permissions,
+		"prefixes":    prefixes,
 	}
-
-	return tfMap
 }
 
 func FindAccessPointScopeByTwoPartKey(ctx context.Context, conn *s3control.Client, accountID, name string) (*types.Scope, error) {
