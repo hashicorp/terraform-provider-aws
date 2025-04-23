@@ -23,7 +23,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newResourceDBInstance,
+			Factory:  newDBInstanceResource,
 			TypeName: "aws_timestreaminfluxdb_db_instance",
 			Name:     "DB Instance",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
