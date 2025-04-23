@@ -879,66 +879,14 @@ resource "aws_iam_role_policy_attachment" "secrets_manager_read_write_update" {
 //	  exclude_punctuation = true
 //	}
 func ConfigRandomPassword(overrides ...string) string {
-	// Default configuration values
-	config := map[string]string{
-		"password_length":     "20",
-		"exclude_punctuation": "true",
-	}
-
-	// Additional keys without defaults
-	optionalKeys := []string{
-		"exclude_characters",
-		"exclude_lowercase",
-		"exclude_numbers",
-		"exclude_uppercase",
-		"include_space",
-		"require_each_included_type",
-	}
-
-	// Parse overrides and update the config map
-	for _, override := range overrides {
-		parts := strings.SplitN(override, "=", 2)
-		if len(parts) == 2 {
-			key := strings.TrimSpace(parts[0])
-			value := strings.TrimSpace(parts[1])
-			config[key] = value
-		}
-	}
-
-	// Build the Terraform configuration string
-	var builder strings.Builder
-	builder.WriteString(`
-ephemeral "aws_secretsmanager_random_password" "test" {
-`)
-
-	// Add default keys
-	builder.WriteString(fmt.Sprintf("  password_length     = %s\n", config["password_length"]))
-	builder.WriteString(fmt.Sprintf("  exclude_punctuation = %s\n", config["exclude_punctuation"]))
-
-	// Add optional keys in a consistent order
-	for _, key := range optionalKeys {
-		if value, exists := config[key]; exists {
-			if key == "exclude_characters" {
-				// Special handling for exclude_characters
-				if strings.HasPrefix(value, `"`) && strings.HasSuffix(value, `"`) {
-					// Trim surrounding quotes
-					value = value[1 : len(value)-1]
-				}
-				value = strings.ReplaceAll(value, `\"`, `"`)
-				builder.WriteString(fmt.Sprintf("  %s = %q\n", key, value))
-				continue
-			}
-
-			// Default handling for other keys
-			builder.WriteString(fmt.Sprintf("  %s = %s\n", key, value))
-		}
-	}
-
-	builder.WriteString("}\n")
-	return builder.String()
+	return configRandomPassword("ephemeral", overrides)
 }
 
 func ConfigRandomPasswordDataSource(overrides ...string) string {
+	return configRandomPassword("data", overrides)
+}
+
+func configRandomPassword(typ string, overrides []string) string {
 	// Default configuration values
 	config := map[string]string{
 		"password_length":     "20",
@@ -967,8 +915,8 @@ func ConfigRandomPasswordDataSource(overrides ...string) string {
 
 	// Build the Terraform configuration string
 	var builder strings.Builder
-	builder.WriteString(`
-data "aws_secretsmanager_random_password" "test" {
+	builder.WriteString(typ + " ")
+	builder.WriteString(`"aws_secretsmanager_random_password" "test" {
 `)
 
 	// Add default keys
