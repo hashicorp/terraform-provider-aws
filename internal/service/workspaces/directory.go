@@ -295,6 +295,9 @@ func resourceDirectory() *schema.Resource {
 				if d.HasChange("directory_id") {
 					return fmt.Errorf("`directory_id` cannot be set manually when `workspace_type` is set to `POOLS`")
 				}
+				if _, ok := d.GetOk("self_service_permissions"); ok {
+					return fmt.Errorf("`self_service_permissions` cannot be set when `workspace_type` is set to `POOLS`")
+				}
 			case string(types.WorkspaceTypePersonal):
 				if _, ok := d.GetOk("workspace_directory_description"); ok {
 					return fmt.Errorf("`workspace_directory_description` cannot be set when `workspace_type` is set to `PERSONAL`")
