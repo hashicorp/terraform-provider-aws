@@ -178,7 +178,7 @@ func resourceDetectorRead(ctx context.Context, d *schema.ResourceData, meta any)
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
-	gdo, err := FindDetectorByID(ctx, conn, d.Id())
+	gdo, err := findDetectorByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] GuardDuty Detector (%s) not found, removing from state", d.Id())
@@ -488,7 +488,7 @@ func flattenS3LogsConfigurationResult(apiObject *awstypes.S3LogsConfigurationRes
 	return tfMap
 }
 
-func FindDetectorByID(ctx context.Context, conn *guardduty.Client, id string) (*guardduty.GetDetectorOutput, error) {
+func findDetectorByID(ctx context.Context, conn *guardduty.Client, id string) (*guardduty.GetDetectorOutput, error) {
 	input := &guardduty.GetDetectorInput{
 		DetectorId: aws.String(id),
 	}

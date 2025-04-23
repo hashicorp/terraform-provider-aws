@@ -154,7 +154,7 @@ func detectorFeatureParseResourceID(id string) (string, string, error) {
 }
 
 func FindDetectorFeatureByTwoPartKey(ctx context.Context, conn *guardduty.Client, detectorID, name string) (*awstypes.DetectorFeatureConfigurationResult, error) {
-	output, err := FindDetectorByID(ctx, conn, detectorID)
+	output, err := findDetectorByID(ctx, conn, detectorID)
 
 	if err != nil {
 		return nil, err
