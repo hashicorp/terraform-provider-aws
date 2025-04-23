@@ -27,7 +27,7 @@ import (
 
 // @SDKResource("aws_guardduty_ipset", name="IP Set")
 // @Tags(identifierAttribute="arn")
-func ResourceIPSet() *schema.Resource {
+func resourceIPSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceIPSetCreate,
 		ReadWithoutTimeout:   resourceIPSetRead,

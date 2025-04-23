@@ -25,7 +25,7 @@ import (
 
 // @SDKResource("aws_guardduty_detector", name="Detector")
 // @Tags(identifierAttribute="arn")
-func ResourceDetector() *schema.Resource {
+func resourceDetector() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDetectorCreate,
 		ReadWithoutTimeout:   resourceDetectorRead,

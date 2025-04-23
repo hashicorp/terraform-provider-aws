@@ -15,7 +15,7 @@ import (
 )
 
 // @SDKDataSource("aws_guardduty_detector", name="Detector")
-func DataSourceDetector() *schema.Resource {
+func dataSourceDetector() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDetectorRead,
 

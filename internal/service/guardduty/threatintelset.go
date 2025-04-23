@@ -27,7 +27,7 @@ import (
 
 // @SDKResource("aws_guardduty_threatintelset", name="Threat Intel Set")
 // @Tags(identifierAttribute="arn")
-func ResourceThreatIntelSet() *schema.Resource {
+func resourceThreatIntelSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceThreatIntelSetCreate,
 		ReadWithoutTimeout:   resourceThreatIntelSetRead,

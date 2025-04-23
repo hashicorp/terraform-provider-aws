@@ -46,7 +46,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceDetector,
+			Factory:  dataSourceDetector,
 			TypeName: "aws_guardduty_detector",
 			Name:     "Detector",
 		},
@@ -56,7 +56,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceDetector,
+			Factory:  resourceDetector,
 			TypeName: "aws_guardduty_detector",
 			Name:     "Detector",
 			Tags: unique.Make(types.ServicePackageResourceTags{
@@ -64,12 +64,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			}),
 		},
 		{
-			Factory:  ResourceDetectorFeature,
+			Factory:  resourceDetectorFeature,
 			TypeName: "aws_guardduty_detector_feature",
 			Name:     "Detector Feature",
 		},
 		{
-			Factory:  ResourceFilter,
+			Factory:  resourceFilter,
 			TypeName: "aws_guardduty_filter",
 			Name:     "Filter",
 			Tags: unique.Make(types.ServicePackageResourceTags{
@@ -82,7 +82,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Invite Accepter",
 		},
 		{
-			Factory:  ResourceIPSet,
+			Factory:  resourceIPSet,
 			TypeName: "aws_guardduty_ipset",
 			Name:     "IP Set",
 			Tags: unique.Make(types.ServicePackageResourceTags{
@@ -90,32 +90,32 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			}),
 		},
 		{
-			Factory:  ResourceMember,
+			Factory:  resourceMember,
 			TypeName: "aws_guardduty_member",
 			Name:     "Member",
 		},
 		{
-			Factory:  ResourceOrganizationAdminAccount,
+			Factory:  resourceOrganizationAdminAccount,
 			TypeName: "aws_guardduty_organization_admin_account",
 			Name:     "Organization Admin Account",
 		},
 		{
-			Factory:  ResourceOrganizationConfiguration,
+			Factory:  resourceOrganizationConfiguration,
 			TypeName: "aws_guardduty_organization_configuration",
 			Name:     "Organization Configuration",
 		},
 		{
-			Factory:  ResourceOrganizationConfigurationFeature,
+			Factory:  resourceOrganizationConfigurationFeature,
 			TypeName: "aws_guardduty_organization_configuration_feature",
 			Name:     "Organization Configuration Feature",
 		},
 		{
-			Factory:  ResourcePublishingDestination,
+			Factory:  resourcePublishingDestination,
 			TypeName: "aws_guardduty_publishing_destination",
 			Name:     "Publishing Destination",
 		},
 		{
-			Factory:  ResourceThreatIntelSet,
+			Factory:  resourceThreatIntelSet,
 			TypeName: "aws_guardduty_threatintelset",
 			Name:     "Threat Intel Set",
 			Tags: unique.Make(types.ServicePackageResourceTags{
