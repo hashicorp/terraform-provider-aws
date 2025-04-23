@@ -33,7 +33,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newResourceContributorInsightRule,
+			Factory:  newContributorInsightRuleResource,
 			TypeName: "aws_cloudwatch_contributor_insight_rule",
 			Name:     "Contributor Insight Rule",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
@@ -45,7 +45,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 		},
 		{
-			Factory:  newResourceContributorManagedInsightRule,
+			Factory:  newContributorManagedInsightRuleResource,
 			TypeName: "aws_cloudwatch_contributor_managed_insight_rule",
 			Name:     "Contributor Managed Insight Rule",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
