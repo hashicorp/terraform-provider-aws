@@ -790,17 +790,17 @@ func resourceUserHash(v any) int {
 
 	m := v.(map[string]any)
 	if ca, ok := m["console_access"]; ok {
-		buf.WriteString(fmt.Sprintf("%t-", ca.(bool)))
+		fmt.Fprintf(&buf, "%t-", ca.(bool))
 	} else {
 		buf.WriteString("false-")
 	}
 	if g, ok := m["groups"]; ok {
-		buf.WriteString(fmt.Sprintf("%v-", g.(*schema.Set).List()))
+		fmt.Fprintf(&buf, "%v-", g.(*schema.Set).List())
 	}
 	if p, ok := m[names.AttrPassword]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", p.(string)))
+		fmt.Fprintf(&buf, "%s-", p.(string))
 	}
-	buf.WriteString(fmt.Sprintf("%s-", m[names.AttrUsername].(string)))
+	fmt.Fprintf(&buf, "%s-", m[names.AttrUsername].(string))
 
 	return create.StringHashcode(buf.String())
 }
