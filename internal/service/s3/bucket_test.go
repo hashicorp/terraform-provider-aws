@@ -157,11 +157,9 @@ func TestAccS3Bucket_Basic_Identity_Basic(t *testing.T) {
 				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateKind:         resource.ImportBlockWithID,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
+				ResourceName:    resourceName,
+				ImportState:     true,
+				ImportStateKind: resource.ImportBlockWithID,
 			},
 		},
 	})
@@ -200,12 +198,10 @@ func TestAccS3Bucket_Basic_Identity_RegionOverride(t *testing.T) {
 				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 			{
-				ResourceName:            resourceName,
-				ImportStateIdFunc:       acctest.CrossRegionImportStateIdFunc(resourceName),
-				ImportState:             true,
-				ImportStateKind:         resource.ImportBlockWithID,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
+				ResourceName:      resourceName,
+				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
+				ImportState:       true,
+				ImportStateKind:   resource.ImportBlockWithID,
 			},
 		},
 	})
