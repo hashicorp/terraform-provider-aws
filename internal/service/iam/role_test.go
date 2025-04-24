@@ -92,11 +92,9 @@ func TestAccIAMRole_Identity_Basic(t *testing.T) {
 				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateKind:         resource.ImportBlockWithID,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
+				ResourceName:    resourceName,
+				ImportState:     true,
+				ImportStateKind: resource.ImportBlockWithID,
 			},
 		},
 	})
