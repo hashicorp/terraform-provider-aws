@@ -145,7 +145,11 @@ func testAccAnalyzer_organizationUnusedAccess(t *testing.T) {
 	resourceName := "aws_accessanalyzer_analyzer.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+			acctest.PreCheckOrganizationsAccount(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AccessAnalyzerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAnalyzerDestroy(ctx),
@@ -212,7 +216,7 @@ func testAccAnalyzer_upgradeV5_95_0(t *testing.T) {
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 					PostApplyPreRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
@@ -315,7 +319,15 @@ resource "aws_accessanalyzer_analyzer" "test" {
 
 func testAccAnalyzerConfig_organizationUnusedAccess(rName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_organizations_organization" "test" {
+  aws_service_access_principals = ["access-analyzer.${data.aws_partition.current.dns_suffix}"]
+}
+
 resource "aws_accessanalyzer_analyzer" "test" {
+  depends_on = [aws_organizations_organization.test]
+
   analyzer_name = %[1]q
   type          = "ORGANIZATION_UNUSED_ACCESS"
 
