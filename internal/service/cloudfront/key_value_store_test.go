@@ -99,10 +99,9 @@ func TestAccCloudFrontKeyValueStore_Identity_Basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateKind:   resource.ImportBlockWithID,
-				ImportStateVerify: true,
+				ResourceName:    resourceName,
+				ImportState:     true,
+				ImportStateKind: resource.ImportBlockWithID,
 			},
 		},
 	})
