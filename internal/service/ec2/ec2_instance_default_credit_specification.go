@@ -102,7 +102,7 @@ func (r *resourceDefaultCreditSpecification) Create(ctx context.Context, req res
 	}
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	_, err = waitDefaultCreditSpecificationCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
+	err = waitDefaultCreditSpecificationCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.EC2, create.ErrActionWaitingForCreation, ResNameDefaultCreditSpecification, plan.ID.String(), err),
@@ -174,7 +174,7 @@ func (r *resourceDefaultCreditSpecification) Update(ctx context.Context, req res
 	}
 
 	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	_, err = waitDefaultCreditSpecificationCreated(ctx, conn, plan.ID.ValueString(), updateTimeout)
+	err = waitDefaultCreditSpecificationCreated(ctx, conn, plan.ID.ValueString(), updateTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.EC2, create.ErrActionWaitingForUpdate, ResNameDefaultCreditSpecification, plan.ID.String(), err),
@@ -201,7 +201,7 @@ const (
 	statusUpdated       = "Updated"
 )
 
-func waitDefaultCreditSpecificationCreated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.InstanceFamilyCreditSpecification, error) {
+func waitDefaultCreditSpecificationCreated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    []string{statusNormal},
@@ -212,15 +212,15 @@ func waitDefaultCreditSpecificationCreated(ctx context.Context, conn *ec2.Client
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awstypes.InstanceFamilyCreditSpecification); ok {
-		return out, err
+	if _, ok := outputRaw.(*awstypes.InstanceFamilyCreditSpecification); ok {
+		return err
 	}
 
-	return nil, err
+	return err
 }
 
 func statusDefaultCreditSpecification(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := findDefaultCreditSpecificationByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil

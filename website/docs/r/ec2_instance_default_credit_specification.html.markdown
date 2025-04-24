@@ -43,12 +43,12 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 
 ```terraform
 import {
-  to = aws_ec2_default_credit_specification.example
+  to = aws_ec2_instance_default_credit_specification.example
   id = "t2"
 }
 ```
 
-Using `terraform import`, import EC2 (Elastic Compute Cloud) Default Credit Specification using the `example_id_arg`. For example:
+Using `terraform import`, import EC2 (Elastic Compute Cloud) Default Credit Specification using the `instance_family`. For example:
 
 ```console
-% terraform import aws_ec2_default_credit_specification.example t2
+% terraform import aws_ec2_instance_default_credit_specification.example t2
