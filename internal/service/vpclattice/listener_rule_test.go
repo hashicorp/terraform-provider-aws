@@ -66,6 +66,34 @@ func TestAccVPCLatticeListenerRule_basic(t *testing.T) {
 	})
 }
 
+func TestAccVPCLatticeListenerRule_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var listenerRule vpclattice.GetRuleOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_vpclattice_listener_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccListenerRuleConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckListenerRuleExists(ctx, resourceName, &listenerRule),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfvpclattice.ResourceListenerRule(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccVPCLatticeListenerRule_fixedResponse(t *testing.T) {
 	ctx := acctest.Context(t)
 	var listenerRule vpclattice.GetRuleOutput
