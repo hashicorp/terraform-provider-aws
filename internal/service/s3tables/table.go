@@ -66,7 +66,7 @@ func (r *resourceTable) Schema(ctx context.Context, req resource.SchemaRequest, 
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"encryption_configuration": schema.ObjectAttribute{
+			names.AttrEncryptionConfiguration: schema.ObjectAttribute{
 				CustomType: fwtypes.NewObjectTypeOf[encryptionConfigurationModel](ctx),
 				Optional:   true,
 				Computed:   true,

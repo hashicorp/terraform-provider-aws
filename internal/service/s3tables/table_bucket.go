@@ -57,7 +57,7 @@ func (r *resourceTableBucket) Schema(ctx context.Context, req resource.SchemaReq
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"encryption_configuration": schema.ObjectAttribute{
+			names.AttrEncryptionConfiguration: schema.ObjectAttribute{
 				CustomType: fwtypes.NewObjectTypeOf[encryptionConfigurationModel](ctx),
 				Optional:   true,
 				PlanModifiers: []planmodifier.Object{
