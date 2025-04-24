@@ -53,7 +53,7 @@ func normalizeCasingAndEscapeCodes(input string) string {
 			fallthrough
 		default:
 			// Three-digit octal code.
-			output.WriteString(fmt.Sprintf("\\%03o", ch))
+			fmt.Fprintf(&output, "\\%03o", ch)
 		}
 	}
 

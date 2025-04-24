@@ -119,7 +119,7 @@ func resourceInstancePublicPortsCreate(ctx context.Context, d *schema.ResourceDa
 
 	var buffer bytes.Buffer
 	for _, portInfo := range portInfos {
-		buffer.WriteString(fmt.Sprintf("%s-%d-%d\n", string(portInfo.Protocol), int64(portInfo.FromPort), int64(portInfo.ToPort)))
+		fmt.Fprintf(&buffer, "%s-%d-%d\n", string(portInfo.Protocol), int64(portInfo.FromPort), int64(portInfo.ToPort))
 	}
 
 	d.SetId(fmt.Sprintf("%s-%d", d.Get("instance_name").(string), create.StringHashcode(buffer.String())))
