@@ -114,6 +114,60 @@ func TestAccRoute53TrafficPolicy_update(t *testing.T) {
 	})
 }
 
+func TestAccRoute53TrafficPolicy_updateDocument(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.TrafficPolicy
+	resourceName := "aws_route53_traffic_policy.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	initialDocument := `{
+		"AWSPolicyFormatVersion":"2015-10-01",
+		"RecordType":"A",
+		"Endpoints":{
+			"endpoint-start-NkPh":{
+				"Type":"value",
+				"Value":"10.0.0.1"
+			}
+		},
+		"StartEndpoint":"endpoint-start-NkPh"
+	}`
+	updatedDocument := `{
+		"AWSPolicyFormatVersion":"2015-10-01",
+		"RecordType":"A",
+		"Endpoints":{
+			"endpoint-start-NkPh":{
+				"Type":"value",
+				"Value":"10.0.0.2"
+			}
+		},
+		"StartEndpoint":"endpoint-start-NkPh"
+	}`
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckTrafficPolicy(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTrafficPolicyDestroy(ctx),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTrafficPolicyConfig_document(rName, initialDocument),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTrafficPolicyExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "document", initialDocument),
+					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+				),
+			},
+			{
+				Config: testAccTrafficPolicyConfig_document(rName, updatedDocument),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTrafficPolicyExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "document", updatedDocument),
+					resource.TestCheckResourceAttr(resourceName, "version", "2"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckTrafficPolicyExists(ctx context.Context, n string, v *awstypes.TrafficPolicy) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -213,4 +267,13 @@ resource "aws_route53_traffic_policy" "test" {
 EOT
 }
 `, rName, comment)
+}
+
+func testAccTrafficPolicyConfig_document(rName, document string) string {
+	return fmt.Sprintf(`
+resource "aws_route53_traffic_policy" "test" {
+  name     = %[1]q
+  document = %[2]q
+}
+`, rName, document)
 }

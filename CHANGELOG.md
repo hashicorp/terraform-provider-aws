@@ -25,6 +25,7 @@ BUG FIXES:
 * resource/aws_elasticache_replication_group: Fix `malformed version` error when parsing 7.x redis engine versions ([#42346](https://github.com/hashicorp/terraform-provider-aws/issues/42346))
 * resource/aws_iam_user: Retry `ConcurrentModificationException`s during user creation ([#42081](https://github.com/hashicorp/terraform-provider-aws/issues/42081))
 * resource/aws_rds_cluster: Fix `InvalidParameterValue: SecondsUntilAutoPause can only be specified when minimum capacity is 0` errors when removing `serverlessv2_scaling_configuration.seconds_until_auto_pause` ([#41180](https://github.com/hashicorp/terraform-provider-aws/issues/41180))
+* resource/aws_route53_traffic_policy: Fix bug preventing updates to create new versions of traffic policy while preserving previous versions ([#27767](https://github.com/hashicorp/terraform-provider-aws/issues/27767))
 
 ## 5.95.0 (April 17, 2025)
 
