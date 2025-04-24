@@ -497,7 +497,7 @@ func TestAccS3TablesTable_encryptionConfiguration(t *testing.T) {
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerAccountID),
 					resource.TestCheckResourceAttrPair(resourceName, "table_bucket_arn", "aws_s3tables_table_bucket.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.TableTypeCustomer)),
-					resource.TestCheckResourceAttrPair(resourceName, "encryption_configuration.kms_key_arn", "aws_kms_key.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "encryption_configuration.kms_key_arn", "aws_kms_key.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.sse_algorithm", "aws:kms"),
 					resource.TestCheckResourceAttrSet(resourceName, "version_token"),
 					func(s *terraform.State) error {
@@ -712,11 +712,13 @@ resource "aws_kms_key" "test" {
 
 data "aws_caller_identity" "current" {}
 
+data "aws_partition" "current" {}
+
 data "aws_iam_policy_document" "key_policy" {
   statement {
     sid = "EnableUserAccess"
     principals {
-      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
+      identifiers = ["arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"]
       type        = "AWS"
     }
     actions   = ["kms:*"]
