@@ -576,6 +576,42 @@ func TestAccImageBuilderInfrastructureConfiguration_terminateInstanceOnFailure(t
 	})
 }
 
+func TestAccImageBuilderInfrastructureConfiguration_placement(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_imagebuilder_infrastructure_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInfrastructureConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInfrastructureConfigurationConfig_placement(rName, "dedicated"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "placement.0.tenancy", "dedicated"),
+					resource.TestCheckResourceAttr(resourceName, "placement.0.availability_zone", acctest.Region()+"a"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccInfrastructureConfigurationConfig_placement(rName, "default"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "placement.0.tenancy", "default"),
+					resource.TestCheckResourceAttr(resourceName, "placement.0.availability_zone", acctest.Region()+"a"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckInfrastructureConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderClient(ctx)
@@ -1028,4 +1064,21 @@ resource "aws_imagebuilder_infrastructure_configuration" "test" {
   terminate_instance_on_failure = %[2]t
 }
 `, rName, terminateInstanceOnFailure))
+}
+
+func testAccInfrastructureConfigurationConfig_placement(rName, tenancy string) string {
+	return acctest.ConfigCompose(
+		testAccInfrastructureConfigurationBaseConfig(rName),
+		fmt.Sprintf(`
+data "aws_region" "current" {}
+
+resource "aws_imagebuilder_infrastructure_configuration" "test" {
+  instance_profile_name = aws_iam_instance_profile.test.name
+  name                  = %[1]q
+  placement {
+    tenancy           = %[2]q
+    availability_zone = "${data.aws_region.current.name}a"
+  }
+}
+`, rName, tenancy))
 }
