@@ -60,7 +60,6 @@ func (r *resourceTableBucket) Schema(ctx context.Context, req resource.SchemaReq
 			"encryption_configuration": schema.ObjectAttribute{
 				CustomType: fwtypes.NewObjectTypeOf[encryptionConfigurationModel](ctx),
 				Optional:   true,
-				Computed:   true,
 				PlanModifiers: []planmodifier.Object{
 					objectplanmodifier.UseStateForUnknown(),
 				},
@@ -203,18 +202,16 @@ func (r *resourceTableBucket) Create(ctx context.Context, req resource.CreateReq
 	}
 	plan.MaintenanceConfiguration = maintenanceConfiguration
 
-	awsEncryptionConfig, err := conn.GetTableBucketEncryption(ctx, &s3tables.GetTableBucketEncryptionInput{
-		TableBucketARN: plan.ARN.ValueStringPointer(),
-	})
+	awsEncryptionConfig, err := findTableBucketEncryptionConfiguration(ctx, conn, plan.ARN.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.S3Tables, create.ErrActionReading, resNameTableBucket, plan.Name.String(), err),
 			err.Error(),
 		)
 	}
-	if awsEncryptionConfig.EncryptionConfiguration != nil {
+	if awsEncryptionConfig != nil {
 		var encryptionConfiguration encryptionConfigurationModel
-		resp.Diagnostics.Append(flex.Flatten(ctx, awsEncryptionConfig.EncryptionConfiguration, &encryptionConfiguration)...)
+		resp.Diagnostics.Append(flex.Flatten(ctx, awsEncryptionConfig, &encryptionConfiguration)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -267,18 +264,16 @@ func (r *resourceTableBucket) Read(ctx context.Context, req resource.ReadRequest
 	}
 	state.MaintenanceConfiguration = maintenanceConfiguration
 
-	awsEncryptionConfig, err := conn.GetTableBucketEncryption(ctx, &s3tables.GetTableBucketEncryptionInput{
-		TableBucketARN: state.ARN.ValueStringPointer(),
-	})
+	awsEncryptionConfig, err := findTableBucketEncryptionConfiguration(ctx, conn, state.ARN.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.S3Tables, create.ErrActionReading, resNameTableBucket, state.Name.String(), err),
 			err.Error(),
 		)
 	}
-	if awsEncryptionConfig.EncryptionConfiguration != nil {
+	if awsEncryptionConfig != nil {
 		var encryptionConfiguration encryptionConfigurationModel
-		resp.Diagnostics.Append(flex.Flatten(ctx, awsEncryptionConfig.EncryptionConfiguration, &encryptionConfiguration)...)
+		resp.Diagnostics.Append(flex.Flatten(ctx, awsEncryptionConfig, &encryptionConfiguration)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -434,6 +429,21 @@ func findTableBucket(ctx context.Context, conn *s3tables.Client, arn string) (*s
 	}
 
 	return out, nil
+}
+
+func findTableBucketEncryptionConfiguration(ctx context.Context, conn *s3tables.Client, arn string) (*awstypes.EncryptionConfiguration, error) {
+	awsEncryptionConfig, err := conn.GetTableBucketEncryption(ctx, &s3tables.GetTableBucketEncryptionInput{
+		TableBucketARN: aws.String(arn),
+	})
+
+	if err != nil {
+		if errs.IsA[*awstypes.NotFoundException](err) {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return awsEncryptionConfig.EncryptionConfiguration, nil
 }
 
 type resourceTableBucketModel struct {
