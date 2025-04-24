@@ -17,6 +17,7 @@ var (
 	ResourceUserProfile                       = newUserProfileResource
 
 	FindAssetTypeByID          = findAssetTypeByID
+	FindDomainByID             = findDomainByID
 	FindEnvironmentByID        = findEnvironmentByID
 	FindEnvironmentProfileByID = findEnvironmentProfileByID
 	FindFormTypeByID           = findFormTypeByID
