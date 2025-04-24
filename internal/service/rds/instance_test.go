@@ -9260,11 +9260,10 @@ resource "aws_security_group_rule" "test" {
 }
 
 resource "aws_directory_service_directory" "directory" {
-  name                = %[2]q
-  password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
-  password_wo_version = 1
-  type                = "MicrosoftAD"
-  edition             = "Standard"
+  name     = %[2]q
+  password = "SuperSecretPassw0rd"
+  type     = "MicrosoftAD"
+  edition  = "Standard"
 
   vpc_settings {
     vpc_id     = aws_vpc.test.id
@@ -9299,11 +9298,10 @@ resource "aws_db_instance" "test" {
 }
 
 resource "aws_directory_service_directory" "directory-2" {
-  name                = %[2]q
-  password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
-  password_wo_version = 1
-  type                = "MicrosoftAD"
-  edition             = "Standard"
+  name     = %[2]q
+  password = "SuperSecretPassw0rd"
+  type     = "MicrosoftAD"
+  edition  = "Standard"
 
   vpc_settings {
     vpc_id     = aws_vpc.test.id
@@ -9337,11 +9335,10 @@ resource "aws_db_instance" "test" {
 }
 
 resource "aws_directory_service_directory" "directory-2" {
-  name                = %[2]q
-  password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
-  password_wo_version = 1
-  type                = "MicrosoftAD"
-  edition             = "Standard"
+  name     = %[2]q
+  password = "SuperSecretPassw0rd"
+  type     = "MicrosoftAD"
+  edition  = "Standard"
 
   vpc_settings {
     vpc_id     = aws_vpc.test.id
