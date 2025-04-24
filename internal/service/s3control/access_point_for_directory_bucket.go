@@ -297,7 +297,7 @@ func resourceAccessPointForDirectoryBucketRead(ctx context.Context, d *schema.Re
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading S3 Directory Access Point (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading S3 Access Point for Directory Bucket (%s): %s", d.Id(), err)
 	}
 
 	accessPointARN := arn.ARN{
@@ -343,7 +343,7 @@ func resourceAccessPointForDirectoryBucketRead(ctx context.Context, d *schema.Re
 	} else if policy == "" || tfresource.NotFound(err) {
 		d.Set(names.AttrPolicy, nil)
 	} else {
-		return sdkdiag.AppendErrorf(diags, "reading S3 Directory Access Point (%s) policy: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading S3 Access Point for Directory Bucket (%s) policy: %s", d.Id(), err)
 	}
 
 	scope, err := FindAccessPointScopeByTwoPartKey(ctx, conn, accountID, name)
@@ -357,7 +357,7 @@ func resourceAccessPointForDirectoryBucketRead(ctx context.Context, d *schema.Re
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	} else {
-		return sdkdiag.AppendErrorf(diags, "reading S3 Directory Access Point (%s) scope: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading S3 Access Point for Directory Bucket (%s) scope: %s", d.Id(), err)
 	}
 
 	return diags
@@ -465,7 +465,7 @@ func resourceAccessPointForDirectoryBucketDelete(ctx context.Context, d *schema.
 func AccessPointForDirectoryBucketCreateResourceID(accessPointName string, accountID string) (string, error) {
 
 	if accessPointName == "" || accountID == "" {
-		return "", fmt.Errorf("unexpected directory access point name: %s or accountID: %s", accessPointName, accountID)
+		return "", fmt.Errorf("unexpected access point name for directory bucket: %s or accountID: %s", accessPointName, accountID)
 	}
 	id := accessPointName + accessPointResourceIDSeparator + accountID
 	return id, nil

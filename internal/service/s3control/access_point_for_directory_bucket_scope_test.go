@@ -200,7 +200,7 @@ func testAccCheckAccessPointForDirectoryBucketScopeDestroy(ctx context.Context) 
 				return err
 			}
 
-			return fmt.Errorf("Directory Access Point Scope still exists: %s", rs.Primary.ID)
+			return fmt.Errorf("S3 Access Point for Directory Bucket Scope still exists: %s", rs.Primary.ID)
 		}
 
 		return nil
