@@ -1,3 +1,7 @@
 ```release-note:bug
-resource/aws_vpclattice_listener_rule: Add validation for the `action` and `match` blocks to prevent a panic when either the `action` or `match` block is empty.
+resource/aws_vpclattice_listener_rule: Requires `match.http_match`.
+```
+
+```release-note:bug
+resource/aws_vpclattice_listener_rule: Requires exactly one of `action.fixed_response` or `action.forward`.
 ```
