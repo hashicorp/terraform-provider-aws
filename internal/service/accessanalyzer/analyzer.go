@@ -77,11 +77,6 @@ func resourceAnalyzer() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"unused_access_age": {
-										Type:     schema.TypeInt,
-										Optional: true,
-										ForceNew: true,
-									},
 									"analysis_rule": {
 										Type:     schema.TypeList,
 										Optional: true,
@@ -122,6 +117,11 @@ func resourceAnalyzer() *schema.Resource {
 												},
 											},
 										},
+									},
+									"unused_access_age": {
+										Type:     schema.TypeInt,
+										Optional: true,
+										ForceNew: true,
 									},
 								},
 							},
@@ -194,7 +194,7 @@ func resourceAnalyzerRead(ctx context.Context, d *schema.ResourceData, meta any)
 	d.Set("analyzer_name", analyzer.Name)
 	d.Set(names.AttrARN, analyzer.Arn)
 	if analyzer.Configuration != nil {
-		if err := d.Set(names.AttrConfiguration, []any{flattenConfiguration(analyzer.Configuration)}); err != nil {
+		if err := d.Set(names.AttrConfiguration, []any{flattenAnalyzerConfiguration(analyzer.Configuration)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting configuration: %s", err)
 		}
 	} else {
@@ -270,21 +270,21 @@ func expandAnalyzerConfiguration(tfMap map[string]any) types.AnalyzerConfigurati
 	apiObject := &types.AnalyzerConfigurationMemberUnusedAccess{}
 
 	if v, ok := tfMap["unused_access"].([]any); ok && len(v) > 0 && v[0] != nil {
-		apiObject.Value = expandUnusedAccess(v[0].(map[string]any))
+		apiObject.Value = expandUnusedAccessConfiguration(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandUnusedAccess(tfMap map[string]any) types.UnusedAccessConfiguration {
+func expandUnusedAccessConfiguration(tfMap map[string]any) types.UnusedAccessConfiguration {
 	apiObject := types.UnusedAccessConfiguration{}
-
-	if v, ok := tfMap["unused_access_age"].(int); ok && v != 0 {
-		apiObject.UnusedAccessAge = aws.Int32(int32(v))
-	}
 
 	if v, ok := tfMap["analysis_rule"].([]any); ok && len(v) > 0 && v[0] != nil {
 		apiObject.AnalysisRule = expandAnalysisRule(v[0].(map[string]any))
+	}
+
+	if v, ok := tfMap["unused_access_age"].(int); ok && v != 0 {
+		apiObject.UnusedAccessAge = aws.Int32(int32(v))
 	}
 
 	return apiObject
@@ -294,13 +294,13 @@ func expandAnalysisRule(tfMap map[string]any) *types.AnalysisRule {
 	apiObject := &types.AnalysisRule{}
 
 	if v, ok := tfMap["exclusion"].([]any); ok && len(v) > 0 {
-		apiObject.Exclusions = expandExclusions(v)
+		apiObject.Exclusions = expandAnalysisRuleCriterias(v)
 	}
 
 	return apiObject
 }
 
-func expandExclusions(tfList []any) []types.AnalysisRuleCriteria {
+func expandAnalysisRuleCriterias(tfList []any) []types.AnalysisRuleCriteria {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -309,12 +309,11 @@ func expandExclusions(tfList []any) []types.AnalysisRuleCriteria {
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]any)
-
 		if !ok {
 			continue
 		}
 
-		apiObject := expandExclusion(tfMap)
+		apiObject := expandAnalysisRuleCriteria(tfMap)
 
 		if apiObject == nil {
 			continue
@@ -326,34 +325,33 @@ func expandExclusions(tfList []any) []types.AnalysisRuleCriteria {
 	return apiObjects
 }
 
-func expandExclusion(tfMap map[string]any) *types.AnalysisRuleCriteria {
+func expandAnalysisRuleCriteria(tfMap map[string]any) *types.AnalysisRuleCriteria {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &types.AnalysisRuleCriteria{}
 
-	if v, ok := tfMap["account_ids"].([]any); ok && len(v) > 0 {
-		for _, accountId := range v {
-			accountId, ok := accountId.(string)
+	if tfList, ok := tfMap["account_ids"].([]any); ok && len(tfList) > 0 {
+		for _, v := range tfList {
+			accountID, ok := v.(string)
 			if !ok {
 				continue
 			}
-			apiObject.AccountIds = append(apiObject.AccountIds, accountId)
+			apiObject.AccountIds = append(apiObject.AccountIds, accountID)
 		}
 	}
 
-	if v, ok := tfMap[names.AttrResourceTags].([]any); ok && len(v) > 0 {
-		for _, resourceTag := range v {
-			resourceTagMap := flex.ExpandStringValueMap(resourceTag.(map[string]any))
-			apiObject.ResourceTags = append(apiObject.ResourceTags, resourceTagMap)
+	if tfList, ok := tfMap[names.AttrResourceTags].([]any); ok && len(tfList) > 0 {
+		for _, v := range tfList {
+			apiObject.ResourceTags = append(apiObject.ResourceTags, flex.ExpandStringValueMap(v.(map[string]any)))
 		}
 	}
 
 	return apiObject
 }
 
-func flattenConfiguration(apiObject types.AnalyzerConfiguration) map[string]any {
+func flattenAnalyzerConfiguration(apiObject types.AnalyzerConfiguration) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
@@ -375,13 +373,14 @@ func flattenUnusedAccessConfiguration(apiObject *types.UnusedAccessConfiguration
 
 	tfMap := map[string]any{}
 
+	if v := apiObject.AnalysisRule; v != nil {
+		tfMap["analysis_rule"] = []any{flattenAnalysisRule(v)}
+	}
+
 	if v := apiObject.UnusedAccessAge; v != nil {
 		tfMap["unused_access_age"] = aws.ToInt32(v)
 	}
 
-	if v := apiObject.AnalysisRule; v != nil {
-		tfMap["analysis_rule"] = []any{flattenAnalysisRule(v)}
-	}
 	return tfMap
 }
 
@@ -393,13 +392,13 @@ func flattenAnalysisRule(apiObject *types.AnalysisRule) map[string]any {
 	tfMap := map[string]any{}
 
 	if v := apiObject.Exclusions; v != nil {
-		tfMap["exclusion"] = flattenExclusions(v)
+		tfMap["exclusion"] = flattenAnalysisRuleCriterias(v)
 	}
 
 	return tfMap
 }
 
-func flattenExclusions(apiObjects []types.AnalysisRuleCriteria) []any {
+func flattenAnalysisRuleCriterias(apiObjects []types.AnalysisRuleCriteria) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -407,7 +406,7 @@ func flattenExclusions(apiObjects []types.AnalysisRuleCriteria) []any {
 	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfMap := flattenExclusion(&apiObject)
+		tfMap := flattenAnalysisRuleCriteria(&apiObject)
 		if tfMap != nil {
 			tfList = append(tfList, tfMap)
 		}
@@ -415,7 +414,8 @@ func flattenExclusions(apiObjects []types.AnalysisRuleCriteria) []any {
 
 	return tfList
 }
-func flattenExclusion(apiObject *types.AnalysisRuleCriteria) map[string]any {
+
+func flattenAnalysisRuleCriteria(apiObject *types.AnalysisRuleCriteria) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
