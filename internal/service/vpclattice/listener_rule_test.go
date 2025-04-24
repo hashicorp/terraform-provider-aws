@@ -94,7 +94,7 @@ func TestAccVPCLatticeListenerRule_disappears(t *testing.T) {
 	})
 }
 
-func TestAccVPCLatticeListenerRule_fixedResponse(t *testing.T) {
+func TestAccVPCLatticeListenerRule_action_fixedResponse(t *testing.T) {
 	ctx := acctest.Context(t)
 	var listenerRule vpclattice.GetRuleOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -111,7 +111,7 @@ func TestAccVPCLatticeListenerRule_fixedResponse(t *testing.T) {
 		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccListenerRuleConfig_fixedResponse(rName),
+				Config: testAccListenerRuleConfig_action_fixedResponse(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, resourceName, &listenerRule),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -303,7 +303,7 @@ resource "aws_vpclattice_listener_rule" "test" {
 `, rName))
 }
 
-func testAccListenerRuleConfig_fixedResponse(rName string) string {
+func testAccListenerRuleConfig_action_fixedResponse(rName string) string {
 	return acctest.ConfigCompose(testAccListenerRuleConfig_base(rName), fmt.Sprintf(`
 resource "aws_vpclattice_listener_rule" "test" {
   name = %[1]q
