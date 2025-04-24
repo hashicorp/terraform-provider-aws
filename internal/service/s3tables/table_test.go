@@ -707,7 +707,7 @@ resource "aws_s3tables_table_bucket" "test" {
 
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
-  policy = data.aws_iam_policy_document.key_policy.json
+  policy                  = data.aws_iam_policy_document.key_policy.json
 }
 
 data "aws_caller_identity" "current" {}
@@ -717,16 +717,16 @@ data "aws_iam_policy_document" "key_policy" {
     sid = "EnableUserAccess"
     principals {
       identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
-      type = "AWS"
+      type        = "AWS"
     }
-    actions = ["kms:*"]
+    actions   = ["kms:*"]
     resources = ["*"]
   }
   statement {
     sid = "EnableMaintenace"
     principals {
       identifiers = ["maintenance.s3tables.amazonaws.com"]
-      type = "Service"
+      type        = "Service"
     }
     actions = [
       "kms:GenerateDataKey",
@@ -735,7 +735,7 @@ data "aws_iam_policy_document" "key_policy" {
     resources = ["*"]
     condition {
       test     = "StringLike"
-      values = ["${aws_s3tables_table_bucket.test.arn}/*"]
+      values   = ["${aws_s3tables_table_bucket.test.arn}/*"]
       variable = "kms:EncryptionContext:aws:s3:arn"
     }
   }
@@ -744,6 +744,7 @@ data "aws_iam_policy_document" "key_policy" {
 resource "aws_kms_key" "test2" {
   deletion_window_in_days = 7
 }
+
 
 `, rName, namespace, bucketName)
 }
