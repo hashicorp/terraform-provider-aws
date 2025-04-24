@@ -6,10 +6,10 @@ package fwprovider
 import (
 	"context"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -32,28 +32,28 @@ func (r identityInterceptor) create(ctx context.Context, opts interceptorOptions
 			break
 		}
 
-		for _, attr := range r.attributes {
-			switch attr {
+		for _, attrName := range r.attributes {
+			switch attrName {
 			case names.AttrAccountID:
-				diags.Append(identity.SetAttribute(ctx, path.Root(attr), awsClient.AccountID(ctx))...)
+				diags.Append(identity.SetAttribute(ctx, path.Root(attrName), awsClient.AccountID(ctx))...)
 				if diags.HasError() {
 					return diags
 				}
 
 			case names.AttrRegion:
-				diags.Append(identity.SetAttribute(ctx, path.Root(attr), awsClient.Region(ctx))...)
+				diags.Append(identity.SetAttribute(ctx, path.Root(attrName), awsClient.Region(ctx))...)
 				if diags.HasError() {
 					return diags
 				}
 
 			default:
-				var attrVal types.String
-				diags.Append(response.State.GetAttribute(ctx, path.Root(attr), &attrVal)...)
+				var attrVal attr.Value
+				diags.Append(response.State.GetAttribute(ctx, path.Root(attrName), &attrVal)...)
 				if diags.HasError() {
 					return diags
 				}
 
-				diags.Append(identity.SetAttribute(ctx, path.Root(attr), attrVal)...)
+				diags.Append(identity.SetAttribute(ctx, path.Root(attrName), attrVal)...)
 				if diags.HasError() {
 					return diags
 				}
