@@ -1,0 +1,7 @@
+```release-note:enhancement
+data-source/aws_guardduty_detector: Add `arn` attribute
+```
+
+```release-note:enhancement
+data-source/aws_guardduty_detector: Add `tags` attribute
+```

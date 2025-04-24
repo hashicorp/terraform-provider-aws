@@ -1,4 +1,12 @@
-## 5.96.0 (Unreleased)
+## 5.97.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* data-source/aws_imagebuilder_infrastructure_configuration: Add `placement` attribute ([#42347](https://github.com/hashicorp/terraform-provider-aws/issues/42347))
+* resource/aws_accessanalyzer_analyzer: Add `configuration.unused_access.analysis_rule` argument ([#42332](https://github.com/hashicorp/terraform-provider-aws/issues/42332))
+* resource/aws_imagebuilder_infrastructure_configuration: Add `placement` argument ([#42347](https://github.com/hashicorp/terraform-provider-aws/issues/42347))
+
+## 5.96.0 (April 24, 2025)
 
 FEATURES:
 
@@ -11,6 +19,8 @@ ENHANCEMENTS:
 * data-source/aws_api_gateway_rest_api: Add `endpoint_configuration.ip_address_type` attribute ([#42146](https://github.com/hashicorp/terraform-provider-aws/issues/42146))
 * data-source/aws_apigatewayv2_api: Add `ip_address_type` attribute ([#42145](https://github.com/hashicorp/terraform-provider-aws/issues/42145))
 * data-source/aws_dms_endpoint: Add `kinesis_settings.use_large_integer_value` attribute ([#42300](https://github.com/hashicorp/terraform-provider-aws/issues/42300))
+* data-source/aws_guardduty_detector: Add `arn` attribute ([#42344](https://github.com/hashicorp/terraform-provider-aws/issues/42344))
+* data-source/aws_guardduty_detector: Add `tags` attribute ([#42344](https://github.com/hashicorp/terraform-provider-aws/issues/42344))
 * resource/aws_api_gateway_domain_name: Add `endpoint_configuration.ip_address_type` argument to support dual-stack (IPv4 and IPv6) endpoints ([#42146](https://github.com/hashicorp/terraform-provider-aws/issues/42146))
 * resource/aws_api_gateway_rest_api: Add `endpoint_configuration.ip_address_type` argument to support dual-stack (IPv4 and IPv6) endpoints ([#42146](https://github.com/hashicorp/terraform-provider-aws/issues/42146))
 * resource/aws_apigatewayv2_api: Add `ip_address_type` argument to support dual-stack (IPv4 and IPv6) endpoints ([#42145](https://github.com/hashicorp/terraform-provider-aws/issues/42145))
@@ -20,6 +30,8 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_elasticache_replication_group: Fix `malformed version` error when parsing 7.x redis engine versions ([#42346](https://github.com/hashicorp/terraform-provider-aws/issues/42346))
+* resource/aws_iam_user: Retry `ConcurrentModificationException`s during user creation ([#42081](https://github.com/hashicorp/terraform-provider-aws/issues/42081))
 * resource/aws_rds_cluster: Fix `InvalidParameterValue: SecondsUntilAutoPause can only be specified when minimum capacity is 0` errors when removing `serverlessv2_scaling_configuration.seconds_until_auto_pause` ([#41180](https://github.com/hashicorp/terraform-provider-aws/issues/41180))
 
 ## 5.95.0 (April 17, 2025)
