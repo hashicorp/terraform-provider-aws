@@ -114,7 +114,7 @@ func TestAccRoute53Record_Identity_basic(t *testing.T) {
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
-				ImportStateKind:         resource.ImportCommandWithId,
+				ImportStateKind:         resource.ImportCommandWithID,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
 			},
@@ -154,7 +154,7 @@ func TestAccRoute53Record_Identity_setIdentifier(t *testing.T) {
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
-				ImportStateKind:         resource.ImportCommandWithId,
+				ImportStateKind:         resource.ImportCommandWithID,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
 			},

@@ -92,14 +92,14 @@ func TestAccCloudFrontKeyValueStoreKey_Identity_Basic(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateKind:   resource.ImportCommandWithId,
+				ImportStateKind:   resource.ImportCommandWithID,
 				ImportStateVerify: true,
 			},
 			// Dependent resource
 			// {
 			// 	ResourceName:      resourceName,
 			// 	ImportState:       true,
-			// 	ImportStateKind:   resource.ImportBlockWithId,
+			// 	ImportStateKind:   resource.ImportBlockWithID,
 			// 	ImportStateVerify: true,
 			// },
 		},
