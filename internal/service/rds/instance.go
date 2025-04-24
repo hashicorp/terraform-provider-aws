@@ -191,17 +191,8 @@ func resourceInstance() *schema.Resource {
 				ConflictsWith: []string{
 					"replicate_source_db",
 					"s3_import",
+					"restore_to_point_in_time",
 					"snapshot_identifier",
-				},
-				DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
-					for _, conflictAttr := range []string{
-						"restore_to_point_in_time",
-					} {
-						if _, ok := d.GetOk(conflictAttr); ok {
-							return true
-						}
-					}
-					return false
 				},
 			},
 			"copy_tags_to_snapshot": {
@@ -769,20 +760,6 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 	identifier := create.Name(d.Get(names.AttrIdentifier).(string), d.Get("identifier_prefix").(string))
 
 	var resourceID string // will be assigned depending on how it is created
-
-	if _, ok := d.GetOk("character_set_name"); ok {
-		charSetPath := cty.GetAttrPath("character_set_name")
-		for _, conflictAttr := range []string{
-			"restore_to_point_in_time",
-		} {
-			if _, ok := d.GetOk(conflictAttr); ok {
-				diags = append(diags, errs.NewAttributeConflictsWillBeError(
-					charSetPath,
-					cty.GetAttrPath(conflictAttr),
-				))
-			}
-		}
-	}
 
 	// get write-only value from configuration
 	passwordWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("password_wo"))
