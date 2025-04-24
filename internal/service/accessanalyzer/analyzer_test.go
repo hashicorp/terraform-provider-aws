@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/accessanalyzer/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -22,7 +23,6 @@ import (
 func testAccAnalyzer_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var analyzer types.AnalyzerSummary
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_accessanalyzer_analyzer.test"
 
@@ -55,7 +55,6 @@ func testAccAnalyzer_basic(t *testing.T) {
 func testAccAnalyzer_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var analyzer types.AnalyzerSummary
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_accessanalyzer_analyzer.test"
 
@@ -77,10 +76,9 @@ func testAccAnalyzer_disappears(t *testing.T) {
 	})
 }
 
-func testAccAnalyzer_Type_Organization(t *testing.T) {
+func testAccAnalyzer_typeOrganization(t *testing.T) {
 	ctx := acctest.Context(t)
 	var analyzer types.AnalyzerSummary
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_accessanalyzer_analyzer.test"
 
@@ -113,7 +111,6 @@ func testAccAnalyzer_Type_Organization(t *testing.T) {
 func testAccAnalyzer_configuration(t *testing.T) {
 	ctx := acctest.Context(t)
 	var analyzer types.AnalyzerSummary
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_accessanalyzer_analyzer.test"
 
@@ -144,7 +141,6 @@ func testAccAnalyzer_configuration(t *testing.T) {
 func testAccAnalyzer_organizationUnusedAccess(t *testing.T) {
 	ctx := acctest.Context(t)
 	var analyzer types.AnalyzerSummary
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_accessanalyzer_analyzer.test"
 
@@ -175,6 +171,56 @@ func testAccAnalyzer_organizationUnusedAccess(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccAnalyzer_upgradeV5_95_0(t *testing.T) {
+	ctx := acctest.Context(t)
+	var analyzer types.AnalyzerSummary
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_accessanalyzer_analyzer.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.AccessAnalyzerServiceID),
+		CheckDestroy: testAccCheckAnalyzerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.95.0",
+					},
+				},
+				Config: testAccAnalyzerConfig_name(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAnalyzerExists(ctx, resourceName, &analyzer),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccAnalyzerConfig_name(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAnalyzerExists(ctx, resourceName, &analyzer),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -211,10 +257,6 @@ func testAccCheckAnalyzerExists(ctx context.Context, n string, v *types.Analyzer
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No IAM Access Analyzer Analyzer ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AccessAnalyzerClient(ctx)

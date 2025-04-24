@@ -23,7 +23,8 @@ func TestAccAccessAnalyzer_serial(t *testing.T) {
 			"organizationUnusedAccess": testAccAnalyzer_organizationUnusedAccess,
 			acctest.CtDisappears:       testAccAnalyzer_disappears,
 			"tags":                     testAccAccessAnalyzerAnalyzer_tagsSerial,
-			"Type_Organization":        testAccAnalyzer_Type_Organization,
+			"type_Organization":        testAccAnalyzer_typeOrganization,
+			"upgradeV5_95_0":           testAccAnalyzer_upgradeV5_95_0,
 		},
 		"ArchiveRule": {
 			acctest.CtBasic:      testAccAnalyzerArchiveRule_basic,
