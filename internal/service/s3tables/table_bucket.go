@@ -212,12 +212,14 @@ func (r *resourceTableBucket) Create(ctx context.Context, req resource.CreateReq
 			err.Error(),
 		)
 	}
-	var encryptionConfiguration encryptionConfigurationModel
-	resp.Diagnostics.Append(flex.Flatten(ctx, awsEncryptionConfig.EncryptionConfiguration, &encryptionConfiguration)...)
-	if resp.Diagnostics.HasError() {
-		return
+	if awsEncryptionConfig.EncryptionConfiguration != nil {
+		var encryptionConfiguration encryptionConfigurationModel
+		resp.Diagnostics.Append(flex.Flatten(ctx, awsEncryptionConfig.EncryptionConfiguration, &encryptionConfiguration)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		plan.EncryptionConfiguration = fwtypes.NewObjectValueOfMust[encryptionConfigurationModel](ctx, &encryptionConfiguration)
 	}
-	plan.EncryptionConfiguration = fwtypes.NewObjectValueOfMust[encryptionConfigurationModel](ctx, &encryptionConfiguration)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
@@ -274,12 +276,14 @@ func (r *resourceTableBucket) Read(ctx context.Context, req resource.ReadRequest
 			err.Error(),
 		)
 	}
-	var encryptionConfiguration encryptionConfigurationModel
-	resp.Diagnostics.Append(flex.Flatten(ctx, awsEncryptionConfig.EncryptionConfiguration, &encryptionConfiguration)...)
-	if resp.Diagnostics.HasError() {
-		return
+	if awsEncryptionConfig.EncryptionConfiguration != nil {
+		var encryptionConfiguration encryptionConfigurationModel
+		resp.Diagnostics.Append(flex.Flatten(ctx, awsEncryptionConfig.EncryptionConfiguration, &encryptionConfiguration)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		state.EncryptionConfiguration = fwtypes.NewObjectValueOfMust[encryptionConfigurationModel](ctx, &encryptionConfiguration)
 	}
-	state.EncryptionConfiguration = fwtypes.NewObjectValueOfMust[encryptionConfigurationModel](ctx, &encryptionConfiguration)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
