@@ -47,14 +47,18 @@ func TestAccS3ControlAccessPointForDirectoryBucketPolicy_basic(t *testing.T) {
 						return "", fmt.Errorf("not found: %s", resourceName)
 					}
 
-					name := rs.Primary.Attributes["name"]
-					accountID := rs.Primary.Attributes["account_id"]
+					arn := rs.Primary.Attributes["access_point_arn"]
 
-					if name == "" || accountID == "" {
-						return "", fmt.Errorf("missing name or account_id in state")
+					if arn == "" {
+						return "", fmt.Errorf("missing arn in state")
 					}
 
-					return fmt.Sprintf("%s:%s", name, accountID), nil
+					resourceID, err := tfs3control.AccessPointForDirectoryBucketCreateResourceIDFromARN(arn)
+					if err != nil {
+						return "", fmt.Errorf("could not parse access point ARN")
+					}
+
+					return resourceID, nil
 				},
 				ImportStateVerify: true,
 			},
@@ -139,14 +143,18 @@ func TestAccS3ControlAccessPointForDirectoryBucketPolicy_update(t *testing.T) {
 						return "", fmt.Errorf("not found: %s", resourceName)
 					}
 
-					name := rs.Primary.Attributes["name"]
-					accountID := rs.Primary.Attributes["account_id"]
+					arn := rs.Primary.Attributes["access_point_arn"]
 
-					if name == "" || accountID == "" {
-						return "", fmt.Errorf("missing name or account_id in state")
+					if arn == "" {
+						return "", fmt.Errorf("missing arn in state")
 					}
 
-					return fmt.Sprintf("%s:%s", name, accountID), nil
+					resourceID, err := tfs3control.AccessPointForDirectoryBucketCreateResourceIDFromARN(arn)
+					if err != nil {
+						return "", fmt.Errorf("could not parse access point ARN")
+					}
+
+					return resourceID, nil
 				},
 				ImportStateVerify: true,
 			},
@@ -216,8 +224,7 @@ func testAccCheckAccessPointForDirectoryBucketPolicyExists(ctx context.Context, 
 func testAccAccessPointForDirectoryBucketPolicyConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccAccessPointForDirectoryBucketConfig_basic(rName), `
 resource "aws_s3control_directory_access_point_policy" "test_policy" {
-  name       = aws_s3_directory_access_point.test_ap.name
-  account_id = data.aws_caller_identity.current.account_id
+  access_point_arn = aws_s3_directory_access_point.test_ap.arn
 
   policy = jsonencode({
     Version = "2008-10-17"
@@ -227,7 +234,7 @@ resource "aws_s3control_directory_access_point_policy" "test_policy" {
       Principal = {
         AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
       }
-      Resource = "arn:${data.aws_partition.current.partition}:s3express:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:accesspoint/${aws_s3_directory_access_point.test_ap.name}"
+      Resource = "${aws_s3_directory_access_point.test_ap.arn}"
     }]
   })
 }
@@ -237,8 +244,7 @@ resource "aws_s3control_directory_access_point_policy" "test_policy" {
 func testAccAccessPointForDirectoryBucketPolicyConfig_updated(rName string) string {
 	return acctest.ConfigCompose(testAccAccessPointForDirectoryBucketConfig_basic(rName), `
 resource "aws_s3control_directory_access_point_policy" "test_policy" {
-  name       = aws_s3_directory_access_point.test_ap.name
-  account_id = data.aws_caller_identity.current.account_id
+  access_point_arn = aws_s3_directory_access_point.test_ap.arn
 
   policy = jsonencode({
     Version = "2008-10-17"
@@ -248,10 +254,10 @@ resource "aws_s3control_directory_access_point_policy" "test_policy" {
       Principal = {
         AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
       }
-      Resource = "arn:${data.aws_partition.current.partition}:s3express:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:accesspoint/${aws_s3_directory_access_point.test_ap.name}"
+      Resource = "${aws_s3_directory_access_point.test_ap.arn}"
       Condition = {
         StringLike = {
-          "s3express:DataAccessPointArn": "arn:${data.aws_partition.current.partition}:s3express:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:accesspoint/${aws_s3_directory_access_point.test_ap.name}"
+          "s3express:DataAccessPointArn": "${aws_s3_directory_access_point.test_ap.arn}"
         }
       }
     }]

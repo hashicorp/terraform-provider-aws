@@ -35,7 +35,7 @@ var (
 	DirectoryBucketNameRegex = regexache.MustCompile(`^(?:[0-9a-z.-]+)--(?:[0-9a-za-z]+(?:-[0-9a-za-z]+)+)--x-s3$`)
 
 	// e.g. arn:aws:s3express:us-west-2:1234567890:accesspoint/ap-name--usw2-az2--xa-s3
-	AccessPointArnRegex = regexache.MustCompile(`^arn:aws(-[a-z]+)?:s3express:[a-z0-9-]+:\d{12}:accesspoint/[a-zA-Z0-9\-]+--[a-z0-9-]+--xa-s3$`)
+	AccessPointArnRegex = regexache.MustCompile(`^arn:aws(-[a-z]+)?:s3express:[a-z0-9-]+:\d{12}:accesspoint/[a-zA-Z0-9\-]+--[a-z0-9-]+--xa-s3/*$`)
 )
 
 // @SDKResource("aws_s3_directory_access_point", name="Directory Access Point")
@@ -95,10 +95,6 @@ func resourceAccessPointForDirectoryBucket() *schema.Resource {
 				Type:     schema.TypeMap,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"has_public_access_policy": {
-				Type:     schema.TypeBool,
-				Computed: true,
 			},
 			"network_origin": {
 				Type:     schema.TypeString,
@@ -297,7 +293,7 @@ func resourceAccessPointForDirectoryBucketRead(ctx context.Context, d *schema.Re
 	d.Set(names.AttrAccountID, accountID)
 	d.Set(names.AttrAlias, output.Alias)
 	d.Set("bucket_account_id", output.BucketAccountId)
-	d.Set(names.AttrDomainName, meta.(*conns.AWSClient).RegionalHostname(ctx, fmt.Sprintf("%s-%s.s3-accesspoint", aws.ToString(output.Name), accountID)))
+	d.Set(names.AttrDomainName, meta.(*conns.AWSClient).RegionalHostname(ctx, fmt.Sprintf("%s-%s.s3express-accesspoint", aws.ToString(output.Name), accountID)))
 	d.Set(names.AttrEndpoints, output.Endpoints)
 	d.Set(names.AttrName, output.Name)
 	d.Set("network_origin", output.NetworkOrigin)
@@ -444,6 +440,29 @@ func resourceAccessPointForDirectoryBucketDelete(ctx context.Context, d *schema.
 	}
 
 	return diags
+}
+
+func AccessPointForDirectoryBucketCreateResourceIDFromARN(accessPointARN string) (string, error) {
+	v, err := arn.Parse(accessPointARN)
+
+	if err != nil {
+		return "", err
+	}
+
+	switch service := v.Service; service {
+	case "s3express":
+		resource := v.Resource
+		if !strings.HasPrefix(resource, "accesspoint/") {
+			return "", fmt.Errorf("unexpected resource: %s", resource)
+		}
+
+		parts := []string{strings.TrimPrefix(resource, "accesspoint/"), v.AccountID}
+		id := strings.Join(parts, accessPointResourceIDSeparator)
+
+		return id, nil
+	default:
+		return "", fmt.Errorf("unexpected service: %s", service)
+	}
 }
 
 func AccessPointForDirectoryBucketCreateResourceID(accessPointName string, accountID string) (string, error) {

@@ -5,6 +5,7 @@ package s3control
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -34,19 +35,11 @@ func resourceAccessPointForDirectoryBucketPolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.StringMatch(AccessPointForDirectoryBucketNameRegex,
-					"must be in the format [access_point_name]--[azid]--xa-s3. Use the aws_s3_access_point resource to manage general purpose access points"),
-			},
-			names.AttrAccountID: {
+			"access_point_arn": {
 				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
+				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: verify.ValidAccountID,
+				ValidateFunc: verify.ValidARN,
 			},
 			names.AttrPolicy: {
 				Type:                  schema.TypeString,
@@ -67,14 +60,16 @@ func resourceAccessPointForDirectoryBucketPolicyCreate(ctx context.Context, d *s
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
-	name := d.Get(names.AttrName).(string)
-	accountID := d.Get(names.AttrAccountID).(string)
-
-	resourceID, err := AccessPointForDirectoryBucketCreateResourceID(name, accountID)
+	resourceID, err := AccessPointForDirectoryBucketCreateResourceIDFromARN(d.Get("access_point_arn").(string))
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating S3 Access Point for Directory Bucket (%s:%s) Scope: %s", name, accountID, err)
+		return sdkdiag.AppendErrorf(diags, "creating S3 Access Point for Directory Bucket Policy: %s", err)
 	}
 	d.SetId(resourceID)
+
+	name, accountID, err := AccessPointForDirectoryBucketParseResourceID(resourceID)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "creating S3 Access Point for Directory Bucket (%s:%s) Policy: %s", name, accountID, err)
+	}
 
 	policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
 	if err != nil {
@@ -105,8 +100,14 @@ func resourceAccessPointForDirectoryBucketPolicyRead(ctx context.Context, d *sch
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.Set(names.AttrName, name)
-	d.Set(names.AttrAccountID, accountID)
+	partition := meta.(*conns.AWSClient).Partition(ctx)
+	region := meta.(*conns.AWSClient).Region(ctx)
+
+	arn := fmt.Sprintf("arn:%s:s3express:%s:%s:accesspoint/%s", partition, region, accountID, name)
+	if err := d.Set("access_point_arn", arn); err != nil {
+		return sdkdiag.AppendFromErr(diags, fmt.Errorf("error setting access_point_arn: %w", err))
+	}
+	d.Set("access_point_arn", arn)
 
 	policy, err := FindAccessPointForDirectoryBucketPolicyByTwoPartKey(ctx, conn, accountID, name)
 
