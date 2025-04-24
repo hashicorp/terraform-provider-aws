@@ -154,6 +154,8 @@ The `header_matches` block supports the following:
 
 The Header Match `match` block supports the following:
 
+Exactly one of `contains`, `exact`, or `prefix` is required.
+
 * `contains` - (Optional) Specifies a contains type match.
 * `exact` - (Optional) Specifies an exact type match.
 * `prefix` - (Optional) Specifies a prefix type match.
