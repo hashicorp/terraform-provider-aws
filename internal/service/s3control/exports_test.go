@@ -5,23 +5,24 @@ package s3control
 
 // Exports for use in tests only.
 var (
-	ResourceAccessGrant                        = newAccessGrantResource
-	ResourceAccessGrantsInstance               = newAccessGrantsInstanceResource
-	ResourceAccessGrantsInstanceResourcePolicy = newAccessGrantsInstanceResourcePolicyResource
-	ResourceAccessGrantsLocation               = newAccessGrantsLocationResource
-	ResourceAccessPoint                        = resourceAccessPoint
-	ResourceAccessPointPolicy                  = resourceAccessPointPolicy
-	ResourceAccessPointForDirectoryBucket      = resourceAccessPointForDirectoryBucket
-	ResourceAccessPointForDirectoryBucketScope = resourceAccessPointForDirectoryBucketScope
-	ResourceAccountPublicAccessBlock           = resourceAccountPublicAccessBlock
-	ResourceBucket                             = resourceBucket
-	ResourceBucketLifecycleConfiguration       = resourceBucketLifecycleConfiguration
-	ResourceBucketPolicy                       = resourceBucketPolicy
-	ResourceMultiRegionAccessPoint             = resourceMultiRegionAccessPoint
-	ResourceMultiRegionAccessPointPolicy       = resourceMultiRegionAccessPointPolicy
-	ResourceObjectLambdaAccessPoint            = resourceObjectLambdaAccessPoint
-	ResourceObjectLambdaAccessPointPolicy      = resourceObjectLambdaAccessPointPolicy
-	ResourceStorageLensConfiguration           = resourceStorageLensConfiguration
+	ResourceAccessGrant                         = newAccessGrantResource
+	ResourceAccessGrantsInstance                = newAccessGrantsInstanceResource
+	ResourceAccessGrantsInstanceResourcePolicy  = newAccessGrantsInstanceResourcePolicyResource
+	ResourceAccessGrantsLocation                = newAccessGrantsLocationResource
+	ResourceAccessPoint                         = resourceAccessPoint
+	ResourceAccessPointPolicy                   = resourceAccessPointPolicy
+	ResourceAccessPointForDirectoryBucket       = resourceAccessPointForDirectoryBucket
+	ResourceAccessPointForDirectoryBucketScope  = resourceAccessPointForDirectoryBucketScope
+	ResourceAccessPointForDirectoryBucketPolicy = resourceAccessPointForDirectoryBucketPolicy
+	ResourceAccountPublicAccessBlock            = resourceAccountPublicAccessBlock
+	ResourceBucket                              = resourceBucket
+	ResourceBucketLifecycleConfiguration        = resourceBucketLifecycleConfiguration
+	ResourceBucketPolicy                        = resourceBucketPolicy
+	ResourceMultiRegionAccessPoint              = resourceMultiRegionAccessPoint
+	ResourceMultiRegionAccessPointPolicy        = resourceMultiRegionAccessPointPolicy
+	ResourceObjectLambdaAccessPoint             = resourceObjectLambdaAccessPoint
+	ResourceObjectLambdaAccessPointPolicy       = resourceObjectLambdaAccessPointPolicy
+	ResourceStorageLensConfiguration            = resourceStorageLensConfiguration
 
 	FindAccessGrantByTwoPartKey                            = findAccessGrantByTwoPartKey
 	FindAccessGrantsInstance                               = findAccessGrantsInstance

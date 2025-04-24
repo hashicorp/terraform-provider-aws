@@ -38,7 +38,7 @@ var (
 	AccessPointArnRegex = regexache.MustCompile(`^arn:aws(-[a-z]+)?:s3express:[a-z0-9-]+:\d{12}:accesspoint/[a-zA-Z0-9\-]+--[a-z0-9-]+--xa-s3$`)
 )
 
-// @SdkResource("aws_s3_directory_access_point", name="Directory Access Point")
+// @SDKResource("aws_s3_directory_access_point", name="Directory Access Point")
 func resourceAccessPointForDirectoryBucket() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAccessPointForDirectoryBucketCreate,
@@ -260,22 +260,6 @@ func resourceAccessPointForDirectoryBucketCreate(ctx context.Context, d *schema.
 		}
 	}
 
-	if v, ok := d.GetOk(names.AttrScope); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-		scope := expandScope(v.([]any)[0].(map[string]any))
-
-		input := &s3control.PutAccessPointScopeInput{
-			AccountId: aws.String(accountID),
-			Name:      aws.String(name),
-			Scope:     scope,
-		}
-
-		_, err = conn.PutAccessPointScope(ctx, input)
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "creating S3 Access Point for Directory Bucket (%s) policy: %s", d.Id(), err)
-		}
-	}
-
 	return append(diags, resourceAccessPointForDirectoryBucketRead(ctx, d, meta)...)
 }
 
@@ -428,7 +412,7 @@ func resourceAccessPointForDirectoryBucketUpdate(ctx context.Context, d *schema.
 			_, err := conn.DeleteAccessPointScope(ctx, input)
 
 			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "deleting Directory S3 Access Point (%s) scope: %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "deleting S3 Access Point for Directory Bucket (%s) scope: %s", d.Id(), err)
 			}
 		}
 	}

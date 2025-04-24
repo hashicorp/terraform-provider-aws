@@ -82,8 +82,11 @@ func resourceAccessPointForDirectoryBucketScopeCreate(ctx context.Context, d *sc
 	name := d.Get(names.AttrName).(string)
 	accountID := d.Get(names.AttrAccountID).(string)
 
-	d.Set(names.AttrName, name)
-	d.Set(names.AttrAccountID, accountID)
+	resourceID, err := AccessPointForDirectoryBucketCreateResourceID(name, accountID)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "creating S3 Access Point for Directory Bucket (%s:%s) Scope: %s", name, accountID, err)
+	}
+	d.SetId(resourceID)
 
 	var scope *types.Scope
 	if v, ok := d.GetOk(names.AttrScope); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
@@ -96,17 +99,11 @@ func resourceAccessPointForDirectoryBucketScopeCreate(ctx context.Context, d *sc
 		Scope:     scope,
 	}
 
-	_, err := conn.PutAccessPointScope(ctx, input)
+	_, err = conn.PutAccessPointScope(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating S3 Access Point for Directory Bucket (%s:%s) Scope: %s", name, accountID, err)
 	}
-
-	resourceID, err := AccessPointForDirectoryBucketCreateResourceID(name, accountID)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating S3 Access Point for Directory Bucket (%s:%s) Scope: %s", name, accountID, err)
-	}
-	d.SetId(resourceID)
 
 	return append(diags, resourceAccessPointForDirectoryBucketScopeRead(ctx, d, meta)...)
 }

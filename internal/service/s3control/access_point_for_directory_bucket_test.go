@@ -722,6 +722,8 @@ resource "aws_s3_directory_bucket" "test_bucket" {
 func testAccAccessPointForDirectoryBucketConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+data "aws_region" "current" {}
 
 resource "aws_s3_directory_access_point" "test_ap" {
   bucket     = aws_s3_directory_bucket.test_bucket.bucket

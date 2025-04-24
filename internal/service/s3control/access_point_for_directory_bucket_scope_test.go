@@ -22,7 +22,7 @@ func TestAccS3ControlAccessPointForDirectoryBucketScope_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_s3control_directory_access_point_scope.test_scope"
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	apName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	accessPointName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -31,9 +31,20 @@ func TestAccS3ControlAccessPointForDirectoryBucketScope_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckAccessPointForDirectoryBucketScopeDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDirectoryBucketConfig_basic(bucketName) + testAccAccessPointScopeConfig_basic(apName),
+				Config: testAccDirectoryBucketConfig_basic(bucketName) + testAccAccessPointScopeConfig_basic(accessPointName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPointForDirectoryBucketScopeExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "scope.0.permissions.#", "2"),
+					resource.TestCheckResourceAttrSet(resourceName, "scope.0.permissions.0"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "scope.0.permissions.*", "GetObject"),
+					resource.TestCheckResourceAttrSet(resourceName, "scope.0.permissions.1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "scope.0.permissions.*", "PutObject"),
+
+					resource.TestCheckResourceAttr(resourceName, "scope.0.prefixes.#", "2"),
+					resource.TestCheckResourceAttrSet(resourceName, "scope.0.prefixes.0"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "scope.0.prefixes.*", "prefix1/"),
+					resource.TestCheckResourceAttrSet(resourceName, "scope.0.prefixes.1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "scope.0.prefixes.*", "prefix2-*-*"),
 				),
 			},
 			{
@@ -64,7 +75,7 @@ func TestAccS3ControlAccessPointScope_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_s3control_directory_access_point_scope.test_scope"
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	apName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	accessPointName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -73,10 +84,35 @@ func TestAccS3ControlAccessPointScope_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckAccessPointForDirectoryBucketScopeDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDirectoryBucketConfig_basic(bucketName) + testAccAccessPointScopeConfig_basic(apName),
+				Config: testAccDirectoryBucketConfig_basic(bucketName) + testAccAccessPointScopeConfig_basic(accessPointName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPointForDirectoryBucketScopeExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3control.ResourceAccessPointForDirectoryBucketScope(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccS3ControlAccessPointScope_disappears_AccessPoint(t *testing.T) {
+	ctx := acctest.Context(t)
+	accessPointResourceName := "aws_s3_directory_access_point.test_ap"
+	resourceName := "aws_s3control_directory_access_point_scope.test_scope"
+	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	accessPointName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccessPointForDirectoryBucketScopeDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDirectoryBucketConfig_basic(bucketName) + testAccAccessPointScopeConfig_basic(accessPointName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccessPointForDirectoryBucketScopeExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3control.ResourceAccessPointForDirectoryBucket(), accessPointResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -88,7 +124,7 @@ func TestAccS3ControlAccessPointScope_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_s3control_directory_access_point_scope.test_scope"
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	apName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	accessPointName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -97,7 +133,7 @@ func TestAccS3ControlAccessPointScope_update(t *testing.T) {
 		CheckDestroy:             testAccCheckAccessPointForDirectoryBucketScopeDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDirectoryBucketConfig_basic(bucketName) + testAccAccessPointScopeConfig_basic(apName),
+				Config: testAccDirectoryBucketConfig_basic(bucketName) + testAccAccessPointScopeConfig_basic(accessPointName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPointForDirectoryBucketScopeExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "scope.0.permissions.#", "2"),
@@ -135,7 +171,7 @@ func TestAccS3ControlAccessPointScope_update(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDirectoryBucketConfig_basic(bucketName) + testAccAccessPointScopeConfig_updated(apName),
+				Config: testAccDirectoryBucketConfig_basic(bucketName) + testAccAccessPointScopeConfig_updated(accessPointName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPointForDirectoryBucketScopeExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "scope.0.permissions.#", "1"),
