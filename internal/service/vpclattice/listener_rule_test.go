@@ -170,7 +170,7 @@ func TestAccVPCLatticeListenerRule_action_forward_Multiple(t *testing.T) {
 	})
 }
 
-func TestAccVPCLatticeListenerRule_methodMatch(t *testing.T) {
+func TestAccVPCLatticeListenerRule_match_HeaderMatches_Single(t *testing.T) {
 	ctx := acctest.Context(t)
 	var listenerRule vpclattice.GetRuleOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -183,11 +183,20 @@ func TestAccVPCLatticeListenerRule_methodMatch(t *testing.T) {
 		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccListenerRuleConfig_methodMatch(rName),
+				Config: testAccListenerRuleConfig_match_HeaderMatches_Single(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, resourceName, &listenerRule),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "40"),
+					resource.TestCheckResourceAttr(resourceName, "match.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "match.0.http_match.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "match.0.http_match.0.header_matches.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "match.0.http_match.0.header_matches.0.case_sensitive", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "match.0.http_match.0.header_matches.0.name", "example-header"),
+					resource.TestCheckResourceAttr(resourceName, "match.0.http_match.0.header_matches.0.match.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "match.0.http_match.0.header_matches.0.match.0.contains", "example-contains"),
+					resource.TestCheckResourceAttr(resourceName, "match.0.http_match.0.header_matches.0.match.0.exact", ""),
+					resource.TestCheckResourceAttr(resourceName, "match.0.http_match.0.header_matches.0.match.0.prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "match.0.http_match.0.method", ""),
+					resource.TestCheckResourceAttr(resourceName, "match.0.http_match.0.path_match.#", "0"),
 				),
 			},
 			{
@@ -462,6 +471,39 @@ resource "aws_vpclattice_listener_rule" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccListenerRuleConfig_match_HeaderMatches_Single(rName string) string {
+	return acctest.ConfigCompose(testAccListenerRuleConfig_base(rName), fmt.Sprintf(`
+resource "aws_vpclattice_listener_rule" "test" {
+  name = %[1]q
+
+  listener_identifier = aws_vpclattice_listener.test.listener_id
+  service_identifier  = aws_vpclattice_service.test.id
+
+  priority = 40
+
+  match {
+    http_match {
+      header_matches {
+        name = "example-header"
+
+        match {
+          contains = "example-contains"
+        }
+      }
+    }
+  }
+
+  action {
+    forward {
+      target_groups {
+        target_group_identifier = aws_vpclattice_target_group.test[0].id
+      }
+    }
+  }
+}
+`, rName))
 }
 
 func testAccListenerRuleConfig_methodMatch(rName string) string {
