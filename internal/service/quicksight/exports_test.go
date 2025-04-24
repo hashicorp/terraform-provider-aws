@@ -27,7 +27,6 @@ var (
 
 	DashboardLatestVersion                = dashboardLatestVersion
 	DefaultGroupNamespace                 = defaultGroupNamespace
-	DefaultIAMPolicyAssignmentNamespace   = defaultIAMPolicyAssignmentNamespace
 	DefaultUserNamespace                  = defaultUserNamespace
 	FindAccountSubscriptionByID           = findAccountSubscriptionByID
 	FindAnalysisByTwoPartKey              = findAnalysisByTwoPartKey
