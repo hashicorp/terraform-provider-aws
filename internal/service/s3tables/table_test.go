@@ -463,6 +463,80 @@ func TestAccS3TablesTable_maintenanceConfiguration(t *testing.T) {
 	})
 }
 
+func TestAccS3TablesTable_encryptionConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var table s3tables.GetTableOutput
+	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	namespace := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
+	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
+	resourceName := "aws_s3tables_table.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3TablesServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_encryptionConfiguration(rName, namespace, bucketName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableExists(ctx, resourceName, &table),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "s3tables", regexache.MustCompile("bucket/"+bucketName+"/table/"+verify.UUIDRegexPattern+"$")),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "created_by"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrFormat, "ICEBERG"),
+					resource.TestCheckNoResourceAttr(resourceName, "metadata_location"),
+					resource.TestCheckResourceAttrPair(resourceName, "modified_at", resourceName, names.AttrCreatedAt),
+					resource.TestCheckNoResourceAttr(resourceName, "modified_by"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrNamespace, "aws_s3tables_namespace.test", names.AttrNamespace),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerAccountID),
+					resource.TestCheckResourceAttrPair(resourceName, "table_bucket_arn", "aws_s3tables_table_bucket.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.TableTypeCustomer)),
+					resource.TestCheckResourceAttrPair(resourceName, "encryption_configuration.kms_key_arn", "aws_kms_key.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.sse_algorithm", "aws:kms"),
+					resource.TestCheckResourceAttrSet(resourceName, "version_token"),
+					func(s *terraform.State) error {
+						tableID, err := tfs3tables.TableIDFromTableARN(aws.ToString(table.TableARN))
+						if err != nil {
+							return err
+						}
+						return resource.TestMatchResourceAttr(resourceName, "warehouse_location", regexache.MustCompile("^s3://"+tableID[:19]+".+--table-s3$"))(s)
+					},
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("maintenance_configuration"), knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"iceberg_compaction": knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"settings": knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"target_file_size_mb": knownvalue.Int32Exact(512),
+							}),
+							names.AttrStatus: tfknownvalue.StringExact(awstypes.MaintenanceStatusEnabled),
+						}),
+						"iceberg_snapshot_management": knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"settings": knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"max_snapshot_age_hours": knownvalue.Int32Exact(120),
+								"min_snapshots_to_keep":  knownvalue.Int32Exact(1),
+							}),
+							names.AttrStatus: tfknownvalue.StringExact(awstypes.MaintenanceStatusEnabled),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccTableImportStateIdFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+		},
+	})
+}
+
 func testAccCheckTableDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3TablesClient(ctx)
@@ -598,4 +672,78 @@ resource "aws_s3tables_table_bucket" "test" {
   name = %[3]q
 }
 `, rName, namespace, bucketName, targetSize, maxSnapshotAge, minSnapshots)
+}
+
+func testAccTableConfig_encryptionConfiguration(rName, namespace, bucketName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3tables_table" "test" {
+  name             = %[1]q
+  namespace        = aws_s3tables_namespace.test.namespace
+  table_bucket_arn = aws_s3tables_namespace.test.table_bucket_arn
+  format           = "ICEBERG"
+
+  encryption_configuration = {
+    kms_key_arn   = aws_kms_key.test.arn
+    sse_algorithm = "aws:kms"
+  }
+}
+
+resource "aws_s3tables_namespace" "test" {
+  namespace        = %[2]q
+  table_bucket_arn = aws_s3tables_table_bucket.test.arn
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_s3tables_table_bucket" "test" {
+  name = %[3]q
+  encryption_configuration = {
+    kms_key_arn   = aws_kms_key.test2.arn
+    sse_algorithm = "aws:kms"
+  }
+}
+
+resource "aws_kms_key" "test" {
+  deletion_window_in_days = 7
+  policy = data.aws_iam_policy_document.key_policy.json
+}
+
+data "aws_caller_identity" "current" {}
+
+data "aws_iam_policy_document" "key_policy" {
+  statement {
+    sid = "EnableUserAccess"
+    principals {
+      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
+      type = "AWS"
+    }
+    actions = ["kms:*"]
+    resources = ["*"]
+  }
+  statement {
+    sid = "EnableMaintenace"
+    principals {
+      identifiers = ["maintenance.s3tables.amazonaws.com"]
+      type = "Service"
+    }
+    actions = [
+      "kms:GenerateDataKey",
+      "kms:Decrypt"
+    ]
+    resources = ["*"]
+    condition {
+      test     = "StringLike"
+      values = ["${aws_s3tables_table_bucket.test.arn}/*"]
+      variable = "kms:EncryptionContext:aws:s3:arn"
+    }
+  }
+}
+
+resource "aws_kms_key" "test2" {
+  deletion_window_in_days = 7
+}
+
+`, rName, namespace, bucketName)
 }

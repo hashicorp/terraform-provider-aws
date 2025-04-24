@@ -459,6 +459,19 @@ type encryptionConfigurationModel struct {
 	SseAlgorithm fwtypes.StringEnum[awstypes.SSEAlgorithm] `tfsdk:"sse_algorithm"`
 }
 
+func (m *encryptionConfigurationModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
+	switch t := v.(type) {
+	case awstypes.EncryptionConfiguration:
+		m.SseAlgorithm = fwtypes.StringEnumValue[awstypes.SSEAlgorithm](t.SseAlgorithm)
+		if t.SseAlgorithm == awstypes.SSEAlgorithmAes256 {
+			m.KmsKeyArn = fwtypes.ARNNull()
+		} else {
+			m.KmsKeyArn = fwtypes.ARNValue(aws.ToString(t.KmsKeyArn))
+		}
+	}
+	return diags
+}
+
 type tableBucketMaintenanceConfigurationModel struct {
 	IcebergUnreferencedFileRemovalSettings fwtypes.ObjectValueOf[tableBucketMaintenanceConfigurationValueModel[icebergUnreferencedFileRemovalSettingsModel]] `tfsdk:"iceberg_unreferenced_file_removal"`
 }
