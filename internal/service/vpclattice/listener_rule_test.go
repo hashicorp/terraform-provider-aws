@@ -208,6 +208,50 @@ func TestAccVPCLatticeListenerRule_match_HeaderMatches_Single(t *testing.T) {
 	})
 }
 
+func TestAccVPCLatticeListenerRule_match_HeaderMatches_Multiple(t *testing.T) {
+	ctx := acctest.Context(t)
+	var listenerRule vpclattice.GetRuleOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_vpclattice_listener_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccListenerRuleConfig_match_HeaderMatches_Multiple(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerRuleExists(ctx, resourceName, &listenerRule),
+					resource.TestCheckResourceAttr(resourceName, "match.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "match.0.http_match.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "match.0.http_match.0.header_matches.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "match.0.http_match.0.header_matches.0.case_sensitive", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "match.0.http_match.0.header_matches.0.name", "example-header"),
+					resource.TestCheckResourceAttr(resourceName, "match.0.http_match.0.header_matches.0.match.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "match.0.http_match.0.header_matches.0.match.0.contains", "example-contains"),
+					resource.TestCheckResourceAttr(resourceName, "match.0.http_match.0.header_matches.0.match.0.exact", ""),
+					resource.TestCheckResourceAttr(resourceName, "match.0.http_match.0.header_matches.0.match.0.prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "match.0.http_match.0.header_matches.1.case_sensitive", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "match.0.http_match.0.header_matches.1.name", "other-header"),
+					resource.TestCheckResourceAttr(resourceName, "match.0.http_match.0.header_matches.1.match.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "match.0.http_match.0.header_matches.1.match.0.contains", ""),
+					resource.TestCheckResourceAttr(resourceName, "match.0.http_match.0.header_matches.1.match.0.exact", "example-exact"),
+					resource.TestCheckResourceAttr(resourceName, "match.0.http_match.0.header_matches.1.match.0.prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "match.0.http_match.0.method", ""),
+					resource.TestCheckResourceAttr(resourceName, "match.0.http_match.0.path_match.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccVPCLatticeListenerRule_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var listenerRule vpclattice.GetRuleOutput
@@ -490,6 +534,47 @@ resource "aws_vpclattice_listener_rule" "test" {
 
         match {
           contains = "example-contains"
+        }
+      }
+    }
+  }
+
+  action {
+    forward {
+      target_groups {
+        target_group_identifier = aws_vpclattice_target_group.test[0].id
+      }
+    }
+  }
+}
+`, rName))
+}
+
+func testAccListenerRuleConfig_match_HeaderMatches_Multiple(rName string) string {
+	return acctest.ConfigCompose(testAccListenerRuleConfig_base(rName), fmt.Sprintf(`
+resource "aws_vpclattice_listener_rule" "test" {
+  name = %[1]q
+
+  listener_identifier = aws_vpclattice_listener.test.listener_id
+  service_identifier  = aws_vpclattice_service.test.id
+
+  priority = 40
+
+  match {
+    http_match {
+      header_matches {
+        name = "example-header"
+
+        match {
+          contains = "example-contains"
+        }
+      }
+      header_matches {
+        name           = "other-header"
+        case_sensitive = true
+
+        match {
+          exact = "example-exact"
         }
       }
     }
