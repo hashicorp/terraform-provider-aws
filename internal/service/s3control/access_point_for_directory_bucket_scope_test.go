@@ -1,5 +1,5 @@
-// // Copyright (c) HashiCorp, Inc.
-// // SPDX-License-Identifier: MPL-2.0
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package s3control_test
 
@@ -205,18 +205,6 @@ func testAccCheckAccessPointForDirectoryBucketScopeDestroy(ctx context.Context) 
 
 		return nil
 	}
-}
-
-func testAccAccessPointForDirectoryBucketConfig_basic(rName string) string {
-	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
-
-resource "aws_s3_directory_access_point" "test_ap" {
-  bucket     = aws_s3_directory_bucket.test_bucket.bucket
-  name       = "%[1]s--${local.location_name}--xa-s3"
-  account_id = data.aws_caller_identity.current.account_id
-}
-`, rName)
 }
 
 func testAccAccessPointScopeConfig_basic(rName string) string {

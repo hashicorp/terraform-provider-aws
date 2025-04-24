@@ -9,13 +9,17 @@ import (
 	"sort"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/s3control"
 	"github.com/aws/aws-sdk-go-v2/service/s3control/types"
-	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfs3control "github.com/hashicorp/terraform-provider-aws/internal/service/s3control"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -26,22 +30,20 @@ func TestAccS3ControlDirectoryAccessPoint_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v s3control.GetAccessPointOutput
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	accessPointName := fmt.Sprintf("%s--usw2-az2--xa-s3", sdkacctest.RandomWithPrefix("dap"))
-	resourceName := "aws_s3_directory_access_point.test"
+	accessPointName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_directory_access_point.test_ap"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccessPointDestroy(ctx),
+		CheckDestroy:             testAccCheckAccessPointForDirectoryBucketDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDirectoryAccessPointConfig_basic(bucketName, accessPointName),
+				Config: testAccDirectoryBucketConfig_basic(bucketName) + testAccAccessPointForDirectoryBucketConfig_basic(accessPointName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPointForDirectoryBucketExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrAccountID),
-					resource.TestCheckResourceAttr(resourceName, names.AttrBucket, bucketName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, accessPointName),
 					resource.TestCheckResourceAttr(resourceName, "network_origin", "Internet"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPolicy, ""),
 					resource.TestCheckResourceAttr(resourceName, "public_access_block_configuration.#", "1"),
@@ -50,8 +52,15 @@ func TestAccS3ControlDirectoryAccessPoint_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "public_access_block_configuration.0.ignore_public_acls", "true"),
 					resource.TestCheckResourceAttr(resourceName, "public_access_block_configuration.0.restrict_public_buckets", "true"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "scope.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "scope.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scope.0.permissions.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "scope.0.prefixes.#", "0"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("s3express", regexache.MustCompile(`accesspoint/.+--xa-s3`))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrBucket), knownvalue.StringRegexp(tfs3control.DirectoryBucketNameRegex)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringRegexp(tfs3control.AccessPointForDirectoryBucketNameRegex)),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -65,9 +74,9 @@ func TestAccS3ControlDirectoryAccessPoint_basic(t *testing.T) {
 func TestAccS3ControlAccessPointForDirectoryBucket_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v s3control.GetAccessPointOutput
-	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix) + "--usw2-az2--x-s3"
-	accessPointName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix) + "--usw2-az2--xa-s3"
-	resourceName := "aws_s3_directory_access_point.test"
+	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	accessPointName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_directory_access_point.test_ap"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -76,10 +85,10 @@ func TestAccS3ControlAccessPointForDirectoryBucket_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckAccessPointForDirectoryBucketDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDirectoryAccessPointConfig_basic(bucketName, accessPointName),
+				Config: testAccDirectoryBucketConfig_basic(bucketName) + testAccAccessPointForDirectoryBucketConfig_basic(accessPointName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPointForDirectoryBucketExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3control.ResourceAccessPoint(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3control.ResourceAccessPointForDirectoryBucket(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -90,49 +99,9 @@ func TestAccS3ControlAccessPointForDirectoryBucket_disappears(t *testing.T) {
 func TestAccS3ControlDirectoryAccessPoint_policy(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v s3control.GetAccessPointOutput
-	accessPointName := fmt.Sprintf("%s--usw2-az2--xa-s3", sdkacctest.RandomWithPrefix("dap"))
-	resourceName := "aws_s3_directory_access_point.test"
-
-	expectedPolicyText1 := func() string {
-		return fmt.Sprintf(`{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "",
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "arn:%[1]s:iam::%[3]s:root"
-      },
-      "Action": "s3:GetObject",
-      "Resource": [
-        "arn:%[1]s:s3express:%[2]s:%[3]s:accesspoint/%[4]s/object/*"
-      ]
-    }
-  ]
-}`, acctest.Partition(), acctest.Region(), acctest.AccountID(ctx), accessPointName)
-	}
-
-	expectedPolicyText2 := func() string {
-		return fmt.Sprintf(`{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "",
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "arn:%[1]s:iam::%[3]s:root"
-      },
-      "Action": [
-        "s3:PutObject",
-        "s3:GetObject"
-      ],
-      "Resource": [
-        "arn:%[1]s:s3express:%[2]s:%[3]s:accesspoint/%[4]s/object/*"
-      ]
-    }
-  ]
-}`, acctest.Partition(), acctest.Region(), acctest.AccountID(ctx), accessPointName)
-	}
+	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	accessPointName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_directory_access_point.test_ap"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -141,14 +110,12 @@ func TestAccS3ControlDirectoryAccessPoint_policy(t *testing.T) {
 		CheckDestroy:             testAccCheckAccessPointForDirectoryBucketDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccessPointForDirectoryBucketConfig_policy(accessPointName),
+				Config: testAccDirectoryBucketConfig_basic(bucketName) +
+					testAccAccessPointForDirectoryBucketConfig_policy(accessPointName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPointForDirectoryBucketExists(ctx, resourceName, &v),
-					testAccCheckAccessPointForDirectoryBucketHasPolicy(ctx, resourceName, expectedPolicyText1),
+					testAccCheckAccessPointForDirectoryBucketHasPolicy(ctx, resourceName),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrAccountID),
-					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "s3express", fmt.Sprintf("accesspoint/%s", accessPointName)),
-					resource.TestCheckResourceAttr(resourceName, names.AttrBucket, accessPointName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, accessPointName),
 					resource.TestCheckResourceAttr(resourceName, "network_origin", "Internet"),
 					resource.TestCheckResourceAttr(resourceName, "public_access_block_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "public_access_block_configuration.0.block_public_acls", acctest.CtTrue),
@@ -156,8 +123,15 @@ func TestAccS3ControlDirectoryAccessPoint_policy(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "public_access_block_configuration.0.ignore_public_acls", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "public_access_block_configuration.0.restrict_public_buckets", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "vpc_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "scope.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "scope.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scope.0.permissions.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "scope.0.prefixes.#", "0"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("s3express", regexache.MustCompile(`accesspoint/.+--xa-s3`))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrBucket), knownvalue.StringRegexp(tfs3control.DirectoryBucketNameRegex)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringRegexp(tfs3control.AccessPointForDirectoryBucketNameRegex)),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -165,14 +139,14 @@ func TestAccS3ControlDirectoryAccessPoint_policy(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAccessPointForDirectoryBucketConfig_policyUpdated(accessPointName),
+				Config: testAccDirectoryBucketConfig_basic(bucketName) + testAccAccessPointForDirectoryBucketConfig_policyUpdated(accessPointName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPointForDirectoryBucketExists(ctx, resourceName, &v),
-					testAccCheckAccessPointForDirectoryBucketHasPolicy(ctx, resourceName, expectedPolicyText2),
+					testAccCheckAccessPointForDirectoryBucketHasPolicy(ctx, resourceName),
 				),
 			},
 			{
-				Config: testAccAccessPointForDirectoryBucketConfig_noPolicy(accessPointName),
+				Config: testAccDirectoryBucketConfig_basic(bucketName) + testAccAccessPointForDirectoryBucketConfig_noPolicy(accessPointName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPointForDirectoryBucketExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPolicy, ""),
@@ -185,8 +159,9 @@ func TestAccS3ControlDirectoryAccessPoint_policy(t *testing.T) {
 func TestAccS3ControlAccessPointForDirectoryBucket_publicAccessBlock(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v s3control.GetAccessPointOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_s3_directory_access_point.test"
+	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	accessPointName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_directory_access_point.test_ap"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -195,13 +170,10 @@ func TestAccS3ControlAccessPointForDirectoryBucket_publicAccessBlock(t *testing.
 		CheckDestroy:             testAccCheckAccessPointForDirectoryBucketDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccessPointForDirectoryBucketConfig_publicBlock(rName),
+				Config: testAccDirectoryBucketConfig_basic(bucketName) + testAccAccessPointForDirectoryBucketConfig_publicBlock(accessPointName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPointForDirectoryBucketExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrAccountID),
-					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "s3express", fmt.Sprintf("accesspoint/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, names.AttrBucket, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "network_origin", "Internet"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPolicy, ""),
 					resource.TestCheckResourceAttr(resourceName, "public_access_block_configuration.#", "1"),
@@ -210,8 +182,15 @@ func TestAccS3ControlAccessPointForDirectoryBucket_publicAccessBlock(t *testing.
 					resource.TestCheckResourceAttr(resourceName, "public_access_block_configuration.0.ignore_public_acls", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "public_access_block_configuration.0.restrict_public_buckets", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "vpc_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "scope.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "scope.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scope.0.permissions.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "scope.0.prefixes.#", "0"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("s3express", regexache.MustCompile(`accesspoint/.+--xa-s3`))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrBucket), knownvalue.StringRegexp(tfs3control.DirectoryBucketNameRegex)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringRegexp(tfs3control.AccessPointForDirectoryBucketNameRegex)),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -225,8 +204,9 @@ func TestAccS3ControlAccessPointForDirectoryBucket_publicAccessBlock(t *testing.
 func TestAccS3ControlAccessPointForDirectoryBucket_vpc(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v s3control.GetAccessPointOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_s3_directory_access_point.test"
+	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	accessPointName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_directory_access_point.test_ap"
 	vpcResourceName := "aws_vpc.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -236,13 +216,10 @@ func TestAccS3ControlAccessPointForDirectoryBucket_vpc(t *testing.T) {
 		CheckDestroy:             testAccCheckAccessPointDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccessPointForDirectoryBucketConfig_vpc(rName),
+				Config: testAccDirectoryBucketConfig_basic(bucketName) + testAccAccessPointForDirectoryBucketConfig_vpc(accessPointName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccessPointExists(ctx, resourceName, &v),
+					testAccCheckAccessPointForDirectoryBucketExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrAccountID),
-					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "s3express", fmt.Sprintf("accesspoint/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, names.AttrBucket, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "network_origin", "VPC"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPolicy, ""),
 					resource.TestCheckResourceAttr(resourceName, "public_access_block_configuration.#", "1"),
@@ -252,8 +229,15 @@ func TestAccS3ControlAccessPointForDirectoryBucket_vpc(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "public_access_block_configuration.0.restrict_public_buckets", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "vpc_configuration.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_configuration.0.vpc_id", vpcResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "scope.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "scope.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scope.0.permissions.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "scope.0.prefixes.#", "0"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("s3express", regexache.MustCompile(`accesspoint/.+--xa-s3`))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrBucket), knownvalue.StringRegexp(tfs3control.DirectoryBucketNameRegex)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringRegexp(tfs3control.AccessPointForDirectoryBucketNameRegex)),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -267,8 +251,9 @@ func TestAccS3ControlAccessPointForDirectoryBucket_vpc(t *testing.T) {
 func TestAccS3ControlAccessPointForDirectoryBucket_scope(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v s3control.GetAccessPointOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_s3_directory_access_point.test"
+	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	accessPointName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_directory_access_point.test_ap"
 
 	expectedScope1 := func() *types.Scope {
 
@@ -305,15 +290,12 @@ func TestAccS3ControlAccessPointForDirectoryBucket_scope(t *testing.T) {
 		CheckDestroy:             testAccCheckAccessPointDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccessPointForDirectoryBucketConfig_scope(rName),
+				Config: testAccDirectoryBucketConfig_basic(bucketName) + testAccAccessPointForDirectoryBucketConfig_scope(accessPointName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPointForDirectoryBucketExists(ctx, resourceName, &v),
 					testAccCheckAccessPointForDirectoryBucketHasScope(ctx, resourceName, expectedScope1),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrAccountID),
-					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "s3express", fmt.Sprintf("accesspoint/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, names.AttrBucket, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "network_origin", "VPC"),
+					resource.TestCheckResourceAttr(resourceName, "network_origin", "Internet"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPolicy, ""),
 					resource.TestCheckResourceAttr(resourceName, "public_access_block_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "public_access_block_configuration.0.block_public_acls", acctest.CtTrue),
@@ -322,9 +304,18 @@ func TestAccS3ControlAccessPointForDirectoryBucket_scope(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "public_access_block_configuration.0.restrict_public_buckets", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "vpc_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "scope.#", "1"),
-					// TODO: add more checks here for scope
-
+					resource.TestCheckResourceAttr(resourceName, "scope.0.permissions.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "scope.0.permissions.0", "GetObject"),
+					resource.TestCheckResourceAttr(resourceName, "scope.0.permissions.1", "PutObject"),
+					resource.TestCheckResourceAttr(resourceName, "scope.0.prefixes.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "scope.0.prefixes.0", "prefix1/"),
+					resource.TestCheckResourceAttr(resourceName, "scope.0.prefixes.1", "prefix2-*-*"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("s3express", regexache.MustCompile(`accesspoint/.+--xa-s3`))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrBucket), knownvalue.StringRegexp(tfs3control.DirectoryBucketNameRegex)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringRegexp(tfs3control.AccessPointForDirectoryBucketNameRegex)),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -332,35 +323,27 @@ func TestAccS3ControlAccessPointForDirectoryBucket_scope(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAccessPointForDirectoryBucketConfig_scopeUpdated(rName),
+				Config: testAccDirectoryBucketConfig_basic(bucketName) + testAccAccessPointForDirectoryBucketConfig_scopeUpdated(accessPointName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPointForDirectoryBucketExists(ctx, resourceName, &v),
 					testAccCheckAccessPointForDirectoryBucketHasScope(ctx, resourceName, expectedScope2),
+					resource.TestCheckResourceAttr(resourceName, "scope.0.permissions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scope.0.permissions.0", "GetObject"),
+					resource.TestCheckResourceAttr(resourceName, "scope.0.prefixes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scope.0.prefixes.0", "*"),
 				),
 			},
 			{
-				Config: testAccAccessPointForDirectoryBucketConfig_noScope(rName),
+				Config: testAccDirectoryBucketConfig_basic(bucketName) + testAccAccessPointForDirectoryBucketConfig_noScope(accessPointName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPointForDirectoryBucketExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "scope.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "scope.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scope.0.permissions.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "scope.0.prefixes.#", "0"),
 				),
 			},
 		},
 	})
-}
-
-func testAccDirectoryAccessPointConfig_basic(bucketName, accessPointName string) string {
-	return fmt.Sprintf(`
-resource "aws_s3_directory_bucket" "test_bucket" {
-  bucket = "%s--usw2-az2--x-s3"
-}
-
-resource "aws_s3_directory_access_point" "test_ap" {
-  bucket = aws_s3_directory_bucket.test_bucket.bucket
-  name   = "%s--usw2-az2--xa-s3"
-  account_id = data.aws_caller_identity.current.account_id
-}
-`, bucketName, accessPointName)
 }
 
 func testAccCheckAccessPointForDirectoryBucketDestroy(ctx context.Context) resource.TestCheckFunc {
@@ -368,7 +351,7 @@ func testAccCheckAccessPointForDirectoryBucketDestroy(ctx context.Context) resou
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_s3_access_point" {
+			if rs.Type != "aws_s3_directory_access_point" {
 				continue
 			}
 
@@ -422,13 +405,10 @@ func testAccCheckAccessPointForDirectoryBucketExists(ctx context.Context, n stri
 
 func testAccAccessPointForDirectoryBucketConfig_policy(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_s3_directory_bucket" "test" {
-  bucket = %[1]q
-}
-
-resource "aws_s3_directory_access_point" "test" {
-  bucket = aws_s3_directory_bucket.test.bucket
-  name   = %[1]q
+resource "aws_s3_directory_access_point" "test_ap" {
+  bucket     = aws_s3_directory_bucket.test_bucket.bucket
+  name       = "%[1]s--${local.location_name}--xa-s3"
+  account_id = data.aws_caller_identity.current.account_id
   policy = data.aws_iam_policy_document.test.json
 
   public_access_block_configuration {
@@ -448,11 +428,11 @@ data "aws_iam_policy_document" "test" {
     effect = "Allow"
 
     actions = [
-      "s3:GetObject",
+      "s3express:CreateSession",
     ]
 
     resources = [
-      "arn:${data.aws_partition.current.partition}:s3express:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:accesspoint/%[1]s/object/*",
+      "arn:${data.aws_partition.current.partition}:s3express:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:accesspoint/%[1]s--${local.location_name}--xa-s3",
     ]
 
     principals {
@@ -464,7 +444,7 @@ data "aws_iam_policy_document" "test" {
 `, rName)
 }
 
-func testAccCheckAccessPointForDirectoryBucketHasPolicy(ctx context.Context, n string, fn func() string) resource.TestCheckFunc {
+func testAccCheckAccessPointForDirectoryBucketHasPolicy(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -478,37 +458,18 @@ func testAccCheckAccessPointForDirectoryBucketHasPolicy(ctx context.Context, n s
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlClient(ctx)
 
-		actualPolicyText, err := tfs3control.FindAccessPointForDirectoryBucketPolicyByTwoPartKey(ctx, conn, accountID, name)
-
-		if err != nil {
-			return err
-		}
-
-		expectedPolicyText := fn()
-
-		equivalent, err := awspolicy.PoliciesAreEquivalent(actualPolicyText, expectedPolicyText)
-		if err != nil {
-			return fmt.Errorf("Error testing policy equivalence: %s", err)
-		}
-		if !equivalent {
-			return fmt.Errorf("Non-equivalent policy error:\n\nexpected: %s\n\n     got: %s\n",
-				expectedPolicyText, actualPolicyText)
-		}
-
-		return nil
+		_, err = tfs3control.FindAccessPointForDirectoryBucketPolicyByTwoPartKey(ctx, conn, accountID, name)
+		return err
 	}
 }
 
 func testAccAccessPointForDirectoryBucketConfig_policyUpdated(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_s3_directory_bucket" "test" {
-  bucket = %[1]q
-}
 
-resource "aws_s3_directory_access_point" "test" {
-  bucket = aws_s3_directory_bucket.test.bucket
-  name   = %[1]q
-  policy = data.aws_iam_policy_document.test.json
+resource "aws_s3_directory_access_point" "test_ap" {
+  bucket     = aws_s3_directory_bucket.test_bucket.bucket
+  name       = "%[1]s--${local.location_name}--xa-s3"
+  account_id = data.aws_caller_identity.current.account_id
 
   public_access_block_configuration {
     block_public_acls       = true
@@ -527,12 +488,11 @@ data "aws_iam_policy_document" "test" {
     effect = "Allow"
 
     actions = [
-      "s3:PutObject",
-      "s3:GetObject"
+      "s3express:CreateSession",
     ]
 
     resources = [
-      "arn:${data.aws_partition.current.partition}:s3express:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:accesspoint/%[1]s/object/*",
+      "arn:${data.aws_partition.current.partition}:s3express:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:accesspoint/%[1]s--${local.location_name}--xa-s3",
     ]
 
     principals {
@@ -546,13 +506,11 @@ data "aws_iam_policy_document" "test" {
 
 func testAccAccessPointForDirectoryBucketConfig_noPolicy(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_s3_directory_bucket" "test" {
-  bucket = %[1]q
-}
 
-resource "aws_s3_directory_access_point" "test" {
-  bucket = aws_s3_directory_bucket.test.bucket
-  name   = %[1]q
+resource "aws_s3_directory_access_point" "test_ap" {
+  bucket     = aws_s3_directory_bucket.test_bucket.bucket
+  name       = "%[1]s--${local.location_name}--xa-s3"
+  account_id = data.aws_caller_identity.current.account_id
 
   public_access_block_configuration {
     block_public_acls       = true
@@ -563,18 +521,20 @@ resource "aws_s3_directory_access_point" "test" {
 
   policy = "{}"
 }
+
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+data "aws_region" "current" {}
+
 `, rName)
 }
 
 func testAccAccessPointForDirectoryBucketConfig_publicBlock(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_s3_directory_bucket" "test" {
-  bucket = %[1]q
-}
-
-resource "aws_s3_directory_access_point" "test" {
-  bucket = aws_s3_directory_bucket.test.bucket
-  name   = %[1]q
+resource "aws_s3_directory_access_point" "test_ap" {
+  bucket     = aws_s3_directory_bucket.test_bucket.bucket
+  name       = "%[1]s--${local.location_name}--xa-s3"
+  account_id = data.aws_caller_identity.current.account_id
 
   public_access_block_configuration {
     block_public_acls       = true
@@ -583,6 +543,11 @@ resource "aws_s3_directory_access_point" "test" {
     restrict_public_buckets = true
   }
 }
+
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+data "aws_region" "current" {}
+
 `, rName)
 }
 
@@ -596,31 +561,28 @@ resource "aws_vpc" "test" {
   }
 }
 
-resource "aws_s3_directory_bucket" "test" {
-  bucket = %[1]q
-}
-
-resource "aws_s3_directory_access_point" "test" {
-  bucket = aws_s3_directory_bucket.test.bucket
-  name   = %[1]q
+resource "aws_s3_directory_access_point" "test_ap" {
+  bucket     = aws_s3_directory_bucket.test_bucket.bucket
+  name       = "%[1]s--${local.location_name}--xa-s3"
+  account_id = data.aws_caller_identity.current.account_id
 
   vpc_configuration {
     vpc_id = aws_vpc.test.id
   }
 }
+
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+data "aws_region" "current" {}
 `, rName)
 }
 
 func testAccAccessPointForDirectoryBucketConfig_scope(rName string) string {
 	return fmt.Sprintf(`
 
-resource "aws_s3_directory_bucket" "test" {
-  bucket = %[1]q
-}
-
-resource "aws_s3_directory_access_point" "test" {
-  bucket = aws_s3_directory_bucket.test.bucket
-  name   = %[1]q
+resource "aws_s3_directory_access_point" "test_ap" {
+  bucket     = aws_s3_directory_bucket.test_bucket.bucket
+  name       = "%[1]s--${local.location_name}--xa-s3"
   account_id = data.aws_caller_identity.current.account_id
 
   scope {
@@ -628,19 +590,19 @@ resource "aws_s3_directory_access_point" "test" {
     prefixes    = ["prefix1/", "prefix2-*-*"]
   }
 }
+
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+data "aws_region" "current" {}
 `, rName)
 }
 
 func testAccAccessPointForDirectoryBucketConfig_scopeUpdated(rName string) string {
 	return fmt.Sprintf(`
 
-resource "aws_s3_directory_bucket" "test" {
-  bucket = %[1]q
-}
-
-resource "aws_s3_directory_access_point" "test" {
-  bucket = aws_s3_directory_bucket.test.bucket
-  name   = %[1]q
+resource "aws_s3_directory_access_point" "test_ap" {
+  bucket     = aws_s3_directory_bucket.test_bucket.bucket
+  name       = "%[1]s--${local.location_name}--xa-s3"
   account_id = data.aws_caller_identity.current.account_id
 
   scope {
@@ -648,21 +610,29 @@ resource "aws_s3_directory_access_point" "test" {
     prefixes    = ["*"]
   }
 }
+
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+data "aws_region" "current" {}
 `, rName)
 }
 
 func testAccAccessPointForDirectoryBucketConfig_noScope(rName string) string {
 	return fmt.Sprintf(`
 
-resource "aws_s3_directory_bucket" "test" {
-  bucket = %[1]q
+resource "aws_s3_directory_access_point" "test_ap" {
+  bucket     = aws_s3_directory_bucket.test_bucket.bucket
+  name       = "%[1]s--${local.location_name}--xa-s3"
+  account_id = data.aws_caller_identity.current.account_id
+  scope {
+    permissions = []
+    prefixes    = []
+  }
 }
 
-resource "aws_s3_directory_access_point" "test" {
-  bucket = aws_s3_directory_bucket.test.bucket
-  name   = %[1]q
-  account_id = data.aws_caller_identity.current.account_id
-}
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+data "aws_region" "current" {}
 `, rName)
 }
 
@@ -747,4 +717,16 @@ resource "aws_s3_directory_bucket" "test_bucket" {
   force_destroy = true
 }
 `)
+}
+
+func testAccAccessPointForDirectoryBucketConfig_basic(rName string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+resource "aws_s3_directory_access_point" "test_ap" {
+  bucket     = aws_s3_directory_bucket.test_bucket.bucket
+  name       = "%[1]s--${local.location_name}--xa-s3"
+  account_id = data.aws_caller_identity.current.account_id
+}
+`, rName)
 }

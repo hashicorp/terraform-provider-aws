@@ -30,6 +30,12 @@ import (
 var (
 	// e.g. example--usw2-az2--xa-s3
 	AccessPointForDirectoryBucketNameRegex = regexache.MustCompile(`^(?:[0-9a-z.-]+)--(?:[0-9a-za-z]+(?:-[0-9a-za-z]+)+)--xa-s3$`)
+
+	// e.g. example--usw2-az2--x-s3
+	DirectoryBucketNameRegex = regexache.MustCompile(`^(?:[0-9a-z.-]+)--(?:[0-9a-za-z]+(?:-[0-9a-za-z]+)+)--x-s3$`)
+
+	// e.g. arn:aws:s3express:us-west-2:1234567890:accesspoint/ap-name--usw2-az2--xa-s3
+	AccessPointArnRegex = regexache.MustCompile(`^arn:aws(-[a-z]+)?:s3express:[a-z0-9-]+:\d{12}:accesspoint/[a-zA-Z0-9\-]+--[a-z0-9-]+--xa-s3$`)
 )
 
 // @SdkResource("aws_s3_directory_access_point", name="Directory Access Point")
@@ -68,10 +74,11 @@ func resourceAccessPointForDirectoryBucket() *schema.Resource {
 				Computed: true,
 			},
 			names.AttrBucket: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.NoZeroValues,
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.StringMatch(DirectoryBucketNameRegex,
+					"must be in the format [bucket_name]--[azid]--x-s3. Use the aws_s3_bucket resource to manage general purpose buckets"),
 			},
 			"bucket_account_id": {
 				Type:         schema.TypeString,
@@ -302,6 +309,7 @@ func resourceAccessPointForDirectoryBucketRead(ctx context.Context, d *schema.Re
 	}
 
 	d.Set(names.AttrARN, accessPointARN.String())
+	d.Set(names.AttrBucket, output.Bucket)
 	d.Set(names.AttrAccountID, accountID)
 	d.Set(names.AttrAlias, output.Alias)
 	d.Set("bucket_account_id", output.BucketAccountId)
