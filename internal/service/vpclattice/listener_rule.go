@@ -243,6 +243,7 @@ func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, met
 	name := d.Get(names.AttrName).(string)
 	serviceID, listenerID := d.Get("service_identifier").(string), d.Get("listener_identifier").(string)
 	input := vpclattice.CreateRuleInput{
+		Action:             expandRuleActions(d.Get(names.AttrAction).([]any)),
 		ClientToken:        aws.String(sdkid.UniqueId()),
 		ListenerIdentifier: aws.String(listenerID),
 		Match:              expandRuleMatches(d.Get("match").([]any)),
@@ -253,14 +254,6 @@ func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, met
 
 	if v, ok := d.GetOk(names.AttrPriority); ok {
 		input.Priority = aws.Int32(int32(v.(int)))
-	}
-
-	if v, ok := d.GetOk(names.AttrAction); ok {
-		if v, ok := v.([]any); ok && len(v) > 0 && v[0] != nil {
-			input.Action = expandRuleAction(v[0].(map[string]any))
-		} else {
-			return sdkdiag.AppendErrorf(diags, "Invalid \"action\" value: %v", v)
-		}
 	}
 
 	output, err := conn.CreateRule(ctx, &input)
@@ -696,6 +689,14 @@ func flattenPathMatchTypeMemberPrefix(apiObject *types.PathMatchTypeMemberPrefix
 	}
 
 	return tfMap
+}
+
+func expandRuleActions(tfList []any) types.RuleAction {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	return expandRuleAction(tfList[0].(map[string]any))
 }
 
 func expandRuleAction(tfMap map[string]any) types.RuleAction {
