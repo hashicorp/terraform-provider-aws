@@ -248,6 +248,7 @@ func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, met
 		ListenerIdentifier: aws.String(listenerID),
 		Match:              expandRuleMatches(d.Get("match").([]any)),
 		Name:               aws.String(name),
+		Priority:           aws.Int32(int32(d.Get(names.AttrPriority).(int))),
 		ServiceIdentifier:  aws.String(serviceID),
 		Tags:               getTagsIn(ctx),
 	}
