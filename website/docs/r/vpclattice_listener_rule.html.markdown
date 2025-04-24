@@ -174,6 +174,8 @@ The `path_match` block supports the following:
 
 The Path Match `match` block supports the following:
 
+Exactly one of `exact` or `prefix` is required.
+
 * `exact` - (Optional) Specifies an exact type match.
 * `prefix` - (Optional) Specifies a prefix type match.
   Matches the value with the prefix.
