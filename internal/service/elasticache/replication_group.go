@@ -979,7 +979,7 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 		if requestUpdate {
 			updateFuncs = append(updateFuncs, func() error {
 				_, err := conn.ModifyReplicationGroup(ctx, &input)
-				// modifying to match out of band operations may result n this error
+				// modifying to match out of band operations may result in this error
 				if errs.IsAErrorMessageContains[*awstypes.InvalidParameterCombinationException](err, "No modifications were requested") {
 					return nil
 				}
@@ -1001,7 +1001,7 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 
 			updateFuncs = append(updateFuncs, func() error {
 				_, err := conn.ModifyReplicationGroup(ctx, &authInput)
-				// modifying to match out of band operations may result n this error
+				// modifying to match out of band operations may result in this error
 				if errs.IsAErrorMessageContains[*awstypes.InvalidParameterCombinationException](err, "No modifications were requested") {
 					return nil
 				}
