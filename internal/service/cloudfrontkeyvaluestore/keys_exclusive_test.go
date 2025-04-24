@@ -350,18 +350,20 @@ func testAccCheckStoreDestroy(ctx context.Context, n, rName string) resource.Tes
 		conns.GlobalMutexKV.Lock(mutexKey)
 		defer conns.GlobalMutexKV.Unlock(mutexKey)
 
-		input := &cloudfront.DescribeKeyValueStoreInput{Name: aws.String(rName)}
+		inputDescribe := &cloudfront.DescribeKeyValueStoreInput{Name: aws.String(rName)}
 
-		resp, err := conn.DescribeKeyValueStore(ctx, input)
+		resp, err := conn.DescribeKeyValueStore(ctx, inputDescribe)
 
 		if err != nil {
 			return fmt.Errorf("error finding Cloudfront KeyValueStore in disappear test")
 		}
 
-		_, err = conn.DeleteKeyValueStore(ctx, &cloudfront.DeleteKeyValueStoreInput{
+		input := &cloudfront.DeleteKeyValueStoreInput{
 			Name:    aws.String(rName),
 			IfMatch: resp.ETag,
-		})
+		}
+
+		_, err = conn.DeleteKeyValueStore(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("error deleting Cloudfront KeyValueStore in disappear test: %s", err)
