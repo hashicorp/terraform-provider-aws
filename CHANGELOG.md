@@ -1,4 +1,5 @@
-## 5.96.0 (Unreleased)
+## 5.97.0 (Unreleased)
+## 5.96.0 (April 24, 2025)
 
 FEATURES:
 
