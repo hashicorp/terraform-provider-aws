@@ -57,6 +57,14 @@ func (r *resourceTableBucket) Schema(ctx context.Context, req resource.SchemaReq
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
+			"encryption_configuration": schema.ObjectAttribute{
+				CustomType: fwtypes.NewObjectTypeOf[encryptionConfigurationModel](ctx),
+				Optional:   true,
+				Computed:   true,
+				PlanModifiers: []planmodifier.Object{
+					objectplanmodifier.UseStateForUnknown(),
+				},
+			},
 			// TODO: Once Protocol v6 is supported, convert this to a `schema.SingleNestedAttribute` with full schema information
 			// Validations needed:
 			// * iceberg_unreferenced_file_removal.settings.non_current_days:  int32validator.AtLeast(1)
@@ -195,6 +203,22 @@ func (r *resourceTableBucket) Create(ctx context.Context, req resource.CreateReq
 	}
 	plan.MaintenanceConfiguration = maintenanceConfiguration
 
+	awsEncryptionConfig, err := conn.GetTableBucketEncryption(ctx, &s3tables.GetTableBucketEncryptionInput{
+		TableBucketARN: plan.ARN.ValueStringPointer(),
+	})
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.S3Tables, create.ErrActionReading, resNameTableBucket, plan.Name.String(), err),
+			err.Error(),
+		)
+	}
+	var encryptionConfiguration encryptionConfigurationModel
+	resp.Diagnostics.Append(flex.Flatten(ctx, awsEncryptionConfig.EncryptionConfiguration, &encryptionConfiguration)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	plan.EncryptionConfiguration = fwtypes.NewObjectValueOfMust[encryptionConfigurationModel](ctx, &encryptionConfiguration)
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
@@ -241,6 +265,22 @@ func (r *resourceTableBucket) Read(ctx context.Context, req resource.ReadRequest
 	}
 	state.MaintenanceConfiguration = maintenanceConfiguration
 
+	awsEncryptionConfig, err := conn.GetTableBucketEncryption(ctx, &s3tables.GetTableBucketEncryptionInput{
+		TableBucketARN: state.ARN.ValueStringPointer(),
+	})
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.S3Tables, create.ErrActionReading, resNameTableBucket, state.Name.String(), err),
+			err.Error(),
+		)
+	}
+	var encryptionConfiguration encryptionConfigurationModel
+	resp.Diagnostics.Append(flex.Flatten(ctx, awsEncryptionConfig.EncryptionConfiguration, &encryptionConfiguration)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	state.EncryptionConfiguration = fwtypes.NewObjectValueOfMust[encryptionConfigurationModel](ctx, &encryptionConfiguration)
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
@@ -255,9 +295,39 @@ func (r *resourceTableBucket) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
-	if !state.MaintenanceConfiguration.Equal(plan.MaintenanceConfiguration) {
-		conn := r.Meta().S3TablesClient(ctx)
+	conn := r.Meta().S3TablesClient(ctx)
 
+	if !plan.EncryptionConfiguration.Equal(state.EncryptionConfiguration) {
+		ec, d := plan.EncryptionConfiguration.ToPtr(ctx)
+		resp.Diagnostics.Append(d...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		input := s3tables.PutTableBucketEncryptionInput{
+			TableBucketARN: plan.ARN.ValueStringPointer(),
+		}
+
+		var encryptionConfiguration awstypes.EncryptionConfiguration
+
+		resp.Diagnostics.Append(flex.Expand(ctx, ec, &encryptionConfiguration)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		input.EncryptionConfiguration = &encryptionConfiguration
+
+		_, err := conn.PutTableBucketEncryption(ctx, &input)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.S3Tables, create.ErrActionUpdating, resNameTableBucket, plan.Name.String(), err),
+				err.Error(),
+			)
+			return
+		}
+	}
+
+	if !state.MaintenanceConfiguration.Equal(plan.MaintenanceConfiguration) {
 		mc, d := plan.MaintenanceConfiguration.ToPtr(ctx)
 		resp.Diagnostics.Append(d...)
 		if resp.Diagnostics.HasError() {
@@ -365,9 +435,14 @@ func findTableBucket(ctx context.Context, conn *s3tables.Client, arn string) (*s
 type resourceTableBucketModel struct {
 	ARN                      types.String                                                    `tfsdk:"arn"`
 	CreatedAt                timetypes.RFC3339                                               `tfsdk:"created_at"`
+	EncryptionConfiguration  fwtypes.ObjectValueOf[encryptionConfigurationModel]             `tfsdk:"encryption_configuration"`
 	MaintenanceConfiguration fwtypes.ObjectValueOf[tableBucketMaintenanceConfigurationModel] `tfsdk:"maintenance_configuration" autoflex:"-"`
 	Name                     types.String                                                    `tfsdk:"name"`
 	OwnerAccountID           types.String                                                    `tfsdk:"owner_account_id"`
+}
+type encryptionConfigurationModel struct {
+	KmsKeyArn    fwtypes.ARN                               `tfsdk:"kms_key_arn"`
+	SseAlgorithm fwtypes.StringEnum[awstypes.SSEAlgorithm] `tfsdk:"sse_algorithm"`
 }
 
 type tableBucketMaintenanceConfigurationModel struct {
