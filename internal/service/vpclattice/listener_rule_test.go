@@ -235,39 +235,23 @@ resource "aws_vpclattice_listener" "test" {
 func testAccListenerRuleConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccListenerRuleConfig_base(rName), fmt.Sprintf(`
 resource "aws_vpclattice_listener_rule" "test" {
-  name                = %[1]q
+  name = %[1]q
+
   listener_identifier = aws_vpclattice_listener.test.listener_id
   service_identifier  = aws_vpclattice_service.test.id
-  priority            = 20
+
+  priority = 20
+
   match {
     http_match {
-
-      header_matches {
-        name           = "example-header"
-        case_sensitive = false
-
-        match {
-          exact = "example-contains"
-        }
-      }
-
-      path_match {
-        case_sensitive = true
-        match {
-          prefix = "/example-path"
-        }
-      }
+      method = "GET"
     }
   }
+
   action {
     forward {
       target_groups {
         target_group_identifier = aws_vpclattice_target_group.test[0].id
-        weight                  = 1
-      }
-      target_groups {
-        target_group_identifier = aws_vpclattice_target_group.test[1].id
-        weight                  = 2
       }
     }
   }
