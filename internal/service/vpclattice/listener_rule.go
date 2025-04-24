@@ -126,6 +126,11 @@ func resourceListenerRule() *schema.Resource {
 										DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 										MinItems:         1,
 										MaxItems:         5,
+										AtLeastOneOf: []string{
+											"match.0.http_match.0.header_matches",
+											"match.0.http_match.0.method",
+											"match.0.http_match.0.path_match",
+										},
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"case_sensitive": {

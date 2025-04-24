@@ -131,6 +131,8 @@ The `match` block supports the following:
 
 The `http_match` block supports the following:
 
+At least one of `header_matches`, `method`, or `path_match` is required.
+
 * `header_matches` - (Optional) The header matches.
   Matches incoming requests with rule based on request header value before applying rule action.
   See [`header_matches` Block](#header_matches-block) for details.
