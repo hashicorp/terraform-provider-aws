@@ -13,6 +13,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/account"
 	"github.com/aws/aws-sdk-go-v2/service/organizations"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -43,6 +44,7 @@ func resourceAccount() *schema.Resource {
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
+			Update: schema.DefaultTimeout(10 * time.Minute),
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
@@ -91,7 +93,6 @@ func resourceAccount() *schema.Resource {
 			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
-				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 50),
 			},
 			"parent_id": {
@@ -244,7 +245,8 @@ func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta any) 
 
 func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
+	orgConn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
+	accConn := meta.(*conns.AWSClient).AccountClient(ctx)
 
 	if d.HasChange("parent_id") {
 		o, n := d.GetChange("parent_id")
@@ -255,10 +257,25 @@ func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			DestinationParentId: aws.String(n.(string)),
 		}
 
-		_, err := conn.MoveAccount(ctx, input)
+		_, err := orgConn.MoveAccount(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "moving AWS Organizations Account (%s): %s", d.Id(), err)
+		}
+	}
+	if d.HasChange(names.AttrName) {
+		o, n := d.GetChange(names.AttrName)
+
+		input := &account.PutAccountNameInput{
+			AccountId:   aws.String(d.Id()),
+			AccountName: aws.String(n.(string)),
+		}
+		_, err := accConn.PutAccountName(ctx, input)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "rename AWS Account (%s): %s", d.Id(), err)
+		}
+		if _, err := waitAccountNameUpdate(ctx, orgConn, d.Id(), o.(string), n.(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for AWS Account (%s) rename: %s", d.Id(), err)
 		}
 	}
 
@@ -487,4 +504,37 @@ func waitAccountDeleted(ctx context.Context, conn *organizations.Client, id stri
 	}
 
 	return nil, err
+}
+
+func waitAccountNameUpdate(ctx context.Context, conn *organizations.Client, id string, oldName string, newName string, timeout time.Duration) (*awstypes.Account, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:      []string{oldName},
+		Target:       []string{newName},
+		Refresh:      statusAccountName(ctx, conn, id),
+		PollInterval: 10 * time.Second,
+		Timeout:      timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if output, ok := outputRaw.(*awstypes.Account); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func statusAccountName(ctx context.Context, conn *organizations.Client, id string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findAccountByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.ToString(output.Name), nil
+	}
 }
