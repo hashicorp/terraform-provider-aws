@@ -115,10 +115,9 @@ func resourceListenerRule() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"http_match": {
-							Type:             schema.TypeList,
-							Optional:         true,
-							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-							MaxItems:         1,
+							Type:     schema.TypeList,
+							Required: true,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"header_matches": {
@@ -237,6 +236,7 @@ func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, met
 	input := vpclattice.CreateRuleInput{
 		ClientToken:        aws.String(sdkid.UniqueId()),
 		ListenerIdentifier: aws.String(listenerID),
+		Match:              expandRuleMatches(d.Get("match").([]any)),
 		Name:               aws.String(name),
 		ServiceIdentifier:  aws.String(serviceID),
 		Tags:               getTagsIn(ctx),
@@ -251,14 +251,6 @@ func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, met
 			input.Action = expandRuleAction(v[0].(map[string]any))
 		} else {
 			return sdkdiag.AppendErrorf(diags, "Invalid \"action\" value: %v", v)
-		}
-	}
-
-	if v, ok := d.GetOk("match"); ok {
-		if v, ok := v.([]any); ok && len(v) > 0 && v[0] != nil {
-			input.Match = expandRuleMatch(v[0].(map[string]any))
-		} else {
-			return sdkdiag.AppendErrorf(diags, "Invalid \"match\" value: %v", v)
 		}
 	}
 
@@ -760,6 +752,14 @@ func expandWeightedTargetGroup(tfMap map[string]any) types.WeightedTargetGroup {
 	}
 
 	return apiObject
+}
+
+func expandRuleMatches(tfList []any) types.RuleMatch {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	return expandRuleMatch(tfList[0].(map[string]any))
 }
 
 func expandRuleMatch(tfMap map[string]any) types.RuleMatch {

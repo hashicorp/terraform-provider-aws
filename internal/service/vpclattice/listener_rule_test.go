@@ -127,10 +127,6 @@ func TestAccVPCLatticeListenerRule_emptyBlockError(t *testing.T) {
 		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccListenerRuleConfig_emptyMatchError(rName),
-				ExpectError: regexache.MustCompile("Invalid \"match\" value"),
-			},
-			{
 				Config:      testAccListenerRuleConfig_emptyActionError(rName),
 				ExpectError: regexache.MustCompile("Invalid \"action\" value"),
 			},
@@ -413,30 +409,6 @@ resource "aws_vpclattice_listener_rule" "test" {
 
     }
   }
-  action {
-    forward {
-      target_groups {
-        target_group_identifier = aws_vpclattice_target_group.test[0].id
-        weight                  = 1
-      }
-      target_groups {
-        target_group_identifier = aws_vpclattice_target_group.test[1].id
-        weight                  = 2
-      }
-    }
-  }
-}
-`, rName))
-}
-
-func testAccListenerRuleConfig_emptyMatchError(rName string) string {
-	return acctest.ConfigCompose(testAccListenerRuleConfig_base(rName), fmt.Sprintf(`
-resource "aws_vpclattice_listener_rule" "test" {
-  name                = %[1]q
-  listener_identifier = aws_vpclattice_listener.test.listener_id
-  service_identifier  = aws_vpclattice_service.test.id
-  priority            = 40
-  match {}
   action {
     forward {
       target_groups {
