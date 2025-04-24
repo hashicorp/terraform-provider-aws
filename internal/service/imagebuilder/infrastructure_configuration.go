@@ -133,7 +133,7 @@ func resourceInfrastructureConfiguration() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"availability_zone": {
+						names.AttrAvailabilityZone: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(1, 1024),
@@ -515,7 +515,7 @@ func expandPlacement(tfMap map[string]any) *awstypes.Placement {
 
 	apiObject := &awstypes.Placement{}
 
-	if v, ok := tfMap["availability_zone"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrAvailabilityZone].(string); ok && v != "" {
 		apiObject.AvailabilityZone = aws.String(v)
 	}
 
@@ -592,7 +592,7 @@ func flattenPlacement(apiObject *awstypes.Placement) map[string]any {
 	tfMap := map[string]any{}
 
 	if v := apiObject.AvailabilityZone; v != nil {
-		tfMap["availability_zone"] = aws.ToString(v)
+		tfMap[names.AttrAvailabilityZone] = aws.ToString(v)
 	}
 
 	if v := apiObject.HostId; v != nil {
