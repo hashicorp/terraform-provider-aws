@@ -13,7 +13,7 @@ Terraform resource for managing an AWS VPC Lattice Listener Rule.
 ## Example Usage
 
 ```terraform
-resource "aws_vpclattice_listener_rule" "test" {
+resource "aws_vpclattice_listener_rule" "example" {
   name                = "example"
   listener_identifier = aws_vpclattice_listener.example.listener_id
   service_identifier  = aws_vpclattice_service.example.id
@@ -57,7 +57,7 @@ resource "aws_vpclattice_listener_rule" "test" {
 ### Basic Usage
 
 ```terraform
-resource "aws_vpclattice_listener_rule" "test" {
+resource "aws_vpclattice_listener_rule" "example" {
   name                = "example"
   listener_identifier = aws_vpclattice_listener.example.listener_id
   service_identifier  = aws_vpclattice_service.example.id
