@@ -38,6 +38,13 @@ func DiagnosticString(d diag.Diagnostic) string {
 	return buf.String()
 }
 
+func NewParsingResourceIDErrorDiagnostic(err error) diag.Diagnostic {
+	return diag.NewErrorDiagnostic(
+		"Parsing Resource ID",
+		err.Error(),
+	)
+}
+
 func NewResourceNotFoundWarningDiagnostic(err error) diag.Diagnostic {
 	return diag.NewWarningDiagnostic(
 		"AWS resource not found during refresh",
