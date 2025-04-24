@@ -27,6 +27,8 @@ Upgrade topics:
 - [data-source/aws_ecs_task_execution](#data-sourceaws_ecs_task_execution)
 - [data-source/aws_elbv2_listener_rule](#data-sourceaws_elbv2_listener_rule)
 - [data-source/aws_globalaccelerator_accelerator](#data-sourceaws_globalaccelerator_accelerator)
+- [data-source/aws_identitystore_user](#data-sourceaws_identitystore_group)
+- [data-source/aws_identitystore_user](#data-sourceaws_identitystore_user)
 - [data-source/aws_launch_template](#data-sourceaws_launch_template)
 - [data-source/aws_opensearch_domain](#data-sourceaws_opensearch_domain)
 - [data-source/aws_opensearchserverless_security_config](#data-sourceaws_opensearchserverless_security_config)
@@ -183,6 +185,16 @@ This is not recommended.
 ## data-source/aws_globalaccelerator_accelerator
 
 `id` is now computed only.
+
+## data-source/aws_identitystore_group
+
+`filter` has been removed.
+Use `alternate_identifier` instead.
+
+## data-source/aws_identitystore_user
+
+`filter` has been removed.
+Use `alternate_identifier` instead.
 
 ## data-source/aws_opensearchserverless_security_config
 
