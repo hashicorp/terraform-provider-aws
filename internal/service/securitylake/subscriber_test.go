@@ -471,7 +471,17 @@ func testAccSubscriber_migrate_source(t *testing.T) {
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccSubscriberConfig_basic(rName),
-				PlanOnly:                 true,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSubscriberExists(ctx, resourceName, &subscriber),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})

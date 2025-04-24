@@ -13,3 +13,11 @@ data-source/aws_servicequotas_templates: The `region` attribute has been depreca
 ```release-note:enhancement
 resource/aws_quicksight_iam_policy_assignment: Add plan-time validation of `policy_arn`
 ```
+
+```release-note:enhancement
+resource/aws_securitylake_subscriber: Add plan-time validation of `access_type` `source.aws_log_source_resource.source_name`, and `subscriber_identity.external_id`
+```
+
+```release-note:bug
+resource/aws_securitylake_subscriber: Change `access_type` to [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew)
+```
