@@ -115,8 +115,10 @@ func TestAccVPCLatticeListenerRule_fixedResponse(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, resourceName, &listenerRule),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "10"),
+					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.fixed_response.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.fixed_response.0.status_code", "404"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.forward.#", "0"),
 				),
 			},
 			{
@@ -304,10 +306,13 @@ resource "aws_vpclattice_listener_rule" "test" {
 func testAccListenerRuleConfig_fixedResponse(rName string) string {
 	return acctest.ConfigCompose(testAccListenerRuleConfig_base(rName), fmt.Sprintf(`
 resource "aws_vpclattice_listener_rule" "test" {
-  name                = %[1]q
+  name = %[1]q
+
   listener_identifier = aws_vpclattice_listener.test.listener_id
   service_identifier  = aws_vpclattice_service.test.id
-  priority            = 10
+
+  priority = 10
+
   match {
     http_match {
       path_match {
@@ -318,6 +323,7 @@ resource "aws_vpclattice_listener_rule" "test" {
       }
     }
   }
+
   action {
     fixed_response {
       status_code = 404
