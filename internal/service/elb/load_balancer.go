@@ -783,13 +783,13 @@ func findLoadBalancerAttributesByName(ctx context.Context, conn *elasticloadbala
 func listenerHash(v any) int {
 	var buf bytes.Buffer
 	m := v.(map[string]any)
-	buf.WriteString(fmt.Sprintf("%d-", m["instance_port"].(int)))
-	buf.WriteString(fmt.Sprintf("%s-", strings.ToLower(m["instance_protocol"].(string))))
-	buf.WriteString(fmt.Sprintf("%d-", m["lb_port"].(int)))
-	buf.WriteString(fmt.Sprintf("%s-", strings.ToLower(m["lb_protocol"].(string))))
+	fmt.Fprintf(&buf, "%d-", m["instance_port"].(int))
+	fmt.Fprintf(&buf, "%s-", strings.ToLower(m["instance_protocol"].(string)))
+	fmt.Fprintf(&buf, "%d-", m["lb_port"].(int))
+	fmt.Fprintf(&buf, "%s-", strings.ToLower(m["lb_protocol"].(string)))
 
 	if v, ok := m["ssl_certificate_id"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+		fmt.Fprintf(&buf, "%s-", v.(string))
 	}
 
 	return create.StringHashcode(buf.String())
