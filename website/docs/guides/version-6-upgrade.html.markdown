@@ -38,6 +38,7 @@ Upgrade topics:
 - [resource/aws_bedrock_model_invocation_logging_configuration](#resourceaws_bedrock_model_invocation_logging_configuration)
 - [resource/aws_cloudfront_key_value_store](#resourceaws_cloudfront_key_value_store)
 - [resource/aws_cloudfront_response_headers_policy](#resourceaws_cloudfront_response_headers_policy)
+- [resource/aws_db_instance](#resourceaws_db_instance)
 - [resource/aws_dx_gateway_association](#resourceaws_dx_gateway_association)
 - [resource/aws_ecs_task_definition](#resourceaws_ecs_task_definition)
 - [resource/aws_eks_addon](#resourceaws_eks_addon)
@@ -309,6 +310,10 @@ For the name, use the `name` attribute.
 ## resource/aws_cloudfront_response_headers_policy
 
 The `etag` argument is now computed only.
+
+## resource/aws_db_instance
+
+The `character_set_name` now cannot be set with `replicate_source_db`, `restore_to_point_in_time`, `s3_import`, or `snapshot_identifier`.
 
 ## resource/aws_dx_gateway_association
 
