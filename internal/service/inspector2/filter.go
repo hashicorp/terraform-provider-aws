@@ -259,11 +259,11 @@ func dateFilterSchemaFramework(ctx context.Context, maxSize int) schema.SetNeste
 		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				"end": schema.StringAttribute{
+				"end_inclusive": schema.StringAttribute{
 					CustomType: timetypes.RFC3339Type{},
 					Optional:   true,
 				},
-				"start": schema.StringAttribute{
+				"start_inclusive": schema.StringAttribute{
 					CustomType: timetypes.RFC3339Type{},
 					Optional:   true,
 				},
@@ -322,10 +322,10 @@ func portRangeFilterSchemaFramework(ctx context.Context, maxSize int) schema.Set
 		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				"begin_inclusive": schema.Float64Attribute{
+				"begin_inclusive": schema.Int32Attribute{
 					Required: true,
 				},
-				"end_inclusive": schema.Float64Attribute{
+				"end_inclusive": schema.Int32Attribute{
 					Required: true,
 				},
 			},
@@ -378,10 +378,10 @@ func packageFilterSchemaFramework(ctx context.Context, maxSize int) schema.SetNe
 						},
 					},
 				},
-				"epoch": schema.SetNestedBlock{
-					CustomType: fwtypes.NewSetNestedObjectTypeOf[numberFilterModel](ctx),
-					Validators: []validator.Set{
-						setvalidator.SizeAtMost(maxSize),
+				"epoch": schema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[numberFilterModel](ctx),
+					Validators: []validator.List{
+						listvalidator.SizeAtMost(maxSize),
 					},
 					NestedObject: schema.NestedBlockObject{
 						Attributes: map[string]schema.Attribute{
@@ -875,8 +875,8 @@ type dateFilterModel struct {
 }
 
 type portRangeFilterModel struct {
-	BeginInclusive types.Float64 `tfsdk:"begin_inclusive"`
-	EndInclusive   types.Float64 `tfsdk:"end_inclusive"`
+	BeginInclusive types.Int32 `tfsdk:"begin_inclusive"`
+	EndInclusive   types.Int32 `tfsdk:"end_inclusive"`
 }
 
 type mapFilterModel struct {
@@ -886,12 +886,12 @@ type mapFilterModel struct {
 }
 
 type packageFilterModel struct {
-	Architecture         fwtypes.SetNestedObjectValueOf[stringFilterModel] `tfsdk:"architecture"`
-	Epoch                fwtypes.SetNestedObjectValueOf[numberFilterModel] `tfsdk:"epoch"`
-	FilePath             fwtypes.SetNestedObjectValueOf[stringFilterModel] `tfsdk:"file_path"`
-	Name                 fwtypes.SetNestedObjectValueOf[stringFilterModel] `tfsdk:"name"`
-	Release              fwtypes.SetNestedObjectValueOf[stringFilterModel] `tfsdk:"release"`
-	SourceLambdaLayerARN fwtypes.SetNestedObjectValueOf[stringFilterModel] `tfsdk:"source_lambda_layer_arn"`
-	SourceLayerHash      fwtypes.SetNestedObjectValueOf[stringFilterModel] `tfsdk:"source_layer_hash"`
-	Version              fwtypes.SetNestedObjectValueOf[stringFilterModel] `tfsdk:"version"`
+	Architecture         fwtypes.ListNestedObjectValueOf[stringFilterModel] `tfsdk:"architecture"`
+	Epoch                fwtypes.ListNestedObjectValueOf[numberFilterModel] `tfsdk:"epoch"`
+	FilePath             fwtypes.ListNestedObjectValueOf[stringFilterModel] `tfsdk:"file_path"`
+	Name                 fwtypes.ListNestedObjectValueOf[stringFilterModel] `tfsdk:"name"`
+	Release              fwtypes.ListNestedObjectValueOf[stringFilterModel] `tfsdk:"release"`
+	SourceLambdaLayerARN fwtypes.ListNestedObjectValueOf[stringFilterModel] `tfsdk:"source_lambda_layer_arn"`
+	SourceLayerHash      fwtypes.ListNestedObjectValueOf[stringFilterModel] `tfsdk:"source_layer_hash"`
+	Version              fwtypes.ListNestedObjectValueOf[stringFilterModel] `tfsdk:"version"`
 }
