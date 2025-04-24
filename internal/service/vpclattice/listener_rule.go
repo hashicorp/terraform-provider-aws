@@ -66,6 +66,10 @@ func resourceListenerRule() *schema.Resource {
 									},
 								},
 							},
+							ExactlyOneOf: []string{
+								"action.0.fixed_response",
+								"action.0.forward",
+							},
 						},
 						"forward": {
 							Type:     schema.TypeList,

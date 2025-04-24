@@ -101,6 +101,8 @@ The following arguments are optional:
 
 The `action` block supports the following:
 
+Exactly one of `fixed_response` or `forward` is required.
+
 * `fixed_response` - (Optional) Describes the rule action that returns a custom HTTP response.
   See [`fixed_response` Block](#fixed_response-block) for details.
 * `forward` - (Optional) The forward action. Traffic that matches the rule is forwarded to the specified target groups.
