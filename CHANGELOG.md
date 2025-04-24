@@ -46,6 +46,7 @@ resource/aws_batch_compute_environment: Rename `compute_environment_name_prefix`
 * resource/aws_dx_gateway_association: `vpn_gateway_id` has been removed ([#42323](https://github.com/hashicorp/terraform-provider-aws/issues/42323))
 * resource/aws_ec2_spot_instance_request: Remove `block_duration_minutes` attribute ([#42060](https://github.com/hashicorp/terraform-provider-aws/issues/42060))
 * resource/aws_ecs_task_definition: Remove `inference_accelerator` attribute. Amazon Elastic Inference reached end of life on April, 2024. ([#42137](https://github.com/hashicorp/terraform-provider-aws/issues/42137))
+* resource/aws_eip: `vpc` has been removed. Use `domain` instead. ([#42340](https://github.com/hashicorp/terraform-provider-aws/issues/42340))
 * resource/aws_eks_addon: `resolve_conflicts` has been removed. Use `resolve_conflicts_on_create` and `resolve_conflicts_on_update` instead. ([#42318](https://github.com/hashicorp/terraform-provider-aws/issues/42318))
 * resource/aws_elasticache_replication_group: `auth_token_update_strategy` no longer has a default value. If `auth_token` is set, `auth_token_update_strategy` must also be explicitly configured. ([#42336](https://github.com/hashicorp/terraform-provider-aws/issues/42336))
 * resource/aws_globalaccelerator_accelerator: The `id` attribute is now computed only ([#42097](https://github.com/hashicorp/terraform-provider-aws/issues/42097))
