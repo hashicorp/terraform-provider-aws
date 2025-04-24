@@ -252,6 +252,42 @@ func TestAccVPCLatticeListenerRule_match_HeaderMatches_Multiple(t *testing.T) {
 	})
 }
 
+func TestAccVPCLatticeListenerRule_match_PathMatch(t *testing.T) {
+	ctx := acctest.Context(t)
+	var listenerRule vpclattice.GetRuleOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_vpclattice_listener_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccListenerRuleConfig_match_PathMatch(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerRuleExists(ctx, resourceName, &listenerRule),
+					resource.TestCheckResourceAttr(resourceName, "match.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "match.0.http_match.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "match.0.http_match.0.header_matches.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "match.0.http_match.0.method", ""),
+					resource.TestCheckResourceAttr(resourceName, "match.0.http_match.0.path_match.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "match.0.http_match.0.path_match.0.case_sensitive", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "match.0.http_match.0.path_match.0.match.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "match.0.http_match.0.path_match.0.match.0.exact", ""),
+					resource.TestCheckResourceAttr(resourceName, "match.0.http_match.0.path_match.0.match.0.prefix", "/example-path"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccVPCLatticeListenerRule_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var listenerRule vpclattice.GetRuleOutput
@@ -575,6 +611,38 @@ resource "aws_vpclattice_listener_rule" "test" {
 
         match {
           exact = "example-exact"
+        }
+      }
+    }
+  }
+
+  action {
+    forward {
+      target_groups {
+        target_group_identifier = aws_vpclattice_target_group.test[0].id
+      }
+    }
+  }
+}
+`, rName))
+}
+
+func testAccListenerRuleConfig_match_PathMatch(rName string) string {
+	return acctest.ConfigCompose(testAccListenerRuleConfig_base(rName), fmt.Sprintf(`
+resource "aws_vpclattice_listener_rule" "test" {
+  name = %[1]q
+
+  listener_identifier = aws_vpclattice_listener.test.listener_id
+  service_identifier  = aws_vpclattice_service.test.id
+
+  priority = 40
+
+  match {
+    http_match {
+      path_match {
+        case_sensitive = true
+        match {
+          prefix = "/example-path"
         }
       }
     }
