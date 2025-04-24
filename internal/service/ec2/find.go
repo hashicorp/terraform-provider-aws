@@ -2445,6 +2445,26 @@ func findVPCEndpoints(ctx context.Context, conn *ec2.Client, input *ec2.Describe
 	return output, nil
 }
 
+func findVPCEndpointAssociations(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcEndpointAssociationsInput) ([]awstypes.VpcEndpointAssociation, error) {
+	var output []awstypes.VpcEndpointAssociation
+
+	err := describeVPCEndpointAssociationsPages(ctx, conn, input, func(page *ec2.DescribeVpcEndpointAssociationsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		output = append(output, page.VpcEndpointAssociations...)
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
 func findPrefixListByName(ctx context.Context, conn *ec2.Client, name string) (*awstypes.PrefixList, error) {
 	input := ec2.DescribePrefixListsInput{
 		Filters: newAttributeFilterList(map[string]string{

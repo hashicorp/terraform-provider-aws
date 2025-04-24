@@ -35,9 +35,9 @@ body:
   - type: textarea
     id: affected_resource
     attributes:
-      label: Affected Resource(s) or Data Sources
+      label: Affected Resource(s) or Data Source(s)
       description: |
-        If applicable, please list the affected Resource(s) and/or Data Source(s).
+        If applicable, please list the affected resource(s) and/or data source(s).
       placeholder: |
         * `aws_example_resource`
         * `aws_example_data_source`

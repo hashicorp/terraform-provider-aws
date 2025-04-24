@@ -35,9 +35,9 @@ body:
   - type: textarea
     id: affected_resource
     attributes:
-      label: Affected Resource(s) or Data Sources
+      label: Affected Resource(s) or Data Source(s)
       description: |
-        If applicable, please list the affected Resource(s) and/or Data Source(s).
+        If applicable, please list the affected resource(s) and/or data source(s).
       placeholder: |
         * `aws_example_resource`
         * `aws_example_data_source`
@@ -169,7 +169,7 @@ body:
       description: |
         Indicate to the maintainers and community as to whether you plan to implement a fix for this (you can update this later if you change your mind). This helps prevent duplication of effort, as many of our contributors look for recently filed issues as a source for their next contribution.
 
-        If this would be your first contribution, refer to the [contribution guide](https://hashicorp.github.io/terraform-provider-aws/) for tips on getting started.
+        If this would be your first contribution, refer to the [contributor guide](https://hashicorp.github.io/terraform-provider-aws/) for tips on getting started.
       options:
         - "No"
         - "Yes"
