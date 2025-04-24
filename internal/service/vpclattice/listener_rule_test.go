@@ -130,6 +130,46 @@ func TestAccVPCLatticeListenerRule_action_fixedResponse(t *testing.T) {
 	})
 }
 
+func TestAccVPCLatticeListenerRule_action_forward_Multiple(t *testing.T) {
+	ctx := acctest.Context(t)
+	var listenerRule vpclattice.GetRuleOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_vpclattice_listener_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccListenerRuleConfig_action_forward_Multiple(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckListenerRuleExists(ctx, resourceName, &listenerRule),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.fixed_response.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.forward.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.forward.0.target_groups.#", "2"),
+					resource.TestCheckResourceAttrPair(resourceName, "action.0.forward.0.target_groups.0.target_group_identifier", "aws_vpclattice_target_group.test.0", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "action.0.forward.0.target_groups.0.weight", "25"),
+					resource.TestCheckResourceAttrPair(resourceName, "action.0.forward.0.target_groups.1.target_group_identifier", "aws_vpclattice_target_group.test.1", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "action.0.forward.0.target_groups.1.weight", "75"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccVPCLatticeListenerRule_methodMatch(t *testing.T) {
 	ctx := acctest.Context(t)
 	var listenerRule vpclattice.GetRuleOutput
@@ -327,6 +367,38 @@ resource "aws_vpclattice_listener_rule" "test" {
   action {
     fixed_response {
       status_code = 404
+    }
+  }
+}
+`, rName))
+}
+
+func testAccListenerRuleConfig_action_forward_Multiple(rName string) string {
+	return acctest.ConfigCompose(testAccListenerRuleConfig_base(rName), fmt.Sprintf(`
+resource "aws_vpclattice_listener_rule" "test" {
+  name = %[1]q
+
+  listener_identifier = aws_vpclattice_listener.test.listener_id
+  service_identifier  = aws_vpclattice_service.test.id
+
+  priority = 20
+
+  match {
+    http_match {
+      method = "GET"
+    }
+  }
+
+  action {
+    forward {
+      target_groups {
+        target_group_identifier = aws_vpclattice_target_group.test[0].id
+        weight                  = 25
+      }
+      target_groups {
+        target_group_identifier = aws_vpclattice_target_group.test[1].id
+        weight                  = 75
+      }
     }
   }
 }
