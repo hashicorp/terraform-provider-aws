@@ -72,7 +72,6 @@ func (r *resourceVPCRouteServerAssociation) Schema(ctx context.Context, req reso
 		Blocks: map[string]schema.Block{
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
-				Update: true,
 				Delete: true,
 			}),
 		},
