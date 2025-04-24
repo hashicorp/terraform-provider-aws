@@ -1,0 +1,4 @@
+```release-note:enhancement
+resource/aws_s3tables_table_bucket: Add `encryption_configuration` argument
+```
+```
