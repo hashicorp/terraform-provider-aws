@@ -98,6 +98,48 @@ func resourceGroup() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
+			"capacity_reservation_specification": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"capacity_reservation_preference": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Default:          awstypes.CapacityReservationPreferenceDefault,
+							ValidateDiagFunc: enum.Validate[awstypes.CapacityReservationPreference](),
+						},
+						"capacity_reservation_target": {
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"capacity_reservation_ids": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+										},
+										ConflictsWith: []string{"capacity_reservation_specification.0.capacity_reservation_target.0.capacity_reservation_resource_group_arns"},
+									},
+									"capacity_reservation_resource_group_arns": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+											ValidateFunc: verify.ValidARN,
+										},
+										ConflictsWith: []string{"capacity_reservation_specification.0.capacity_reservation_target.0.capacity_reservation_ids"},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"context": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -1094,6 +1136,10 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 		inputCASG.AvailabilityZoneDistribution = expandAvailabilityZoneDistribution(v.([]any)[0].(map[string]any))
 	}
 
+	if v, ok := d.GetOk("capacity_reservation_specification"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		inputCASG.CapacityReservationSpecification = expandCapacityReservationSpecification(v.([]any)[0].(map[string]any))
+	}
+
 	if v, ok := d.GetOk("capacity_rebalance"); ok {
 		inputCASG.CapacityRebalance = aws.Bool(v.(bool))
 	}
@@ -1296,6 +1342,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	d.Set(names.AttrAvailabilityZones, g.AvailabilityZones)
 	d.Set("availability_zone_distribution", []any{flattenAvailabilityZoneDistribution(g.AvailabilityZoneDistribution)})
 	d.Set("capacity_rebalance", g.CapacityRebalance)
+	d.Set("capacity_reservation_specification", []any{flattenCapacityReservationSpecification(g.CapacityReservationSpecification)})
 	d.Set("context", g.Context)
 	d.Set("default_cooldown", g.DefaultCooldown)
 	d.Set("default_instance_warmup", g.DefaultInstanceWarmup)
@@ -1404,6 +1451,12 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 		if d.HasChange("availability_zone_distribution") {
 			if v, ok := d.GetOk("availability_zone_distribution"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 				input.AvailabilityZoneDistribution = expandAvailabilityZoneDistribution(v.([]any)[0].(map[string]any))
+			}
+		}
+
+		if d.HasChange("capacity_reservation_specification") {
+			if v, ok := d.GetOk("capacity_reservation_specification"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.CapacityReservationSpecification = expandCapacityReservationSpecification(v.([]any)[0].(map[string]any))
 			}
 		}
 
@@ -3412,6 +3465,42 @@ func expandAvailabilityZoneDistribution(tfMap map[string]any) *awstypes.Availabi
 	return apiObject
 }
 
+func expandCapacityReservationSpecification(tfMap map[string]any) *awstypes.CapacityReservationSpecification {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.CapacityReservationSpecification{}
+
+	if v, ok := tfMap["capacity_reservation_preference"].(string); ok && v != "" {
+		apiObject.CapacityReservationPreference = awstypes.CapacityReservationPreference(v)
+	}
+
+	if v, ok := tfMap["capacity_reservation_target"].([]any); ok && len(v) > 0 {
+		apiObject.CapacityReservationTarget = expandCapacityReservationTarget(v[0].(map[string]any))
+	}
+
+	return apiObject
+}
+
+func expandCapacityReservationTarget(tfMap map[string]any) *awstypes.CapacityReservationTarget {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.CapacityReservationTarget{}
+
+	if v, ok := tfMap["capacity_reservation_ids"].([]any); ok && len(v) > 0 {
+		apiObject.CapacityReservationIds = flex.ExpandStringValueList(v)
+	}
+
+	if v, ok := tfMap["capacity_reservation_resource_group_arns"].([]any); ok && len(v) > 0 {
+		apiObject.CapacityReservationResourceGroupArns = flex.ExpandStringValueList(v)
+	}
+
+	return apiObject
+}
+
 func expandTrafficSourceIdentifier(tfMap map[string]any) awstypes.TrafficSourceIdentifier {
 	apiObject := awstypes.TrafficSourceIdentifier{}
 
@@ -3455,6 +3544,40 @@ func flattenAvailabilityZoneDistribution(apiObject *awstypes.AvailabilityZoneDis
 	tfMap := map[string]any{}
 	if v := apiObject.CapacityDistributionStrategy; v != "" {
 		tfMap["capacity_distribution_strategy"] = string(v)
+	}
+
+	return tfMap
+}
+
+func flattenCapacityReservationSpecification(apiObject *awstypes.CapacityReservationSpecification) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+	if v := apiObject.CapacityReservationPreference; v != "" {
+		tfMap["capacity_reservation_preference"] = string(v)
+	}
+
+	if v := apiObject.CapacityReservationTarget; v != nil {
+		tfMap["capacity_reservation_target"] = []any{flattenCapacityReservationTarget(v)}
+	}
+
+	return tfMap
+}
+
+func flattenCapacityReservationTarget(apiObject *awstypes.CapacityReservationTarget) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+	if v := apiObject.CapacityReservationIds; len(v) > 0 {
+		tfMap["capacity_reservation_ids"] = v
+	}
+
+	if v := apiObject.CapacityReservationResourceGroupArns; len(v) > 0 {
+		tfMap["capacity_reservation_resource_group_arns"] = v
 	}
 
 	return tfMap

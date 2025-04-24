@@ -80,6 +80,8 @@ func TestAccAutoScalingGroup_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "availability_zones.*", "data.aws_availability_zones.available", "names.0"),
 					resource.TestCheckResourceAttr(resourceName, "availability_zone_distribution.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "availability_zone_distribution.0.capacity_distribution_strategy", "balanced-best-effort"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.0.capacity_reservation_preference", "default"),
 					resource.TestCheckResourceAttr(resourceName, "capacity_rebalance", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "context", ""),
 					resource.TestCheckResourceAttr(resourceName, "default_cooldown", "300"),
@@ -310,6 +312,8 @@ func TestAccAutoScalingGroup_simple(t *testing.T) {
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "availability_zones.*", "data.aws_availability_zones.available", "names.0"),
 					resource.TestCheckResourceAttr(resourceName, "availability_zone_distribution.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "availability_zone_distribution.0.capacity_distribution_strategy", "balanced-best-effort"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.0.capacity_reservation_preference", "default"),
 					resource.TestCheckResourceAttr(resourceName, "capacity_rebalance", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "default_cooldown", "300"),
 					resource.TestCheckResourceAttr(resourceName, "desired_capacity", "4"),
@@ -361,6 +365,8 @@ func TestAccAutoScalingGroup_simple(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "autoscaling", regexache.MustCompile(fmt.Sprintf(`autoScalingGroup:.+:autoScalingGroupName/%s`, rName))),
 					resource.TestCheckResourceAttr(resourceName, "availability_zones.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "availability_zones.*", "data.aws_availability_zones.available", "names.0"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.0.capacity_reservation_preference", "default"),
 					resource.TestCheckResourceAttr(resourceName, "capacity_rebalance", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "default_cooldown", "300"),
 					resource.TestCheckResourceAttr(resourceName, "desired_capacity", "4"),
@@ -4141,6 +4147,101 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 	})
 }
 
+func TestAccAutoScalingGroup_capacityReservationSpecificationBasic(t *testing.T) {
+	ctx := acctest.Context(t)
+	var group awstypes.AutoScalingGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_autoscaling_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AutoScalingServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGroupConfig_capacityReservationSpecificationBasic(rName, "capacity-reservations-only"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(ctx, resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.0.capacity_reservation_preference", "capacity-reservations-only"),
+				),
+			},
+			testAccGroupImportStep(resourceName),
+			{
+				Config: testAccGroupConfig_capacityReservationSpecificationBasic(rName, "capacity-reservations-first"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(ctx, resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.0.capacity_reservation_preference", "capacity-reservations-first"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAutoScalingGroup_capacityReservationSpecificationWithTarget(t *testing.T) {
+	ctx := acctest.Context(t)
+	var group awstypes.AutoScalingGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_autoscaling_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AutoScalingServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGroupConfig_capacityReservationSpecificationWithCrId(rName, "capacity-reservations-only"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(ctx, resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.0.capacity_reservation_preference", "capacity-reservations-only"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.0.capacity_reservation_target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.0.capacity_reservation_target.0.capacity_reservation_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.0.capacity_reservation_target.0.capacity_reservation_resource_group_arns.#", "0"),
+				),
+			},
+			testAccGroupImportStep(resourceName),
+			// changing the target type
+			{
+				Config: testAccGroupConfig_capacityReservationSpecificationWithRgArn(rName, "capacity-reservations-only"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(ctx, resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.0.capacity_reservation_preference", "capacity-reservations-only"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.0.capacity_reservation_target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.0.capacity_reservation_target.0.capacity_reservation_resource_group_arns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.0.capacity_reservation_target.0.capacity_reservation_ids.#", "0"),
+				),
+			},
+			// Just changing the preference
+			{
+				Config: testAccGroupConfig_capacityReservationSpecificationWithRgArn(rName, "capacity-reservations-first"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(ctx, resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.0.capacity_reservation_preference", "capacity-reservations-first"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.0.capacity_reservation_target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.0.capacity_reservation_target.0.capacity_reservation_resource_group_arns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.0.capacity_reservation_target.0.capacity_reservation_ids.#", "0"),
+				),
+			},
+			// Going back to default
+			{
+				Config: testAccGroupConfig_capacityReservationSpecificationBasic(rName, "default"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(ctx, resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.0.capacity_reservation_preference", "default"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.0.capacity_reservation_target.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckGroupExists(ctx context.Context, n string, v *awstypes.AutoScalingGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -5275,6 +5376,135 @@ resource "aws_autoscaling_group" "test" {
   }
 }
 `, rName, n))
+}
+
+func testAccGroupConfig_capacityReservationSpecificationBasic(rName, capacityReservationPreference string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
+		fmt.Sprintf(`
+
+resource "aws_launch_template" "test" {
+  image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+  instance_type = "t3.micro"
+  name          = %[1]q
+}
+
+resource "aws_autoscaling_group" "test" {
+  availability_zones   = [data.aws_availability_zones.available.names[0]]
+  max_size             = 0
+  min_size             = 0
+  name                 = %[1]q
+  launch_template {
+    id = aws_launch_template.test.id
+  }
+
+  capacity_reservation_specification {
+    capacity_reservation_preference = %[2]q
+  }
+}
+`, rName, capacityReservationPreference))
+}
+
+func testAccGroupConfig_capacityReservationSpecificationWithCrId(rName, capacityReservationPreference string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
+		fmt.Sprintf(`
+
+resource "aws_launch_template" "test" {
+  image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+  instance_type = "t3.micro"
+  name          = %[1]q
+}
+
+resource "aws_ec2_capacity_reservation" "test" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  instance_count    = 1
+  instance_platform = "Linux/UNIX"
+  instance_type     = "t3.micro"
+}
+
+resource "aws_autoscaling_group" "test" {
+  availability_zones   = [data.aws_availability_zones.available.names[0]]
+  max_size             = 0
+  min_size             = 0
+  name                 = %[1]q
+  launch_template {
+    id = aws_launch_template.test.id
+  }
+
+  capacity_reservation_specification {
+    capacity_reservation_preference = %[2]q
+	capacity_reservation_target {
+	  capacity_reservation_ids = [aws_ec2_capacity_reservation.test.id]
+	}
+  }
+}
+`, rName, capacityReservationPreference))
+}
+
+func testAccGroupConfig_capacityReservationSpecificationWithRgArn(rName, capacityReservationPreference string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
+		fmt.Sprintf(`
+
+resource "aws_launch_template" "test" {
+  image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+  instance_type = "t3.micro"
+  name          = %[1]q
+}
+
+resource "aws_ec2_capacity_reservation" "test" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  instance_count    = 1
+  instance_platform = "Linux/UNIX"
+  instance_type     = "t3.micro"
+}
+
+resource "aws_resourcegroups_group" "test" {
+  name = %[1]q
+ 
+  configuration {
+    type = "AWS::EC2::CapacityReservationPool"
+  }
+  
+  configuration {
+    type = "AWS::ResourceGroups::Generic"
+	parameters {
+      name = "allowed-resource-types"
+      values = [
+        "AWS::EC2::CapacityReservation"
+      ]
+    }
+  }
+}
+
+resource "aws_resourcegroups_resource" "test" {
+  group_arn = aws_resourcegroups_group.test.arn
+  resource_arn = aws_ec2_capacity_reservation.test.arn
+
+  depends_on = [aws_ec2_capacity_reservation.test]
+}
+
+resource "aws_autoscaling_group" "test" {
+  availability_zones   = [data.aws_availability_zones.available.names[0]]
+  max_size             = 0
+  min_size             = 0
+  name                 = %[1]q
+  launch_template {
+    id = aws_launch_template.test.id
+  }
+
+  capacity_reservation_specification {
+    capacity_reservation_preference = %[2]q
+	capacity_reservation_target {
+	  capacity_reservation_resource_group_arns = [aws_resourcegroups_group.test.arn]
+	}
+  }
+}
+`, rName, capacityReservationPreference))
 }
 
 func testAccGroupConfig_instanceRefreshBasic(rName string) string {
