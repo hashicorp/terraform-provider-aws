@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -62,6 +63,10 @@ func TestAccVPCLatticeListenerRule_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
+			{
+				Config:   testAccListenerRuleConfig_ARNs(rName),
+				PlanOnly: true,
+			},
 		},
 	})
 }
@@ -89,6 +94,51 @@ func TestAccVPCLatticeListenerRule_disappears(t *testing.T) {
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfvpclattice.ResourceListenerRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccVPCLatticeListenerRule_ARNs(t *testing.T) {
+	ctx := acctest.Context(t)
+	var listenerRule vpclattice.GetRuleOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_vpclattice_listener_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccListenerRuleConfig_ARNs(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerRuleExists(ctx, resourceName, &listenerRule),
+					resource.TestCheckResourceAttrPair(resourceName, "listener_identifier", "aws_vpclattice_listener.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "service_identifier", "aws_vpclattice_service.test", names.AttrARN),
+				),
+			},
+			{
+				ResourceName: resourceName,
+				ImportState:  true,
+				ImportStateCheck: acctest.ComposeAggregateImportStateCheckFunc(
+					acctest.ImportMatchResourceAttr("listener_identifier", regexache.MustCompile("^listener-[[:xdigit:]]+$")),
+					acctest.ImportMatchResourceAttr("service_identifier", regexache.MustCompile("^svc-[[:xdigit:]]+$")),
+				),
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"listener_identifier",
+					"service_identifier",
+				},
+			},
+			{
+				Config:   testAccListenerRuleConfig_basic(rName),
+				PlanOnly: true,
 			},
 		},
 	})
@@ -412,6 +462,33 @@ resource "aws_vpclattice_listener_rule" "test" {
 
   listener_identifier = aws_vpclattice_listener.test.listener_id
   service_identifier  = aws_vpclattice_service.test.id
+
+  priority = 20
+
+  match {
+    http_match {
+      method = "GET"
+    }
+  }
+
+  action {
+    forward {
+      target_groups {
+        target_group_identifier = aws_vpclattice_target_group.test[0].id
+      }
+    }
+  }
+}
+`, rName))
+}
+
+func testAccListenerRuleConfig_ARNs(rName string) string {
+	return acctest.ConfigCompose(testAccListenerRuleConfig_base(rName), fmt.Sprintf(`
+resource "aws_vpclattice_listener_rule" "test" {
+  name = %[1]q
+
+  listener_identifier = aws_vpclattice_listener.test.arn
+  service_identifier  = aws_vpclattice_service.test.arn
 
   priority = 20
 

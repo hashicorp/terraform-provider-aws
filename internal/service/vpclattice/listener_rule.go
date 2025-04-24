@@ -5,12 +5,14 @@ package vpclattice
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -38,7 +40,18 @@ func resourceListenerRule() *schema.Resource {
 		DeleteWithoutTimeout: resourceListenerRuleDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+				serviceID, listenerID, ruleID, err := listenerRuleParseResourceID(d.Id())
+				if err != nil {
+					return nil, err
+				}
+
+				d.Set("service_identifier", serviceID)
+				d.Set("listener_identifier", listenerID)
+				d.Set("rule_id", ruleID)
+
+				return []*schema.ResourceData{d}, nil
+			},
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -107,9 +120,10 @@ func resourceListenerRule() *schema.Resource {
 				Computed: true,
 			},
 			"listener_identifier": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				DiffSuppressFunc: suppressEquivalentIDOrARN,
 			},
 			"match": {
 				Type:             schema.TypeList,
@@ -226,9 +240,10 @@ func resourceListenerRule() *schema.Resource {
 				Computed: true,
 			},
 			"service_identifier": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				DiffSuppressFunc: suppressEquivalentIDOrARN,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -241,15 +256,14 @@ func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	serviceID, listenerID := d.Get("service_identifier").(string), d.Get("listener_identifier").(string)
 	input := vpclattice.CreateRuleInput{
 		Action:             expandRuleActions(d.Get(names.AttrAction).([]any)),
 		ClientToken:        aws.String(sdkid.UniqueId()),
-		ListenerIdentifier: aws.String(listenerID),
+		ListenerIdentifier: aws.String(d.Get("listener_identifier").(string)),
 		Match:              expandRuleMatches(d.Get("match").([]any)),
 		Name:               aws.String(name),
 		Priority:           aws.Int32(int32(d.Get(names.AttrPriority).(int))),
-		ServiceIdentifier:  aws.String(serviceID),
+		ServiceIdentifier:  aws.String(d.Get("service_identifier").(string)),
 		Tags:               getTagsIn(ctx),
 	}
 
@@ -263,7 +277,12 @@ func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "creating VPCLattice Listener Rule (%s): %s", name, err)
 	}
 
-	d.SetId(listenerRuleCreateResourceID(serviceID, listenerID, aws.ToString(output.Id)))
+	serviceID, listenerID, ruleID, err := listenerRuleParseARN(aws.ToString(output.Arn))
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "creating VPCLattice Listener Rule (%s): %s", name, err)
+	}
+
+	d.SetId(listenerRuleCreateResourceID(serviceID, listenerID, ruleID))
 
 	return append(diags, resourceListenerRuleRead(ctx, d, meta)...)
 }
@@ -293,14 +312,12 @@ func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "setting action: %s", err)
 	}
 	d.Set(names.AttrARN, output.Arn)
-	d.Set("listener_identifier", listenerID)
 	if err := d.Set("match", []any{flattenRuleMatch(output.Match)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting match: %s", err)
 	}
 	d.Set(names.AttrName, output.Name)
 	d.Set(names.AttrPriority, output.Priority)
 	d.Set("rule_id", output.Id)
-	d.Set("service_identifier", serviceID)
 
 	return diags
 }
@@ -387,6 +404,35 @@ func listenerRuleParseResourceID(id string) (string, string, string, error) {
 	}
 
 	return parts[0], parts[1], parts[2], nil
+}
+
+func listenerRuleParseARN(arnS string) (serviceID string, listenerID string, ruleID string, err error) {
+	a, err := arn.Parse(arnS)
+	if err != nil {
+		return
+	}
+
+	resource := a.Resource
+	var ok bool
+
+	resource, ok = strings.CutPrefix(resource, "service/")
+	if !ok {
+		err = errors.New("foo")
+		return
+	}
+
+	serviceID, resource, ok = strings.Cut(resource, "/listener/")
+	if !ok {
+		err = errors.New("foo")
+		return
+	}
+
+	listenerID, ruleID, ok = strings.Cut(resource, "/rule/")
+	if !ok {
+		err = errors.New("foo")
+		return
+	}
+	return
 }
 
 func findListenerRuleByThreePartKey(ctx context.Context, conn *vpclattice.Client, serviceID, listenerID, ruleID string) (*vpclattice.GetRuleOutput, error) {
