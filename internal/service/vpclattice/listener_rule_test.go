@@ -84,7 +84,7 @@ func TestAccVPCLatticeListenerRule_disappears(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerRuleConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, resourceName, &listenerRule),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfvpclattice.ResourceListenerRule(), resourceName),
 				),
@@ -112,7 +112,7 @@ func TestAccVPCLatticeListenerRule_action_fixedResponse(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerRuleConfig_action_fixedResponse(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, resourceName, &listenerRule),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
@@ -148,7 +148,7 @@ func TestAccVPCLatticeListenerRule_action_forward_Multiple(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerRuleConfig_action_forward_Multiple(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, resourceName, &listenerRule),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
@@ -184,7 +184,7 @@ func TestAccVPCLatticeListenerRule_match_HeaderMatches_Single(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerRuleConfig_match_HeaderMatches_Single(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, resourceName, &listenerRule),
 					resource.TestCheckResourceAttr(resourceName, "match.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "match.0.http_match.#", "1"),
@@ -222,7 +222,7 @@ func TestAccVPCLatticeListenerRule_tags(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerRuleConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, resourceName, &listenerRule),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
@@ -235,7 +235,7 @@ func TestAccVPCLatticeListenerRule_tags(t *testing.T) {
 			},
 			{
 				Config: testAccListenerRuleConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, resourceName, &listenerRule),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
