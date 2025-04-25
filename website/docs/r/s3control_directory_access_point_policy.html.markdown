@@ -53,7 +53,6 @@ This resource supports the following arguments:
 
 * `access_point_arn` - (Required) The access point ARN that you want to associate with the specified policy.
 * `policy` - (Required) The policy that you want to apply to the specified access point.
-## TODO: check AWS docs for wording
 
 ## Attribute Reference
 

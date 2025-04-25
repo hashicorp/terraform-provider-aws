@@ -10,7 +10,7 @@ description: |-
 
 Provides a resource to manage the access point scope for a directory bucket.
 
-With access points for directory buckets, you can use the access point scope to restrict access to specific prefixes, API actions, or a combination of both. You can specify any amount of prefixes, but the total length of characters of all prefixes must be less than 256 bytes. For more information, see [AWS Documentation](TODO: paste link).
+With access points for directory buckets, you can use the access point scope to restrict access to specific prefixes, API actions, or a combination of both. You can specify any amount of prefixes, but the total length of characters of all prefixes must be less than 256 bytes. For more information, see [AWS Documentation](https://docs.aws.amazon.com/AmazonS3/latest/userguide/access-points-directory-buckets-manage-scope.html).
 
 NOTE: Terraform provides two ways to manage S3 Access Points for S3 directory buckets and their scopes. You can use a standalone resource (`aws_s3control_directory_access_point_scope`) or, you can use an in-line scope with the access point for directory bucket resource [`aws_s3_directory_access_point`](aws_s3_directory_access_point.html). You cannot use a standalone resource at the same time as in-line, which will cause an overwrite of each other. You must use one or the other.
 

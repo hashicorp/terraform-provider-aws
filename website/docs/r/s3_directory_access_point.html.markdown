@@ -56,7 +56,7 @@ This resource supports the following arguments:
 
 * `policy` - (Optional) Valid JSON document that specifies the policy that you want to apply to this access point. Removing `policy` from your configuration or setting `policy` to null or an empty string (i.e., `policy = ""`) _will not_ delete the policy since it could have been set by `aws_s3control_directory_access_point_policy`. To remove the `policy`, set it to `"{}"` (an empty JSON document).
 
-* `public_access_block_configuration` - (Optional) Configuration block to manage the `PublicAccessBlock` configuration that you want to apply to this directory bucket. Block Public Access is turned on by  default and cannot be changed. TODO: Add an AWS docs reference here.
+* `public_access_block_configuration` - (Optional) Configuration block to manage the `PublicAccessBlock` configuration that you want to apply to this directory bucket. Block Public Access is turned on by  default and cannot be changed.
 
 * `vpc_configuration` - (Optional) Configuration block to restrict access to this access point to requests from the specified Virtual Private Cloud (VPC).
 
