@@ -91,11 +91,6 @@ func resourceAccessPointForDirectoryBucket() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrEndpoints: {
-				Type:     schema.TypeMap,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
 			"network_origin": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -294,7 +289,6 @@ func resourceAccessPointForDirectoryBucketRead(ctx context.Context, d *schema.Re
 	d.Set(names.AttrAlias, output.Alias)
 	d.Set("bucket_account_id", output.BucketAccountId)
 	d.Set(names.AttrDomainName, meta.(*conns.AWSClient).RegionalHostname(ctx, fmt.Sprintf("%s-%s.s3express-accesspoint", aws.ToString(output.Name), accountID)))
-	d.Set(names.AttrEndpoints, output.Endpoints)
 	d.Set(names.AttrName, output.Name)
 	d.Set("network_origin", output.NetworkOrigin)
 	if output.PublicAccessBlockConfiguration != nil {
