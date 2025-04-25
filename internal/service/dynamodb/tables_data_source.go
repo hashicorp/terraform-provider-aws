@@ -6,16 +6,12 @@ package dynamodb
 import (
 	"context"
 
-	// "github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
-	// awstypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	// fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	// tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -61,10 +57,6 @@ func (d *dataSourceTables) Read(ctx context.Context, req datasource.ReadRequest,
 		resp.Diagnostics.AddError("reading DynamoDB Tables", err.Error())
 		return
 	}
-
-	// tableIDs := tfslices.ApplyToAll(out, func(v string) string {
-	// 	return aws.ToString(v)
-	// })
 
 	data.ID = types.StringValue(d.Meta().Region(ctx))
 	data.TableIDs = fwflex.FlattenFrameworkStringValueList(ctx, out)
