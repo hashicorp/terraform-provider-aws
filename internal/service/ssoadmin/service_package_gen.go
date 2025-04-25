@@ -162,7 +162,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			}),
 		},
 		{
-			Factory:  ResourceAccessControlAttributes,
+			Factory:  resourceInstanceAccessControlAttributes,
 			TypeName: "aws_ssoadmin_instance_access_control_attributes",
 			Name:     "Instance Access Control Attributes",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
