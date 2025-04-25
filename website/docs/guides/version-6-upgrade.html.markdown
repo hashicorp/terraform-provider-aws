@@ -338,7 +338,7 @@ The `character_set_name` now cannot be set with `replicate_source_db`, `restore_
 
 ## resource/aws_dms_endpoint
 
-`s3_settings` has been removed.
+`s3_settings` has been removed. Use `aws_dms_s3_endpoint` instead.
 
 ## resource/aws_dx_gateway_association
 
