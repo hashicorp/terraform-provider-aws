@@ -3647,7 +3647,7 @@ resource "aws_redshift_cluster" "test" {
   master_password    = "Mustbe8characters"
   node_type          = "dc2.large"
   cluster_type       = "single-node"
-encrypted = true
+  encrypted          = true
 
   automated_snapshot_retention_period = 0
   skip_final_snapshot                 = true
