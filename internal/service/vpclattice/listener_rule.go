@@ -40,7 +40,7 @@ func resourceListenerRule() *schema.Resource {
 		DeleteWithoutTimeout: resourceListenerRuleDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, m any) ([]*schema.ResourceData, error) {
 				serviceID, listenerID, ruleID, err := listenerRuleParseResourceID(d.Id())
 				if err != nil {
 					return nil, err
