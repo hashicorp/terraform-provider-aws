@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccEC2VPCRouteServerPropagation_basic(t *testing.T) {
+func TestAccVPCRouteServerPropagation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var VPCRouteServerPropagation awstypes.RouteServerPropagation
@@ -57,7 +57,7 @@ func TestAccEC2VPCRouteServerPropagation_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCRouteServerPropagation_disappears(t *testing.T) {
+func TestAccVPCRouteServerPropagation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var VPCRouteServerPropagation awstypes.RouteServerPropagation
