@@ -96,6 +96,11 @@ func TestAccIAMRole_Identity_Basic(t *testing.T) {
 				ImportState:     true,
 				ImportStateKind: resource.ImportBlockWithID,
 			},
+			{
+				ResourceName:    resourceName,
+				ImportState:     true,
+				ImportStateKind: resource.ImportBlockWithResourceIdentity,
+			},
 		},
 	})
 }
