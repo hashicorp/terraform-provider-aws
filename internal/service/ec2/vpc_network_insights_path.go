@@ -320,14 +320,14 @@ func expandPathRequestFilter(tfMap map[string]any) *awstypes.PathRequestFilter {
 	if v, ok := tfMap["destination_address"].(string); ok && v != "" {
 		apiObject.DestinationAddress = aws.String(v)
 	}
-	if v, ok := tfMap["destination_port_range"]; ok && len(v.([]any)) > 0 {
-		apiObject.DestinationPortRange = expandRequestFilterPortRange(v.([]any)[0].(map[string]any))
+	if v, ok := tfMap["destination_port_range"].([]any); ok && len(v) > 0 {
+		apiObject.DestinationPortRange = expandRequestFilterPortRange(v[0].(map[string]any))
 	}
 	if v, ok := tfMap["source_address"].(string); ok && v != "" {
 		apiObject.SourceAddress = aws.String(v)
 	}
-	if v, ok := tfMap["source_port_range"]; ok && len(v.([]any)) > 0 {
-		apiObject.SourcePortRange = expandRequestFilterPortRange(v.([]any)[0].(map[string]any))
+	if v, ok := tfMap["source_port_range"].([]any); ok && len(v) > 0 {
+		apiObject.SourcePortRange = expandRequestFilterPortRange(v[0].(map[string]any))
 	}
 
 	return apiObject
