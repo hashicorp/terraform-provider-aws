@@ -72,7 +72,7 @@ The following arguments are required:
 
 * `s3_logs` - (Required) Configuration block with S3 logging settings. Detailed below.
 
-### s3_logs
+#### s3_logs
 
 The following arguments are required:
 
