@@ -28,7 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource("aws_ec2_instance_default_credit_specification", name="Default Credit Specification")
+// @FrameworkResource("aws_ec2_default_credit_specification", name="Default Credit Specification")
 func newDefaultCreditSpecificationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &defaultCreditSpecificationResource{}
 

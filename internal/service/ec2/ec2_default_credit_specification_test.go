@@ -20,7 +20,7 @@ import (
 func TestAccEC2DefaultCreditSpecification_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var defaultcreditspecification awstypes.InstanceFamilyCreditSpecification
-	resourceName := "aws_ec2_instance_default_credit_specification.test"
+	resourceName := "aws_ec2_default_credit_specification.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -83,7 +83,7 @@ func testAccDefaultCreditSpecificationImportStateIDFunc(n string) resource.Impor
 
 func testAccDefaultCreditSpecificationConfig_basic() string {
 	return `
-resource "aws_ec2_instance_default_credit_specification" "test" {
+resource "aws_ec2_default_credit_specification" "test" {
   cpu_credits     = "standard"
   instance_family = "t4g"
 }

@@ -1,11 +1,11 @@
 ---
 subcategory: "EC2 (Elastic Compute Cloud)"
 layout: "aws"
-page_title: "AWS: aws_ec2_instance_default_credit_specification"
+page_title: "AWS: aws_ec2_default_credit_specification"
 description: |-
   Terraform resource for managing an AWS EC2 (Elastic Compute Cloud) Default Credit Specification.
 ---
-# Resource: aws_ec2_instance_default_credit_specification
+# Resource: aws_ec2_default_credit_specification
 
 Terraform resource for managing an AWS EC2 (Elastic Compute Cloud) Default Credit Specification.
 
@@ -14,7 +14,7 @@ Terraform resource for managing an AWS EC2 (Elastic Compute Cloud) Default Credi
 ### Basic Usage
 
 ```terraform
-resource "aws_ec2_instance_default_credit_specification" "example" {
+resource "aws_ec2_default_credit_specification" "example" {
   instance_family = "t2"
   cpu_credits     = "standard"
 }
@@ -44,7 +44,7 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 
 ```terraform
 import {
-  to = aws_ec2_instance_default_credit_specification.example
+  to = aws_ec2_default_credit_specification.example
   id = "t2"
 }
 ```
@@ -52,4 +52,4 @@ import {
 Using `terraform import`, import EC2 (Elastic Compute Cloud) Default Credit Specification using the `instance_family`. For example:
 
 ```console
-% terraform import aws_ec2_instance_default_credit_specification.example t2
+% terraform import aws_ec2_default_credit_specification.example t2

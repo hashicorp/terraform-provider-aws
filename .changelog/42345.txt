@@ -1,3 +1,3 @@
 ```release-note:new-resource
-aws_ec2_instance_default_credit_specification
+aws_ec2_default_credit_specification
 ```
