@@ -18,10 +18,8 @@ resource.{{ if and .Serialize (not .SerializeParallelTests) }}Test{{ else }}Para
 {{- end }}
 
 {{ define "TestCaseSetup" -}}
-{{ template "TestCaseSetupNoProviders" . -}}
-{{ if not .AlternateRegionProvider }}
-	ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-{{- end -}}
+{{ template "TestCaseSetupNoProviders" . }}
+ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 {{- end }}
 
 {{ define "TestCaseSetupNoProviders" -}}
@@ -128,9 +126,6 @@ plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), know
 	{{ range $name, $value := .AdditionalTfVars -}}
 	{{ $name }}: config.StringVariable({{ $value }}),
 	{{ end -}}
-	{{ if .AlternateRegionProvider -}}
-	"alt_region": config.StringVariable(acctest.AlternateRegion()),
-	{{ end }}
 {{ end }}
 
 package {{ .ProviderPackage }}_test
@@ -168,9 +163,6 @@ func {{ template "testname" . }}_Identity_Basic(t *testing.T) {
 		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
-				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/basic/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
@@ -185,9 +177,6 @@ func {{ template "testname" . }}_Identity_Basic(t *testing.T) {
 			},
 			{{ if not .NoImport -}}
 			{
-				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/basic/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}

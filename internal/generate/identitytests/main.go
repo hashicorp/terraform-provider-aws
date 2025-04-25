@@ -18,6 +18,7 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 	"text/template"
@@ -124,49 +125,44 @@ func main() {
 			g.Fatalf("generating file (%s): %s", filename, err)
 		}
 
-		// configTmplFile := path.Join("testdata", "tmpl", fmt.Sprintf("%s_basic.gtpl", sourceName))
-		// var configTmpl string
-		// if _, err := os.Stat(configTmplFile); err == nil {
-		// 	b, err := os.ReadFile(configTmplFile)
-		// 	if err != nil {
-		// 		g.Fatalf("reading %q: %w", configTmplFile, err)
-		// 	}
-		// 	configTmpl = string(b)
-		// 	resource.GenerateConfig = true
-		// } else if errors.Is(err, os.ErrNotExist) {
-		// 	g.Errorf("no basic template found for %s at %q", sourceName, configTmplFile)
-		// 	failed = true
-		// } else {
-		// 	g.Fatalf("opening config template %q: %w", configTmplFile, err)
-		// }
+		configTmplFile := path.Join("testdata", "tmpl", fmt.Sprintf("%s_tags.gtpl", sourceName))
+		var configTmpl string
+		if _, err := os.Stat(configTmplFile); err == nil {
+			b, err := os.ReadFile(configTmplFile)
+			if err != nil {
+				g.Fatalf("reading %q: %w", configTmplFile, err)
+			}
+			configTmpl = string(b)
+			resource.GenerateConfig = true
+		} else if errors.Is(err, os.ErrNotExist) {
+			g.Errorf("no tags template found for %s at %q", sourceName, configTmplFile)
+			failed = true
+		} else {
+			g.Fatalf("opening config template %q: %w", configTmplFile, err)
+		}
 
-		// if resource.GenerateConfig {
-		// 	additionalTfVars := tfmaps.Keys(resource.additionalTfVars)
-		// 	slices.Sort(additionalTfVars)
-		// 	testDirPath := path.Join("testdata", resource.Name)
+		if resource.GenerateConfig {
+			additionalTfVars := tfmaps.Keys(resource.additionalTfVars)
+			slices.Sort(additionalTfVars)
+			testDirPath := path.Join("testdata", resource.Name)
 
-		// 	tfTemplates, err := template.New("identitytests").Parse(testTfTmpl)
-		// 	if err != nil {
-		// 		g.Fatalf("parsing base Terraform config template: %s", err)
-		// 	}
+			tfTemplates, err := template.New("identitytests").Parse(testTfTmpl)
+			if err != nil {
+				g.Fatalf("parsing base Terraform config template: %s", err)
+			}
 
-		// 	_, err = tfTemplates.New("body").Parse(configTmpl)
-		// 	if err != nil {
-		// 		g.Fatalf("parsing config template %q: %s", configTmplFile, err)
-		// 	}
+			_, err = tfTemplates.New("body").Parse(configTmpl)
+			if err != nil {
+				g.Fatalf("parsing config template %q: %s", configTmplFile, err)
+			}
 
-		// 	common := commonConfig{
-		// 		AdditionalTfVars:        additionalTfVars,
-		// 		WithRName:               (resource.Generator != ""),
-		// 		AlternateRegionProvider: resource.AlternateRegionProvider,
-		// 	}
+			common := commonConfig{
+				AdditionalTfVars: additionalTfVars,
+				WithRName:        (resource.Generator != ""),
+			}
 
-		// 	generateTestConfig(g, testDirPath, "tags", false, tfTemplates, common)
-		// 	generateTestConfig(g, testDirPath, "tags", true, tfTemplates, common)
-		// 	generateTestConfig(g, testDirPath, "tagsComputed1", false, tfTemplates, common)
-		// 	generateTestConfig(g, testDirPath, "tagsComputed2", false, tfTemplates, common)
-		// 	generateTestConfig(g, testDirPath, "tags_ignore", false, tfTemplates, common)
-		// }
+			generateTestConfig(g, testDirPath, "basic", tfTemplates, common)
+		}
 	}
 
 	if failed {
@@ -261,7 +257,6 @@ type ResourceDatum struct {
 	GenerateConfig              bool
 	InitCodeBlocks              []codeBlock
 	additionalTfVars            map[string]string
-	AlternateRegionProvider     bool
 	CheckDestroyNoop            bool
 	overrideIdentifierAttribute string
 	OverrideResourceType        string
@@ -301,9 +296,8 @@ type codeBlock struct {
 }
 
 type commonConfig struct {
-	AdditionalTfVars        []string
-	WithRName               bool
-	AlternateRegionProvider bool
+	AdditionalTfVars []string
+	WithRName        bool
 }
 
 type ConfigDatum struct {
@@ -433,14 +427,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 			case "Testing":
 				args := common.ParseArgs(m[3])
-				if attr, ok := args.Keyword["altRegionProvider"]; ok {
-					if b, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid altRegionProvider value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-						continue
-					} else {
-						d.AlternateRegionProvider = b
-					}
-				}
 
 				if attr, ok := args.Keyword["destroyTakesT"]; ok {
 					if b, err := strconv.ParseBool(attr); err != nil {
@@ -641,11 +627,8 @@ func (v *visitor) Visit(node ast.Node) ast.Visitor {
 	return v
 }
 
-func generateTestConfig(g *common.Generator, dirPath, test string, withDefaults bool, tfTemplates *template.Template, common commonConfig) {
+func generateTestConfig(g *common.Generator, dirPath, test string, tfTemplates *template.Template, common commonConfig) {
 	testName := test
-	if withDefaults {
-		testName += "_defaults"
-	}
 	dirPath = path.Join(dirPath, testName)
 	if err := os.MkdirAll(dirPath, 0755); err != nil {
 		g.Fatalf("creating test directory %q: %w", dirPath, err)
