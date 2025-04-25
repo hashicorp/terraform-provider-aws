@@ -87,10 +87,6 @@ func resourceAccessPointForDirectoryBucket() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
 			},
-			names.AttrDomainName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			names.AttrEndpoints: {
 				Type:     schema.TypeMap,
 				Computed: true,
@@ -293,7 +289,6 @@ func resourceAccessPointForDirectoryBucketRead(ctx context.Context, d *schema.Re
 	d.Set(names.AttrAccountID, accountID)
 	d.Set(names.AttrAlias, output.Alias)
 	d.Set("bucket_account_id", output.BucketAccountId)
-	d.Set(names.AttrDomainName, meta.(*conns.AWSClient).RegionalHostname(ctx, fmt.Sprintf("%s-%s.s3express-accesspoint", aws.ToString(output.Name), accountID)))
 	d.Set(names.AttrEndpoints, output.Endpoints)
 	d.Set(names.AttrName, output.Name)
 	d.Set("network_origin", output.NetworkOrigin)
