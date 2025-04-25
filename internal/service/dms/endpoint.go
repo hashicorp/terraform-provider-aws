@@ -286,6 +286,11 @@ func resourceEndpoint() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
 						},
+						"use_large_integer_value": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
 					},
 				},
 			},
@@ -2034,6 +2039,10 @@ func expandKinesisSettings(tfMap map[string]any) *awstypes.KinesisSettings {
 		apiObject.StreamArn = aws.String(v)
 	}
 
+	if v, ok := tfMap["use_large_integer_value"].(bool); ok {
+		apiObject.UseLargeIntegerValue = aws.Bool(v)
+	}
+
 	return apiObject
 }
 
@@ -2076,6 +2085,10 @@ func flattenKinesisSettings(apiObject *awstypes.KinesisSettings) map[string]any 
 
 	if v := apiObject.StreamArn; v != nil {
 		tfMap[names.AttrStreamARN] = aws.ToString(v)
+	}
+
+	if v := apiObject.UseLargeIntegerValue; v != nil {
+		tfMap["use_large_integer_value"] = aws.ToBool(v)
 	}
 
 	return tfMap

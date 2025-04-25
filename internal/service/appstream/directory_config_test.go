@@ -212,9 +212,9 @@ func testAccCheckDirectoryConfigNotRecreated(i, j *awstypes.DirectoryConfig) res
 
 func orgUnitFromDomain(orgUnit, domainName string) string {
 	var sb strings.Builder
-	sb.WriteString(fmt.Sprintf("OU=%s", orgUnit))
+	fmt.Fprintf(&sb, "OU=%s", orgUnit)
 	for dc := range strings.SplitSeq(domainName, ".") {
-		sb.WriteString(fmt.Sprintf(" DC=%s", dc))
+		fmt.Fprintf(&sb, " DC=%s", dc)
 	}
 	return sb.String()
 }
