@@ -5,12 +5,14 @@ package ssoadmin
 
 // Exports for use in tests only.
 var (
+	ResourceAccountAssignment                  = resourceAccountAssignment
 	ResourceApplication                        = newApplicationResource
 	ResourceApplicationAssignment              = newApplicationAssignmentResource
 	ResourceApplicationAssignmentConfiguration = newApplicationAssignmentConfigurationResource
 	ResourceApplicationAccessScope             = newApplicationAccessScopeResource
 	ResourceTrustedTokenIssuer                 = newTrustedTokenIssuerResource
 
+	FindAccountAssignmentBy5PartKey            = findAccountAssignmentBy5PartKey
 	FindApplicationByID                        = findApplicationByID
 	FindApplicationAssignmentByID              = findApplicationAssignmentByID
 	FindApplicationAssignmentConfigurationByID = findApplicationAssignmentConfigurationByID

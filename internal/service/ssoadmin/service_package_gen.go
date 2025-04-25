@@ -144,7 +144,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePackageSDKResource {
 	return []*inttypes.ServicePackageSDKResource{
 		{
-			Factory:  ResourceAccountAssignment,
+			Factory:  resourceAccountAssignment,
 			TypeName: "aws_ssoadmin_account_assignment",
 			Name:     "Account Assignment",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{

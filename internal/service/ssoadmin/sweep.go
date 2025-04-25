@@ -114,7 +114,7 @@ func sweepAccountAssignments(region string) error {
 					targetID := aws.ToString(a.AccountId)
 					targetType := awstypes.TargetTypeAwsAccount // only valid value currently accepted by API
 
-					r := ResourceAccountAssignment()
+					r := resourceAccountAssignment()
 					d := r.Data(nil)
 					d.SetId(fmt.Sprintf("%s,%s,%s,%s,%s,%s", principalID, principalType, targetID, targetType, permissionSetArn, instanceArn))
 
