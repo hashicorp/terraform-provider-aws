@@ -213,6 +213,14 @@ func (sr ServiceRecord) SDKID() string {
 	return ""
 }
 
+func (sr ServiceRecord) ARNService() string {
+	if sr.service.ServiceSDK != nil {
+		return sr.service.ServiceSDK.ARNService
+	}
+	return ""
+
+}
+
 func (sr ServiceRecord) AWSServiceEnvVar() string {
 	return "AWS_ENDPOINT_URL_" + strings.ReplaceAll(strings.ToUpper(sr.SDKID()), " ", "_")
 }
@@ -294,8 +302,9 @@ type ResourcePrefix struct {
 }
 
 type SDK struct {
-	ID      string `hcl:"id,optional"`
-	Version int    `hcl:"client_version,optional"`
+	ID         string `hcl:"id,optional"`
+	Version    int    `hcl:"client_version,optional"`
+	ARNService string `hcl:"arn_service,optional"`
 }
 
 type Names struct {
