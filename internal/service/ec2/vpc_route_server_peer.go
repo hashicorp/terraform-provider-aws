@@ -80,6 +80,12 @@ func (r *resourceVPCRouteServerPeer) Schema(ctx context.Context, req resource.Sc
 			"endpoint_eni_id": schema.StringAttribute{
 				Computed: true,
 			},
+			"subnet_id": schema.StringAttribute{
+				Computed: true,
+			},
+			"vpc_id": schema.StringAttribute{
+				Computed: true,
+			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
@@ -101,24 +107,6 @@ func (r *resourceVPCRouteServerPeer) Schema(ctx context.Context, req resource.Sc
 						Validators: []validator.String{
 							enum.FrameworkValidate[awstypes.RouteServerPeerLivenessMode](),
 						},
-					},
-				},
-			},
-			"bfd_status": schema.SingleNestedBlock{
-				CustomType: fwtypes.NewObjectTypeOf[resourceVPCRouteServerPeerBfdStatusModel](ctx),
-				Attributes: map[string]schema.Attribute{
-					"status": schema.StringAttribute{
-						Computed: true,
-						Optional: true,
-					},
-				},
-			},
-			"bgp_status": schema.SingleNestedBlock{
-				CustomType: fwtypes.NewObjectTypeOf[resourceVPCRouteServerPeerBgpStatusModel](ctx),
-				Attributes: map[string]schema.Attribute{
-					"status": schema.StringAttribute{
-						Computed: true,
-						Optional: true,
 					},
 				},
 			},
@@ -344,29 +332,21 @@ func findVPCRouteServerPeerByID(ctx context.Context, conn *ec2.Client, id string
 }
 
 type resourceVPCRouteServerPeerModel struct {
-	RouteServerPeerId     types.String                                                     `tfsdk:"id"`
-	RouteServerEndpointId types.String                                                     `tfsdk:"route_server_endpoint_id"`
-	PeerAddress           types.String                                                     `tfsdk:"peer_address"`
-	RouteServerId         types.String                                                     `tfsdk:"route_server_id"`
+	BgpOptions            fwtypes.ObjectValueOf[resourceVPCRouteServerPeerBgpOptionsModel] `tfsdk:"bgp_options"`
 	EndpointEniAddress    types.String                                                     `tfsdk:"endpoint_eni_address"`
 	EndpointEniId         types.String                                                     `tfsdk:"endpoint_eni_id"`
-	BgpOptions            fwtypes.ObjectValueOf[resourceVPCRouteServerPeerBgpOptionsModel] `tfsdk:"bgp_options"`
-	BfdStatus             fwtypes.ObjectValueOf[resourceVPCRouteServerPeerBfdStatusModel]  `tfsdk:"bfd_status"`
-	BgpStatus             fwtypes.ObjectValueOf[resourceVPCRouteServerPeerBgpStatusModel]  `tfsdk:"bgp_status"`
+	PeerAddress           types.String                                                     `tfsdk:"peer_address"`
+	RouteServerEndpointId types.String                                                     `tfsdk:"route_server_endpoint_id"`
+	RouteServerId         types.String                                                     `tfsdk:"route_server_id"`
+	RouteServerPeerId     types.String                                                     `tfsdk:"id"`
+	SubnetId              types.String                                                     `tfsdk:"subnet_id"`
 	Tags                  tftags.Map                                                       `tfsdk:"tags"`
 	TagsAll               tftags.Map                                                       `tfsdk:"tags_all"`
 	Timeouts              timeouts.Value                                                   `tfsdk:"timeouts"`
+	VpcId                 types.String                                                     `tfsdk:"vpc_id"`
 }
 
 type resourceVPCRouteServerPeerBgpOptionsModel struct {
 	PeerAsn               types.Int64                                              `tfsdk:"peer_asn"`
 	PeerLivenessDetection fwtypes.StringEnum[awstypes.RouteServerPeerLivenessMode] `tfsdk:"peer_liveness_detection"`
-}
-
-type resourceVPCRouteServerPeerBfdStatusModel struct {
-	Status fwtypes.StringEnum[awstypes.RouteServerBfdState] `tfsdk:"status"`
-}
-
-type resourceVPCRouteServerPeerBgpStatusModel struct {
-	Status fwtypes.StringEnum[awstypes.RouteServerBgpState] `tfsdk:"status"`
 }
