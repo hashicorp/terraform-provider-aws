@@ -23,7 +23,6 @@ Upgrade topics:
 - [Amazon Elastic Transcoder Deprecation](#amazon-elastic-transcoder-deprecation)
 - [data-source/aws_ami](#data-sourceaws_ami)
 - [data-source/aws_batch_compute_environment](#data-sourceaws_batch_compute_environment)
-- [data-source/aws_dms_endpoint](#data-sourceaws_dms_endpoint)
 - [data-source/aws_ecs_task_definition](#data-sourceaws_ecs_task_definition)
 - [data-source/aws_ecs_task_execution](#data-sourceaws_ecs_task_execution)
 - [data-source/aws_elbv2_listener_rule](#data-sourceaws_elbv2_listener_rule)
@@ -212,10 +211,6 @@ For example, `saml_options.session_timeout` would now be referenced as `saml_opt
 ## data-source/aws_service_discovery_service
 
 `tags_all` has been removed.
-
-## data-source/aws_dms_endpoint
-
-`s3_settings` has been removed.
 
 ## data-source/aws_ecs_task_definition
 
