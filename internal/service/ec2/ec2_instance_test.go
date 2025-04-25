@@ -4426,12 +4426,8 @@ func TestAccEC2Instance_cpuOptionsCoreThreadsUnspecifiedToSpecified(t *testing.T
 	})
 }
 
-func TestAccEC2Instance_upgradeV6(t *testing.T) {
+func TestAccEC2Instance_upgradeV6CPUOptions(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var v1, v2 awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
