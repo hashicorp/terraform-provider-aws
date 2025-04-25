@@ -292,7 +292,7 @@ require (
 	github.com/hashicorp/terraform-plugin-go v0.27.0-alpha.1.0.20250325210248-fa8d1fe4306b
 	github.com/hashicorp/terraform-plugin-log v0.9.0
 	github.com/hashicorp/terraform-plugin-mux v0.19.0-alpha.1
-	github.com/hashicorp/terraform-plugin-sdk/v2 v2.37.0-alpha.1
+	github.com/hashicorp/terraform-plugin-sdk/v2 v2.37.0-beta.1
 	github.com/hashicorp/terraform-plugin-testing v1.13.0-beta.1
 	github.com/jmespath/go-jmespath v0.4.0
 	github.com/mattbaird/jsonpatch v0.0.0-20240118010651-0ba75a80ca38
@@ -371,7 +371,7 @@ require (
 	go.opentelemetry.io/otel v1.35.0 // indirect
 	go.opentelemetry.io/otel/metric v1.35.0 // indirect
 	go.opentelemetry.io/otel/trace v1.35.0 // indirect
-	golang.org/x/net v0.37.0 // indirect
+	golang.org/x/net v0.38.0 // indirect
 	golang.org/x/sync v0.13.0 // indirect
 	golang.org/x/sys v0.32.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
