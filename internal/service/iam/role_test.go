@@ -85,11 +85,10 @@ func TestAccIAMRole_Identity_Basic(t *testing.T) {
 				},
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateKind:         resource.ImportCommandWithID,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateKind:   resource.ImportCommandWithID,
+				ImportStateVerify: true,
 			},
 			{
 				ResourceName:    resourceName,
@@ -584,9 +583,6 @@ func TestAccIAMRole_permissionsBoundary(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					names.AttrForceDestroy,
-				},
 			},
 			// Test removal
 			{
