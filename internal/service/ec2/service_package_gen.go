@@ -140,6 +140,14 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Name:     "VPC Route Server Association",
 		},
 		{
+			Factory:  newVPCRouteServerEndpointResource,
+			TypeName: "aws_vpc_route_server_endpoint",
+			Name:     "VPC Route Server Endpoint",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			},
+		},
+		{
 			Factory:  newVPCRouteServerPropagationResource,
 			TypeName: "aws_vpc_route_server_propagation",
 			Name:     "VPC Route Server Propagation",

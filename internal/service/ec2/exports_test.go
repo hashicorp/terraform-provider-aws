@@ -117,6 +117,7 @@ var (
 	ResourceVPCRouteServer                                = newVPCRouteServerResource
 	ResourceVPCRouteServerAssociation                     = newVPCRouteServerAssociationResource
 	ResourceVPCRouteServerPropagation                     = newVPCRouteServerPropagationResource
+	ResourceVPCRouteServerEndpoint                        = newVPCRouteServerEndpointResource
 	ResourceVPNConnection                                 = resourceVPNConnection
 	ResourceVPNConnectionRoute                            = resourceVPNConnectionRoute
 	ResourceVPNGateway                                    = resourceVPNGateway
@@ -242,6 +243,7 @@ var (
 	FindVPCRouteServerByID                                     = findVPCRouteServerByID
 	FindVPCRouteServerAssociationByTwoPartKey                  = findVPCRouteServerAssociationByTwoPartKey
 	FindVPCRouteServerPropagationByTwoPartKey                  = findVPCRouteServerPropagationByTwoPartKey
+	FindVPCRouteServerEndpointByID                             = findVPCRouteServerEndpointByID
 	FindVPNConnectionByID                                      = findVPNConnectionByID
 	FindVPNConnectionRouteByTwoPartKey                         = findVPNConnectionRouteByTwoPartKey
 	FindVPNGatewayByID                                         = findVPNGatewayByID
