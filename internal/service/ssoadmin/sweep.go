@@ -53,7 +53,7 @@ func sweepAccountAssignments(region string) error {
 
 	// Need to Read the SSO Instance first; assumes the first instance returned
 	// is where the permission sets exist as AWS SSO currently supports only 1 instance
-	ds := DataSourceInstances()
+	ds := dataSourceInstances()
 	dsData := ds.Data(nil)
 
 	if err := sdk.ReadResource(ctx, ds, dsData, client); err != nil {
@@ -146,7 +146,7 @@ func sweepApplications(region string) error {
 
 	// Need to Read the SSO Instance first; assumes the first instance returned
 	// is where the permission sets exist as AWS SSO currently supports only 1 instance
-	ds := DataSourceInstances()
+	ds := dataSourceInstances()
 	dsData := ds.Data(nil)
 
 	if err := sdk.ReadResource(ctx, ds, dsData, client); err != nil {
@@ -206,7 +206,7 @@ func sweepPermissionSets(region string) error {
 
 	// Need to Read the SSO Instance first; assumes the first instance returned
 	// is where the permission sets exist as AWS SSO currently supports only 1 instance
-	ds := DataSourceInstances()
+	ds := dataSourceInstances()
 	dsData := ds.Data(nil)
 
 	if err := sdk.ReadResource(ctx, ds, dsData, client); err != nil {
