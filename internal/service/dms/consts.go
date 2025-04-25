@@ -90,7 +90,6 @@ func engineName_Values() []string {
 		engineNameRedis,
 		engineNameRedshift,
 		engineNameRedshiftServerless,
-		engineNameS3,
 		engineNameSQLServer,
 		engineNameSybase,
 	}
