@@ -67,6 +67,11 @@ func (r *resourceVPCRouteServer) Schema(ctx context.Context, req resource.Schema
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
 				},
+				Validators: []validator.Int64{
+					int64validator.Any(
+						int64validator.Between(64512, 65534),
+						int64validator.Between(4200000000, 4294967294),
+					)},
 			},
 			"persist_routes": schema.StringAttribute{
 				Computed: true,
