@@ -221,6 +221,7 @@ func TestAccS3ControlAccessPointForDirectoryBucket_vpc(t *testing.T) {
 					testAccCheckAccessPointForDirectoryBucketExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrAccountID),
 					resource.TestCheckResourceAttr(resourceName, "network_origin", "VPC"),
+					resource.TestCheckResourceAttr(resourceName, "endpoints.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPolicy, ""),
 					resource.TestCheckResourceAttr(resourceName, "public_access_block_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "public_access_block_configuration.0.block_public_acls", acctest.CtTrue),
