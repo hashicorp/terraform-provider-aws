@@ -47,13 +47,13 @@ func newScraperResource(_ context.Context) (resource.ResourceWithConfigure, erro
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultDeleteTimeout(20 * time.Minute)
+	r.SetDefaultUpdateTimeout(2 * time.Minute)
 
 	return r, nil
 }
 
 type scraperResource struct {
 	framework.ResourceWithConfigure
-	framework.WithNoOpUpdate[scraperResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }
@@ -63,9 +63,6 @@ func (r *scraperResource) Schema(ctx context.Context, request resource.SchemaReq
 		Attributes: map[string]schema.Attribute{
 			names.AttrAlias: schema.StringAttribute{
 				Optional: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
 			},
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			names.AttrID:  framework.IDAttribute(),
@@ -77,9 +74,6 @@ func (r *scraperResource) Schema(ctx context.Context, request resource.SchemaReq
 			},
 			"scrape_configuration": schema.StringAttribute{
 				Required: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
@@ -92,9 +86,6 @@ func (r *scraperResource) Schema(ctx context.Context, request resource.SchemaReq
 					listvalidator.SizeAtLeast(1),
 					listvalidator.SizeAtMost(1),
 				},
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.RequiresReplace(),
-				},
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
 						"amp": schema.ListNestedBlock{
@@ -103,17 +94,11 @@ func (r *scraperResource) Schema(ctx context.Context, request resource.SchemaReq
 								listvalidator.SizeAtLeast(1),
 								listvalidator.SizeAtMost(1),
 							},
-							PlanModifiers: []planmodifier.List{
-								listplanmodifier.RequiresReplace(),
-							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"workspace_arn": schema.StringAttribute{
 										CustomType: fwtypes.ARNType,
 										Required:   true,
-										PlanModifiers: []planmodifier.String{
-											stringplanmodifier.RequiresReplace(),
-										},
 									},
 								},
 							},
@@ -126,17 +111,11 @@ func (r *scraperResource) Schema(ctx context.Context, request resource.SchemaReq
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.RequiresReplace(),
-				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"source_role_arn": schema.StringAttribute{
 							Optional:   true,
 							CustomType: fwtypes.ARNType,
-							PlanModifiers: []planmodifier.String{
-								stringplanmodifier.RequiresReplace(),
-							},
 							Validators: []validator.String{
 								stringvalidator.AlsoRequires(
 									path.MatchRelative().AtParent().AtName("target_role_arn"),
@@ -146,9 +125,6 @@ func (r *scraperResource) Schema(ctx context.Context, request resource.SchemaReq
 						"target_role_arn": schema.StringAttribute{
 							Optional:   true,
 							CustomType: fwtypes.ARNType,
-							PlanModifiers: []planmodifier.String{
-								stringplanmodifier.RequiresReplace(),
-							},
 							Validators: []validator.String{
 								stringvalidator.AlsoRequires(
 									path.MatchRelative().AtParent().AtName("source_role_arn"),
@@ -218,6 +194,7 @@ func (r *scraperResource) Schema(ctx context.Context, request resource.SchemaReq
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Delete: true,
+				Update: true,
 			}),
 		},
 	}
@@ -316,6 +293,54 @@ func (r *scraperResource) Read(ctx context.Context, request resource.ReadRequest
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
+func (r *scraperResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var new, old scraperResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	conn := r.Meta().AMPClient(ctx)
+
+	if !new.Alias.Equal(old.Alias) ||
+		!new.Destination.Equal(old.Destination) ||
+		!new.RoleConfiguration.Equal(old.RoleConfiguration) ||
+		!new.ScrapeConfiguration.Equal(old.ScrapeConfiguration) {
+		var input amp.UpdateScraperInput
+		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		// Additional fields.
+		input.ClientToken = aws.String(sdkid.UniqueId())
+		input.ScrapeConfiguration = &awstypes.ScrapeConfigurationMemberConfigurationBlob{
+			Value: []byte(new.ScrapeConfiguration.ValueString()),
+		}
+		input.ScraperId = fwflex.StringFromFramework(ctx, new.ID)
+
+		_, err := conn.UpdateScraper(ctx, &input)
+
+		if err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("updating Prometheus Scraper (%s)", new.ID.ValueString()), err.Error())
+
+			return
+		}
+
+		if _, err := waitScraperUpdated(ctx, conn, new.ID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("waiting for Prometheus Scraper (%s) update", new.ID.ValueString()), err.Error())
+
+			return
+		}
+	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
+}
+
 func (r *scraperResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	var data scraperResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
@@ -327,7 +352,7 @@ func (r *scraperResource) Delete(ctx context.Context, request resource.DeleteReq
 
 	input := amp.DeleteScraperInput{
 		ClientToken: aws.String(sdkid.UniqueId()),
-		ScraperId:   data.ID.ValueStringPointer(),
+		ScraperId:   fwflex.StringFromFramework(ctx, data.ID),
 	}
 	_, err := conn.DeleteScraper(ctx, &input)
 
@@ -519,6 +544,25 @@ func statusScraper(ctx context.Context, conn *amp.Client, id string) retry.State
 func waitScraperCreated(ctx context.Context, conn *amp.Client, id string, timeout time.Duration) (*awstypes.ScraperDescription, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ScraperStatusCodeCreating),
+		Target:  enum.Slice(awstypes.ScraperStatusCodeActive),
+		Refresh: statusScraper(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.ScraperDescription); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitScraperUpdated(ctx context.Context, conn *amp.Client, id string, timeout time.Duration) (*awstypes.ScraperDescription, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.ScraperStatusCodeUpdating),
 		Target:  enum.Slice(awstypes.ScraperStatusCodeActive),
 		Refresh: statusScraper(ctx, conn, id),
 		Timeout: timeout,

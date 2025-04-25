@@ -1243,20 +1243,24 @@ func flattenWorkflowDetail(apiObjects []awstypes.WorkflowDetail) []any {
 type securityPolicyName string
 
 const (
-	securityPolicyName2018_11             securityPolicyName = "TransferSecurityPolicy-2018-11"
-	securityPolicyName2020_06             securityPolicyName = "TransferSecurityPolicy-2020-06"
-	securityPolicyName2022_03             securityPolicyName = "TransferSecurityPolicy-2022-03"
-	securityPolicyName2023_05             securityPolicyName = "TransferSecurityPolicy-2023-05"
-	securityPolicyName2024_01             securityPolicyName = "TransferSecurityPolicy-2024-01"
-	securityPolicyNameFIPS_2020_06        securityPolicyName = "TransferSecurityPolicy-FIPS-2020-06"
-	securityPolicyNameFIPS_2023_05        securityPolicyName = "TransferSecurityPolicy-FIPS-2023-05"
-	securityPolicyNameFIPS_2024_01        securityPolicyName = "TransferSecurityPolicy-FIPS-2024-01"
-	securityPolicyNameFIPS_2024_05        securityPolicyName = "TransferSecurityPolicy-FIPS-2024-05"
-	securityPolicyNamePQ_SSH_2023_04      securityPolicyName = "TransferSecurityPolicy-PQ-SSH-Experimental-2023-04"
-	securityPolicyNamePQ_SSH_FIPS_2023_04 securityPolicyName = "TransferSecurityPolicy-PQ-SSH-FIPS-Experimental-2023-04"
-	securityPolicyNameRestricted_2018_11  securityPolicyName = "TransferSecurityPolicy-Restricted-2018-11"
-	securityPolicyNameRestricted_2020_06  securityPolicyName = "TransferSecurityPolicy-Restricted-2020-06"
-	securityPolicyNameRestricted_2024_06  securityPolicyName = "TransferSecurityPolicy-Restricted-2024-06"
+	securityPolicyName2018_11                   securityPolicyName = "TransferSecurityPolicy-2018-11"
+	securityPolicyName2020_06                   securityPolicyName = "TransferSecurityPolicy-2020-06"
+	securityPolicyName2022_03                   securityPolicyName = "TransferSecurityPolicy-2022-03"
+	securityPolicyName2023_05                   securityPolicyName = "TransferSecurityPolicy-2023-05"
+	securityPolicyName2024_01                   securityPolicyName = "TransferSecurityPolicy-2024-01"
+	securityPolicyName2025_03                   securityPolicyName = "TransferSecurityPolicy-2025-03"
+	securityPolicyNameFIPS_2020_06              securityPolicyName = "TransferSecurityPolicy-FIPS-2020-06"
+	securityPolicyNameFIPS_2023_05              securityPolicyName = "TransferSecurityPolicy-FIPS-2023-05"
+	securityPolicyNameFIPS_2024_01              securityPolicyName = "TransferSecurityPolicy-FIPS-2024-01"
+	securityPolicyNameFIPS_2024_05              securityPolicyName = "TransferSecurityPolicy-FIPS-2024-05"
+	securityPolicyNameFIPS_2024_10              securityPolicyName = "TransferSFTPConnectorSecurityPolicy-FIPS-2024-10"
+	securityPolicyNameFIPS_2025_03              securityPolicyName = "TransferSecurityPolicy-FIPS-2025-03"
+	securityPolicyNamePQ_SSH_2023_04            securityPolicyName = "TransferSecurityPolicy-PQ-SSH-Experimental-2023-04"
+	securityPolicyNamePQ_SSH_FIPS_2023_04       securityPolicyName = "TransferSecurityPolicy-PQ-SSH-FIPS-Experimental-2023-04"
+	securityPolicyNameRestricted_2018_11        securityPolicyName = "TransferSecurityPolicy-Restricted-2018-11"
+	securityPolicyNameRestricted_2020_06        securityPolicyName = "TransferSecurityPolicy-Restricted-2020-06"
+	securityPolicyNameRestricted_2024_06        securityPolicyName = "TransferSecurityPolicy-Restricted-2024-06"
+	securityPolicyNameSSHAuditCompliant_2025_02 securityPolicyName = "TransferSecurityPolicy-SshAuditCompliant-2025-02"
 )
 
 func (securityPolicyName) Values() []securityPolicyName {
@@ -1266,14 +1270,17 @@ func (securityPolicyName) Values() []securityPolicyName {
 		securityPolicyName2022_03,
 		securityPolicyName2023_05,
 		securityPolicyName2024_01,
+		securityPolicyName2025_03,
 		securityPolicyNameFIPS_2020_06,
 		securityPolicyNameFIPS_2023_05,
 		securityPolicyNameFIPS_2024_01,
 		securityPolicyNameFIPS_2024_05,
+		securityPolicyNameFIPS_2025_03,
 		securityPolicyNamePQ_SSH_2023_04,
 		securityPolicyNamePQ_SSH_FIPS_2023_04,
 		securityPolicyNameRestricted_2018_11,
 		securityPolicyNameRestricted_2020_06,
 		securityPolicyNameRestricted_2024_06,
+		securityPolicyNameSSHAuditCompliant_2025_02,
 	}
 }

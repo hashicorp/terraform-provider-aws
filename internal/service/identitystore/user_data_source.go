@@ -9,13 +9,11 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/identitystore"
-	"github.com/aws/aws-sdk-go-v2/service/identitystore/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -109,7 +107,7 @@ func dataSourceUser() *schema.Resource {
 						},
 					},
 				},
-				ConflictsWith: []string{names.AttrFilter, "user_id"},
+				ConflictsWith: []string{"user_id"},
 			},
 			names.AttrDisplayName: {
 				Type:     schema.TypeString,
@@ -147,26 +145,6 @@ func dataSourceUser() *schema.Resource {
 						names.AttrIssuer: {
 							Type:     schema.TypeString,
 							Computed: true,
-						},
-					},
-				},
-			},
-			names.AttrFilter: {
-				Deprecated:    "filter is deprecated. Use alternate_identifier instead.",
-				Type:          schema.TypeList,
-				Optional:      true,
-				MaxItems:      1,
-				AtLeastOneOf:  []string{"alternate_identifier", names.AttrFilter, "user_id"},
-				ConflictsWith: []string{"alternate_identifier"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"attribute_path": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"attribute_value": {
-							Type:     schema.TypeString,
-							Required: true,
 						},
 					},
 				},
@@ -263,7 +241,7 @@ func dataSourceUser() *schema.Resource {
 					validation.StringLenBetween(1, 47),
 					validation.StringMatch(regexache.MustCompile(`^([0-9a-f]{10}-|)[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}$`), "must match ([0-9a-f]{10}-|)[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}"),
 				),
-				AtLeastOneOf:  []string{"alternate_identifier", names.AttrFilter, "user_id"},
+				AtLeastOneOf:  []string{"alternate_identifier", "user_id"},
 				ConflictsWith: []string{"alternate_identifier"},
 			},
 			names.AttrUserName: {
@@ -284,77 +262,15 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	identityStoreID := d.Get("identity_store_id").(string)
 
-	if v, ok := d.GetOk(names.AttrFilter); ok && len(v.([]any)) > 0 {
-		// Use ListUsers for backwards compat.
-		var output []types.User
-		input := &identitystore.ListUsersInput{
-			Filters:         expandFilters(d.Get(names.AttrFilter).([]any)),
-			IdentityStoreId: aws.String(identityStoreID),
-		}
-
-		pages := identitystore.NewListUsersPaginator(conn, input)
-		for pages.HasMorePages() {
-			page, err := pages.NextPage(ctx)
-
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "reading IdentityStore Users (%s): %s", identityStoreID, err)
-			}
-
-			for _, user := range page.Users {
-				if v, ok := d.GetOk("user_id"); ok && v.(string) != aws.ToString(user.UserId) {
-					continue
-				}
-
-				output = append(output, user)
-			}
-		}
-
-		user, err := tfresource.AssertSingleValueResult(output)
-
-		if err != nil {
-			return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("IdentityStore User", err))
-		}
-
-		d.SetId(aws.ToString(user.UserId))
-		if err := d.Set("addresses", flattenAddresses(user.Addresses)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting addresses: %s", err)
-		}
-		d.Set(names.AttrDisplayName, user.DisplayName)
-		if err := d.Set("emails", flattenEmails(user.Emails)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting emails: %s", err)
-		}
-		if err := d.Set("external_ids", flattenExternalIDs(user.ExternalIds)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting external_ids: %s", err)
-		}
-		d.Set("identity_store_id", user.IdentityStoreId)
-		d.Set("locale", user.Locale)
-		if err := d.Set(names.AttrName, []any{flattenName(user.Name)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting name: %s", err)
-		}
-		d.Set("nickname", user.NickName)
-		if err := d.Set("phone_numbers", flattenPhoneNumbers(user.PhoneNumbers)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting phone_numbers: %s", err)
-		}
-		d.Set("preferred_language", user.PreferredLanguage)
-		d.Set("profile_url", user.ProfileUrl)
-		d.Set("timezone", user.Timezone)
-		d.Set("title", user.Title)
-		d.Set("user_id", user.UserId)
-		d.Set(names.AttrUserName, user.UserName)
-		d.Set("user_type", user.UserType)
-
-		return diags
-	}
-
 	var userID string
 
 	if v, ok := d.GetOk("alternate_identifier"); ok && len(v.([]any)) > 0 {
-		input := &identitystore.GetUserIdInput{
+		input := identitystore.GetUserIdInput{
 			AlternateIdentifier: expandAlternateIdentifier(v.([]any)[0].(map[string]any)),
 			IdentityStoreId:     aws.String(identityStoreID),
 		}
 
-		output, err := conn.GetUserId(ctx, input)
+		output, err := conn.GetUserId(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading IdentityStore User (%s): %s", identityStoreID, err)

@@ -1,0 +1,3 @@
+```release-note:note
+resource/aws_api_gateway_deployment: Computed attributes `invoke_url` and `execution_arn` are deprecated. Use the `invoke_url` and `execution_arn` attributes of the `aws_api_gateway_stage` resource instead.
+```

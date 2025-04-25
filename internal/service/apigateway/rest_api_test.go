@@ -985,6 +985,101 @@ func TestAccAPIGatewayRestAPI_EndpointVPCEndpointIDs_setByBody(t *testing.T) {
 	})
 }
 
+func TestAccAPIGatewayRestAPI_ipAddressType(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf apigateway.GetRestApiOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_api_gateway_rest_api.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRESTAPIDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRestAPIConfig_ipAddressType(rName, "REGIONAL", "ipv4"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.0", "REGIONAL"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.ip_address_type", "ipv4"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"body", "put_rest_api_mode"},
+			},
+			{
+				Config: testAccRestAPIConfig_ipAddressType(rName, "REGIONAL", "dualstack"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.0", "REGIONAL"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.ip_address_type", "dualstack"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAPIGatewayRestAPI_ipAddressType_overrideBody(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf apigateway.GetRestApiOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_api_gateway_rest_api.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRESTAPIDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRestAPIConfig_ipAddressTypeOverrideBody(rName, "REGIONAL", "ipv4"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.0", "REGIONAL"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.ip_address_type", "ipv4"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"body", "put_rest_api_mode"},
+			},
+			// Verify updated description still overrides
+			{
+				Config: testAccRestAPIConfig_ipAddressTypeOverrideBody(rName, "REGIONAL", "dualstack"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.0", "REGIONAL"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.ip_address_type", "dualstack"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAPIGatewayRestAPI_ipAddressType_privateError(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRESTAPIDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccRestAPIConfig_ipAddressType(rName, "PRIVATE", "ipv4"),
+				ExpectError: regexache.MustCompile(`endpoint_configuration type "PRIVATE" requires ip_address_type "dualstack"`),
+			},
+		},
+	})
+}
+
 func TestAccAPIGatewayRestAPI_minimumCompressionSize(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf apigateway.GetRestApiOutput
@@ -2345,6 +2440,60 @@ resource "aws_api_gateway_rest_api" "test" {
   })
 }
 `, rName, bodyDescription)
+}
+
+func testAccRestAPIConfig_ipAddressType(rName, endpointType, ipAddressType string) string {
+	return fmt.Sprintf(`
+resource "aws_api_gateway_rest_api" "test" {
+  endpoint_configuration {
+    types           = ["%[2]s"]
+    ip_address_type = %[3]q
+  }
+  name = %[1]q
+}
+`, rName, endpointType, ipAddressType)
+}
+
+func testAccRestAPIConfig_ipAddressTypeOverrideBody(rName, endpointType, ipAddressType string) string {
+	return fmt.Sprintf(`
+resource "aws_api_gateway_rest_api" "test" {
+  endpoint_configuration {
+    types           = ["%[2]s"]
+    ip_address_type = %[3]q
+  }
+  name = %[1]q
+
+  body = jsonencode({
+    swagger = "2.0"
+    info = {
+      title   = "test"
+      version = "2017-04-20T04:08:08Z"
+    }
+    schemes = ["https"]
+    paths = {
+      "/test" = {
+        get = {
+          responses = {
+            "200" = {
+              description = "OK"
+            }
+          }
+          x-amazon-apigateway-integration = {
+            httpMethod = "GET"
+            type       = "HTTP"
+            responses = {
+              default = {
+                statusCode = 200
+              }
+            }
+            uri = "https://api.example.com/"
+          }
+        }
+      }
+    }
+  })
+}
+`, rName, endpointType, ipAddressType)
 }
 
 func testAccRestAPIConfig_minimumCompressionSize(rName string, minimumCompressionSize string) string {

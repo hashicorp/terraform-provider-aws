@@ -16,7 +16,13 @@ import (
 type servicePackage struct{}
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
-	return []*types.ServicePackageFrameworkDataSource{}
+	return []*types.ServicePackageFrameworkDataSource{
+		{
+			Factory:  newExperimentTemplatesDataSource,
+			TypeName: "aws_fis_experiment_templates",
+			Name:     "Experiment Templates",
+		},
+	}
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
