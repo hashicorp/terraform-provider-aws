@@ -4,18 +4,6 @@
 package inspector2_test
 
 import (
-	// TIP: ==== IMPORTS ====
-	// This is a common set of imports but not customized to your code since
-	// your code hasn't been written yet. Make sure you, your IDE, or
-	// goimports -w <file> fixes these imports.
-	//
-	// The provider linter wants your imports to be in two groups: first,
-	// standard library (i.e., "fmt" or "strings"), second, everything else.
-	//
-	// Also, AWS Go SDK v2 may handle nested structures differently than v1,
-	// using the services/inspector2/types package. If so, you'll
-	// need to import types and reference the nested types, e.g., as
-	// types.<Type Name>.
 	"context"
 	"errors"
 	"fmt"
@@ -34,41 +22,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 
-	// "github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 
-	// TIP: You will often need to import the package that this test file lives
-	// in. Since it is in the "test" context, it must import the package to use
-	// any normal context constants, variables, or functions.
 	tfinspector2 "github.com/hashicorp/terraform-provider-aws/internal/service/inspector2"
 )
 
-// TIP: File Structure. The basic outline for all test files should be as
-// follows. Improve this resource's maintainability by following this
-// outline.
-//
-// 1. Package declaration (add "_test" since this is a test file)
-// 2. Imports
-// 3. Unit tests
-// 4. Basic test
-// 5. Disappears test
-// 6. All the other tests
-// 7. Helper functions (exists, destroy, check, etc.)
-// 8. Functions that return Terraform configurations
-
-// TIP: ==== ACCEPTANCE TESTS ====
-// This is an example of a basic acceptance test. This should test as much of
-// standard functionality of the resource as possible, and test importing, if
-// applicable. We prefix its name with "TestAcc", the service, and the
-// resource name.
-//
-// Acceptance test access AWS and cost money to run.
 func testAccInspector2Filter_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	// fmt.Printf("Account is: " + acctest.AccountID(ctx))
-	// TIP: This is a long-running test guard for tests that run longer than
-	// 300s (5 min) generally.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -105,10 +66,7 @@ func testAccInspector2Filter_basic(t *testing.T) {
 						"comparison": comparison_1,
 						"value":      account_id_1,
 					}),
-					// TIP: If the ARN can be partially or completely determined by the parameters passed, e.g. it contains the
-					// value of `rName`, either include the values in the regex or check for an exact match using `acctest.CheckResourceAttrRegionalARN`
-					// acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "inspector2", regexache.MustCompile(`filter:.+$`)),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "inspector2", regexache.MustCompile(`owner/.+/filter/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "inspector2", regexache.MustCompile(`owner/\d{12}/filter/.+$`)),
 				),
 			},
 			{
@@ -124,9 +82,6 @@ func testAccInspector2Filter_basic(t *testing.T) {
 
 func testAccInspector2Filter_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	// fmt.Printf("Account is: " + acctest.AccountID(ctx))
-	// TIP: This is a long-running test guard for tests that run longer than
-	// 300s (5 min) generally.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -169,10 +124,7 @@ func testAccInspector2Filter_update(t *testing.T) {
 						"comparison": comparison_1,
 						"value":      account_id_1,
 					}),
-					// TIP: If the ARN can be partially or completely determined by the parameters passed, e.g. it contains the
-					// value of `rName`, either include the values in the regex or check for an exact match using `acctest.CheckResourceAttrRegionalARN`
-					// acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "inspector2", regexache.MustCompile(`filter:.+$`)),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "inspector2", regexache.MustCompile(`owner/.+/filter/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "inspector2", regexache.MustCompile(`owner/\d{12}/filter/.+$`)),
 				),
 			},
 			{
@@ -195,10 +147,7 @@ func testAccInspector2Filter_update(t *testing.T) {
 						"comparison": comparison_2,
 						"value":      account_id_2,
 					}),
-					// TIP: If the ARN can be partially or completely determined by the parameters passed, e.g. it contains the
-					// value of `rName`, either include the values in the regex or check for an exact match using `acctest.CheckResourceAttrRegionalARN`
-					// acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "inspector2", regexache.MustCompile(`filter:.+$`)),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "inspector2", regexache.MustCompile(`owner/.+/filter/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "inspector2", regexache.MustCompile(`owner/\d{12}/filter/.+$`)),
 				),
 			},
 			{
@@ -214,9 +163,6 @@ func testAccInspector2Filter_update(t *testing.T) {
 
 func testAccInspector2Filter_stringFilters(t *testing.T) {
 	ctx := acctest.Context(t)
-	// fmt.Printf("Account is: " + acctest.AccountID(ctx))
-	// TIP: This is a long-running test guard for tests that run longer than
-	// 300s (5 min) generally.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -259,10 +205,7 @@ func testAccInspector2Filter_stringFilters(t *testing.T) {
 						"comparison": comparison_1,
 						"value":      value_1,
 					}),
-					// TIP: If the ARN can be partially or completely determined by the parameters passed, e.g. it contains the
-					// value of `rName`, either include the values in the regex or check for an exact match using `acctest.CheckResourceAttrRegionalARN`
-					// acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "inspector2", regexache.MustCompile(`filter:.+$`)),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "inspector2", regexache.MustCompile(`owner/.+/filter/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "inspector2", regexache.MustCompile(`owner/\d{12}/filter/.+$`)),
 				),
 			},
 			{
@@ -285,10 +228,7 @@ func testAccInspector2Filter_stringFilters(t *testing.T) {
 						"comparison": comparison_2,
 						"value":      value_2,
 					}),
-					// TIP: If the ARN can be partially or completely determined by the parameters passed, e.g. it contains the
-					// value of `rName`, either include the values in the regex or check for an exact match using `acctest.CheckResourceAttrRegionalARN`
-					// acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "inspector2", regexache.MustCompile(`filter:.+$`)),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "inspector2", regexache.MustCompile(`owner/.+/filter/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "inspector2", regexache.MustCompile(`owner/\d{12}/filter/.+$`)),
 				),
 			},
 			{
@@ -304,9 +244,6 @@ func testAccInspector2Filter_stringFilters(t *testing.T) {
 
 func testAccInspector2Filter_numberFilters(t *testing.T) {
 	ctx := acctest.Context(t)
-	// fmt.Printf("Account is: " + acctest.AccountID(ctx))
-	// TIP: This is a long-running test guard for tests that run longer than
-	// 300s (5 min) generally.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -349,10 +286,7 @@ func testAccInspector2Filter_numberFilters(t *testing.T) {
 						"lower_inclusive": lower_inclusive_value_1,
 						"upper_inclusive": upper_inclusive_value_1,
 					}),
-					// TIP: If the ARN can be partially or completely determined by the parameters passed, e.g. it contains the
-					// value of `rName`, either include the values in the regex or check for an exact match using `acctest.CheckResourceAttrRegionalARN`
-					// acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "inspector2", regexache.MustCompile(`filter:.+$`)),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "inspector2", regexache.MustCompile(`owner/.+/filter/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "inspector2", regexache.MustCompile(`owner/\d{12}/filter/.+$`)),
 				),
 			},
 			{
@@ -375,10 +309,7 @@ func testAccInspector2Filter_numberFilters(t *testing.T) {
 						"lower_inclusive": lower_inclusive_value_2,
 						"upper_inclusive": upper_inclusive_value_2,
 					}),
-					// TIP: If the ARN can be partially or completely determined by the parameters passed, e.g. it contains the
-					// value of `rName`, either include the values in the regex or check for an exact match using `acctest.CheckResourceAttrRegionalARN`
-					// acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "inspector2", regexache.MustCompile(`filter:.+$`)),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "inspector2", regexache.MustCompile(`owner/.+/filter/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "inspector2", regexache.MustCompile(`owner/\d{12}/filter/.+$`)),
 				),
 			},
 			{
@@ -394,9 +325,6 @@ func testAccInspector2Filter_numberFilters(t *testing.T) {
 
 func testAccInspector2Filter_dateFilters(t *testing.T) {
 	ctx := acctest.Context(t)
-	// fmt.Printf("Account is: " + acctest.AccountID(ctx))
-	// TIP: This is a long-running test guard for tests that run longer than
-	// 300s (5 min) generally.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -439,10 +367,7 @@ func testAccInspector2Filter_dateFilters(t *testing.T) {
 						"start_inclusive": start_inclusive_value_1,
 						"end_inclusive":   end_inclusive_value_1,
 					}),
-					// TIP: If the ARN can be partially or completely determined by the parameters passed, e.g. it contains the
-					// value of `rName`, either include the values in the regex or check for an exact match using `acctest.CheckResourceAttrRegionalARN`
-					// acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "inspector2", regexache.MustCompile(`filter:.+$`)),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "inspector2", regexache.MustCompile(`owner/.+/filter/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "inspector2", regexache.MustCompile(`owner/\d{12}/filter/.+$`)),
 				),
 			},
 			{
@@ -465,10 +390,7 @@ func testAccInspector2Filter_dateFilters(t *testing.T) {
 						"start_inclusive": start_inclusive_value_2,
 						"end_inclusive":   end_inclusive_value_2,
 					}),
-					// TIP: If the ARN can be partially or completely determined by the parameters passed, e.g. it contains the
-					// value of `rName`, either include the values in the regex or check for an exact match using `acctest.CheckResourceAttrRegionalARN`
-					// acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "inspector2", regexache.MustCompile(`filter:.+$`)),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "inspector2", regexache.MustCompile(`owner/.+/filter/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "inspector2", regexache.MustCompile(`owner/\d{12}/filter/.+$`)),
 				),
 			},
 			{
@@ -484,9 +406,6 @@ func testAccInspector2Filter_dateFilters(t *testing.T) {
 
 func testAccInspector2Filter_mapFilters(t *testing.T) {
 	ctx := acctest.Context(t)
-	// fmt.Printf("Account is: " + acctest.AccountID(ctx))
-	// TIP: This is a long-running test guard for tests that run longer than
-	// 300s (5 min) generally.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -532,10 +451,7 @@ func testAccInspector2Filter_mapFilters(t *testing.T) {
 						"key":        key_1,
 						"value":      value_1,
 					}),
-					// TIP: If the ARN can be partially or completely determined by the parameters passed, e.g. it contains the
-					// value of `rName`, either include the values in the regex or check for an exact match using `acctest.CheckResourceAttrRegionalARN`
-					// acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "inspector2", regexache.MustCompile(`filter:.+$`)),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "inspector2", regexache.MustCompile(`owner/.+/filter/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "inspector2", regexache.MustCompile(`owner/\d{12}/filter/.+$`)),
 				),
 			},
 			{
@@ -559,10 +475,7 @@ func testAccInspector2Filter_mapFilters(t *testing.T) {
 						"key":        key_2,
 						"value":      value_2,
 					}),
-					// TIP: If the ARN can be partially or completely determined by the parameters passed, e.g. it contains the
-					// value of `rName`, either include the values in the regex or check for an exact match using `acctest.CheckResourceAttrRegionalARN`
-					// acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "inspector2", regexache.MustCompile(`filter:.+$`)),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "inspector2", regexache.MustCompile(`owner/.+/filter/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "inspector2", regexache.MustCompile(`owner/\d{12}/filter/.+$`)),
 				),
 			},
 			{
@@ -578,9 +491,6 @@ func testAccInspector2Filter_mapFilters(t *testing.T) {
 
 func testAccInspector2Filter_portRangeFilters(t *testing.T) {
 	ctx := acctest.Context(t)
-	// fmt.Printf("Account is: " + acctest.AccountID(ctx))
-	// TIP: This is a long-running test guard for tests that run longer than
-	// 300s (5 min) generally.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -621,10 +531,7 @@ func testAccInspector2Filter_portRangeFilters(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.port_range.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.port_range.0.begin_inclusive", strconv.Itoa(begin_inclusive_value_1)),
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.port_range.0.end_inclusive", strconv.Itoa(end_inclusive_value_1)),
-					// TIP: If the ARN can be partially or completely determined by the parameters passed, e.g. it contains the
-					// value of `rName`, either include the values in the regex or check for an exact match using `acctest.CheckResourceAttrRegionalARN`
-					// acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "inspector2", regexache.MustCompile(`filter:.+$`)),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "inspector2", regexache.MustCompile(`owner/.+/filter/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "inspector2", regexache.MustCompile(`owner/\d{12}/filter/.+$`)),
 				),
 			},
 			{
@@ -645,10 +552,7 @@ func testAccInspector2Filter_portRangeFilters(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.port_range.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.port_range.0.begin_inclusive", strconv.Itoa(begin_inclusive_value_2)),
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.port_range.0.end_inclusive", strconv.Itoa(end_inclusive_value_2)),
-					// TIP: If the ARN can be partially or completely determined by the parameters passed, e.g. it contains the
-					// value of `rName`, either include the values in the regex or check for an exact match using `acctest.CheckResourceAttrRegionalARN`
-					// acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "inspector2", regexache.MustCompile(`filter:.+$`)),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "inspector2", regexache.MustCompile(`owner/.+/filter/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "inspector2", regexache.MustCompile(`owner/\d{12}/filter/.+$`)),
 				),
 			},
 			{
@@ -664,9 +568,6 @@ func testAccInspector2Filter_portRangeFilters(t *testing.T) {
 
 func testAccInspector2Filter_packageFilters(t *testing.T) {
 	ctx := acctest.Context(t)
-	// fmt.Printf("Account is: " + acctest.AccountID(ctx))
-	// TIP: This is a long-running test guard for tests that run longer than
-	// 300s (5 min) generally.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -751,10 +652,7 @@ func testAccInspector2Filter_packageFilters(t *testing.T) {
 						"value":      "version_1",
 					}),
 
-					// TIP: If the ARN can be partially or completely determined by the parameters passed, e.g. it contains the
-					// value of `rName`, either include the values in the regex or check for an exact match using `acctest.CheckResourceAttrRegionalARN`
-					// acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "inspector2", regexache.MustCompile(`filter:.+$`)),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "inspector2", regexache.MustCompile(`owner/.+/filter/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "inspector2", regexache.MustCompile(`owner/\d{12}/filter/.+$`)),
 				),
 			},
 			{
@@ -822,10 +720,7 @@ func testAccInspector2Filter_packageFilters(t *testing.T) {
 						"value":      "version_2",
 					}),
 
-					// TIP: If the ARN can be partially or completely determined by the parameters passed, e.g. it contains the
-					// value of `rName`, either include the values in the regex or check for an exact match using `acctest.CheckResourceAttrRegionalARN`
-					// acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "inspector2", regexache.MustCompile(`filter:.+$`)),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "inspector2", regexache.MustCompile(`owner/.+/filter/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "inspector2", regexache.MustCompile(`owner/\d{12}/filter/.+$`)),
 				),
 			},
 			{
@@ -880,12 +775,6 @@ func testAccInspector2Filter_disappears(t *testing.T) {
 				Config: testAccFilterConfig_basic(rName, action_1, description_1, reason_1, comparison_1, account_id_1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFilterExists(ctx, resourceName, &filter),
-					// TIP: The Plugin-Framework disappears helper is similar to the Plugin-SDK version,
-					// but expects a new resource factory function as the third argument. To expose this
-					// private function to the testing package, you may need to add a line like the following
-					// to exports_test.go:
-					//
-					//   var ResourceFilter = newResourceFilter
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfinspector2.ResourceFilter, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -903,9 +792,6 @@ func testAccCheckFilterDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			// TIP: ==== FINDERS ====
-			// The find function should be exported. Since it won't be used outside of the package, it can be exported
-			// in the `exports_test.go` file.
 			_, err := tfinspector2.FindFilterByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
 			if tfresource.NotFound(err) {
 				return nil
