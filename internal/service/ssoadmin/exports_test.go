@@ -12,6 +12,7 @@ var (
 	ResourceApplicationAccessScope             = newApplicationAccessScopeResource
 	ResourceCustomerManagedPolicyAttachment    = resourceCustomerManagedPolicyAttachment
 	ResourceInstanceAccessControlAttributes    = resourceInstanceAccessControlAttributes
+	ResourceManagedPolicyAttachment            = resourceManagedPolicyAttachment
 	ResourceTrustedTokenIssuer                 = newTrustedTokenIssuerResource
 
 	FindAccountAssignmentBy5PartKey             = findAccountAssignmentBy5PartKey
@@ -21,5 +22,6 @@ var (
 	FindApplicationAccessScopeByID              = findApplicationAccessScopeByID
 	FindCustomerManagedPolicyBy4PartKey         = findCustomerManagedPolicyBy4PartKey
 	FindInstanceAttributeControlAttributesByARN = findInstanceAttributeControlAttributesByARN
+	FindManagedPolicyBy3PartKey                 = findManagedPolicyBy3PartKey
 	FindTrustedTokenIssuerByARN                 = findTrustedTokenIssuerByARN
 )

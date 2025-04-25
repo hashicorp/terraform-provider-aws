@@ -171,7 +171,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			}),
 		},
 		{
-			Factory:  ResourceManagedPolicyAttachment,
+			Factory:  resourceManagedPolicyAttachment,
 			TypeName: "aws_ssoadmin_managed_policy_attachment",
 			Name:     "Managed Policy Attachment",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
