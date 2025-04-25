@@ -21,6 +21,7 @@ Upgrade topics:
 - [AWS OpsWorks Stacks End of Life](#aws-opsworks-stacks-end-of-life)
 - [AWS CloudWatch Evidently Deprecation](#aws-cloudwatch-evidently-deprecation)
 - [Amazon Elastic Transcoder Deprecation](#amazon-elastic-transcoder-deprecation)
+- [S3 Global Endpoint Support Deprecation](#s3-global-endpoint-support-deprecation)
 - [data-source/aws_ami](#data-sourceaws_ami)
 - [data-source/aws_batch_compute_environment](#data-sourceaws_batch_compute_environment)
 - [data-source/aws_ecs_task_definition](#data-sourceaws_ecs_task_definition)
@@ -171,6 +172,13 @@ The following resources have been deprecated and will be removed in a future maj
 * `aws_elastictranscoder_preset`
 
 Use [AWS Elemental MediaConvert](https://aws.amazon.com/blogs/media/migrating-workflows-from-amazon-elastic-transcoder-to-aws-elemental-mediaconvert/) instead.
+
+## S3 Global Endpoint Support Deprecation
+
+Support for the global S3 endpoint is deprecated, along with the `s3_us_east_1_regional_endpoint` argument.
+The ability to use the global S3 endpoint will be removed in `v7.0.0`.
+This change only affects S3 resources in `us-east-1` (excluding directory buckets), where `s3_us_east_1_regional_endpoint` is set to `legacy` in the provider configuration.
+Impacted configurations can remove the `s3_us_east_1_regional_endpoint` provider argument, or switch the value to `regional` to verify connectivity with the regional S3 endpoint in `us-east-1` prior to this option being removed.
 
 ## data-source/aws_ami
 
