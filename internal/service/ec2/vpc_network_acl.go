@@ -385,27 +385,27 @@ func networkACLRuleHash(v any) int {
 	var buf bytes.Buffer
 
 	tfMap := v.(map[string]any)
-	buf.WriteString(fmt.Sprintf("%d-", tfMap["from_port"].(int)))
-	buf.WriteString(fmt.Sprintf("%d-", tfMap["to_port"].(int)))
-	buf.WriteString(fmt.Sprintf("%d-", tfMap["rule_no"].(int)))
-	buf.WriteString(fmt.Sprintf("%s-", strings.ToLower(tfMap[names.AttrAction].(string))))
+	fmt.Fprintf(&buf, "%d-", tfMap["from_port"].(int))
+	fmt.Fprintf(&buf, "%d-", tfMap["to_port"].(int))
+	fmt.Fprintf(&buf, "%d-", tfMap["rule_no"].(int))
+	fmt.Fprintf(&buf, "%s-", strings.ToLower(tfMap[names.AttrAction].(string)))
 
 	// The AWS network ACL API only speaks protocol numbers, and that's
 	// all we store. Never hash a protocol name.
 	protocolNumber, _ := networkACLProtocolNumber(tfMap[names.AttrProtocol].(string))
-	buf.WriteString(fmt.Sprintf("%d-", protocolNumber))
+	fmt.Fprintf(&buf, "%d-", protocolNumber)
 
 	if v, ok := tfMap[names.AttrCIDRBlock]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+		fmt.Fprintf(&buf, "%s-", v.(string))
 	}
 	if v, ok := tfMap["ipv6_cidr_block"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+		fmt.Fprintf(&buf, "%s-", v.(string))
 	}
 	if v, ok := tfMap["icmp_type"]; ok {
-		buf.WriteString(fmt.Sprintf("%d-", v.(int)))
+		fmt.Fprintf(&buf, "%d-", v.(int))
 	}
 	if v, ok := tfMap["icmp_code"]; ok {
-		buf.WriteString(fmt.Sprintf("%d-", v.(int)))
+		fmt.Fprintf(&buf, "%d-", v.(int))
 	}
 
 	return create.StringHashcode(buf.String())

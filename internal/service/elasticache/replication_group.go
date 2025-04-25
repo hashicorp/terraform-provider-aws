@@ -986,6 +986,11 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 		if requestUpdate {
 			updateFuncs = append(updateFuncs, func() error {
 				_, err := conn.ModifyReplicationGroup(ctx, &input)
+				// modifying to match out of band operations may result in this error
+				if errs.IsAErrorMessageContains[*awstypes.InvalidParameterCombinationException](err, "No modifications were requested") {
+					return nil
+				}
+
 				if err != nil {
 					return fmt.Errorf("modifying ElastiCache Replication Group (%s): %s", d.Id(), err)
 				}
@@ -1003,6 +1008,11 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 
 			updateFuncs = append(updateFuncs, func() error {
 				_, err := conn.ModifyReplicationGroup(ctx, &authInput)
+				// modifying to match out of band operations may result in this error
+				if errs.IsAErrorMessageContains[*awstypes.InvalidParameterCombinationException](err, "No modifications were requested") {
+					return nil
+				}
+
 				if err != nil {
 					return fmt.Errorf("modifying ElastiCache Replication Group (%s) authentication: %s", d.Id(), err)
 				}

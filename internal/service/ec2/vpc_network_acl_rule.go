@@ -298,9 +298,9 @@ const networkACLRuleImportIDSeparator = ":"
 
 func networkACLRuleCreateResourceID(naclID string, ruleNumber int, egress bool, protocol string) string {
 	var buf bytes.Buffer
-	buf.WriteString(fmt.Sprintf("%s-", naclID))
-	buf.WriteString(fmt.Sprintf("%d-", ruleNumber))
-	buf.WriteString(fmt.Sprintf("%t-", egress))
-	buf.WriteString(fmt.Sprintf("%s-", protocol))
+	fmt.Fprintf(&buf, "%s-", naclID)
+	fmt.Fprintf(&buf, "%d-", ruleNumber)
+	fmt.Fprintf(&buf, "%t-", egress)
+	fmt.Fprintf(&buf, "%s-", protocol)
 	return fmt.Sprintf("nacl-%d", create.StringHashcode(buf.String()))
 }

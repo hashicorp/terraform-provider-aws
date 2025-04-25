@@ -579,7 +579,7 @@ func redactedFieldsHash(v any) int {
 		sh, ok := v[0].(map[string]any)
 		if ok {
 			if name, ok := sh[names.AttrName].(string); ok {
-				buf.WriteString(fmt.Sprintf("%s-", name))
+				fmt.Fprintf(&buf, "%s-", name)
 			}
 		}
 	}

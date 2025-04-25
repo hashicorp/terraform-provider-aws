@@ -9221,11 +9221,10 @@ resource "aws_security_group_rule" "test" {
 }
 
 resource "aws_directory_service_directory" "directory" {
-  name                = %[2]q
-  password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
-  password_wo_version = 1
-  type                = "MicrosoftAD"
-  edition             = "Standard"
+  name     = %[2]q
+  password = "SuperSecretPassw0rd"
+  type     = "MicrosoftAD"
+  edition  = "Standard"
 
   vpc_settings {
     vpc_id     = aws_vpc.test.id
@@ -9260,11 +9259,10 @@ resource "aws_db_instance" "test" {
 }
 
 resource "aws_directory_service_directory" "directory-2" {
-  name                = %[2]q
-  password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
-  password_wo_version = 1
-  type                = "MicrosoftAD"
-  edition             = "Standard"
+  name     = %[2]q
+  password = "SuperSecretPassw0rd"
+  type     = "MicrosoftAD"
+  edition  = "Standard"
 
   vpc_settings {
     vpc_id     = aws_vpc.test.id
@@ -9298,11 +9296,10 @@ resource "aws_db_instance" "test" {
 }
 
 resource "aws_directory_service_directory" "directory-2" {
-  name                = %[2]q
-  password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
-  password_wo_version = 1
-  type                = "MicrosoftAD"
-  edition             = "Standard"
+  name     = %[2]q
+  password = "SuperSecretPassw0rd"
+  type     = "MicrosoftAD"
+  edition  = "Standard"
 
   vpc_settings {
     vpc_id     = aws_vpc.test.id
@@ -13677,7 +13674,7 @@ func testAccInstanceConfig_dedicatedLogVolumeEnabled(rName string, enabled bool)
 resource "aws_db_instance" "test" {
   # Dedicated log volumes do not support PG 16 instances.
   engine              = "postgres"
-  engine_version      = "15.6"
+  engine_version      = "15.12"
   identifier          = %[1]q
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
   password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
