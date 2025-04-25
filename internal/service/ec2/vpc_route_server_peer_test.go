@@ -45,9 +45,48 @@ func TestAccVPCRouteServerPeer_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "route_server_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_eni_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_eni_address"),
+					resource.TestCheckResourceAttrSet(resourceName, "vpc_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "subnet_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "bgp_options.peer_asn"),
-					resource.TestCheckResourceAttrSet(resourceName, "bfd_status.status"),
-					resource.TestCheckResourceAttrSet(resourceName, "bgp_status.status"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccVPCRouteServerPeer_bgpOptionsBfd(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var VPCRouteServerPeer awstypes.RouteServerPeer
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_vpc_route_server_peer.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.EC2)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCRouteServerPeerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCRouteServerPeerConfig_bgpOptionsBfd(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVPCRouteServerPeerExists(ctx, resourceName, &VPCRouteServerPeer),
+					resource.TestCheckResourceAttrSet(resourceName, "route_server_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_eni_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_eni_address"),
+					resource.TestCheckResourceAttrSet(resourceName, "vpc_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "subnet_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "bgp_options.peer_asn"),
+					resource.TestCheckResourceAttr(resourceName, "bgp_options.peer_liveness_detection", "bfd"),
 				),
 			},
 			{
@@ -135,17 +174,10 @@ func testAccCheckVPCRouteServerPeerExists(ctx context.Context, name string, VPCR
 	}
 }
 
-func testAccVPCRouteServerPeerConfig_basic(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+func testAccVPCRouteServerPeerConfig_base(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptIn(),
+		fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
   
@@ -186,7 +218,14 @@ resource "aws_vpc_route_server_endpoint" "test" {
 
   depends_on     = [aws_vpc_route_server_association.test]
 }
+	`, rName))
+}
 
+func testAccVPCRouteServerPeerConfig_basic(rName string) string {
+	return acctest.ConfigCompose(
+		testAccVPCRouteServerPeerConfig_base(rName),
+		fmt.Sprintf(` 
+	
 resource "aws_vpc_route_server_peer" "test" {
   route_server_endpoint_id = aws_vpc_route_server_endpoint.test.id
   peer_address    = "10.0.1.250"
@@ -199,5 +238,26 @@ resource "aws_vpc_route_server_peer" "test" {
   }
 }
 
-`, rName)
+`, rName))
+}
+
+func testAccVPCRouteServerPeerConfig_bgpOptionsBfd(rName string) string {
+	return acctest.ConfigCompose(
+		testAccVPCRouteServerPeerConfig_base(rName),
+		fmt.Sprintf(` 
+	
+resource "aws_vpc_route_server_peer" "test" {
+  route_server_endpoint_id = aws_vpc_route_server_endpoint.test.id
+  peer_address    = "10.0.1.250"
+  bgp_options {
+	peer_asn = 65000
+	peer_liveness_detection = "bfd"
+  }
+
+  tags = {
+	Name = %[1]q
+  }
+}
+
+`, rName))
 }
