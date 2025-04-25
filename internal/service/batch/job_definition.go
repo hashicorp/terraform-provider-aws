@@ -36,7 +36,9 @@ import (
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
 // @MutableIdentity
+// @ArnFormat("job-definition/{name}:{revision}")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/batch/types;types.JobDefinition")
+// @Testing(idAttrDuplicates="arn")
 func resourceJobDefinition() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceJobDefinitionCreate,

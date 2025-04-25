@@ -63,7 +63,7 @@ func TestAccBatchJobQueue_basic(t *testing.T) {
 	})
 }
 
-func TestAccBatchJobQueue_Identity_Basic(t *testing.T) {
+func TestAccBatchJobQueue_Identity_Basic_Manual(t *testing.T) {
 	ctx := acctest.Context(t)
 	var jobQueue1 awstypes.JobQueueDetail
 	resourceName := "aws_batch_job_queue.test"
