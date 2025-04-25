@@ -83,7 +83,9 @@ func newIdentityInterceptor(attributes []types.IdentityAttribute) interceptorIte
 
 func newResourceIdentity(v types.Identity) *schema.ResourceIdentity {
 	return &schema.ResourceIdentity{
-		Schema: newIdentitySchema(v.Attributes),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return newIdentitySchema(v.Attributes)
+		},
 	}
 }
 
