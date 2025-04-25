@@ -201,9 +201,9 @@ func resourceVolumeAttachmentDelete(ctx context.Context, d *schema.ResourceData,
 
 func volumeAttachmentID(name, volumeID, instanceID string) string {
 	var buf bytes.Buffer
-	buf.WriteString(fmt.Sprintf("%s-", name))
-	buf.WriteString(fmt.Sprintf("%s-", instanceID))
-	buf.WriteString(fmt.Sprintf("%s-", volumeID))
+	fmt.Fprintf(&buf, "%s-", name)
+	fmt.Fprintf(&buf, "%s-", instanceID)
+	fmt.Fprintf(&buf, "%s-", volumeID)
 
 	return fmt.Sprintf("vai-%d", create.StringHashcode(buf.String()))
 }
