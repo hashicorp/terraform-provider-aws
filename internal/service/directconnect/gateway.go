@@ -38,7 +38,7 @@ func resourceGateway() *schema.Resource {
 		DeleteWithoutTimeout: resourceGatewayDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, rd *schema.ResourceData, i any) ([]*schema.ResourceData, error) {
+			StateContext: func(_ context.Context, rd *schema.ResourceData, _ any) ([]*schema.ResourceData, error) {
 				// Import-by-id case
 				if rd.Id() != "" {
 					return []*schema.ResourceData{rd}, nil
