@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccEC2VPCRouteServerAssociation_basic(t *testing.T) {
+func TestAccVPCRouteServerAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var vpcrouteserverassociation awstypes.RouteServerAssociation
@@ -57,7 +57,7 @@ func TestAccEC2VPCRouteServerAssociation_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCRouteServerAssociation_disappears(t *testing.T) {
+func TestAccVPCRouteServerAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
