@@ -180,7 +180,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			}),
 		},
 		{
-			Factory:  ResourcePermissionSet,
+			Factory:  resourcePermissionSet,
 			TypeName: "aws_ssoadmin_permission_set",
 			Name:     "Permission Set",
 			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),

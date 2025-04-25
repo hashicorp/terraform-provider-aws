@@ -238,7 +238,7 @@ func sweepPermissionSets(region string) error {
 			for _, permissionSetArn := range page.PermissionSets {
 				log.Printf("[INFO] Deleting SSO Permission Set: %s", permissionSetArn)
 
-				r := ResourcePermissionSet()
+				r := resourcePermissionSet()
 				d := r.Data(nil)
 				d.SetId(fmt.Sprintf("%s,%s", permissionSetArn, instanceArn))
 
