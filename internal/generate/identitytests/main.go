@@ -243,6 +243,7 @@ type ResourceDatum struct {
 	ExistsTakesT                bool
 	FileName                    string
 	Generator                   string
+	idAttrDuplicates            string
 	NoImport                    bool
 	ImportStateID               string
 	importStateIDAttribute      string
@@ -268,6 +269,14 @@ func (d ResourceDatum) AdditionalTfVars() map[string]string {
 	return tfmaps.ApplyToAllKeys(d.additionalTfVars, func(k string) string {
 		return acctestgen.ConstOrQuote(k)
 	})
+}
+
+func (d ResourceDatum) HasIDAttrDuplicates() bool {
+	return d.idAttrDuplicates != ""
+}
+
+func (d ResourceDatum) IDAttrDuplicates() string {
+	return namesgen.ConstOrQuote(d.idAttrDuplicates)
 }
 
 func (d ResourceDatum) HasImportStateIDAttribute() bool {
@@ -481,6 +490,17 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						}
 						generatorSeen = true
 					}
+				}
+				if attr, ok := args.Keyword["idAttrDuplicates"]; ok {
+					d.idAttrDuplicates = attr
+					d.GoImports = append(d.GoImports,
+						goImport{
+							Path: "github.com/hashicorp/terraform-plugin-testing/config",
+						},
+						goImport{
+							Path: "github.com/hashicorp/terraform-plugin-testing/tfjsonpath",
+						},
+					)
 				}
 				if attr, ok := args.Keyword["importIgnore"]; ok {
 					d.ImportIgnore = strings.Split(attr, ";")
