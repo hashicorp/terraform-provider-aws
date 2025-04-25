@@ -168,6 +168,9 @@ func {{ template "testname" . }}_Identity_Basic(t *testing.T) {
 					{{- template "ExistsCheck" . -}}
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
+					{{ if .HasIDAttrDuplicates -}}
+						statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New({{ .IDAttrDuplicates }}), compare.ValuesSame()),
+					{{ end -}}
 				},
 			},
 			{{ if not .NoImport -}}
