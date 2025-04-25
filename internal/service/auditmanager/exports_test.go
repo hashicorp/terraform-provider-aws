@@ -13,4 +13,6 @@ var (
 	ResourceControl                              = newControlResource
 	ResourceFramework                            = newFrameworkResource
 	ResourceFrameworkShare                       = newFrameworkShareResource
+
+	FindControlByID = findControlByID
 )

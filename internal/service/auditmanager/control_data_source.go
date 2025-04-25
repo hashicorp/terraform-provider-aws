@@ -131,7 +131,7 @@ func (d *controlDataSource) Read(ctx context.Context, req datasource.ReadRequest
 
 	// Control metadata from the ListControls API does not contain all information available
 	// about a control. Use control ID to get complete information.
-	control, err := FindControlByID(ctx, conn, aws.ToString(controlMetadata.Id))
+	control, err := findControlByID(ctx, conn, aws.ToString(controlMetadata.Id))
 	if err != nil {
 		resp.Diagnostics.AddError("finding control by ID", err.Error())
 		return
@@ -189,9 +189,10 @@ func (rd *controlDataSourceModel) refreshFromOutput(ctx context.Context, meta *c
 
 	rd.ID = types.StringValue(aws.ToString(out.Id))
 	rd.Name = types.StringValue(aws.ToString(out.Name))
-	cms, d := flattenControlMappingSources(ctx, out.ControlMappingSources)
-	diags.Append(d...)
-	rd.ControlMappingSources = cms
+	// TODO REGION
+	// cms, d := flattenControlMappingSources(ctx, out.ControlMappingSources)
+	// diags.Append(d...)
+	// rd.ControlMappingSources = cms
 
 	rd.ActionPlanInstructions = flex.StringToFramework(ctx, out.ActionPlanInstructions)
 	rd.ActionPlanTitle = flex.StringToFramework(ctx, out.ActionPlanTitle)
