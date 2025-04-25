@@ -12,8 +12,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -335,112 +333,6 @@ func findApplicationByID(ctx context.Context, conn *ssoadmin.Client, id string) 
 	return output, nil
 }
 
-func flattenPortalOptions(ctx context.Context, apiObject *awstypes.PortalOptions) (types.List, diag.Diagnostics) {
-	var diags diag.Diagnostics
-	elemType := types.ObjectType{AttrTypes: portalOptionsAttrTypes}
-
-	if apiObject == nil {
-		return types.ListNull(elemType), diags
-	}
-	// Skip writing to state if only the visibilty attribute is returned
-	// to avoid a nested computed attribute causing a diff.
-	if apiObject.SignInOptions == nil {
-		return types.ListNull(elemType), diags
-	}
-
-	signInOptions, d := flattenSignInOptions(ctx, apiObject.SignInOptions)
-	diags.Append(d...)
-
-	obj := map[string]attr.Value{
-		"visibility":      fwflex.StringValueToFramework(ctx, apiObject.Visibility),
-		"sign_in_options": signInOptions,
-	}
-	objVal, d := types.ObjectValue(portalOptionsAttrTypes, obj)
-	diags.Append(d...)
-
-	listVal, d := types.ListValue(elemType, []attr.Value{objVal})
-	diags.Append(d...)
-
-	return listVal, diags
-}
-
-func flattenSignInOptions(ctx context.Context, apiObject *awstypes.SignInOptions) (types.List, diag.Diagnostics) {
-	var diags diag.Diagnostics
-	elemType := types.ObjectType{AttrTypes: signInOptionsAttrTypes}
-
-	if apiObject == nil {
-		return types.ListNull(elemType), diags
-	}
-
-	obj := map[string]attr.Value{
-		"application_url": fwflex.StringToFramework(ctx, apiObject.ApplicationUrl),
-		"origin":          fwflex.StringValueToFramework(ctx, apiObject.Origin),
-	}
-	objVal, d := types.ObjectValue(signInOptionsAttrTypes, obj)
-	diags.Append(d...)
-
-	listVal, d := types.ListValue(elemType, []attr.Value{objVal})
-	diags.Append(d...)
-
-	return listVal, diags
-}
-
-func expandPortalOptions(ctx context.Context, tfList []portalOptionsModel) (*awstypes.PortalOptions, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	if len(tfList) == 0 {
-		return nil, diags
-	}
-	tfObj := tfList[0]
-
-	var signInOptions []signInOptionsModel
-	diags.Append(tfObj.SignInOptions.ElementsAs(ctx, &signInOptions, false)...)
-
-	apiObject := &awstypes.PortalOptions{
-		Visibility:    awstypes.ApplicationVisibility(tfObj.Visibility.ValueString()),
-		SignInOptions: expandSignInOptions(signInOptions),
-	}
-
-	return apiObject, diags
-}
-
-// expandPortalOptionsUpdate is a variant of the expander for update opertations which
-// does not include the visibility argument.
-func expandPortalOptionsUpdate(ctx context.Context, tfList []portalOptionsModel) (*awstypes.UpdateApplicationPortalOptions, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	if len(tfList) == 0 {
-		return nil, diags
-	}
-	tfObj := tfList[0]
-
-	var signInOptions []signInOptionsModel
-	diags.Append(tfObj.SignInOptions.ElementsAs(ctx, &signInOptions, false)...)
-
-	apiObject := &awstypes.UpdateApplicationPortalOptions{
-		SignInOptions: expandSignInOptions(signInOptions),
-	}
-
-	return apiObject, diags
-}
-
-func expandSignInOptions(tfList []signInOptionsModel) *awstypes.SignInOptions {
-	if len(tfList) == 0 {
-		return nil
-	}
-
-	tfObj := tfList[0]
-	apiObject := &awstypes.SignInOptions{
-		Origin: awstypes.SignInOrigin(tfObj.Origin.ValueString()),
-	}
-
-	if !tfObj.ApplicationURL.IsNull() {
-		apiObject.ApplicationUrl = tfObj.ApplicationURL.ValueStringPointer()
-	}
-
-	return apiObject
-}
-
 type applicationResourceModel struct {
 	framework.WithRegionModel
 	ApplicationAccount     types.String                                        `tfsdk:"application_account"`
@@ -465,14 +357,4 @@ type portalOptionsModel struct {
 type signInOptionsModel struct {
 	ApplicationURL types.String                              `tfsdk:"application_url"`
 	Origin         fwtypes.StringEnum[awstypes.SignInOrigin] `tfsdk:"origin"`
-}
-
-var portalOptionsAttrTypes = map[string]attr.Type{
-	"sign_in_options": types.ListType{ElemType: types.ObjectType{AttrTypes: signInOptionsAttrTypes}},
-	"visibility":      types.StringType,
-}
-
-var signInOptionsAttrTypes = map[string]attr.Type{
-	"application_url": types.StringType,
-	"origin":          types.StringType,
 }
