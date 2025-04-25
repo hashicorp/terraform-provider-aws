@@ -13,7 +13,9 @@ var (
 	ResourceCustomerManagedPolicyAttachment    = resourceCustomerManagedPolicyAttachment
 	ResourceInstanceAccessControlAttributes    = resourceInstanceAccessControlAttributes
 	ResourceManagedPolicyAttachment            = resourceManagedPolicyAttachment
+	ResourcePermissionsBoundaryAttachment      = resourcePermissionsBoundaryAttachment
 	ResourcePermissionSet                      = resourcePermissionSet
+	ResourcePermissionSetInlinePolicy          = resourcePermissionSetInlinePolicy
 	ResourceTrustedTokenIssuer                 = newTrustedTokenIssuerResource
 
 	FindAccountAssignmentByFivePartKey          = findAccountAssignmentByFivePartKey
@@ -24,6 +26,8 @@ var (
 	FindCustomerManagedPolicyByFourPartKey      = findCustomerManagedPolicyByFourPartKey
 	FindInstanceAttributeControlAttributesByARN = findInstanceAttributeControlAttributesByARN
 	FindManagedPolicyByThreePartKey             = findManagedPolicyByThreePartKey
+	FindPermissionsBoundaryByTwoPartKey         = findPermissionsBoundaryByTwoPartKey
 	FindPermissionSetByTwoPartKey               = findPermissionSetByTwoPartKey
+	FindPermissionSetInlinePolicyByTwoPartKey   = findPermissionSetInlinePolicyByTwoPartKey
 	FindTrustedTokenIssuerByARN                 = findTrustedTokenIssuerByARN
 )

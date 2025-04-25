@@ -190,7 +190,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			}),
 		},
 		{
-			Factory:  ResourcePermissionSetInlinePolicy,
+			Factory:  resourcePermissionSetInlinePolicy,
 			TypeName: "aws_ssoadmin_permission_set_inline_policy",
 			Name:     "Permission Set Inline Policy",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
@@ -199,7 +199,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			}),
 		},
 		{
-			Factory:  ResourcePermissionsBoundaryAttachment,
+			Factory:  resourcePermissionsBoundaryAttachment,
 			TypeName: "aws_ssoadmin_permissions_boundary_attachment",
 			Name:     "Permissions Boundary Attachment",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
