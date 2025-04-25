@@ -34,11 +34,15 @@ issues:
       text: "SA1019: apiObject.ImageId is deprecated: This field is deprecated"
     - linters:
         - staticcheck
+      path: "internal/service/budgets/"
+      text: "SA1019: \\w+.(\\w+) is deprecated: (CostFilters|CostTypes) lack support for"
+    - linters:
+        - staticcheck
       path: internal/service/chime/
       text: "SA1019: conn.\\w+ is deprecated: Replaced by \\w+ in the Amazon Chime SDK Voice Namespace"
     - linters:
         - staticcheck
-      path: "internal/service/cloudfront"
+      path: "internal/service/cloudfront/"
       text: "SA1019: \\w+.(\\w+) is deprecated: This member has been deprecated"
     - linters:
         - staticcheck
@@ -50,11 +54,11 @@ issues:
       text: "SA1019: params.RegistryIds is deprecated: This field is deprecated."
     - linters:
         - staticcheck
-      path: "internal/service/firehose"
+      path: "internal/service/firehose/"
       text: "SA1019: \\w+.(\\w+) is deprecated: (\\w+) has been deprecated"
     - linters:
         - staticcheck
-      path: "internal/service/fsx"
+      path: "internal/service/fsx/"
       text: "SA1019: \\w+.(\\w+) is deprecated: This property is deprecated"
     - linters:
         - staticcheck
