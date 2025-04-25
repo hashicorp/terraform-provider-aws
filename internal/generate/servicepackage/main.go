@@ -393,7 +393,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				}
 			case "Region", "Tags", "ArnIdentity", "SingletonIdentity":
 				// Handled above.
-			case "Testing", "WrappedImport":
+			case "ArnFormat", "Testing", "WrappedImport":
 				// Ignored.
 			default:
 				v.g.Warnf("unknown annotation: %s", annotationName)
