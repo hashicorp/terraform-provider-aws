@@ -23,6 +23,7 @@ Upgrade topics:
 - [Amazon Elastic Transcoder Deprecation](#amazon-elastic-transcoder-deprecation)
 - [data-source/aws_ami](#data-sourceaws_ami)
 - [data-source/aws_batch_compute_environment](#data-sourceaws_batch_compute_environment)
+- [data-source/aws_dms_endpoint](#data-sourceaws_dms_endpoint)
 - [data-source/aws_ecs_task_definition](#data-sourceaws_ecs_task_definition)
 - [data-source/aws_ecs_task_execution](#data-sourceaws_ecs_task_execution)
 - [data-source/aws_elbv2_listener_rule](#data-sourceaws_elbv2_listener_rule)
@@ -41,6 +42,7 @@ Upgrade topics:
 - [resource/aws_cloudfront_key_value_store](#resourceaws_cloudfront_key_value_store)
 - [resource/aws_cloudfront_response_headers_policy](#resourceaws_cloudfront_response_headers_policy)
 - [resource/aws_db_instance](#resourceaws_db_instance)
+- [resource/aws_dms_endpoint](#resourceaws_dms_endpoint)
 - [resource/aws_dx_gateway_association](#resourceaws_dx_gateway_association)
 - [resource/aws_ecs_task_definition](#resourceaws_ecs_task_definition)
 - [resource/aws_eip](#resourceaws_eip)
@@ -211,6 +213,10 @@ For example, `saml_options.session_timeout` would now be referenced as `saml_opt
 
 `tags_all` has been removed.
 
+## data-source/aws_dms_endpoint
+
+`s3_settings` has been removed.
+
 ## data-source/aws_ecs_task_definition
 
 Remove `inference_accelerator` from your configuration—it no longer exists. Amazon Elastic Inference reached end of life in April 2024.
@@ -329,6 +335,10 @@ The `etag` argument is now computed only.
 ## resource/aws_db_instance
 
 The `character_set_name` now cannot be set with `replicate_source_db`, `restore_to_point_in_time`, `s3_import`, or `snapshot_identifier`.
+
+## resource/aws_dms_endpoint
+
+`s3_settings` has been removed.
 
 ## resource/aws_dx_gateway_association
 
