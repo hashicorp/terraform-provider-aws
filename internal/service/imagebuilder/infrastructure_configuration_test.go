@@ -43,6 +43,7 @@ func TestAccImageBuilderInfrastructureConfiguration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "instance_types.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "key_pair", ""),
 					resource.TestCheckResourceAttr(resourceName, "logging.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "placement.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "resource_tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "0"),
