@@ -21,11 +21,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-
+	tfinspector2 "github.com/hashicorp/terraform-provider-aws/internal/service/inspector2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
-
-	tfinspector2 "github.com/hashicorp/terraform-provider-aws/internal/service/inspector2"
 )
 
 func testAccInspector2Filter_basic(t *testing.T) {
