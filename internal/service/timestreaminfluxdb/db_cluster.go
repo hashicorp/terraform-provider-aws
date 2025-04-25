@@ -592,7 +592,7 @@ func waitDBClusterCreated(ctx context.Context, conn *timestreaminfluxdb.Client, 
 
 func waitDBClusterUpdated(ctx context.Context, conn *timestreaminfluxdb.Client, id string, timeout time.Duration) (*timestreaminfluxdb.GetDbClusterOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{string(awstypes.ClusterStatusUpdating), string(awstypes.StatusUpdatingInstanceType)},
+		Pending:                   enum.Slice(string(awstypes.ClusterStatusUpdating), string(awstypes.StatusUpdatingInstanceType)),
 		Target:                    enum.Slice(awstypes.ClusterStatusAvailable),
 		Refresh:                   statusDBCluster(ctx, conn, id),
 		Timeout:                   timeout,
