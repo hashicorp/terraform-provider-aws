@@ -130,7 +130,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			}),
 		},
 		{
-			Factory:  DataSourcePermissionSet,
+			Factory:  dataSourcePermissionSet,
 			TypeName: "aws_ssoadmin_permission_set",
 			Name:     "Permission Set",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
