@@ -768,7 +768,8 @@ service "backupgateway" {
 
 service "batch" {
   sdk {
-    id = "Batch"
+    id          = "Batch"
+    arn_service = "batch"
   }
 
   names {
