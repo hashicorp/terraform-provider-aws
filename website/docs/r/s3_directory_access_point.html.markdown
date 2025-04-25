@@ -13,7 +13,7 @@ NOTE: Terraform provides two ways to manage access point policy and access point
 Bucket type: this resource cannot be used for access points for general purpose buckets, see [`aws_s3_access_point`](s3_access_point.html) for more. 
 
 ## Example Usage
-### S3 Access Point for a directory bucket in an AWS Availability Zone
+### S3 Access Point for a directory bucket in an AWS Availability Zone or Local Zone
 ```terraform
 resource "aws_s3_directory_access_point" "example" {
   bucket = "bucket--zoneid--x-s3"
@@ -21,16 +21,8 @@ resource "aws_s3_directory_access_point" "example" {
   account_id = "123456789012"
 }
 ```
-### S3 Access Point for a directory bucket in an AWS Local Zone
-```
-resource "aws_s3_directory_access_point" "example_local_zone" {
-    bucket = "bucket--zoneid-x-s3"
-    name = "example--zoneid--xa-s3"
-    account_id = "123456789012"
-}
-```
 
-### S3 Access Point for a directory bucket in an AWS Local Zone with Scope configuration
+### S3 Access Point for a directory bucket with Scope configuration
 ```
 resource "aws_s3_directory_access_point" "example_local_zone" {
     bucket = "bucket--lzid--x-s3"
@@ -56,7 +48,7 @@ This resource supports the following arguments:
 
 * `policy` - (Optional) Valid JSON document that specifies the policy that you want to apply to this access point. Removing `policy` from your configuration or setting `policy` to null or an empty string (i.e., `policy = ""`) _will not_ delete the policy since it could have been set by `aws_s3control_directory_access_point_policy`. To remove the `policy`, set it to `"{}"` (an empty JSON document).
 
-* `public_access_block_configuration` - (Optional) Configuration block to manage the `PublicAccessBlock` configuration that you want to apply to this directory bucket. Block Public Access is turned on by  default and cannot be changed.
+* `public_access_block_configuration` - (Optional) Configuration block to manage the `PublicAccessBlock` configuration that you want to apply to this directory bucket. Block Public Access is turned on by  default and cannot be changed. For more information, see [AWS Documentation](https://docs.aws.amazon.com/AmazonS3/latest/userguide/access-control-block-public-access.html).
 
 * `vpc_configuration` - (Optional) Configuration block to restrict access to this access point to requests from the specified Virtual Private Cloud (VPC).
 
