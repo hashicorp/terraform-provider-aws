@@ -6,6 +6,7 @@ package directconnect
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"time"
 
@@ -37,7 +38,31 @@ func resourceGateway() *schema.Resource {
 		DeleteWithoutTimeout: resourceGatewayDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: func(ctx context.Context, rd *schema.ResourceData, i any) ([]*schema.ResourceData, error) {
+				// Import-by-id case
+				if rd.Id() != "" {
+					return []*schema.ResourceData{rd}, nil
+				}
+
+				identity, err := rd.Identity()
+				if err != nil {
+					return nil, err
+				}
+
+				idRaw, ok := identity.GetOk("id")
+				if !ok {
+					return nil, fmt.Errorf("identity attribute %q is required", "id")
+				}
+
+				id, ok := idRaw.(string)
+				if !ok {
+					return nil, fmt.Errorf("identity attribute %q: expected string, got %T", "id", idRaw)
+				}
+
+				rd.SetId(id)
+
+				return []*schema.ResourceData{rd}, nil
+			},
 		},
 
 		Schema: map[string]*schema.Schema{
