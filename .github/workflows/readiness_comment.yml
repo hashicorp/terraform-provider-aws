@@ -52,7 +52,7 @@ jobs:
         if: |
           steps.filter.outputs.dependencies == 'true'
           || steps.filter.outputs.changelog == 'true'
-          || (steps.changelog-update-needed.needs == 'true' && steps.changelog-update-needed.has == 'false')
+          || (steps.changelog-update-needed.outputs.needs == 'true' && steps.changelog-update-needed.outputs.has == 'false')
         with:
           sparse-checkout: .github/actions/community_check
 
