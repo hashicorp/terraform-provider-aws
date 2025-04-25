@@ -5,28 +5,32 @@ package ec2
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_ec2_instance_default_credit_specification", name="Default Credit Specification")
-func newResourceDefaultCreditSpecification(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceDefaultCreditSpecification{}
+func newDefaultCreditSpecificationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &defaultCreditSpecificationResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
@@ -34,239 +38,162 @@ func newResourceDefaultCreditSpecification(_ context.Context) (resource.Resource
 	return r, nil
 }
 
-const (
-	ResNameDefaultCreditSpecification = "Default Credit Specification"
-)
-
-type resourceDefaultCreditSpecification struct {
+type defaultCreditSpecificationResource struct {
 	framework.ResourceWithConfigure
+	framework.WithNoOpDelete
 	framework.WithTimeouts
 }
 
-func (r *resourceDefaultCreditSpecification) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *defaultCreditSpecificationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrID: framework.IDAttribute(),
 			"cpu_credits": schema.StringAttribute{
 				Required: true,
+				Validators: []validator.String{
+					stringvalidator.OneOf(cpuCredits_Values()...),
+				},
 			},
 			"instance_family": schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.UnlimitedSupportedInstanceFamily](),
 				Required:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 		},
 		Blocks: map[string]schema.Block{
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
+				Update: true,
 			}),
 		},
 	}
 }
 
-func (r *resourceDefaultCreditSpecification) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().EC2Client(ctx)
-
-	var plan resourceDefaultCreditSpecificationModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
+func (r *defaultCreditSpecificationResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data defaultCreditSpecificationResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
+	conn := r.Meta().EC2Client(ctx)
+
+	instanceFamily := data.InstanceFamily.ValueEnum()
 	var input ec2.ModifyDefaultCreditSpecificationInput
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	plan.ID = plan.InstanceFamily.StringValue
+	_, err := conn.ModifyDefaultCreditSpecification(ctx, &input)
 
-	out, err := createDefaultCreditSpecification(ctx, conn, &input)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionCreating, ResNameDefaultCreditSpecification, plan.ID.String(), err),
-			err.Error(),
-		)
-		return
-	}
-	if out == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionCreating, ResNameDefaultCreditSpecification, plan.ID.String(), nil),
-			errors.New("empty output").Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("creating EC2 Default Credit Specification (%s)", instanceFamily), err.Error())
+
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	err = waitDefaultCreditSpecificationCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionWaitingForCreation, ResNameDefaultCreditSpecification, plan.ID.String(), err),
-			err.Error(),
-		)
-		return
-	}
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
-}
-
-func (r *resourceDefaultCreditSpecification) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().EC2Client(ctx)
-
-	var state resourceDefaultCreditSpecificationModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	out, err := findDefaultCreditSpecificationByID(ctx, conn, state.ID.ValueString())
-	if tfresource.NotFound(err) {
-		resp.State.RemoveResource(ctx)
-		return
-	}
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionSetting, ResNameDefaultCreditSpecification, state.ID.String(), err),
-			err.Error(),
-		)
-		return
-	}
-
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
-}
-
-func (r *resourceDefaultCreditSpecification) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan resourceDefaultCreditSpecificationModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	var input ec2.ModifyDefaultCreditSpecificationInput
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	conn := r.Meta().EC2Client(ctx)
-
-	out, err := createDefaultCreditSpecification(ctx, conn, &input)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.QBusiness, create.ErrActionUpdating, ResNameDefaultCreditSpecification, plan.ID.String(), err),
-			err.Error(),
-		)
-		return
-	}
-
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	err = waitDefaultCreditSpecificationCreated(ctx, conn, plan.ID.ValueString(), updateTimeout)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionWaitingForUpdate, ResNameDefaultCreditSpecification, plan.ID.String(), err),
-			err.Error(),
-		)
-		return
-	}
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
-}
-
-// No-op Delete
-func (r *resourceDefaultCreditSpecification) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-}
-
-func (r *resourceDefaultCreditSpecification) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-}
-
-const (
-	statusChangePending = "Pending"
-	statusDeleting      = "Deleting"
-	statusNormal        = "Normal"
-	statusUpdated       = "Updated"
-)
-
-func waitDefaultCreditSpecificationCreated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) error {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{},
-		Target:                    []string{statusNormal},
-		Refresh:                   statusDefaultCreditSpecification(ctx, conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if _, ok := outputRaw.(*awstypes.InstanceFamilyCreditSpecification); ok {
-		return err
-	}
-
-	return err
-}
-
-func statusDefaultCreditSpecification(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
-		out, err := findDefaultCreditSpecificationByID(ctx, conn, id)
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
+	_, err = tfresource.RetryUntilEqual(ctx, r.CreateTimeout(ctx, data.Timeouts), data.CPUCredits.ValueString(), func() (string, error) {
+		output, err := findDefaultCreditSpecificationByInstanceFamily(ctx, conn, instanceFamily)
 
 		if err != nil {
-			return nil, "", err
+			return "", err
 		}
 
-		return out, statusNormal, nil
-	}
-}
+		return aws.ToString(output.CpuCredits), nil
+	})
 
-func findDefaultCreditSpecificationByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.InstanceFamilyCreditSpecification, error) {
-	in := ec2.GetDefaultCreditSpecificationInput{
-		InstanceFamily: awstypes.UnlimitedSupportedInstanceFamily(id),
-	}
-
-	out, err := conn.GetDefaultCreditSpecification(ctx, &in)
 	if err != nil {
-		return nil, err
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for EC2 Default Credit Specification (%s) create", instanceFamily), err.Error())
+
+		return
 	}
 
-	if out == nil || out.InstanceFamilyCreditSpecification == nil {
-		return nil, tfresource.NewEmptyResultError(in)
-	}
-
-	return out.InstanceFamilyCreditSpecification, nil
+	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-func createDefaultCreditSpecification(ctx context.Context, conn *ec2.Client, in *ec2.ModifyDefaultCreditSpecificationInput) (*awstypes.InstanceFamilyCreditSpecification, error) {
-	out, err := conn.ModifyDefaultCreditSpecification(ctx, in)
+func (r *defaultCreditSpecificationResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data defaultCreditSpecificationResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	conn := r.Meta().EC2Client(ctx)
+
+	output, err := findDefaultCreditSpecificationByInstanceFamily(ctx, conn, data.InstanceFamily.ValueEnum())
+
+	if tfresource.NotFound(err) {
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+
+		return
+	}
+
 	if err != nil {
-		return nil, err
+		response.Diagnostics.AddError(fmt.Sprintf("reading EC2 Default Credit Specification (%s)", data.InstanceFamily.ValueString()), err.Error())
+
+		return
 	}
 
-	if out == nil || out.InstanceFamilyCreditSpecification == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	if response.Diagnostics.HasError() {
+		return
 	}
 
-	return out.InstanceFamilyCreditSpecification, nil
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-type resourceDefaultCreditSpecificationModel struct {
-	ID             types.String                                                  `tfsdk:"id"`
-	Timeouts       timeouts.Value                                                `tfsdk:"timeouts"`
+func (r *defaultCreditSpecificationResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var new defaultCreditSpecificationResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	conn := r.Meta().EC2Client(ctx)
+
+	instanceFamily := new.InstanceFamily.ValueEnum()
+	var input ec2.ModifyDefaultCreditSpecificationInput
+	response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	_, err := conn.ModifyDefaultCreditSpecification(ctx, &input)
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("updating EC2 Default Credit Specification (%s)", instanceFamily), err.Error())
+
+		return
+	}
+
+	_, err = tfresource.RetryUntilEqual(ctx, r.UpdateTimeout(ctx, new.Timeouts), new.CPUCredits.ValueString(), func() (string, error) {
+		output, err := findDefaultCreditSpecificationByInstanceFamily(ctx, conn, instanceFamily)
+
+		if err != nil {
+			return "", err
+		}
+
+		return aws.ToString(output.CpuCredits), nil
+	})
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for EC2 Default Credit Specification (%s) update", instanceFamily), err.Error())
+
+		return
+	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
+}
+
+func (r *defaultCreditSpecificationResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("instance_family"), request, response)
+}
+
+type defaultCreditSpecificationResourceModel struct {
+	CPUCredits     types.String                                                  `tfsdk:"cpu_credits"`
 	InstanceFamily fwtypes.StringEnum[awstypes.UnlimitedSupportedInstanceFamily] `tfsdk:"instance_family"`
-	CpuCredits     types.String                                                  `tfsdk:"cpu_credits"`
+	Timeouts       timeouts.Value                                                `tfsdk:"timeouts"`
 }

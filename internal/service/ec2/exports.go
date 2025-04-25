@@ -30,5 +30,4 @@ var (
 	ResourceVPC                                                    = resourceVPC
 	VPCEndpointCreationTimeout                                     = vpcEndpointCreationTimeout
 	WaitVPCEndpointAvailable                                       = waitVPCEndpointAvailable
-	FindDefaultCreditSpecificationByID                             = findDefaultCreditSpecificationByID
 )

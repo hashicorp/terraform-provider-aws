@@ -5,28 +5,21 @@ package ec2_test
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEC2DefaultCreditSpecification_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var defaultcreditspecification awstypes.InstanceFamilyCreditSpecification
-	_ = sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ec2_instance_default_credit_specification.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -35,53 +28,64 @@ func TestAccEC2DefaultCreditSpecification_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDefaultCreditSpecificationConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDefaultCreditSpecificationExists(ctx, resourceName, &defaultcreditspecification),
-					resource.TestCheckResourceAttr(resourceName, "cpu_credits", "unlimited"),
-					resource.TestCheckResourceAttr(resourceName, "instance_family", "t2"),
+					resource.TestCheckResourceAttr(resourceName, "cpu_credits", "standard"),
+					resource.TestCheckResourceAttr(resourceName, "instance_family", "t4g"),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    testAccDefaultCreditSpecificationImportStateIDFunc(resourceName),
+				ImportStateVerifyIdentifierAttribute: "instance_family",
 			},
 		},
 	})
 }
 
-func testAccCheckDefaultCreditSpecificationExists(ctx context.Context, name string, defaultcreditspecification *awstypes.InstanceFamilyCreditSpecification) resource.TestCheckFunc {
+func testAccCheckDefaultCreditSpecificationExists(ctx context.Context, n string, v *awstypes.InstanceFamilyCreditSpecification) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.EC2, create.ErrActionCheckingExistence, tfec2.ResNameDefaultCreditSpecification, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.EC2, create.ErrActionCheckingExistence, tfec2.ResNameDefaultCreditSpecification, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		resp, err := tfec2.FindDefaultCreditSpecificationByID(ctx, conn, rs.Primary.ID)
+		output, err := tfec2.FindDefaultCreditSpecificationByInstanceFamily(ctx, conn, awstypes.UnlimitedSupportedInstanceFamily(rs.Primary.Attributes["instance_family"]))
+
 		if err != nil {
-			return create.Error(names.EC2, create.ErrActionCheckingExistence, tfec2.ResNameDefaultCreditSpecification, rs.Primary.ID, err)
+			return err
 		}
 
-		*defaultcreditspecification = *resp
+		*v = *output
 
 		return nil
 	}
 }
+
+func testAccDefaultCreditSpecificationImportStateIDFunc(n string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", n)
+		}
+
+		return rs.Primary.Attributes["instance_family"], nil
+	}
+}
+
 func testAccDefaultCreditSpecificationConfig_basic() string {
 	return `
 resource "aws_ec2_instance_default_credit_specification" "test" {
   cpu_credits     = "standard"
-  instance_family = "t2"
+  instance_family = "t4g"
 }
 `
 }

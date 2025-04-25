@@ -74,7 +74,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			},
 		},
 		{
-			Factory:  newResourceDefaultCreditSpecification,
+			Factory:  newDefaultCreditSpecificationResource,
 			TypeName: "aws_ec2_instance_default_credit_specification",
 			Name:     "Default Credit Specification",
 		},

@@ -15,6 +15,8 @@ Terraform resource for managing an AWS EC2 (Elastic Compute Cloud) Default Credi
 
 ```terraform
 resource "aws_ec2_instance_default_credit_specification" "example" {
+  instance_family = "t2"
+  cpu_credits     = "standard"
 }
 ```
 
@@ -23,7 +25,6 @@ resource "aws_ec2_instance_default_credit_specification" "example" {
 The following arguments are required:
 
 * `cpu_credits` - (Required) Credit option for CPU usage of the instance family. Valid values: `standard`, `unlimited`.
-
 * `instance_family` - (Required) Instance family. Valid values are `t2`, `t3`, `t3a`, `t4g`.
 
 ## Attribute Reference
