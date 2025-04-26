@@ -32,6 +32,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Factory:  newFrameworkDataSource,
 			TypeName: "aws_auditmanager_framework",
 			Name:     "Framework",
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
