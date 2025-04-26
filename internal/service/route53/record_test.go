@@ -102,6 +102,7 @@ func TestAccRoute53Record_Identity_basic(t *testing.T) {
 					testAccCheckRecordExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringRegexp(regexache.MustCompile(fmt.Sprintf(`^\w+_%s_A$`, recordName.String())))),
 					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						"zone_id":           knownvalue.NotNull(), // Needs compare
@@ -153,6 +154,7 @@ func TestAccRoute53Record_Identity_setIdentifier(t *testing.T) {
 					testAccCheckRecordExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringRegexp(regexache.MustCompile(`^\w+_test_CNAME_test$`))),
 					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						"zone_id":           knownvalue.NotNull(), // Needs compare
