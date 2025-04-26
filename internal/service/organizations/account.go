@@ -3,7 +3,7 @@
 
 package organizations
 
-import (
+import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"context"
 	"errors"
 	"fmt"
@@ -245,8 +245,8 @@ func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta any) 
 
 func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	orgConn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
-	accConn := meta.(*conns.AWSClient).AccountClient(ctx)
+	connOrg := meta.(*conns.AWSClient).OrganizationsClient(ctx)
+	connAcc := meta.(*conns.AWSClient).AccountClient(ctx)
 
 	if d.HasChange("parent_id") {
 		o, n := d.GetChange("parent_id")
@@ -257,7 +257,7 @@ func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			DestinationParentId: aws.String(n.(string)),
 		}
 
-		_, err := orgConn.MoveAccount(ctx, input)
+		_, err := connOrg.MoveAccount(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "moving AWS Organizations Account (%s): %s", d.Id(), err)
@@ -270,11 +270,11 @@ func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			AccountId:   aws.String(d.Id()),
 			AccountName: aws.String(n.(string)),
 		}
-		_, err := accConn.PutAccountName(ctx, input)
+		_, err := connAcc.PutAccountName(ctx, input)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "rename AWS Account (%s): %s", d.Id(), err)
 		}
-		if _, err := waitAccountNameUpdate(ctx, orgConn, d.Id(), o.(string), n.(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if _, err := waitAccountNameUpdate(ctx, connOrg, d.Id(), o.(string), n.(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for AWS Account (%s) rename: %s", d.Id(), err)
 		}
 	}
