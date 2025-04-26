@@ -284,7 +284,7 @@ func TestAccFISExperimentTemplate_managedResource(t *testing.T) {
 		CheckDestroy:             testAccCheckExperimentTemplateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccExperimentTemplateConfig_managedResource_loadbalancer(rName, "nlb custom resource creation", "nlb-zonal-shift", "nlb zonal shift", "aws:arc:start-zonal-autoshift", "ManagedResources", "target_0", names.AttrDuration, "PT1M", "managedResourceTypes", "NLB", "availabilityZoneIdentifier", "us-west-2a", "aws:arc:zonal-shift-managed-resource", "ALL"),
+				Config: testAccExperimentTemplateConfig_managedResource_loadbalancer(rName, "nlb custom resource creation", "nlb-zonal-shift", "nlb zonal shift", "aws:arc:start-zonal-autoshift", "ManagedResources", "target_0", names.AttrDuration, "PT1M", "aws:arc:zonal-shift-managed-resource", "ALL"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccExperimentTemplateExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "nlb custom resource creation"),
@@ -297,7 +297,6 @@ func TestAccFISExperimentTemplate_managedResource(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "action.0.action_id", "aws:arc:start-zonal-autoshift"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.parameter.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.parameter.0.key", "availabilityZoneIdentifier"),
-					resource.TestCheckResourceAttr(resourceName, "action.0.parameter.0.value", "us-west-2a"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.parameter.1.key", names.AttrDuration),
 					resource.TestCheckResourceAttr(resourceName, "action.0.parameter.1.value", "PT1M"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.start_after.#", "0"),
@@ -1207,7 +1206,7 @@ resource "aws_fis_experiment_template" "test" {
 `, rName, desc, actionName, actionDesc, actionID, actionTargetK, actionTargetV, targetResType, targetSelectMode, targetResTagK, targetResTagV)
 }
 
-func testAccExperimentTemplateConfig_managedResource_loadbalancer(rName, desc, actionName, actionDesc, actionID, actionTargetK, actionTargetV, paramK1, paramV1, paramK2, paramV2, paramK3, paramV3, targetResType, targetSelectMode string) string {
+func testAccExperimentTemplateConfig_managedResource_loadbalancer(rName, desc, actionName, actionDesc, actionID, actionTargetK, actionTargetV, paramK1, paramV1, targetResType, targetSelectMode string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -1258,20 +1257,20 @@ resource "aws_fis_experiment_template" "test" {
     }
 
     parameter {
-      key   = %[8]q
-      value = %[9]q
+      key   = "availabilityZoneIdentifier"
+      value = data.aws_availability_zones.available.names[0] 
     }
 
     parameter {
-      key   = %[12]q
-      value = %[13]q
+      key   = %[8]q
+      value = %[9]q
     }
   }
 
   target {
     name           = %[7]q
-    resource_type  = %[14]q
-    selection_mode = %[15]q
+    resource_type  = %[10]q
+    selection_mode = %[11]q
 
     resource_arns = tolist([aws_lb.nlb_test.arn])
   }
@@ -1280,7 +1279,7 @@ resource "aws_fis_experiment_template" "test" {
     Name = %[1]q
   }
 }
-`, rName, desc, actionName, actionDesc, actionID, actionTargetK, actionTargetV, paramK1, paramV1, paramK2, paramV2, paramK3, paramV3, targetResType, targetSelectMode))
+`, rName, desc, actionName, actionDesc, actionID, actionTargetK, actionTargetV, paramK1, paramV1, targetResType, targetSelectMode))
 }
 
 func testAccExperimentTemplateConfig_ExperimentOptions(rName, mode string) string {
