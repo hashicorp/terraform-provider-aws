@@ -268,6 +268,55 @@ func TestAccFISExperimentTemplate_eks(t *testing.T) {
 	})
 }
 
+func TestAccFISExperimentTemplate_managedResource(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_fis_experiment_template.test"
+	var conf awstypes.ExperimentTemplate
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, fis.ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckExperimentTemplateDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccExperimentTemplateConfig_managedResource_loadbalancer(rName, "nlb custom resource creation", "nlb-zonal-shift", "nlb zonal shift", "aws:arc:start-zonal-autoshift", "ManagedResources", "target_0", "duration", "PT1M", "managedResourceTypes", "NLB", "availabilityZoneIdentifier", "us-west-2a", "aws:arc:zonal-shift-managed-resource", "ALL"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccExperimentTemplateExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "nlb custom resource creation"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test_fis", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "stop_condition.0.source", "none"),
+					resource.TestCheckResourceAttr(resourceName, "stop_condition.0.value", ""),
+					resource.TestCheckResourceAttr(resourceName, "stop_condition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.name", "nlb-zonal-shift"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.description", "nlb zonal shift"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.action_id", "aws:arc:start-zonal-autoshift"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.parameter.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.parameter.0.key", "availabilityZoneIdentifier"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.parameter.0.value", "us-west-2a"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.parameter.1.key", "duration"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.parameter.1.value", "PT1M"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.start_after.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.target.0.key", "ManagedResources"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.target.0.value", "target_0"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.name", "target_0"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.resource_type", "aws:arc:zonal-shift-managed-resource"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.selection_mode", "ALL"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.filter.#", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, "target.0.resource_arns.0", "aws_lb.nlb_test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "target.0.resource_tag.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target.#", "1"),
+				),
+			},
+		},
+	})
+}
 func TestAccFISExperimentTemplate_ebs(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -1156,6 +1205,82 @@ resource "aws_fis_experiment_template" "test" {
   }
 }
 `, rName, desc, actionName, actionDesc, actionID, actionTargetK, actionTargetV, targetResType, targetSelectMode, targetResTagK, targetResTagV)
+}
+
+func testAccExperimentTemplateConfig_managedResource_loadbalancer(rName, desc, actionName, actionDesc, actionID, actionTargetK, actionTargetV, paramK1, paramV1, paramK2, paramV2, paramK3, paramV3, targetResType, targetSelectMode string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_lb" "nlb_test" {
+  name = %[1]q
+
+  subnets = aws_subnet.test[*].id
+
+  load_balancer_type         = "network"
+  internal                   = true
+  idle_timeout               = 60
+  enable_deletion_protection = false
+}
+
+resource "aws_iam_role" "test_fis" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = [
+          "fis.${data.aws_partition.current.dns_suffix}",
+        ]
+      }
+    }]
+    Version = "2012-10-17"
+  })
+}
+
+resource "aws_fis_experiment_template" "test" {
+  description = %[2]q
+  role_arn    = aws_iam_role.test_fis.arn
+
+  stop_condition {
+    source = "none"
+  }
+
+  action {
+    name        = %[3]q
+    description = %[4]q
+    action_id   = %[5]q
+
+    target {
+      key   = %[6]q
+      value = %[7]q
+    }
+
+    parameter {
+      key   = %[8]q
+      value = %[9]q
+    }
+
+    parameter {
+      key   = %[12]q
+      value = %[13]q
+    }
+  }
+
+  target {
+    name           = %[7]q
+    resource_type  = %[14]q
+    selection_mode = %[15]q
+
+    resource_arns = tolist([aws_lb.nlb_test.arn])
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, desc, actionName, actionDesc, actionID, actionTargetK, actionTargetV, paramK1, paramV1, paramK2, paramV2, paramK3, paramV3, targetResType, targetSelectMode))
 }
 
 func testAccExperimentTemplateConfig_ExperimentOptions(rName, mode string) string {
