@@ -38,12 +38,12 @@ func TestAccOrganizations_serial(t *testing.T) {
 			"DataSource_delegatedAdministrator": testAccOrganizationDataSource_delegatedAdministrator,
 		},
 		"Account": {
-			acctest.CtBasic:     testAccAccount_basic,
-			"CloseOnDeletion":   testAccAccount_CloseOnDeletion,
-			"ParentId":          testAccAccount_ParentID,
-			"Tags":              testAccAccount_Tags,
-			"GovCloud":          testAccAccount_govCloud,
-			"AccountNameUpdate": testAccAccount_AccountUpdate,
+			acctest.CtBasic:   testAccAccount_basic,
+			"CloseOnDeletion": testAccAccount_CloseOnDeletion,
+			"ParentId":        testAccAccount_ParentID,
+			"Tags":            testAccAccount_Tags,
+			"GovCloud":        testAccAccount_govCloud,
+			"AccounUpdate":    testAccAccount_AccountUpdate,
 		},
 		"OrganizationalUnit": {
 			acctest.CtBasic:                      testAccOrganizationalUnit_basic,
