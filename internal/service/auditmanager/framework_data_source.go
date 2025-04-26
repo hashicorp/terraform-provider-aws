@@ -99,7 +99,7 @@ func (d *frameworkDataSource) Read(ctx context.Context, req datasource.ReadReque
 
 	// Framework metadata from the ListFrameworks API does not contain all information available
 	// about a framework. Use framework ID to get complete information.
-	framework, err := FindFrameworkByID(ctx, conn, aws.ToString(frameworkMetadata.Id))
+	framework, err := findFrameworkByID(ctx, conn, aws.ToString(frameworkMetadata.Id))
 	if err != nil {
 		resp.Diagnostics.AddError("finding framework by ID", err.Error())
 		return
@@ -155,9 +155,9 @@ func (rd *frameworkDataSourceModel) refreshFromOutput(ctx context.Context, meta 
 
 	rd.ID = types.StringValue(aws.ToString(out.Id))
 	rd.Name = types.StringValue(aws.ToString(out.Name))
-	cs, d := flattenFrameworkControlSets(ctx, out.ControlSets)
-	diags.Append(d...)
-	rd.ControlSets = cs
+	// cs, d := flattenFrameworkControlSets(ctx, out.ControlSets)
+	// diags.Append(d...)
+	// rd.ControlSets = cs
 
 	rd.ComplianceType = flex.StringToFramework(ctx, out.ComplianceType)
 	rd.Description = flex.StringToFramework(ctx, out.Description)
