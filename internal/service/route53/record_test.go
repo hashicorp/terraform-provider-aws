@@ -123,6 +123,12 @@ func TestAccRoute53Record_Identity_basic(t *testing.T) {
 				ImportState:     true,
 				ImportStateKind: resource.ImportBlockWithID,
 			},
+			// TODO: Clarify "" vs unset for OptionalForImport identity attributes
+			// {
+			// 	ResourceName:    resourceName,
+			// 	ImportState:     true,
+			// 	ImportStateKind: resource.ImportBlockWithResourceIdentity,
+			// },
 		},
 	})
 }
@@ -167,6 +173,11 @@ func TestAccRoute53Record_Identity_setIdentifier(t *testing.T) {
 				ResourceName:    resourceName,
 				ImportState:     true,
 				ImportStateKind: resource.ImportBlockWithID,
+			},
+			{
+				ResourceName:    resourceName,
+				ImportState:     true,
+				ImportStateKind: resource.ImportBlockWithResourceIdentity,
 			},
 		},
 	})
