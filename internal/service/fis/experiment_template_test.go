@@ -1258,7 +1258,7 @@ resource "aws_fis_experiment_template" "test" {
 
     parameter {
       key   = "availabilityZoneIdentifier"
-      value = data.aws_availability_zones.available.names[0] 
+      value = data.aws_availability_zones.available.names[0]
     }
 
     parameter {
