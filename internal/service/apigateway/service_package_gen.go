@@ -15,7 +15,13 @@ import (
 type servicePackage struct{}
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
-	return []*types.ServicePackageFrameworkDataSource{}
+	return []*types.ServicePackageFrameworkDataSource{
+		{
+			Factory:  newDataSourceAPIKeys,
+			TypeName: "aws_api_gateway_api_keys",
+			Name:     "API Keys",
+		},
+	}
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
@@ -32,6 +38,11 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+		},
+		{
+			Factory:  newResourceRestAPIPut,
+			TypeName: "aws_api_gateway_rest_api_put",
+			Name:     "Rest API Put",
 		},
 	}
 }

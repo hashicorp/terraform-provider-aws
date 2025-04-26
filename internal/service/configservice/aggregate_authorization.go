@@ -58,7 +58,7 @@ func resourceAggregateAuthorization() *schema.Resource {
 	}
 }
 
-func resourceAggregateAuthorizationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAggregateAuthorizationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
@@ -81,7 +81,7 @@ func resourceAggregateAuthorizationCreate(ctx context.Context, d *schema.Resourc
 	return append(diags, resourceAggregateAuthorizationRead(ctx, d, meta)...)
 }
 
-func resourceAggregateAuthorizationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAggregateAuthorizationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
@@ -109,7 +109,7 @@ func resourceAggregateAuthorizationRead(ctx context.Context, d *schema.ResourceD
 	return diags
 }
 
-func resourceAggregateAuthorizationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAggregateAuthorizationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Tags only.
@@ -117,7 +117,7 @@ func resourceAggregateAuthorizationUpdate(ctx context.Context, d *schema.Resourc
 	return append(diags, resourceAggregateAuthorizationRead(ctx, d, meta)...)
 }
 
-func resourceAggregateAuthorizationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAggregateAuthorizationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 

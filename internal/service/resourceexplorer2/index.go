@@ -210,7 +210,7 @@ func (r *indexResource) Delete(ctx context.Context, request resource.DeleteReque
 
 	conn := r.Meta().ResourceExplorer2Client(ctx)
 
-	tflog.Debug(ctx, "deleting Resource Explorer Index", map[string]interface{}{
+	tflog.Debug(ctx, "deleting Resource Explorer Index", map[string]any{
 		names.AttrID: data.ID.ValueString(),
 	})
 	_, err := conn.DeleteIndex(ctx, &resourceexplorer2.DeleteIndexInput{
@@ -275,7 +275,7 @@ func findIndex(ctx context.Context, conn *resourceexplorer2.Client) (*resourceex
 }
 
 func statusIndex(ctx context.Context, conn *resourceexplorer2.Client) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findIndex(ctx, conn)
 
 		if tfresource.NotFound(err) {

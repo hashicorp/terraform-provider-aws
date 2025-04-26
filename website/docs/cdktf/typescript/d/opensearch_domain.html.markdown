@@ -69,12 +69,18 @@ This data source exports the following attributes in addition to the arguments a
     * `dedicatedMasterType` - Instance type of the dedicated master nodes in the cluster.
     * `dedicatedMasterCount` - Number of dedicated master nodes in the cluster.
     * `multiAzWithStandbyEnabled` - Whether a multi-AZ domain is turned on with a standby AZ.
-    * `zoneAwarenessEnabled` - Indicates whether zone awareness is enabled.
-    * `zoneAwarenessConfig` - Configuration block containing zone awareness settings.
-        * `availabilityZoneCount` - Number of availability zones used.
+    * `nodeOptions` - List of node options for the domain.
+        * `nodeConfig` - Sizing of a node type.
+            * `count` - Number of nodes of a particular node type in the cluster.
+            * `enabled` - Whether a particular node type is enabled.
+            * `type` - The instance type of a particular node type in the cluster.
+        * `nodeType` - Type of node this configuration describes.
     * `warmEnabled` - Warm storage is enabled.
     * `warmCount` - Number of warm nodes in the cluster.
     * `warmType` - Instance type for the OpenSearch cluster's warm nodes.
+    * `zoneAwarenessEnabled` - Indicates whether zone awareness is enabled.
+    * `zoneAwarenessConfig` - Configuration block containing zone awareness settings.
+        * `availabilityZoneCount` - Number of availability zones used.
 * `cognitoOptions` - Domain Amazon Cognito Authentication options for Dashboard.
     * `enabled` - Whether Amazon Cognito Authentication is enabled.
     * `userPoolId` - Cognito User pool used by the domain.
@@ -124,4 +130,4 @@ This data source exports the following attributes in addition to the arguments a
     * `subnetIds` - Subnets used by the domain.
     * `vpcId` - VPC used by the domain.
 
-<!-- cache-key: cdktf-0.20.8 input-206305f479449066996709d5dfec811f0b8097d8aa6496cf6fc11d73f4ca4b5b -->
+<!-- cache-key: cdktf-0.20.8 input-837de436745fda2e63a3c16e01709893584fc4561159fc72f98d83229cc7d58b -->

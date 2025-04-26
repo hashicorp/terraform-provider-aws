@@ -74,7 +74,7 @@ func ResourceTracker() *schema.Resource {
 	}
 }
 
-func resourceTrackerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTrackerCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LocationClient(ctx)
 
@@ -113,7 +113,7 @@ func resourceTrackerCreate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceTrackerRead(ctx, d, meta)...)
 }
 
-func resourceTrackerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTrackerRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LocationClient(ctx)
 
@@ -151,7 +151,7 @@ func resourceTrackerRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceTrackerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTrackerUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LocationClient(ctx)
 
@@ -178,7 +178,7 @@ func resourceTrackerUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceTrackerRead(ctx, d, meta)...)
 }
 
-func resourceTrackerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTrackerDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LocationClient(ctx)
 

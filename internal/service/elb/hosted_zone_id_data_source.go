@@ -68,7 +68,7 @@ func dataSourceHostedZoneID() *schema.Resource {
 	}
 }
 
-func dataSourceHostedZoneIDRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceHostedZoneIDRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	region := meta.(*conns.AWSClient).Region(ctx)

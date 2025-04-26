@@ -87,7 +87,7 @@ func resourceUser() *schema.Resource {
 	}
 }
 
-func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
@@ -103,14 +103,14 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		input.PermissionsBoundary = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateUser(ctx, input)
+	output, err := retryCreateUser(ctx, conn, input)
 
 	// Some partitions (e.g. ISO) may not support tag-on-create.
 	partition := meta.(*conns.AWSClient).Partition(ctx)
 	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(partition, err) {
 		input.Tags = nil
 
-		output, err = conn.CreateUser(ctx, input)
+		output, err = retryCreateUser(ctx, conn, input)
 	}
 
 	if err != nil {
@@ -124,7 +124,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		err := userCreateTags(ctx, conn, d.Id(), tags)
 
 		// If default tags only, continue. Otherwise, error.
-		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err) {
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]any)) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err) {
 			return append(diags, resourceUserRead(ctx, d, meta)...)
 		}
 
@@ -136,11 +136,11 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	return append(diags, resourceUserRead(ctx, d, meta)...)
 }
 
-func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (any, error) {
 		return findUserByName(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
@@ -171,7 +171,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	return diags
 }
 
-func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
@@ -219,7 +219,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	return append(diags, resourceUserRead(ctx, d, meta)...)
 }
 
-func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
@@ -606,4 +606,30 @@ func userTags(ctx context.Context, conn *iam.Client, identifier string) ([]awsty
 	}
 
 	return output.Tags, nil
+}
+
+func retryCreateUser(ctx context.Context, conn *iam.Client, input *iam.CreateUserInput) (*iam.CreateUserOutput, error) {
+	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
+		func() (any, error) {
+			return conn.CreateUser(ctx, input)
+		},
+		func(err error) (bool, error) {
+			if errs.IsA[*awstypes.ConcurrentModificationException](err) {
+				return true, err
+			}
+
+			return false, err
+		},
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	output, ok := outputRaw.(*iam.CreateUserOutput)
+	if !ok || output == nil || aws.ToString(output.User.UserName) == "" {
+		return nil, fmt.Errorf("create IAM user (%s) returned an empty result", aws.ToString(input.UserName))
+	}
+
+	return output, err
 }

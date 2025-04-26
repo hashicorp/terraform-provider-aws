@@ -46,7 +46,7 @@ func resourceBackendServerPolicy() *schema.Resource {
 	}
 }
 
-func resourceBackendServerPolicySet(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBackendServerPolicySet(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBClient(ctx)
 
@@ -75,7 +75,7 @@ func resourceBackendServerPolicySet(ctx context.Context, d *schema.ResourceData,
 	return append(diags, resourceBackendServerPolicyRead(ctx, d, meta)...)
 }
 
-func resourceBackendServerPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBackendServerPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBClient(ctx)
 
@@ -103,7 +103,7 @@ func resourceBackendServerPolicyRead(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func resourceBackendServerPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBackendServerPolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBClient(ctx)
 

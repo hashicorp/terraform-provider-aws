@@ -116,11 +116,11 @@ func resourceAMIFromInstance() *schema.Resource {
 						},
 					},
 				},
-				Set: func(v interface{}) int {
+				Set: func(v any) int {
 					var buf bytes.Buffer
-					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrDeviceName].(string)))
-					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrSnapshotID].(string)))
+					m := v.(map[string]any)
+					fmt.Fprintf(&buf, "%s-", m[names.AttrDeviceName].(string))
+					fmt.Fprintf(&buf, "%s-", m[names.AttrSnapshotID].(string))
 					return create.StringHashcode(buf.String())
 				},
 			},
@@ -145,11 +145,11 @@ func resourceAMIFromInstance() *schema.Resource {
 						},
 					},
 				},
-				Set: func(v interface{}) int {
+				Set: func(v any) int {
 					var buf bytes.Buffer
-					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrDeviceName].(string)))
-					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrVirtualName].(string)))
+					m := v.(map[string]any)
+					fmt.Fprintf(&buf, "%s-", m[names.AttrDeviceName].(string))
+					fmt.Fprintf(&buf, "%s-", m[names.AttrVirtualName].(string))
 					return create.StringHashcode(buf.String())
 				},
 			},
@@ -174,6 +174,10 @@ func resourceAMIFromInstance() *schema.Resource {
 				Computed: true,
 			},
 			"kernel_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"last_launched_time": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -254,7 +258,7 @@ func resourceAMIFromInstance() *schema.Resource {
 	}
 }
 
-func resourceAMIFromInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAMIFromInstanceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 

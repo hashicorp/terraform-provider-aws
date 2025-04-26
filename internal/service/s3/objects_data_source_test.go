@@ -143,7 +143,7 @@ func TestAccS3ObjectsDataSource_maxKeysLarge(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_s3_objects.test"
 	var keys []string
-	for i := 0; i < 1500; i++ {
+	for i := range 1500 {
 		keys = append(keys, fmt.Sprintf("data%d", i))
 	}
 

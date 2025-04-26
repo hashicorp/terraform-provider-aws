@@ -24,8 +24,8 @@ including fixes for potential error messages in this process,
 can be found in the [`generate` package documentation](https://github.com/hashicorp/terraform-provider-aws/tree/main/internal/generate/tags/README.md).
 
 The generator will create several types of tagging-related code.
-All services that support tagging will generate the function `KeyValueTags`, which converts from service-specific structs returned by the AWS SDK into a common format used by the provider,
-and the function `Tags`, which converts from the common format back to the service-specific structs.
+All services that support tagging will generate the function `keyValueTags`, which converts from service-specific structs returned by the AWS SDK into a common format used by the provider,
+and the function `svcTags`, which converts from the common format back to the service-specific structs.
 In addition, many services have separate functions to list or update tags, so the corresponding `listTags` and `updateTags` can be generated.
 Optionally, to retrieve a specific tag, you can generate the `GetTag` function.
 
@@ -312,7 +312,7 @@ implement the logic to convert the configuration tags into the service tags, e.g
 
     input := eks.CreateClusterInput{
       /* ... other configuration ... */
-      Tags: Tags(tags.IgnoreAWS()),
+      Tags: svcTags(tags.IgnoreAWS()),
     }
     ```
 
@@ -329,7 +329,7 @@ If the service API does not allow passing an empty list, the logic can be adjust
     }
 
     if len(tags) > 0 {
-      input.Tags = Tags(tags.IgnoreAWS())
+      input.Tags = svcTags(tags.IgnoreAWS())
     }
     ```
 
@@ -379,7 +379,7 @@ In the resource `Read` operation, implement the logic to convert the service tag
 
     /* ... other d.Set(...) logic ... */
 
-    tags := KeyValueTags(ctx, cluster.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+    tags := keyValueTags(ctx, cluster.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
     if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
       return fmt.Errorf("setting tags: %w", err)
@@ -472,6 +472,16 @@ If a resource or data source type supports tags but does not use transparent tag
 
 Additional `@Testing(...)` parameters can be used to control the generated tests.
 
+##### PreCheck parameters
+
+All generated tagging tests include the standard `acctest.PreCheck` PreCheck function.
+In some cases, acceptance tests will require additional PreCheck functions.
+Specify them with the annotation `@Testing(preCheck=<reference>)`.
+The reference optionally contains a Go package path and package alias, using the format
+`[<package path>;[<package alias>;]]<function name>`.
+The function is assumed to have the signature `func(ctx context.Context, t *testing.T)`.
+Multiple `@Testing(preCheck)` annotations are allowed.
+
 ##### Required Argument parameters
 
 Most testing configurations take a single parameter, often a name or a domain name.
@@ -490,7 +500,7 @@ Some acceptance tests also require a TLS key and certificate.
 This can be included by setting the annotation `@Testing(tlsKey=true)`,
 which will add the Terraform variables `certificate_pem` and `private_key_pem` to the configuration.
 By default, the common name for the certificate is `example.com`.
-To override the common name, set the annotation `@Testing(tlsKeyDomain=<reference>) to reference an existing variable.
+To override the common name, set the annotation `@Testing(tlsKeyDomain=<reference>)` to reference an existing variable.
 For example, the API Gateway v2 Domain Name sets the variable `rName` to `acctest.RandomSubdomain()`
 and sets the annotation `@Testing(tlsKeyDomain=rName)` to reference it.
 

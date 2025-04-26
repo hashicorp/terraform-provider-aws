@@ -77,7 +77,7 @@ func ResourceVoiceConnectorTermination() *schema.Resource {
 	}
 }
 
-func resourceVoiceConnectorTerminationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVoiceConnectorTerminationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
@@ -116,7 +116,7 @@ func resourceVoiceConnectorTerminationCreate(ctx context.Context, d *schema.Reso
 	return append(diags, resourceVoiceConnectorTerminationRead(ctx, d, meta)...)
 }
 
-func resourceVoiceConnectorTerminationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVoiceConnectorTerminationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
@@ -155,7 +155,7 @@ func resourceVoiceConnectorTerminationRead(ctx context.Context, d *schema.Resour
 	return diags
 }
 
-func resourceVoiceConnectorTerminationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVoiceConnectorTerminationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
@@ -190,7 +190,7 @@ func resourceVoiceConnectorTerminationUpdate(ctx context.Context, d *schema.Reso
 	return append(diags, resourceVoiceConnectorTerminationRead(ctx, d, meta)...)
 }
 
-func resourceVoiceConnectorTerminationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVoiceConnectorTerminationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)

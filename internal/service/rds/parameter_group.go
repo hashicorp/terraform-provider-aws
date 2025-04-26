@@ -109,7 +109,7 @@ func resourceParameterGroup() *schema.Resource {
 	}
 }
 
-func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -135,7 +135,7 @@ func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceParameterGroupUpdate(ctx, d, meta)...)
 }
 
-func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -234,7 +234,7 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	const (
 		maxParamModifyChunk = 20
 	)
@@ -307,7 +307,7 @@ func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceParameterGroupRead(ctx, d, meta)...)
 }
 
-func resourceParameterGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceParameterGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -320,7 +320,7 @@ func resourceParameterGroupDelete(ctx context.Context, d *schema.ResourceData, m
 	const (
 		timeout = 3 * time.Minute
 	)
-	_, err := tfresource.RetryWhenIsA[*types.InvalidDBParameterGroupStateFault](ctx, timeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsA[*types.InvalidDBParameterGroupStateFault](ctx, timeout, func() (any, error) {
 		return conn.DeleteDBParameterGroup(ctx, &rds.DeleteDBParameterGroupInput{
 			DBParameterGroupName: aws.String(d.Id()),
 		})
@@ -423,13 +423,13 @@ func findDBParameters(ctx context.Context, conn *rds.Client, input *rds.Describe
 	return output, nil
 }
 
-func resourceParameterHash(v interface{}) int {
+func resourceParameterHash(v any) int {
 	var buf bytes.Buffer
-	m := v.(map[string]interface{})
+	m := v.(map[string]any)
 	// Store the value as a lower case string, to match how we store them in FlattenParameters
-	buf.WriteString(fmt.Sprintf("%s-", strings.ToLower(m[names.AttrName].(string))))
-	buf.WriteString(fmt.Sprintf("%s-", strings.ToLower(m["apply_method"].(string))))
-	buf.WriteString(fmt.Sprintf("%s-", m[names.AttrValue].(string)))
+	fmt.Fprintf(&buf, "%s-", strings.ToLower(m[names.AttrName].(string)))
+	fmt.Fprintf(&buf, "%s-", strings.ToLower(m["apply_method"].(string)))
+	fmt.Fprintf(&buf, "%s-", m[names.AttrValue].(string))
 
 	// This hash randomly affects the "order" of the set, which affects in what order parameters
 	// are applied, when there are more than 20 (chunked).

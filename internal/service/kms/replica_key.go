@@ -106,7 +106,7 @@ func resourceReplicaKey() *schema.Resource {
 	}
 }
 
-func resourceReplicaKeyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReplicaKeyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
@@ -169,7 +169,7 @@ func resourceReplicaKeyCreate(ctx context.Context, d *schema.ResourceData, meta 
 		}
 	}
 
-	if tags := KeyValueTags(ctx, getTagsIn(ctx)); len(tags) > 0 {
+	if tags := keyValueTags(ctx, getTagsIn(ctx)); len(tags) > 0 {
 		if err := waitTagsPropagated(ctx, conn, d.Id(), tags); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for KMS Replica Key (%s) tag update: %s", d.Id(), err)
 		}
@@ -178,7 +178,7 @@ func resourceReplicaKeyCreate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceReplicaKeyRead(ctx, d, meta)...)
 }
 
-func resourceReplicaKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReplicaKeyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
@@ -230,7 +230,7 @@ func resourceReplicaKeyRead(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourceReplicaKeyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReplicaKeyUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
@@ -265,7 +265,7 @@ func resourceReplicaKeyUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceReplicaKeyRead(ctx, d, meta)...)
 }
 
-func resourceReplicaKeyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReplicaKeyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 

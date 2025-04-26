@@ -132,6 +132,7 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | `lint`<sup>M</sup> | Legacy target, use caution |  | ✔️ |  |
 | `lint-fix`<sup>M</sup> | Fix acceptance test, website, and docs linter findings |  | ✔️ |  |
 | `misspell`<sup>M</sup> | Run all CI misspell checks | ✔️ |  |  |
+| `modern-check` | Check for modern GO | ✔️ |  | `TEST` |
 | `prereq-go` | Install the project's Go version |  |  | `GO_VER` |
 | `provider-lint` | ProviderLint Checks / providerlint | ✔️ |  | `K`, `PKG`, `SVC_DIR` |
 | `provider-markdown-lint` | Provider Check / markdown-lint | ✔️ |  |  |

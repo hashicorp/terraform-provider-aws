@@ -18,7 +18,7 @@ func TestInstanceMigrateState(t *testing.T) {
 		StateVersion int
 		Attributes   map[string]string
 		Expected     map[string]string
-		Meta         interface{}
+		Meta         any
 	}{
 		"v0.3.6 and earlier": {
 			StateVersion: 0,
@@ -146,7 +146,7 @@ func TestInstanceMigrateState_empty(t *testing.T) {
 	t.Parallel()
 
 	var is *terraform.InstanceState
-	var meta interface{}
+	var meta any
 
 	// should handle nil
 	is, err := tfec2.InstanceMigrateState(0, is, meta)
