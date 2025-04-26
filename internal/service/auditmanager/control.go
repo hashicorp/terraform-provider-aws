@@ -177,6 +177,8 @@ func (r *controlResource) Read(ctx context.Context, request resource.ReadRequest
 		return
 	}
 
+	setTagsOut(ctx, output.Tags)
+
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
