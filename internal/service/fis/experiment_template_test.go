@@ -284,7 +284,7 @@ func TestAccFISExperimentTemplate_managedResource(t *testing.T) {
 		CheckDestroy:             testAccCheckExperimentTemplateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccExperimentTemplateConfig_managedResource_loadbalancer(rName, "nlb custom resource creation", "nlb-zonal-shift", "nlb zonal shift", "aws:arc:start-zonal-autoshift", "ManagedResources", "target_0", "duration", "PT1M", "managedResourceTypes", "NLB", "availabilityZoneIdentifier", "us-west-2a", "aws:arc:zonal-shift-managed-resource", "ALL"),
+				Config: testAccExperimentTemplateConfig_managedResource_loadbalancer(rName, "nlb custom resource creation", "nlb-zonal-shift", "nlb zonal shift", "aws:arc:start-zonal-autoshift", "ManagedResources", "target_0", names.AttrDuration, "PT1M", "managedResourceTypes", "NLB", "availabilityZoneIdentifier", "us-west-2a", "aws:arc:zonal-shift-managed-resource", "ALL"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccExperimentTemplateExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "nlb custom resource creation"),
@@ -298,7 +298,7 @@ func TestAccFISExperimentTemplate_managedResource(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "action.0.parameter.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.parameter.0.key", "availabilityZoneIdentifier"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.parameter.0.value", "us-west-2a"),
-					resource.TestCheckResourceAttr(resourceName, "action.0.parameter.1.key", "duration"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.parameter.1.key", names.AttrDuration),
 					resource.TestCheckResourceAttr(resourceName, "action.0.parameter.1.value", "PT1M"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.start_after.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.target.0.key", "ManagedResources"),
