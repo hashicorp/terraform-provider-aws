@@ -271,6 +271,14 @@ func resourceConnection() *schema.Resource {
 						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+`), ""),
 					),
 				},
+				"kms_key_identifier": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(0, 2048),
+						validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9_\-/:]*$`), ""),
+					),
+				},
 				"secret_arn": {
 					Type:     schema.TypeString,
 					Computed: true,
@@ -297,6 +305,10 @@ func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	if v, ok := d.GetOk("invocation_connectivity_parameters"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		input.InvocationConnectivityParameters = expandConnectivityResourceParameters(v.([]any)[0].(map[string]any))
+	}
+
+	if v, ok := d.GetOk("kms_key_identifier"); ok {
+		input.KmsKeyIdentifier = aws.String(v.(string))
 	}
 
 	_, err := conn.CreateConnection(ctx, input)
@@ -346,6 +358,7 @@ func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta an
 		d.Set("invocation_connectivity_parameters", nil)
 	}
 	d.Set(names.AttrName, output.Name)
+	d.Set("kms_key_identifier", output.KmsKeyIdentifier)
 	d.Set("secret_arn", output.SecretArn)
 
 	return diags
@@ -373,6 +386,10 @@ func resourceConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 	if v, ok := d.GetOk("invocation_connectivity_parameters"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		input.InvocationConnectivityParameters = expandConnectivityResourceParameters(v.([]any)[0].(map[string]any))
+	}
+
+	if v, ok := d.GetOk("kms_key_identifier"); ok {
+		input.KmsKeyIdentifier = aws.String(v.(string))
 	}
 
 	_, err := conn.UpdateConnection(ctx, input)

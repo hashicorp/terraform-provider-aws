@@ -31,6 +31,10 @@ func dataSourceConnection() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"kms_key_identifier": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"secret_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -55,6 +59,7 @@ func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set(names.AttrARN, output.ConnectionArn)
 	d.Set("authorization_type", output.AuthorizationType)
 	d.Set(names.AttrName, output.Name)
+	d.Set("kms_key_identifier", output.KmsKeyIdentifier)
 	d.Set("secret_arn", output.SecretArn)
 
 	return diags
