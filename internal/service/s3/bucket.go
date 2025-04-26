@@ -66,7 +66,40 @@ func resourceBucket() *schema.Resource {
 		},
 
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: func(_ context.Context, rd *schema.ResourceData, _ any) ([]*schema.ResourceData, error) {
+				// Import-by-id case
+				if rd.Id() != "" {
+					rd.Set("bucket", rd.Id())
+					return []*schema.ResourceData{rd}, nil
+				}
+
+				identity, err := rd.Identity()
+				if err != nil {
+					return nil, err
+				}
+
+				regionRaw, ok := identity.GetOk("region")
+				if ok {
+					region, ok := regionRaw.(string)
+					if !ok {
+						return nil, fmt.Errorf("identity attribute %q: expected string, got %T", "region", regionRaw)
+					}
+					rd.Set("region", region)
+				}
+
+				bucketRaw, ok := identity.GetOk("bucket")
+				if !ok {
+					return nil, fmt.Errorf("identity attribute %q is required", "bucket")
+				}
+				bucket, ok := bucketRaw.(string)
+				if !ok {
+					return nil, fmt.Errorf("identity attribute %q: expected string, got %T", "bucket", bucketRaw)
+				}
+				rd.Set("bucket", bucket)
+				rd.SetId(bucket)
+
+				return []*schema.ResourceData{rd}, nil
+			},
 		},
 
 		Schema: map[string]*schema.Schema{

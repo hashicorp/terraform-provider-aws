@@ -161,6 +161,11 @@ func TestAccS3Bucket_Basic_Identity_Basic(t *testing.T) {
 				ImportState:     true,
 				ImportStateKind: resource.ImportBlockWithID,
 			},
+			{
+				ResourceName:    resourceName,
+				ImportState:     true,
+				ImportStateKind: resource.ImportBlockWithResourceIdentity,
+			},
 		},
 	})
 }
@@ -202,6 +207,11 @@ func TestAccS3Bucket_Basic_Identity_RegionOverride(t *testing.T) {
 				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateKind:   resource.ImportBlockWithID,
+			},
+			{
+				ResourceName:    resourceName,
+				ImportState:     true,
+				ImportStateKind: resource.ImportBlockWithResourceIdentity,
 			},
 		},
 	})
