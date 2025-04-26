@@ -82,7 +82,7 @@ func resourceResourceServer() *schema.Resource {
 	}
 }
 
-func resourceResourceServerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourceServerCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 
@@ -110,7 +110,7 @@ func resourceResourceServerCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceResourceServerRead(ctx, d, meta)...)
 }
 
-func resourceResourceServerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourceServerRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 
@@ -138,7 +138,7 @@ func resourceResourceServerRead(ctx context.Context, d *schema.ResourceData, met
 	if err := d.Set(names.AttrScope, scopes); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting scope: %s", err)
 	}
-	d.Set("scope_identifiers", tfslices.ApplyToAll(scopes, func(tfMap map[string]interface{}) string {
+	d.Set("scope_identifiers", tfslices.ApplyToAll(scopes, func(tfMap map[string]any) string {
 		return identifier + "/" + tfMap["scope_name"].(string)
 	}))
 	d.Set(names.AttrUserPoolID, resourceServer.UserPoolId)
@@ -146,7 +146,7 @@ func resourceResourceServerRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceResourceServerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourceServerUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 
@@ -171,7 +171,7 @@ func resourceResourceServerUpdate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceResourceServerRead(ctx, d, meta)...)
 }
 
-func resourceResourceServerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourceServerDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 
@@ -181,10 +181,11 @@ func resourceResourceServerDelete(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	log.Printf("[DEBUG] Deleting Cognito Resource Server: %s", d.Id())
-	_, err = conn.DeleteResourceServer(ctx, &cognitoidentityprovider.DeleteResourceServerInput{
+	input := cognitoidentityprovider.DeleteResourceServerInput{
 		Identifier: aws.String(identifier),
 		UserPoolId: aws.String(userPoolID),
-	})
+	}
+	_, err = conn.DeleteResourceServer(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
@@ -242,11 +243,11 @@ func findResourceServerByTwoPartKey(ctx context.Context, conn *cognitoidentitypr
 	return output.ResourceServer, nil
 }
 
-func expandResourceServerScopeTypes(tfList []interface{}) []awstypes.ResourceServerScopeType {
+func expandResourceServerScopeTypes(tfList []any) []awstypes.ResourceServerScopeType {
 	apiObjects := make([]awstypes.ResourceServerScopeType, len(tfList))
 
 	for i, tfMapRaw := range tfList {
-		tfMap := tfMapRaw.(map[string]interface{})
+		tfMap := tfMapRaw.(map[string]any)
 		apiObject := awstypes.ResourceServerScopeType{}
 
 		if v, ok := tfMap["scope_description"]; ok {
@@ -263,11 +264,11 @@ func expandResourceServerScopeTypes(tfList []interface{}) []awstypes.ResourceSer
 	return apiObjects
 }
 
-func flattenResourceServerScopeTypes(apiObjects []awstypes.ResourceServerScopeType) []map[string]interface{} {
-	tfList := make([]map[string]interface{}, 0)
+func flattenResourceServerScopeTypes(apiObjects []awstypes.ResourceServerScopeType) []map[string]any {
+	tfList := make([]map[string]any, 0)
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			"scope_description": aws.ToString(apiObject.ScopeDescription),
 			"scope_name":        aws.ToString(apiObject.ScopeName),
 		}

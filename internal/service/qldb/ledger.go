@@ -82,12 +82,10 @@ func resourceLedger() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceLedgerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLedgerCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QLDBClient(ctx)
 
@@ -118,7 +116,7 @@ func resourceLedgerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceLedgerRead(ctx, d, meta)...)
 }
 
-func resourceLedgerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLedgerRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QLDBClient(ctx)
 
@@ -147,7 +145,7 @@ func resourceLedgerRead(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func resourceLedgerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLedgerUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QLDBClient(ctx)
 
@@ -180,7 +178,7 @@ func resourceLedgerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceLedgerRead(ctx, d, meta)...)
 }
 
-func resourceLedgerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLedgerDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QLDBClient(ctx)
 
@@ -189,7 +187,7 @@ func resourceLedgerDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	log.Printf("[INFO] Deleting QLDB Ledger: %s", d.Id())
-	_, err := tfresource.RetryWhenIsA[*types.ResourceInUseException](ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsA[*types.ResourceInUseException](ctx, d.Timeout(schema.TimeoutDelete), func() (any, error) {
 		return conn.DeleteLedger(ctx, input)
 	})
 
@@ -241,7 +239,7 @@ func findLedgerByName(ctx context.Context, conn *qldb.Client, name string) (*qld
 }
 
 func statusLedgerState(ctx context.Context, conn *qldb.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findLedgerByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {

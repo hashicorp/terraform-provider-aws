@@ -9,6 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/{{ .GoV2Package }}"
 {{- end }}
+{{- if gt (len .EndpointRegionOverrides) 0 }}
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
+{{- end }}
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 {{- if ne .ProviderPackage "meta" }}
@@ -132,11 +135,47 @@ func (p *servicePackage) ServicePackageName() string {
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*{{ .GoV2Package }}.Client, error) {
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
-
-	return {{ .GoV2Package }}.NewFromConfig(cfg,
+	optFns := []func(*{{ .GoV2Package }}.Options){
 		{{ .GoV2Package }}.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
-	), nil
+{{- if gt (len .EndpointRegionOverrides) 0 }}
+		func(o *{{ .GoV2Package }}.Options) {
+			switch partition := config["partition"].(string); partition {
+	{{- range $k, $v := .EndpointRegionOverrides }}
+			case endpoints.{{ $k | Camel }}PartitionID:
+				if region := endpoints.{{ $v | Camel }}RegionID; cfg.Region != region {
+					tflog.Info(ctx, "overriding region", map[string]any{
+						"original_region": cfg.Region,
+						"override_region": region,
+					})
+					o.Region = region
+				}
+	{{- end }}
+			}
+		},
+{{- end }}
+		withExtraOptions(ctx, p, config),
+	}
+
+	return {{ .GoV2Package }}.NewFromConfig(cfg, optFns...), nil
+}
+
+// withExtraOptions returns a functional option that allows this service package to specify extra API client options.
+// This option is always called after any generated options.
+func withExtraOptions(ctx context.Context, sp conns.ServicePackage, config map[string]any) func(*{{ .GoV2Package }}.Options) {
+	if v, ok := sp.(interface {
+		withExtraOptions(context.Context, map[string]any) []func(*{{ .GoV2Package }}.Options)
+	}); ok {
+		optFns := v.withExtraOptions(ctx, config)
+
+		return func(o *{{ .GoV2Package }}.Options) {
+			for _, optFn := range optFns {
+				optFn(o)
+			}
+		}
+	}
+
+	return func (*{{ .GoV2Package }}.Options) {}
 }
 {{- end }}
 

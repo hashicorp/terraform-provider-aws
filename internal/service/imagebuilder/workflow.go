@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -105,12 +104,10 @@ func resourceWorkflow() *schema.Resource {
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9]+\.[0-9]+\.[0-9]+$`), "valid semantic version must be provided"),
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceWorkflowCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWorkflowCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
@@ -154,7 +151,7 @@ func resourceWorkflowCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceWorkflowRead(ctx, d, meta)...)
 }
 
-func resourceWorkflowRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWorkflowRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
@@ -186,7 +183,7 @@ func resourceWorkflowRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func resourceWorkflowUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWorkflowUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Tags only.
@@ -194,7 +191,7 @@ func resourceWorkflowUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceWorkflowRead(ctx, d, meta)...)
 }
 
-func resourceWorkflowDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWorkflowDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 

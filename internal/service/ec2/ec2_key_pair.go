@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 	"golang.org/x/crypto/ssh"
 )
@@ -41,8 +40,6 @@ func resourceKeyPair() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 
 		SchemaVersion: 1,
 		MigrateState:  keyPairMigrateState,
@@ -84,7 +81,7 @@ func resourceKeyPair() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					switch v := v.(type) {
 					case string:
 						return strings.TrimSpace(v)
@@ -99,18 +96,18 @@ func resourceKeyPair() *schema.Resource {
 	}
 }
 
-func resourceKeyPairCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKeyPairCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	keyName := create.Name(d.Get("key_name").(string), d.Get("key_name_prefix").(string))
-	input := &ec2.ImportKeyPairInput{
+	input := ec2.ImportKeyPairInput{
 		KeyName:           aws.String(keyName),
 		PublicKeyMaterial: []byte(d.Get(names.AttrPublicKey).(string)),
 		TagSpecifications: getTagSpecificationsIn(ctx, types.ResourceTypeKeyPair),
 	}
 
-	output, err := conn.ImportKeyPair(ctx, input)
+	output, err := conn.ImportKeyPair(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "importing EC2 Key Pair (%s): %s", keyName, err)
@@ -121,7 +118,7 @@ func resourceKeyPairCreate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceKeyPairRead(ctx, d, meta)...)
 }
 
-func resourceKeyPairRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKeyPairRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -156,7 +153,7 @@ func resourceKeyPairRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceKeyPairUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKeyPairUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Tags only.
@@ -164,14 +161,15 @@ func resourceKeyPairUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceKeyPairRead(ctx, d, meta)...)
 }
 
-func resourceKeyPairDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKeyPairDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 Key Pair: %s", d.Id())
-	_, err := conn.DeleteKeyPair(ctx, &ec2.DeleteKeyPairInput{
+	input := ec2.DeleteKeyPairInput{
 		KeyName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteKeyPair(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting EC2 Key Pair (%s): %s", d.Id(), err)

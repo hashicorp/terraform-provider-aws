@@ -87,6 +87,10 @@ func dataSourceAPI() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			names.AttrIPAddressType: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -108,7 +112,7 @@ func dataSourceAPI() *schema.Resource {
 	}
 }
 
-func dataSourceAPIRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceAPIRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
@@ -127,12 +131,13 @@ func dataSourceAPIRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("api_endpoint", api.ApiEndpoint)
 	d.Set("api_key_selection_expression", api.ApiKeySelectionExpression)
 	d.Set(names.AttrARN, apiARN(ctx, meta.(*conns.AWSClient), d.Id()))
-	if err := d.Set("cors_configuration", flattenCORSConfiguration(api.CorsConfiguration)); err != nil {
+	if err := d.Set("cors_configuration", flattenCORS(api.CorsConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting cors_configuration: %s", err)
 	}
 	d.Set(names.AttrDescription, api.Description)
 	d.Set("disable_execute_api_endpoint", api.DisableExecuteApiEndpoint)
 	d.Set("execution_arn", apiInvokeARN(ctx, meta.(*conns.AWSClient), d.Id()))
+	d.Set(names.AttrIPAddressType, api.IpAddressType)
 	d.Set(names.AttrName, api.Name)
 	d.Set("protocol_type", api.ProtocolType)
 	d.Set("route_selection_expression", api.RouteSelectionExpression)

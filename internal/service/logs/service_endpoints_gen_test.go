@@ -697,7 +697,7 @@ func cancelRequestMiddleware() middleware.FinalizeMiddleware {
 		})
 }
 
-func fullTypeName(i interface{}) string {
+func fullTypeName(i any) string {
 	return fullValueTypeName(reflect.ValueOf(i))
 }
 
@@ -719,17 +719,17 @@ aws_access_key_id = DefaultSharedCredentialsAccessKey
 aws_secret_access_key = DefaultSharedCredentialsSecretKey
 `)
 	if config.baseUrl != "" {
-		buf.WriteString(fmt.Sprintf("endpoint_url = %s\n", config.baseUrl))
+		fmt.Fprintf(&buf, "endpoint_url = %s\n", config.baseUrl)
 	}
 
 	if config.serviceUrl != "" {
-		buf.WriteString(fmt.Sprintf(`
+		fmt.Fprintf(&buf, `
 services = endpoint-test
 
 [services endpoint-test]
 %[1]s =
   endpoint_url = %[2]s
-`, configParam, serviceConfigFileEndpoint))
+`, configParam, serviceConfigFileEndpoint)
 	}
 
 	return buf.String()

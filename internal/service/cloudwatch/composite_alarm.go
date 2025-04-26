@@ -114,12 +114,10 @@ func resourceCompositeAlarm() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceCompositeAlarmCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCompositeAlarmCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudWatchClient(ctx)
 
@@ -152,7 +150,7 @@ func resourceCompositeAlarmCreate(ctx context.Context, d *schema.ResourceData, m
 		err = createTags(ctx, conn, aws.ToString(alarm.AlarmArn), tags)
 
 		// If default tags only, continue. Otherwise, error.
-		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]any)) == 0) && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
 			return append(diags, resourceCompositeAlarmRead(ctx, d, meta)...)
 		}
 
@@ -164,7 +162,7 @@ func resourceCompositeAlarmCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceCompositeAlarmRead(ctx, d, meta)...)
 }
 
-func resourceCompositeAlarmRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCompositeAlarmRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudWatchClient(ctx)
 
@@ -182,7 +180,7 @@ func resourceCompositeAlarmRead(ctx context.Context, d *schema.ResourceData, met
 
 	d.Set("actions_enabled", alarm.ActionsEnabled)
 	if alarm.ActionsSuppressor != nil {
-		if err := d.Set("actions_suppressor", []interface{}{flattenActionsSuppressor(alarm)}); err != nil {
+		if err := d.Set("actions_suppressor", []any{flattenActionsSuppressor(alarm)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting actions_suppressor: %s", err)
 		}
 	} else {
@@ -199,7 +197,7 @@ func resourceCompositeAlarmRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceCompositeAlarmUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCompositeAlarmUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudWatchClient(ctx)
 
@@ -216,14 +214,15 @@ func resourceCompositeAlarmUpdate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceCompositeAlarmRead(ctx, d, meta)...)
 }
 
-func resourceCompositeAlarmDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCompositeAlarmDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudWatchClient(ctx)
 
 	log.Printf("[INFO] Deleting CloudWatch Composite Alarm: %s", d.Id())
-	_, err := conn.DeleteAlarms(ctx, &cloudwatch.DeleteAlarmsInput{
+	input := cloudwatch.DeleteAlarmsInput{
 		AlarmNames: []string{d.Id()},
-	})
+	}
+	_, err := conn.DeleteAlarms(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
@@ -265,8 +264,8 @@ func expandPutCompositeAlarmInput(ctx context.Context, d *schema.ResourceData) *
 		apiObject.AlarmActions = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("actions_suppressor"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		alarm := expandActionsSuppressor(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("actions_suppressor"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		alarm := expandActionsSuppressor(v.([]any)[0].(map[string]any))
 		apiObject.ActionsSuppressor = alarm.ActionsSuppressor
 		apiObject.ActionsSuppressorExtensionPeriod = alarm.ActionsSuppressorExtensionPeriod
 		apiObject.ActionsSuppressorWaitPeriod = alarm.ActionsSuppressorWaitPeriod
@@ -295,12 +294,12 @@ func expandPutCompositeAlarmInput(ctx context.Context, d *schema.ResourceData) *
 	return apiObject
 }
 
-func flattenActionsSuppressor(apiObject *types.CompositeAlarm) map[string]interface{} {
+func flattenActionsSuppressor(apiObject *types.CompositeAlarm) map[string]any {
 	if apiObject == nil || apiObject.ActionsSuppressor == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"alarm":            aws.ToString(apiObject.ActionsSuppressor),
 		"extension_period": aws.ToInt32(apiObject.ActionsSuppressorExtensionPeriod),
 		"wait_period":      aws.ToInt32(apiObject.ActionsSuppressorWaitPeriod),
@@ -309,7 +308,7 @@ func flattenActionsSuppressor(apiObject *types.CompositeAlarm) map[string]interf
 	return tfMap
 }
 
-func expandActionsSuppressor(tfMap map[string]interface{}) *types.CompositeAlarm {
+func expandActionsSuppressor(tfMap map[string]any) *types.CompositeAlarm {
 	if tfMap == nil {
 		return nil
 	}

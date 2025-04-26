@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/servicequotas"
 	"github.com/aws/aws-sdk-go-v2/service/servicequotas/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -110,26 +111,26 @@ func DataSourceServiceQuota() *schema.Resource {
 	}
 }
 
-func flattenUsageMetric(usageMetric *types.MetricInfo) []interface{} {
+func flattenUsageMetric(usageMetric *types.MetricInfo) []any {
 	if usageMetric == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	var usageMetrics []interface{}
-	var metricDimensions []interface{}
+	var usageMetrics []any
+	var metricDimensions []any
 
 	if usageMetric.MetricDimensions != nil && usageMetric.MetricDimensions["Service"] != "" {
-		metricDimensions = append(metricDimensions, map[string]interface{}{
+		metricDimensions = append(metricDimensions, map[string]any{
 			"service":      usageMetric.MetricDimensions["Service"],
 			"class":        usageMetric.MetricDimensions["Class"],
 			names.AttrType: usageMetric.MetricDimensions["Type"],
 			"resource":     usageMetric.MetricDimensions["Resource"],
 		})
 	} else {
-		metricDimensions = append(metricDimensions, map[string]interface{}{})
+		metricDimensions = append(metricDimensions, map[string]any{})
 	}
 
-	usageMetrics = append(usageMetrics, map[string]interface{}{
+	usageMetrics = append(usageMetrics, map[string]any{
 		names.AttrMetricName:              usageMetric.MetricName,
 		"metric_namespace":                usageMetric.MetricNamespace,
 		"metric_statistic_recommendation": usageMetric.MetricStatisticRecommendation,
@@ -139,7 +140,7 @@ func flattenUsageMetric(usageMetric *types.MetricInfo) []interface{} {
 	return usageMetrics
 }
 
-func dataSourceServiceQuotaRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceServiceQuotaRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceQuotasClient(ctx)
 
@@ -193,4 +194,26 @@ func dataSourceServiceQuotaRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set(names.AttrValue, serviceQuota.Value)
 
 	return diags
+}
+
+func findServiceQuotaDefaultByName(ctx context.Context, conn *servicequotas.Client, serviceCode, quotaName string) (*types.ServiceQuota, error) {
+	input := servicequotas.ListAWSDefaultServiceQuotasInput{
+		ServiceCode: aws.String(serviceCode),
+	}
+
+	paginator := servicequotas.NewListAWSDefaultServiceQuotasPaginator(conn, &input)
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, q := range page.Quotas {
+			if aws.ToString(q.QuotaName) == quotaName {
+				return &q, nil
+			}
+		}
+	}
+
+	return nil, tfresource.NewEmptyResultError(input)
 }

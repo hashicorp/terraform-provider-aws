@@ -58,10 +58,6 @@ type resourceIdentitySource struct {
 	framework.ResourceWithConfigure
 }
 
-func (r *resourceIdentitySource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_verifiedpermissions_identity_source"
-}
-
 func (r *resourceIdentitySource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -369,7 +365,7 @@ func (r *resourceIdentitySource) Delete(ctx context.Context, request resource.De
 		return
 	}
 
-	tflog.Debug(ctx, "deleting Verified Permissions Identity Source", map[string]interface{}{
+	tflog.Debug(ctx, "deleting Verified Permissions Identity Source", map[string]any{
 		names.AttrID: state.ID.ValueString(),
 	})
 

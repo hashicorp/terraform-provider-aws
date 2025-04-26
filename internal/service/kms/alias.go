@@ -67,7 +67,7 @@ func resourceAlias() *schema.Resource {
 	}
 }
 
-func resourceAliasCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAliasCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
@@ -81,7 +81,7 @@ func resourceAliasCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		TargetKeyId: aws.String(d.Get("target_key_id").(string)),
 	}
 
-	_, err := tfresource.RetryWhenIsA[*awstypes.NotFoundException](ctx, keyRotationUpdatedTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsA[*awstypes.NotFoundException](ctx, keyRotationUpdatedTimeout, func() (any, error) {
 		return conn.CreateAlias(ctx, input)
 	})
 
@@ -94,11 +94,11 @@ func resourceAliasCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceAliasRead(ctx, d, meta)...)
 }
 
-func resourceAliasRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAliasRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (any, error) {
 		return findAliasByName(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
@@ -129,7 +129,7 @@ func resourceAliasRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	return diags
 }
 
-func resourceAliasUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAliasUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
@@ -149,7 +149,7 @@ func resourceAliasUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceAliasRead(ctx, d, meta)...)
 }
 
-func resourceAliasDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAliasDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 

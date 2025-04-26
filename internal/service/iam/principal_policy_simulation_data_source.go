@@ -209,11 +209,11 @@ func dataSourcePrincipalPolicySimulation() *schema.Resource {
 	}
 }
 
-func dataSourcePrincipalPolicySimulationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourcePrincipalPolicySimulationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	setAsAWSStringSlice := func(raw interface{}) []string {
+	setAsAWSStringSlice := func(raw any) []string {
 		if raw.(*schema.Set).Len() == 0 {
 			return nil
 		}
@@ -229,7 +229,7 @@ func dataSourcePrincipalPolicySimulationRead(ctx context.Context, d *schema.Reso
 	}
 
 	for _, entryRaw := range d.Get("context").(*schema.Set).List() {
-		entryRaw := entryRaw.(map[string]interface{})
+		entryRaw := entryRaw.(map[string]any)
 		entry := awstypes.ContextEntry{
 			ContextKeyName:   aws.String(entryRaw[names.AttrKey].(string)),
 			ContextKeyType:   awstypes.ContextKeyTypeEnum(entryRaw[names.AttrType].(string)),
@@ -282,9 +282,9 @@ func dataSourcePrincipalPolicySimulationRead(ctx context.Context, d *schema.Reso
 	allowedCount := 0
 	deniedCount := 0
 
-	rawResults := make([]interface{}, len(results))
+	rawResults := make([]any, len(results))
 	for i, result := range results {
-		rawResult := map[string]interface{}{}
+		rawResult := map[string]any{}
 		rawResult["action_name"] = aws.ToString(result.EvalActionName)
 		rawResult["decision"] = string(result.EvalDecision)
 		allowed := string(result.EvalDecision) == "allowed"
@@ -314,9 +314,9 @@ func dataSourcePrincipalPolicySimulationRead(ctx context.Context, d *schema.Reso
 		}
 		rawResult["decision_details"] = decisionDetails
 
-		rawMatchedStmts := make([]interface{}, len(result.MatchedStatements))
+		rawMatchedStmts := make([]any, len(result.MatchedStatements))
 		for i, stmt := range result.MatchedStatements {
-			rawStmt := map[string]interface{}{
+			rawStmt := map[string]any{
 				"source_policy_id":   stmt.SourcePolicyId,
 				"source_policy_type": stmt.SourcePolicyType,
 			}

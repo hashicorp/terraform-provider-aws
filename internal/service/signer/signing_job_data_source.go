@@ -150,7 +150,7 @@ func DataSourceSigningJob() *schema.Resource {
 	}
 }
 
-func dataSourceSigningJobRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceSigningJobRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SignerClient(ctx)
 	jobId := d.Get("job_id").(string)

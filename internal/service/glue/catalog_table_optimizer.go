@@ -47,10 +47,6 @@ type resourceCatalogTableOptimizer struct {
 	framework.ResourceWithConfigure
 }
 
-func (r *resourceCatalogTableOptimizer) Metadata(_ context.Context, _ resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_glue_catalog_table_optimizer"
-}
-
 func (r *resourceCatalogTableOptimizer) Schema(ctx context.Context, _ resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -312,7 +308,7 @@ func (r *resourceCatalogTableOptimizer) Delete(ctx context.Context, request reso
 		return
 	}
 
-	tflog.Debug(ctx, "deleting Glue Catalog Table Optimizer", map[string]interface{}{
+	tflog.Debug(ctx, "deleting Glue Catalog Table Optimizer", map[string]any{
 		names.AttrCatalogID:    data.CatalogID.ValueString(),
 		names.AttrDatabaseName: data.DatabaseName.ValueString(),
 		names.AttrTableName:    data.TableName.ValueString(),

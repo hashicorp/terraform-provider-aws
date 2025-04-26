@@ -36,6 +36,10 @@ func resourceResponseHeadersPolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrComment: {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -328,7 +332,7 @@ func resourceResponseHeadersPolicy() *schema.Resource {
 	}
 }
 
-func resourceResponseHeadersPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResponseHeadersPolicyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
@@ -341,24 +345,24 @@ func resourceResponseHeadersPolicyCreate(ctx context.Context, d *schema.Resource
 		apiObject.Comment = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("cors_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		apiObject.CorsConfig = expandResponseHeadersPolicyCorsConfig(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("cors_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		apiObject.CorsConfig = expandResponseHeadersPolicyCorsConfig(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("custom_headers_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		apiObject.CustomHeadersConfig = expandResponseHeadersPolicyCustomHeadersConfig(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("custom_headers_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		apiObject.CustomHeadersConfig = expandResponseHeadersPolicyCustomHeadersConfig(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("remove_headers_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		apiObject.RemoveHeadersConfig = expandResponseHeadersPolicyRemoveHeadersConfig(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("remove_headers_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		apiObject.RemoveHeadersConfig = expandResponseHeadersPolicyRemoveHeadersConfig(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("security_headers_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		apiObject.SecurityHeadersConfig = expandResponseHeadersPolicySecurityHeadersConfig(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("security_headers_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		apiObject.SecurityHeadersConfig = expandResponseHeadersPolicySecurityHeadersConfig(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("server_timing_headers_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		apiObject.ServerTimingHeadersConfig = expandResponseHeadersPolicyServerTimingHeadersConfig(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("server_timing_headers_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		apiObject.ServerTimingHeadersConfig = expandResponseHeadersPolicyServerTimingHeadersConfig(v.([]any)[0].(map[string]any))
 	}
 
 	input := &cloudfront.CreateResponseHeadersPolicyInput{
@@ -376,7 +380,7 @@ func resourceResponseHeadersPolicyCreate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceResponseHeadersPolicyRead(ctx, d, meta)...)
 }
 
-func resourceResponseHeadersPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResponseHeadersPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
@@ -392,17 +396,18 @@ func resourceResponseHeadersPolicyRead(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "reading CloudFront Response Headers Policy (%s): %s", d.Id(), err)
 	}
 
+	d.Set(names.AttrARN, responseHeadersPolicyARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	apiObject := output.ResponseHeadersPolicy.ResponseHeadersPolicyConfig
 	d.Set(names.AttrComment, apiObject.Comment)
 	if apiObject.CorsConfig != nil {
-		if err := d.Set("cors_config", []interface{}{flattenResponseHeadersPolicyCorsConfig(apiObject.CorsConfig)}); err != nil {
+		if err := d.Set("cors_config", []any{flattenResponseHeadersPolicyCorsConfig(apiObject.CorsConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting cors_config: %s", err)
 		}
 	} else {
 		d.Set("cors_config", nil)
 	}
 	if apiObject.CustomHeadersConfig != nil {
-		if err := d.Set("custom_headers_config", []interface{}{flattenResponseHeadersPolicyCustomHeadersConfig(apiObject.CustomHeadersConfig)}); err != nil {
+		if err := d.Set("custom_headers_config", []any{flattenResponseHeadersPolicyCustomHeadersConfig(apiObject.CustomHeadersConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting custom_headers_config: %s", err)
 		}
 	} else {
@@ -411,21 +416,21 @@ func resourceResponseHeadersPolicyRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("etag", output.ETag)
 	d.Set(names.AttrName, apiObject.Name)
 	if apiObject.RemoveHeadersConfig != nil {
-		if err := d.Set("remove_headers_config", []interface{}{flattenResponseHeadersPolicyRemoveHeadersConfig(apiObject.RemoveHeadersConfig)}); err != nil {
+		if err := d.Set("remove_headers_config", []any{flattenResponseHeadersPolicyRemoveHeadersConfig(apiObject.RemoveHeadersConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting remove_headers_config: %s", err)
 		}
 	} else {
 		d.Set("remove_headers_config", nil)
 	}
 	if apiObject.SecurityHeadersConfig != nil {
-		if err := d.Set("security_headers_config", []interface{}{flattenResponseHeadersPolicySecurityHeadersConfig(apiObject.SecurityHeadersConfig)}); err != nil {
+		if err := d.Set("security_headers_config", []any{flattenResponseHeadersPolicySecurityHeadersConfig(apiObject.SecurityHeadersConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting security_headers_config: %s", err)
 		}
 	} else {
 		d.Set("security_headers_config", nil)
 	}
 	if apiObject.ServerTimingHeadersConfig != nil {
-		if err := d.Set("server_timing_headers_config", []interface{}{flattenResponseHeadersPolicyServerTimingHeadersConfig(apiObject.ServerTimingHeadersConfig)}); err != nil {
+		if err := d.Set("server_timing_headers_config", []any{flattenResponseHeadersPolicyServerTimingHeadersConfig(apiObject.ServerTimingHeadersConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting server_timing_headers_config: %s", err)
 		}
 	} else {
@@ -435,7 +440,7 @@ func resourceResponseHeadersPolicyRead(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func resourceResponseHeadersPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResponseHeadersPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
@@ -451,24 +456,24 @@ func resourceResponseHeadersPolicyUpdate(ctx context.Context, d *schema.Resource
 		apiObject.Comment = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("cors_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		apiObject.CorsConfig = expandResponseHeadersPolicyCorsConfig(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("cors_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		apiObject.CorsConfig = expandResponseHeadersPolicyCorsConfig(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("custom_headers_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		apiObject.CustomHeadersConfig = expandResponseHeadersPolicyCustomHeadersConfig(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("custom_headers_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		apiObject.CustomHeadersConfig = expandResponseHeadersPolicyCustomHeadersConfig(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("remove_headers_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		apiObject.RemoveHeadersConfig = expandResponseHeadersPolicyRemoveHeadersConfig(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("remove_headers_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		apiObject.RemoveHeadersConfig = expandResponseHeadersPolicyRemoveHeadersConfig(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("security_headers_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		apiObject.SecurityHeadersConfig = expandResponseHeadersPolicySecurityHeadersConfig(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("security_headers_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		apiObject.SecurityHeadersConfig = expandResponseHeadersPolicySecurityHeadersConfig(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("server_timing_headers_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		apiObject.ServerTimingHeadersConfig = expandResponseHeadersPolicyServerTimingHeadersConfig(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("server_timing_headers_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		apiObject.ServerTimingHeadersConfig = expandResponseHeadersPolicyServerTimingHeadersConfig(v.([]any)[0].(map[string]any))
 	}
 
 	input := &cloudfront.UpdateResponseHeadersPolicyInput{
@@ -486,15 +491,16 @@ func resourceResponseHeadersPolicyUpdate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceResponseHeadersPolicyRead(ctx, d, meta)...)
 }
 
-func resourceResponseHeadersPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResponseHeadersPolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
 	log.Printf("[DEBUG] Deleting CloudFront Response Headers Policy: %s", d.Id())
-	_, err := conn.DeleteResponseHeadersPolicy(ctx, &cloudfront.DeleteResponseHeadersPolicyInput{
+	input := cloudfront.DeleteResponseHeadersPolicyInput{
 		Id:      aws.String(d.Id()),
 		IfMatch: aws.String(d.Get("etag").(string)),
-	})
+	}
+	_, err := conn.DeleteResponseHeadersPolicy(ctx, &input)
 
 	if errs.IsA[*awstypes.NoSuchResponseHeadersPolicy](err) {
 		return diags
@@ -536,7 +542,7 @@ func findResponseHeadersPolicyByID(ctx context.Context, conn *cloudfront.Client,
 // cors_config:
 //
 
-func expandResponseHeadersPolicyCorsConfig(tfMap map[string]interface{}) *awstypes.ResponseHeadersPolicyCorsConfig {
+func expandResponseHeadersPolicyCorsConfig(tfMap map[string]any) *awstypes.ResponseHeadersPolicyCorsConfig {
 	if tfMap == nil {
 		return nil
 	}
@@ -547,20 +553,20 @@ func expandResponseHeadersPolicyCorsConfig(tfMap map[string]interface{}) *awstyp
 		apiObject.AccessControlAllowCredentials = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["access_control_allow_headers"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.AccessControlAllowHeaders = expandResponseHeadersPolicyAccessControlAllowHeaders(v[0].(map[string]interface{}))
+	if v, ok := tfMap["access_control_allow_headers"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.AccessControlAllowHeaders = expandResponseHeadersPolicyAccessControlAllowHeaders(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["access_control_allow_methods"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.AccessControlAllowMethods = expandResponseHeadersPolicyAccessControlAllowMethods(v[0].(map[string]interface{}))
+	if v, ok := tfMap["access_control_allow_methods"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.AccessControlAllowMethods = expandResponseHeadersPolicyAccessControlAllowMethods(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["access_control_allow_origins"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.AccessControlAllowOrigins = expandResponseHeadersPolicyAccessControlAllowOrigins(v[0].(map[string]interface{}))
+	if v, ok := tfMap["access_control_allow_origins"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.AccessControlAllowOrigins = expandResponseHeadersPolicyAccessControlAllowOrigins(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["access_control_expose_headers"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.AccessControlExposeHeaders = expandResponseHeadersPolicyAccessControlExposeHeaders(v[0].(map[string]interface{}))
+	if v, ok := tfMap["access_control_expose_headers"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.AccessControlExposeHeaders = expandResponseHeadersPolicyAccessControlExposeHeaders(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["access_control_max_age_sec"].(int); ok && v != 0 {
@@ -574,7 +580,7 @@ func expandResponseHeadersPolicyCorsConfig(tfMap map[string]interface{}) *awstyp
 	return apiObject
 }
 
-func expandResponseHeadersPolicyAccessControlAllowHeaders(tfMap map[string]interface{}) *awstypes.ResponseHeadersPolicyAccessControlAllowHeaders {
+func expandResponseHeadersPolicyAccessControlAllowHeaders(tfMap map[string]any) *awstypes.ResponseHeadersPolicyAccessControlAllowHeaders {
 	if tfMap == nil {
 		return nil
 	}
@@ -590,7 +596,7 @@ func expandResponseHeadersPolicyAccessControlAllowHeaders(tfMap map[string]inter
 	return apiObject
 }
 
-func expandResponseHeadersPolicyAccessControlAllowMethods(tfMap map[string]interface{}) *awstypes.ResponseHeadersPolicyAccessControlAllowMethods {
+func expandResponseHeadersPolicyAccessControlAllowMethods(tfMap map[string]any) *awstypes.ResponseHeadersPolicyAccessControlAllowMethods {
 	if tfMap == nil {
 		return nil
 	}
@@ -606,7 +612,7 @@ func expandResponseHeadersPolicyAccessControlAllowMethods(tfMap map[string]inter
 	return apiObject
 }
 
-func expandResponseHeadersPolicyAccessControlAllowOrigins(tfMap map[string]interface{}) *awstypes.ResponseHeadersPolicyAccessControlAllowOrigins {
+func expandResponseHeadersPolicyAccessControlAllowOrigins(tfMap map[string]any) *awstypes.ResponseHeadersPolicyAccessControlAllowOrigins {
 	if tfMap == nil {
 		return nil
 	}
@@ -622,7 +628,7 @@ func expandResponseHeadersPolicyAccessControlAllowOrigins(tfMap map[string]inter
 	return apiObject
 }
 
-func expandResponseHeadersPolicyAccessControlExposeHeaders(tfMap map[string]interface{}) *awstypes.ResponseHeadersPolicyAccessControlExposeHeaders {
+func expandResponseHeadersPolicyAccessControlExposeHeaders(tfMap map[string]any) *awstypes.ResponseHeadersPolicyAccessControlExposeHeaders {
 	if tfMap == nil {
 		return nil
 	}
@@ -638,31 +644,31 @@ func expandResponseHeadersPolicyAccessControlExposeHeaders(tfMap map[string]inte
 	return apiObject
 }
 
-func flattenResponseHeadersPolicyCorsConfig(apiObject *awstypes.ResponseHeadersPolicyCorsConfig) map[string]interface{} {
+func flattenResponseHeadersPolicyCorsConfig(apiObject *awstypes.ResponseHeadersPolicyCorsConfig) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.AccessControlAllowCredentials; v != nil {
 		tfMap["access_control_allow_credentials"] = aws.ToBool(v)
 	}
 
 	if v := flattenResponseHeadersPolicyAccessControlAllowHeaders(apiObject.AccessControlAllowHeaders); len(v) > 0 {
-		tfMap["access_control_allow_headers"] = []interface{}{v}
+		tfMap["access_control_allow_headers"] = []any{v}
 	}
 
 	if v := flattenResponseHeadersPolicyAccessControlAllowMethods(apiObject.AccessControlAllowMethods); len(v) > 0 {
-		tfMap["access_control_allow_methods"] = []interface{}{v}
+		tfMap["access_control_allow_methods"] = []any{v}
 	}
 
 	if v := flattenResponseHeadersPolicyAccessControlAllowOrigins(apiObject.AccessControlAllowOrigins); len(v) > 0 {
-		tfMap["access_control_allow_origins"] = []interface{}{v}
+		tfMap["access_control_allow_origins"] = []any{v}
 	}
 
 	if v := flattenResponseHeadersPolicyAccessControlExposeHeaders(apiObject.AccessControlExposeHeaders); len(v) > 0 {
-		tfMap["access_control_expose_headers"] = []interface{}{v}
+		tfMap["access_control_expose_headers"] = []any{v}
 	}
 
 	if v := apiObject.AccessControlMaxAgeSec; v != nil {
@@ -676,12 +682,12 @@ func flattenResponseHeadersPolicyCorsConfig(apiObject *awstypes.ResponseHeadersP
 	return tfMap
 }
 
-func flattenResponseHeadersPolicyAccessControlAllowHeaders(apiObject *awstypes.ResponseHeadersPolicyAccessControlAllowHeaders) map[string]interface{} {
+func flattenResponseHeadersPolicyAccessControlAllowHeaders(apiObject *awstypes.ResponseHeadersPolicyAccessControlAllowHeaders) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Items; len(v) > 0 {
 		tfMap["items"] = v
@@ -690,12 +696,12 @@ func flattenResponseHeadersPolicyAccessControlAllowHeaders(apiObject *awstypes.R
 	return tfMap
 }
 
-func flattenResponseHeadersPolicyAccessControlAllowMethods(apiObject *awstypes.ResponseHeadersPolicyAccessControlAllowMethods) map[string]interface{} {
+func flattenResponseHeadersPolicyAccessControlAllowMethods(apiObject *awstypes.ResponseHeadersPolicyAccessControlAllowMethods) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Items; len(v) > 0 {
 		tfMap["items"] = v
@@ -704,12 +710,12 @@ func flattenResponseHeadersPolicyAccessControlAllowMethods(apiObject *awstypes.R
 	return tfMap
 }
 
-func flattenResponseHeadersPolicyAccessControlAllowOrigins(apiObject *awstypes.ResponseHeadersPolicyAccessControlAllowOrigins) map[string]interface{} {
+func flattenResponseHeadersPolicyAccessControlAllowOrigins(apiObject *awstypes.ResponseHeadersPolicyAccessControlAllowOrigins) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Items; len(v) > 0 {
 		tfMap["items"] = v
@@ -718,12 +724,12 @@ func flattenResponseHeadersPolicyAccessControlAllowOrigins(apiObject *awstypes.R
 	return tfMap
 }
 
-func flattenResponseHeadersPolicyAccessControlExposeHeaders(apiObject *awstypes.ResponseHeadersPolicyAccessControlExposeHeaders) map[string]interface{} {
+func flattenResponseHeadersPolicyAccessControlExposeHeaders(apiObject *awstypes.ResponseHeadersPolicyAccessControlExposeHeaders) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Items; len(v) > 0 {
 		tfMap["items"] = v
@@ -736,7 +742,7 @@ func flattenResponseHeadersPolicyAccessControlExposeHeaders(apiObject *awstypes.
 // custom_headers_config:
 //
 
-func expandResponseHeadersPolicyCustomHeadersConfig(tfMap map[string]interface{}) *awstypes.ResponseHeadersPolicyCustomHeadersConfig {
+func expandResponseHeadersPolicyCustomHeadersConfig(tfMap map[string]any) *awstypes.ResponseHeadersPolicyCustomHeadersConfig {
 	if tfMap == nil {
 		return nil
 	}
@@ -752,7 +758,7 @@ func expandResponseHeadersPolicyCustomHeadersConfig(tfMap map[string]interface{}
 	return apiObject
 }
 
-func expandResponseHeadersPolicyCustomHeader(tfMap map[string]interface{}) *awstypes.ResponseHeadersPolicyCustomHeader {
+func expandResponseHeadersPolicyCustomHeader(tfMap map[string]any) *awstypes.ResponseHeadersPolicyCustomHeader {
 	if tfMap == nil {
 		return nil
 	}
@@ -774,7 +780,7 @@ func expandResponseHeadersPolicyCustomHeader(tfMap map[string]interface{}) *awst
 	return apiObject
 }
 
-func expandResponseHeadersPolicyCustomHeaders(tfList []interface{}) []awstypes.ResponseHeadersPolicyCustomHeader {
+func expandResponseHeadersPolicyCustomHeaders(tfList []any) []awstypes.ResponseHeadersPolicyCustomHeader {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -782,7 +788,7 @@ func expandResponseHeadersPolicyCustomHeaders(tfList []interface{}) []awstypes.R
 	var apiObjects []awstypes.ResponseHeadersPolicyCustomHeader
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -800,12 +806,12 @@ func expandResponseHeadersPolicyCustomHeaders(tfList []interface{}) []awstypes.R
 	return apiObjects
 }
 
-func flattenResponseHeadersPolicyCustomHeadersConfig(apiObject *awstypes.ResponseHeadersPolicyCustomHeadersConfig) map[string]interface{} {
+func flattenResponseHeadersPolicyCustomHeadersConfig(apiObject *awstypes.ResponseHeadersPolicyCustomHeadersConfig) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Items; len(v) > 0 {
 		tfMap["items"] = flattenResponseHeadersPolicyCustomHeaders(v)
@@ -814,12 +820,12 @@ func flattenResponseHeadersPolicyCustomHeadersConfig(apiObject *awstypes.Respons
 	return tfMap
 }
 
-func flattenResponseHeadersPolicyCustomHeader(apiObject *awstypes.ResponseHeadersPolicyCustomHeader) map[string]interface{} {
+func flattenResponseHeadersPolicyCustomHeader(apiObject *awstypes.ResponseHeadersPolicyCustomHeader) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Header; v != nil {
 		tfMap[names.AttrHeader] = aws.ToString(v)
@@ -836,12 +842,12 @@ func flattenResponseHeadersPolicyCustomHeader(apiObject *awstypes.ResponseHeader
 	return tfMap
 }
 
-func flattenResponseHeadersPolicyCustomHeaders(apiObjects []awstypes.ResponseHeadersPolicyCustomHeader) []interface{} {
+func flattenResponseHeadersPolicyCustomHeaders(apiObjects []awstypes.ResponseHeadersPolicyCustomHeader) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		if v := flattenResponseHeadersPolicyCustomHeader(&apiObject); len(v) > 0 {
@@ -856,7 +862,7 @@ func flattenResponseHeadersPolicyCustomHeaders(apiObjects []awstypes.ResponseHea
 // remove_headers_config:
 //
 
-func expandResponseHeadersPolicyRemoveHeadersConfig(tfMap map[string]interface{}) *awstypes.ResponseHeadersPolicyRemoveHeadersConfig {
+func expandResponseHeadersPolicyRemoveHeadersConfig(tfMap map[string]any) *awstypes.ResponseHeadersPolicyRemoveHeadersConfig {
 	if tfMap == nil {
 		return nil
 	}
@@ -872,7 +878,7 @@ func expandResponseHeadersPolicyRemoveHeadersConfig(tfMap map[string]interface{}
 	return apiObject
 }
 
-func expandResponseHeadersPolicyRemoveHeader(tfMap map[string]interface{}) *awstypes.ResponseHeadersPolicyRemoveHeader {
+func expandResponseHeadersPolicyRemoveHeader(tfMap map[string]any) *awstypes.ResponseHeadersPolicyRemoveHeader {
 	if tfMap == nil {
 		return nil
 	}
@@ -886,7 +892,7 @@ func expandResponseHeadersPolicyRemoveHeader(tfMap map[string]interface{}) *awst
 	return apiObject
 }
 
-func expandResponseHeadersPolicyRemoveHeaders(tfList []interface{}) []awstypes.ResponseHeadersPolicyRemoveHeader {
+func expandResponseHeadersPolicyRemoveHeaders(tfList []any) []awstypes.ResponseHeadersPolicyRemoveHeader {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -894,7 +900,7 @@ func expandResponseHeadersPolicyRemoveHeaders(tfList []interface{}) []awstypes.R
 	var apiObjects []awstypes.ResponseHeadersPolicyRemoveHeader
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -912,12 +918,12 @@ func expandResponseHeadersPolicyRemoveHeaders(tfList []interface{}) []awstypes.R
 	return apiObjects
 }
 
-func flattenResponseHeadersPolicyRemoveHeadersConfig(apiObject *awstypes.ResponseHeadersPolicyRemoveHeadersConfig) map[string]interface{} {
+func flattenResponseHeadersPolicyRemoveHeadersConfig(apiObject *awstypes.ResponseHeadersPolicyRemoveHeadersConfig) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Items; len(v) > 0 {
 		tfMap["items"] = flattenResponseHeadersPolicyRemoveHeaders(v)
@@ -926,12 +932,12 @@ func flattenResponseHeadersPolicyRemoveHeadersConfig(apiObject *awstypes.Respons
 	return tfMap
 }
 
-func flattenResponseHeadersPolicyRemoveHeader(apiObject *awstypes.ResponseHeadersPolicyRemoveHeader) map[string]interface{} {
+func flattenResponseHeadersPolicyRemoveHeader(apiObject *awstypes.ResponseHeadersPolicyRemoveHeader) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Header; v != nil {
 		tfMap[names.AttrHeader] = aws.ToString(v)
@@ -940,12 +946,12 @@ func flattenResponseHeadersPolicyRemoveHeader(apiObject *awstypes.ResponseHeader
 	return tfMap
 }
 
-func flattenResponseHeadersPolicyRemoveHeaders(apiObjects []awstypes.ResponseHeadersPolicyRemoveHeader) []interface{} {
+func flattenResponseHeadersPolicyRemoveHeaders(apiObjects []awstypes.ResponseHeadersPolicyRemoveHeader) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		if v := flattenResponseHeadersPolicyRemoveHeader(&apiObject); len(v) > 0 {
@@ -960,41 +966,41 @@ func flattenResponseHeadersPolicyRemoveHeaders(apiObjects []awstypes.ResponseHea
 // security_headers_config:
 //
 
-func expandResponseHeadersPolicySecurityHeadersConfig(tfMap map[string]interface{}) *awstypes.ResponseHeadersPolicySecurityHeadersConfig {
+func expandResponseHeadersPolicySecurityHeadersConfig(tfMap map[string]any) *awstypes.ResponseHeadersPolicySecurityHeadersConfig {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.ResponseHeadersPolicySecurityHeadersConfig{}
 
-	if v, ok := tfMap["content_security_policy"].([]interface{}); ok && len(v) > 0 {
-		apiObject.ContentSecurityPolicy = expandResponseHeadersPolicyContentSecurityPolicy(v[0].(map[string]interface{}))
+	if v, ok := tfMap["content_security_policy"].([]any); ok && len(v) > 0 {
+		apiObject.ContentSecurityPolicy = expandResponseHeadersPolicyContentSecurityPolicy(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["content_type_options"].([]interface{}); ok && len(v) > 0 {
-		apiObject.ContentTypeOptions = expandResponseHeadersPolicyContentTypeOptions(v[0].(map[string]interface{}))
+	if v, ok := tfMap["content_type_options"].([]any); ok && len(v) > 0 {
+		apiObject.ContentTypeOptions = expandResponseHeadersPolicyContentTypeOptions(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["frame_options"].([]interface{}); ok && len(v) > 0 {
-		apiObject.FrameOptions = expandResponseHeadersPolicyFrameOptions(v[0].(map[string]interface{}))
+	if v, ok := tfMap["frame_options"].([]any); ok && len(v) > 0 {
+		apiObject.FrameOptions = expandResponseHeadersPolicyFrameOptions(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["referrer_policy"].([]interface{}); ok && len(v) > 0 {
-		apiObject.ReferrerPolicy = expandResponseHeadersPolicyReferrerPolicy(v[0].(map[string]interface{}))
+	if v, ok := tfMap["referrer_policy"].([]any); ok && len(v) > 0 {
+		apiObject.ReferrerPolicy = expandResponseHeadersPolicyReferrerPolicy(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["strict_transport_security"].([]interface{}); ok && len(v) > 0 {
-		apiObject.StrictTransportSecurity = expandResponseHeadersPolicyStrictTransportSecurity(v[0].(map[string]interface{}))
+	if v, ok := tfMap["strict_transport_security"].([]any); ok && len(v) > 0 {
+		apiObject.StrictTransportSecurity = expandResponseHeadersPolicyStrictTransportSecurity(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["xss_protection"].([]interface{}); ok && len(v) > 0 {
-		apiObject.XSSProtection = expandResponseHeadersPolicyXSSProtection(v[0].(map[string]interface{}))
+	if v, ok := tfMap["xss_protection"].([]any); ok && len(v) > 0 {
+		apiObject.XSSProtection = expandResponseHeadersPolicyXSSProtection(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandResponseHeadersPolicyContentSecurityPolicy(tfMap map[string]interface{}) *awstypes.ResponseHeadersPolicyContentSecurityPolicy {
+func expandResponseHeadersPolicyContentSecurityPolicy(tfMap map[string]any) *awstypes.ResponseHeadersPolicyContentSecurityPolicy {
 	if tfMap == nil {
 		return nil
 	}
@@ -1012,7 +1018,7 @@ func expandResponseHeadersPolicyContentSecurityPolicy(tfMap map[string]interface
 	return apiObject
 }
 
-func expandResponseHeadersPolicyContentTypeOptions(tfMap map[string]interface{}) *awstypes.ResponseHeadersPolicyContentTypeOptions {
+func expandResponseHeadersPolicyContentTypeOptions(tfMap map[string]any) *awstypes.ResponseHeadersPolicyContentTypeOptions {
 	if tfMap == nil {
 		return nil
 	}
@@ -1026,7 +1032,7 @@ func expandResponseHeadersPolicyContentTypeOptions(tfMap map[string]interface{})
 	return apiObject
 }
 
-func expandResponseHeadersPolicyFrameOptions(tfMap map[string]interface{}) *awstypes.ResponseHeadersPolicyFrameOptions {
+func expandResponseHeadersPolicyFrameOptions(tfMap map[string]any) *awstypes.ResponseHeadersPolicyFrameOptions {
 	if tfMap == nil {
 		return nil
 	}
@@ -1044,7 +1050,7 @@ func expandResponseHeadersPolicyFrameOptions(tfMap map[string]interface{}) *awst
 	return apiObject
 }
 
-func expandResponseHeadersPolicyReferrerPolicy(tfMap map[string]interface{}) *awstypes.ResponseHeadersPolicyReferrerPolicy {
+func expandResponseHeadersPolicyReferrerPolicy(tfMap map[string]any) *awstypes.ResponseHeadersPolicyReferrerPolicy {
 	if tfMap == nil {
 		return nil
 	}
@@ -1062,7 +1068,7 @@ func expandResponseHeadersPolicyReferrerPolicy(tfMap map[string]interface{}) *aw
 	return apiObject
 }
 
-func expandResponseHeadersPolicyStrictTransportSecurity(tfMap map[string]interface{}) *awstypes.ResponseHeadersPolicyStrictTransportSecurity {
+func expandResponseHeadersPolicyStrictTransportSecurity(tfMap map[string]any) *awstypes.ResponseHeadersPolicyStrictTransportSecurity {
 	if tfMap == nil {
 		return nil
 	}
@@ -1088,7 +1094,7 @@ func expandResponseHeadersPolicyStrictTransportSecurity(tfMap map[string]interfa
 	return apiObject
 }
 
-func expandResponseHeadersPolicyXSSProtection(tfMap map[string]interface{}) *awstypes.ResponseHeadersPolicyXSSProtection {
+func expandResponseHeadersPolicyXSSProtection(tfMap map[string]any) *awstypes.ResponseHeadersPolicyXSSProtection {
 	if tfMap == nil {
 		return nil
 	}
@@ -1114,46 +1120,46 @@ func expandResponseHeadersPolicyXSSProtection(tfMap map[string]interface{}) *aws
 	return apiObject
 }
 
-func flattenResponseHeadersPolicySecurityHeadersConfig(apiObject *awstypes.ResponseHeadersPolicySecurityHeadersConfig) map[string]interface{} {
+func flattenResponseHeadersPolicySecurityHeadersConfig(apiObject *awstypes.ResponseHeadersPolicySecurityHeadersConfig) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := flattenResponseHeadersPolicyContentSecurityPolicy(apiObject.ContentSecurityPolicy); len(v) > 0 {
-		tfMap["content_security_policy"] = []interface{}{v}
+		tfMap["content_security_policy"] = []any{v}
 	}
 
 	if v := flattenResponseHeadersPolicyContentTypeOptions(apiObject.ContentTypeOptions); len(v) > 0 {
-		tfMap["content_type_options"] = []interface{}{v}
+		tfMap["content_type_options"] = []any{v}
 	}
 
 	if v := flattenResponseHeadersPolicyFrameOptions(apiObject.FrameOptions); len(v) > 0 {
-		tfMap["frame_options"] = []interface{}{v}
+		tfMap["frame_options"] = []any{v}
 	}
 
 	if v := flattenResponseHeadersPolicyReferrerPolicy(apiObject.ReferrerPolicy); len(v) > 0 {
-		tfMap["referrer_policy"] = []interface{}{v}
+		tfMap["referrer_policy"] = []any{v}
 	}
 
 	if v := flattenResponseHeadersPolicyStrictTransportSecurity(apiObject.StrictTransportSecurity); len(v) > 0 {
-		tfMap["strict_transport_security"] = []interface{}{v}
+		tfMap["strict_transport_security"] = []any{v}
 	}
 
 	if v := flattenResponseHeadersPolicyXSSProtection(apiObject.XSSProtection); len(v) > 0 {
-		tfMap["xss_protection"] = []interface{}{v}
+		tfMap["xss_protection"] = []any{v}
 	}
 
 	return tfMap
 }
 
-func flattenResponseHeadersPolicyContentSecurityPolicy(apiObject *awstypes.ResponseHeadersPolicyContentSecurityPolicy) map[string]interface{} {
+func flattenResponseHeadersPolicyContentSecurityPolicy(apiObject *awstypes.ResponseHeadersPolicyContentSecurityPolicy) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.ContentSecurityPolicy; v != nil {
 		tfMap["content_security_policy"] = aws.ToString(v)
@@ -1166,12 +1172,12 @@ func flattenResponseHeadersPolicyContentSecurityPolicy(apiObject *awstypes.Respo
 	return tfMap
 }
 
-func flattenResponseHeadersPolicyContentTypeOptions(apiObject *awstypes.ResponseHeadersPolicyContentTypeOptions) map[string]interface{} {
+func flattenResponseHeadersPolicyContentTypeOptions(apiObject *awstypes.ResponseHeadersPolicyContentTypeOptions) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Override; v != nil {
 		tfMap["override"] = aws.ToBool(v)
@@ -1180,12 +1186,12 @@ func flattenResponseHeadersPolicyContentTypeOptions(apiObject *awstypes.Response
 	return tfMap
 }
 
-func flattenResponseHeadersPolicyFrameOptions(apiObject *awstypes.ResponseHeadersPolicyFrameOptions) map[string]interface{} {
+func flattenResponseHeadersPolicyFrameOptions(apiObject *awstypes.ResponseHeadersPolicyFrameOptions) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.FrameOption; v != "" {
 		tfMap["frame_option"] = v
@@ -1198,12 +1204,12 @@ func flattenResponseHeadersPolicyFrameOptions(apiObject *awstypes.ResponseHeader
 	return tfMap
 }
 
-func flattenResponseHeadersPolicyReferrerPolicy(apiObject *awstypes.ResponseHeadersPolicyReferrerPolicy) map[string]interface{} {
+func flattenResponseHeadersPolicyReferrerPolicy(apiObject *awstypes.ResponseHeadersPolicyReferrerPolicy) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Override; v != nil {
 		tfMap["override"] = aws.ToBool(v)
@@ -1216,12 +1222,12 @@ func flattenResponseHeadersPolicyReferrerPolicy(apiObject *awstypes.ResponseHead
 	return tfMap
 }
 
-func flattenResponseHeadersPolicyStrictTransportSecurity(apiObject *awstypes.ResponseHeadersPolicyStrictTransportSecurity) map[string]interface{} {
+func flattenResponseHeadersPolicyStrictTransportSecurity(apiObject *awstypes.ResponseHeadersPolicyStrictTransportSecurity) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.AccessControlMaxAgeSec; v != nil {
 		tfMap["access_control_max_age_sec"] = aws.ToInt32(v)
@@ -1242,12 +1248,12 @@ func flattenResponseHeadersPolicyStrictTransportSecurity(apiObject *awstypes.Res
 	return tfMap
 }
 
-func flattenResponseHeadersPolicyXSSProtection(apiObject *awstypes.ResponseHeadersPolicyXSSProtection) map[string]interface{} {
+func flattenResponseHeadersPolicyXSSProtection(apiObject *awstypes.ResponseHeadersPolicyXSSProtection) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.ModeBlock; v != nil {
 		tfMap["mode_block"] = aws.ToBool(v)
@@ -1272,7 +1278,7 @@ func flattenResponseHeadersPolicyXSSProtection(apiObject *awstypes.ResponseHeade
 // server_timing_headers_config:
 //
 
-func expandResponseHeadersPolicyServerTimingHeadersConfig(tfMap map[string]interface{}) *awstypes.ResponseHeadersPolicyServerTimingHeadersConfig {
+func expandResponseHeadersPolicyServerTimingHeadersConfig(tfMap map[string]any) *awstypes.ResponseHeadersPolicyServerTimingHeadersConfig {
 	if tfMap == nil {
 		return nil
 	}
@@ -1290,12 +1296,12 @@ func expandResponseHeadersPolicyServerTimingHeadersConfig(tfMap map[string]inter
 	return apiObject
 }
 
-func flattenResponseHeadersPolicyServerTimingHeadersConfig(apiObject *awstypes.ResponseHeadersPolicyServerTimingHeadersConfig) map[string]interface{} {
+func flattenResponseHeadersPolicyServerTimingHeadersConfig(apiObject *awstypes.ResponseHeadersPolicyServerTimingHeadersConfig) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Enabled; v != nil {
 		tfMap[names.AttrEnabled] = aws.ToBool(v)
@@ -1306,4 +1312,9 @@ func flattenResponseHeadersPolicyServerTimingHeadersConfig(apiObject *awstypes.R
 	}
 
 	return tfMap
+}
+
+// See https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazoncloudfront.html#amazoncloudfront-resources-for-iam-policies.
+func responseHeadersPolicyARN(ctx context.Context, c *conns.AWSClient, id string) string {
+	return c.GlobalARN(ctx, "cloudfront", "response-headers-policy/"+id)
 }

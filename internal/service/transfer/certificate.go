@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -91,12 +90,10 @@ func resourceCertificate() *schema.Resource {
 				ValidateDiagFunc: enum.Validate[awstypes.CertificateUsageType](),
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
@@ -129,7 +126,7 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceCertificateRead(ctx, d, meta)...)
 }
 
-func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
@@ -159,7 +156,7 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
@@ -179,14 +176,15 @@ func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceCertificateRead(ctx, d, meta)...)
 }
 
-func resourceCertificateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCertificateDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Transfer Certificate: %s", d.Id())
-	_, err := conn.DeleteCertificate(ctx, &transfer.DeleteCertificateInput{
+	input := transfer.DeleteCertificateInput{
 		CertificateId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteCertificate(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

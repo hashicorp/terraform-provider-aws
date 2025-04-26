@@ -59,10 +59,6 @@ type applicationLayerAutomaticResponseResource struct {
 	framework.WithTimeouts
 }
 
-func (r *applicationLayerAutomaticResponseResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_shield_application_layer_automatic_response"
-}
-
 func (r *applicationLayerAutomaticResponseResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -273,7 +269,7 @@ func findApplicationLayerAutomaticResponseByResourceARN(ctx context.Context, con
 }
 
 func statusApplicationLayerAutomaticResponse(ctx context.Context, conn *shield.Client, resourceARN string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findApplicationLayerAutomaticResponseByResourceARN(ctx, conn, resourceARN)
 
 		if tfresource.NotFound(err) {

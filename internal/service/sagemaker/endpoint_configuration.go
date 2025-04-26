@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -20,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -596,11 +598,76 @@ func resourceEndpointConfiguration() *schema.Resource {
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
+		CustomizeDiff: validateDataCaptureConfigCustomDiff,
 	}
 }
 
-func resourceEndpointConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func validateDataCaptureConfigCustomDiff(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+	var diags diag.Diagnostics
+
+	configRaw := d.GetRawConfig()
+	if !configRaw.IsKnown() || configRaw.IsNull() {
+		return nil
+	}
+
+	dataCapturesPath := cty.GetAttrPath("data_capture_config")
+	dataCaptures := configRaw.GetAttr("data_capture_config")
+	if dataCaptures.IsKnown() && !dataCaptures.IsNull() {
+		dataCaptureConfigPlanTimeValidate(dataCapturesPath, dataCaptures, &diags)
+	}
+
+	return sdkdiag.DiagnosticsError(diags)
+}
+
+func dataCaptureConfigPlanTimeValidate(path cty.Path, dataCaptures cty.Value, diags *diag.Diagnostics) {
+	it := dataCaptures.ElementIterator()
+	for it.Next() {
+		_, dataCapture := it.Element()
+
+		if !dataCapture.IsKnown() {
+			break
+		}
+		if dataCapture.IsNull() {
+			break
+		}
+
+		captureContentHeaderPath := path.GetAttr("capture_content_type_header")
+		captureContentHeaders := dataCapture.GetAttr("capture_content_type_header")
+
+		captureContentTypeHeaderPlanTimeValidate(captureContentHeaderPath, captureContentHeaders, diags)
+	}
+}
+
+func captureContentTypeHeaderPlanTimeValidate(path cty.Path, captureContentHeaders cty.Value, diags *diag.Diagnostics) {
+	it := captureContentHeaders.ElementIterator()
+	for it.Next() {
+		_, captureContentHeader := it.Element()
+
+		if !captureContentHeader.IsKnown() {
+			break
+		}
+		if captureContentHeader.IsNull() {
+			break
+		}
+
+		csvContentTypes := captureContentHeader.GetAttr("csv_content_types")
+		if csvContentTypes.IsKnown() && !csvContentTypes.IsNull() {
+			break
+		}
+
+		jsonContentTypes := captureContentHeader.GetAttr("json_content_types")
+		if jsonContentTypes.IsKnown() && !jsonContentTypes.IsNull() {
+			break
+		}
+
+		*diags = append(*diags, errs.NewAtLeastOneOfChildrenError(path,
+			cty.GetAttrPath("csv_content_types"),
+			cty.GetAttrPath("json_content_types"),
+		))
+	}
+}
+
+func resourceEndpointConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -608,7 +675,7 @@ func resourceEndpointConfigurationCreate(ctx context.Context, d *schema.Resource
 
 	createOpts := &sagemaker.CreateEndpointConfigInput{
 		EndpointConfigName: aws.String(name),
-		ProductionVariants: expandProductionVariants(d.Get("production_variants").([]interface{})),
+		ProductionVariants: expandProductionVariants(d.Get("production_variants").([]any)),
 		Tags:               getTagsIn(ctx),
 	}
 
@@ -616,42 +683,42 @@ func resourceEndpointConfigurationCreate(ctx context.Context, d *schema.Resource
 		createOpts.KmsKeyId = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("shadow_production_variants"); ok && len(v.([]interface{})) > 0 {
-		createOpts.ShadowProductionVariants = expandProductionVariants(v.([]interface{}))
+	if v, ok := d.GetOk("shadow_production_variants"); ok && len(v.([]any)) > 0 {
+		createOpts.ShadowProductionVariants = expandProductionVariants(v.([]any))
 	}
 
 	if v, ok := d.GetOk("data_capture_config"); ok {
-		createOpts.DataCaptureConfig = expandDataCaptureConfig(v.([]interface{}))
+		createOpts.DataCaptureConfig = expandDataCaptureConfig(v.([]any))
 	}
 
 	if v, ok := d.GetOk("async_inference_config"); ok {
-		createOpts.AsyncInferenceConfig = expandEndpointConfigAsyncInferenceConfig(v.([]interface{}))
+		createOpts.AsyncInferenceConfig = expandEndpointConfigAsyncInferenceConfig(v.([]any))
 	}
 
-	log.Printf("[DEBUG] SageMaker Endpoint Configuration create config: %#v", *createOpts)
+	log.Printf("[DEBUG] SageMaker AI Endpoint Configuration create config: %#v", *createOpts)
 	_, err := conn.CreateEndpointConfig(ctx, createOpts)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker Endpoint Configuration: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Endpoint Configuration: %s", err)
 	}
 	d.SetId(name)
 
 	return append(diags, resourceEndpointConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceEndpointConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEndpointConfigurationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
 	endpointConfig, err := findEndpointConfigByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] SageMaker Endpoint Configuration (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] SageMaker AI Endpoint Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SageMaker Endpoint Configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI Endpoint Configuration (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrARN, endpointConfig.EndpointConfigArn)
@@ -660,25 +727,25 @@ func resourceEndpointConfigurationRead(ctx context.Context, d *schema.ResourceDa
 	d.Set(names.AttrKMSKeyARN, endpointConfig.KmsKeyId)
 
 	if err := d.Set("production_variants", flattenProductionVariants(endpointConfig.ProductionVariants)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting production_variants for SageMaker Endpoint Configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting production_variants for SageMaker AI Endpoint Configuration (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("shadow_production_variants", flattenProductionVariants(endpointConfig.ShadowProductionVariants)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting shadow_production_variants for SageMaker Endpoint Configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting shadow_production_variants for SageMaker AI Endpoint Configuration (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("data_capture_config", flattenDataCaptureConfig(endpointConfig.DataCaptureConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting data_capture_config for SageMaker Endpoint Configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting data_capture_config for SageMaker AI Endpoint Configuration (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("async_inference_config", flattenEndpointConfigAsyncInferenceConfig(endpointConfig.AsyncInferenceConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting async_inference_config for SageMaker Endpoint Configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting async_inference_config for SageMaker AI Endpoint Configuration (%s): %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func resourceEndpointConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEndpointConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Tags only.
@@ -686,14 +753,14 @@ func resourceEndpointConfigurationUpdate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceEndpointConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceEndpointConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEndpointConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
 	deleteOpts := &sagemaker.DeleteEndpointConfigInput{
 		EndpointConfigName: aws.String(d.Id()),
 	}
-	log.Printf("[INFO] Deleting SageMaker Endpoint Configuration: %s", d.Id())
+	log.Printf("[INFO] Deleting SageMaker AI Endpoint Configuration: %s", d.Id())
 
 	_, err := conn.DeleteEndpointConfig(ctx, deleteOpts)
 
@@ -702,7 +769,7 @@ func resourceEndpointConfigurationDelete(ctx context.Context, d *schema.Resource
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting SageMaker Endpoint Configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SageMaker AI Endpoint Configuration (%s): %s", d.Id(), err)
 	}
 
 	return diags
@@ -733,11 +800,11 @@ func findEndpointConfigByName(ctx context.Context, conn *sagemaker.Client, name 
 	return output, nil
 }
 
-func expandProductionVariants(configured []interface{}) []awstypes.ProductionVariant {
+func expandProductionVariants(configured []any) []awstypes.ProductionVariant {
 	containers := make([]awstypes.ProductionVariant, 0, len(configured))
 
 	for _, lRaw := range configured {
-		data := lRaw.(map[string]interface{})
+		data := lRaw.(map[string]any)
 
 		l := awstypes.ProductionVariant{
 			ModelName: aws.String(data["model_name"].(string)),
@@ -777,15 +844,15 @@ func expandProductionVariants(configured []interface{}) []awstypes.ProductionVar
 			l.AcceleratorType = awstypes.ProductionVariantAcceleratorType(v)
 		}
 
-		if v, ok := data["routing_config"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := data["routing_config"].([]any); ok && len(v) > 0 {
 			l.RoutingConfig = expandRoutingConfig(v)
 		}
 
-		if v, ok := data["serverless_config"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := data["serverless_config"].([]any); ok && len(v) > 0 {
 			l.ServerlessConfig = expandServerlessConfig(v)
 		}
 
-		if v, ok := data["core_dump_config"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := data["core_dump_config"].([]any); ok && len(v) > 0 {
 			l.CoreDumpConfig = expandCoreDumpConfig(v)
 		}
 
@@ -793,7 +860,7 @@ func expandProductionVariants(configured []interface{}) []awstypes.ProductionVar
 			l.EnableSSMAccess = aws.Bool(v)
 		}
 
-		if v, ok := data["managed_instance_scaling"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := data["managed_instance_scaling"].([]any); ok && len(v) > 0 {
 			l.ManagedInstanceScaling = expandManagedInstanceScaling(v)
 		}
 
@@ -807,11 +874,11 @@ func expandProductionVariants(configured []interface{}) []awstypes.ProductionVar
 	return containers
 }
 
-func flattenProductionVariants(list []awstypes.ProductionVariant) []map[string]interface{} {
-	result := make([]map[string]interface{}, 0, len(list))
+func flattenProductionVariants(list []awstypes.ProductionVariant) []map[string]any {
+	result := make([]map[string]any, 0, len(list))
 
 	for _, i := range list {
-		l := map[string]interface{}{
+		l := map[string]any{
 			"accelerator_type":       i.AcceleratorType,
 			names.AttrInstanceType:   i.InstanceType,
 			"inference_ami_version":  i.InferenceAmiVersion,
@@ -861,17 +928,17 @@ func flattenProductionVariants(list []awstypes.ProductionVariant) []map[string]i
 	return result
 }
 
-func expandDataCaptureConfig(configured []interface{}) *awstypes.DataCaptureConfig {
+func expandDataCaptureConfig(configured []any) *awstypes.DataCaptureConfig {
 	if len(configured) == 0 {
 		return nil
 	}
 
-	m := configured[0].(map[string]interface{})
+	m := configured[0].(map[string]any)
 
 	c := &awstypes.DataCaptureConfig{
 		InitialSamplingPercentage: aws.Int32(int32(m["initial_sampling_percentage"].(int))),
 		DestinationS3Uri:          aws.String(m["destination_s3_uri"].(string)),
-		CaptureOptions:            expandCaptureOptions(m["capture_options"].([]interface{})),
+		CaptureOptions:            expandCaptureOptions(m["capture_options"].([]any)),
 	}
 
 	if v, ok := m["enable_capture"]; ok {
@@ -882,19 +949,19 @@ func expandDataCaptureConfig(configured []interface{}) *awstypes.DataCaptureConf
 		c.KmsKeyId = aws.String(v)
 	}
 
-	if v, ok := m["capture_content_type_header"].([]interface{}); ok && (len(v) > 0) {
-		c.CaptureContentTypeHeader = expandCaptureContentTypeHeader(v[0].(map[string]interface{}))
+	if v, ok := m["capture_content_type_header"].([]any); ok && len(v) > 0 && v[0] != nil {
+		c.CaptureContentTypeHeader = expandCaptureContentTypeHeader(v[0].(map[string]any))
 	}
 
 	return c
 }
 
-func flattenDataCaptureConfig(dataCaptureConfig *awstypes.DataCaptureConfig) []map[string]interface{} {
+func flattenDataCaptureConfig(dataCaptureConfig *awstypes.DataCaptureConfig) []map[string]any {
 	if dataCaptureConfig == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	cfg := map[string]interface{}{
+	cfg := map[string]any{
 		"initial_sampling_percentage": aws.ToInt32(dataCaptureConfig.InitialSamplingPercentage),
 		"destination_s3_uri":          aws.ToString(dataCaptureConfig.DestinationS3Uri),
 		"capture_options":             flattenCaptureOptions(dataCaptureConfig.CaptureOptions),
@@ -912,14 +979,14 @@ func flattenDataCaptureConfig(dataCaptureConfig *awstypes.DataCaptureConfig) []m
 		cfg["capture_content_type_header"] = flattenCaptureContentTypeHeader(dataCaptureConfig.CaptureContentTypeHeader)
 	}
 
-	return []map[string]interface{}{cfg}
+	return []map[string]any{cfg}
 }
 
-func expandCaptureOptions(configured []interface{}) []awstypes.CaptureOption {
+func expandCaptureOptions(configured []any) []awstypes.CaptureOption {
 	containers := make([]awstypes.CaptureOption, 0, len(configured))
 
 	for _, lRaw := range configured {
-		data := lRaw.(map[string]interface{})
+		data := lRaw.(map[string]any)
 
 		l := awstypes.CaptureOption{
 			CaptureMode: awstypes.CaptureMode(data["capture_mode"].(string)),
@@ -930,11 +997,11 @@ func expandCaptureOptions(configured []interface{}) []awstypes.CaptureOption {
 	return containers
 }
 
-func flattenCaptureOptions(list []awstypes.CaptureOption) []map[string]interface{} {
-	containers := make([]map[string]interface{}, 0, len(list))
+func flattenCaptureOptions(list []awstypes.CaptureOption) []map[string]any {
+	containers := make([]map[string]any, 0, len(list))
 
 	for _, lRaw := range list {
-		captureOption := make(map[string]interface{})
+		captureOption := make(map[string]any)
 		captureOption["capture_mode"] = lRaw.CaptureMode
 		containers = append(containers, captureOption)
 	}
@@ -942,7 +1009,7 @@ func flattenCaptureOptions(list []awstypes.CaptureOption) []map[string]interface
 	return containers
 }
 
-func expandCaptureContentTypeHeader(m map[string]interface{}) *awstypes.CaptureContentTypeHeader {
+func expandCaptureContentTypeHeader(m map[string]any) *awstypes.CaptureContentTypeHeader {
 	c := &awstypes.CaptureContentTypeHeader{}
 
 	if v, ok := m["csv_content_types"].(*schema.Set); ok && v.Len() > 0 {
@@ -956,12 +1023,12 @@ func expandCaptureContentTypeHeader(m map[string]interface{}) *awstypes.CaptureC
 	return c
 }
 
-func flattenCaptureContentTypeHeader(contentTypeHeader *awstypes.CaptureContentTypeHeader) []map[string]interface{} {
+func flattenCaptureContentTypeHeader(contentTypeHeader *awstypes.CaptureContentTypeHeader) []map[string]any {
 	if contentTypeHeader == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	l := make(map[string]interface{})
+	l := make(map[string]any)
 
 	if contentTypeHeader.CsvContentTypes != nil {
 		l["csv_content_types"] = flex.FlattenStringValueSet(contentTypeHeader.CsvContentTypes)
@@ -971,35 +1038,35 @@ func flattenCaptureContentTypeHeader(contentTypeHeader *awstypes.CaptureContentT
 		l["json_content_types"] = flex.FlattenStringValueSet(contentTypeHeader.JsonContentTypes)
 	}
 
-	return []map[string]interface{}{l}
+	return []map[string]any{l}
 }
 
-func expandEndpointConfigAsyncInferenceConfig(configured []interface{}) *awstypes.AsyncInferenceConfig {
+func expandEndpointConfigAsyncInferenceConfig(configured []any) *awstypes.AsyncInferenceConfig {
 	if len(configured) == 0 {
 		return nil
 	}
 
-	m := configured[0].(map[string]interface{})
+	m := configured[0].(map[string]any)
 
 	c := &awstypes.AsyncInferenceConfig{}
 
-	if v, ok := m["client_config"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["client_config"].([]any); ok && len(v) > 0 {
 		c.ClientConfig = expandEndpointConfigClientConfig(v)
 	}
 
-	if v, ok := m["output_config"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["output_config"].([]any); ok && len(v) > 0 {
 		c.OutputConfig = expandEndpointConfigOutputConfig(v)
 	}
 
 	return c
 }
 
-func expandEndpointConfigClientConfig(configured []interface{}) *awstypes.AsyncInferenceClientConfig {
+func expandEndpointConfigClientConfig(configured []any) *awstypes.AsyncInferenceClientConfig {
 	if len(configured) == 0 {
 		return nil
 	}
 
-	m := configured[0].(map[string]interface{})
+	m := configured[0].(map[string]any)
 
 	c := &awstypes.AsyncInferenceClientConfig{}
 
@@ -1010,12 +1077,12 @@ func expandEndpointConfigClientConfig(configured []interface{}) *awstypes.AsyncI
 	return c
 }
 
-func expandEndpointConfigOutputConfig(configured []interface{}) *awstypes.AsyncInferenceOutputConfig {
+func expandEndpointConfigOutputConfig(configured []any) *awstypes.AsyncInferenceOutputConfig {
 	if len(configured) == 0 {
 		return nil
 	}
 
-	m := configured[0].(map[string]interface{})
+	m := configured[0].(map[string]any)
 
 	c := &awstypes.AsyncInferenceOutputConfig{
 		S3OutputPath: aws.String(m["s3_output_path"].(string)),
@@ -1029,19 +1096,19 @@ func expandEndpointConfigOutputConfig(configured []interface{}) *awstypes.AsyncI
 		c.S3FailurePath = aws.String(v)
 	}
 
-	if v, ok := m["notification_config"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["notification_config"].([]any); ok && len(v) > 0 {
 		c.NotificationConfig = expandEndpointConfigNotificationConfig(v)
 	}
 
 	return c
 }
 
-func expandEndpointConfigNotificationConfig(configured []interface{}) *awstypes.AsyncInferenceNotificationConfig {
+func expandEndpointConfigNotificationConfig(configured []any) *awstypes.AsyncInferenceNotificationConfig {
 	if len(configured) == 0 {
 		return nil
 	}
 
-	m := configured[0].(map[string]interface{})
+	m := configured[0].(map[string]any)
 
 	c := &awstypes.AsyncInferenceNotificationConfig{}
 
@@ -1060,12 +1127,12 @@ func expandEndpointConfigNotificationConfig(configured []interface{}) *awstypes.
 	return c
 }
 
-func expandRoutingConfig(configured []interface{}) *awstypes.ProductionVariantRoutingConfig {
+func expandRoutingConfig(configured []any) *awstypes.ProductionVariantRoutingConfig {
 	if len(configured) == 0 {
 		return nil
 	}
 
-	m := configured[0].(map[string]interface{})
+	m := configured[0].(map[string]any)
 
 	c := &awstypes.ProductionVariantRoutingConfig{}
 
@@ -1076,12 +1143,12 @@ func expandRoutingConfig(configured []interface{}) *awstypes.ProductionVariantRo
 	return c
 }
 
-func expandServerlessConfig(configured []interface{}) *awstypes.ProductionVariantServerlessConfig {
+func expandServerlessConfig(configured []any) *awstypes.ProductionVariantServerlessConfig {
 	if len(configured) == 0 {
 		return nil
 	}
 
-	m := configured[0].(map[string]interface{})
+	m := configured[0].(map[string]any)
 
 	c := &awstypes.ProductionVariantServerlessConfig{}
 
@@ -1100,12 +1167,12 @@ func expandServerlessConfig(configured []interface{}) *awstypes.ProductionVarian
 	return c
 }
 
-func expandCoreDumpConfig(configured []interface{}) *awstypes.ProductionVariantCoreDumpConfig {
+func expandCoreDumpConfig(configured []any) *awstypes.ProductionVariantCoreDumpConfig {
 	if len(configured) == 0 {
 		return nil
 	}
 
-	m := configured[0].(map[string]interface{})
+	m := configured[0].(map[string]any)
 
 	c := &awstypes.ProductionVariantCoreDumpConfig{}
 
@@ -1120,12 +1187,12 @@ func expandCoreDumpConfig(configured []interface{}) *awstypes.ProductionVariantC
 	return c
 }
 
-func expandManagedInstanceScaling(configured []interface{}) *awstypes.ProductionVariantManagedInstanceScaling {
+func expandManagedInstanceScaling(configured []any) *awstypes.ProductionVariantManagedInstanceScaling {
 	if len(configured) == 0 {
 		return nil
 	}
 
-	m := configured[0].(map[string]interface{})
+	m := configured[0].(map[string]any)
 
 	c := &awstypes.ProductionVariantManagedInstanceScaling{}
 
@@ -1144,12 +1211,12 @@ func expandManagedInstanceScaling(configured []interface{}) *awstypes.Production
 	return c
 }
 
-func flattenEndpointConfigAsyncInferenceConfig(config *awstypes.AsyncInferenceConfig) []map[string]interface{} {
+func flattenEndpointConfigAsyncInferenceConfig(config *awstypes.AsyncInferenceConfig) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	cfg := map[string]interface{}{}
+	cfg := map[string]any{}
 
 	if config.ClientConfig != nil {
 		cfg["client_config"] = flattenEndpointConfigClientConfig(config.ClientConfig)
@@ -1159,29 +1226,29 @@ func flattenEndpointConfigAsyncInferenceConfig(config *awstypes.AsyncInferenceCo
 		cfg["output_config"] = flattenEndpointConfigOutputConfig(config.OutputConfig)
 	}
 
-	return []map[string]interface{}{cfg}
+	return []map[string]any{cfg}
 }
 
-func flattenEndpointConfigClientConfig(config *awstypes.AsyncInferenceClientConfig) []map[string]interface{} {
+func flattenEndpointConfigClientConfig(config *awstypes.AsyncInferenceClientConfig) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	cfg := map[string]interface{}{}
+	cfg := map[string]any{}
 
 	if config.MaxConcurrentInvocationsPerInstance != nil {
 		cfg["max_concurrent_invocations_per_instance"] = aws.ToInt32(config.MaxConcurrentInvocationsPerInstance)
 	}
 
-	return []map[string]interface{}{cfg}
+	return []map[string]any{cfg}
 }
 
-func flattenEndpointConfigOutputConfig(config *awstypes.AsyncInferenceOutputConfig) []map[string]interface{} {
+func flattenEndpointConfigOutputConfig(config *awstypes.AsyncInferenceOutputConfig) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	cfg := map[string]interface{}{
+	cfg := map[string]any{
 		"s3_output_path": aws.ToString(config.S3OutputPath),
 	}
 
@@ -1197,15 +1264,15 @@ func flattenEndpointConfigOutputConfig(config *awstypes.AsyncInferenceOutputConf
 		cfg["s3_failure_path"] = aws.ToString(config.S3FailurePath)
 	}
 
-	return []map[string]interface{}{cfg}
+	return []map[string]any{cfg}
 }
 
-func flattenEndpointConfigNotificationConfig(config *awstypes.AsyncInferenceNotificationConfig) []map[string]interface{} {
+func flattenEndpointConfigNotificationConfig(config *awstypes.AsyncInferenceNotificationConfig) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	cfg := map[string]interface{}{}
+	cfg := map[string]any{}
 
 	if config.ErrorTopic != nil {
 		cfg["error_topic"] = aws.ToString(config.ErrorTopic)
@@ -1219,27 +1286,27 @@ func flattenEndpointConfigNotificationConfig(config *awstypes.AsyncInferenceNoti
 		cfg["include_inference_response_in"] = flex.FlattenStringyValueSet[awstypes.AsyncNotificationTopicTypes](config.IncludeInferenceResponseIn)
 	}
 
-	return []map[string]interface{}{cfg}
+	return []map[string]any{cfg}
 }
 
-func flattenRoutingConfig(config *awstypes.ProductionVariantRoutingConfig) []map[string]interface{} {
+func flattenRoutingConfig(config *awstypes.ProductionVariantRoutingConfig) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	cfg := map[string]interface{}{
+	cfg := map[string]any{
 		"routing_strategy": config.RoutingStrategy,
 	}
 
-	return []map[string]interface{}{cfg}
+	return []map[string]any{cfg}
 }
 
-func flattenServerlessConfig(config *awstypes.ProductionVariantServerlessConfig) []map[string]interface{} {
+func flattenServerlessConfig(config *awstypes.ProductionVariantServerlessConfig) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	cfg := map[string]interface{}{}
+	cfg := map[string]any{}
 
 	if config.MaxConcurrency != nil {
 		cfg["max_concurrency"] = aws.ToInt32(config.MaxConcurrency)
@@ -1253,15 +1320,15 @@ func flattenServerlessConfig(config *awstypes.ProductionVariantServerlessConfig)
 		cfg["provisioned_concurrency"] = aws.ToInt32(config.ProvisionedConcurrency)
 	}
 
-	return []map[string]interface{}{cfg}
+	return []map[string]any{cfg}
 }
 
-func flattenCoreDumpConfig(config *awstypes.ProductionVariantCoreDumpConfig) []map[string]interface{} {
+func flattenCoreDumpConfig(config *awstypes.ProductionVariantCoreDumpConfig) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	cfg := map[string]interface{}{}
+	cfg := map[string]any{}
 
 	if config.DestinationS3Uri != nil {
 		cfg["destination_s3_uri"] = aws.ToString(config.DestinationS3Uri)
@@ -1271,15 +1338,15 @@ func flattenCoreDumpConfig(config *awstypes.ProductionVariantCoreDumpConfig) []m
 		cfg[names.AttrKMSKeyID] = aws.ToString(config.KmsKeyId)
 	}
 
-	return []map[string]interface{}{cfg}
+	return []map[string]any{cfg}
 }
 
-func flattenManagedInstanceScaling(config *awstypes.ProductionVariantManagedInstanceScaling) []map[string]interface{} {
+func flattenManagedInstanceScaling(config *awstypes.ProductionVariantManagedInstanceScaling) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	cfg := map[string]interface{}{}
+	cfg := map[string]any{}
 
 	if config.Status != "" {
 		cfg[names.AttrStatus] = config.Status
@@ -1293,5 +1360,5 @@ func flattenManagedInstanceScaling(config *awstypes.ProductionVariantManagedInst
 		cfg["max_instance_count"] = aws.ToInt32(config.MaxInstanceCount)
 	}
 
-	return []map[string]interface{}{cfg}
+	return []map[string]any{cfg}
 }

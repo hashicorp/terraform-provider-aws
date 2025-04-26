@@ -26,7 +26,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -197,11 +196,10 @@ func ResourceFeature() *schema.Resource {
 				},
 			},
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceFeatureCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFeatureCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EvidentlyClient(ctx)
@@ -223,7 +221,7 @@ func resourceFeatureCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.Description = aws.String(v.(string))
 	}
 
-	if v := d.Get("entity_overrides").(map[string]interface{}); len(v) > 0 {
+	if v := d.Get("entity_overrides").(map[string]any); len(v) > 0 {
 		input.EntityOverrides = flex.ExpandStringValueMap(v)
 	}
 
@@ -248,7 +246,7 @@ func resourceFeatureCreate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceFeatureRead(ctx, d, meta)...)
 }
 
-func resourceFeatureRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFeatureRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EvidentlyClient(ctx)
@@ -296,7 +294,7 @@ func resourceFeatureRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceFeatureUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFeatureUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EvidentlyClient(ctx)
@@ -308,7 +306,7 @@ func resourceFeatureUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		input := &evidently.UpdateFeatureInput{
 			DefaultVariation:   aws.String(d.Get("default_variation").(string)),
 			Description:        aws.String(d.Get(names.AttrDescription).(string)),
-			EntityOverrides:    flex.ExpandStringValueMap(d.Get("entity_overrides").(map[string]interface{})),
+			EntityOverrides:    flex.ExpandStringValueMap(d.Get("entity_overrides").(map[string]any)),
 			EvaluationStrategy: awstypes.FeatureEvaluationStrategy(d.Get("evaluation_strategy").(string)),
 			Feature:            aws.String(name),
 			Project:            aws.String(project),
@@ -338,7 +336,7 @@ func resourceFeatureUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceFeatureRead(ctx, d, meta)...)
 }
 
-func resourceFeatureDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFeatureDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EvidentlyClient(ctx)
@@ -377,7 +375,7 @@ func FeatureParseID(id string) (string, string, error) {
 	return featureName, projectNameOrARN, nil
 }
 
-func expandVariations(variations []interface{}) []awstypes.VariationConfig {
+func expandVariations(variations []any) []awstypes.VariationConfig {
 	if len(variations) == 0 {
 		return nil
 	}
@@ -385,25 +383,25 @@ func expandVariations(variations []interface{}) []awstypes.VariationConfig {
 	variationsFormatted := make([]awstypes.VariationConfig, len(variations))
 
 	for i, variation := range variations {
-		variationsFormatted[i] = expandVariation(variation.(map[string]interface{}))
+		variationsFormatted[i] = expandVariation(variation.(map[string]any))
 	}
 
 	return variationsFormatted
 }
 
-func expandVariation(variation map[string]interface{}) awstypes.VariationConfig {
+func expandVariation(variation map[string]any) awstypes.VariationConfig {
 	return awstypes.VariationConfig{
 		Name:  aws.String(variation[names.AttrName].(string)),
-		Value: expandValue(variation[names.AttrValue].([]interface{})),
+		Value: expandValue(variation[names.AttrValue].([]any)),
 	}
 }
 
-func expandValue(value []interface{}) awstypes.VariableValue {
+func expandValue(value []any) awstypes.VariableValue {
 	if len(value) == 0 || value[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := value[0].(map[string]interface{})
+	tfMap, ok := value[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -431,14 +429,14 @@ func expandValue(value []interface{}) awstypes.VariableValue {
 	return result
 }
 
-func flattenVariations(apiObject []awstypes.Variation) []interface{} {
+func flattenVariations(apiObject []awstypes.Variation) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	variationsFormatted := []interface{}{}
+	variationsFormatted := []any{}
 	for _, variation := range apiObject {
-		variationFormatted := map[string]interface{}{
+		variationFormatted := map[string]any{
 			names.AttrName:  aws.ToString(variation.Name),
 			names.AttrValue: flattenValue(variation.Value),
 		}
@@ -447,12 +445,12 @@ func flattenVariations(apiObject []awstypes.Variation) []interface{} {
 	return variationsFormatted
 }
 
-func flattenValue(apiObject awstypes.VariableValue) []interface{} {
+func flattenValue(apiObject awstypes.VariableValue) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	// only one of these values should be set at a time
 	switch v := apiObject.(type) {
@@ -466,17 +464,17 @@ func flattenValue(apiObject awstypes.VariableValue) []interface{} {
 		m["string_value"] = v.Value
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenEvaluationRules(apiObject []awstypes.EvaluationRule) []interface{} {
+func flattenEvaluationRules(apiObject []awstypes.EvaluationRule) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	evaluationRulesFormatted := []interface{}{}
+	evaluationRulesFormatted := []any{}
 	for _, evaluationRule := range apiObject {
-		evaluationRuleFormatted := map[string]interface{}{
+		evaluationRuleFormatted := map[string]any{
 			names.AttrName: aws.ToString(evaluationRule.Name),
 			names.AttrType: aws.ToString(evaluationRule.Type),
 		}
@@ -485,7 +483,7 @@ func flattenEvaluationRules(apiObject []awstypes.EvaluationRule) []interface{} {
 	return evaluationRulesFormatted
 }
 
-func VariationChanges(o, n interface{}) (remove []string, addOrUpdate []awstypes.VariationConfig) {
+func VariationChanges(o, n any) (remove []string, addOrUpdate []awstypes.VariationConfig) {
 	if o == nil {
 		o = new(schema.Set)
 	}
@@ -498,12 +496,12 @@ func VariationChanges(o, n interface{}) (remove []string, addOrUpdate []awstypes
 
 	om := make(map[string]awstypes.VariationConfig, os.Len())
 	for _, raw := range os.List() {
-		param := raw.(map[string]interface{})
+		param := raw.(map[string]any)
 		om[param[names.AttrName].(string)] = expandVariation(param)
 	}
 	nm := make(map[string]awstypes.VariationConfig, len(addOrUpdate))
 	for _, raw := range ns.List() {
-		param := raw.(map[string]interface{})
+		param := raw.(map[string]any)
 		nm[param[names.AttrName].(string)] = expandVariation(param)
 	}
 

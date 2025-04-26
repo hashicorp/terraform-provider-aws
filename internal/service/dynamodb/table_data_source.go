@@ -70,6 +70,22 @@ func dataSourceTable() *schema.Resource {
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
+						"on_demand_throughput": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"max_read_request_units": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+									"max_write_request_units": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+								},
+							},
+						},
 						"projection_type": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -121,6 +137,22 @@ func dataSourceTable() *schema.Resource {
 			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
+			},
+			"on_demand_throughput": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"max_read_request_units": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"max_write_request_units": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+					},
+				},
 			},
 			"point_in_time_recovery": {
 				Type:     schema.TypeList,
@@ -221,7 +253,7 @@ func dataSourceTable() *schema.Resource {
 	}
 }
 
-func dataSourceTableRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceTableRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
@@ -269,6 +301,10 @@ func dataSourceTableRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "setting global_secondary_index: %s", err)
 	}
 
+	if err := d.Set("on_demand_throughput", flattenOnDemandThroughput(table.OnDemandThroughput)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting on_demand_throughput: %s", err)
+	}
+
 	if table.StreamSpecification != nil {
 		d.Set("stream_view_type", table.StreamSpecification.StreamViewType)
 		d.Set("stream_enabled", table.StreamSpecification.StreamEnabled)
@@ -294,9 +330,10 @@ func dataSourceTableRead(ctx context.Context, d *schema.ResourceData, meta inter
 		d.Set("table_class", awstypes.TableClassStandard)
 	}
 
-	pitrOut, err := conn.DescribeContinuousBackups(ctx, &dynamodb.DescribeContinuousBackupsInput{
+	describeBackupsInput := dynamodb.DescribeContinuousBackupsInput{
 		TableName: aws.String(d.Id()),
-	})
+	}
+	pitrOut, err := conn.DescribeContinuousBackups(ctx, &describeBackupsInput)
 
 	// When a Table is `ARCHIVED`, DescribeContinuousBackups returns `TableNotFoundException`
 	if err != nil && !tfawserr.ErrCodeEquals(err, errCodeUnknownOperationException, errCodeTableNotFoundException) {
@@ -307,9 +344,10 @@ func dataSourceTableRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "setting point_in_time_recovery: %s", err)
 	}
 
-	ttlOut, err := conn.DescribeTimeToLive(ctx, &dynamodb.DescribeTimeToLiveInput{
+	describeTTLInput := dynamodb.DescribeTimeToLiveInput{
 		TableName: aws.String(d.Id()),
-	})
+	}
+	ttlOut, err := conn.DescribeTimeToLive(ctx, &describeTTLInput)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading DynamoDB Table (%s) Time to Live: %s", d.Id(), err)

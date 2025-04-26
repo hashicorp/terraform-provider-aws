@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -238,11 +237,10 @@ func resourceAppImageConfig() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceAppImageConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAppImageConfigCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -252,21 +250,21 @@ func resourceAppImageConfigCreate(ctx context.Context, d *schema.ResourceData, m
 		Tags:               getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("code_editor_app_image_config"); ok && len(v.([]interface{})) > 0 {
-		input.CodeEditorAppImageConfig = expandCodeEditorAppImageConfig(v.([]interface{}))
+	if v, ok := d.GetOk("code_editor_app_image_config"); ok && len(v.([]any)) > 0 {
+		input.CodeEditorAppImageConfig = expandCodeEditorAppImageConfig(v.([]any))
 	}
 
-	if v, ok := d.GetOk("jupyter_lab_image_config"); ok && len(v.([]interface{})) > 0 {
-		input.JupyterLabAppImageConfig = expandJupyterLabAppImageConfig(v.([]interface{}))
+	if v, ok := d.GetOk("jupyter_lab_image_config"); ok && len(v.([]any)) > 0 {
+		input.JupyterLabAppImageConfig = expandJupyterLabAppImageConfig(v.([]any))
 	}
 
-	if v, ok := d.GetOk("kernel_gateway_image_config"); ok && len(v.([]interface{})) > 0 {
-		input.KernelGatewayImageConfig = expandKernelGatewayImageConfig(v.([]interface{}))
+	if v, ok := d.GetOk("kernel_gateway_image_config"); ok && len(v.([]any)) > 0 {
+		input.KernelGatewayImageConfig = expandKernelGatewayImageConfig(v.([]any))
 	}
 
 	_, err := conn.CreateAppImageConfig(ctx, input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker App Image Config %s: %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI App Image Config %s: %s", name, err)
 	}
 
 	d.SetId(name)
@@ -274,7 +272,7 @@ func resourceAppImageConfigCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceAppImageConfigRead(ctx, d, meta)...)
 }
 
-func resourceAppImageConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAppImageConfigRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -282,12 +280,12 @@ func resourceAppImageConfigRead(ctx context.Context, d *schema.ResourceData, met
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		d.SetId("")
-		log.Printf("[WARN] Unable to find SageMaker App Image Config (%s); removing from state", d.Id())
+		log.Printf("[WARN] Unable to find SageMaker AI App Image Config (%s); removing from state", d.Id())
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SageMaker App Image Config (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI App Image Config (%s): %s", d.Id(), err)
 	}
 
 	arn := aws.ToString(image.AppImageConfigArn)
@@ -309,7 +307,7 @@ func resourceAppImageConfigRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceAppImageConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAppImageConfigUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -319,34 +317,34 @@ func resourceAppImageConfigUpdate(ctx context.Context, d *schema.ResourceData, m
 		}
 
 		if d.HasChange("code_editor_app_image_config") {
-			if v, ok := d.GetOk("code_editor_app_image_config"); ok && len(v.([]interface{})) > 0 {
-				input.CodeEditorAppImageConfig = expandCodeEditorAppImageConfig(v.([]interface{}))
+			if v, ok := d.GetOk("code_editor_app_image_config"); ok && len(v.([]any)) > 0 {
+				input.CodeEditorAppImageConfig = expandCodeEditorAppImageConfig(v.([]any))
 			}
 		}
 
 		if d.HasChange("kernel_gateway_image_config") {
-			if v, ok := d.GetOk("kernel_gateway_image_config"); ok && len(v.([]interface{})) > 0 {
-				input.KernelGatewayImageConfig = expandKernelGatewayImageConfig(v.([]interface{}))
+			if v, ok := d.GetOk("kernel_gateway_image_config"); ok && len(v.([]any)) > 0 {
+				input.KernelGatewayImageConfig = expandKernelGatewayImageConfig(v.([]any))
 			}
 		}
 
 		if d.HasChange("jupyter_lab_image_config") {
-			if v, ok := d.GetOk("jupyter_lab_image_config"); ok && len(v.([]interface{})) > 0 {
-				input.JupyterLabAppImageConfig = expandJupyterLabAppImageConfig(v.([]interface{}))
+			if v, ok := d.GetOk("jupyter_lab_image_config"); ok && len(v.([]any)) > 0 {
+				input.JupyterLabAppImageConfig = expandJupyterLabAppImageConfig(v.([]any))
 			}
 		}
 
-		log.Printf("[DEBUG] SageMaker App Image Config update config: %#v", *input)
+		log.Printf("[DEBUG] SageMaker AI App Image Config update config: %#v", *input)
 		_, err := conn.UpdateAppImageConfig(ctx, input)
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating SageMaker App Image Config: %s", err)
+			return sdkdiag.AppendErrorf(diags, "updating SageMaker AI App Image Config: %s", err)
 		}
 	}
 
 	return append(diags, resourceAppImageConfigRead(ctx, d, meta)...)
 }
 
-func resourceAppImageConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAppImageConfigDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -358,7 +356,7 @@ func resourceAppImageConfigDelete(ctx context.Context, d *schema.ResourceData, m
 		if errs.IsAErrorMessageContains[*awstypes.ResourceNotFound](err, "does not exist") {
 			return diags
 		}
-		return sdkdiag.AppendErrorf(diags, "deleting SageMaker App Image Config (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SageMaker AI App Image Config (%s): %s", d.Id(), err)
 	}
 
 	return diags
@@ -389,32 +387,32 @@ func findAppImageConfigByName(ctx context.Context, conn *sagemaker.Client, appIm
 	return output, nil
 }
 
-func expandKernelGatewayImageConfig(l []interface{}) *awstypes.KernelGatewayImageConfig {
+func expandKernelGatewayImageConfig(l []any) *awstypes.KernelGatewayImageConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.KernelGatewayImageConfig{}
 
-	if v, ok := m["kernel_spec"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["kernel_spec"].([]any); ok && len(v) > 0 {
 		config.KernelSpecs = expandKernelGatewayImageConfigKernelSpecs(v)
 	}
 
-	if v, ok := m["file_system_config"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["file_system_config"].([]any); ok && len(v) > 0 {
 		config.FileSystemConfig = expandFileSystemConfig(v)
 	}
 
 	return config
 }
 
-func expandFileSystemConfig(l []interface{}) *awstypes.FileSystemConfig {
+func expandFileSystemConfig(l []any) *awstypes.FileSystemConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.FileSystemConfig{
 		DefaultGid: aws.Int32(int32(m["default_gid"].(int))),
@@ -425,7 +423,7 @@ func expandFileSystemConfig(l []interface{}) *awstypes.FileSystemConfig {
 	return config
 }
 
-func expandKernelGatewayImageConfigKernelSpecs(tfList []interface{}) []awstypes.KernelSpec {
+func expandKernelGatewayImageConfigKernelSpecs(tfList []any) []awstypes.KernelSpec {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -433,7 +431,7 @@ func expandKernelGatewayImageConfigKernelSpecs(tfList []interface{}) []awstypes.
 	var kernelSpecs []awstypes.KernelSpec
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -453,12 +451,12 @@ func expandKernelGatewayImageConfigKernelSpecs(tfList []interface{}) []awstypes.
 	return kernelSpecs
 }
 
-func flattenKernelGatewayImageConfig(config *awstypes.KernelGatewayImageConfig) []map[string]interface{} {
+func flattenKernelGatewayImageConfig(config *awstypes.KernelGatewayImageConfig) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if config.KernelSpecs != nil {
 		m["kernel_spec"] = flattenKernelGatewayImageConfigKernelSpecs(config.KernelSpecs)
@@ -468,28 +466,28 @@ func flattenKernelGatewayImageConfig(config *awstypes.KernelGatewayImageConfig) 
 		m["file_system_config"] = flattenFileSystemConfig(config.FileSystemConfig)
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenFileSystemConfig(config *awstypes.FileSystemConfig) []map[string]interface{} {
+func flattenFileSystemConfig(config *awstypes.FileSystemConfig) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"mount_path":  aws.ToString(config.MountPath),
 		"default_gid": aws.ToInt32(config.DefaultGid),
 		"default_uid": aws.ToInt32(config.DefaultUid),
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenKernelGatewayImageConfigKernelSpecs(kernelSpecs []awstypes.KernelSpec) []map[string]interface{} {
-	res := make([]map[string]interface{}, 0, len(kernelSpecs))
+func flattenKernelGatewayImageConfigKernelSpecs(kernelSpecs []awstypes.KernelSpec) []map[string]any {
+	res := make([]map[string]any, 0, len(kernelSpecs))
 
 	for _, raw := range kernelSpecs {
-		kernelSpec := make(map[string]interface{})
+		kernelSpec := make(map[string]any)
 
 		kernelSpec[names.AttrName] = aws.ToString(raw.Name)
 
@@ -503,32 +501,32 @@ func flattenKernelGatewayImageConfigKernelSpecs(kernelSpecs []awstypes.KernelSpe
 	return res
 }
 
-func expandCodeEditorAppImageConfig(l []interface{}) *awstypes.CodeEditorAppImageConfig {
+func expandCodeEditorAppImageConfig(l []any) *awstypes.CodeEditorAppImageConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.CodeEditorAppImageConfig{}
 
-	if v, ok := m["container_config"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["container_config"].([]any); ok && len(v) > 0 {
 		config.ContainerConfig = expandContainerConfig(v)
 	}
 
-	if v, ok := m["file_system_config"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["file_system_config"].([]any); ok && len(v) > 0 {
 		config.FileSystemConfig = expandFileSystemConfig(v)
 	}
 
 	return config
 }
 
-func flattenCodeEditorAppImageConfig(config *awstypes.CodeEditorAppImageConfig) []map[string]interface{} {
+func flattenCodeEditorAppImageConfig(config *awstypes.CodeEditorAppImageConfig) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if config.ContainerConfig != nil {
 		m["container_config"] = flattenContainerConfig(config.ContainerConfig)
@@ -538,35 +536,35 @@ func flattenCodeEditorAppImageConfig(config *awstypes.CodeEditorAppImageConfig) 
 		m["file_system_config"] = flattenFileSystemConfig(config.FileSystemConfig)
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func expandJupyterLabAppImageConfig(l []interface{}) *awstypes.JupyterLabAppImageConfig {
+func expandJupyterLabAppImageConfig(l []any) *awstypes.JupyterLabAppImageConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.JupyterLabAppImageConfig{}
 
-	if v, ok := m["container_config"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["container_config"].([]any); ok && len(v) > 0 {
 		config.ContainerConfig = expandContainerConfig(v)
 	}
 
-	if v, ok := m["file_system_config"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["file_system_config"].([]any); ok && len(v) > 0 {
 		config.FileSystemConfig = expandFileSystemConfig(v)
 	}
 
 	return config
 }
 
-func flattenJupyterLabAppImageConfig(config *awstypes.JupyterLabAppImageConfig) []map[string]interface{} {
+func flattenJupyterLabAppImageConfig(config *awstypes.JupyterLabAppImageConfig) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if config.ContainerConfig != nil {
 		m["container_config"] = flattenContainerConfig(config.ContainerConfig)
@@ -576,43 +574,43 @@ func flattenJupyterLabAppImageConfig(config *awstypes.JupyterLabAppImageConfig) 
 		m["file_system_config"] = flattenFileSystemConfig(config.FileSystemConfig)
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func expandContainerConfig(l []interface{}) *awstypes.ContainerConfig {
+func expandContainerConfig(l []any) *awstypes.ContainerConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.ContainerConfig{}
 
-	if v, ok := m["container_arguments"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["container_arguments"].([]any); ok && len(v) > 0 {
 		config.ContainerArguments = flex.ExpandStringValueList(v)
 	}
 
-	if v, ok := m["container_entrypoint"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["container_entrypoint"].([]any); ok && len(v) > 0 {
 		config.ContainerEntrypoint = flex.ExpandStringValueList(v)
 	}
 
-	if v, ok := m["container_environment_variables"].(map[string]interface{}); ok && len(v) > 0 {
+	if v, ok := m["container_environment_variables"].(map[string]any); ok && len(v) > 0 {
 		config.ContainerEnvironmentVariables = flex.ExpandStringValueMap(v)
 	}
 
 	return config
 }
 
-func flattenContainerConfig(config *awstypes.ContainerConfig) []map[string]interface{} {
+func flattenContainerConfig(config *awstypes.ContainerConfig) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"container_arguments":             flex.FlattenStringValueList(config.ContainerArguments),
 		"container_entrypoint":            flex.FlattenStringValueList(config.ContainerEntrypoint),
 		"container_environment_variables": flex.FlattenStringValueMap(config.ContainerEnvironmentVariables),
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }

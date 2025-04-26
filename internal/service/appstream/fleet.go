@@ -5,6 +5,8 @@ package appstream
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"log"
 	"reflect"
 	"time"
@@ -13,25 +15,24 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/appstream"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appstream/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_appstream_fleet", name="Fleet")
 // @Tags(identifierAttribute="arn")
-func ResourceFleet() *schema.Resource {
+func resourceFleet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFleetCreate,
 		ReadWithoutTimeout:   resourceFleetRead,
@@ -42,10 +43,7 @@ func ResourceFleet() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: customdiff.Sequence(
-			resourceFleetCustDiff,
-			verify.SetTagsDiff,
-		),
+		CustomizeDiff: resourceFleetCustDiff,
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -223,14 +221,15 @@ func ResourceFleet() *schema.Resource {
 	}
 }
 
-func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).AppStreamClient(ctx)
-	input := &appstream.CreateFleetInput{
-		Name:            aws.String(d.Get(names.AttrName).(string)),
+
+	name := d.Get(names.AttrName).(string)
+	input := appstream.CreateFleetInput{
+		ComputeCapacity: expandComputeCapacity(d.Get("compute_capacity").([]any)),
 		InstanceType:    aws.String(d.Get(names.AttrInstanceType).(string)),
-		ComputeCapacity: expandComputeCapacity(d.Get("compute_capacity").([]interface{})),
+		Name:            aws.String(name),
 		Tags:            getTagsIn(ctx),
 	}
 
@@ -251,7 +250,7 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if v, ok := d.GetOk("domain_join_info"); ok {
-		input.DomainJoinInfo = expandDomainJoinInfo(v.([]interface{}))
+		input.DomainJoinInfo = expandDomainJoinInfo(v.([]any))
 	}
 
 	if v, ok := d.GetOk("enable_default_internet_access"); ok {
@@ -287,119 +286,93 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if v, ok := d.GetOk(names.AttrVPCConfig); ok {
-		input.VpcConfig = expandVPCConfig(v.([]interface{}))
+		input.VpcConfig = expandVPCConfig(v.([]any))
 	}
 
-	var err error
-	var output *appstream.CreateFleetOutput
-	err = retry.RetryContext(ctx, fleetOperationTimeout, func() *retry.RetryError {
-		output, err = conn.CreateFleet(ctx, input)
-		if err != nil {
+	const (
+		timeout = 15 * time.Minute
+	)
+	outputRaw, err := tfresource.RetryWhen(ctx, timeout,
+		func() (any, error) {
+			return conn.CreateFleet(ctx, &input)
+		},
+		func(err error) (bool, error) {
 			if errs.IsA[*awstypes.ResourceNotFoundException](err) || errs.IsA[*awstypes.ConcurrentModificationException](err) {
-				return retry.RetryableError(err)
+				return true, err
 			}
 
-			// Retry for IAM eventual consistency on error:
+			// Retry for IAM eventual consistency.
 			if errs.IsAErrorMessageContains[*awstypes.InvalidRoleException](err, "encountered an error because your IAM role") {
-				return retry.RetryableError(err)
+				return true, err
 			}
 
-			return retry.NonRetryableError(err)
-		}
+			return false, err
+		},
+	)
 
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		output, err = conn.CreateFleet(ctx, input)
-	}
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Appstream Fleet (%s): %s", d.Get(names.AttrName).(string), err)
+		return sdkdiag.AppendErrorf(diags, "creating AppStream Fleet (%s): %s", name, err)
 	}
 
-	d.SetId(aws.ToString(output.Fleet.Name))
+	d.SetId(aws.ToString(outputRaw.(*appstream.CreateFleetOutput).Fleet.Name))
 
-	// Start fleet workflow
-	_, err = conn.StartFleet(ctx, &appstream.StartFleetInput{
-		Name: aws.String(d.Id()),
-	})
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "starting Appstream Fleet (%s): %s", d.Id(), err)
-	}
-
-	if _, err = waitFleetStateRunning(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for Appstream Fleet (%s) to be running: %s", d.Id(), err)
+	if err := startFleet(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	return append(diags, resourceFleetRead(ctx, d, meta)...)
 }
 
-func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).AppStreamClient(ctx)
 
-	resp, err := conn.DescribeFleets(ctx, &appstream.DescribeFleetsInput{Names: []string{d.Id()}})
+	fleet, err := findFleetByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		log.Printf("[WARN] Appstream Fleet (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] AppStream Fleet (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Appstream Fleet (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading AppStream Fleet (%s): %s", d.Id(), err)
 	}
-
-	if len(resp.Fleets) == 0 {
-		return sdkdiag.AppendErrorf(diags, "reading Appstream Fleet (%s): %s", d.Id(), "empty response")
-	}
-
-	if len(resp.Fleets) > 1 {
-		return sdkdiag.AppendErrorf(diags, "reading Appstream Fleet (%s): %s", d.Id(), "multiple fleets found")
-	}
-
-	fleet := resp.Fleets[0]
 
 	d.Set(names.AttrARN, fleet.Arn)
-
 	if fleet.ComputeCapacityStatus != nil {
-		if err = d.Set("compute_capacity", []interface{}{flattenComputeCapacity(fleet.ComputeCapacityStatus)}); err != nil {
-			return create.AppendDiagSettingError(diags, names.AppStream, "Fleet", d.Id(), "compute_capacity", err)
+		if err = d.Set("compute_capacity", []any{flattenComputeCapacity(fleet.ComputeCapacityStatus)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting compute_capacity: %s", err)
 		}
 	} else {
 		d.Set("compute_capacity", nil)
 	}
-
 	d.Set(names.AttrCreatedTime, aws.ToTime(fleet.CreatedTime).Format(time.RFC3339))
 	d.Set(names.AttrDescription, fleet.Description)
 	d.Set(names.AttrDisplayName, fleet.DisplayName)
 	d.Set("disconnect_timeout_in_seconds", fleet.DisconnectTimeoutInSeconds)
-
 	if fleet.DomainJoinInfo != nil {
-		if err = d.Set("domain_join_info", []interface{}{flattenDomainInfo(fleet.DomainJoinInfo)}); err != nil {
-			return create.AppendDiagSettingError(diags, names.AppStream, "Fleet", d.Id(), "domain_join_info", err)
+		if err = d.Set("domain_join_info", []any{flattenDomainInfo(fleet.DomainJoinInfo)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting domain_join_info: %s", err)
 		}
 	} else {
 		d.Set("domain_join_info", nil)
 	}
-
-	d.Set("idle_disconnect_timeout_in_seconds", fleet.IdleDisconnectTimeoutInSeconds)
 	d.Set("enable_default_internet_access", fleet.EnableDefaultInternetAccess)
 	d.Set("fleet_type", fleet.FleetType)
 	d.Set(names.AttrIAMRoleARN, fleet.IamRoleArn)
-	d.Set("image_name", fleet.ImageName)
+	d.Set("idle_disconnect_timeout_in_seconds", fleet.IdleDisconnectTimeoutInSeconds)
 	d.Set("image_arn", fleet.ImageArn)
+	d.Set("image_name", fleet.ImageName)
 	d.Set(names.AttrInstanceType, fleet.InstanceType)
 	d.Set("max_sessions_per_instance", fleet.MaxSessionsPerInstance)
 	d.Set("max_user_duration_in_seconds", fleet.MaxUserDurationInSeconds)
 	d.Set(names.AttrName, fleet.Name)
 	d.Set(names.AttrState, fleet.State)
 	d.Set("stream_view", fleet.StreamView)
-
 	if fleet.VpcConfig != nil {
-		if err = d.Set(names.AttrVPCConfig, []interface{}{flattenVPCConfig(fleet.VpcConfig)}); err != nil {
-			return create.AppendDiagSettingError(diags, names.AppStream, "Fleet", d.Id(), names.AttrVPCConfig, err)
+		if err = d.Set(names.AttrVPCConfig, []any{flattenVPCConfig(fleet.VpcConfig)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting vpc_config: %s", err)
 		}
 	} else {
 		d.Set(names.AttrVPCConfig, nil)
@@ -408,172 +381,316 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	return diags
 }
 
-func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).AppStreamClient(ctx)
-	input := &appstream.UpdateFleetInput{
-		Name: aws.String(d.Id()),
-	}
-	shouldStop := false
 
-	if d.HasChanges(names.AttrDescription, "domain_join_info", "enable_default_internet_access", names.AttrIAMRoleARN, names.AttrInstanceType, "max_user_duration_in_seconds", "stream_view", names.AttrVPCConfig) {
-		shouldStop = true
-	}
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+		shouldStop := false
+		if d.HasChanges(names.AttrDescription, "domain_join_info", "enable_default_internet_access", names.AttrIAMRoleARN, names.AttrInstanceType, "max_user_duration_in_seconds", "stream_view", names.AttrVPCConfig) {
+			shouldStop = true
+		}
 
-	// Stop fleet workflow if needed
-	if shouldStop {
-		_, err := conn.StopFleet(ctx, &appstream.StopFleetInput{
+		if shouldStop {
+			if err := stopFleet(ctx, conn, d.Id()); err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
+			}
+		}
+
+		input := appstream.UpdateFleetInput{
 			Name: aws.String(d.Id()),
-		})
+		}
+
+		if d.HasChange("compute_capacity") {
+			input.ComputeCapacity = expandComputeCapacity(d.Get("compute_capacity").([]any))
+		}
+
+		if d.HasChange(names.AttrDescription) {
+			input.Description = aws.String(d.Get(names.AttrDescription).(string))
+		}
+
+		if d.HasChange("disconnect_timeout_in_seconds") {
+			input.DisconnectTimeoutInSeconds = aws.Int32(int32(d.Get("disconnect_timeout_in_seconds").(int)))
+		}
+
+		if d.HasChange(names.AttrDisplayName) {
+			input.DisplayName = aws.String(d.Get(names.AttrDisplayName).(string))
+		}
+
+		if d.HasChange("domain_join_info") {
+			input.DomainJoinInfo = expandDomainJoinInfo(d.Get("domain_join_info").([]any))
+		}
+
+		if d.HasChange("enable_default_internet_access") {
+			input.EnableDefaultInternetAccess = aws.Bool(d.Get("enable_default_internet_access").(bool))
+		}
+
+		if d.HasChange(names.AttrIAMRoleARN) {
+			input.IamRoleArn = aws.String(d.Get(names.AttrIAMRoleARN).(string))
+		}
+
+		if d.HasChange("idle_disconnect_timeout_in_seconds") {
+			input.IdleDisconnectTimeoutInSeconds = aws.Int32(int32(d.Get("idle_disconnect_timeout_in_seconds").(int)))
+		}
+
+		if d.HasChange("image_name") {
+			input.ImageName = aws.String(d.Get("image_name").(string))
+		}
+
+		if d.HasChange("image_arn") {
+			input.ImageArn = aws.String(d.Get("image_arn").(string))
+		}
+
+		if d.HasChange(names.AttrInstanceType) {
+			input.InstanceType = aws.String(d.Get(names.AttrInstanceType).(string))
+		}
+
+		if d.HasChange("max_sessions_per_instance") {
+			input.MaxSessionsPerInstance = aws.Int32(int32(d.Get("max_sessions_per_instance").(int)))
+		}
+
+		if d.HasChange("max_user_duration_in_seconds") {
+			input.MaxUserDurationInSeconds = aws.Int32(int32(d.Get("max_user_duration_in_seconds").(int)))
+		}
+
+		if d.HasChange("stream_view") {
+			input.StreamView = awstypes.StreamView(d.Get("stream_view").(string))
+		}
+
+		if d.HasChange(names.AttrVPCConfig) {
+			input.VpcConfig = expandVPCConfig(d.Get(names.AttrVPCConfig).([]any))
+		}
+
+		_, err := conn.UpdateFleet(ctx, &input)
+
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "stopping Appstream Fleet (%s): %s", d.Id(), err)
-		}
-		if _, err = waitFleetStateStopped(ctx, conn, d.Id()); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for Appstream Fleet (%s) to be stopped: %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("compute_capacity") {
-		input.ComputeCapacity = expandComputeCapacity(d.Get("compute_capacity").([]interface{}))
-	}
-
-	if d.HasChange(names.AttrDescription) {
-		input.Description = aws.String(d.Get(names.AttrDescription).(string))
-	}
-
-	if d.HasChange("domain_join_info") {
-		input.DomainJoinInfo = expandDomainJoinInfo(d.Get("domain_join_info").([]interface{}))
-	}
-
-	if d.HasChange("disconnect_timeout_in_seconds") {
-		input.DisconnectTimeoutInSeconds = aws.Int32(int32(d.Get("disconnect_timeout_in_seconds").(int)))
-	}
-
-	if d.HasChange("enable_default_internet_access") {
-		input.EnableDefaultInternetAccess = aws.Bool(d.Get("enable_default_internet_access").(bool))
-	}
-
-	if d.HasChange("idle_disconnect_timeout_in_seconds") {
-		input.IdleDisconnectTimeoutInSeconds = aws.Int32(int32(d.Get("idle_disconnect_timeout_in_seconds").(int)))
-	}
-
-	if d.HasChange(names.AttrDisplayName) {
-		input.DisplayName = aws.String(d.Get(names.AttrDisplayName).(string))
-	}
-
-	if d.HasChange("image_name") {
-		input.ImageName = aws.String(d.Get("image_name").(string))
-	}
-
-	if d.HasChange("image_arn") {
-		input.ImageArn = aws.String(d.Get("image_arn").(string))
-	}
-
-	if d.HasChange(names.AttrIAMRoleARN) {
-		input.IamRoleArn = aws.String(d.Get(names.AttrIAMRoleARN).(string))
-	}
-
-	if d.HasChange("stream_view") {
-		input.StreamView = awstypes.StreamView(d.Get("stream_view").(string))
-	}
-
-	if d.HasChange(names.AttrInstanceType) {
-		input.InstanceType = aws.String(d.Get(names.AttrInstanceType).(string))
-	}
-
-	if d.HasChange("max_sessions_per_instance") {
-		input.MaxSessionsPerInstance = aws.Int32(int32(d.Get("max_sessions_per_instance").(int)))
-	}
-
-	if d.HasChange("max_user_duration_in_seconds") {
-		input.MaxUserDurationInSeconds = aws.Int32(int32(d.Get("max_user_duration_in_seconds").(int)))
-	}
-
-	if d.HasChange(names.AttrVPCConfig) {
-		input.VpcConfig = expandVPCConfig(d.Get(names.AttrVPCConfig).([]interface{}))
-	}
-
-	_, err := conn.UpdateFleet(ctx, input)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating Appstream Fleet (%s): %s", d.Id(), err)
-	}
-
-	// Start fleet workflow if stopped
-	if shouldStop {
-		_, err = conn.StartFleet(ctx, &appstream.StartFleetInput{
-			Name: aws.String(d.Id()),
-		})
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "starting Appstream Fleet (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating AppStream Fleet (%s): %s", d.Id(), err)
 		}
 
-		if _, err = waitFleetStateRunning(ctx, conn, d.Id()); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for Appstream Fleet (%s) to be running: %s", d.Id(), err)
+		if shouldStop {
+			if err := startFleet(ctx, conn, d.Id()); err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
+			}
 		}
 	}
 
 	return append(diags, resourceFleetRead(ctx, d, meta)...)
 }
 
-func resourceFleetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFleetDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).AppStreamClient(ctx)
 
-	// Stop fleet workflow
-	log.Printf("[DEBUG] Stopping AppStream Fleet: (%s)", d.Id())
-	_, err := conn.StopFleet(ctx, &appstream.StopFleetInput{
-		Name: aws.String(d.Id()),
-	})
+	log.Printf("[DEBUG] Stopping AppStream Fleet: %s", d.Id())
+	err := stopFleet(ctx, conn, d.Id())
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "stopping Appstream Fleet (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	if _, err = waitFleetStateStopped(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for Appstream Fleet (%s) to be stopped: %s", d.Id(), err)
-	}
-
-	log.Printf("[DEBUG] Deleting AppStream Fleet: (%s)", d.Id())
-	_, err = conn.DeleteFleet(ctx, &appstream.DeleteFleetInput{
+	log.Printf("[DEBUG] Deleting AppStream Fleet: %s", d.Id())
+	input := appstream.DeleteFleetInput{
 		Name: aws.String(d.Id()),
-	})
+	}
+	_, err = conn.DeleteFleet(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Appstream Fleet (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting AppStream Fleet (%s): %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func resourceFleetCustDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+func resourceFleetCustDiff(_ context.Context, diff *schema.ResourceDiff, meta any) error {
 	if diff.HasChange("domain_join_info") {
 		o, n := diff.GetChange("domain_join_info")
 
-		if reflect.DeepEqual(expandDomainJoinInfo(o.([]interface{})), expandDomainJoinInfo(n.([]interface{}))) {
+		if reflect.DeepEqual(expandDomainJoinInfo(o.([]any)), expandDomainJoinInfo(n.([]any))) {
 			return diff.Clear("domain_join_info")
 		}
 	}
+
 	return nil
 }
 
-func expandComputeCapacity(tfList []interface{}) *awstypes.ComputeCapacity {
+func startFleet(ctx context.Context, conn *appstream.Client, id string) error {
+	input := appstream.StartFleetInput{
+		Name: aws.String(id),
+	}
+
+	_, err := conn.StartFleet(ctx, &input)
+
+	if err != nil {
+		return fmt.Errorf("starting AppStream Fleet (%s): %w", id, err)
+	}
+
+	if _, err := waitFleetRunning(ctx, conn, id); err != nil {
+		return fmt.Errorf("waiting for AppStream Fleet (%s) start: %w", id, err)
+	}
+
+	return nil
+}
+
+func stopFleet(ctx context.Context, conn *appstream.Client, id string) error {
+	input := appstream.StopFleetInput{
+		Name: aws.String(id),
+	}
+
+	_, err := conn.StopFleet(ctx, &input)
+
+	if err != nil {
+		return fmt.Errorf("stopping AppStream Fleet (%s): %w", id, err)
+	}
+
+	if _, err := waitFleetStopped(ctx, conn, id); err != nil {
+		return fmt.Errorf("waiting for AppStream Fleet (%s) stop: %w", id, err)
+	}
+
+	return nil
+}
+
+func findFleetByID(ctx context.Context, conn *appstream.Client, id string) (*awstypes.Fleet, error) {
+	input := appstream.DescribeFleetsInput{
+		Names: []string{id},
+	}
+
+	return findFleet(ctx, conn, &input)
+}
+
+func findFleet(ctx context.Context, conn *appstream.Client, input *appstream.DescribeFleetsInput) (*awstypes.Fleet, error) {
+	output, err := findFleets(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findFleets(ctx context.Context, conn *appstream.Client, input *appstream.DescribeFleetsInput) ([]awstypes.Fleet, error) {
+	var output []awstypes.Fleet
+
+	err := describeFleetsPages(ctx, conn, input, func(page *appstream.DescribeFleetsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		output = append(output, page.Fleets...)
+
+		return !lastPage
+	})
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func statusFleet(ctx context.Context, conn *appstream.Client, id string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findFleetByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.State), nil
+	}
+}
+
+func waitFleetRunning(ctx context.Context, conn *appstream.Client, id string) (*awstypes.Fleet, error) { //nolint:unparam
+	const (
+		timeout = 180 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.FleetStateStarting),
+		Target:  enum.Slice(awstypes.FleetStateRunning),
+		Refresh: statusFleet(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.Fleet); ok {
+		tfresource.SetLastError(err, fleetsError(output.FleetErrors))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitFleetStopped(ctx context.Context, conn *appstream.Client, id string) (*awstypes.Fleet, error) { //nolint:unparam
+	const (
+		timeout = 180 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.FleetStateStopping),
+		Target:  enum.Slice(awstypes.FleetStateStopped),
+		Refresh: statusFleet(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.Fleet); ok {
+		tfresource.SetLastError(err, fleetsError(output.FleetErrors))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func fleetError(apiObject *awstypes.FleetError) error {
+	if apiObject == nil {
+		return nil
+	}
+
+	return errs.APIError(apiObject.ErrorCode, aws.ToString(apiObject.ErrorMessage))
+}
+
+func fleetsError(apiObjects []awstypes.FleetError) error {
+	var errs []error
+
+	for _, apiObject := range apiObjects {
+		if err := fleetError(&apiObject); err != nil {
+			errs = append(errs, err)
+		}
+	}
+
+	return errors.Join(errs...)
+}
+
+func expandComputeCapacity(tfList []any) *awstypes.ComputeCapacity {
 	if len(tfList) == 0 {
 		return nil
 	}
 
 	apiObject := &awstypes.ComputeCapacity{}
 
-	attr := tfList[0].(map[string]interface{})
+	attr := tfList[0].(map[string]any)
+
 	if v, ok := attr["desired_instances"]; ok && v != 0 {
 		apiObject.DesiredInstances = aws.Int32(int32(v.(int)))
 	}
@@ -582,19 +699,23 @@ func expandComputeCapacity(tfList []interface{}) *awstypes.ComputeCapacity {
 		apiObject.DesiredSessions = aws.Int32(int32(v.(int)))
 	}
 
-	if reflect.DeepEqual(&awstypes.ComputeCapacity{}, apiObject) {
+	if itypes.IsZero(apiObject) {
 		return nil
 	}
 
 	return apiObject
 }
 
-func flattenComputeCapacity(apiObject *awstypes.ComputeCapacityStatus) map[string]interface{} {
+func flattenComputeCapacity(apiObject *awstypes.ComputeCapacityStatus) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
+
+	if v := apiObject.Available; v != nil {
+		tfMap["available"] = aws.ToInt32(v)
+	}
 
 	if v := apiObject.DesiredUserSessions; v != nil {
 		tfMap["desired_sessions"] = aws.ToInt32(v)
@@ -605,10 +726,6 @@ func flattenComputeCapacity(apiObject *awstypes.ComputeCapacityStatus) map[strin
 		tfMap["desired_instances"] = aws.ToInt32(v)
 	}
 
-	if v := apiObject.Available; v != nil {
-		tfMap["available"] = aws.ToInt32(v)
-	}
-
 	if v := apiObject.InUse; v != nil {
 		tfMap["in_use"] = aws.ToInt32(v)
 	}
@@ -617,21 +734,21 @@ func flattenComputeCapacity(apiObject *awstypes.ComputeCapacityStatus) map[strin
 		tfMap["running"] = aws.ToInt32(v)
 	}
 
-	if reflect.DeepEqual(map[string]interface{}{}, tfMap) {
+	if len(tfMap) == 0 {
 		return nil
 	}
 
 	return tfMap
 }
 
-func expandDomainJoinInfo(tfList []interface{}) *awstypes.DomainJoinInfo {
+func expandDomainJoinInfo(tfList []any) *awstypes.DomainJoinInfo {
 	if len(tfList) == 0 {
 		return nil
 	}
 
 	apiObject := &awstypes.DomainJoinInfo{}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 
 	if !ok {
 		return nil
@@ -645,19 +762,19 @@ func expandDomainJoinInfo(tfList []interface{}) *awstypes.DomainJoinInfo {
 		apiObject.OrganizationalUnitDistinguishedName = aws.String(v.(string))
 	}
 
-	if reflect.DeepEqual(&awstypes.DomainJoinInfo{}, apiObject) {
+	if itypes.IsZero(apiObject) {
 		return nil
 	}
 
 	return apiObject
 }
 
-func flattenDomainInfo(apiObject *awstypes.DomainJoinInfo) map[string]interface{} {
+func flattenDomainInfo(apiObject *awstypes.DomainJoinInfo) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.DirectoryName; v != nil && aws.ToString(v) != "" {
 		tfMap["directory_name"] = aws.ToString(v)
@@ -667,42 +784,43 @@ func flattenDomainInfo(apiObject *awstypes.DomainJoinInfo) map[string]interface{
 		tfMap["organizational_unit_distinguished_name"] = aws.ToString(v)
 	}
 
-	if reflect.DeepEqual(map[string]interface{}{}, tfMap) {
+	if len(tfMap) == 0 {
 		return nil
 	}
 
 	return tfMap
 }
 
-func expandVPCConfig(tfList []interface{}) *awstypes.VpcConfig {
+func expandVPCConfig(tfList []any) *awstypes.VpcConfig {
 	if len(tfList) == 0 {
 		return nil
 	}
 
 	apiObject := &awstypes.VpcConfig{}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
+
 	if v, ok := tfMap[names.AttrSecurityGroupIDs]; ok {
-		apiObject.SecurityGroupIds = flex.ExpandStringValueList(v.([]interface{}))
+		apiObject.SecurityGroupIds = flex.ExpandStringValueList(v.([]any))
 	}
 
 	if v, ok := tfMap[names.AttrSubnetIDs]; ok {
-		apiObject.SubnetIds = flex.ExpandStringValueList(v.([]interface{}))
+		apiObject.SubnetIds = flex.ExpandStringValueList(v.([]any))
 	}
 
-	if reflect.DeepEqual(&awstypes.VpcConfig{}, apiObject) {
+	if itypes.IsZero(apiObject) {
 		return nil
 	}
 
 	return apiObject
 }
 
-func flattenVPCConfig(apiObject *awstypes.VpcConfig) map[string]interface{} {
+func flattenVPCConfig(apiObject *awstypes.VpcConfig) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.SecurityGroupIds; v != nil {
 		tfMap[names.AttrSecurityGroupIDs] = v
@@ -712,7 +830,7 @@ func flattenVPCConfig(apiObject *awstypes.VpcConfig) map[string]interface{} {
 		tfMap[names.AttrSubnetIDs] = v
 	}
 
-	if reflect.DeepEqual(map[string]interface{}{}, tfMap) {
+	if len(tfMap) == 0 {
 		return nil
 	}
 

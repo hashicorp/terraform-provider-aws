@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -73,12 +72,10 @@ func resourceVPCConnector() *schema.Resource {
 				Computed: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceVPCConnectorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCConnectorCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
@@ -106,7 +103,7 @@ func resourceVPCConnectorCreate(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceVPCConnectorRead(ctx, d, meta)...)
 }
 
-func resourceVPCConnectorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCConnectorRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
@@ -133,20 +130,21 @@ func resourceVPCConnectorRead(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func resourceVPCConnectorUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCConnectorUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	// Tags only.
 	return resourceVPCConnectorRead(ctx, d, meta)
 }
 
-func resourceVPCConnectorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCConnectorDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
 
 	log.Printf("[DEBUG] Deleting App Runner VPC Connector: %s", d.Id())
-	_, err := conn.DeleteVpcConnector(ctx, &apprunner.DeleteVpcConnectorInput{
+	input := apprunner.DeleteVpcConnectorInput{
 		VpcConnectorArn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteVpcConnector(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
@@ -196,7 +194,7 @@ func findVPCConnectorByARN(ctx context.Context, conn *apprunner.Client, arn stri
 }
 
 func statusVPCConnector(ctx context.Context, conn *apprunner.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findVPCConnectorByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {

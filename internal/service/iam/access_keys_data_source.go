@@ -49,7 +49,7 @@ func dataSourceAccessKeys() *schema.Resource {
 	}
 }
 
-func dataSourceAccessKeysRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceAccessKeysRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
@@ -69,12 +69,12 @@ func dataSourceAccessKeysRead(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func flattenAccessKeys(apiObjects []awstypes.AccessKeyMetadata) []interface{} {
+func flattenAccessKeys(apiObjects []awstypes.AccessKeyMetadata) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		if apiObject == (awstypes.AccessKeyMetadata{}) {
@@ -86,12 +86,12 @@ func flattenAccessKeys(apiObjects []awstypes.AccessKeyMetadata) []interface{} {
 	return tfList
 }
 
-func flattenAccessKey(apiObject awstypes.AccessKeyMetadata) map[string]interface{} {
+func flattenAccessKey(apiObject awstypes.AccessKeyMetadata) map[string]any {
 	if apiObject == (awstypes.AccessKeyMetadata{}) {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := apiObject.AccessKeyId; v != nil {
 		m["access_key_id"] = aws.ToString(v)

@@ -53,10 +53,6 @@ type resourceBotLocale struct {
 	framework.WithTimeouts
 }
 
-func (r *resourceBotLocale) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_lexv2models_bot_locale"
-}
-
 func (r *resourceBotLocale) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -418,7 +414,7 @@ func waitBotLocaleDeleted(ctx context.Context, conn *lexmodelsv2.Client, id stri
 }
 
 func statusBotLocale(ctx context.Context, conn *lexmodelsv2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := FindBotLocaleByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil

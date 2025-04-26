@@ -121,7 +121,7 @@ func resourceFlowLog() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"log_destination"},
-				Deprecated:    "use 'log_destination' argument instead",
+				Deprecated:    "log_group_name is deprecated. Use log_destination instead.",
 			},
 			"max_aggregation_interval": {
 				Type:         schema.TypeInt,
@@ -163,12 +163,10 @@ func resourceFlowLog() *schema.Resource {
 				ExactlyOneOf: []string{"eni_id", names.AttrSubnetID, names.AttrVPCID, names.AttrTransitGatewayID, names.AttrTransitGatewayAttachmentID},
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceLogFlowCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLogFlowCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -220,8 +218,8 @@ func resourceLogFlowCreate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 	}
 
-	if v, ok := d.GetOk("destination_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.DestinationOptions = expandDestinationOptionsRequest(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("destination_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.DestinationOptions = expandDestinationOptionsRequest(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("deliver_cross_account_role"); ok {
@@ -248,7 +246,7 @@ func resourceLogFlowCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.MaxAggregationInterval = aws.Int32(int32(v.(int)))
 	}
 
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, iamPropagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, iamPropagationTimeout, func() (any, error) {
 		return conn.CreateFlowLogs(ctx, input)
 	}, errCodeInvalidParameter, "Unable to assume given IAM role")
 
@@ -265,7 +263,7 @@ func resourceLogFlowCreate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceLogFlowRead(ctx, d, meta)...)
 }
 
-func resourceLogFlowRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLogFlowRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -291,7 +289,7 @@ func resourceLogFlowRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set(names.AttrARN, arn)
 	d.Set("deliver_cross_account_role", fl.DeliverCrossAccountRole)
 	if fl.DestinationOptions != nil {
-		if err := d.Set("destination_options", []interface{}{flattenDestinationOptionsResponse(fl.DestinationOptions)}); err != nil {
+		if err := d.Set("destination_options", []any{flattenDestinationOptionsResponse(fl.DestinationOptions)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting destination_options: %s", err)
 		}
 	} else {
@@ -326,7 +324,7 @@ func resourceLogFlowRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceLogFlowUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLogFlowUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Tags only.
@@ -334,14 +332,15 @@ func resourceLogFlowUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceLogFlowRead(ctx, d, meta)...)
 }
 
-func resourceLogFlowDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLogFlowDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[INFO] Deleting Flow Log: %s", d.Id())
-	output, err := conn.DeleteFlowLogs(ctx, &ec2.DeleteFlowLogsInput{
+	input := ec2.DeleteFlowLogsInput{
 		FlowLogIds: []string{d.Id()},
-	})
+	}
+	output, err := conn.DeleteFlowLogs(ctx, &input)
 
 	if err == nil && output != nil {
 		err = unsuccessfulItemsError(output.Unsuccessful)
@@ -358,7 +357,7 @@ func resourceLogFlowDelete(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func expandDestinationOptionsRequest(tfMap map[string]interface{}) *awstypes.DestinationOptionsRequest {
+func expandDestinationOptionsRequest(tfMap map[string]any) *awstypes.DestinationOptionsRequest {
 	if tfMap == nil {
 		return nil
 	}
@@ -380,8 +379,8 @@ func expandDestinationOptionsRequest(tfMap map[string]interface{}) *awstypes.Des
 	return apiObject
 }
 
-func flattenDestinationOptionsResponse(apiObject *awstypes.DestinationOptionsResponse) map[string]interface{} {
-	tfMap := map[string]interface{}{
+func flattenDestinationOptionsResponse(apiObject *awstypes.DestinationOptionsResponse) map[string]any {
+	tfMap := map[string]any{
 		"file_format": apiObject.FileFormat,
 	}
 

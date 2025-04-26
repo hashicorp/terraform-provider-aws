@@ -37,10 +37,6 @@ type domainResource struct {
 	framework.WithImportByID
 }
 
-func (*domainResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_simpledb_domain"
-}
-
 func (r *domainResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -121,7 +117,7 @@ func (r *domainResource) Delete(ctx context.Context, request resource.DeleteRequ
 
 	conn := simpleDBConn(ctx, r.Meta())
 
-	tflog.Debug(ctx, "deleting SimpleDB Domain", map[string]interface{}{
+	tflog.Debug(ctx, "deleting SimpleDB Domain", map[string]any{
 		names.AttrID: data.ID.ValueString(),
 	})
 

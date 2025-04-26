@@ -331,6 +331,12 @@ service/bedrockagent:
           - any-glob-to-any-file:
               - 'internal/service/bedrockagent/**/*'
               - 'website/**/bedrockagent_*'
+service/billing:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/billing/**/*'
+              - 'website/**/billing_*'
 service/billingconductor:
   - any:
       - changed-files:
@@ -471,6 +477,7 @@ service/cloudwatch:
               - 'website/**/cloudwatch_dashboard*'
               - 'website/**/cloudwatch_metric_*'
               - 'website/**/cloudwatch_composite_*'
+              - 'website/**/cloudwatch_contributor_*'
 service/codeartifact:
   - any:
       - changed-files:
@@ -739,6 +746,12 @@ service/ds:
           - any-glob-to-any-file:
               - 'internal/service/ds/**/*'
               - 'website/**/directory_service_*'
+service/dsql:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/dsql/**/*'
+              - 'website/**/dsql_*'
 service/dynamodb:
   - any:
       - changed-files:
@@ -766,6 +779,7 @@ service/ec2:
               - 'website/**/availability_zone*'
               - 'website/**/ec2_availability_*'
               - 'website/**/ec2_capacity_*'
+              - 'website/**/ec2_default_credit_specification*'
               - 'website/**/ec2_fleet*'
               - 'website/**/ec2_host*'
               - 'website/**/ec2_image_*'

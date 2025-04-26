@@ -54,9 +54,6 @@ type resourceFormType struct {
 	framework.WithNoUpdate
 }
 
-func (r *resourceFormType) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_datazone_form_type"
-}
 func (r *resourceFormType) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -189,7 +186,7 @@ func (r *resourceFormType) Create(ctx context.Context, req resource.CreateReques
 	}
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	outputRaws, err := tfresource.RetryWhenNotFound(ctx, createTimeout, func() (interface{}, error) {
+	outputRaws, err := tfresource.RetryWhenNotFound(ctx, createTimeout, func() (any, error) {
 		return findFormTypeByID(ctx, conn, *out.DomainId, *out.Name, *out.Revision)
 	})
 	if err != nil {

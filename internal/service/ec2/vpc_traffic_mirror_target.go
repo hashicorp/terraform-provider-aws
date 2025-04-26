@@ -38,8 +38,6 @@ func resourceTrafficMirrorTarget() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,
@@ -91,7 +89,7 @@ func resourceTrafficMirrorTarget() *schema.Resource {
 	}
 }
 
-func resourceTrafficMirrorTargetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTrafficMirrorTargetCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -127,7 +125,7 @@ func resourceTrafficMirrorTargetCreate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceTrafficMirrorTargetRead(ctx, d, meta)...)
 }
 
-func resourceTrafficMirrorTargetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTrafficMirrorTargetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -163,7 +161,7 @@ func resourceTrafficMirrorTargetRead(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func resourceTrafficMirrorTargetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTrafficMirrorTargetUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Tags only
@@ -171,14 +169,15 @@ func resourceTrafficMirrorTargetUpdate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceTrafficMirrorTargetRead(ctx, d, meta)...)
 }
 
-func resourceTrafficMirrorTargetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTrafficMirrorTargetDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 Traffic Mirror Target: %s", d.Id())
-	_, err := conn.DeleteTrafficMirrorTarget(ctx, &ec2.DeleteTrafficMirrorTargetInput{
+	input := ec2.DeleteTrafficMirrorTargetInput{
 		TrafficMirrorTargetId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteTrafficMirrorTarget(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidTrafficMirrorTargetIdNotFound) {
 		return diags

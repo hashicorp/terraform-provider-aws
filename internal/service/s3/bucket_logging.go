@@ -136,7 +136,7 @@ func resourceBucketLogging() *schema.Resource {
 	}
 }
 
-func resourceBucketLoggingCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketLoggingCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
@@ -162,11 +162,11 @@ func resourceBucketLoggingCreate(ctx context.Context, d *schema.ResourceData, me
 		input.BucketLoggingStatus.LoggingEnabled.TargetGrants = expandTargetGrants(v.(*schema.Set).List())
 	}
 
-	if v, ok := d.GetOk("target_object_key_format"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.BucketLoggingStatus.LoggingEnabled.TargetObjectKeyFormat = expandTargetObjectKeyFormat(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("target_object_key_format"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.BucketLoggingStatus.LoggingEnabled.TargetObjectKeyFormat = expandTargetObjectKeyFormat(v.([]any)[0].(map[string]any))
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (any, error) {
 		return conn.PutBucketLogging(ctx, input)
 	}, errCodeNoSuchBucket)
 
@@ -178,9 +178,9 @@ func resourceBucketLoggingCreate(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "creating S3 Bucket (%s) Logging: %s", bucket, err)
 	}
 
-	d.SetId(CreateResourceID(bucket, expectedBucketOwner))
+	d.SetId(createResourceID(bucket, expectedBucketOwner))
 
-	_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func() (any, error) {
 		return findLoggingEnabled(ctx, conn, bucket, expectedBucketOwner)
 	})
 
@@ -191,11 +191,11 @@ func resourceBucketLoggingCreate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceBucketLoggingRead(ctx, d, meta)...)
 }
 
-func resourceBucketLoggingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketLoggingRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
+	bucket, expectedBucketOwner, err := parseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -223,7 +223,7 @@ func resourceBucketLoggingRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "setting target_grant: %s", err)
 	}
 	if loggingEnabled.TargetObjectKeyFormat != nil {
-		if err := d.Set("target_object_key_format", []interface{}{flattenTargetObjectKeyFormat(loggingEnabled.TargetObjectKeyFormat)}); err != nil {
+		if err := d.Set("target_object_key_format", []any{flattenTargetObjectKeyFormat(loggingEnabled.TargetObjectKeyFormat)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting target_object_key_format: %s", err)
 		}
 	} else {
@@ -234,11 +234,11 @@ func resourceBucketLoggingRead(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func resourceBucketLoggingUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketLoggingUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
+	bucket, expectedBucketOwner, err := parseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -264,8 +264,8 @@ func resourceBucketLoggingUpdate(ctx context.Context, d *schema.ResourceData, me
 		input.BucketLoggingStatus.LoggingEnabled.TargetGrants = expandTargetGrants(v.(*schema.Set).List())
 	}
 
-	if v, ok := d.GetOk("target_object_key_format"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.BucketLoggingStatus.LoggingEnabled.TargetObjectKeyFormat = expandTargetObjectKeyFormat(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("target_object_key_format"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.BucketLoggingStatus.LoggingEnabled.TargetObjectKeyFormat = expandTargetObjectKeyFormat(v.([]any)[0].(map[string]any))
 	}
 
 	_, err = conn.PutBucketLogging(ctx, input)
@@ -277,11 +277,11 @@ func resourceBucketLoggingUpdate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceBucketLoggingRead(ctx, d, meta)...)
 }
 
-func resourceBucketLoggingDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketLoggingDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
+	bucket, expectedBucketOwner, err := parseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -341,18 +341,18 @@ func findLoggingEnabled(ctx context.Context, conn *s3.Client, bucketName, expect
 	return output.LoggingEnabled, nil
 }
 
-func expandTargetGrants(l []interface{}) []types.TargetGrant {
+func expandTargetGrants(l []any) []types.TargetGrant {
 	var grants []types.TargetGrant
 
 	for _, tfMapRaw := range l {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
 
 		grant := types.TargetGrant{}
 
-		if v, ok := tfMap["grantee"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		if v, ok := tfMap["grantee"].([]any); ok && len(v) > 0 && v[0] != nil {
 			grant.Grantee = expandLoggingGrantee(v)
 		}
 
@@ -366,12 +366,12 @@ func expandTargetGrants(l []interface{}) []types.TargetGrant {
 	return grants
 }
 
-func expandLoggingGrantee(l []interface{}) *types.Grantee {
+func expandLoggingGrantee(l []any) *types.Grantee {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := l[0].(map[string]interface{})
+	tfMap, ok := l[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -401,11 +401,11 @@ func expandLoggingGrantee(l []interface{}) *types.Grantee {
 	return grantee
 }
 
-func flattenTargetGrants(grants []types.TargetGrant) []interface{} {
-	var results []interface{}
+func flattenTargetGrants(grants []types.TargetGrant) []any {
+	var results []any
 
 	for _, grant := range grants {
-		m := map[string]interface{}{
+		m := map[string]any{
 			"permission": grant.Permission,
 		}
 
@@ -419,12 +419,12 @@ func flattenTargetGrants(grants []types.TargetGrant) []interface{} {
 	return results
 }
 
-func flattenLoggingGrantee(g *types.Grantee) []interface{} {
+func flattenLoggingGrantee(g *types.Grantee) []any {
 	if g == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		names.AttrType: g.Type,
 	}
 
@@ -444,28 +444,28 @@ func flattenLoggingGrantee(g *types.Grantee) []interface{} {
 		m[names.AttrURI] = aws.ToString(g.URI)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func expandTargetObjectKeyFormat(tfMap map[string]interface{}) *types.TargetObjectKeyFormat {
+func expandTargetObjectKeyFormat(tfMap map[string]any) *types.TargetObjectKeyFormat {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &types.TargetObjectKeyFormat{}
 
-	if v, ok := tfMap["partitioned_prefix"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.PartitionedPrefix = expandPartitionedPrefix(v[0].(map[string]interface{}))
+	if v, ok := tfMap["partitioned_prefix"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.PartitionedPrefix = expandPartitionedPrefix(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["simple_prefix"]; ok && len(v.([]interface{})) > 0 {
+	if v, ok := tfMap["simple_prefix"]; ok && len(v.([]any)) > 0 {
 		apiObject.SimplePrefix = &types.SimplePrefix{}
 	}
 
 	return apiObject
 }
 
-func expandPartitionedPrefix(tfMap map[string]interface{}) *types.PartitionedPrefix {
+func expandPartitionedPrefix(tfMap map[string]any) *types.PartitionedPrefix {
 	if tfMap == nil {
 		return nil
 	}
@@ -479,30 +479,30 @@ func expandPartitionedPrefix(tfMap map[string]interface{}) *types.PartitionedPre
 	return apiObject
 }
 
-func flattenTargetObjectKeyFormat(apiObject *types.TargetObjectKeyFormat) map[string]interface{} {
+func flattenTargetObjectKeyFormat(apiObject *types.TargetObjectKeyFormat) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.PartitionedPrefix; v != nil {
-		tfMap["partitioned_prefix"] = []interface{}{flattenPartitionedPrefix(v)}
+		tfMap["partitioned_prefix"] = []any{flattenPartitionedPrefix(v)}
 	}
 
 	if apiObject.SimplePrefix != nil {
-		tfMap["simple_prefix"] = make([]map[string]interface{}, 1)
+		tfMap["simple_prefix"] = make([]map[string]any, 1)
 	}
 
 	return tfMap
 }
 
-func flattenPartitionedPrefix(apiObject *types.PartitionedPrefix) map[string]interface{} {
+func flattenPartitionedPrefix(apiObject *types.PartitionedPrefix) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"partition_date_source": apiObject.PartitionDateSource,
 	}
 

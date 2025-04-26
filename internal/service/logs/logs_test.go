@@ -14,10 +14,11 @@ func TestAccLogs_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"Delivery": {
-			acctest.CtBasic:      testAccDelivery_basic,
-			acctest.CtDisappears: testAccDelivery_disappears,
-			"tags":               testAccDelivery_tags,
-			"update":             testAccDelivery_update,
+			acctest.CtBasic:          testAccDelivery_basic,
+			acctest.CtDisappears:     testAccDelivery_disappears,
+			"cloudFrontDistribution": testAccDelivery_cloudFrontDistribution,
+			"tags":                   testAccDelivery_tags,
+			"update":                 testAccDelivery_update,
 		},
 		"DeliverySource": {
 			acctest.CtBasic:      testAccDeliverySource_basic,
