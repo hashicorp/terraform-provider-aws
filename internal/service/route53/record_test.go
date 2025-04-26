@@ -154,13 +154,13 @@ func TestAccRoute53Record_Identity_setIdentifier(t *testing.T) {
 					testAccCheckRecordExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringRegexp(regexache.MustCompile(`^\w+_test_CNAME_test$`))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringRegexp(regexache.MustCompile(`^\w+_test_CNAME_set-id$`))),
 					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						"zone_id":           knownvalue.NotNull(), // Needs compare
 						names.AttrName:      knownvalue.StringExact("test"),
 						names.AttrType:      knownvalue.StringExact("CNAME"),
-						"set_identifier":    knownvalue.StringExact("test"),
+						"set_identifier":    knownvalue.StringExact("set-id"),
 					}),
 				},
 			},
@@ -2647,7 +2647,7 @@ resource "aws_route53_record" "test" {
   health_check_id = aws_route53_health_check.test.id
   name            = "test"
   records         = ["127.0.0.1"]
-  set_identifier  = "test"
+  set_identifier  = "set-id"
   ttl             = "5"
   type            = "A"
 
@@ -2679,7 +2679,7 @@ resource "aws_route53_record" "test" {
   health_check_id = aws_route53_health_check.test.id
   name            = "test"
   records         = ["test1.domain.test"]
-  set_identifier  = "test"
+  set_identifier  = "set-id"
   ttl             = "5"
   type            = "CNAME"
 
