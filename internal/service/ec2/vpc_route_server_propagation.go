@@ -170,12 +170,12 @@ func (r *resourceVPCRouteServerPropagation) Delete(ctx context.Context, req reso
 
 	// Check if the resource is already deleted
 	_, err := findVPCRouteServerPropagationByTwoPartKey(ctx, conn, state.RouteServerId.ValueString(), state.RouteTableId.ValueString())
+	if tfresource.NotFound(err) {
+		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		resp.State.RemoveResource(ctx)
+		return
+	}
 	if err != nil {
-		if tfresource.NotFound(err) {
-			resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
-			resp.State.RemoveResource(ctx)
-			return
-		}
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.EC2, create.ErrActionDeleting, ResNameVPCRouteServerPropagation, state.RouteServerId.String(), err),
 			err.Error(),
@@ -184,16 +184,16 @@ func (r *resourceVPCRouteServerPropagation) Delete(ctx context.Context, req reso
 	}
 
 	input := ec2.DisableRouteServerPropagationInput{
-		RouteServerId: aws.String(state.RouteServerId.ValueString()),
-		RouteTableId:  aws.String(state.RouteTableId.ValueString()),
+		RouteServerId: state.RouteServerId.ValueStringPointer(),
+		RouteTableId:  state.RouteTableId.ValueStringPointer(),
 	}
 
 	_, err = conn.DisableRouteServerPropagation(ctx, &input)
-	if err != nil {
-		if tfresource.NotFound(err) {
-			return
-		}
 
+	if tfresource.NotFound(err) {
+		return
+	}
+	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.EC2, create.ErrActionDeleting, ResNameVPCRouteServerPropagation, state.RouteServerId.String(), err),
 			err.Error(),

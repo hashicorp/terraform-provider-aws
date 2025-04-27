@@ -184,12 +184,13 @@ func (r *resourceVPCRouteServerEndpoint) Delete(ctx context.Context, req resourc
 		return
 	}
 	_, err := findVPCRouteServerEndpointByID(ctx, conn, state.RouteServerEndpointId.ValueString())
+
+	if tfresource.NotFound(err) {
+		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		resp.State.RemoveResource(ctx)
+		return
+	}
 	if err != nil {
-		if tfresource.NotFound(err) {
-			resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
-			resp.State.RemoveResource(ctx)
-			return
-		}
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.EC2, create.ErrActionDeleting, ResNameVPCRouteServerEndpoint, state.RouteServerEndpointId.String(), err),
 			err.Error(),
@@ -201,10 +202,11 @@ func (r *resourceVPCRouteServerEndpoint) Delete(ctx context.Context, req resourc
 	}
 
 	_, err = conn.DeleteRouteServerEndpoint(ctx, &input)
+
+	if tfresource.NotFound(err) {
+		return
+	}
 	if err != nil {
-		if tfresource.NotFound(err) {
-			return
-		}
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.EC2, create.ErrActionDeleting, ResNameVPCRouteServerEndpoint, state.RouteServerEndpointId.String(), err),
 			err.Error(),

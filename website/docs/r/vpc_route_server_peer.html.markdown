@@ -121,7 +121,7 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 
 ```terraform
 import {
-  to = aws_evpc_route_server.example
+  to = aws_vpc_route_server_peer.example
   id = "rsp-12345678"
 }
 ```

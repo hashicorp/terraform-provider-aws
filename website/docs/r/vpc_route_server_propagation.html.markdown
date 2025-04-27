@@ -5,7 +5,7 @@ page_title: "AWS: aws_vpc_route_server_propagation"
 description: |-
   Terraform resource for managing a VPC (Virtual Private Cloud) Route Server Propagation.
 ---
-# Resource: aws_vpc_route_server_Propagation
+# Resource: aws_vpc_route_server_propagation
 
   Provides a resource for managing propagation between VPC (Virtual Private Cloud) route server and a route table.
 

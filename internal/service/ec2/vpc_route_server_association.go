@@ -170,12 +170,12 @@ func (r *resourceVPCRouteServerAssociation) Delete(ctx context.Context, req reso
 
 	// Check if the resource is already deleted
 	_, err := findVPCRouteServerAssociationByTwoPartKey(ctx, conn, state.RouteServerId.ValueString(), state.VpcId.ValueString())
+	if tfresource.NotFound(err) {
+		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		resp.State.RemoveResource(ctx)
+		return
+	}
 	if err != nil {
-		if tfresource.NotFound(err) {
-			resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
-			resp.State.RemoveResource(ctx)
-			return
-		}
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.EC2, create.ErrActionDeleting, ResNameVPCRouteServer, state.RouteServerId.String(), err),
 			err.Error(),
@@ -189,10 +189,10 @@ func (r *resourceVPCRouteServerAssociation) Delete(ctx context.Context, req reso
 	}
 
 	_, err = conn.DisassociateRouteServer(ctx, &input)
+	if tfresource.NotFound(err) {
+		return
+	}
 	if err != nil {
-		if tfresource.NotFound(err) {
-			return
-		}
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.EC2, create.ErrActionDeleting, ResNameVPCRouteServerAssociation, state.RouteServerId.String(), err),
 			err.Error(),

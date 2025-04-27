@@ -31,7 +31,7 @@ resource "aws_vpc_route_server" "test" {
   persist_routes            = "enable"
   persist_routes_duration   = 2
   sns_notifications_enabled = true
-  
+
   tags = {
     Name = "Main Route Server"
   }
@@ -76,7 +76,7 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 
 ```terraform
 import {
-  to = aws_evpc_route_server.example
+  to = aws_vpc_route_server.example
   id = "rs-12345678"
 }
 ```

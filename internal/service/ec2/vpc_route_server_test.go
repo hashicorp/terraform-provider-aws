@@ -127,7 +127,7 @@ func TestAccVPCRouteServer_updatePersitRoutesSNSNotification(t *testing.T) {
 				Config: testAccVPCRouterServerConfig_persistRoutesSNSNotification(rName, rAsn, "disable"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCRouteServerExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "amazon_side_asn", fmt.Sprintf("%d", rAsn)),
+					resource.TestCheckResourceAttr(resourceName, "amazon_side_asn", strconv.Itoa(rAsn)),
 					resource.TestCheckResourceAttr(resourceName, "persist_routes", "disable"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrSNSTopicARN),
 				),
