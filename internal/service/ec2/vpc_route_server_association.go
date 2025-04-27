@@ -280,15 +280,14 @@ func findVPCRouteServerAssociationByTwoPartKey(ctx context.Context, conn *ec2.Cl
 	}
 
 	out, err := conn.GetRouteServerAssociations(ctx, &input)
-		if tfresource.NotFound(err) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: &input,
-			}
+	if tfresource.NotFound(err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: &input,
 		}
-		if err != nil {
-			return nil, err
-		}
+	}
+	if err != nil {
+		return nil, err
 	}
 	if out == nil || out.RouteServerAssociations == nil {
 		return nil, tfresource.NewEmptyResultError(&input)
