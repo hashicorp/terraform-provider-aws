@@ -44,8 +44,8 @@ func TestAccVPCRouteServerEndpoint_basic(t *testing.T) {
 					testAccCheckVPCRouteServerEndpointExists(ctx, resourceName, &VPCRouteServerEndpoint),
 					resource.TestCheckResourceAttrSet(resourceName, "eni_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "eni_address"),
-					resource.TestCheckResourceAttrSet(resourceName, "subnet_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "vpc_id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrSubnetID),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
 				),
 			},
 			{
@@ -146,7 +146,7 @@ data "aws_availability_zones" "available" {
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-  
+
   tags = {
     Name = %[1]q
   }
@@ -165,7 +165,7 @@ resource "aws_subnet" "test" {
 resource "aws_vpc_route_server" "test" {
   amazon_side_asn = 4294967294
   tags = {
-	Name = %[1]q
+    Name = %[1]q
   }
 }
 
@@ -179,7 +179,7 @@ resource "aws_vpc_route_server_endpoint" "test" {
   subnet_id       = aws_subnet.test.id
 
   tags = {
-	Name = %[1]q
+    Name = %[1]q
   }
 
   depends_on = [aws_vpc_route_server_association.test]

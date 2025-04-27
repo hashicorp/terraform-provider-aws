@@ -19,7 +19,7 @@ resource "aws_vpc_route_server_endpoint" "test" {
   subnet_id       = aws_subnet.main.id
 
   tags = {
-	 Name = "Endpoint A"
+    Name = "Endpoint A"
   }
 }
 ```

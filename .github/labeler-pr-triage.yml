@@ -2267,6 +2267,7 @@ service/vpc:
               - 'website/**/vpc\.*'
               - 'website/**/vpcs\.*'
               - 'website/**/vpc_block_public_access_*'
+              - 'website/**/vpc_route_server*'
 service/vpclattice:
   - any:
       - changed-files:

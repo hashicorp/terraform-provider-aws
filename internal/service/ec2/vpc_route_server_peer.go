@@ -12,6 +12,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -80,30 +81,35 @@ func (r *resourceVPCRouteServerPeer) Schema(ctx context.Context, req resource.Sc
 			"endpoint_eni_id": schema.StringAttribute{
 				Computed: true,
 			},
-			"subnet_id": schema.StringAttribute{
+			names.AttrSubnetID: schema.StringAttribute{
 				Computed: true,
 			},
-			"vpc_id": schema.StringAttribute{
+			names.AttrVPCID: schema.StringAttribute{
 				Computed: true,
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			"bgp_options": schema.SingleNestedBlock{
-				CustomType: fwtypes.NewObjectTypeOf[resourceVPCRouteServerPeerBgpOptionsModel](ctx),
-				Attributes: map[string]schema.Attribute{
-					"peer_asn": schema.Int64Attribute{
-						Required: true,
-						Validators: []validator.Int64{
-							int64validator.Between(1, 4294967295),
+			"bgp_options": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[resourceVPCRouteServerPeerBgpOptionsModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"peer_asn": schema.Int64Attribute{
+							Required: true,
+							Validators: []validator.Int64{
+								int64validator.Between(1, 4294967295),
+							},
 						},
-					},
-					"peer_liveness_detection": schema.StringAttribute{
-						Optional: true,
-						Computed: true,
-						Validators: []validator.String{
-							enum.FrameworkValidate[awstypes.RouteServerPeerLivenessMode](),
+						"peer_liveness_detection": schema.StringAttribute{
+							Optional: true,
+							Computed: true,
+							Validators: []validator.String{
+								enum.FrameworkValidate[awstypes.RouteServerPeerLivenessMode](),
+							},
 						},
 					},
 				},
@@ -206,9 +212,16 @@ func (r *resourceVPCRouteServerPeer) Delete(ctx context.Context, req resource.De
 		return
 	}
 	_, err := findVPCRouteServerPeerByID(ctx, conn, state.RouteServerPeerId.ValueString())
-	if tfresource.NotFound(err) {
-		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
-		resp.State.RemoveResource(ctx)
+	if err != nil {
+		if tfresource.NotFound(err) {
+			resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+			resp.State.RemoveResource(ctx)
+			return
+		}
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.EC2, create.ErrActionDeleting, ResNameVPCRouteServerPeer, state.RouteServerPeerId.String(), err),
+			err.Error(),
+		)
 		return
 	}
 	input := ec2.DeleteRouteServerPeerInput{
@@ -330,18 +343,18 @@ func findVPCRouteServerPeerByID(ctx context.Context, conn *ec2.Client, id string
 }
 
 type resourceVPCRouteServerPeerModel struct {
-	BgpOptions            fwtypes.ObjectValueOf[resourceVPCRouteServerPeerBgpOptionsModel] `tfsdk:"bgp_options"`
-	EndpointEniAddress    types.String                                                     `tfsdk:"endpoint_eni_address"`
-	EndpointEniId         types.String                                                     `tfsdk:"endpoint_eni_id"`
-	PeerAddress           types.String                                                     `tfsdk:"peer_address"`
-	RouteServerEndpointId types.String                                                     `tfsdk:"route_server_endpoint_id"`
-	RouteServerId         types.String                                                     `tfsdk:"route_server_id"`
-	RouteServerPeerId     types.String                                                     `tfsdk:"id"`
-	SubnetId              types.String                                                     `tfsdk:"subnet_id"`
-	Tags                  tftags.Map                                                       `tfsdk:"tags"`
-	TagsAll               tftags.Map                                                       `tfsdk:"tags_all"`
-	Timeouts              timeouts.Value                                                   `tfsdk:"timeouts"`
-	VpcId                 types.String                                                     `tfsdk:"vpc_id"`
+	BgpOptions            fwtypes.ListNestedObjectValueOf[resourceVPCRouteServerPeerBgpOptionsModel] `tfsdk:"bgp_options"`
+	EndpointEniAddress    types.String                                                               `tfsdk:"endpoint_eni_address"`
+	EndpointEniId         types.String                                                               `tfsdk:"endpoint_eni_id"`
+	PeerAddress           types.String                                                               `tfsdk:"peer_address"`
+	RouteServerEndpointId types.String                                                               `tfsdk:"route_server_endpoint_id"`
+	RouteServerId         types.String                                                               `tfsdk:"route_server_id"`
+	RouteServerPeerId     types.String                                                               `tfsdk:"id"`
+	SubnetId              types.String                                                               `tfsdk:"subnet_id"`
+	Tags                  tftags.Map                                                                 `tfsdk:"tags"`
+	TagsAll               tftags.Map                                                                 `tfsdk:"tags_all"`
+	Timeouts              timeouts.Value                                                             `tfsdk:"timeouts"`
+	VpcId                 types.String                                                               `tfsdk:"vpc_id"`
 }
 
 type resourceVPCRouteServerPeerBgpOptionsModel struct {

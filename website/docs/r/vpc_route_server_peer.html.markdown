@@ -22,7 +22,7 @@ resource "aws_vpc_route_server_peer" "test" {
   }
 
   tags = {
-	 Name = "Appliance 1"
+    Name = "Appliance 1"
   }
 }
 ```
@@ -45,25 +45,25 @@ resource "aws_vpc_route_server_association" "test" {
 
 resource "aws_vpc_route_server_endpoint" "test" {
   route_server_id = aws_vpc_route_server.test.id
-  subnet_id      = aws_subnet.test.id
+  subnet_id       = aws_subnet.test.id
 
   tags = {
     Name = "Test Endpoint"
   }
 
-  depends_on     = [aws_vpc_route_server_association.test]
+  depends_on = [aws_vpc_route_server_association.test]
 }
 
 resource "aws_vpc_route_server_propagation" "test" {
   route_server_id = aws_vpc_route_server.test.id
   route_table_id  = aws_route_table.test.id
 
-  depends_on     = [aws_vpc_route_server_association.test]
+  depends_on = [aws_vpc_route_server_association.test]
 }
 
 resource "aws_vpc_route_server_peer" "test" {
-  route_server_endpoint_id  = aws_vpc_route_server_endpoint.test.id
-  peer_address              = "10.0.1.250"
+  route_server_endpoint_id = aws_vpc_route_server_endpoint.test.id
+  peer_address             = "10.0.1.250"
   bgp_options {
     peer_asn                = 65000
     peer_liveness_detection = "bgp-keepalive"

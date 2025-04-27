@@ -95,7 +95,7 @@ func (r *resourceVPCRouteServer) Schema(ctx context.Context, req resource.Schema
 				Optional: true,
 				Computed: true,
 			},
-			"sns_topic_arn": schema.StringAttribute{
+			names.AttrSNSTopicARN: schema.StringAttribute{
 				Computed: true,
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
@@ -287,11 +287,19 @@ func (r *resourceVPCRouteServer) Delete(ctx context.Context, req resource.Delete
 		return
 	}
 	_, err := findVPCRouteServerByID(ctx, conn, state.RouteServerId.ValueString())
-	if tfresource.NotFound(err) {
-		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
-		resp.State.RemoveResource(ctx)
+	if err != nil {
+		if tfresource.NotFound(err) {
+			resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+			resp.State.RemoveResource(ctx)
+			return
+		}
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.EC2, create.ErrActionDeleting, ResNameVPCRouteServer, state.RouteServerId.String(), err),
+			err.Error(),
+		)
 		return
 	}
+
 	input := ec2.DeleteRouteServerInput{
 		RouteServerId: state.RouteServerId.ValueStringPointer(),
 	}
@@ -324,7 +332,6 @@ func (r *resourceVPCRouteServer) ImportState(ctx context.Context, req resource.I
 }
 
 func waitVPCRouteServerCreated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.RouteServer, error) {
-
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.RouteServerStatePending),
 		Target:                    enum.Slice(awstypes.RouteServerStateAvailable),
@@ -457,7 +464,6 @@ func findVPCRouteServerByID(ctx context.Context, conn *ec2.Client, id string) (*
 				routeServers = append(routeServers, routeServer)
 			}
 		}
-
 	}
 	if len(routeServers) == 0 {
 		return nil, &retry.NotFoundError{
@@ -471,7 +477,6 @@ func findVPCRouteServerByID(ctx context.Context, conn *ec2.Client, id string) (*
 
 // the API does not return the persist route action, but only the state. This function will set the persist route action based on the state for seemless experiece.
 func updateVPCRouteServerPersistRouteFromState(ctx context.Context, data *resourceVPCRouteServerModel, routeServer *awstypes.RouteServer) {
-
 	var persistRoutes string
 	if routeServer.PersistRoutesState == awstypes.RouteServerPersistRoutesStateEnabled {
 		persistRoutes = string(awstypes.RouteServerPersistRoutesActionEnable)
@@ -482,7 +487,6 @@ func updateVPCRouteServerPersistRouteFromState(ctx context.Context, data *resour
 	if data.PersistRoutes.IsNull() || data.PersistRoutes.IsUnknown() {
 		data.PersistRoutes = flex.StringToFramework(ctx, &persistRoutes)
 	}
-
 }
 
 type resourceVPCRouteServerModel struct {

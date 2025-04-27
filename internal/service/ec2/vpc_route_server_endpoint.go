@@ -64,7 +64,7 @@ func (r *resourceVPCRouteServerEndpoint) Schema(ctx context.Context, req resourc
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"subnet_id": schema.StringAttribute{
+			names.AttrSubnetID: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -76,7 +76,7 @@ func (r *resourceVPCRouteServerEndpoint) Schema(ctx context.Context, req resourc
 			"eni_address": schema.StringAttribute{
 				Computed: true,
 			},
-			"vpc_id": schema.StringAttribute{
+			names.AttrVPCID: schema.StringAttribute{
 				Computed: true,
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
@@ -184,9 +184,16 @@ func (r *resourceVPCRouteServerEndpoint) Delete(ctx context.Context, req resourc
 		return
 	}
 	_, err := findVPCRouteServerEndpointByID(ctx, conn, state.RouteServerEndpointId.ValueString())
-	if tfresource.NotFound(err) {
-		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
-		resp.State.RemoveResource(ctx)
+	if err != nil {
+		if tfresource.NotFound(err) {
+			resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+			resp.State.RemoveResource(ctx)
+			return
+		}
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.EC2, create.ErrActionDeleting, ResNameVPCRouteServerEndpoint, state.RouteServerEndpointId.String(), err),
+			err.Error(),
+		)
 		return
 	}
 	input := ec2.DeleteRouteServerEndpointInput{
@@ -221,7 +228,6 @@ func (r *resourceVPCRouteServerEndpoint) ImportState(ctx context.Context, req re
 }
 
 func waitVPCRouteServerEndpointCreated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.RouteServerEndpoint, error) {
-
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.RouteServerEndpointStatePending),
 		Target:                    enum.Slice(awstypes.RouteServerEndpointStateAvailable),
@@ -296,7 +302,6 @@ func findVPCRouteServerEndpointByID(ctx context.Context, conn *ec2.Client, id st
 				routeServerEndpoints = append(routeServerEndpoints, routeServerEndpoint)
 			}
 		}
-
 	}
 	if len(routeServerEndpoints) == 0 {
 		return nil, &retry.NotFoundError{

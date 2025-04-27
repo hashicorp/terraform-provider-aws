@@ -170,15 +170,22 @@ func (r *resourceVPCRouteServerAssociation) Delete(ctx context.Context, req reso
 
 	// Check if the resource is already deleted
 	_, err := findVPCRouteServerAssociationByTwoPartKey(ctx, conn, state.RouteServerId.ValueString(), state.VpcId.ValueString())
-	if tfresource.NotFound(err) {
-		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
-		resp.State.RemoveResource(ctx)
+	if err != nil {
+		if tfresource.NotFound(err) {
+			resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+			resp.State.RemoveResource(ctx)
+			return
+		}
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.EC2, create.ErrActionDeleting, ResNameVPCRouteServer, state.RouteServerId.String(), err),
+			err.Error(),
+		)
 		return
 	}
 
 	input := ec2.DisassociateRouteServerInput{
-		RouteServerId: aws.String(state.RouteServerId.ValueString()),
-		VpcId:         aws.String(state.VpcId.ValueString()),
+		RouteServerId: state.RouteServerId.ValueStringPointer(),
+		VpcId:         state.VpcId.ValueStringPointer(),
 	}
 
 	_, err = conn.DisassociateRouteServer(ctx, &input)
@@ -186,7 +193,6 @@ func (r *resourceVPCRouteServerAssociation) Delete(ctx context.Context, req reso
 		if tfresource.NotFound(err) {
 			return
 		}
-
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.EC2, create.ErrActionDeleting, ResNameVPCRouteServerAssociation, state.RouteServerId.String(), err),
 			err.Error(),
