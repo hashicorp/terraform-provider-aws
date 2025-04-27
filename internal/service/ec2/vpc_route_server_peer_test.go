@@ -45,9 +45,9 @@ func TestAccVPCRouteServerPeer_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "route_server_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_eni_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_eni_address"),
-					resource.TestCheckResourceAttrSet(resourceName, "vpc_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "subnet_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "bgp_options.peer_asn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrSubnetID),
+					resource.TestCheckResourceAttrSet(resourceName, "bgp_options.0.peer_asn"),
 				),
 			},
 			{
@@ -83,10 +83,10 @@ func TestAccVPCRouteServerPeer_bgpOptionsBfd(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "route_server_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_eni_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_eni_address"),
-					resource.TestCheckResourceAttrSet(resourceName, "vpc_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "subnet_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "bgp_options.peer_asn"),
-					resource.TestCheckResourceAttr(resourceName, "bgp_options.peer_liveness_detection", "bfd"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrSubnetID),
+					resource.TestCheckResourceAttrSet(resourceName, "bgp_options.0.peer_asn"),
+					resource.TestCheckResourceAttr(resourceName, "bgp_options.0.peer_liveness_detection", "bfd"),
 				),
 			},
 			{
@@ -180,7 +180,7 @@ func testAccVPCRouteServerPeerConfig_base(rName string) string {
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-  
+
   tags = {
     Name = %[1]q
   }
@@ -199,7 +199,7 @@ resource "aws_subnet" "test" {
 resource "aws_vpc_route_server" "test" {
   amazon_side_asn = 4294967294
   tags = {
-	Name = %[1]q
+    Name = %[1]q
   }
 }
 
@@ -213,10 +213,10 @@ resource "aws_vpc_route_server_endpoint" "test" {
   subnet_id       = aws_subnet.test.id
 
   tags = {
-	Name = %[1]q
+    Name = %[1]q
   }
 
-  depends_on     = [aws_vpc_route_server_association.test]
+  depends_on = [aws_vpc_route_server_association.test]
 }
 	`, rName))
 }
@@ -225,17 +225,16 @@ func testAccVPCRouteServerPeerConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccVPCRouteServerPeerConfig_base(rName),
 		fmt.Sprintf(` 
-	
 resource "aws_vpc_route_server_peer" "test" {
   route_server_endpoint_id = aws_vpc_route_server_endpoint.test.id
   peer_address             = "10.0.1.250"
 
   bgp_options {
-	peer_asn = 65000
+    peer_asn = 65000
   }
 
   tags = {
-	Name = %[1]q
+    Name = %[1]q
   }
 }
 
@@ -246,18 +245,17 @@ func testAccVPCRouteServerPeerConfig_bgpOptionsBfd(rName string) string {
 	return acctest.ConfigCompose(
 		testAccVPCRouteServerPeerConfig_base(rName),
 		fmt.Sprintf(` 
-	
 resource "aws_vpc_route_server_peer" "test" {
   route_server_endpoint_id = aws_vpc_route_server_endpoint.test.id
   peer_address             = "10.0.1.250"
 
   bgp_options {
-	peer_asn = 65000
-	peer_liveness_detection = "bfd"
+    peer_asn                = 65000
+    peer_liveness_detection = "bfd"
   }
 
   tags = {
-	Name = %[1]q
+    Name = %[1]q
   }
 }
 

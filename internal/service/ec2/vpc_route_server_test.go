@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -41,7 +42,7 @@ func TestAccVPCRouteServer_basic(t *testing.T) {
 				Config: testAccVPCRouterServerConfig_basic(rName, rAsn),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCRouteServerExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "amazon_side_asn", fmt.Sprintf("%d", rAsn)),
+					resource.TestCheckResourceAttr(resourceName, "amazon_side_asn", strconv.Itoa(rAsn)),
 					resource.TestCheckResourceAttr(resourceName, "persist_routes", "disable"),
 				),
 			},
@@ -76,9 +77,9 @@ func TestAccVPCRouteServer_persistRoutes(t *testing.T) {
 				Config: testAccVPCRouterServerConfig_persistRoutes(rName, rAsn, rPersistRoutes, rPersistRoutesDuration),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCRouteServerExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "amazon_side_asn", fmt.Sprintf("%d", rAsn)),
+					resource.TestCheckResourceAttr(resourceName, "amazon_side_asn", strconv.Itoa(rAsn)),
 					resource.TestCheckResourceAttr(resourceName, "persist_routes", rPersistRoutes),
-					resource.TestCheckResourceAttr(resourceName, "persist_routes_duration", fmt.Sprintf("%d", rPersistRoutesDuration)),
+					resource.TestCheckResourceAttr(resourceName, "persist_routes_duration", strconv.Itoa(rPersistRoutesDuration)),
 				),
 			},
 			{
@@ -112,9 +113,9 @@ func TestAccVPCRouteServer_updatePersitRoutesSNSNotification(t *testing.T) {
 				Config: testAccVPCRouterServerConfig_persistRoutes(rName, rAsn, rPersistRoutes, rPersistRoutesDuration),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCRouteServerExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "amazon_side_asn", fmt.Sprintf("%d", rAsn)),
+					resource.TestCheckResourceAttr(resourceName, "amazon_side_asn", strconv.Itoa(rAsn)),
 					resource.TestCheckResourceAttr(resourceName, "persist_routes", rPersistRoutes),
-					resource.TestCheckResourceAttr(resourceName, "persist_routes_duration", fmt.Sprintf("%d", rPersistRoutesDuration)),
+					resource.TestCheckResourceAttr(resourceName, "persist_routes_duration", strconv.Itoa(rPersistRoutesDuration)),
 				),
 			},
 			{
@@ -128,7 +129,7 @@ func TestAccVPCRouteServer_updatePersitRoutesSNSNotification(t *testing.T) {
 					testAccCheckVPCRouteServerExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "amazon_side_asn", fmt.Sprintf("%d", rAsn)),
 					resource.TestCheckResourceAttr(resourceName, "persist_routes", "disable"),
-					resource.TestCheckResourceAttrSet(resourceName, "sns_topic_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrSNSTopicARN),
 				),
 			},
 		},
@@ -230,7 +231,7 @@ func testAccVPCRouterServerConfig_basic(rName string, rAsn int) string {
 resource "aws_vpc_route_server" "test" {
   amazon_side_asn = %[2]d
   tags = {
-	Name = %[1]q
+    Name = %[1]q
   }
 }
 `, rName, rAsn)
@@ -239,11 +240,11 @@ resource "aws_vpc_route_server" "test" {
 func testAccVPCRouterServerConfig_persistRoutes(rName string, rAsn int, rPersistRoutes string, rPersistRoutesDuration int) string {
 	return fmt.Sprintf(`
 resource "aws_vpc_route_server" "test" {
-  amazon_side_asn = %[2]d
-  persist_routes  = %[3]q
+  amazon_side_asn         = %[2]d
+  persist_routes          = %[3]q
   persist_routes_duration = %[4]d
   tags = {
-	Name = %[1]q
+    Name = %[1]q
   }
 }
 `, rName, rAsn, rPersistRoutes, rPersistRoutesDuration)
@@ -252,11 +253,11 @@ resource "aws_vpc_route_server" "test" {
 func testAccVPCRouterServerConfig_persistRoutesSNSNotification(rName string, rAsn int, rPersistRoutes string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc_route_server" "test" {
-  amazon_side_asn = %[2]d
-  persist_routes  = %[3]q
+  amazon_side_asn           = %[2]d
+  persist_routes            = %[3]q
   sns_notifications_enabled = true
   tags = {
-	Name = %[1]q
+    Name = %[1]q
   }
 }
 `, rName, rAsn, rPersistRoutes)

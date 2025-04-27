@@ -157,7 +157,7 @@ resource "aws_route_table" "test" {
 resource "aws_vpc_route_server" "test" {
   amazon_side_asn = 4294967293
   tags = {
-	Name = %[1]q
+    Name = %[1]q
   }
 }
 

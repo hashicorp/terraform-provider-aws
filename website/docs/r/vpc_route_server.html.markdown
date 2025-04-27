@@ -18,7 +18,7 @@ resource "aws_vpc_route_server" "test" {
   amazon_side_asn = 65534
 
   tags = {
-	 Name = "Main Route Server"
+    Name = "Test"
   }
 }
 ```
@@ -27,13 +27,13 @@ resource "aws_vpc_route_server" "test" {
 
 ```terraform
 resource "aws_vpc_route_server" "test" {
-  amazon_side_asn = 65534
-  persist_routes = "enable"
-  persist_routes_duration = 2
+  amazon_side_asn           = 65534
+  persist_routes            = "enable"
+  persist_routes_duration   = 2
   sns_notifications_enabled = true
   
   tags = {
-	 Name = "Main Route Server"
+    Name = "Main Route Server"
   }
 }
 ```

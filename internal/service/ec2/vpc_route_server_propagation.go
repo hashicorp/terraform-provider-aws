@@ -170,9 +170,16 @@ func (r *resourceVPCRouteServerPropagation) Delete(ctx context.Context, req reso
 
 	// Check if the resource is already deleted
 	_, err := findVPCRouteServerPropagationByTwoPartKey(ctx, conn, state.RouteServerId.ValueString(), state.RouteTableId.ValueString())
-	if tfresource.NotFound(err) {
-		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
-		resp.State.RemoveResource(ctx)
+	if err != nil {
+		if tfresource.NotFound(err) {
+			resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+			resp.State.RemoveResource(ctx)
+			return
+		}
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.EC2, create.ErrActionDeleting, ResNameVPCRouteServerPropagation, state.RouteServerId.String(), err),
+			err.Error(),
+		)
 		return
 	}
 
