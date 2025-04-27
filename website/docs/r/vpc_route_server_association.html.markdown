@@ -53,5 +53,5 @@ import {
 Using `terraform import`, to  to import VPC (Virtual Private Cloud) Route Server Association using the associated resource ID and VPC Id separated by a comma (,). For example:
 
 ```console
-% terraform import aws_ec2_vpc_route_server_association.example rs-12345678,vpc-0f001273ec18911b1
+% terraform import aws_vpc_route_server_association.example rs-12345678,vpc-0f001273ec18911b1
 ```

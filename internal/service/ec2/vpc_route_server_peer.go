@@ -212,12 +212,13 @@ func (r *resourceVPCRouteServerPeer) Delete(ctx context.Context, req resource.De
 		return
 	}
 	_, err := findVPCRouteServerPeerByID(ctx, conn, state.RouteServerPeerId.ValueString())
+
+	if tfresource.NotFound(err) {
+		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		resp.State.RemoveResource(ctx)
+		return
+	}
 	if err != nil {
-		if tfresource.NotFound(err) {
-			resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
-			resp.State.RemoveResource(ctx)
-			return
-		}
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.EC2, create.ErrActionDeleting, ResNameVPCRouteServerPeer, state.RouteServerPeerId.String(), err),
 			err.Error(),
@@ -229,10 +230,11 @@ func (r *resourceVPCRouteServerPeer) Delete(ctx context.Context, req resource.De
 	}
 
 	_, err = conn.DeleteRouteServerPeer(ctx, &input)
+
+	if tfresource.NotFound(err) {
+		return
+	}
 	if err != nil {
-		if tfresource.NotFound(err) {
-			return
-		}
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.EC2, create.ErrActionDeleting, ResNameVPCRouteServerPeer, state.RouteServerPeerId.String(), err),
 			err.Error(),
@@ -256,7 +258,6 @@ func (r *resourceVPCRouteServerPeer) ImportState(ctx context.Context, req resour
 }
 
 func waitVPCRouteServerPeerCreated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.RouteServerPeer, error) {
-
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.RouteServerPeerStatePending),
 		Target:                    enum.Slice(awstypes.RouteServerPeerStateAvailable),
@@ -330,7 +331,6 @@ func findVPCRouteServerPeerByID(ctx context.Context, conn *ec2.Client, id string
 				routeServerPeers = append(routeServerPeers, routeServerPeer)
 			}
 		}
-
 	}
 	if len(routeServerPeers) == 0 {
 		return nil, &retry.NotFoundError{
