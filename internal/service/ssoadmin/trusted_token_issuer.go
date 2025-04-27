@@ -6,6 +6,7 @@ package ssoadmin
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -214,32 +215,10 @@ func (r *trustedTokenIssuerResource) Update(ctx context.Context, request resourc
 
 	if !new.Name.Equal(old.Name) ||
 		!new.TrustedTokenIssuerConfiguration.Equal(old.TrustedTokenIssuerConfiguration) {
-		// Unfortunately Create and Update have different (but 100% compatible) types for TrustedTokenIssuerConfiguration.
-		saved := new.TrustedTokenIssuerConfiguration
-		trustedTokenIssuerConfiguration, d := saved.ToPtr(ctx)
-		response.Diagnostics.Append(d...)
-		if response.Diagnostics.HasError() {
-			return
-		}
-
-		var trustedTokenIssuerConfigurationUpdate trustedTokenIssuerUpdateConfigurationModel
-		if trustedTokenIssuerConfiguration != nil {
-			trustedTokenIssuerConfigurationUpdate.OIDCJWTConfiguration = trustedTokenIssuerConfiguration.OIDCJWTConfiguration
-			new.TrustedTokenIssuerConfiguration = fwtypes.NewListNestedObjectValueOfNull[trustedTokenIssuerConfigurationModel](ctx)
-		}
-
 		var input ssoadmin.UpdateTrustedTokenIssuerInput
 		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
 		if response.Diagnostics.HasError() {
 			return
-		}
-		if trustedTokenIssuerConfiguration != nil {
-			response.Diagnostics.Append(fwflex.Expand(ctx, trustedTokenIssuerConfigurationUpdate, &input.TrustedTokenIssuerConfiguration)...)
-			if response.Diagnostics.HasError() {
-				return
-			}
-
-			new.TrustedTokenIssuerConfiguration = saved
 		}
 
 		_, err := conn.UpdateTrustedTokenIssuer(ctx, &input)
@@ -344,24 +323,62 @@ type trustedTokenIssuerConfigurationModel struct {
 }
 
 var (
-	_ fwflex.Expander  = trustedTokenIssuerConfigurationModel{}
-	_ fwflex.Flattener = &trustedTokenIssuerConfigurationModel{}
+	_ fwflex.TypedExpander = trustedTokenIssuerConfigurationModel{}
+	_ fwflex.Flattener     = &trustedTokenIssuerConfigurationModel{}
 )
 
-func (m trustedTokenIssuerConfigurationModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+func (m trustedTokenIssuerConfigurationModel) ExpandTo(ctx context.Context, targetType reflect.Type) (any, diag.Diagnostics) {
 	var result any
 	var diags diag.Diagnostics
 
-	switch {
-	case !m.OIDCJWTConfiguration.IsNull():
-		oidcJWTConfiguration, d := m.OIDCJWTConfiguration.ToPtr(ctx)
+	switch targetType {
+	case reflect.TypeFor[awstypes.TrustedTokenIssuerConfiguration]():
+		r, d := m.expandToTrustedTokenIssuerConfiguration(ctx)
 		diags.Append(d...)
 		if diags.HasError() {
 			return nil, diags
 		}
 
+		result = r
+	case reflect.TypeFor[awstypes.TrustedTokenIssuerUpdateConfiguration]():
+		r, d := m.expandToTrustedTokenIssuerUpdateConfiguration(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		result = r
+	}
+
+	return result, diags
+}
+
+func (m trustedTokenIssuerConfigurationModel) expandToTrustedTokenIssuerConfiguration(ctx context.Context) (awstypes.TrustedTokenIssuerConfiguration, diag.Diagnostics) {
+	var result awstypes.TrustedTokenIssuerConfiguration
+	var diags diag.Diagnostics
+
+	switch {
+	case !m.OIDCJWTConfiguration.IsNull():
 		var r awstypes.TrustedTokenIssuerConfigurationMemberOidcJwtConfiguration
-		diags.Append(fwflex.Expand(ctx, oidcJWTConfiguration, &r.Value)...)
+		diags.Append(fwflex.Expand(ctx, m.OIDCJWTConfiguration, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		result = &r
+	}
+
+	return result, diags
+}
+
+func (m trustedTokenIssuerConfigurationModel) expandToTrustedTokenIssuerUpdateConfiguration(ctx context.Context) (awstypes.TrustedTokenIssuerUpdateConfiguration, diag.Diagnostics) {
+	var result awstypes.TrustedTokenIssuerUpdateConfiguration
+	var diags diag.Diagnostics
+
+	switch {
+	case !m.OIDCJWTConfiguration.IsNull():
+		var r awstypes.TrustedTokenIssuerUpdateConfigurationMemberOidcJwtConfiguration
+		diags.Append(fwflex.Expand(ctx, m.OIDCJWTConfiguration, &r.Value)...)
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -386,39 +403,6 @@ func (m *trustedTokenIssuerConfigurationModel) Flatten(ctx context.Context, v an
 	}
 
 	return diags
-}
-
-// Unfortunately Create and Update have different (but 100% compatible) types for TrustedTokenIssuerConfiguration.
-type trustedTokenIssuerUpdateConfigurationModel struct {
-	OIDCJWTConfiguration fwtypes.ListNestedObjectValueOf[oidcJWTConfigurationModel] `tfsdk:"oidc_jwt_configuration"`
-}
-
-var (
-	_ fwflex.Expander = trustedTokenIssuerUpdateConfigurationModel{}
-)
-
-func (m trustedTokenIssuerUpdateConfigurationModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
-	var result any
-	var diags diag.Diagnostics
-
-	switch {
-	case !m.OIDCJWTConfiguration.IsNull():
-		oidcJWTConfiguration, d := m.OIDCJWTConfiguration.ToPtr(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-
-		var r awstypes.TrustedTokenIssuerUpdateConfigurationMemberOidcJwtConfiguration
-		diags.Append(fwflex.Expand(ctx, oidcJWTConfiguration, &r.Value)...)
-		if diags.HasError() {
-			return nil, diags
-		}
-
-		result = &r
-	}
-
-	return result, diags
 }
 
 type oidcJWTConfigurationModel struct {
