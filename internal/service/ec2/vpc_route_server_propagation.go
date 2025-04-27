@@ -289,6 +289,9 @@ func findVPCRouteServerPropagationByTwoPartKey(ctx context.Context, conn *ec2.Cl
 				LastRequest: &input,
 			}
 		}
+		if err != nil {
+			return nil, err
+		}
 	}
 	if out == nil || out.RouteServerPropagations == nil || len(out.RouteServerPropagations) == 0 {
 		return nil, tfresource.NewEmptyResultError(&input)
