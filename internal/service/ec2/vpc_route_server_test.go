@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccEC2VPCRouteServer_basic(t *testing.T) {
+func TestAccVPCRouteServer_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_route_server.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -54,7 +54,7 @@ func TestAccEC2VPCRouteServer_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCRouteServer_persistRoutes(t *testing.T) {
+func TestAccVPCRouteServer_persistRoutes(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_route_server.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -90,7 +90,7 @@ func TestAccEC2VPCRouteServer_persistRoutes(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCRouteServer_updatePersitRoutesSNSNotification(t *testing.T) {
+func TestAccVPCRouteServer_updatePersitRoutesSNSNotification(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_route_server.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -135,7 +135,7 @@ func TestAccEC2VPCRouteServer_updatePersitRoutesSNSNotification(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCRouteServer_disappears(t *testing.T) {
+func TestAccVPCRouteServer_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpc_route_server.test"

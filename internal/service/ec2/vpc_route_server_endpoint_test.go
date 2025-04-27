@@ -176,13 +176,13 @@ resource "aws_vpc_route_server_association" "test" {
 
 resource "aws_vpc_route_server_endpoint" "test" {
   route_server_id = aws_vpc_route_server.test.id
-  subnet_id      = aws_subnet.test.id
+  subnet_id       = aws_subnet.test.id
 
   tags = {
 	Name = %[1]q
   }
 
-  depends_on     = [aws_vpc_route_server_association.test]
+  depends_on = [aws_vpc_route_server_association.test]
 }
 `, rName)
 }
