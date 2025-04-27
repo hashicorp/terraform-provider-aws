@@ -210,7 +210,7 @@ resource "aws_vpc_route_server_association" "test" {
 
 resource "aws_vpc_route_server_endpoint" "test" {
   route_server_id = aws_vpc_route_server.test.id
-  subnet_id      = aws_subnet.test.id
+  subnet_id       = aws_subnet.test.id
 
   tags = {
 	Name = %[1]q
@@ -228,7 +228,8 @@ func testAccVPCRouteServerPeerConfig_basic(rName string) string {
 	
 resource "aws_vpc_route_server_peer" "test" {
   route_server_endpoint_id = aws_vpc_route_server_endpoint.test.id
-  peer_address    = "10.0.1.250"
+  peer_address             = "10.0.1.250"
+
   bgp_options {
 	peer_asn = 65000
   }
@@ -248,7 +249,8 @@ func testAccVPCRouteServerPeerConfig_bgpOptionsBfd(rName string) string {
 	
 resource "aws_vpc_route_server_peer" "test" {
   route_server_endpoint_id = aws_vpc_route_server_endpoint.test.id
-  peer_address    = "10.0.1.250"
+  peer_address             = "10.0.1.250"
+
   bgp_options {
 	peer_asn = 65000
 	peer_liveness_detection = "bfd"

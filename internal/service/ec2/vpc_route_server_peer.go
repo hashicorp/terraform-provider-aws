@@ -96,10 +96,8 @@ func (r *resourceVPCRouteServerPeer) Schema(ctx context.Context, req resource.Sc
 					"peer_asn": schema.Int64Attribute{
 						Required: true,
 						Validators: []validator.Int64{
-							int64validator.Any(
-								int64validator.Between(64512, 65534),
-								int64validator.Between(4200000000, 4294967294),
-							)},
+							int64validator.Between(1, 4294967295),
+						},
 					},
 					"peer_liveness_detection": schema.StringAttribute{
 						Optional: true,

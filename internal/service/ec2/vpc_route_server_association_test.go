@@ -162,7 +162,7 @@ resource "aws_vpc_route_server" "test" {
 
 resource "aws_vpc_route_server_association" "test" {
   route_server_id = aws_vpc_route_server.test.id
-  vpc_id         = aws_vpc.test.id
+  vpc_id          = aws_vpc.test.id
 }
 `, rName)
 }

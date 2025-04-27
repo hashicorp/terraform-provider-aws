@@ -169,7 +169,8 @@ resource "aws_vpc_route_server_association" "test" {
 resource "aws_vpc_route_server_propagation" "test" {
   route_server_id = aws_vpc_route_server.test.id
   route_table_id  = aws_route_table.test.id
-  depends_on     = [aws_vpc_route_server_association.test]
+
+  depends_on = [aws_vpc_route_server_association.test]
 }
 `, rName)
 }

@@ -68,10 +68,8 @@ func (r *resourceVPCRouteServer) Schema(ctx context.Context, req resource.Schema
 					int64planmodifier.RequiresReplace(),
 				},
 				Validators: []validator.Int64{
-					int64validator.Any(
-						int64validator.Between(64512, 65534),
-						int64validator.Between(4200000000, 4294967294),
-					)},
+					int64validator.Between(1, 4294967295),
+				},
 			},
 			"persist_routes": schema.StringAttribute{
 				Computed: true,
@@ -88,6 +86,9 @@ func (r *resourceVPCRouteServer) Schema(ctx context.Context, req resource.Schema
 				Computed: true,
 				Validators: []validator.Int64{
 					int64validator.Between(1, 5),
+					int64validator.AlsoRequires(
+						path.MatchRelative().AtParent().AtName("persist_routes"),
+					),
 				},
 			},
 			"sns_notifications_enabled": schema.BoolAttribute{
