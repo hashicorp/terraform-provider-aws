@@ -23,9 +23,13 @@ resource/aws_securitylake_subscriber: Change `access_type` to [ForceNew](https:/
 ```
 
 ```release-note:enhancement
-resource/aws_auditmanager_control: Add plan-time validation of `control_mapping_sources.source_frequency`, `control_mapping_sources.source_set_up_option`, `control_mapping_sources.source_type`
+resource/aws_auditmanager_control: Add plan-time validation of `control_mapping_sources.source_frequency`, `control_mapping_sources.source_set_up_option`, and `control_mapping_sources.source_type`
 ```
 
 ```release-note:bug
 resource/aws_auditmanager_control: Fix `Provider produced inconsistent result after apply` errors
+```
+
+```release-note:enhancement
+resource/aws_auditmanager_assessment: Add plan-time validation of `roles.role_arn` and `roles.role_type`
 ```
