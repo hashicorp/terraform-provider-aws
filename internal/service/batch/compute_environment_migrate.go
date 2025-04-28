@@ -234,12 +234,12 @@ func computeEnvironmentStateUpgradeV0(_ context.Context, rawState map[string]any
 	}
 
 	if v, ok := rawState["compute_environment_name"].(string); ok && v != "" {
-		rawState["name"] = v
+		rawState[names.AttrName] = v
 		delete(rawState, "compute_environment_name")
 	}
 
 	if v, ok := rawState["compute_environment_name_prefix"].(string); ok && v != "" {
-		rawState["name_prefix"] = v
+		rawState[names.AttrNamePrefix] = v
 		delete(rawState, "compute_environment_name_prefix")
 	}
 

@@ -30,7 +30,7 @@ func TestComputeEnvironmentStateUpgradeV0(t *testing.T) {
 				"compute_environment_name": "test-environment",
 			},
 			expected: map[string]any{
-				"name": "test-environment",
+				names.AttrName: "test-environment",
 			},
 		},
 		{
@@ -39,7 +39,7 @@ func TestComputeEnvironmentStateUpgradeV0(t *testing.T) {
 				"compute_environment_name_prefix": "test-prefix",
 			},
 			expected: map[string]any{
-				"name_prefix": "test-prefix",
+				names.AttrNamePrefix: "test-prefix",
 			},
 		},
 		{
@@ -49,8 +49,8 @@ func TestComputeEnvironmentStateUpgradeV0(t *testing.T) {
 				"compute_environment_name_prefix": "test-prefix",
 			},
 			expected: map[string]any{
-				"name":        "test-environment",
-				"name_prefix": "test-prefix",
+				names.AttrName:        "test-environment",
+				names.AttrNamePrefix: "test-prefix",
 			},
 		},
 		{
@@ -61,8 +61,8 @@ func TestComputeEnvironmentStateUpgradeV0(t *testing.T) {
 				"other_key":                       "other-value",
 			},
 			expected: map[string]any{
-				"name":        "test-environment",
-				"name_prefix": "test-prefix",
+				names.AttrName:        "test-environment",
+				names.AttrNamePrefix: "test-prefix",
 				"other_key":   "other-value",
 			},
 		},
