@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -37,8 +36,6 @@ func resourceCarrierGateway() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -60,17 +57,17 @@ func resourceCarrierGateway() *schema.Resource {
 	}
 }
 
-func resourceCarrierGatewayCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCarrierGatewayCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.CreateCarrierGatewayInput{
+	input := ec2.CreateCarrierGatewayInput{
 		ClientToken:       aws.String(id.UniqueId()),
 		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeCarrierGateway),
 		VpcId:             aws.String(d.Get(names.AttrVPCID).(string)),
 	}
 
-	output, err := conn.CreateCarrierGateway(ctx, input)
+	output, err := conn.CreateCarrierGateway(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Carrier Gateway: %s", err)
@@ -85,7 +82,7 @@ func resourceCarrierGatewayCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceCarrierGatewayRead(ctx, d, meta)...)
 }
 
-func resourceCarrierGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCarrierGatewayRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -118,7 +115,7 @@ func resourceCarrierGatewayRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceCarrierGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCarrierGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Tags only.
@@ -126,14 +123,15 @@ func resourceCarrierGatewayUpdate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceCarrierGatewayRead(ctx, d, meta)...)
 }
 
-func resourceCarrierGatewayDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCarrierGatewayDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[INFO] Deleting EC2 Carrier Gateway (%s)", d.Id())
-	_, err := conn.DeleteCarrierGateway(ctx, &ec2.DeleteCarrierGatewayInput{
+	input := ec2.DeleteCarrierGatewayInput{
 		CarrierGatewayId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteCarrierGateway(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidCarrierGatewayIDNotFound) {
 		return diags

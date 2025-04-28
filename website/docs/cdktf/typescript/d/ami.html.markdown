@@ -115,6 +115,7 @@ interpolation.
 * `imdsSupport` - Instance Metadata Service (IMDS) support mode for the image. Set to `v2.0` if instances ran from this image enforce IMDSv2.
 * `kernelId` - Kernel associated with the image, if any. Only applicable
   for machine images.
+* `lastLaunchedTime` - Date and time, in ISO 8601 date-time format , when the AMI was last used to launch an EC2 instance. When the AMI is used to launch an instance, there is a 24-hour delay before that usage is reported. For more information, see the following [AWS document](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ami-last-launched-time.html).
 * `name` - Name of the AMI that was provided during image creation.
 * `ownerId` - AWS account ID of the image owner.
 * `platform` - Value is Windows for `Windows` AMIs; otherwise blank.
@@ -140,6 +141,7 @@ interpolation.
 * `tpmSupport` - If the image is configured for NitroTPM support, the value is `v2.0`.
 * `virtualizationType` - Type of virtualization of the AMI (ie: `hvm` or
   `paravirtual`).
+* `uefiData` - (Optional) Base64 representation of the non-volatile UEFI variable store.
 * `usageOperation` - Operation of the Amazon EC2 instance and the billing code that is associated with the AMI.
 * `platformDetails` - Platform details associated with the billing code of the AMI.
 * `enaSupport` - Whether enhanced networking with ENA is enabled.
@@ -152,4 +154,4 @@ interpolation.
 
 [1]: http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-images.html
 
-<!-- cache-key: cdktf-0.20.8 input-ddf36ab9a263ec2e8e853d80bf60b914742b569dad64c1a3b33bf922722760bf -->
+<!-- cache-key: cdktf-0.20.8 input-001f6f9d65f91435da56c242347f43a07ad28c6093d0f3fa2f0d69e7e6053d8f -->

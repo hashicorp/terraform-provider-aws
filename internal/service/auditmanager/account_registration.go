@@ -8,7 +8,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/auditmanager"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/auditmanager/types"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -18,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource
+// @FrameworkResource("aws_auditmanager_account_registration", name="Account Registration")
 func newResourceAccountRegistration(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceAccountRegistration{}, nil
 }
@@ -29,10 +28,7 @@ const (
 
 type resourceAccountRegistration struct {
 	framework.ResourceWithConfigure
-}
-
-func (r *resourceAccountRegistration) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_auditmanager_account_registration"
+	framework.WithImportByID
 }
 
 func (r *resourceAccountRegistration) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -175,10 +171,6 @@ func (r *resourceAccountRegistration) Delete(ctx context.Context, req resource.D
 			)
 		}
 	}
-}
-
-func (r *resourceAccountRegistration) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 type resourceAccountRegistrationData struct {

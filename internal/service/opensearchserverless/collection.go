@@ -14,7 +14,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -34,7 +33,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Collection")
+// @FrameworkResource("aws_opensearchserverless_collection", name="Collection")
 // @Tags(identifierAttribute="arn")
 func newResourceCollection(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := resourceCollection{}
@@ -65,11 +64,8 @@ const (
 
 type resourceCollection struct {
 	framework.ResourceWithConfigure
+	framework.WithImportByID
 	framework.WithTimeouts
-}
-
-func (r *resourceCollection) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_opensearchserverless_collection"
 }
 
 func (r *resourceCollection) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -310,14 +306,6 @@ func (r *resourceCollection) Delete(ctx context.Context, req resource.DeleteRequ
 	}
 }
 
-func (r *resourceCollection) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, req, resp)
-}
-
-func (r *resourceCollection) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-}
-
 func waitCollectionCreated(ctx context.Context, conn *opensearchserverless.Client, id string, timeout time.Duration) (*awstypes.CollectionDetail, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.CollectionStatusCreating),
@@ -365,7 +353,7 @@ func waitCollectionDeleted(ctx context.Context, conn *opensearchserverless.Clien
 }
 
 func statusCollection(ctx context.Context, conn *opensearchserverless.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findCollectionByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

@@ -45,7 +45,7 @@ var hostedZoneIDs = map[string]string{
 	endpoints.UsGovWest1RegionID: "Z4KAURWC4UUUG",
 }
 
-// @SDKDataSource("aws_elastic_beanstalk_hosted_zone")
+// @SDKDataSource("aws_elastic_beanstalk_hosted_zone", name="Hosted Zone")
 func dataSourceHostedZone() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceHostedZoneRead,
@@ -59,7 +59,7 @@ func dataSourceHostedZone() *schema.Resource {
 	}
 }
 
-func dataSourceHostedZoneRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceHostedZoneRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	region := meta.(*conns.AWSClient).Region(ctx)
 	if v, ok := d.GetOk(names.AttrRegion); ok {

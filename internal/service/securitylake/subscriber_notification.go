@@ -15,7 +15,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/securitylake/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -31,7 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Subscriber Notification")
+// @FrameworkResource("aws_securitylake_subscriber_notification", name="Subscriber Notification")
 func newSubscriberNotificationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &subscriberNotificationResource{}
 
@@ -44,10 +43,7 @@ const (
 
 type subscriberNotificationResource struct {
 	framework.ResourceWithConfigure
-}
-
-func (r *subscriberNotificationResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_securitylake_subscriber_notification"
+	framework.WithImportByID
 }
 
 func (r *subscriberNotificationResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -284,10 +280,6 @@ func (r *subscriberNotificationResource) Delete(ctx context.Context, req resourc
 		)
 		return
 	}
-}
-
-func (r *subscriberNotificationResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 // findSubscriberNotificationBySubscriberID returns an `*awstypes.SubscriberResource` because subscriber notifications are not really a standalone concept

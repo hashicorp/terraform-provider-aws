@@ -61,10 +61,6 @@ type ingestionDestinationResource struct {
 	framework.WithTimeouts
 }
 
-func (*ingestionDestinationResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_appfabric_ingestion_destination"
-}
-
 func (r *ingestionDestinationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -354,11 +350,12 @@ func (r *ingestionDestinationResource) Delete(ctx context.Context, request resou
 
 	conn := r.Meta().AppFabricClient(ctx)
 
-	_, err := conn.DeleteIngestionDestination(ctx, &appfabric.DeleteIngestionDestinationInput{
+	input := appfabric.DeleteIngestionDestinationInput{
 		AppBundleIdentifier:            data.AppBundleARN.ValueStringPointer(),
 		IngestionDestinationIdentifier: data.ARN.ValueStringPointer(),
 		IngestionIdentifier:            data.IngestionARN.ValueStringPointer(),
-	})
+	}
+	_, err := conn.DeleteIngestionDestination(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
@@ -384,10 +381,6 @@ func (r *ingestionDestinationResource) ConfigValidators(context.Context) []resou
 			path.MatchRoot("destination_configuration").AtListIndex(0).AtName("audit_log").AtListIndex(0).AtName(names.AttrDestination).AtListIndex(0).AtName(names.AttrS3Bucket),
 		),
 	}
-}
-
-func (r *ingestionDestinationResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func findIngestionDestinationByThreePartKey(ctx context.Context, conn *appfabric.Client, appBundleARN, ingestionARN, arn string) (*awstypes.IngestionDestination, error) {
@@ -418,7 +411,7 @@ func findIngestionDestinationByThreePartKey(ctx context.Context, conn *appfabric
 }
 
 func statusIngestionDestination(ctx context.Context, conn *appfabric.Client, appBundleARN, ingestionARN, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findIngestionDestinationByThreePartKey(ctx, conn, appBundleARN, ingestionARN, arn)
 
 		if tfresource.NotFound(err) {

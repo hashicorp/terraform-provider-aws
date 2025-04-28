@@ -4,6 +4,7 @@ package cloudtrail
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudtrail"
@@ -21,8 +22,9 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newOrganizationDelegatedAdminAccountResource,
-			Name:    "Organization Delegated Admin Account",
+			Factory:  newOrganizationDelegatedAdminAccountResource,
+			TypeName: "aws_cloudtrail_organization_delegated_admin_account",
+			Name:     "Organization Delegated Admin Account",
 		},
 	}
 }
@@ -43,17 +45,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceTrail,
 			TypeName: "aws_cloudtrail",
 			Name:     "Trail",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 		{
 			Factory:  resourceEventDataStore,
 			TypeName: "aws_cloudtrail_event_data_store",
 			Name:     "Event Data Store",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
 		},
 	}
 }
@@ -65,11 +67,31 @@ func (p *servicePackage) ServicePackageName() string {
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*cloudtrail.Client, error) {
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
-
-	return cloudtrail.NewFromConfig(cfg,
+	optFns := []func(*cloudtrail.Options){
 		cloudtrail.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
-	), nil
+		withExtraOptions(ctx, p, config),
+	}
+
+	return cloudtrail.NewFromConfig(cfg, optFns...), nil
+}
+
+// withExtraOptions returns a functional option that allows this service package to specify extra API client options.
+// This option is always called after any generated options.
+func withExtraOptions(ctx context.Context, sp conns.ServicePackage, config map[string]any) func(*cloudtrail.Options) {
+	if v, ok := sp.(interface {
+		withExtraOptions(context.Context, map[string]any) []func(*cloudtrail.Options)
+	}); ok {
+		optFns := v.withExtraOptions(ctx, config)
+
+		return func(o *cloudtrail.Options) {
+			for _, optFn := range optFns {
+				optFn(o)
+			}
+		}
+	}
+
+	return func(*cloudtrail.Options) {}
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

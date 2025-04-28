@@ -27,6 +27,7 @@ Backup
 Batch
 Bedrock
 Bedrock Agents
+Billing
 CE (Cost Explorer)
 Chatbot
 Chime
@@ -76,6 +77,7 @@ Cost and Usage Report
 DLM (Data Lifecycle Manager)
 DMS (Database Migration)
 DRS (Elastic Disaster Recovery)
+DSQL
 Data Exchange
 Data Pipeline
 DataSync
@@ -110,6 +112,7 @@ Elemental MediaConnect
 Elemental MediaConvert
 Elemental MediaLive
 Elemental MediaPackage
+Elemental MediaPackage VOD
 Elemental MediaPackage Version 2
 Elemental MediaStore
 End User Messaging SMS
@@ -134,6 +137,7 @@ IVS (Interactive Video)
 IVS (Interactive Video) Chat
 Inspector
 Inspector Classic
+Invoicing
 IoT Analytics
 IoT Core
 IoT Events
@@ -171,7 +175,6 @@ Network Manager
 OpenSearch
 OpenSearch Ingestion
 OpenSearch Serverless
-OpsWorks
 Organizations
 Outposts
 Outposts (EC2)
@@ -206,7 +209,6 @@ S3 Control
 S3 Glacier
 S3 Tables
 S3 on Outposts
-SDB (SimpleDB)
 SES (Simple Email)
 SESv2 (Simple Email V2)
 SFN (Step Functions)
@@ -220,7 +222,7 @@ SSO Admin
 SSO Identity Store
 STS (Security Token)
 SWF (Simple Workflow)
-SageMaker
+SageMaker AI
 Secrets Manager
 Security Hub
 Security Lake
@@ -252,7 +254,6 @@ WAF Classic Regional
 Wavelength
 Web Services Budgets
 Well-Architected Tool
-WorkLink
 WorkSpaces
 WorkSpaces Web
 X-Ray

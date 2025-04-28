@@ -4,6 +4,7 @@ package resourceexplorer2
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/resourceexplorer2"
@@ -17,8 +18,9 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newDataSourceSearch,
-			Name:    "Search",
+			Factory:  newDataSourceSearch,
+			TypeName: "aws_resourceexplorer2_search",
+			Name:     "Search",
 		},
 	}
 }
@@ -26,18 +28,20 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newIndexResource,
-			Name:    "Index",
-			Tags: &types.ServicePackageResourceTags{
+			Factory:  newIndexResource,
+			TypeName: "aws_resourceexplorer2_index",
+			Name:     "Index",
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
 		},
 		{
-			Factory: newViewResource,
-			Name:    "View",
-			Tags: &types.ServicePackageResourceTags{
+			Factory:  newViewResource,
+			TypeName: "aws_resourceexplorer2_view",
+			Name:     "View",
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
 		},
 	}
 }
@@ -57,11 +61,31 @@ func (p *servicePackage) ServicePackageName() string {
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*resourceexplorer2.Client, error) {
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
-
-	return resourceexplorer2.NewFromConfig(cfg,
+	optFns := []func(*resourceexplorer2.Options){
 		resourceexplorer2.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
-	), nil
+		withExtraOptions(ctx, p, config),
+	}
+
+	return resourceexplorer2.NewFromConfig(cfg, optFns...), nil
+}
+
+// withExtraOptions returns a functional option that allows this service package to specify extra API client options.
+// This option is always called after any generated options.
+func withExtraOptions(ctx context.Context, sp conns.ServicePackage, config map[string]any) func(*resourceexplorer2.Options) {
+	if v, ok := sp.(interface {
+		withExtraOptions(context.Context, map[string]any) []func(*resourceexplorer2.Options)
+	}); ok {
+		optFns := v.withExtraOptions(ctx, config)
+
+		return func(o *resourceexplorer2.Options) {
+			for _, optFn := range optFns {
+				optFn(o)
+			}
+		}
+	}
+
+	return func(*resourceexplorer2.Options) {}
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

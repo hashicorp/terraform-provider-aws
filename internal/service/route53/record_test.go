@@ -10,13 +10,15 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/route53"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
@@ -377,6 +379,15 @@ func TestAccRoute53Record_wildcard(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(ctx, resourceName, &record1),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("fqdn"), knownvalue.StringExact("*.domain.test")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact("*.domain.test")),
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -391,6 +402,15 @@ func TestAccRoute53Record_wildcard(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(ctx, resourceName, &record2),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("fqdn"), knownvalue.StringExact("*.domain.test")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact("*.domain.test")),
+				},
 			},
 		},
 	})
@@ -1575,6 +1595,121 @@ func TestAccRoute53Record_ttl0(t *testing.T) {
 	})
 }
 
+func TestAccRoute53Record_aliasWildcardName(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.ResourceRecordSet
+	resourceName := "aws_route53_record.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	zoneName := acctest.RandomDomain()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRecordConfig_aliasWildcardName(rName, zoneName.String()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRecordExists(ctx, resourceName, &v),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
+			},
+		},
+	})
+}
+
+func TestAccRoute53Record_escapedSlash(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.ResourceRecordSet
+	resourceName := "aws_route53_record.test"
+	zoneName := "0/24." + acctest.RandomDomain()
+	recordName := "0"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRecordConfig_basic(zoneName.String(), recordName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRecordExists(ctx, resourceName, &v),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccRoute53Record_escapedSpace(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.ResourceRecordSet
+	resourceName := "aws_route53_record.test"
+	zoneName := "a\\040b." + acctest.RandomDomain()
+	recordName := "0\\040to\\0401"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRecordConfig_basic(zoneName.String(), recordName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRecordExists(ctx, resourceName, &v),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccRoute53Record_escapedJustSpace(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.ResourceRecordSet
+	resourceName := "aws_route53_record.test"
+	// zone name always needs an escape code if any
+	zoneName := "a\\040b." + acctest.RandomDomain()
+	// as for record name, r53 API can accept a space as is but will send the escaped version of it back
+	recordName := "0 to 1"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRecordConfig_basic(zoneName.String(), recordName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRecordExists(ctx, resourceName, &v),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 // testAccErrorCheckSkip skips Route53 tests that have error messages indicating unsupported features
 func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,
@@ -1659,41 +1794,29 @@ func testAccCheckRecordExists(ctx context.Context, n string, v *awstypes.Resourc
 	}
 }
 
-func testAccCheckRecordDoesNotExist(ctx context.Context, zoneResourceName string, recordName string, recordType string) resource.TestCheckFunc {
+func testAccCheckRecordDoesNotExist(ctx context.Context, zoneResourceName, recordName, recordType string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Client(ctx)
 
-		zoneResource, ok := s.RootModule().Resources[zoneResourceName]
+		rs, ok := s.RootModule().Resources[zoneResourceName]
 		if !ok {
 			return fmt.Errorf("Not found: %s", zoneResourceName)
 		}
 
-		zoneId := zoneResource.Primary.ID
-		en := tfroute53.ExpandRecordName(recordName, zoneResource.Primary.Attributes["zone_id"])
+		zone := rs.Primary.ID
+		recordName := tfroute53.ExpandRecordName(recordName, zone)
 
-		lopts := &route53.ListResourceRecordSetsInput{
-			HostedZoneId: aws.String(tfroute53.CleanZoneID(zoneId)),
+		_, _, err := tfroute53.FindResourceRecordSetByFourPartKey(ctx, conn, zone, recordName, recordType, "")
+
+		if tfresource.NotFound(err) {
+			return nil
 		}
 
-		resp, err := conn.ListResourceRecordSets(ctx, lopts)
 		if err != nil {
 			return err
 		}
 
-		found := false
-		for _, rec := range resp.ResourceRecordSets {
-			recName := tfroute53.CleanRecordName(*rec.Name)
-			if tfroute53.FQDN(strings.ToLower(recName)) == tfroute53.FQDN(strings.ToLower(en)) && rec.Type == awstypes.RRType(recordType) {
-				found = true
-				break
-			}
-		}
-
-		if found {
-			return fmt.Errorf("Record exists but should not: %s", en)
-		}
-
-		return nil
+		return fmt.Errorf("Route 53 Record %s still exists", recordName)
 	}
 }
 
@@ -3255,4 +3378,60 @@ resource "aws_route53_record" "test" {
   records = ["127.0.0.1", "127.0.0.27"]
 }
 `, zoneName, recordName, ttl)
+}
+
+func testAccRecordConfig_aliasWildcardName(rName, zoneName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block           = "10.0.0.0/16"
+  enable_dns_support   = true
+  enable_dns_hostnames = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  count = 3
+
+  vpc_id            = aws_vpc.test.id
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 2, count.index)
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+data "aws_region" "current" {}
+
+resource "aws_vpc_endpoint" "test" {
+  vpc_id              = aws_vpc.test.id
+  service_name        = "com.amazonaws.${data.aws_region.current.name}.s3"
+  vpc_endpoint_type   = "Interface"
+  private_dns_enabled = false
+  subnet_ids          = aws_subnet.test[*].id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route53_zone" "test1" {
+  name = %[2]q
+}
+
+resource "aws_route53_record" "test" {
+  zone_id = aws_route53_zone.test1.zone_id
+  name    = "*.%[2]s"
+  type    = "A"
+
+  alias {
+    name                   = aws_vpc_endpoint.test.dns_entry[0].dns_name
+    zone_id                = aws_vpc_endpoint.test.dns_entry[0].hosted_zone_id
+    evaluate_target_health = false
+  }
+}
+`, rName, zoneName))
 }

@@ -4,6 +4,7 @@ package athena
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/athena"
@@ -19,7 +20,16 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{}
+	return []*types.ServicePackageFrameworkResource{
+		{
+			Factory:  newResourceCapacityReservation,
+			TypeName: "aws_athena_capacity_reservation",
+			Name:     "Capacity Reservation",
+			Tags: unique.Make(types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+		},
+	}
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
@@ -27,6 +37,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  dataSourceNamedQuery,
 			TypeName: "aws_athena_named_query",
+			Name:     "Named Query",
 		},
 	}
 }
@@ -37,17 +48,19 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceDataCatalog,
 			TypeName: "aws_athena_data_catalog",
 			Name:     "Data Catalog",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 		{
 			Factory:  resourceDatabase,
 			TypeName: "aws_athena_database",
+			Name:     "Database",
 		},
 		{
 			Factory:  resourceNamedQuery,
 			TypeName: "aws_athena_named_query",
+			Name:     "Named Query",
 		},
 		{
 			Factory:  resourcePreparedStatement,
@@ -58,9 +71,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceWorkGroup,
 			TypeName: "aws_athena_workgroup",
 			Name:     "WorkGroup",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 	}
 }
@@ -72,11 +85,31 @@ func (p *servicePackage) ServicePackageName() string {
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*athena.Client, error) {
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
-
-	return athena.NewFromConfig(cfg,
+	optFns := []func(*athena.Options){
 		athena.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
-	), nil
+		withExtraOptions(ctx, p, config),
+	}
+
+	return athena.NewFromConfig(cfg, optFns...), nil
+}
+
+// withExtraOptions returns a functional option that allows this service package to specify extra API client options.
+// This option is always called after any generated options.
+func withExtraOptions(ctx context.Context, sp conns.ServicePackage, config map[string]any) func(*athena.Options) {
+	if v, ok := sp.(interface {
+		withExtraOptions(context.Context, map[string]any) []func(*athena.Options)
+	}); ok {
+		optFns := v.withExtraOptions(ctx, config)
+
+		return func(o *athena.Options) {
+			for _, optFn := range optFns {
+				optFn(o)
+			}
+		}
+	}
+
+	return func(*athena.Options) {}
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

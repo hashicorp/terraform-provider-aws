@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/auditmanager"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/auditmanager/types"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -27,7 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource
+// @FrameworkResource("aws_auditmanager_assessment_delegation", name="Assessment Delegation")
 func newResourceAssessmentDelegation(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceAssessmentDelegation{}, nil
 }
@@ -38,10 +37,7 @@ const (
 
 type resourceAssessmentDelegation struct {
 	framework.ResourceWithConfigure
-}
-
-func (r *resourceAssessmentDelegation) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_auditmanager_assessment_delegation"
+	framework.WithImportByID
 }
 
 func (r *resourceAssessmentDelegation) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -237,10 +233,6 @@ func (r *resourceAssessmentDelegation) Delete(ctx context.Context, req resource.
 			err.Error(),
 		)
 	}
-}
-
-func (r *resourceAssessmentDelegation) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func FindAssessmentDelegationByID(ctx context.Context, conn *auditmanager.Client, id string) (*awstypes.DelegationMetadata, error) {

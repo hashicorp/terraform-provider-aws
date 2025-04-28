@@ -4,14 +4,19 @@
 package athena
 
 import (
+	"context"
 	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/athena"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -36,6 +41,39 @@ func RegisterSweepers() {
 			"aws_athena_data_catalog",
 		},
 	})
+
+	awsv2.Register("aws_athena_capacity_reservation", sweepCapacityReservations)
+}
+
+func sweepCapacityReservations(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	input := athena.ListCapacityReservationsInput{}
+	conn := client.AthenaClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	pages := athena.NewListCapacityReservationsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		// The Athena API returns a ThrottlingException in unsupported regions
+		if tfawserr.ErrCodeEquals(err, "ThrottlingException") {
+			tflog.Warn(ctx, "Skipping sweeper", map[string]any{
+				"skip_reason": "Unsupported region",
+				"error":       err.Error(),
+			})
+			return sweepResources, nil
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.CapacityReservations {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceCapacityReservation, client,
+				framework.NewAttribute(names.AttrName, aws.ToString(v.Name))),
+			)
+		}
+	}
+
+	return sweepResources, nil
 }
 
 func sweepDataCatalogs(region string) error {

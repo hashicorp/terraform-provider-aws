@@ -8,7 +8,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/servicequotas"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/servicequotas/types"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -18,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Template Association")
+// @FrameworkResource("aws_servicequotas_template_association", name="Template Association")
 func newResourceTemplateAssociation(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceTemplateAssociation{}, nil
 }
@@ -29,10 +28,7 @@ const (
 
 type resourceTemplateAssociation struct {
 	framework.ResourceWithConfigure
-}
-
-func (r *resourceTemplateAssociation) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_servicequotas_template_association"
+	framework.WithImportByID
 }
 
 func (r *resourceTemplateAssociation) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -136,10 +132,6 @@ func (r *resourceTemplateAssociation) Delete(ctx context.Context, req resource.D
 		)
 		return
 	}
-}
-
-func (r *resourceTemplateAssociation) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 type resourceTemplateAssociationData struct {

@@ -15,8 +15,6 @@ bug:
   #   doesn't support update
   #   Invalid address to set
   - "(\\[Bug\\]:|doesn't support update|failed to satisfy constraint: Member must not be null|Invalid address to set|panic:|produced an (invalid|unexpected) new value|Provider produced inconsistent (final plan|result after apply))"
-crash:
-  - 'panic:'
 sweeper:
   - 'sweeper'
 skaff:
@@ -99,6 +97,8 @@ service/bedrock:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_bedrock_'
 service/bedrockagent:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_bedrockagent_'
+service/billing:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_billing_'
 service/billingconductor:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_billingconductor_'
 service/braket:
@@ -233,6 +233,8 @@ service/drs:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_drs_'
 service/ds:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_directory_service_'
+service/dsql:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_dsql_'
 service/dynamodb:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_dynamodb_'
 service/dynamodbstreams:
@@ -335,6 +337,8 @@ service/inspector2:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_inspector2_'
 service/internetmonitor:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_internetmonitor_'
+service/invoicing:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_invoicing_'
 service/iot:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_iot_'
 service/iot1clickdevices:

@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_sqs_queue")
+// @SDKDataSource("aws_sqs_queue", name="Queue")
 // @Tags(identifierAttribute="url")
 func dataSourceQueue() *schema.Resource {
 	return &schema.Resource{
@@ -44,7 +44,7 @@ func dataSourceQueue() *schema.Resource {
 	}
 }
 
-func dataSourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceQueueRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SQSClient(ctx)
 

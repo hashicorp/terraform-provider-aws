@@ -841,7 +841,7 @@ func dataSourcePrebuiltECRImage() *schema.Resource {
 	}
 }
 
-func dataSourcePrebuiltECRImageRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourcePrebuiltECRImageRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	region := meta.(*conns.AWSClient).Region(ctx)
 	if v, ok := d.GetOk(names.AttrRegion); ok {
@@ -855,7 +855,7 @@ func dataSourcePrebuiltECRImageRead(ctx context.Context, d *schema.ResourceData,
 
 	repo := d.Get(names.AttrRepositoryName).(string)
 
-	id := ""
+	var id string
 	switch repo {
 	case repositoryBlazingText,
 		repositoryImageClassification,

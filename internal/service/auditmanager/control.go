@@ -31,7 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Control")
+// @FrameworkResource("aws_auditmanager_control", name="Control")
 // @Tags(identifierAttribute="arn")
 func newResourceControl(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceControl{}, nil
@@ -43,10 +43,7 @@ const (
 
 type resourceControl struct {
 	framework.ResourceWithConfigure
-}
-
-func (r *resourceControl) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_auditmanager_control"
+	framework.WithImportByID
 }
 
 func (r *resourceControl) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -309,10 +306,6 @@ func (r *resourceControl) Delete(ctx context.Context, req resource.DeleteRequest
 	}
 }
 
-func (r *resourceControl) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-}
-
 func (r *resourceControl) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
 	if !req.State.Raw.IsNull() && !req.Plan.Raw.IsNull() {
 		var plan resourceControlData
@@ -337,8 +330,6 @@ func (r *resourceControl) ModifyPlan(ctx context.Context, req resource.ModifyPla
 			}
 		}
 	}
-
-	r.SetTagsAll(ctx, req, resp)
 }
 
 func FindControlByID(ctx context.Context, conn *auditmanager.Client, id string) (*awstypes.Control, error) {

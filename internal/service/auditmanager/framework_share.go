@@ -6,11 +6,11 @@ package auditmanager
 import (
 	"context"
 	"errors"
+	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/auditmanager"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/auditmanager/types"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -25,7 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource
+// @FrameworkResource("aws_auditmanager_framework_share", name="Framework Share")
 func newResourceFrameworkShare(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceFrameworkShare{}, nil
 }
@@ -36,10 +36,7 @@ const (
 
 type resourceFrameworkShare struct {
 	framework.ResourceWithConfigure
-}
-
-func (r *resourceFrameworkShare) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_auditmanager_framework_share"
+	framework.WithImportByID
 }
 
 func (r *resourceFrameworkShare) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -187,10 +184,6 @@ func (r *resourceFrameworkShare) Delete(ctx context.Context, req resource.Delete
 	}
 }
 
-func (r *resourceFrameworkShare) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-}
-
 func FindFrameworkShareByID(ctx context.Context, conn *auditmanager.Client, id string) (*awstypes.AssessmentFrameworkShareRequest, error) {
 	in := &auditmanager.ListAssessmentFrameworkShareRequestsInput{
 		RequestType: awstypes.ShareRequestTypeSent,
@@ -223,12 +216,7 @@ func CanBeRevoked(status string) bool {
 		awstypes.ShareRequestStatusFailed,
 		awstypes.ShareRequestStatusRevoked,
 	)
-	for _, s := range nonRevokable {
-		if s == status {
-			return false
-		}
-	}
-	return true
+	return !slices.Contains(nonRevokable, status)
 }
 
 type resourceFrameworkShareData struct {

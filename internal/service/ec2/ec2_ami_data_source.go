@@ -36,6 +36,10 @@ func dataSourceAMI() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"allow_unsafe_filter": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"architecture": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -128,6 +132,10 @@ func dataSourceAMI() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"last_launched_time": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrMostRecent: {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -217,6 +225,10 @@ func dataSourceAMI() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"uefi_data": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"usage_operation": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -229,29 +241,29 @@ func dataSourceAMI() *schema.Resource {
 	}
 }
 
-func dataSourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceAMIRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.DescribeImagesInput{
+	describeImagesInput := ec2.DescribeImagesInput{
 		IncludeDeprecated: aws.Bool(d.Get("include_deprecated").(bool)),
 	}
 
 	if v, ok := d.GetOk("executable_users"); ok {
-		input.ExecutableUsers = flex.ExpandStringValueList(v.([]interface{}))
+		describeImagesInput.ExecutableUsers = flex.ExpandStringValueList(v.([]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrFilter); ok {
-		input.Filters = newCustomFilterList(v.(*schema.Set))
+		describeImagesInput.Filters = newCustomFilterList(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("owners"); ok && len(v.([]interface{})) > 0 {
-		input.Owners = flex.ExpandStringValueList(v.([]interface{}))
+	if v, ok := d.GetOk("owners"); ok && len(v.([]any)) > 0 {
+		describeImagesInput.Owners = flex.ExpandStringValueList(v.([]any))
 	}
 
-	diags = checkMostRecentAndMissingFilters(diags, input, d.Get(names.AttrMostRecent).(bool))
+	diags = checkMostRecentAndMissingFilters(diags, &describeImagesInput, d.Get(names.AttrMostRecent).(bool), d.Get("allow_unsafe_filter").(bool))
 
-	images, err := findImages(ctx, conn, input)
+	images, err := findImages(ctx, conn, &describeImagesInput)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 AMIs: %s", err)
@@ -317,6 +329,7 @@ func dataSourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("image_type", image.ImageType)
 	d.Set("imds_support", image.ImdsSupport)
 	d.Set("kernel_id", image.KernelId)
+	d.Set("last_launched_time", image.LastLaunchedTime)
 	d.Set(names.AttrName, image.Name)
 	d.Set(names.AttrOwnerID, image.OwnerId)
 	d.Set("platform", image.Platform)
@@ -338,26 +351,34 @@ func dataSourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("usage_operation", image.UsageOperation)
 	d.Set("virtualization_type", image.VirtualizationType)
 
+	getInstanceUEFIDataInput := ec2.GetInstanceUefiDataInput{
+		InstanceId: aws.String(d.Id()),
+	}
+	instanceData, err := conn.GetInstanceUefiData(ctx, &getInstanceUEFIDataInput)
+	if err == nil {
+		d.Set("uefi_data", instanceData.UefiData)
+	}
+
 	setTagsOut(ctx, image.Tags)
 
 	return diags
 }
 
-func flattenAMIBlockDeviceMappings(apiObjects []awstypes.BlockDeviceMapping) []interface{} {
+func flattenAMIBlockDeviceMappings(apiObjects []awstypes.BlockDeviceMapping) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			names.AttrDeviceName:  aws.ToString(apiObject.DeviceName),
 			names.AttrVirtualName: aws.ToString(apiObject.VirtualName),
 		}
 
 		if apiObject := apiObject.Ebs; apiObject != nil {
-			ebs := map[string]interface{}{
+			ebs := map[string]any{
 				names.AttrDeleteOnTermination: flex.BoolToStringValue(apiObject.DeleteOnTermination),
 				names.AttrEncrypted:           flex.BoolToStringValue(apiObject.Encrypted),
 				names.AttrIOPS:                flex.Int32ToStringValue(apiObject.Iops),
@@ -376,15 +397,15 @@ func flattenAMIBlockDeviceMappings(apiObjects []awstypes.BlockDeviceMapping) []i
 	return tfList
 }
 
-func flattenAMIProductCodes(apiObjects []awstypes.ProductCode) []interface{} {
+func flattenAMIProductCodes(apiObjects []awstypes.ProductCode) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfList = append(tfList, map[string]interface{}{
+		tfList = append(tfList, map[string]any{
 			"product_code_id":   aws.ToString(apiObject.ProductCodeId),
 			"product_code_type": apiObject.ProductCodeType,
 		})
@@ -409,8 +430,8 @@ func amiRootSnapshotId(image awstypes.Image) string {
 	return ""
 }
 
-func flattenAMIStateReason(m *awstypes.StateReason) map[string]interface{} {
-	s := make(map[string]interface{})
+func flattenAMIStateReason(m *awstypes.StateReason) map[string]any {
+	s := make(map[string]any)
 	if m != nil {
 		s["code"] = aws.ToString(m.Code)
 		s[names.AttrMessage] = aws.ToString(m.Message)
@@ -423,7 +444,7 @@ func flattenAMIStateReason(m *awstypes.StateReason) map[string]interface{} {
 
 // checkMostRecentAndMissingFilters appends a diagnostic if the provided configuration
 // uses the most recent image and is not filtered by owner or image ID
-func checkMostRecentAndMissingFilters(diags diag.Diagnostics, input *ec2.DescribeImagesInput, mostRecent bool) diag.Diagnostics {
+func checkMostRecentAndMissingFilters(diags diag.Diagnostics, input *ec2.DescribeImagesInput, mostRecent, allowUnsafe bool) diag.Diagnostics {
 	filtered := false
 	for _, f := range input.Filters {
 		name := aws.ToString(f.Name)
@@ -433,14 +454,19 @@ func checkMostRecentAndMissingFilters(diags diag.Diagnostics, input *ec2.Describ
 	}
 
 	if mostRecent && len(input.Owners) == 0 && !filtered {
-		return append(diags, diag.Diagnostic{
-			Severity: diag.Warning,
+		d := diag.Diagnostic{
+			Severity: diag.Error,
 			Summary:  "Most Recent Image Not Filtered",
 			Detail: `"most_recent" is set to "true" and results are not filtered by owner or image ID. ` +
 				"With this configuration, a third party may introduce a new image which " +
-				"will be returned by this data source. Consider filtering by owner or image ID " +
-				"to avoid this possibility.",
-		})
+				"will be returned by this data source. Filter by owner or image ID to " +
+				"avoid this possibility.",
+		}
+		if allowUnsafe {
+			d.Severity = diag.Warning
+		}
+
+		return append(diags, d)
 	}
 
 	return diags

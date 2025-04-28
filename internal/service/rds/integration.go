@@ -61,10 +61,6 @@ type integrationResource struct {
 	framework.WithTimeouts
 }
 
-func (*integrationResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_rds_integration"
-}
-
 func (r *integrationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -77,7 +73,15 @@ func (r *integrationResource) Schema(ctx context.Context, request resource.Schem
 				},
 			},
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			names.AttrID:  framework.IDAttribute(),
+			"data_filter": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			names.AttrID: framework.IDAttribute(),
 			"integration_name": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -160,6 +164,7 @@ func (r *integrationResource) Create(ctx context.Context, request resource.Creat
 
 	// Set values for unknowns.
 	data.KMSKeyID = fwflex.StringToFramework(ctx, integration.KMSKeyId)
+	data.DataFilter = fwflex.StringToFramework(ctx, integration.DataFilter)
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
@@ -222,7 +227,7 @@ func (r *integrationResource) Delete(ctx context.Context, request resource.Delet
 	conn := r.Meta().RDSClient(ctx)
 
 	_, err := conn.DeleteIntegration(ctx, &rds.DeleteIntegrationInput{
-		IntegrationIdentifier: data.ID.ValueStringPointer(),
+		IntegrationIdentifier: fwflex.StringFromFramework(ctx, data.ID),
 	})
 
 	if errs.IsA[*awstypes.IntegrationNotFoundFault](err) {
@@ -240,10 +245,6 @@ func (r *integrationResource) Delete(ctx context.Context, request resource.Delet
 
 		return
 	}
-}
-
-func (r *integrationResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func findIntegrationByARN(ctx context.Context, conn *rds.Client, arn string) (*awstypes.Integration, error) {
@@ -293,7 +294,7 @@ func findIntegrations(ctx context.Context, conn *rds.Client, input *rds.Describe
 }
 
 func statusIntegration(ctx context.Context, conn *rds.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findIntegrationByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
@@ -352,6 +353,7 @@ func integrationError(v awstypes.IntegrationError) error {
 
 type integrationResourceModel struct {
 	AdditionalEncryptionContext fwtypes.MapValueOf[types.String] `tfsdk:"additional_encryption_context"`
+	DataFilter                  types.String                     `tfsdk:"data_filter"`
 	ID                          types.String                     `tfsdk:"id"`
 	IntegrationARN              types.String                     `tfsdk:"arn"`
 	IntegrationName             types.String                     `tfsdk:"integration_name"`

@@ -49,6 +49,35 @@ func resourceFleet() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.IntAtLeast(1),
 			},
+			"compute_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"disk": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Computed: true,
+						},
+						"machine_type": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[types.MachineType](),
+						},
+						"memory": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Computed: true,
+						},
+						"vcpu": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"compute_type": {
 				Type:             schema.TypeString,
 				Required:         true,
@@ -190,7 +219,6 @@ func resourceFleet() *schema.Resource {
 				},
 			},
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -198,7 +226,7 @@ const (
 	resNameFleet = "Fleet"
 )
 
-func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).CodeBuildClient(ctx)
@@ -209,6 +237,10 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		EnvironmentType: types.EnvironmentType(d.Get("environment_type").(string)),
 		Name:            aws.String(d.Get(names.AttrName).(string)),
 		Tags:            getTagsIn(ctx),
+	}
+
+	if v, ok := d.GetOk("compute_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.ComputeConfiguration = expandComputeConfiguration(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("fleet_service_role"); ok {
@@ -223,16 +255,16 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.OverflowBehavior = types.FleetOverflowBehavior(v.(string))
 	}
 
-	if v, ok := d.GetOk("scaling_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.ScalingConfiguration = expandScalingConfiguration(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("scaling_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.ScalingConfiguration = expandScalingConfiguration(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk(names.AttrVPCConfig); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.VpcConfig = expandVPCConfig(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk(names.AttrVPCConfig); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.VpcConfig = expandVPCConfig(v.([]any)[0].(map[string]any))
 	}
 
 	// InvalidInputException: CodeBuild is not authorized to perform
-	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidInputException](ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidInputException](ctx, propagationTimeout, func() (any, error) {
 		return conn.CreateFleet(ctx, input)
 	}, "ot authorized to perform")
 
@@ -252,7 +284,7 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceFleetRead(ctx, d, meta)...)
 }
 
-func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).CodeBuildClient(ctx)
@@ -271,6 +303,15 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	d.Set(names.AttrARN, fleet.Arn)
 	d.Set("base_capacity", fleet.BaseCapacity)
+
+	if fleet.ComputeConfiguration != nil {
+		if err := d.Set("compute_configuration", []any{flattenComputeConfiguration(fleet.ComputeConfiguration)}); err != nil {
+			return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionSetting, resNameFleet, d.Id(), err)
+		}
+	} else {
+		d.Set("compute_configuration", nil)
+	}
+
 	d.Set("compute_type", fleet.ComputeType)
 	d.Set("created", aws.ToTime(fleet.Created).Format(time.RFC3339))
 	d.Set("environment_type", fleet.EnvironmentType)
@@ -280,20 +321,19 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("last_modified", aws.ToTime(fleet.LastModified).Format(time.RFC3339))
 	d.Set(names.AttrName, fleet.Name)
 	d.Set("overflow_behavior", fleet.OverflowBehavior)
-	if fleet.ScalingConfiguration != nil {
-		if err := d.Set("scaling_configuration", []interface{}{flattenScalingConfiguration(fleet.ScalingConfiguration)}); err != nil {
-			return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionSetting, resNameFleet, d.Id(), err)
-		}
-	} else {
-		d.Set("scaling_configuration", nil)
+
+	if err := d.Set("scaling_configuration", flattenScalingConfiguration(fleet.ScalingConfiguration)); err != nil {
+		return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionSetting, resNameFleet, d.Id(), err)
 	}
+
 	if fleet.Status != nil {
-		if err := d.Set(names.AttrStatus, []interface{}{flattenStatus(fleet.Status)}); err != nil {
+		if err := d.Set(names.AttrStatus, []any{flattenStatus(fleet.Status)}); err != nil {
 			return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionSetting, resNameFleet, d.Id(), err)
 		}
 	} else {
 		d.Set(names.AttrStatus, nil)
 	}
+
 	if err := d.Set(names.AttrVPCConfig, flattenVPCConfig(fleet.VpcConfig)); err != nil {
 		return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionSetting, resNameFleet, d.Id(), err)
 	}
@@ -303,7 +343,7 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	return diags
 }
 
-func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeBuildClient(ctx)
 
@@ -313,6 +353,14 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if d.HasChange("base_capacity") {
 		input.BaseCapacity = aws.Int32(int32(d.Get("base_capacity").(int)))
+	}
+
+	if d.HasChange("compute_configuration") {
+		input.ComputeType = types.ComputeType(d.Get("compute_type").(string))
+
+		if v, ok := d.GetOk("compute_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.ComputeConfiguration = expandComputeConfiguration(v.([]any)[0].(map[string]any))
+		}
 	}
 
 	if d.HasChange("compute_type") {
@@ -337,20 +385,22 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if d.HasChange("scaling_configuration") {
-		if v, ok := d.GetOk("scaling_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.ScalingConfiguration = expandScalingConfiguration(v.([]interface{})[0].(map[string]interface{}))
+		if v, ok := d.GetOk("scaling_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.ScalingConfiguration = expandScalingConfiguration(v.([]any)[0].(map[string]any))
+		} else {
+			input.ScalingConfiguration = &types.ScalingConfigurationInput{}
 		}
 	}
 
 	if d.HasChange(names.AttrVPCConfig) {
-		if v, ok := d.GetOk(names.AttrVPCConfig); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.VpcConfig = expandVPCConfig(v.([]interface{})[0].(map[string]interface{}))
+		if v, ok := d.GetOk(names.AttrVPCConfig); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.VpcConfig = expandVPCConfig(v.([]any)[0].(map[string]any))
 		}
 	}
 
 	input.Tags = getTagsIn(ctx)
 
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidInputException](ctx, propagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidInputException](ctx, propagationTimeout, func() (any, error) {
 		return conn.UpdateFleet(ctx, input)
 	}, "ot authorized to perform")
 
@@ -368,14 +418,15 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceFleetRead(ctx, d, meta)...)
 }
 
-func resourceFleetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFleetDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeBuildClient(ctx)
 
 	log.Printf("[INFO] Deleting CodeBuild Fleet: %s", d.Id())
-	_, err := conn.DeleteFleet(ctx, &codebuild.DeleteFleetInput{
+	input := codebuild.DeleteFleetInput{
 		Arn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteFleet(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
@@ -443,7 +494,7 @@ func findFleets(ctx context.Context, conn *codebuild.Client, input *codebuild.Ba
 }
 
 func statusFleet(ctx context.Context, conn *codebuild.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findFleetByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
@@ -521,7 +572,33 @@ func waitFleetDeleted(ctx context.Context, conn *codebuild.Client, arn string, t
 	return nil, err
 }
 
-func expandScalingConfiguration(tfMap map[string]interface{}) *types.ScalingConfigurationInput {
+func expandComputeConfiguration(tfMap map[string]any) *types.ComputeConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.ComputeConfiguration{}
+
+	if v, ok := tfMap["disk"].(int); ok {
+		apiObject.Disk = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["machine_type"].(string); ok && v != "" {
+		apiObject.MachineType = types.MachineType(v)
+	}
+
+	if v, ok := tfMap["memory"].(int); ok {
+		apiObject.Memory = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["vcpu"].(int); ok {
+		apiObject.VCpu = aws.Int64(int64(v))
+	}
+
+	return apiObject
+}
+
+func expandScalingConfiguration(tfMap map[string]any) *types.ScalingConfigurationInput {
 	if tfMap == nil {
 		return nil
 	}
@@ -536,14 +613,14 @@ func expandScalingConfiguration(tfMap map[string]interface{}) *types.ScalingConf
 		apiObject.ScalingType = types.FleetScalingType(v)
 	}
 
-	if v, ok := tfMap["target_tracking_scaling_configs"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["target_tracking_scaling_configs"].([]any); ok && len(v) > 0 {
 		apiObject.TargetTrackingScalingConfigs = expandTargetTrackingScalingConfigs(v)
 	}
 
 	return apiObject
 }
 
-func expandTargetTrackingScalingConfigs(tfList []interface{}) []types.TargetTrackingScalingConfiguration {
+func expandTargetTrackingScalingConfigs(tfList []any) []types.TargetTrackingScalingConfiguration {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -551,7 +628,7 @@ func expandTargetTrackingScalingConfigs(tfList []interface{}) []types.TargetTrac
 	var apiObjects []types.TargetTrackingScalingConfiguration
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -566,7 +643,7 @@ func expandTargetTrackingScalingConfigs(tfList []interface{}) []types.TargetTrac
 	return apiObjects
 }
 
-func expandTargetTrackingScalingConfig(tfMap map[string]interface{}) *types.TargetTrackingScalingConfiguration {
+func expandTargetTrackingScalingConfig(tfMap map[string]any) *types.TargetTrackingScalingConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -584,12 +661,38 @@ func expandTargetTrackingScalingConfig(tfMap map[string]interface{}) *types.Targ
 	return apiObject
 }
 
-func flattenScalingConfiguration(apiObject *types.ScalingConfigurationOutput) map[string]interface{} {
+func flattenComputeConfiguration(apiObject *types.ComputeConfiguration) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
+
+	if v := apiObject.Disk; v != nil {
+		tfMap["disk"] = aws.ToInt64(v)
+	}
+
+	if v := apiObject.MachineType; v != "" {
+		tfMap["machine_type"] = v
+	}
+
+	if v := apiObject.Memory; v != nil {
+		tfMap["memory"] = aws.ToInt64(v)
+	}
+
+	if v := apiObject.VCpu; v != nil {
+		tfMap["vcpu"] = aws.ToInt64(v)
+	}
+
+	return tfMap
+}
+
+func flattenScalingConfiguration(apiObject *types.ScalingConfigurationOutput) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
 
 	if v := apiObject.DesiredCapacity; v != nil {
 		tfMap["desired_capacity"] = aws.ToInt32(v)
@@ -607,15 +710,19 @@ func flattenScalingConfiguration(apiObject *types.ScalingConfigurationOutput) ma
 		tfMap["target_tracking_scaling_configs"] = flattenTargetTrackingScalingConfigs(v)
 	}
 
-	return tfMap
+	if len(tfMap) == 0 {
+		return nil
+	}
+
+	return []any{tfMap}
 }
 
-func flattenTargetTrackingScalingConfigs(apiObjects []types.TargetTrackingScalingConfiguration) []interface{} {
+func flattenTargetTrackingScalingConfigs(apiObjects []types.TargetTrackingScalingConfiguration) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenTargetTrackingScalingConfig(&apiObject))
@@ -624,12 +731,12 @@ func flattenTargetTrackingScalingConfigs(apiObjects []types.TargetTrackingScalin
 	return tfList
 }
 
-func flattenTargetTrackingScalingConfig(apiObject *types.TargetTrackingScalingConfiguration) map[string]interface{} {
+func flattenTargetTrackingScalingConfig(apiObject *types.TargetTrackingScalingConfiguration) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.MetricType; v != "" {
 		tfMap["metric_type"] = v
@@ -642,12 +749,12 @@ func flattenTargetTrackingScalingConfig(apiObject *types.TargetTrackingScalingCo
 	return tfMap
 }
 
-func flattenStatus(apiObject *types.FleetStatus) map[string]interface{} {
+func flattenStatus(apiObject *types.FleetStatus) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Context; v != "" {
 		tfMap["context"] = v

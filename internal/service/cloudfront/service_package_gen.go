@@ -4,6 +4,7 @@ package cloudfront
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
@@ -17,8 +18,9 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newDataSourceOriginAccessControl,
-			Name:    "Origin Access Control",
+			Factory:  newDataSourceOriginAccessControl,
+			TypeName: "aws_cloudfront_origin_access_control",
+			Name:     "Origin Access Control",
 		},
 	}
 }
@@ -26,19 +28,22 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newContinuousDeploymentPolicyResource,
-			Name:    "Continuous Deployment Policy",
+			Factory:  newContinuousDeploymentPolicyResource,
+			TypeName: "aws_cloudfront_continuous_deployment_policy",
+			Name:     "Continuous Deployment Policy",
 		},
 		{
-			Factory: newKeyValueStoreResource,
-			Name:    "Key Value Store",
+			Factory:  newKeyValueStoreResource,
+			TypeName: "aws_cloudfront_key_value_store",
+			Name:     "Key Value Store",
 		},
 		{
-			Factory: newVPCOriginResource,
-			Name:    "VPC Origin",
-			Tags: &types.ServicePackageResourceTags{
+			Factory:  newVPCOriginResource,
+			TypeName: "aws_cloudfront_vpc_origin",
+			Name:     "VPC Origin",
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 	}
 }
@@ -54,9 +59,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Factory:  dataSourceDistribution,
 			TypeName: "aws_cloudfront_distribution",
 			Name:     "Distribution",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 		{
 			Factory:  dataSourceFunction,
@@ -107,9 +112,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceDistribution,
 			TypeName: "aws_cloudfront_distribution",
 			Name:     "Distribution",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 		{
 			Factory:  resourceFieldLevelEncryptionConfig,
@@ -176,11 +181,31 @@ func (p *servicePackage) ServicePackageName() string {
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*cloudfront.Client, error) {
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
-
-	return cloudfront.NewFromConfig(cfg,
+	optFns := []func(*cloudfront.Options){
 		cloudfront.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
-	), nil
+		withExtraOptions(ctx, p, config),
+	}
+
+	return cloudfront.NewFromConfig(cfg, optFns...), nil
+}
+
+// withExtraOptions returns a functional option that allows this service package to specify extra API client options.
+// This option is always called after any generated options.
+func withExtraOptions(ctx context.Context, sp conns.ServicePackage, config map[string]any) func(*cloudfront.Options) {
+	if v, ok := sp.(interface {
+		withExtraOptions(context.Context, map[string]any) []func(*cloudfront.Options)
+	}); ok {
+		optFns := v.withExtraOptions(ctx, config)
+
+		return func(o *cloudfront.Options) {
+			for _, optFn := range optFns {
+				optFn(o)
+			}
+		}
+	}
+
+	return func(*cloudfront.Options) {}
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

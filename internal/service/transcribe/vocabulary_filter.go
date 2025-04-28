@@ -23,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -79,11 +78,10 @@ func ResourceVocabularyFilter() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			verify.SetTagsDiff,
-			customdiff.ForceNewIfChange("words", func(_ context.Context, old, new, meta interface{}) bool {
-				return len(old.([]interface{})) > 0 && len(new.([]interface{})) == 0
+			customdiff.ForceNewIfChange("words", func(_ context.Context, old, new, meta any) bool {
+				return len(old.([]any)) > 0 && len(new.([]any)) == 0
 			}),
-			customdiff.ForceNewIfChange("vocabulary_filter_file_uri", func(_ context.Context, old, new, meta interface{}) bool {
+			customdiff.ForceNewIfChange("vocabulary_filter_file_uri", func(_ context.Context, old, new, meta any) bool {
 				return new.(string) == ""
 			}),
 		),
@@ -94,7 +92,7 @@ const (
 	ResNameVocabularyFilter = "Vocabulary Filter"
 )
 
-func resourceVocabularyFilterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVocabularyFilterCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TranscribeClient(ctx)
 
@@ -109,7 +107,7 @@ func resourceVocabularyFilterCreate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if v, ok := d.GetOk("words"); ok {
-		in.Words = flex.ExpandStringValueList(v.([]interface{}))
+		in.Words = flex.ExpandStringValueList(v.([]any))
 	}
 
 	out, err := conn.CreateVocabularyFilter(ctx, in)
@@ -126,7 +124,7 @@ func resourceVocabularyFilterCreate(ctx context.Context, d *schema.ResourceData,
 	return append(diags, resourceVocabularyFilterRead(ctx, d, meta)...)
 }
 
-func resourceVocabularyFilterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVocabularyFilterRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TranscribeClient(ctx)
 
@@ -164,7 +162,7 @@ func resourceVocabularyFilterRead(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func resourceVocabularyFilterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVocabularyFilterUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TranscribeClient(ctx)
 
@@ -177,7 +175,7 @@ func resourceVocabularyFilterUpdate(ctx context.Context, d *schema.ResourceData,
 			if d.Get("vocabulary_filter_file_uri").(string) != "" {
 				in.VocabularyFilterFileUri = aws.String(d.Get("vocabulary_filter_file_uri").(string))
 			} else {
-				in.Words = flex.ExpandStringValueList(d.Get("words").([]interface{}))
+				in.Words = flex.ExpandStringValueList(d.Get("words").([]any))
 			}
 		}
 
@@ -191,15 +189,16 @@ func resourceVocabularyFilterUpdate(ctx context.Context, d *schema.ResourceData,
 	return append(diags, resourceVocabularyFilterRead(ctx, d, meta)...)
 }
 
-func resourceVocabularyFilterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVocabularyFilterDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TranscribeClient(ctx)
 
 	log.Printf("[INFO] Deleting Transcribe VocabularyFilter %s", d.Id())
 
-	_, err := conn.DeleteVocabularyFilter(ctx, &transcribe.DeleteVocabularyFilterInput{
+	input := transcribe.DeleteVocabularyFilterInput{
 		VocabularyFilterName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteVocabularyFilter(ctx, &input)
 
 	if err != nil {
 		var bre *types.BadRequestException

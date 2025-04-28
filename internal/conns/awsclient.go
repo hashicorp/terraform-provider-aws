@@ -6,6 +6,7 @@ package conns
 import (
 	"context"
 	"fmt"
+	"iter"
 	"maps"
 	"net/http"
 	"os"
@@ -16,22 +17,19 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	apigatewayv2_types "github.com/aws/aws-sdk-go-v2/service/apigatewayv2/types"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
-	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	baselogging "github.com/hashicorp/aws-sdk-go-base/v2/logging"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-provider-aws/internal/dns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type AWSClient struct {
-	ServicePackages map[string]ServicePackage
-
 	accountID                 string
 	awsConfig                 *aws.Config
 	clients                   map[string]any
-	conns                     map[string]any
 	defaultTagsConfig         *tftags.DefaultConfig
 	endpoints                 map[string]string // From provider configuration.
 	httpClient                *http.Client
@@ -40,11 +38,27 @@ type AWSClient struct {
 	logger                    baselogging.Logger
 	partition                 endpoints.Partition
 	region                    string
-	session                   *session_sdkv1.Session
+	servicePackages           map[string]ServicePackage
 	s3ExpressClient           *s3.Client
 	s3UsePathStyle            bool   // From provider configuration.
 	s3USEast1RegionalEndpoint string // From provider configuration.
 	stsRegion                 string // From provider configuration.
+}
+
+func (c *AWSClient) SetServicePackages(_ context.Context, servicePackages map[string]ServicePackage) {
+	c.servicePackages = maps.Clone(servicePackages)
+}
+
+func (c *AWSClient) ServicePackage(_ context.Context, name string) ServicePackage {
+	sp, ok := c.servicePackages[name]
+	if !ok {
+		return nil
+	}
+	return sp
+}
+
+func (c *AWSClient) ServicePackages(context.Context) iter.Seq2[string, ServicePackage] {
+	return maps.All(c.servicePackages)
 }
 
 // CredentialsProvider returns the AWS SDK for Go v2 credentials provider.
@@ -65,15 +79,6 @@ func (c *AWSClient) IgnoreTagsConfig(context.Context) *tftags.IgnoreConfig {
 
 func (c *AWSClient) AwsConfig(context.Context) aws.Config { // nosemgrep:ci.aws-in-func-name
 	return c.awsConfig.Copy()
-}
-
-// AwsSession and Endpoints can be removed once the simpledb service is removed.
-func (c *AWSClient) AwsSession(context.Context) *session_sdkv1.Session { // nosemgrep:ci.aws-in-func-name
-	return c.session
-}
-
-func (c *AWSClient) Endpoints(context.Context) map[string]string {
-	return maps.Clone(c.endpoints)
 }
 
 // AccountID returns the configured AWS account ID.
@@ -100,10 +105,20 @@ func (c *AWSClient) PartitionHostname(ctx context.Context, prefix string) string
 
 // GlobalARN returns a global (no Region) ARN for the specified service namespace and resource.
 func (c *AWSClient) GlobalARN(ctx context.Context, service, resource string) string {
+	return c.GlobalARNWithAccount(ctx, service, c.AccountID(ctx), resource)
+}
+
+// GlobalARNNoAccount returns a global (no Region) ARN for the specified service namespace and resource without AWS account ID.
+func (c *AWSClient) GlobalARNNoAccount(ctx context.Context, service, resource string) string {
+	return c.GlobalARNWithAccount(ctx, service, "", resource)
+}
+
+// GlobalARNWithAccount returns a global (no Region) ARN for the specified service namespace, resource and account ID.
+func (c *AWSClient) GlobalARNWithAccount(ctx context.Context, service, accountID, resource string) string {
 	return arn.ARN{
 		Partition: c.Partition(ctx),
 		Service:   service,
-		AccountID: c.AccountID(ctx),
+		AccountID: accountID,
 		Resource:  resource,
 	}.String()
 }
@@ -165,11 +180,8 @@ func (c *AWSClient) S3UsePathStyle(context.Context) bool {
 }
 
 // SetHTTPClient sets the http.Client used for AWS API calls.
-// To have effect it must be called before the AWS SDK v1 Session is created.
 func (c *AWSClient) SetHTTPClient(_ context.Context, httpClient *http.Client) {
-	if c.session == nil {
-		c.httpClient = httpClient
-	}
+	c.httpClient = httpClient
 }
 
 // HTTPClient returns the http.Client used for AWS API calls.
@@ -251,7 +263,7 @@ func (c *AWSClient) DNSSuffix(context.Context) string {
 
 // ReverseDNSPrefix returns the reverse DNS prefix for the configured AWS partition.
 func (c *AWSClient) ReverseDNSPrefix(ctx context.Context) string {
-	return ReverseDNS(c.DNSSuffix(ctx))
+	return dns.Reverse(c.DNSSuffix(ctx))
 }
 
 // EC2RegionalPrivateDNSSuffix returns the EC2 private DNS suffix for the configured AWS Region.
@@ -282,17 +294,6 @@ func (c *AWSClient) EC2PrivateDNSNameForIP(ctx context.Context, ip string) strin
 // EC2PublicDNSNameForIP returns a EC2 public DNS name in the configured AWS Region.
 func (c *AWSClient) EC2PublicDNSNameForIP(ctx context.Context, ip string) string {
 	return c.PartitionHostname(ctx, fmt.Sprintf("ec2-%s.%s", convertIPToDashIP(ip), c.EC2RegionalPublicDNSSuffix(ctx)))
-}
-
-// ReverseDNS switches a DNS hostname to reverse DNS and vice-versa.
-func ReverseDNS(hostname string) string {
-	parts := strings.Split(hostname, ".")
-
-	for i, j := 0, len(parts)-1; i < j; i, j = i+1, j-1 {
-		parts[i], parts[j] = parts[j], parts[i]
-	}
-
-	return strings.Join(parts, ".")
 }
 
 func convertIPToDashIP(ip string) string {
@@ -344,8 +345,8 @@ func client[T any](ctx context.Context, c *AWSClient, servicePackageName string,
 		}
 	}
 
-	sp, ok := c.ServicePackages[servicePackageName]
-	if !ok {
+	sp := c.ServicePackage(ctx, servicePackageName)
+	if sp == nil {
 		var zero T
 		return zero, fmt.Errorf("unknown service package: %s", servicePackageName)
 	}

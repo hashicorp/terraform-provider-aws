@@ -43,7 +43,6 @@ func TestAccSageMakerNotebookInstance_basic(t *testing.T) {
 				Config: testAccNotebookInstanceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNotebookInstanceExists(ctx, resourceName, &notebook),
-					resource.TestCheckResourceAttr(resourceName, "accelerator_types.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "additional_code_repositories.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "default_code_repository", ""),
 					resource.TestCheckResourceAttr(resourceName, "direct_internet_access", "Enabled"),
@@ -697,7 +696,7 @@ func testAccCheckNotebookInstanceDestroy(ctx context.Context) resource.TestCheck
 				return err
 			}
 
-			return fmt.Errorf("SageMaker Notebook Instance %s still exists", rs.Primary.ID)
+			return fmt.Errorf("SageMaker AI Notebook Instance %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -712,7 +711,7 @@ func testAccCheckNotebookInstanceExists(ctx context.Context, n string, v *sagema
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No SageMaker Notebook Instance ID is set")
+			return fmt.Errorf("No SageMaker AI Notebook Instance ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
@@ -732,7 +731,7 @@ func testAccCheckNotebookInstanceExists(ctx context.Context, n string, v *sagema
 func testAccCheckNotebookInstanceNotRecreated(i, j *sagemaker.DescribeNotebookInstanceOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if !aws.ToTime(i.CreationTime).Equal(aws.ToTime(j.CreationTime)) {
-			return errors.New("SageMaker Notebook Instance was recreated")
+			return errors.New("SageMaker AI Notebook Instance was recreated")
 		}
 
 		return nil
@@ -742,7 +741,7 @@ func testAccCheckNotebookInstanceNotRecreated(i, j *sagemaker.DescribeNotebookIn
 func testAccCheckNotebookInstanceRecreated(i, j *sagemaker.DescribeNotebookInstanceOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.ToTime(i.CreationTime).Equal(aws.ToTime(j.CreationTime)) {
-			return errors.New("SageMaker Notebook Instance was not recreated")
+			return errors.New("SageMaker AI Notebook Instance was not recreated")
 		}
 
 		return nil

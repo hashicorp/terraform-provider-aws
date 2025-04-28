@@ -4,6 +4,7 @@ package lexv2models
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lexmodelsv2"
@@ -21,31 +22,37 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newResourceBot,
-			Name:    "Bot",
-			Tags: &types.ServicePackageResourceTags{
+			Factory:  newResourceBot,
+			TypeName: "aws_lexv2models_bot",
+			Name:     "Bot",
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 		{
-			Factory: newResourceBotLocale,
-			Name:    "Bot Locale",
+			Factory:  newResourceBotLocale,
+			TypeName: "aws_lexv2models_bot_locale",
+			Name:     "Bot Locale",
 		},
 		{
-			Factory: newResourceBotVersion,
-			Name:    "Bot Version",
+			Factory:  newResourceBotVersion,
+			TypeName: "aws_lexv2models_bot_version",
+			Name:     "Bot Version",
 		},
 		{
-			Factory: newResourceIntent,
-			Name:    "Intent",
+			Factory:  newResourceIntent,
+			TypeName: "aws_lexv2models_intent",
+			Name:     "Intent",
 		},
 		{
-			Factory: newResourceSlot,
-			Name:    "Slot",
+			Factory:  newResourceSlot,
+			TypeName: "aws_lexv2models_slot",
+			Name:     "Slot",
 		},
 		{
-			Factory: newResourceSlotType,
-			Name:    "Slot Type",
+			Factory:  newResourceSlotType,
+			TypeName: "aws_lexv2models_slot_type",
+			Name:     "Slot Type",
 		},
 	}
 }
@@ -65,11 +72,31 @@ func (p *servicePackage) ServicePackageName() string {
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*lexmodelsv2.Client, error) {
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
-
-	return lexmodelsv2.NewFromConfig(cfg,
+	optFns := []func(*lexmodelsv2.Options){
 		lexmodelsv2.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
-	), nil
+		withExtraOptions(ctx, p, config),
+	}
+
+	return lexmodelsv2.NewFromConfig(cfg, optFns...), nil
+}
+
+// withExtraOptions returns a functional option that allows this service package to specify extra API client options.
+// This option is always called after any generated options.
+func withExtraOptions(ctx context.Context, sp conns.ServicePackage, config map[string]any) func(*lexmodelsv2.Options) {
+	if v, ok := sp.(interface {
+		withExtraOptions(context.Context, map[string]any) []func(*lexmodelsv2.Options)
+	}); ok {
+		optFns := v.withExtraOptions(ctx, config)
+
+		return func(o *lexmodelsv2.Options) {
+			for _, optFn := range optFns {
+				optFn(o)
+			}
+		}
+	}
+
+	return func(*lexmodelsv2.Options) {}
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

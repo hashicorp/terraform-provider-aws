@@ -4,6 +4,7 @@ package chimesdkvoice
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/chimesdkvoice"
@@ -31,14 +32,15 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceGlobalSettings,
 			TypeName: "aws_chimesdkvoice_global_settings",
+			Name:     "Global Settings",
 		},
 		{
 			Factory:  ResourceSipMediaApplication,
 			TypeName: "aws_chimesdkvoice_sip_media_application",
 			Name:     "Sip Media Application",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 		{
 			Factory:  ResourceSipRule,
@@ -49,9 +51,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  ResourceVoiceProfileDomain,
 			TypeName: "aws_chimesdkvoice_voice_profile_domain",
 			Name:     "Voice Profile Domain",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 	}
 }
@@ -63,11 +65,31 @@ func (p *servicePackage) ServicePackageName() string {
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*chimesdkvoice.Client, error) {
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
-
-	return chimesdkvoice.NewFromConfig(cfg,
+	optFns := []func(*chimesdkvoice.Options){
 		chimesdkvoice.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
-	), nil
+		withExtraOptions(ctx, p, config),
+	}
+
+	return chimesdkvoice.NewFromConfig(cfg, optFns...), nil
+}
+
+// withExtraOptions returns a functional option that allows this service package to specify extra API client options.
+// This option is always called after any generated options.
+func withExtraOptions(ctx context.Context, sp conns.ServicePackage, config map[string]any) func(*chimesdkvoice.Options) {
+	if v, ok := sp.(interface {
+		withExtraOptions(context.Context, map[string]any) []func(*chimesdkvoice.Options)
+	}); ok {
+		optFns := v.withExtraOptions(ctx, config)
+
+		return func(o *chimesdkvoice.Options) {
+			for _, optFn := range optFns {
+				optFn(o)
+			}
+		}
+	}
+
+	return func(*chimesdkvoice.Options) {}
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

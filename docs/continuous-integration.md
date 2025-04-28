@@ -208,7 +208,7 @@ This check is not currently available in the Makefile.
 
 ### golangci-lint Checks
 
-golangci-lint checks runs a variety of linters on the provider's code. This is done in two stages with the first stage acting as a gatekeeper since the second stage takes considerably longer to run.
+golangci-lint checks runs a variety of linters on the provider's code. This is done in two stages with the first stage acting as a gatekeeper since subsequent stages takes considerably longer to run.
 
 Before running these checks locally, you need to install golangci-lint locally. This can be done in [several ways](https://golangci-lint.run/welcome/install/#local-installation) including using Homebrew on macOS:
 
@@ -216,7 +216,7 @@ Before running these checks locally, you need to install golangci-lint locally. 
 brew install golangci-lint
 ```
 
-Use the target `golangci-lint` to run both checks sequentially:
+Use the target `golangci-lint` to run all checks sequentially:
 
 ```console
 make golangci-lint
@@ -228,7 +228,7 @@ You can limit the checks to a specific service package. For example:
 PKG=rds make golangci-lint
 ```
 
-#### 1 of 2
+#### 1 of 5
 
 Use the `golangci-lint1` target to run only the first step of these checks:
 
@@ -236,9 +236,9 @@ Use the `golangci-lint1` target to run only the first step of these checks:
 make golangci-lint1
 ```
 
-#### 2 of 2
+#### 2 through 5 of 5
 
-Use the `golangci-lint2` target to run only the second step of these checks:
+Use the `golangci-lint2`, `golangci-lint3`, `golangci-lint4`, or `golangci-lint5` targets to run subsequent steps of these checks:
 
 ```console
 make golangci-lint2
@@ -253,6 +253,10 @@ PKG=rds make golangci-lint2
 ### GoReleaser CI / build-32-bit
 
 GoReleaser CI build-32-bit ensures that GoReleaser can build a 32-bit binary. This check catches rare but important edge cases. Currently, we do not offer a `make` target to run this check locally.
+
+### Modern Go Check
+
+This check ensures that code uses current idiomatic Go. Currently, the check is only run on a subset of services. To determine which services must have modern Go, check the `.github/workflows/modern_go.yml` file.
 
 ### Provider Checks
 

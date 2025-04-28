@@ -9,7 +9,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/shield"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/shield/types"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
@@ -35,10 +34,7 @@ const (
 
 type resourceSubscription struct {
 	framework.ResourceWithConfigure
-}
-
-func (r *resourceSubscription) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_shield_subscription"
+	framework.WithImportByID
 }
 
 func (r *resourceSubscription) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -172,10 +168,6 @@ func (r *resourceSubscription) Delete(ctx context.Context, req resource.DeleteRe
 		)
 		return
 	}
-}
-
-func (r *resourceSubscription) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func findSubscriptionByID(ctx context.Context, conn *shield.Client) (*awstypes.Subscription, error) {

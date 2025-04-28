@@ -9,10 +9,11 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrock/types"
-	"github.com/hashicorp/terraform-plugin-framework-validators/objectvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -33,51 +34,88 @@ type resourceModelInvocationLoggingConfiguration struct {
 	framework.WithImportByID
 }
 
-func (r *resourceModelInvocationLoggingConfiguration) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_bedrock_model_invocation_logging_configuration"
-}
-
 func (r *resourceModelInvocationLoggingConfiguration) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
+		Version: 1,
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: framework.IDAttribute(),
 		},
 		Blocks: map[string]schema.Block{
-			"logging_config": schema.SingleNestedBlock{
-				CustomType: fwtypes.NewObjectTypeOf[loggingConfigModel](ctx),
-				Validators: []validator.Object{
-					objectvalidator.IsRequired(),
+			"logging_config": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[loggingConfigModel](ctx),
+				Validators: []validator.List{
+					listvalidator.IsRequired(),
+					listvalidator.SizeAtMost(1),
 				},
-				Attributes: map[string]schema.Attribute{
-					"embedding_data_delivery_enabled": schema.BoolAttribute{
-						Required: true,
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"embedding_data_delivery_enabled": schema.BoolAttribute{
+							Optional: true,
+							Computed: true,
+							Default:  booldefault.StaticBool(true),
+						},
+						"image_data_delivery_enabled": schema.BoolAttribute{
+							Optional: true,
+							Computed: true,
+							Default:  booldefault.StaticBool(true),
+						},
+						"text_data_delivery_enabled": schema.BoolAttribute{
+							Optional: true,
+							Computed: true,
+							Default:  booldefault.StaticBool(true),
+						},
+						"video_data_delivery_enabled": schema.BoolAttribute{
+							Optional: true,
+							Computed: true,
+							Default:  booldefault.StaticBool(true),
+						},
 					},
-					"image_data_delivery_enabled": schema.BoolAttribute{
-						Required: true,
-					},
-					"text_data_delivery_enabled": schema.BoolAttribute{
-						Required: true,
-					},
-				},
-				Blocks: map[string]schema.Block{
-					"cloudwatch_config": schema.SingleNestedBlock{
-						CustomType: fwtypes.NewObjectTypeOf[cloudWatchConfigModel](ctx),
-						Attributes: map[string]schema.Attribute{
-							names.AttrLogGroupName: schema.StringAttribute{
-								// Required: true,
-								Optional: true,
+					Blocks: map[string]schema.Block{
+						"cloudwatch_config": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[cloudWatchConfigModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
 							},
-							names.AttrRoleARN: schema.StringAttribute{
-								CustomType: fwtypes.ARNType,
-								Optional:   true,
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									names.AttrLogGroupName: schema.StringAttribute{
+										// Must set to optional to avoid validation error
+										// See: https://github.com/hashicorp/terraform-plugin-framework/issues/740
+										Optional: true,
+									},
+									names.AttrRoleARN: schema.StringAttribute{
+										CustomType: fwtypes.ARNType,
+										Optional:   true,
+									},
+								},
+								Blocks: map[string]schema.Block{
+									"large_data_delivery_s3_config": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[s3ConfigModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												names.AttrBucketName: schema.StringAttribute{
+													Optional: true,
+												},
+												"key_prefix": schema.StringAttribute{
+													Optional: true,
+												},
+											},
+										},
+									},
+								},
 							},
 						},
-						Blocks: map[string]schema.Block{
-							"large_data_delivery_s3_config": schema.SingleNestedBlock{
-								CustomType: fwtypes.NewObjectTypeOf[s3ConfigModel](ctx),
+						"s3_config": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[s3ConfigModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									names.AttrBucketName: schema.StringAttribute{
-										// Required: true,
 										Optional: true,
 									},
 									"key_prefix": schema.StringAttribute{
@@ -87,20 +125,19 @@ func (r *resourceModelInvocationLoggingConfiguration) Schema(ctx context.Context
 							},
 						},
 					},
-					"s3_config": schema.SingleNestedBlock{
-						CustomType: fwtypes.NewObjectTypeOf[s3ConfigModel](ctx),
-						Attributes: map[string]schema.Attribute{
-							names.AttrBucketName: schema.StringAttribute{
-								// Required: true,
-								Optional: true,
-							},
-							"key_prefix": schema.StringAttribute{
-								Optional: true,
-							},
-						},
-					},
 				},
 			},
+		},
+	}
+}
+
+func (r *resourceModelInvocationLoggingConfiguration) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
+	schemaV0 := modelInvocationLoggingConfigurationSchemaV0(ctx)
+
+	return map[int64]resource.StateUpgrader{
+		0: {
+			PriorSchema:   &schemaV0,
+			StateUpgrader: upgradeModelInvocationLoggingConfigurationFromV0,
 		},
 	}
 }
@@ -137,13 +174,11 @@ func (r *resourceModelInvocationLoggingConfiguration) Read(ctx context.Context, 
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
-
 		return
 	}
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("reading Bedrock Model Invocation Logging Configuration (%s)", data.ID.ValueString()), err.Error())
-
 		return
 	}
 
@@ -179,11 +214,10 @@ func (r *resourceModelInvocationLoggingConfiguration) Delete(ctx context.Context
 
 	conn := r.Meta().BedrockClient(ctx)
 
-	_, err := conn.DeleteModelInvocationLoggingConfiguration(ctx, &bedrock.DeleteModelInvocationLoggingConfigurationInput{})
-
+	input := bedrock.DeleteModelInvocationLoggingConfigurationInput{}
+	_, err := conn.DeleteModelInvocationLoggingConfiguration(ctx, &input)
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("deleting Bedrock Model Invocation Logging Configuration (%s)", data.ID.ValueString()), err.Error())
-
 		return
 	}
 }
@@ -202,7 +236,7 @@ func (r *resourceModelInvocationLoggingConfiguration) putModelInvocationLoggingC
 	//   ValidationException: Failed to validate permissions for log group: <group>, with role: <role>. Verify
 	//   the IAM role permissions are correct.
 	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ValidationException](ctx, propagationTimeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.PutModelInvocationLoggingConfiguration(ctx, input)
 		},
 		"Failed to validate permissions for log group",
@@ -234,22 +268,23 @@ func findModelInvocationLoggingConfiguration(ctx context.Context, conn *bedrock.
 }
 
 type modelInvocationLoggingConfigurationResourceModel struct {
-	ID            types.String                              `tfsdk:"id"`
-	LoggingConfig fwtypes.ObjectValueOf[loggingConfigModel] `tfsdk:"logging_config"`
+	ID            types.String                                        `tfsdk:"id"`
+	LoggingConfig fwtypes.ListNestedObjectValueOf[loggingConfigModel] `tfsdk:"logging_config"`
 }
 
 type loggingConfigModel struct {
-	CloudWatchConfig             fwtypes.ObjectValueOf[cloudWatchConfigModel] `tfsdk:"cloudwatch_config"`
-	EmbeddingDataDeliveryEnabled types.Bool                                   `tfsdk:"embedding_data_delivery_enabled"`
-	ImageDataDeliveryEnabled     types.Bool                                   `tfsdk:"image_data_delivery_enabled"`
-	S3Config                     fwtypes.ObjectValueOf[s3ConfigModel]         `tfsdk:"s3_config"`
-	TextDataDeliveryEnabled      types.Bool                                   `tfsdk:"text_data_delivery_enabled"`
+	CloudWatchConfig             fwtypes.ListNestedObjectValueOf[cloudWatchConfigModel] `tfsdk:"cloudwatch_config"`
+	EmbeddingDataDeliveryEnabled types.Bool                                             `tfsdk:"embedding_data_delivery_enabled"`
+	ImageDataDeliveryEnabled     types.Bool                                             `tfsdk:"image_data_delivery_enabled"`
+	S3Config                     fwtypes.ListNestedObjectValueOf[s3ConfigModel]         `tfsdk:"s3_config"`
+	TextDataDeliveryEnabled      types.Bool                                             `tfsdk:"text_data_delivery_enabled"`
+	VideoDataDeliveryEnabled     types.Bool                                             `tfsdk:"video_data_delivery_enabled"`
 }
 
 type cloudWatchConfigModel struct {
-	LargeDataDeliveryS3Config fwtypes.ObjectValueOf[s3ConfigModel] `tfsdk:"large_data_delivery_s3_config"`
-	LogGroupName              types.String                         `tfsdk:"log_group_name"`
-	RoleArn                   fwtypes.ARN                          `tfsdk:"role_arn"`
+	LargeDataDeliveryS3Config fwtypes.ListNestedObjectValueOf[s3ConfigModel] `tfsdk:"large_data_delivery_s3_config"`
+	LogGroupName              types.String                                   `tfsdk:"log_group_name"`
+	RoleArn                   fwtypes.ARN                                    `tfsdk:"role_arn"`
 }
 
 type s3ConfigModel struct {

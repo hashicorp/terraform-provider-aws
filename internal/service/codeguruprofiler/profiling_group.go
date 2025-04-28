@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/codeguruprofiler"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/codeguruprofiler/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -30,7 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Profiling Group")
+// @FrameworkResource("aws_codeguruprofiler_profiling_group", name="Profiling Group")
 // @Tags(identifierAttribute="arn")
 func newResourceProfilingGroup(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceProfilingGroup{}
@@ -44,10 +43,7 @@ const (
 
 type resourceProfilingGroup struct {
 	framework.ResourceWithConfigure
-}
-
-func (r *resourceProfilingGroup) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_codeguruprofiler_profiling_group"
+	framework.WithImportByID
 }
 
 func (r *resourceProfilingGroup) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -239,14 +235,6 @@ func (r *resourceProfilingGroup) Delete(ctx context.Context, req resource.Delete
 		)
 		return
 	}
-}
-
-func (r *resourceProfilingGroup) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-}
-
-func (r *resourceProfilingGroup) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func findProfilingGroupByName(ctx context.Context, conn *codeguruprofiler.Client, name string) (*awstypes.ProfilingGroupDescription, error) {

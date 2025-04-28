@@ -500,9 +500,10 @@ This resource supports the following arguments:
 * `customResponseBody` - (Optional) Defines custom response bodies that can be referenced by `customResponse` actions. See [`customResponseBody`](#custom_response_body-block) below for details.
 * `defaultAction` - (Required) Action to perform if none of the `rules` contained in the WebACL match. See [`defaultAction`](#default_action-block) below for details.
 * `description` - (Optional) Friendly description of the WebACL.
-* `name` - (Required, Forces new resource) Friendly name of the WebACL.
+* `name` - (Optional, Forces new resource) Friendly name of the WebACL. If omitted, Terraform will assign a random, unique name. Conflicts with `namePrefix`.
+* `namePrefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `rule` - (Optional) Rule blocks used to identify the web requests that you want to `allow`, `block`, or `count`. See [`rule`](#rule-block) below for details.
-* `ruleJson` (Optional) Raw JSON string to allow more than three nested statements. Conflicts with `rule` attribute. This is for advanced use cases where more than 3 levels of nested statements are required. **There is no drift detection at this time**. If you use this attribute instead of `rule`, you will be foregoing drift detection. See the AWS [documentation](https://docs.aws.amazon.com/waf/latest/APIReference/API_CreateWebACL.html) for the JSON structure.
+* `ruleJson` (Optional) Raw JSON string to allow more than three nested statements. Conflicts with `rule` attribute. This is for advanced use cases where more than 3 levels of nested statements are required. **There is no drift detection at this time**. If you use this attribute instead of `rule`, you will be foregoing drift detection. Additionally, importing an existing web ACL into a configuration with `ruleJson` set will result in a one time in-place update as the remote rule configuration is initially written to the `rule` attribute. See the AWS [documentation](https://docs.aws.amazon.com/waf/latest/APIReference/API_CreateWebACL.html) for the JSON structure.
 * `scope` - (Required, Forces new resource) Specifies whether this is for an AWS CloudFront distribution or for a regional application. Valid values are `CLOUDFRONT` or `REGIONAL`. To work with CloudFront, you must also specify the region `us-east-1` (N. Virginia) on the AWS provider.
 * `tags` - (Optional) Map of key-value pairs to associate with the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `tokenDomains` - (Optional) Specifies the domains that AWS WAF should accept in a web request token. This enables the use of tokens across multiple protected websites. When AWS WAF provides a token, it uses the domain of the AWS resource that the web ACL is protecting. If you don't specify a list of token domains, AWS WAF accepts tokens only for the domain of the protected resource. With a token domain list, AWS WAF accepts the resource's host domain plus all domains in the token domain list, including their prefixed subdomains.
@@ -539,6 +540,7 @@ Each `rule` supports the following arguments:
 
 * `action` - (Optional) Action that AWS WAF should take on a web request when it matches the rule's statement. This is used only for rules whose **statements do not reference a rule group**. See [`action`](#action-block) for details.
 * `captchaConfig` - (Optional) Specifies how AWS WAF should handle CAPTCHA evaluations. See [`captchaConfig`](#captcha_config-block) below for details.
+* `challengeConfig` - (Optional) Specifies how AWS WAF should handle Challenge evaluations on the rule level. See [`challengeConfig`](#challenge_config-block) below for details.
 * `name` - (Required) Friendly name of the rule. Note that the provider assumes that rules with names matching this pattern, `^ShieldMitigationRuleGroup_<account-id>_<web-acl-guid>_.*`, are AWS-added for [automatic application layer DDoS mitigation activities](https://docs.aws.amazon.com/waf/latest/developerguide/ddos-automatic-app-layer-response-rg.html). Such rules will be ignored by the provider unless you explicitly include them in your configuration (for example, by using the AWS CLI to discover their properties and creating matching configuration). However, since these rules are owned and managed by AWS, you may get permission errors.
 * `overrideAction` - (Optional) Override action to apply to the rules in a rule group. Used only for rule **statements that reference a rule group**, like `ruleGroupReferenceStatement` and `managedRuleGroupStatement`. See [`overrideAction`](#override_action-block) below for details.
 * `priority` - (Required) If you define more than one Rule in a WebACL, AWS WAF evaluates each request against the `rules` in order based on the value of `priority`. AWS WAF processes rules with lower priority first.
@@ -857,7 +859,7 @@ The `managedRuleGroupConfigs` block support the following arguments:
 
 ### `addressFields` Block
 
-* `identifier` - (Required) The name of a single primary address field.
+* `identifiers` - (Required) The names of the address fields.
 
 ### `emailField` Block
 
@@ -869,7 +871,7 @@ The `managedRuleGroupConfigs` block support the following arguments:
 
 ### `phoneNumberFields` Block
 
-* `identifier` - (Required) The name of a single primary phone number field.
+* `identifiers` - (Required) The names of the phone number fields.
 
 ### `usernameField` Block
 
@@ -918,6 +920,7 @@ The `fieldToMatch` block supports the following arguments:
 * `headerOrder` - (Optional) Inspect a string containing the list of the request's header names, ordered as they appear in the web request that AWS WAF receives for inspection. See [`headerOrder`](#header_order-block) below for details.
 * `headers` - (Optional) Inspect the request headers. See [`headers`](#headers-block) below for details.
 * `ja3Fingerprint` - (Optional) Inspect the JA3 fingerprint. See [`ja3Fingerprint`](#ja3_fingerprint-block) below for details.
+* `ja4Fingerprint` - (Optional) Inspect the JA3 fingerprint. See [`ja4Fingerprint`](#ja3_fingerprint-block) below for details.
 * `jsonBody` - (Optional) Inspect the request body as JSON. See [`jsonBody`](#json_body-block) for details.
 * `method` - (Optional) Inspect the HTTP method. The method indicates the type of operation that the request is asking the origin to perform.
 * `queryString` - (Optional) Inspect the query string. This is the part of a URL that appears after a `?` character, if any.
@@ -970,6 +973,12 @@ The `headers` block supports the following arguments:
 The `ja3Fingerprint` block supports the following arguments:
 
 * `fallbackBehavior` - (Required) The match status to assign to the web request if the request doesn't have a JA3 fingerprint. Valid values include: `MATCH` or `NO_MATCH`.
+
+### `ja4Fingerprint` Block
+
+The `ja4Fingerprint` block supports the following arguments:
+
+* `fallbackBehavior` - (Required) The match status to assign to the web request if the request doesn't have a JA4 fingerprint. Valid values include: `MATCH` or `NO_MATCH`.
 
 ### `jsonBody` Block
 
@@ -1096,6 +1105,8 @@ The `customKey` block supports the following arguments:
 * `httpMethod` - (Optional) Use the request's HTTP method as an aggregate key. See [RateLimit `httpMethod`](#ratelimit-http_method-block) below for details.
 * `header` - (Optional) Use the value of a header in the request as an aggregate key. See [RateLimit `header`](#ratelimit-header-block) below for details.
 * `ip` - (Optional) Use the request's originating IP address as an aggregate key. See [`RateLimit ip`](#ratelimit-ip-block) below for details.
+* `ja3Fingerprint` - (Optional) Use the JA3 fingerprint in the request as an aggregate key. See [`RateLimit ip`](#ratelimit-ja3_fingerprint-block) below for details.
+* `ja4Fingerprint` - (Optional) Use the JA3 fingerprint in the request as an aggregate key. See [`RateLimit ip`](#ratelimit-ja4_fingerprint-block) below for details.
 * `labelNamespace` - (Optional) Use the specified label namespace as an aggregate key. See [RateLimit `labelNamespace`](#ratelimit-label_namespace-block) below for details.
 * `queryArgument` - (Optional) Use the specified query argument as an aggregate key. See [RateLimit `queryArgument`](#ratelimit-query_argument-block) below for details.
 * `queryString` - (Optional) Use the request's query string as an aggregate key. See [RateLimit `queryString`](#ratelimit-query_string-block) below for details.
@@ -1136,6 +1147,22 @@ The `header` block supports the following arguments:
 Use the request's originating IP address as an aggregate key. Each distinct IP address contributes to the aggregation instance. When you specify an IP or forwarded IP in the custom key settings, you must also specify at least one other key to use. You can aggregate on only the IP address by specifying `IP` in your rate-based statement's `aggregateKeyType`.
 
 The `ip` block is configured as an empty block `{}`.
+
+### RateLimit `ja3Fingerprint` Block
+
+Use the JA3 fingerprint in the request as an aggregate key. Each distinct JA3 fingerprint contributes to the aggregation instance. You can use this key type once.
+
+The `ja3Fingerprint` block supports the following arguments:
+
+* `fallbackBehavior` - (Required) - Match status to assign to the web request if there is insufficient TSL Client Hello information to compute the JA3 fingerprint. Valid values include: `MATCH` or `NO_MATCH`.
+
+### RateLimit `ja4Fingerprint` Block
+
+Use the JA3 fingerprint in the request as an aggregate key. Each distinct JA3 fingerprint contributes to the aggregation instance. You can use this key type once.
+
+The `ja4Fingerprint` block supports the following arguments:
+
+* `fallbackBehavior` - (Required) - Match status to assign to the web request if there is insufficient TSL Client Hello information to compute the JA4 fingerprint. Valid values include: `MATCH` or `NO_MATCH`.
 
 ### RateLimit `labelNamespace` Block
 
@@ -1212,4 +1239,4 @@ Using `terraform import`, import WAFv2 Web ACLs using `ID/Name/Scope`. For examp
 % terraform import aws_wafv2_web_acl.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc/example/REGIONAL
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-57d51ad71eebf49acf706848293755779d1b4ec3046c36ae586b0a36d118ffc6 -->
+<!-- cache-key: cdktf-0.20.8 input-76067261e3a6968c3c0bd3e9966ef757028c06adb485fad49ec126f5906b3aea -->

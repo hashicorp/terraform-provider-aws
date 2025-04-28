@@ -76,7 +76,6 @@ For more information, see the [Task Networking](https://docs.aws.amazon.com/Amaz
 * `container_overrides` - (Optional) One or more container overrides that are sent to a task. See below.
 * `cpu` - (Optional) The CPU override for the task.
 * `execution_role_arn` - (Optional) Amazon Resource Name (ARN) of the task execution role override for the task.
-* `inference_accelerator_overrides` - (Optional) Elastic Inference accelerator override for the task. See below.
 * `memory` - (Optional) The memory override for the task.
 * `task_role_arn` - (Optional) Amazon Resource Name (ARN) of the role that containers in this task can assume.
 
@@ -97,13 +96,8 @@ For more information, see the [Task Networking](https://docs.aws.amazon.com/Amaz
 
 ### resource_requirements
 
-* `type` - (Required) The type of resource to assign to a container. Valid values are `GPU` or `InferenceAccelerator`.
-* `value` - (Required) The value for the specified resource type. If the `GPU` type is used, the value is the number of physical GPUs the Amazon ECS container agent reserves for the container. The number of GPUs that's reserved for all containers in a task can't exceed the number of available GPUs on the container instance that the task is launched on. If the `InferenceAccelerator` type is used, the value matches the `deviceName` for an InferenceAccelerator specified in a task definition.
-
-### inference_accelerator_overrides
-
-* `device_name` - (Optional) The Elastic Inference accelerator device name to override for the task. This parameter must match a deviceName specified in the task definition.
-* `device_type` - (Optional) The Elastic Inference accelerator type to use.
+* `type` - (Required) The type of resource to assign to a container. Valid values are `GPU`.
+* `value` - (Required) The value for the specified resource type. If the `GPU` type is used, the value is the number of physical GPUs the Amazon ECS container agent reserves for the container. The number of GPUs that's reserved for all containers in a task can't exceed the number of available GPUs on the container instance that the task is launched on.
 
 ### placement_constraints
 

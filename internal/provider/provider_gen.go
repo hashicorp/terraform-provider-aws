@@ -267,6 +267,14 @@ func endpointsSchema() *schema.Schema {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// billing
+
+				"billing": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// budgets
 
 				"budgets": {
@@ -765,6 +773,14 @@ func endpointsSchema() *schema.Schema {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// dsql
+
+				"dsql": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// dynamodb
 
 				"dynamodb": {
@@ -1135,6 +1151,14 @@ func endpointsSchema() *schema.Schema {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// invoicing
+
+				"invoicing": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// iot
 
 				"iot": {
@@ -1431,6 +1455,14 @@ func endpointsSchema() *schema.Schema {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// mediapackagevod
+
+				"mediapackagevod": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// mediastore
 
 				"mediastore": {
@@ -1542,14 +1574,6 @@ func endpointsSchema() *schema.Schema {
 				// opensearchserverless
 
 				"opensearchserverless": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Description: "Use this to override the default service endpoint URL",
-				},
-
-				// opsworks
-
-				"opsworks": {
 					Type:        schema.TypeString,
 					Optional:    true,
 					Description: "Use this to override the default service endpoint URL",
@@ -2039,20 +2063,6 @@ func endpointsSchema() *schema.Schema {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
-				// simpledb
-
-				"simpledb": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Description: "Use this to override the default service endpoint URL",
-				},
-
-				"sdb": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Description: "Use this to override the default service endpoint URL",
-				},
-
 				// sns
 
 				"sns": {
@@ -2254,14 +2264,6 @@ func endpointsSchema() *schema.Schema {
 				// wellarchitected
 
 				"wellarchitected": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Description: "Use this to override the default service endpoint URL",
-				},
-
-				// worklink
-
-				"worklink": {
 					Type:        schema.TypeString,
 					Optional:    true,
 					Description: "Use this to override the default service endpoint URL",
@@ -3197,30 +3199,6 @@ func expandEndpoints(_ context.Context, tfList []any) (map[string]string, diag.D
 			case "sfn", "stepfunctions":
 				const pkg = "sfn"
 				attrs := []string{"sfn", "stepfunctions"}
-				for _, v := range attrs {
-					seen[v] = true
-				}
-				count := 0
-				for _, attr := range attrs {
-					if v := tfMap[attr].(string); v != "" {
-						count++
-					}
-				}
-				if count > 1 {
-					diags = append(diags, ConflictingEndpointsWarningDiag(elementPath, attrs...))
-				}
-				if endpoints[pkg] == "" {
-					for _, attr := range attrs {
-						if v := tfMap[attr].(string); v != "" {
-							endpoints[pkg] = v
-							break
-						}
-					}
-				}
-
-			case "simpledb", "sdb":
-				const pkg = "simpledb"
-				attrs := []string{"simpledb", "sdb"}
 				for _, v := range attrs {
 					seen[v] = true
 				}

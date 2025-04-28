@@ -24,7 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Application Assignment Configuration")
+// @FrameworkResource("aws_ssoadmin_application_assignment_configuration", name="Application Assignment Configuration")
 func newResourceApplicationAssignmentConfiguration(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceApplicationAssignmentConfiguration{}, nil
 }
@@ -35,10 +35,6 @@ const (
 
 type resourceApplicationAssignmentConfiguration struct {
 	framework.ResourceWithConfigure
-}
-
-func (r *resourceApplicationAssignmentConfiguration) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_ssoadmin_application_assignment_configuration"
 }
 
 func (r *resourceApplicationAssignmentConfiguration) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -172,8 +168,8 @@ func (r *resourceApplicationAssignmentConfiguration) Delete(ctx context.Context,
 
 func (r *resourceApplicationAssignmentConfiguration) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	// Set both id and application_arn on import to avoid immediate diff and planned replacement
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), req.ID)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("application_arn"), req.ID)...)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root("application_arn"), req, resp)
 }
 
 func findApplicationAssignmentConfigurationByID(ctx context.Context, conn *ssoadmin.Client, id string) (*ssoadmin.GetApplicationAssignmentConfigurationOutput, error) {

@@ -236,6 +236,62 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
 }
 ```
 
+### With V2 logging to S3
+
+The example below creates a CloudFront distribution with [standard logging V2 to S3](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/standard-logging.html#enable-access-logging-api).
+
+```hcl
+provider "aws" {
+  region = var.region
+}
+
+provider "aws" {
+  region = "us-east-1"
+  alias  = "us_east_1"
+}
+
+resource "aws_cloudfront_distribution" "example" {
+  provider = aws.us_east_1
+
+  # other config...
+}
+
+resource "aws_cloudwatch_log_delivery_source" "example" {
+  provider = aws.us_east_1
+
+  name         = "example"
+  log_type     = "ACCESS_LOGS"
+  resource_arn = aws_cloudfront_distribution.example.arn
+}
+
+resource "aws_s3_bucket" "example" {
+  bucket        = "testbucket"
+  force_destroy = true
+}
+
+resource "aws_cloudwatch_log_delivery_destination" "example" {
+  provider = aws.us_east_1
+
+  name          = "s3-destination"
+  output_format = "parquet"
+
+  delivery_destination_configuration {
+    destination_resource_arn = "${aws_s3_bucket.example.arn}/prefix"
+  }
+}
+
+resource "aws_cloudwatch_log_delivery" "example" {
+  provider = aws.us_east_1
+
+  delivery_source_name     = aws_cloudwatch_log_delivery_source.example.name
+  delivery_destination_arn = aws_cloudwatch_log_delivery_destination.example.arn
+
+  s3_delivery_configuration {
+    suffix_path = "/123456678910/{DistributionId}/{yyyy}/{MM}/{dd}/{HH}"
+  }
+}
+```
+
 ## Argument Reference
 
 The CloudFront distribution argument layout is a complex structure composed of several sub-resources - these resources are laid out below.
@@ -272,13 +328,13 @@ The CloudFront distribution argument layout is a complex structure composed of s
 * `cached_methods` (Required) - Controls whether CloudFront caches the response to requests using the specified HTTP methods.
 * `cache_policy_id` (Optional) - Unique identifier of the cache policy that is attached to the cache behavior. If configuring the `default_cache_behavior` either `cache_policy_id` or `forwarded_values` must be set.
 * `compress` (Optional) - Whether you want CloudFront to automatically compress content for web requests that include `Accept-Encoding: gzip` in the request header (default: `false`).
-* `default_ttl` (Optional) - Default amount of time (in seconds) that an object is in a CloudFront cache before CloudFront forwards another request in the absence of an `Cache-Control max-age` or `Expires` header.
+* `default_ttl` (Optional) - Default amount of time (in seconds) that an object is in a CloudFront cache before CloudFront forwards another request in the absence of an `Cache-Control max-age` or `Expires` header. The TTL defined in Cache Policy overrides this configuration.
 * `field_level_encryption_id` (Optional) - Field level encryption configuration ID.
 * `forwarded_values` (Optional, **Deprecated** use `cache_policy_id` or `origin_request_policy_id ` instead) - The [forwarded values configuration](#forwarded-values-arguments) that specifies how CloudFront handles query strings, cookies and headers (maximum one).
 * `lambda_function_association` (Optional) - A [config block](#lambda-function-association) that triggers a lambda function with specific actions (maximum 4).
 * `function_association` (Optional) - A [config block](#function-association) that triggers a cloudfront function with specific actions (maximum 2).
-* `max_ttl` (Optional) - Maximum amount of time (in seconds) that an object is in a CloudFront cache before CloudFront forwards another request to your origin to determine whether the object has been updated. Only effective in the presence of `Cache-Control max-age`, `Cache-Control s-maxage`, and `Expires` headers.
-* `min_ttl` (Optional) - Minimum amount of time that you want objects to stay in CloudFront caches before CloudFront queries your origin to see whether the object has been updated. Defaults to 0 seconds.
+* `max_ttl` (Optional) - Maximum amount of time (in seconds) that an object is in a CloudFront cache before CloudFront forwards another request to your origin to determine whether the object has been updated. Only effective in the presence of `Cache-Control max-age`, `Cache-Control s-maxage`, and `Expires` headers. The TTL defined in Cache Policy overrides this configuration.
+* `min_ttl` (Optional) - Minimum amount of time that you want objects to stay in CloudFront caches before CloudFront queries your origin to see whether the object has been updated. Defaults to 0 seconds. The TTL defined in Cache Policy overrides this configuration.
 * `origin_request_policy_id` (Optional) - Unique identifier of the origin request policy that is attached to the behavior.
 * `path_pattern` (Required) - Pattern (for example, `images/*.jpg`) that specifies which requests you want this cache behavior to apply to.
 * `realtime_log_config_arn` (Optional) - ARN of the [real-time log configuration](cloudfront_realtime_log_config.html) that is attached to this cache behavior.
@@ -288,6 +344,7 @@ The CloudFront distribution argument layout is a complex structure composed of s
 * `trusted_key_groups` (Optional) - List of key group IDs that CloudFront can use to validate signed URLs or signed cookies. See the [CloudFront User Guide](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-trusted-signers.html) for more information about this feature.
 * `trusted_signers` (Optional) - List of AWS account IDs (or `self`) that you want to allow to create signed URLs for private content. See the [CloudFront User Guide](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-trusted-signers.html) for more information about this feature.
 * `viewer_protocol_policy` (Required) - Use this element to specify the protocol that users can use to access the files in the origin specified by TargetOriginId when a request matches the path pattern in PathPattern. One of `allow-all`, `https-only`, or `redirect-to-https`.
+* `grpc_config` (Optional) - A [config block](#grpc-config-arguments) that sets the grpc config.
 
 ##### Forwarded Values Arguments
 
@@ -351,6 +408,10 @@ resource "aws_cloudfront_distribution" "example" {
 
 * `event_type` (Required) - Specific event to trigger this function. Valid values: `viewer-request` or `viewer-response`.
 * `function_arn` (Required) - ARN of the CloudFront function.
+
+##### GRPC config arguments
+
+* `enabled` (Required) - Whether Grpc requests are enabled.
 
 ##### Cookies Arguments
 

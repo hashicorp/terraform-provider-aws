@@ -90,20 +90,18 @@ func resourceGameSessionQueue() *schema.Resource {
 				ValidateFunc: validation.IntBetween(10, 600),
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceGameSessionQueueCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGameSessionQueueCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GameLiftClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
 	input := &gamelift.CreateGameSessionQueueInput{
 		Name:                  aws.String(name),
-		Destinations:          expandGameSessionQueueDestinations(d.Get("destinations").([]interface{})),
-		PlayerLatencyPolicies: expandGameSessionPlayerLatencyPolicies(d.Get("player_latency_policy").([]interface{})),
+		Destinations:          expandGameSessionQueueDestinations(d.Get("destinations").([]any)),
+		PlayerLatencyPolicies: expandGameSessionPlayerLatencyPolicies(d.Get("player_latency_policy").([]any)),
 		TimeoutInSeconds:      aws.Int32(int32(d.Get("timeout_in_seconds").(int))),
 		Tags:                  getTagsIn(ctx),
 	}
@@ -127,7 +125,7 @@ func resourceGameSessionQueueCreate(ctx context.Context, d *schema.ResourceData,
 	return append(diags, resourceGameSessionQueueRead(ctx, d, meta)...)
 }
 
-func resourceGameSessionQueueRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGameSessionQueueRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GameLiftClient(ctx)
 
@@ -158,15 +156,15 @@ func resourceGameSessionQueueRead(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func resourceGameSessionQueueUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGameSessionQueueUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GameLiftClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &gamelift.UpdateGameSessionQueueInput{
-			Destinations:          expandGameSessionQueueDestinations(d.Get("destinations").([]interface{})),
+			Destinations:          expandGameSessionQueueDestinations(d.Get("destinations").([]any)),
 			Name:                  aws.String(d.Id()),
-			PlayerLatencyPolicies: expandGameSessionPlayerLatencyPolicies(d.Get("player_latency_policy").([]interface{})),
+			PlayerLatencyPolicies: expandGameSessionPlayerLatencyPolicies(d.Get("player_latency_policy").([]any)),
 			TimeoutInSeconds:      aws.Int32(int32(d.Get("timeout_in_seconds").(int))),
 		}
 
@@ -188,7 +186,7 @@ func resourceGameSessionQueueUpdate(ctx context.Context, d *schema.ResourceData,
 	return append(diags, resourceGameSessionQueueRead(ctx, d, meta)...)
 }
 
-func resourceGameSessionQueueDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGameSessionQueueDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GameLiftClient(ctx)
 
@@ -209,7 +207,7 @@ func resourceGameSessionQueueDelete(ctx context.Context, d *schema.ResourceData,
 	const (
 		timeout = 30 * time.Second
 	)
-	_, err = tfresource.RetryUntilNotFound(ctx, timeout, func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, timeout, func() (any, error) {
 		return findGameSessionQueueByName(ctx, conn, d.Id())
 	})
 
@@ -262,17 +260,17 @@ func findGameSessionQueues(ctx context.Context, conn *gamelift.Client, input *ga
 	return output, nil
 }
 
-func flattenGameSessionQueueDestinations(apiObjects []awstypes.GameSessionQueueDestination) []interface{} {
-	return tfslices.ApplyToAll(apiObjects, func(v awstypes.GameSessionQueueDestination) interface{} {
+func flattenGameSessionQueueDestinations(apiObjects []awstypes.GameSessionQueueDestination) []any {
+	return tfslices.ApplyToAll(apiObjects, func(v awstypes.GameSessionQueueDestination) any {
 		return aws.ToString(v.DestinationArn)
 	})
 }
 
-func flattenPlayerLatencyPolicies(apiObjects []awstypes.PlayerLatencyPolicy) []interface{} {
-	tfList := make([]interface{}, 0)
+func flattenPlayerLatencyPolicies(apiObjects []awstypes.PlayerLatencyPolicy) []any {
+	tfList := make([]any, 0)
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			"maximum_individual_player_latency_milliseconds": aws.ToInt32(apiObject.MaximumIndividualPlayerLatencyMilliseconds),
 			"policy_duration_seconds":                        aws.ToInt32(apiObject.PolicyDurationSeconds),
 		}
@@ -282,19 +280,19 @@ func flattenPlayerLatencyPolicies(apiObjects []awstypes.PlayerLatencyPolicy) []i
 	return tfList
 }
 
-func expandGameSessionQueueDestinations(tfList []interface{}) []awstypes.GameSessionQueueDestination {
+func expandGameSessionQueueDestinations(tfList []any) []awstypes.GameSessionQueueDestination {
 	if len(tfList) < 1 {
 		return nil
 	}
 
-	return tfslices.ApplyToAll(tfList, func(v interface{}) awstypes.GameSessionQueueDestination {
+	return tfslices.ApplyToAll(tfList, func(v any) awstypes.GameSessionQueueDestination {
 		return awstypes.GameSessionQueueDestination{
 			DestinationArn: aws.String(v.(string)),
 		}
 	})
 }
 
-func expandGameSessionPlayerLatencyPolicies(tfList []interface{}) []awstypes.PlayerLatencyPolicy {
+func expandGameSessionPlayerLatencyPolicies(tfList []any) []awstypes.PlayerLatencyPolicy {
 	if len(tfList) < 1 {
 		return nil
 	}
@@ -302,7 +300,7 @@ func expandGameSessionPlayerLatencyPolicies(tfList []interface{}) []awstypes.Pla
 	var apiObjects []awstypes.PlayerLatencyPolicy
 
 	for _, tfMapRaw := range tfList {
-		tfMap := tfMapRaw.(map[string]interface{})
+		tfMap := tfMapRaw.(map[string]any)
 		apiObjects = append(apiObjects, awstypes.PlayerLatencyPolicy{
 			MaximumIndividualPlayerLatencyMilliseconds: aws.Int32(int32(tfMap["maximum_individual_player_latency_milliseconds"].(int))),
 			PolicyDurationSeconds:                      aws.Int32(int32(tfMap["policy_duration_seconds"].(int))),

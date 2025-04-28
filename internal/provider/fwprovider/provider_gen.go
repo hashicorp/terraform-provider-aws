@@ -226,6 +226,13 @@ func endpointsBlock() schema.SetNestedBlock {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// billing
+
+				"billing": schema.StringAttribute{
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// budgets
 
 				"budgets": schema.StringAttribute{
@@ -659,6 +666,13 @@ func endpointsBlock() schema.SetNestedBlock {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// dsql
+
+				"dsql": schema.StringAttribute{
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// dynamodb
 
 				"dynamodb": schema.StringAttribute{
@@ -980,6 +994,13 @@ func endpointsBlock() schema.SetNestedBlock {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// invoicing
+
+				"invoicing": schema.StringAttribute{
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// iot
 
 				"iot": schema.StringAttribute{
@@ -1237,6 +1258,13 @@ func endpointsBlock() schema.SetNestedBlock {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// mediapackagevod
+
+				"mediapackagevod": schema.StringAttribute{
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// mediastore
 
 				"mediastore": schema.StringAttribute{
@@ -1334,13 +1362,6 @@ func endpointsBlock() schema.SetNestedBlock {
 				// opensearchserverless
 
 				"opensearchserverless": schema.StringAttribute{
-					Optional:    true,
-					Description: "Use this to override the default service endpoint URL",
-				},
-
-				// opsworks
-
-				"opsworks": schema.StringAttribute{
 					Optional:    true,
 					Description: "Use this to override the default service endpoint URL",
 				},
@@ -1766,18 +1787,6 @@ func endpointsBlock() schema.SetNestedBlock {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
-				// simpledb
-
-				"simpledb": schema.StringAttribute{
-					Optional:    true,
-					Description: "Use this to override the default service endpoint URL",
-				},
-
-				"sdb": schema.StringAttribute{
-					Optional:    true,
-					Description: "Use this to override the default service endpoint URL",
-				},
-
 				// sns
 
 				"sns": schema.StringAttribute{
@@ -1954,13 +1963,6 @@ func endpointsBlock() schema.SetNestedBlock {
 				// wellarchitected
 
 				"wellarchitected": schema.StringAttribute{
-					Optional:    true,
-					Description: "Use this to override the default service endpoint URL",
-				},
-
-				// worklink
-
-				"worklink": schema.StringAttribute{
 					Optional:    true,
 					Description: "Use this to override the default service endpoint URL",
 				},

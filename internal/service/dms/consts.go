@@ -90,7 +90,6 @@ func engineName_Values() []string {
 		engineNameRedis,
 		engineNameRedshift,
 		engineNameRedshiftServerless,
-		engineNameS3,
 		engineNameSQLServer,
 		engineNameSybase,
 	}
@@ -118,18 +117,6 @@ func mongoDBAuthMechanismValue_Values() []string {
 const (
 	mongoDBAuthSourceAdmin = "admin"
 )
-
-const (
-	s3SettingsCompressionTypeGzip = "GZIP"
-	s3SettingsCompressionTypeNone = "NONE"
-)
-
-func s3SettingsCompressionType_Values() []string {
-	return []string{
-		s3SettingsCompressionTypeGzip,
-		s3SettingsCompressionTypeNone,
-	}
-}
 
 const (
 	encryptionModeSseKMS = "SSE_KMS"

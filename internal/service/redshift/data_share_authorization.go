@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/redshift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
@@ -28,7 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Data Share Authorization")
+// @FrameworkResource("aws_redshift_data_share_authorization", name="Data Share Authorization")
 func newResourceDataShareAuthorization(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceDataShareAuthorization{}, nil
 }
@@ -41,10 +40,7 @@ const (
 
 type resourceDataShareAuthorization struct {
 	framework.ResourceWithConfigure
-}
-
-func (r *resourceDataShareAuthorization) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_redshift_data_share_authorization"
+	framework.WithImportByID
 }
 
 func (r *resourceDataShareAuthorization) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -215,10 +211,6 @@ func (r *resourceDataShareAuthorization) Delete(ctx context.Context, req resourc
 		)
 		return
 	}
-}
-
-func (r *resourceDataShareAuthorization) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func findDataShareAuthorizationByID(ctx context.Context, conn *redshift.Client, id string) (*awstypes.DataShare, error) {

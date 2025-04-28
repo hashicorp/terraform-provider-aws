@@ -5,6 +5,7 @@ package servicecatalog_test
 import (
 	"context"
 	"testing"
+	"unique"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	"github.com/hashicorp/terraform-plugin-testing/config"
@@ -2048,7 +2049,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_IgnoreTags_Overlap_DefaultTag(
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
-					expectFullProvisionedProductResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullProvisionedProductResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1), // TODO: Should not be set
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
@@ -2097,7 +2098,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_IgnoreTags_Overlap_DefaultTag(
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
-					expectFullProvisionedProductResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullProvisionedProductResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1), // TODO: Should not be set
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
@@ -2146,7 +2147,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_IgnoreTags_Overlap_DefaultTag(
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1Updated),
 					})),
-					expectFullProvisionedProductResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullProvisionedProductResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1Again), // TODO: Should not be set
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1Updated),
 					})),
@@ -2208,7 +2209,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_IgnoreTags_Overlap_ResourceTag
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
-					expectFullProvisionedProductResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullProvisionedProductResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1), // TODO: Should not be set
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
@@ -2271,7 +2272,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_IgnoreTags_Overlap_ResourceTag
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
-					expectFullProvisionedProductResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullProvisionedProductResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1Updated), // TODO: Should not be set
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
@@ -2334,7 +2335,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_IgnoreTags_Overlap_ResourceTag
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2Updated),
 					})),
-					expectFullProvisionedProductResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullProvisionedProductResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1Again), // TODO: Should not be set
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2Updated),
 					})),
@@ -2384,9 +2385,9 @@ func testAccServiceCatalogProvisionedProduct_removingTagNotSupported(t *testing.
 	}
 }
 
-func expectFullProvisionedProductResourceTags(resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullResourceTagsSpecTags(tfservicecatalog.ServicePackage(context.Background()), resourceAddress, &types.ServicePackageResourceTags{
+func expectFullProvisionedProductResourceTags(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
+	return tfstatecheck.ExpectFullResourceTagsSpecTags(tfservicecatalog.ServicePackage(ctx), resourceAddress, unique.Make(types.ServicePackageResourceTags{
 		IdentifierAttribute: names.AttrID,
 		ResourceType:        "Provisioned Product",
-	}, knownValue)
+	}), knownValue)
 }

@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -90,8 +89,6 @@ func resourceVPCDHCPOptions() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -106,7 +103,7 @@ var (
 	})
 )
 
-func resourceVPCDHCPOptionsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCDHCPOptionsCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -132,11 +129,11 @@ func resourceVPCDHCPOptionsCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceVPCDHCPOptionsRead(ctx, d, meta)...)
 }
 
-func resourceVPCDHCPOptionsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCDHCPOptionsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (any, error) {
 		return findDHCPOptionsByID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
@@ -174,7 +171,7 @@ func resourceVPCDHCPOptionsRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceVPCDHCPOptionsUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCDHCPOptionsUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Tags only.
@@ -182,7 +179,7 @@ func resourceVPCDHCPOptionsUpdate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceVPCDHCPOptionsRead(ctx, d, meta)...)
 }
 
-func resourceVPCDHCPOptionsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCDHCPOptionsDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -200,10 +197,11 @@ func resourceVPCDHCPOptionsDelete(ctx context.Context, d *schema.ResourceData, m
 		vpcID := aws.ToString(v.VpcId)
 
 		log.Printf("[INFO] Disassociating EC2 DHCP Options Set (%s) from VPC (%s)", d.Id(), vpcID)
-		_, err := conn.AssociateDhcpOptions(ctx, &ec2.AssociateDhcpOptionsInput{
+		input := ec2.AssociateDhcpOptionsInput{
 			DhcpOptionsId: aws.String(defaultDHCPOptionsID),
 			VpcId:         aws.String(vpcID),
-		})
+		}
+		_, err := conn.AssociateDhcpOptions(ctx, &input)
 
 		if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCIDNotFound) {
 			continue
@@ -219,7 +217,7 @@ func resourceVPCDHCPOptionsDelete(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	log.Printf("[INFO] Deleting EC2 DHCP Options Set: %s", d.Id())
-	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete), func() (any, error) {
 		return conn.DeleteDhcpOptions(ctx, input)
 	}, errCodeDependencyViolation)
 
@@ -272,7 +270,7 @@ func (m *dhcpOptionsMap) dhcpConfigurationsToResourceData(dhcpConfigurations []a
 		switch currentValue.(type) {
 		case string:
 			d.Set(tfName, dhcpConfiguration.Values[0].Value)
-		case []interface{}:
+		case []any:
 			var values []string
 			for _, v := range dhcpConfiguration.Values {
 				if v.Value != nil {
@@ -302,7 +300,7 @@ func (m *dhcpOptionsMap) resourceDataToDHCPConfigurations(d *schema.ResourceData
 					Values: []string{v},
 				})
 			}
-		case []interface{}:
+		case []any:
 			var values []string
 			for _, item := range v {
 				if str, ok := item.(string); ok && str != "" {

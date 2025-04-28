@@ -233,6 +233,67 @@ func TestAccElastiCacheReplicationGroup_Redis_EngineVersion_v7(t *testing.T) {
 	})
 }
 
+func TestAccElastiCacheReplicationGroup_OutOfBandUpgrade(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var replicationGroup awstypes.ReplicationGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_replication_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationGroupConfig_v6(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, resourceName, &replicationGroup),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "redis"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "6.x"),
+				),
+			},
+			{
+				PreConfig: func() {
+					conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheClient(ctx)
+					timeout := 40 * time.Minute
+					engineVersion := "7.1"
+
+					// Upgrade to engine version 7.x
+					if err := resourceReplicationGroupUpgradeEngineVersion(ctx, conn, rName, engineVersion, timeout); err != nil {
+						t.Fatalf("error upgrading cluster: %s", err)
+					}
+				},
+				RefreshState: true,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, resourceName, &replicationGroup),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "7.x"),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				Config: testAccReplicationGroupConfig_v7_upgraded(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, resourceName, &replicationGroup),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "redis"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "7.1"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						// sets engine_version 7.1 in state
+						// no-op on actual cluster
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
 func TestAccElastiCacheReplicationGroup_EngineVersion_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -415,6 +476,11 @@ func TestAccElastiCacheReplicationGroup_disappears(t *testing.T) {
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelasticache.ResourceReplicationGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -702,7 +768,7 @@ func TestAccElastiCacheReplicationGroup_authToken(t *testing.T) {
 	})
 }
 
-func TestAccElastiCacheReplicationGroup_stateUpgrade5270(t *testing.T) {
+func TestAccElastiCacheReplicationGroup_upgrade_6_0_0(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -718,7 +784,50 @@ func TestAccElastiCacheReplicationGroup_stateUpgrade5270(t *testing.T) {
 		CheckDestroy: testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				// At v5.26.0 the resource's schema is v1 and auth_token_update_strategy is not an argument
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.95.0",
+					},
+				},
+				Config: testAccReplicationGroupConfig_basic_engine(rName, "redis"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccReplicationGroupConfig_basic_engine(rName, "redis"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
+// At v5.26.0 the resource's schema is v1 and auth_token_update_strategy is not an argument
+func TestAccElastiCacheReplicationGroup_upgrade_5_27_0(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var rg awstypes.ReplicationGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_replication_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		CheckDestroy: testAccCheckReplicationGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"aws": {
 						Source:            "hashicorp/aws",
@@ -736,13 +845,18 @@ func TestAccElastiCacheReplicationGroup_stateUpgrade5270(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 			},
 		},
 	})
 }
 
 // https://github.com/hashicorp/terraform-provider-aws/issues/38464.
-func TestAccElastiCacheReplicationGroup_stateUpgrade5590(t *testing.T) {
+func TestAccElastiCacheReplicationGroup_upgrade_4_68_0(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -775,6 +889,11 @@ func TestAccElastiCacheReplicationGroup_stateUpgrade5590(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 			},
 		},
 	})
@@ -2475,7 +2594,7 @@ func TestAccElastiCacheReplicationGroup_tags(t *testing.T) {
 	})
 }
 
-func TestAccElastiCacheReplicationGroup_tagWithOtherModification(t *testing.T) {
+func TestAccElastiCacheReplicationGroup_TagWithOtherModification_version(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -2493,7 +2612,7 @@ func TestAccElastiCacheReplicationGroup_tagWithOtherModification(t *testing.T) {
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationGroupConfig_versionAndTag(rName, "6.0", acctest.CtKey1, acctest.CtValue1),
+				Config: testAccReplicationGroupConfig_tagAndVersion(rName, "6.0", acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "6.0"),
@@ -2503,11 +2622,52 @@ func TestAccElastiCacheReplicationGroup_tagWithOtherModification(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccReplicationGroupConfig_versionAndTag(rName, "6.2", acctest.CtKey1, acctest.CtValue1Updated),
+				Config: testAccReplicationGroupConfig_tagAndVersion(rName, "6.2", acctest.CtKey1, acctest.CtValue1Updated),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "6.2"),
 					testAccReplicationGroupCheckMemberClusterTags(resourceName, clusterDataSourcePrefix, 2, []kvp{
+						{acctest.CtKey1, acctest.CtValue1Updated},
+					}),
+				),
+			},
+		},
+	})
+}
+
+func TestAccElastiCacheReplicationGroup_TagWithOtherModification_numCacheClusters(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var rg awstypes.ReplicationGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_replication_group.test"
+	clusterDataSourcePrefix := "data.aws_elasticache_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationGroupConfig_tagAndNumCacheClusters(rName, 2, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "num_cache_clusters", "2"),
+					testAccReplicationGroupCheckMemberClusterTags(resourceName, clusterDataSourcePrefix, 2, []kvp{
+						{acctest.CtKey1, acctest.CtValue1},
+					}),
+				),
+			},
+			{
+				Config: testAccReplicationGroupConfig_tagAndNumCacheClusters(rName, 3, acctest.CtKey1, acctest.CtValue1Updated),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "num_cache_clusters", "3"),
+					testAccReplicationGroupCheckMemberClusterTags(resourceName, clusterDataSourcePrefix, 3, []kvp{
 						{acctest.CtKey1, acctest.CtValue1Updated},
 					}),
 				),
@@ -3404,7 +3564,7 @@ func testAccReplicationGroupCheckMemberClusterTags(resourceName, dataSourceNameP
 	checks := testAccCheckResourceTags(resourceName, kvs)
 	checks = append(checks, resource.TestCheckResourceAttr(resourceName, "member_clusters.#", strconv.Itoa(memberCount))) // sanity check
 
-	for i := 0; i < memberCount; i++ {
+	for i := range memberCount {
 		dataSourceName := fmt.Sprintf("%s.%d", dataSourceNamePrefix, i)
 		checks = append(checks, testAccCheckResourceTags(dataSourceName, kvs)...)
 	}
@@ -3473,6 +3633,30 @@ resource "aws_elasticache_replication_group" "test" {
   description          = "test description"
   node_type            = "cache.t3.small"
   engine_version       = "5.0.6"
+}
+`, rName)
+}
+
+func testAccReplicationGroupConfig_v6(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id = %[1]q
+  description          = "test description"
+  node_type            = "cache.t3.small"
+  engine_version       = "6.x"
+  engine               = "redis"
+}
+`, rName)
+}
+
+func testAccReplicationGroupConfig_v7_upgraded(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id = %[1]q
+  description          = "test description"
+  node_type            = "cache.t3.small"
+  engine_version       = "7.1"
+  engine               = "redis"
 }
 `, rName)
 }
@@ -4429,10 +4613,10 @@ resource "aws_elasticache_replication_group" "test" {
 	)
 }
 
-func testAccReplicationGroupConfig_versionAndTag(rName, version, tagKey1, tagValue1 string) string {
-	const clusterCount = 2
+func testAccReplicationGroupConfig_tagAndVersion(rName, version, tagKey1, tagValue1 string) string {
+	const numCacheClusters = 2
 	return acctest.ConfigCompose(
-		testAccReplicationGroupClusterData(clusterCount),
+		testAccReplicationGroupClusterData(numCacheClusters),
 		fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id = %[1]q
@@ -4446,7 +4630,27 @@ resource "aws_elasticache_replication_group" "test" {
     %[4]q = %[5]q
   }
 }
-`, rName, clusterCount, version, tagKey1, tagValue1),
+`, rName, numCacheClusters, version, tagKey1, tagValue1),
+	)
+}
+
+func testAccReplicationGroupConfig_tagAndNumCacheClusters(rName string, numCacheClusters int, tagKey1 string, tagValue1 string) string {
+	return acctest.ConfigCompose(
+		testAccReplicationGroupClusterData(numCacheClusters),
+		fmt.Sprintf(`
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id = %[1]q
+  description          = "test description"
+  node_type            = "cache.t3.small"
+  num_cache_clusters   = %[2]d
+  apply_immediately    = true
+  engine_version       = 6.2
+
+  tags = {
+    %[3]q = %[4]q
+  }
+}
+`, rName, numCacheClusters, tagKey1, tagValue1),
 	)
 }
 
@@ -4877,6 +5081,14 @@ func resourceReplicationGroupSetPrimaryClusterID(ctx context.Context, conn *elas
 		ReplicationGroupId: aws.String(replicationGroupID),
 		ApplyImmediately:   aws.Bool(true),
 		PrimaryClusterId:   aws.String(primaryClusterID),
+	})
+}
+
+func resourceReplicationGroupUpgradeEngineVersion(ctx context.Context, conn *elasticache.Client, replicationGroupID, engineVersion string, timeout time.Duration) error {
+	return resourceReplicationGroupModify(ctx, conn, timeout, &elasticache.ModifyReplicationGroupInput{
+		ReplicationGroupId: aws.String(replicationGroupID),
+		ApplyImmediately:   aws.Bool(true),
+		EngineVersion:      aws.String(engineVersion),
 	})
 }
 

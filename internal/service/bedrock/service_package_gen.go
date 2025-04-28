@@ -4,6 +4,7 @@ package bedrock
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
@@ -17,28 +18,34 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newCustomModelDataSource,
-			Name:    "Custom Model",
+			Factory:  newCustomModelDataSource,
+			TypeName: "aws_bedrock_custom_model",
+			Name:     "Custom Model",
 		},
 		{
-			Factory: newCustomModelsDataSource,
-			Name:    "Custom Models",
+			Factory:  newCustomModelsDataSource,
+			TypeName: "aws_bedrock_custom_models",
+			Name:     "Custom Models",
 		},
 		{
-			Factory: newFoundationModelDataSource,
-			Name:    "Foundation Model",
+			Factory:  newFoundationModelDataSource,
+			TypeName: "aws_bedrock_foundation_model",
+			Name:     "Foundation Model",
 		},
 		{
-			Factory: newFoundationModelsDataSource,
-			Name:    "Foundation Models",
+			Factory:  newFoundationModelsDataSource,
+			TypeName: "aws_bedrock_foundation_models",
+			Name:     "Foundation Models",
 		},
 		{
-			Factory: newInferenceProfileDataSource,
-			Name:    "Inference Profile",
+			Factory:  newInferenceProfileDataSource,
+			TypeName: "aws_bedrock_inference_profile",
+			Name:     "Inference Profile",
 		},
 		{
-			Factory: newInferenceProfilesDataSource,
-			Name:    "Inference Profiles",
+			Factory:  newInferenceProfilesDataSource,
+			TypeName: "aws_bedrock_inference_profiles",
+			Name:     "Inference Profiles",
 		},
 	}
 }
@@ -46,40 +53,46 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newCustomModelResource,
-			Name:    "Custom Model",
-			Tags: &types.ServicePackageResourceTags{
+			Factory:  newCustomModelResource,
+			TypeName: "aws_bedrock_custom_model",
+			Name:     "Custom Model",
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: "job_arn",
-			},
+			}),
 		},
 		{
-			Factory: newGuardrailVersionResource,
-			Name:    "Guardrail Version",
-		},
-		{
-			Factory: newModelInvocationLoggingConfigurationResource,
-			Name:    "Model Invocation Logging Configuration",
-		},
-		{
-			Factory: newProvisionedModelThroughputResource,
-			Name:    "Provisioned Model Throughput",
-			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "provisioned_model_arn",
-			},
-		},
-		{
-			Factory: newResourceGuardrail,
-			Name:    "Guardrail",
-			Tags: &types.ServicePackageResourceTags{
+			Factory:  newResourceGuardrail,
+			TypeName: "aws_bedrock_guardrail",
+			Name:     "Guardrail",
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: "guardrail_arn",
-			},
+			}),
 		},
 		{
-			Factory: newResourceInferenceProfile,
-			Name:    "Inference Profile",
-			Tags: &types.ServicePackageResourceTags{
+			Factory:  newGuardrailVersionResource,
+			TypeName: "aws_bedrock_guardrail_version",
+			Name:     "Guardrail Version",
+		},
+		{
+			Factory:  newResourceInferenceProfile,
+			TypeName: "aws_bedrock_inference_profile",
+			Name:     "Inference Profile",
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
+		},
+		{
+			Factory:  newModelInvocationLoggingConfigurationResource,
+			TypeName: "aws_bedrock_model_invocation_logging_configuration",
+			Name:     "Model Invocation Logging Configuration",
+		},
+		{
+			Factory:  newProvisionedModelThroughputResource,
+			TypeName: "aws_bedrock_provisioned_model_throughput",
+			Name:     "Provisioned Model Throughput",
+			Tags: unique.Make(types.ServicePackageResourceTags{
+				IdentifierAttribute: "provisioned_model_arn",
+			}),
 		},
 	}
 }
@@ -99,11 +112,31 @@ func (p *servicePackage) ServicePackageName() string {
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*bedrock.Client, error) {
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
-
-	return bedrock.NewFromConfig(cfg,
+	optFns := []func(*bedrock.Options){
 		bedrock.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
-	), nil
+		withExtraOptions(ctx, p, config),
+	}
+
+	return bedrock.NewFromConfig(cfg, optFns...), nil
+}
+
+// withExtraOptions returns a functional option that allows this service package to specify extra API client options.
+// This option is always called after any generated options.
+func withExtraOptions(ctx context.Context, sp conns.ServicePackage, config map[string]any) func(*bedrock.Options) {
+	if v, ok := sp.(interface {
+		withExtraOptions(context.Context, map[string]any) []func(*bedrock.Options)
+	}); ok {
+		optFns := v.withExtraOptions(ctx, config)
+
+		return func(o *bedrock.Options) {
+			for _, optFn := range optFns {
+				optFn(o)
+			}
+		}
+	}
+
+	return func(*bedrock.Options) {}
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

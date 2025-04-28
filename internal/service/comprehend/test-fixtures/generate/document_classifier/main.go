@@ -37,7 +37,7 @@ func main() {
 	log.SetFlags(0)
 
 	seed := int64(1) // Default rand seed
-	rand.Seed(seed)
+	r := rand.New(rand.NewSource(seed))
 	faker.Seed(seed)
 
 	documentFile, err := os.OpenFile("./test-fixtures/document_classifier/documents.csv", os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0600)
@@ -49,16 +49,16 @@ func main() {
 
 	for i := 0; i < 100; i++ {
 		name := faker.Name().Name()
-		doctype := doctypes[rand.Intn(len(doctypes))]
+		doctype := doctypes[r.Intn(len(doctypes))]
 
 		var line string
 		if doctype == "PHISHING" {
 			order := faker.RandomString(10)
 			phone := faker.PhoneNumber().PhoneNumber()
-			doc := phishingDocs[rand.Intn(len(phishingDocs))]
+			doc := phishingDocs[r.Intn(len(phishingDocs))]
 			line = fmt.Sprintf(doc, name, order, phone)
 		} else {
-			doc := spamDocs[rand.Intn(len(spamDocs))]
+			doc := spamDocs[r.Intn(len(spamDocs))]
 			product := faker.Commerce().ProductName()
 			company := faker.Company().Name()
 			line = fmt.Sprintf(doc, name, product, company)

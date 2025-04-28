@@ -31,7 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Data Share Consumer Association")
+// @FrameworkResource("aws_redshift_data_share_consumer_association", name="Data Share Consumer Association")
 func newResourceDataShareConsumerAssociation(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceDataShareConsumerAssociation{}, nil
 }
@@ -42,10 +42,7 @@ const (
 
 type resourceDataShareConsumerAssociation struct {
 	framework.ResourceWithConfigure
-}
-
-func (r *resourceDataShareConsumerAssociation) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_redshift_data_share_consumer_association"
+	framework.WithImportByID
 }
 
 func (r *resourceDataShareConsumerAssociation) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -263,9 +260,6 @@ func (r *resourceDataShareConsumerAssociation) Delete(ctx context.Context, req r
 	}
 }
 
-func (r *resourceDataShareConsumerAssociation) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-}
 func (r *resourceDataShareConsumerAssociation) ConfigValidators(_ context.Context) []resource.ConfigValidator {
 	return []resource.ConfigValidator{
 		resourcevalidator.ExactlyOneOf(

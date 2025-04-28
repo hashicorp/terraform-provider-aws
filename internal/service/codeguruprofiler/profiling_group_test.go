@@ -43,12 +43,13 @@ func TestAccCodeGuruProfilerProfilingGroup_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProfilingGroupConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProfilingGroupExists(ctx, resourceName, &profilinggroup),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "codeguru-profiler", "profilingGroup/{name}"),
 					resource.TestCheckResourceAttr(resourceName, "compute_platform", "Default"),
 					resource.TestCheckResourceAttr(resourceName, "agent_orchestration_config.0.profiling_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrName),
 				),
 			},
 			{
@@ -115,7 +116,7 @@ func TestAccCodeGuruProfilerProfilingGroup_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProfilingGroupExists(ctx, resourceName, &profilinggroup),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "codeguru-profiler", "profilingGroup/{name}"),
 					resource.TestCheckResourceAttr(resourceName, "compute_platform", "Default"),
 					resource.TestCheckResourceAttr(resourceName, "agent_orchestration_config.0.profiling_enabled", acctest.CtTrue),
 				),
@@ -125,7 +126,7 @@ func TestAccCodeGuruProfilerProfilingGroup_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProfilingGroupExists(ctx, resourceName, &profilinggroup),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "codeguru-profiler", "profilingGroup/{name}"),
 					resource.TestCheckResourceAttr(resourceName, "compute_platform", "Default"),
 					resource.TestCheckResourceAttr(resourceName, "agent_orchestration_config.0.profiling_enabled", acctest.CtFalse),
 				),

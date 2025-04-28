@@ -66,7 +66,7 @@ func resourceGateway() *schema.Resource {
 	}
 }
 
-func resourceGatewayCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGatewayCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
@@ -94,7 +94,7 @@ func resourceGatewayCreate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceGatewayRead(ctx, d, meta)...)
 }
 
-func resourceGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGatewayRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
@@ -118,7 +118,7 @@ func resourceGatewayRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
@@ -138,14 +138,15 @@ func resourceGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceGatewayRead(ctx, d, meta)...)
 }
 
-func resourceGatewayDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGatewayDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Direct Connect Gateway: %s", d.Id())
-	_, err := conn.DeleteDirectConnectGateway(ctx, &directconnect.DeleteDirectConnectGatewayInput{
+	input := directconnect.DeleteDirectConnectGatewayInput{
 		DirectConnectGatewayId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteDirectConnectGateway(ctx, &input)
 
 	if errs.IsAErrorMessageContains[*awstypes.DirectConnectClientException](err, "does not exist") {
 		return diags
@@ -217,7 +218,7 @@ func findGateways(ctx context.Context, conn *directconnect.Client, input *direct
 }
 
 func statusGateway(ctx context.Context, conn *directconnect.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findGatewayByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

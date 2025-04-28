@@ -13,7 +13,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53profiles/types"
 	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -50,10 +49,6 @@ type resourceResourceAssociation struct {
 	framework.WithNoUpdate
 	framework.WithTimeouts
 	framework.WithImportByID
-}
-
-func (r *resourceResourceAssociation) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_route53profiles_resource_association"
 }
 
 func (r *resourceResourceAssociation) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -223,10 +218,6 @@ func (r *resourceResourceAssociation) Delete(ctx context.Context, req resource.D
 	}
 }
 
-func (r *resourceResourceAssociation) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-}
-
 func waitResourceAssociationCreated(ctx context.Context, conn *route53profiles.Client, id string, timeout time.Duration) (*awstypes.ProfileResourceAssociation, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.ProfileStatusCreating, awstypes.ProfileStatusUpdating),
@@ -262,7 +253,7 @@ func waitResourceAssociationDeleted(ctx context.Context, conn *route53profiles.C
 }
 
 func statusResourceAssociation(ctx context.Context, conn *route53profiles.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := findResourceAssociationByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil

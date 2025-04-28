@@ -29,7 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Logging")
+// @FrameworkResource("aws_redshift_logging", name="Logging")
 func newResourceLogging(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceLogging{}, nil
 }
@@ -40,10 +40,6 @@ const (
 
 type resourceLogging struct {
 	framework.ResourceWithConfigure
-}
-
-func (r *resourceLogging) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_redshift_logging"
 }
 
 func (r *resourceLogging) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -99,7 +95,7 @@ func (r *resourceLogging) Create(ctx context.Context, req resource.CreateRequest
 	// Retry InvalidClusterState faults, which can occur when logging is enabled
 	// immediately after being disabled (ie. resource replacement).
 	out, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidClusterStateFault](ctx, propagationTimeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.EnableLogging(ctx, in)
 		},
 		"There is an operation running on the Cluster",
@@ -176,7 +172,7 @@ func (r *resourceLogging) Update(ctx context.Context, req resource.UpdateRequest
 		// Retry InvalidClusterState faults, which can occur when logging is enabled
 		// immediately after being disabled (ie. resource replacement).
 		out, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidClusterStateFault](ctx, propagationTimeout,
-			func() (interface{}, error) {
+			func() (any, error) {
 				return conn.EnableLogging(ctx, in)
 			},
 			"There is an operation running on the Cluster",
@@ -215,7 +211,7 @@ func (r *resourceLogging) Delete(ctx context.Context, req resource.DeleteRequest
 
 	// Retry InvalidClusterState faults, which can occur when logging is being enabled.
 	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidClusterStateFault](ctx, propagationTimeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.DisableLogging(ctx, in)
 		},
 		"There is an operation running on the Cluster",
@@ -233,8 +229,8 @@ func (r *resourceLogging) Delete(ctx context.Context, req resource.DeleteRequest
 }
 
 func (r *resourceLogging) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), req.ID)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrClusterIdentifier), req.ID)...)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrClusterIdentifier), req, resp)
 }
 
 func findLoggingByID(ctx context.Context, conn *redshift.Client, id string) (*redshift.DescribeLoggingStatusOutput, error) {

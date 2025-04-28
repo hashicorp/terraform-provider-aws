@@ -26,7 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Snapshot Copy")
+// @FrameworkResource("aws_redshift_snapshot_copy", name="Snapshot Copy")
 func newResourceSnapshotCopy(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceSnapshotCopy{}, nil
 }
@@ -37,10 +37,6 @@ const (
 
 type resourceSnapshotCopy struct {
 	framework.ResourceWithConfigure
-}
-
-func (r *resourceSnapshotCopy) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_redshift_snapshot_copy"
 }
 
 func (r *resourceSnapshotCopy) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -213,8 +209,8 @@ func (r *resourceSnapshotCopy) Delete(ctx context.Context, req resource.DeleteRe
 }
 
 func (r *resourceSnapshotCopy) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), req.ID)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrClusterIdentifier), req.ID)...)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrClusterIdentifier), req, resp)
 }
 
 func findSnapshotCopyByID(ctx context.Context, conn *redshift.Client, id string) (*awstypes.ClusterSnapshotCopyStatus, error) {

@@ -405,7 +405,7 @@ func resourceService() *schema.Resource {
 									"image_identifier": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validation.StringMatch(regexache.MustCompile(`([0-9]{12}\.dkr\.ecr\.[a-z\-]+-[0-9]{1}\.amazonaws\.com\/.*)|(^public\.ecr\.aws\/.+\/.+)`), ""),
+										ValidateFunc: validation.StringMatch(regexache.MustCompile(`([0-9]{12}\.dkr\.ecr\.[a-z\-]+-[0-9]{1,2}\.amazonaws\.com\/.*)|(^public\.ecr\.aws\/.+\/.+)`), ""),
 									},
 									"image_repository_type": {
 										Type:             schema.TypeString,
@@ -426,12 +426,10 @@ func resourceService() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
@@ -439,7 +437,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 	name := d.Get(names.AttrServiceName).(string)
 	input := &apprunner.CreateServiceInput{
 		ServiceName:         aws.String(name),
-		SourceConfiguration: expandServiceSourceConfiguration(d.Get("source_configuration").([]interface{})),
+		SourceConfiguration: expandServiceSourceConfiguration(d.Get("source_configuration").([]any)),
 		Tags:                getTagsIn(ctx),
 	}
 
@@ -447,27 +445,27 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.AutoScalingConfigurationArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrEncryptionConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.EncryptionConfiguration = expandServiceEncryptionConfiguration(v.([]interface{}))
+	if v, ok := d.GetOk(names.AttrEncryptionConfiguration); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.EncryptionConfiguration = expandServiceEncryptionConfiguration(v.([]any))
 	}
 
-	if v, ok := d.GetOk("health_check_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.HealthCheckConfiguration = expandServiceHealthCheckConfiguration(v.([]interface{}))
+	if v, ok := d.GetOk("health_check_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.HealthCheckConfiguration = expandServiceHealthCheckConfiguration(v.([]any))
 	}
 
-	if v, ok := d.GetOk("instance_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.InstanceConfiguration = expandServiceInstanceConfiguration(v.([]interface{}))
+	if v, ok := d.GetOk("instance_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.InstanceConfiguration = expandServiceInstanceConfiguration(v.([]any))
 	}
 
-	if v, ok := d.GetOk(names.AttrNetworkConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.NetworkConfiguration = expandNetworkConfiguration(v.([]interface{}))
+	if v, ok := d.GetOk(names.AttrNetworkConfiguration); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.NetworkConfiguration = expandNetworkConfiguration(v.([]any))
 	}
 
-	if v, ok := d.GetOk("observability_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.ObservabilityConfiguration = expandServiceObservabilityConfiguration(v.([]interface{}))
+	if v, ok := d.GetOk("observability_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.ObservabilityConfiguration = expandServiceObservabilityConfiguration(v.([]any))
 	}
 
-	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidRequestException](ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidRequestException](ctx, propagationTimeout, func() (any, error) {
 		return conn.CreateService(ctx, input)
 	}, "Error in assuming instance role")
 
@@ -484,7 +482,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceServiceRead(ctx, d, meta)...)
 }
 
-func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
@@ -550,7 +548,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
@@ -565,23 +563,23 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		if d.HasChange("health_check_configuration") {
-			input.HealthCheckConfiguration = expandServiceHealthCheckConfiguration(d.Get("health_check_configuration").([]interface{}))
+			input.HealthCheckConfiguration = expandServiceHealthCheckConfiguration(d.Get("health_check_configuration").([]any))
 		}
 
 		if d.HasChange("instance_configuration") {
-			input.InstanceConfiguration = expandServiceInstanceConfiguration(d.Get("instance_configuration").([]interface{}))
+			input.InstanceConfiguration = expandServiceInstanceConfiguration(d.Get("instance_configuration").([]any))
 		}
 
 		if d.HasChange(names.AttrNetworkConfiguration) {
-			input.NetworkConfiguration = expandNetworkConfiguration(d.Get(names.AttrNetworkConfiguration).([]interface{}))
+			input.NetworkConfiguration = expandNetworkConfiguration(d.Get(names.AttrNetworkConfiguration).([]any))
 		}
 
 		if d.HasChange("observability_configuration") {
-			input.ObservabilityConfiguration = expandServiceObservabilityConfiguration(d.Get("observability_configuration").([]interface{}))
+			input.ObservabilityConfiguration = expandServiceObservabilityConfiguration(d.Get("observability_configuration").([]any))
 		}
 
 		if d.HasChange("source_configuration") {
-			input.SourceConfiguration = expandServiceSourceConfiguration(d.Get("source_configuration").([]interface{}))
+			input.SourceConfiguration = expandServiceSourceConfiguration(d.Get("source_configuration").([]any))
 		}
 
 		_, err := conn.UpdateService(ctx, input)
@@ -598,15 +596,16 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceServiceRead(ctx, d, meta)...)
 }
 
-func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
 
 	log.Printf("[INFO] Deleting App Runner Service: %s", d.Id())
-	_, err := conn.DeleteService(ctx, &apprunner.DeleteServiceInput{
+	input := apprunner.DeleteServiceInput{
 		ServiceArn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteService(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
@@ -656,7 +655,7 @@ func findServiceByARN(ctx context.Context, conn *apprunner.Client, arn string) (
 }
 
 func statusService(ctx context.Context, conn *apprunner.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findServiceByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
@@ -731,12 +730,12 @@ func waitServiceDeleted(ctx context.Context, conn *apprunner.Client, arn string)
 	return nil, err
 }
 
-func expandServiceEncryptionConfiguration(l []interface{}) *types.EncryptionConfiguration {
+func expandServiceEncryptionConfiguration(l []any) *types.EncryptionConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := l[0].(map[string]interface{})
+	tfMap, ok := l[0].(map[string]any)
 
 	if !ok {
 		return nil
@@ -751,12 +750,12 @@ func expandServiceEncryptionConfiguration(l []interface{}) *types.EncryptionConf
 	return result
 }
 
-func expandServiceHealthCheckConfiguration(l []interface{}) *types.HealthCheckConfiguration {
+func expandServiceHealthCheckConfiguration(l []any) *types.HealthCheckConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := l[0].(map[string]interface{})
+	tfMap, ok := l[0].(map[string]any)
 
 	if !ok {
 		return nil
@@ -791,12 +790,12 @@ func expandServiceHealthCheckConfiguration(l []interface{}) *types.HealthCheckCo
 	return result
 }
 
-func expandServiceInstanceConfiguration(l []interface{}) *types.InstanceConfiguration {
+func expandServiceInstanceConfiguration(l []any) *types.InstanceConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := l[0].(map[string]interface{})
+	tfMap, ok := l[0].(map[string]any)
 
 	if !ok {
 		return nil
@@ -819,12 +818,12 @@ func expandServiceInstanceConfiguration(l []interface{}) *types.InstanceConfigur
 	return result
 }
 
-func expandNetworkConfiguration(l []interface{}) *types.NetworkConfiguration {
+func expandNetworkConfiguration(l []any) *types.NetworkConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := l[0].(map[string]interface{})
+	tfMap, ok := l[0].(map[string]any)
 
 	if !ok {
 		return nil
@@ -832,11 +831,11 @@ func expandNetworkConfiguration(l []interface{}) *types.NetworkConfiguration {
 
 	result := &types.NetworkConfiguration{}
 
-	if v, ok := tfMap["ingress_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap["ingress_configuration"].([]any); ok && len(v) > 0 && v[0] != nil {
 		result.IngressConfiguration = expandNetworkIngressConfiguration(v)
 	}
 
-	if v, ok := tfMap["egress_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap["egress_configuration"].([]any); ok && len(v) > 0 && v[0] != nil {
 		result.EgressConfiguration = expandNetworkEgressConfiguration(v)
 	}
 
@@ -847,12 +846,12 @@ func expandNetworkConfiguration(l []interface{}) *types.NetworkConfiguration {
 	return result
 }
 
-func expandServiceObservabilityConfiguration(l []interface{}) *types.ServiceObservabilityConfiguration {
+func expandServiceObservabilityConfiguration(l []any) *types.ServiceObservabilityConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := l[0].(map[string]interface{})
+	tfMap, ok := l[0].(map[string]any)
 
 	if !ok {
 		return nil
@@ -871,12 +870,12 @@ func expandServiceObservabilityConfiguration(l []interface{}) *types.ServiceObse
 	return result
 }
 
-func expandServiceSourceConfiguration(l []interface{}) *types.SourceConfiguration {
+func expandServiceSourceConfiguration(l []any) *types.SourceConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := l[0].(map[string]interface{})
+	tfMap, ok := l[0].(map[string]any)
 
 	if !ok {
 		return nil
@@ -884,7 +883,7 @@ func expandServiceSourceConfiguration(l []interface{}) *types.SourceConfiguratio
 
 	result := &types.SourceConfiguration{}
 
-	if v, ok := tfMap["authentication_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap["authentication_configuration"].([]any); ok && len(v) > 0 && v[0] != nil {
 		result.AuthenticationConfiguration = expandServiceAuthenticationConfiguration(v)
 	}
 
@@ -892,23 +891,23 @@ func expandServiceSourceConfiguration(l []interface{}) *types.SourceConfiguratio
 		result.AutoDeploymentsEnabled = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["code_repository"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap["code_repository"].([]any); ok && len(v) > 0 && v[0] != nil {
 		result.CodeRepository = expandServiceCodeRepository(v)
 	}
 
-	if v, ok := tfMap["image_repository"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap["image_repository"].([]any); ok && len(v) > 0 && v[0] != nil {
 		result.ImageRepository = expandServiceImageRepository(v)
 	}
 
 	return result
 }
 
-func expandServiceAuthenticationConfiguration(l []interface{}) *types.AuthenticationConfiguration {
+func expandServiceAuthenticationConfiguration(l []any) *types.AuthenticationConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := l[0].(map[string]interface{})
+	tfMap, ok := l[0].(map[string]any)
 
 	if !ok {
 		return nil
@@ -927,12 +926,12 @@ func expandServiceAuthenticationConfiguration(l []interface{}) *types.Authentica
 	return result
 }
 
-func expandNetworkIngressConfiguration(l []interface{}) *types.IngressConfiguration {
+func expandNetworkIngressConfiguration(l []any) *types.IngressConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := l[0].(map[string]interface{})
+	tfMap, ok := l[0].(map[string]any)
 
 	if !ok {
 		return nil
@@ -947,12 +946,12 @@ func expandNetworkIngressConfiguration(l []interface{}) *types.IngressConfigurat
 	return result
 }
 
-func expandNetworkEgressConfiguration(l []interface{}) *types.EgressConfiguration {
+func expandNetworkEgressConfiguration(l []any) *types.EgressConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := l[0].(map[string]interface{})
+	tfMap, ok := l[0].(map[string]any)
 
 	if !ok {
 		return nil
@@ -971,12 +970,12 @@ func expandNetworkEgressConfiguration(l []interface{}) *types.EgressConfiguratio
 	return result
 }
 
-func expandServiceImageConfiguration(l []interface{}) *types.ImageConfiguration {
+func expandServiceImageConfiguration(l []any) *types.ImageConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := l[0].(map[string]interface{})
+	tfMap, ok := l[0].(map[string]any)
 
 	if !ok {
 		return nil
@@ -988,11 +987,11 @@ func expandServiceImageConfiguration(l []interface{}) *types.ImageConfiguration 
 		result.Port = aws.String(v)
 	}
 
-	if v, ok := tfMap["runtime_environment_secrets"].(map[string]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["runtime_environment_secrets"].(map[string]any); ok && len(v) > 0 {
 		result.RuntimeEnvironmentSecrets = flex.ExpandStringValueMap(v)
 	}
 
-	if v, ok := tfMap["runtime_environment_variables"].(map[string]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["runtime_environment_variables"].(map[string]any); ok && len(v) > 0 {
 		result.RuntimeEnvironmentVariables = flex.ExpandStringValueMap(v)
 	}
 
@@ -1003,12 +1002,12 @@ func expandServiceImageConfiguration(l []interface{}) *types.ImageConfiguration 
 	return result
 }
 
-func expandServiceCodeRepository(l []interface{}) *types.CodeRepository {
+func expandServiceCodeRepository(l []any) *types.CodeRepository {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := l[0].(map[string]interface{})
+	tfMap, ok := l[0].(map[string]any)
 
 	if !ok {
 		return nil
@@ -1016,11 +1015,11 @@ func expandServiceCodeRepository(l []interface{}) *types.CodeRepository {
 
 	result := &types.CodeRepository{}
 
-	if v, ok := tfMap["source_code_version"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap["source_code_version"].([]any); ok && len(v) > 0 && v[0] != nil {
 		result.SourceCodeVersion = expandServiceSourceCodeVersion(v)
 	}
 
-	if v, ok := tfMap["code_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap["code_configuration"].([]any); ok && len(v) > 0 && v[0] != nil {
 		result.CodeConfiguration = expandServiceCodeConfiguration(v)
 	}
 
@@ -1035,12 +1034,12 @@ func expandServiceCodeRepository(l []interface{}) *types.CodeRepository {
 	return result
 }
 
-func expandServiceImageRepository(l []interface{}) *types.ImageRepository {
+func expandServiceImageRepository(l []any) *types.ImageRepository {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := l[0].(map[string]interface{})
+	tfMap, ok := l[0].(map[string]any)
 
 	if !ok {
 		return nil
@@ -1048,7 +1047,7 @@ func expandServiceImageRepository(l []interface{}) *types.ImageRepository {
 
 	result := &types.ImageRepository{}
 
-	if v, ok := tfMap["image_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap["image_configuration"].([]any); ok && len(v) > 0 && v[0] != nil {
 		result.ImageConfiguration = expandServiceImageConfiguration(v)
 	}
 
@@ -1063,12 +1062,12 @@ func expandServiceImageRepository(l []interface{}) *types.ImageRepository {
 	return result
 }
 
-func expandServiceCodeConfiguration(l []interface{}) *types.CodeConfiguration {
+func expandServiceCodeConfiguration(l []any) *types.CodeConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := l[0].(map[string]interface{})
+	tfMap, ok := l[0].(map[string]any)
 
 	if !ok {
 		return nil
@@ -1080,19 +1079,19 @@ func expandServiceCodeConfiguration(l []interface{}) *types.CodeConfiguration {
 		result.ConfigurationSource = types.ConfigurationSource(v)
 	}
 
-	if v, ok := tfMap["code_configuration_values"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap["code_configuration_values"].([]any); ok && len(v) > 0 && v[0] != nil {
 		result.CodeConfigurationValues = expandServiceCodeConfigurationValues(v)
 	}
 
 	return result
 }
 
-func expandServiceCodeConfigurationValues(l []interface{}) *types.CodeConfigurationValues {
+func expandServiceCodeConfigurationValues(l []any) *types.CodeConfigurationValues {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := l[0].(map[string]interface{})
+	tfMap, ok := l[0].(map[string]any)
 
 	if !ok {
 		return nil
@@ -1112,11 +1111,11 @@ func expandServiceCodeConfigurationValues(l []interface{}) *types.CodeConfigurat
 		result.Runtime = types.Runtime(v)
 	}
 
-	if v, ok := tfMap["runtime_environment_secrets"].(map[string]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["runtime_environment_secrets"].(map[string]any); ok && len(v) > 0 {
 		result.RuntimeEnvironmentSecrets = flex.ExpandStringValueMap(v)
 	}
 
-	if v, ok := tfMap["runtime_environment_variables"].(map[string]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["runtime_environment_variables"].(map[string]any); ok && len(v) > 0 {
 		result.RuntimeEnvironmentVariables = flex.ExpandStringValueMap(v)
 	}
 
@@ -1127,12 +1126,12 @@ func expandServiceCodeConfigurationValues(l []interface{}) *types.CodeConfigurat
 	return result
 }
 
-func expandServiceSourceCodeVersion(l []interface{}) *types.SourceCodeVersion {
+func expandServiceSourceCodeVersion(l []any) *types.SourceCodeVersion {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := l[0].(map[string]interface{})
+	tfMap, ok := l[0].(map[string]any)
 
 	if !ok {
 		return nil
@@ -1151,24 +1150,24 @@ func expandServiceSourceCodeVersion(l []interface{}) *types.SourceCodeVersion {
 	return result
 }
 
-func flattenServiceEncryptionConfiguration(config *types.EncryptionConfiguration) []interface{} {
+func flattenServiceEncryptionConfiguration(config *types.EncryptionConfiguration) []any {
 	if config == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		names.AttrKMSKey: aws.ToString(config.KmsKey),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenServiceHealthCheckConfiguration(config *types.HealthCheckConfiguration) []interface{} {
+func flattenServiceHealthCheckConfiguration(config *types.HealthCheckConfiguration) []any {
 	if config == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"healthy_threshold":   config.HealthyThreshold,
 		names.AttrInterval:    config.Interval,
 		names.AttrPath:        aws.ToString(config.Path),
@@ -1177,109 +1176,109 @@ func flattenServiceHealthCheckConfiguration(config *types.HealthCheckConfigurati
 		"unhealthy_threshold": config.UnhealthyThreshold,
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenServiceInstanceConfiguration(config *types.InstanceConfiguration) []interface{} {
+func flattenServiceInstanceConfiguration(config *types.InstanceConfiguration) []any {
 	if config == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"cpu":               aws.ToString(config.Cpu),
 		"instance_role_arn": aws.ToString(config.InstanceRoleArn),
 		"memory":            aws.ToString(config.Memory),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenNetworkConfiguration(config *types.NetworkConfiguration) []interface{} {
+func flattenNetworkConfiguration(config *types.NetworkConfiguration) []any {
 	if config == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"ingress_configuration": flattenNetworkIngressConfiguration(config.IngressConfiguration),
 		"egress_configuration":  flattenNetworkEgressConfiguration(config.EgressConfiguration),
 		names.AttrIPAddressType: config.IpAddressType,
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenNetworkIngressConfiguration(config *types.IngressConfiguration) []interface{} {
+func flattenNetworkIngressConfiguration(config *types.IngressConfiguration) []any {
 	if config == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"is_publicly_accessible": config.IsPubliclyAccessible,
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenNetworkEgressConfiguration(config *types.EgressConfiguration) []interface{} {
+func flattenNetworkEgressConfiguration(config *types.EgressConfiguration) []any {
 	if config == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"egress_type":       string(config.EgressType),
 		"vpc_connector_arn": aws.ToString(config.VpcConnectorArn),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenServiceObservabilityConfiguration(config *types.ServiceObservabilityConfiguration) []interface{} {
+func flattenServiceObservabilityConfiguration(config *types.ServiceObservabilityConfiguration) []any {
 	if config == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"observability_configuration_arn": aws.ToString(config.ObservabilityConfigurationArn),
 		"observability_enabled":           config.ObservabilityEnabled,
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenServiceCodeRepository(r *types.CodeRepository) []interface{} {
+func flattenServiceCodeRepository(r *types.CodeRepository) []any {
 	if r == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"code_configuration":  flattenServiceCodeConfiguration(r.CodeConfiguration),
 		"repository_url":      aws.ToString(r.RepositoryUrl),
 		"source_code_version": flattenServiceSourceCodeVersion(r.SourceCodeVersion),
 		"source_directory":    aws.ToString(r.SourceDirectory),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenServiceCodeConfiguration(config *types.CodeConfiguration) []interface{} {
+func flattenServiceCodeConfiguration(config *types.CodeConfiguration) []any {
 	if config == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"code_configuration_values": flattenServiceCodeConfigurationValues(config.CodeConfigurationValues),
 		"configuration_source":      string(config.ConfigurationSource),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenServiceCodeConfigurationValues(values *types.CodeConfigurationValues) []interface{} {
+func flattenServiceCodeConfigurationValues(values *types.CodeConfigurationValues) []any {
 	if values == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"build_command":                 aws.ToString(values.BuildCommand),
 		names.AttrPort:                  aws.ToString(values.Port),
 		"runtime":                       string(values.Runtime),
@@ -1288,75 +1287,75 @@ func flattenServiceCodeConfigurationValues(values *types.CodeConfigurationValues
 		"start_command":                 aws.ToString(values.StartCommand),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenServiceSourceCodeVersion(v *types.SourceCodeVersion) []interface{} {
+func flattenServiceSourceCodeVersion(v *types.SourceCodeVersion) []any {
 	if v == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		names.AttrType:  string(v.Type),
 		names.AttrValue: aws.ToString(v.Value),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenServiceSourceConfiguration(config *types.SourceConfiguration) []interface{} {
+func flattenServiceSourceConfiguration(config *types.SourceConfiguration) []any {
 	if config == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"authentication_configuration": flattenServiceAuthenticationConfiguration(config.AuthenticationConfiguration),
 		"auto_deployments_enabled":     aws.ToBool(config.AutoDeploymentsEnabled),
 		"code_repository":              flattenServiceCodeRepository(config.CodeRepository),
 		"image_repository":             flattenServiceImageRepository(config.ImageRepository),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenServiceAuthenticationConfiguration(config *types.AuthenticationConfiguration) []interface{} {
+func flattenServiceAuthenticationConfiguration(config *types.AuthenticationConfiguration) []any {
 	if config == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"access_role_arn": aws.ToString(config.AccessRoleArn),
 		"connection_arn":  aws.ToString(config.ConnectionArn),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenServiceImageConfiguration(config *types.ImageConfiguration) []interface{} {
+func flattenServiceImageConfiguration(config *types.ImageConfiguration) []any {
 	if config == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		names.AttrPort:                  aws.ToString(config.Port),
 		"runtime_environment_secrets":   config.RuntimeEnvironmentSecrets,
 		"runtime_environment_variables": config.RuntimeEnvironmentVariables,
 		"start_command":                 aws.ToString(config.StartCommand),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenServiceImageRepository(r *types.ImageRepository) []interface{} {
+func flattenServiceImageRepository(r *types.ImageRepository) []any {
 	if r == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"image_configuration":   flattenServiceImageConfiguration(r.ImageConfiguration),
 		"image_identifier":      aws.ToString(r.ImageIdentifier),
 		"image_repository_type": string(r.ImageRepositoryType),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }

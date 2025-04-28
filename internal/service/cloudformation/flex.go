@@ -8,7 +8,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
 )
 
-func expandParameters(params map[string]interface{}) []awstypes.Parameter {
+func expandParameters(params map[string]any) []awstypes.Parameter {
 	var cfParams []awstypes.Parameter
 	for k, v := range params {
 		cfParams = append(cfParams, awstypes.Parameter{
@@ -20,8 +20,8 @@ func expandParameters(params map[string]interface{}) []awstypes.Parameter {
 	return cfParams
 }
 
-func flattenAllParameters(cfParams []awstypes.Parameter) map[string]interface{} {
-	params := make(map[string]interface{}, len(cfParams))
+func flattenAllParameters(cfParams []awstypes.Parameter) map[string]any {
+	params := make(map[string]any, len(cfParams))
 	for _, p := range cfParams {
 		params[aws.ToString(p.ParameterKey)] = aws.ToString(p.ParameterValue)
 	}
@@ -40,8 +40,8 @@ func flattenOutputs(cfOutputs []awstypes.Output) map[string]string {
 // *cloudformation.Parameters and only returning existing
 // parameters to avoid clash with default values
 func flattenParameters(cfParams []awstypes.Parameter,
-	originalParams map[string]interface{}) map[string]interface{} {
-	params := make(map[string]interface{}, len(cfParams))
+	originalParams map[string]any) map[string]any {
+	params := make(map[string]any, len(cfParams))
 	for _, p := range cfParams {
 		_, isConfigured := originalParams[aws.ToString(p.ParameterKey)]
 		if isConfigured {

@@ -30,7 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Framework")
+// @FrameworkResource("aws_auditmanager_framework", name="Framework")
 // @Tags(identifierAttribute="arn")
 func newResourceFramework(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceFramework{}, nil
@@ -42,10 +42,7 @@ const (
 
 type resourceFramework struct {
 	framework.ResourceWithConfigure
-}
-
-func (r *resourceFramework) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_auditmanager_framework"
+	framework.WithImportByID
 }
 
 func (r *resourceFramework) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -272,10 +269,6 @@ func (r *resourceFramework) Delete(ctx context.Context, req resource.DeleteReque
 	}
 }
 
-func (r *resourceFramework) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-}
-
 func (r *resourceFramework) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
 	if !req.State.Raw.IsNull() && !req.Plan.Raw.IsNull() {
 		var plan resourceFrameworkData
@@ -300,8 +293,6 @@ func (r *resourceFramework) ModifyPlan(ctx context.Context, req resource.ModifyP
 			}
 		}
 	}
-
-	r.SetTagsAll(ctx, req, resp)
 }
 
 func FindFrameworkByID(ctx context.Context, conn *auditmanager.Client, id string) (*awstypes.Framework, error) {

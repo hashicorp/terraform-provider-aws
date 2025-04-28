@@ -1,0 +1,71 @@
+```release-note:breaking-change
+provider: The `endpoints.opsworks` configuration argument has been removed
+```
+
+```release-note:breaking-change
+provider: As the AWS OpsWorks Stacks service has reached [End Of Life](https://docs.aws.amazon.com/opsworks/latest/userguide/stacks-eol-faqs.html), the `aws_opsworks_application` resource has been removed
+```
+
+```release-note:breaking-change
+provider: As the AWS OpsWorks Stacks service has reached [End Of Life](https://docs.aws.amazon.com/opsworks/latest/userguide/stacks-eol-faqs.html), the `aws_opsworks_custom_layer` resource has been removed
+```
+
+```release-note:breaking-change
+provider: As the AWS OpsWorks Stacks service has reached [End Of Life](https://docs.aws.amazon.com/opsworks/latest/userguide/stacks-eol-faqs.html), the `aws_opsworks_ecs_cluster_layer` resource has been removed
+```
+
+```release-note:breaking-change
+provider: As the AWS OpsWorks Stacks service has reached [End Of Life](https://docs.aws.amazon.com/opsworks/latest/userguide/stacks-eol-faqs.html), the `aws_opsworks_ganglia_layer` resource has been removed
+```
+
+```release-note:breaking-change
+provider: As the AWS OpsWorks Stacks service has reached [End Of Life](https://docs.aws.amazon.com/opsworks/latest/userguide/stacks-eol-faqs.html), the `aws_opsworks_haproxy_layer` resource has been removed
+```
+
+```release-note:breaking-change
+provider: As the AWS OpsWorks Stacks service has reached [End Of Life](https://docs.aws.amazon.com/opsworks/latest/userguide/stacks-eol-faqs.html), the `aws_opsworks_instance` resource has been removed
+```
+
+```release-note:breaking-change
+provider: As the AWS OpsWorks Stacks service has reached [End Of Life](https://docs.aws.amazon.com/opsworks/latest/userguide/stacks-eol-faqs.html), the `aws_opsworks_java_app_layer` resource has been removed
+```
+
+```release-note:breaking-change
+provider: As the AWS OpsWorks Stacks service has reached [End Of Life](https://docs.aws.amazon.com/opsworks/latest/userguide/stacks-eol-faqs.html), the `aws_opsworks_memcached_layer` resource has been removed
+```
+
+```release-note:breaking-change
+provider: As the AWS OpsWorks Stacks service has reached [End Of Life](https://docs.aws.amazon.com/opsworks/latest/userguide/stacks-eol-faqs.html), the `aws_opsworks_mysql_layer` resource has been removed
+```
+
+```release-note:breaking-change
+provider: As the AWS OpsWorks Stacks service has reached [End Of Life](https://docs.aws.amazon.com/opsworks/latest/userguide/stacks-eol-faqs.html), the `aws_opsworks_nodejs_app_layer` resource has been removed
+```
+
+```release-note:breaking-change
+provider: As the AWS OpsWorks Stacks service has reached [End Of Life](https://docs.aws.amazon.com/opsworks/latest/userguide/stacks-eol-faqs.html), the `aws_opsworks_permission` resource has been removed
+```
+
+```release-note:breaking-change
+provider: As the AWS OpsWorks Stacks service has reached [End Of Life](https://docs.aws.amazon.com/opsworks/latest/userguide/stacks-eol-faqs.html), the `aws_opsworks_php_app_layer` resource has been removed
+```
+
+```release-note:breaking-change
+provider: As the AWS OpsWorks Stacks service has reached [End Of Life](https://docs.aws.amazon.com/opsworks/latest/userguide/stacks-eol-faqs.html), the `aws_opsworks_rails_app_layer` resource has been removed
+```
+
+```release-note:breaking-change
+provider: As the AWS OpsWorks Stacks service has reached [End Of Life](https://docs.aws.amazon.com/opsworks/latest/userguide/stacks-eol-faqs.html), the `aws_opsworks_rds_db_instance` resource has been removed
+```
+
+```release-note:breaking-change
+provider: As the AWS OpsWorks Stacks service has reached [End Of Life](https://docs.aws.amazon.com/opsworks/latest/userguide/stacks-eol-faqs.html), the `aws_opsworks_stack` resource has been removed
+```
+
+```release-note:breaking-change
+provider: As the AWS OpsWorks Stacks service has reached [End Of Life](https://docs.aws.amazon.com/opsworks/latest/userguide/stacks-eol-faqs.html), the `aws_opsworks_static_web_layer` resource has been removed
+```
+
+```release-note:breaking-change
+provider: As the AWS OpsWorks Stacks service has reached [End Of Life](https://docs.aws.amazon.com/opsworks/latest/userguide/stacks-eol-faqs.html), the `aws_opsworks_user_profile` resource has been removed
+```

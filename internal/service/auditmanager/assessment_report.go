@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/auditmanager"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/auditmanager/types"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -28,7 +27,7 @@ import (
 
 const reportCompletionTimeout = 5 * time.Minute
 
-// @FrameworkResource
+// @FrameworkResource("aws_auditmanager_assessment_report", name="Assessment Report")
 func newResourceAssessmentReport(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceAssessmentReport{}, nil
 }
@@ -39,10 +38,7 @@ const (
 
 type resourceAssessmentReport struct {
 	framework.ResourceWithConfigure
-}
-
-func (r *resourceAssessmentReport) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_auditmanager_assessment_report"
+	framework.WithImportByID
 }
 
 func (r *resourceAssessmentReport) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -187,10 +183,6 @@ func (r *resourceAssessmentReport) Delete(ctx context.Context, req resource.Dele
 			err.Error(),
 		)
 	}
-}
-
-func (r *resourceAssessmentReport) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func FindAssessmentReportByID(ctx context.Context, conn *auditmanager.Client, id string) (*awstypes.AssessmentReportMetadata, error) {

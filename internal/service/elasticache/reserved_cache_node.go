@@ -13,7 +13,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
@@ -31,7 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource("aws_elasticache_reserved_cache_node")
+// @FrameworkResource("aws_elasticache_reserved_cache_node", name="Reserved Cache Node")
 // @Tags(identifierAttribute="arn")
 // @Testing(tagsTests=false)
 func newResourceReservedCacheNode(context.Context) (resource.ResourceWithConfigure, error) {
@@ -47,11 +46,8 @@ type resourceReservedCacheNode struct {
 	framework.ResourceWithConfigure
 	framework.WithNoOpUpdate[resourceReservedCacheNodeModel]
 	framework.WithNoOpDelete
+	framework.WithImportByID
 	framework.WithTimeouts
-}
-
-func (r *resourceReservedCacheNode) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_elasticache_reserved_cache_node"
 }
 
 func (r *resourceReservedCacheNode) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -207,14 +203,6 @@ func (r *resourceReservedCacheNode) Read(ctx context.Context, request resource.R
 	data.Duration = fwtypes.RFC3339DurationTimeDurationValue(duration)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
-}
-
-func (r *resourceReservedCacheNode) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), request, response)
-}
-
-func (r *resourceReservedCacheNode) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func (r *resourceReservedCacheNode) flexOpts() []flex.AutoFlexOptionsFunc {

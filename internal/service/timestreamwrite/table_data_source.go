@@ -18,17 +18,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Table")
+// @FrameworkDataSource("aws_timestreamwrite_table", name="Table")
 func newDataSourceTable(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceTable{}, nil
 }
 
 type dataSourceTable struct {
 	framework.DataSourceWithConfigure
-}
-
-func (d *dataSourceTable) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
-	response.TypeName = "aws_timestreamwrite_table"
 }
 
 func (d *dataSourceTable) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {

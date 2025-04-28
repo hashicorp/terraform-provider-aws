@@ -4,6 +4,7 @@ package opensearchserverless
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
@@ -17,20 +18,27 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newDataSourceAccessPolicy,
-			Name:    "Access Policy",
+			Factory:  newDataSourceAccessPolicy,
+			TypeName: "aws_opensearchserverless_access_policy",
+			Name:     "Access Policy",
 		},
 		{
-			Factory: newDataSourceCollection,
-			Name:    "Collection",
+			Factory:  newDataSourceCollection,
+			TypeName: "aws_opensearchserverless_collection",
+			Name:     "Collection",
+			Tags: unique.Make(types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
 		},
 		{
-			Factory: newDataSourceLifecyclePolicy,
-			Name:    "Lifecycle Policy",
+			Factory:  newDataSourceLifecyclePolicy,
+			TypeName: "aws_opensearchserverless_lifecycle_policy",
+			Name:     "Lifecycle Policy",
 		},
 		{
-			Factory: newDataSourceSecurityConfig,
-			Name:    "Security Config",
+			Factory:  newDataSourceSecurityConfig,
+			TypeName: "aws_opensearchserverless_security_config",
+			Name:     "Security Config",
 		},
 	}
 }
@@ -38,31 +46,37 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newResourceAccessPolicy,
-			Name:    "Access Policy",
+			Factory:  newResourceAccessPolicy,
+			TypeName: "aws_opensearchserverless_access_policy",
+			Name:     "Access Policy",
 		},
 		{
-			Factory: newResourceCollection,
-			Name:    "Collection",
-			Tags: &types.ServicePackageResourceTags{
+			Factory:  newResourceCollection,
+			TypeName: "aws_opensearchserverless_collection",
+			Name:     "Collection",
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 		{
-			Factory: newResourceLifecyclePolicy,
-			Name:    "Lifecycle Policy",
+			Factory:  newResourceLifecyclePolicy,
+			TypeName: "aws_opensearchserverless_lifecycle_policy",
+			Name:     "Lifecycle Policy",
 		},
 		{
-			Factory: newResourceSecurityConfig,
-			Name:    "Security Config",
+			Factory:  newResourceSecurityConfig,
+			TypeName: "aws_opensearchserverless_security_config",
+			Name:     "Security Config",
 		},
 		{
-			Factory: newResourceSecurityPolicy,
-			Name:    "Security Policy",
+			Factory:  newResourceSecurityPolicy,
+			TypeName: "aws_opensearchserverless_security_policy",
+			Name:     "Security Policy",
 		},
 		{
-			Factory: newVPCEndpointResource,
-			Name:    "VPC Endpoint",
+			Factory:  newVPCEndpointResource,
+			TypeName: "aws_opensearchserverless_vpc_endpoint",
+			Name:     "VPC Endpoint",
 		},
 	}
 }
@@ -93,11 +107,31 @@ func (p *servicePackage) ServicePackageName() string {
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*opensearchserverless.Client, error) {
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
-
-	return opensearchserverless.NewFromConfig(cfg,
+	optFns := []func(*opensearchserverless.Options){
 		opensearchserverless.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
-	), nil
+		withExtraOptions(ctx, p, config),
+	}
+
+	return opensearchserverless.NewFromConfig(cfg, optFns...), nil
+}
+
+// withExtraOptions returns a functional option that allows this service package to specify extra API client options.
+// This option is always called after any generated options.
+func withExtraOptions(ctx context.Context, sp conns.ServicePackage, config map[string]any) func(*opensearchserverless.Options) {
+	if v, ok := sp.(interface {
+		withExtraOptions(context.Context, map[string]any) []func(*opensearchserverless.Options)
+	}); ok {
+		optFns := v.withExtraOptions(ctx, config)
+
+		return func(o *opensearchserverless.Options) {
+			for _, optFn := range optFns {
+				optFn(o)
+			}
+		}
+	}
+
+	return func(*opensearchserverless.Options) {}
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

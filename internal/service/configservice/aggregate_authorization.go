@@ -55,12 +55,10 @@ func resourceAggregateAuthorization() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceAggregateAuthorizationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAggregateAuthorizationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
@@ -83,7 +81,7 @@ func resourceAggregateAuthorizationCreate(ctx context.Context, d *schema.Resourc
 	return append(diags, resourceAggregateAuthorizationRead(ctx, d, meta)...)
 }
 
-func resourceAggregateAuthorizationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAggregateAuthorizationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
@@ -111,7 +109,7 @@ func resourceAggregateAuthorizationRead(ctx context.Context, d *schema.ResourceD
 	return diags
 }
 
-func resourceAggregateAuthorizationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAggregateAuthorizationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Tags only.
@@ -119,7 +117,7 @@ func resourceAggregateAuthorizationUpdate(ctx context.Context, d *schema.Resourc
 	return append(diags, resourceAggregateAuthorizationRead(ctx, d, meta)...)
 }
 
-func resourceAggregateAuthorizationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAggregateAuthorizationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
@@ -129,10 +127,11 @@ func resourceAggregateAuthorizationDelete(ctx context.Context, d *schema.Resourc
 	}
 
 	log.Printf("[DEBUG] Deleting ConfigService Aggregate Authorization: %s", d.Id())
-	_, err = conn.DeleteAggregationAuthorization(ctx, &configservice.DeleteAggregationAuthorizationInput{
+	input := configservice.DeleteAggregationAuthorizationInput{
 		AuthorizedAccountId: aws.String(accountID),
 		AuthorizedAwsRegion: aws.String(region),
-	})
+	}
+	_, err = conn.DeleteAggregationAuthorization(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting ConfigService Aggregate Authorization (%s): %s", d.Id(), err)

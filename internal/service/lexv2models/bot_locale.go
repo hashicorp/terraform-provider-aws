@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -33,7 +32,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Bot Locale")
+// @FrameworkResource("aws_lexv2models_bot_locale", name="Bot Locale")
 func newResourceBotLocale(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceBotLocale{}
 
@@ -50,11 +49,8 @@ const (
 
 type resourceBotLocale struct {
 	framework.ResourceWithConfigure
+	framework.WithImportByID
 	framework.WithTimeouts
-}
-
-func (r *resourceBotLocale) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_lexv2models_bot_locale"
 }
 
 func (r *resourceBotLocale) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -360,10 +356,6 @@ func (r *resourceBotLocale) Delete(ctx context.Context, req resource.DeleteReque
 	}
 }
 
-func (r *resourceBotLocale) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-}
-
 func waitBotLocaleCreated(ctx context.Context, conn *lexmodelsv2.Client, id string, timeout time.Duration) (*lexmodelsv2.DescribeBotLocaleOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.BotLocaleStatusCreating),
@@ -418,7 +410,7 @@ func waitBotLocaleDeleted(ctx context.Context, conn *lexmodelsv2.Client, id stri
 }
 
 func statusBotLocale(ctx context.Context, conn *lexmodelsv2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := FindBotLocaleByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil

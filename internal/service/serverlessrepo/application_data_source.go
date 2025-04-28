@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_serverlessapplicationrepository_application")
+// @SDKDataSource("aws_serverlessapplicationrepository_application", name="Application")
 func DataSourceApplication() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceApplicationRead,
@@ -54,7 +54,7 @@ func DataSourceApplication() *schema.Resource {
 	}
 }
 
-func dataSourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServerlessRepoClient(ctx)
 

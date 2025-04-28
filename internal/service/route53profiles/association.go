@@ -15,7 +15,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53profiles/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -60,10 +59,6 @@ type resourceAssociation struct {
 	framework.WithNoOpUpdate[associationResourceModel]
 	framework.WithTimeouts
 	framework.WithImportByID
-}
-
-func (r *resourceAssociation) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_route53profiles_association"
 }
 
 func (r *resourceAssociation) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -248,10 +243,6 @@ func (r *resourceAssociation) Delete(ctx context.Context, req resource.DeleteReq
 	}
 }
 
-func (r *resourceAssociation) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-}
-
 func waitAssociationCreated(ctx context.Context, conn *route53profiles.Client, id string, timeout time.Duration) (*awstypes.ProfileAssociation, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.ProfileStatusCreating),
@@ -287,7 +278,7 @@ func waitAssociationDeleted(ctx context.Context, conn *route53profiles.Client, i
 }
 
 func statusAssociation(ctx context.Context, conn *route53profiles.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := findAssociationByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -299,10 +290,6 @@ func statusAssociation(ctx context.Context, conn *route53profiles.Client, id str
 
 		return out, string(out.Status), nil
 	}
-}
-
-func (r *resourceAssociation) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, req, resp)
 }
 
 func findAssociationByID(ctx context.Context, conn *route53profiles.Client, id string) (*awstypes.ProfileAssociation, error) {

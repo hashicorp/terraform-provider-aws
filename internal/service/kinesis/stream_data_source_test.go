@@ -22,6 +22,7 @@ func TestAccKinesisStreamDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_kinesis_stream.test"
+	resourceName := "aws_kinesis_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -31,24 +32,27 @@ func TestAccKinesisStreamDataSource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStreamDataSourceConfig_basic(rName, 2),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrARN),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					// resource.TestCheckResourceAttrPair(dataSourceName, "creation_timestamp", resourceName, "creation_timestamp"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "creation_timestamp"),
-					resource.TestCheckResourceAttr(dataSourceName, "closed_shards.#", "0"),
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(dataSourceName, "open_shards.#", "2"),
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrRetentionPeriod, "72"),
-					resource.TestCheckResourceAttr(dataSourceName, "shard_level_metrics.#", "2"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "closed_shards.#", resourceName, "closed_shards.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "encryption_type", resourceName, "encryption_type"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrKMSKeyID, resourceName, names.AttrKMSKeyID),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(dataSourceName, "open_shards.#", resourceName, "shard_count"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrRetentionPeriod, resourceName, names.AttrRetentionPeriod),
+					resource.TestCheckResourceAttrPair(dataSourceName, "shard_level_metrics.#", resourceName, "shard_level_metrics.#"),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrStatus, "ACTIVE"),
-					resource.TestCheckResourceAttr(dataSourceName, "stream_mode_details.0.stream_mode", "PROVISIONED"),
-					resource.TestCheckResourceAttr(dataSourceName, "tags.Name", rName),
+					resource.TestCheckResourceAttrPair(dataSourceName, "stream_mode_details.0.stream_mode", resourceName, "stream_mode_details.0.stream_mode"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "tags.Name", resourceName, "tags.Name"),
 				),
 			},
 			{
 				Config: testAccStreamDataSourceConfig_basic(rName, 3),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "closed_shards.#", "4"),
-					resource.TestCheckResourceAttr(dataSourceName, "open_shards.#", "3"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "open_shards.#", resourceName, "shard_count"),
 				),
 			},
 		},
@@ -59,6 +63,7 @@ func TestAccKinesisStreamDataSource_encryption(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_kinesis_stream.test"
+	resourceName := "aws_kinesis_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -68,16 +73,17 @@ func TestAccKinesisStreamDataSource_encryption(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStreamDataSourceConfig_encryption(rName, 2),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrARN),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					// resource.TestCheckResourceAttrPair(dataSourceName, "creation_timestamp", resourceName, "creation_timestamp"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "creation_timestamp"),
 					resource.TestCheckResourceAttr(dataSourceName, "closed_shards.#", "0"),
-					resource.TestCheckResourceAttr(dataSourceName, "encryption_type", "KMS"),
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrKMSKeyID, "aws_kms_key.test", names.AttrID),
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(dataSourceName, "open_shards.#", "2"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "encryption_type", resourceName, "encryption_type"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrKMSKeyID, resourceName, names.AttrKMSKeyID),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(dataSourceName, "open_shards.#", resourceName, "shard_count"),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrStatus, "ACTIVE"),
-					resource.TestCheckResourceAttr(dataSourceName, "stream_mode_details.0.stream_mode", "PROVISIONED"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "stream_mode_details.0.stream_mode", resourceName, "stream_mode_details.0.stream_mode"),
 				),
 			},
 		},

@@ -41,8 +41,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/{{ .SDKPackage }}"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/{{ .SDKPackage }}/types"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/{{ .SDKPackage }}"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -81,9 +79,6 @@ type dataSource{{ .DataSource }} struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *dataSource{{ .DataSource }}) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "{{ .ProviderResourceName }}"
-}
 {{ if .IncludeComments }}
 // TIP: ==== SCHEMA ====
 // In the schema, add each of the arguments and attributes in snake
@@ -112,18 +107,18 @@ func (d *dataSource{{ .DataSource }}) Metadata(_ context.Context, req datasource
 func (d *dataSource{{ .DataSource }}) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttributeComputedOnly(),
-			"description": schema.StringAttribute{
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			names.AttrDescription: schema.StringAttribute{
 				Computed: true,
 			},
-			"id": framework.IDAttribute(),
-			"name": schema.StringAttribute{
+			names.AttrID: framework.IDAttribute(),
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 			},
 			{{- if .IncludeTags }}
 			names.AttrTags: tftags.TagsAttributeComputedOnly(),
 			{{- end }}
-			"type": schema.StringAttribute{
+			names.AttrType: schema.StringAttribute{
 				Computed: true,
 			},
 		},

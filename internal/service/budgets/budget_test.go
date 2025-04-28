@@ -809,18 +809,18 @@ func generateStartTimes(resourceName, amount string, now time.Time) (string, []r
 	}
 
 	configBuilder := strings.Builder{}
-	for i := 0; i < len(startTimes); i++ {
-		configBuilder.WriteString(fmt.Sprintf(`
+	for i := range startTimes {
+		fmt.Fprintf(&configBuilder, `
 planned_limit {
   start_time = %[1]q
   amount     = %[2]q
   unit       = "USD"
 }
-`, tfbudgets.TimePeriodTimestampToString(&startTimes[i]), amount))
+`, tfbudgets.TimePeriodTimestampToString(&startTimes[i]), amount)
 	}
 
 	testCheckFuncs := make([]resource.TestCheckFunc, len(startTimes))
-	for i := 0; i < len(startTimes); i++ {
+	for i := range startTimes {
 		testCheckFuncs[i] = resource.TestCheckTypeSetElemNestedAttrs(resourceName, "planned_limit.*", map[string]string{
 			names.AttrStartTime: tfbudgets.TimePeriodTimestampToString(&startTimes[i]),
 			"amount":            amount,

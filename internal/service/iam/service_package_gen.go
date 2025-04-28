@@ -4,6 +4,7 @@ package iam
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
@@ -21,32 +22,39 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newOrganizationsFeaturesResource,
-			Name:    "Organizations Features",
+			Factory:  newResourceGroupPoliciesExclusive,
+			TypeName: "aws_iam_group_policies_exclusive",
+			Name:     "Group Policies Exclusive",
 		},
 		{
-			Factory: newResourceGroupPoliciesExclusive,
-			Name:    "Group Policies Exclusive",
+			Factory:  newResourceGroupPolicyAttachmentsExclusive,
+			TypeName: "aws_iam_group_policy_attachments_exclusive",
+			Name:     "Group Policy Attachments Exclusive",
 		},
 		{
-			Factory: newResourceGroupPolicyAttachmentsExclusive,
-			Name:    "Group Policy Attachments Exclusive",
+			Factory:  newOrganizationsFeaturesResource,
+			TypeName: "aws_iam_organizations_features",
+			Name:     "Organizations Features",
 		},
 		{
-			Factory: newResourceRolePoliciesExclusive,
-			Name:    "Role Policies Exclusive",
+			Factory:  newResourceRolePoliciesExclusive,
+			TypeName: "aws_iam_role_policies_exclusive",
+			Name:     "Role Policies Exclusive",
 		},
 		{
-			Factory: newResourceRolePolicyAttachmentsExclusive,
-			Name:    "Role Policy Attachments Exclusive",
+			Factory:  newResourceRolePolicyAttachmentsExclusive,
+			TypeName: "aws_iam_role_policy_attachments_exclusive",
+			Name:     "Role Policy Attachments Exclusive",
 		},
 		{
-			Factory: newResourceUserPoliciesExclusive,
-			Name:    "User Policies Exclusive",
+			Factory:  newResourceUserPoliciesExclusive,
+			TypeName: "aws_iam_user_policies_exclusive",
+			Name:     "User Policies Exclusive",
 		},
 		{
-			Factory: newResourceUserPolicyAttachmentsExclusive,
-			Name:    "User Policy Attachments Exclusive",
+			Factory:  newResourceUserPolicyAttachmentsExclusive,
+			TypeName: "aws_iam_user_policy_attachments_exclusive",
+			Name:     "User Policy Attachments Exclusive",
 		},
 	}
 }
@@ -82,13 +90,13 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Factory:  dataSourceOpenIDConnectProvider,
 			TypeName: "aws_iam_openid_connect_provider",
 			Name:     "OIDC Provider",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags:     unique.Make(types.ServicePackageResourceTags{}),
 		},
 		{
 			Factory:  dataSourcePolicy,
 			TypeName: "aws_iam_policy",
 			Name:     "Policy",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags:     unique.Make(types.ServicePackageResourceTags{}),
 		},
 		{
 			Factory:  dataSourcePolicyDocument,
@@ -104,7 +112,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Factory:  dataSourceRole,
 			TypeName: "aws_iam_role",
 			Name:     "Role",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags:     unique.Make(types.ServicePackageResourceTags{}),
 		},
 		{
 			Factory:  dataSourceRoles,
@@ -130,7 +138,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Factory:  dataSourceUser,
 			TypeName: "aws_iam_user",
 			Name:     "User",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags:     unique.Make(types.ServicePackageResourceTags{}),
 		},
 		{
 			Factory:  dataSourceUserSSHKey,
@@ -186,28 +194,28 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceInstanceProfile,
 			TypeName: "aws_iam_instance_profile",
 			Name:     "Instance Profile",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 				ResourceType:        "InstanceProfile",
-			},
+			}),
 		},
 		{
 			Factory:  resourceOpenIDConnectProvider,
 			TypeName: "aws_iam_openid_connect_provider",
 			Name:     "OIDC Provider",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 				ResourceType:        "OIDCProvider",
-			},
+			}),
 		},
 		{
 			Factory:  resourcePolicy,
 			TypeName: "aws_iam_policy",
 			Name:     "Policy",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 				ResourceType:        "Policy",
-			},
+			}),
 		},
 		{
 			Factory:  resourcePolicyAttachment,
@@ -218,10 +226,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceRole,
 			TypeName: "aws_iam_role",
 			Name:     "Role",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrName,
 				ResourceType:        "Role",
-			},
+			}),
 		},
 		{
 			Factory:  resourceRolePolicy,
@@ -237,10 +245,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceSAMLProvider,
 			TypeName: "aws_iam_saml_provider",
 			Name:     "SAML Provider",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 				ResourceType:        "SAMLProvider",
-			},
+			}),
 		},
 		{
 			Factory:  resourceSecurityTokenServicePreferences,
@@ -251,19 +259,19 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceServerCertificate,
 			TypeName: "aws_iam_server_certificate",
 			Name:     "Server Certificate",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrName,
 				ResourceType:        "ServerCertificate",
-			},
+			}),
 		},
 		{
 			Factory:  resourceServiceLinkedRole,
 			TypeName: "aws_iam_service_linked_role",
 			Name:     "Service Linked Role",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 				ResourceType:        "ServiceLinkedRole",
-			},
+			}),
 		},
 		{
 			Factory:  resourceServiceSpecificCredential,
@@ -279,10 +287,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceUser,
 			TypeName: "aws_iam_user",
 			Name:     "User",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrName,
 				ResourceType:        "User",
-			},
+			}),
 		},
 		{
 			Factory:  resourceUserGroupMembership,
@@ -313,10 +321,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceVirtualMFADevice,
 			TypeName: "aws_iam_virtual_mfa_device",
 			Name:     "Virtual MFA Device",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 				ResourceType:        "VirtualMFADevice",
-			},
+			}),
 		},
 	}
 }
@@ -328,11 +336,31 @@ func (p *servicePackage) ServicePackageName() string {
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*iam.Client, error) {
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
-
-	return iam.NewFromConfig(cfg,
+	optFns := []func(*iam.Options){
 		iam.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
-	), nil
+		withExtraOptions(ctx, p, config),
+	}
+
+	return iam.NewFromConfig(cfg, optFns...), nil
+}
+
+// withExtraOptions returns a functional option that allows this service package to specify extra API client options.
+// This option is always called after any generated options.
+func withExtraOptions(ctx context.Context, sp conns.ServicePackage, config map[string]any) func(*iam.Options) {
+	if v, ok := sp.(interface {
+		withExtraOptions(context.Context, map[string]any) []func(*iam.Options)
+	}); ok {
+		optFns := v.withExtraOptions(ctx, config)
+
+		return func(o *iam.Options) {
+			for _, optFn := range optFns {
+				optFn(o)
+			}
+		}
+	}
+
+	return func(*iam.Options) {}
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

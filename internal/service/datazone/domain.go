@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
@@ -37,8 +36,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
-// @FrameworkResource(name="Domain")
+// @FrameworkResource( "aws_datazone_domain", name="Domain")
 // @Tags(identifierAttribute="arn")
 func newResourceDomain(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceDomain{}
@@ -56,11 +54,8 @@ const (
 
 type resourceDomain struct {
 	framework.ResourceWithConfigure
+	framework.WithImportByID
 	framework.WithTimeouts
-}
-
-func (r *resourceDomain) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_datazone_domain"
 }
 
 func (r *resourceDomain) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -175,7 +170,7 @@ func (r *resourceDomain) Create(ctx context.Context, req resource.CreateRequest,
 		in.SingleSignOn = expandSingleSignOn(tfList)
 	}
 
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeContains(ctx, CreateDomainRetryTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeContains(ctx, CreateDomainRetryTimeout, func() (any, error) {
 		return conn.CreateDomain(ctx, in)
 	}, ErrorCodeAccessDenied)
 
@@ -361,14 +356,6 @@ func (r *resourceDomain) Delete(ctx context.Context, req resource.DeleteRequest,
 	}
 }
 
-func (r *resourceDomain) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-}
-
-func (r *resourceDomain) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, req, resp)
-}
-
 func waitDomainCreated(ctx context.Context, conn *datazone.Client, id string, timeout time.Duration) (*datazone.GetDomainOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DomainStatusCreating),
@@ -402,7 +389,7 @@ func waitDomainDeleted(ctx context.Context, conn *datazone.Client, id string, ti
 }
 
 func statusDomain(ctx context.Context, conn *datazone.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := findDomainByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil

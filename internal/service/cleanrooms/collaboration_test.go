@@ -294,9 +294,10 @@ func testAccCheckCollaborationDestroy(ctx context.Context) resource.TestCheckFun
 				continue
 			}
 
-			_, err := conn.GetCollaboration(ctx, &cleanrooms.GetCollaborationInput{
+			input := cleanrooms.GetCollaborationInput{
 				CollaborationIdentifier: aws.String(rs.Primary.ID),
-			})
+			}
+			_, err := conn.GetCollaboration(ctx, &input)
 			if err != nil {
 				// We throw access denied exceptions for Not Found Collaboration since they are cross account resources
 				var nfe *types.AccessDeniedException
@@ -325,9 +326,10 @@ func testAccCheckCollaborationExists(ctx context.Context, name string, collabora
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CleanRoomsClient(ctx)
-		resp, err := conn.GetCollaboration(ctx, &cleanrooms.GetCollaborationInput{
+		input := cleanrooms.GetCollaborationInput{
 			CollaborationIdentifier: aws.String(rs.Primary.ID),
-		})
+		}
+		resp, err := conn.GetCollaboration(ctx, &input)
 
 		if err != nil {
 			return create.Error(names.CleanRooms, create.ErrActionCheckingExistence, tfcleanrooms.ResNameCollaboration, rs.Primary.ID, err)
@@ -392,9 +394,10 @@ func testCheckCreatorMember(ctx context.Context, name string) resource.TestCheck
 		if !ok {
 			return fmt.Errorf("Collaboration: %s not found in resources", name)
 		}
-		membersOut, err := conn.ListMembers(ctx, &cleanrooms.ListMembersInput{
+		input := cleanrooms.ListMembersInput{
 			CollaborationIdentifier: &collaboration.Primary.ID,
-		})
+		}
+		membersOut, err := conn.ListMembers(ctx, &input)
 		if err != nil {
 			return err
 		}
@@ -427,9 +430,10 @@ func testAccCollaborationTags(ctx context.Context, name string, expectedTags map
 		if !ok {
 			return fmt.Errorf("Collaboration: %s not found in resources", name)
 		}
-		tagsOut, err := conn.ListTagsForResource(ctx, &cleanrooms.ListTagsForResourceInput{
+		input := cleanrooms.ListTagsForResourceInput{
 			ResourceArn: aws.String(collaboration.Primary.Attributes[names.AttrARN]),
-		})
+		}
+		tagsOut, err := conn.ListTagsForResource(ctx, &input)
 		if err != nil {
 			return err
 		}

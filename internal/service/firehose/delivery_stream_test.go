@@ -24,6 +24,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+func init() {
+	acctest.RegisterServiceErrorCheckFunc(names.FirehoseServiceID, testAccErrorCheckSkip)
+}
+
+func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
+	return acctest.ErrorCheckSkipMessagesContaining(t,
+		"Read from timestamp feature is not currently available",
+	)
+}
+
 func TestAccFirehoseDeliveryStream_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var stream types.DeliveryStreamDescription
@@ -40,7 +50,7 @@ func TestAccFirehoseDeliveryStream_basic(t *testing.T) {
 				Config: testAccDeliveryStreamConfig_extendedS3basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "firehose", "deliverystream/{name}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDestination, "extended_s3"),
 					resource.TestCheckResourceAttrSet(resourceName, "destination_id"),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_configuration.#", "0"),
@@ -81,6 +91,7 @@ func TestAccFirehoseDeliveryStream_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.s3_backup_mode", "Disabled"),
 					resource.TestCheckResourceAttr(resourceName, "http_endpoint_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.#", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "kinesis_source_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "msk_source_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -995,6 +1006,42 @@ func TestAccFirehoseDeliveryStream_ExtendedS3_mskClusterSource(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "msk_source_configuration.0.authentication_configuration.0.role_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "msk_source_configuration.0.msk_cluster_arn"),
 					resource.TestCheckResourceAttr(resourceName, "msk_source_configuration.0.topic_name", "test"),
+					resource.TestCheckResourceAttr(resourceName, "msk_source_configuration.0.read_from_timestamp", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccFirehoseDeliveryStream_ExtendedS3_readFromTimestamp(t *testing.T) {
+	ctx := acctest.Context(t)
+	var stream types.DeliveryStreamDescription
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_kinesis_firehose_delivery_stream.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryStreamDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDeliveryStreamConfig_readFromTimestamp(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "kinesis_source_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "msk_source_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "msk_source_configuration.0.authentication_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "msk_source_configuration.0.authentication_configuration.0.connectivity", "PRIVATE"),
+					resource.TestCheckResourceAttrSet(resourceName, "msk_source_configuration.0.authentication_configuration.0.role_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "msk_source_configuration.0.msk_cluster_arn"),
+					resource.TestCheckResourceAttr(resourceName, "msk_source_configuration.0.topic_name", "test"),
+					resource.TestCheckResourceAttr(resourceName, "msk_source_configuration.0.read_from_timestamp", "2025-03-11T14:30:00Z"),
 				),
 			},
 			{
@@ -1245,7 +1292,7 @@ func TestAccFirehoseDeliveryStream_snowflakeUpdates(t *testing.T) {
 				Config: testAccDeliveryStreamConfig_snowflakeBasic(rName, key),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "firehose", "deliverystream/{name}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDestination, "snowflake"),
 					resource.TestCheckResourceAttrSet(resourceName, "destination_id"),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_configuration.#", "0"),
@@ -1314,7 +1361,7 @@ func TestAccFirehoseDeliveryStream_snowflakeUpdates(t *testing.T) {
 				Config: testAccDeliveryStreamConfig_snowflakeUpdate(rName, key),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "firehose", "deliverystream/{name}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDestination, "snowflake"),
 					resource.TestCheckResourceAttrSet(resourceName, "destination_id"),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_configuration.#", "0"),
@@ -1390,7 +1437,7 @@ func TestAccFirehoseDeliveryStream_snowflakeUpdates(t *testing.T) {
 				Config: testAccDeliveryStreamConfig_snowflakeUpdateSecretsManager(rName, key),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "firehose", "deliverystream/{name}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDestination, "snowflake"),
 					resource.TestCheckResourceAttrSet(resourceName, "destination_id"),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_configuration.#", "0"),
@@ -2249,7 +2296,7 @@ func TestAccFirehoseDeliveryStream_openSearchServerlessUpdates(t *testing.T) {
 				Config: testAccDeliveryStreamConfig_openSearchServerlessBasic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "firehose", "deliverystream/{name}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDestination, "opensearchserverless"),
 					resource.TestCheckResourceAttrSet(resourceName, "destination_id"),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_configuration.#", "0"),
@@ -2309,7 +2356,7 @@ func TestAccFirehoseDeliveryStream_openSearchServerlessUpdates(t *testing.T) {
 				Config: testAccDeliveryStreamConfig_openSearchServerlessUpdate(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "firehose", "deliverystream/{name}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDestination, "opensearchserverless"),
 					resource.TestCheckResourceAttrSet(resourceName, "destination_id"),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_configuration.#", "0"),
@@ -2452,7 +2499,7 @@ func testAccCheckDeliveryStreamDestroy(ctx context.Context) resource.TestCheckFu
 	}
 }
 
-func testAccCheckDeliveryStreamAttributes(stream *types.DeliveryStreamDescription, s3config interface{}, extendedS3config interface{}, redshiftConfig interface{}, elasticsearchConfig interface{}, opensearchConfig interface{}, splunkConfig interface{}, httpEndpointConfig interface{}) resource.TestCheckFunc {
+func testAccCheckDeliveryStreamAttributes(stream *types.DeliveryStreamDescription, s3config any, extendedS3config any, redshiftConfig any, elasticsearchConfig any, opensearchConfig any, splunkConfig any, httpEndpointConfig any) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if !strings.HasPrefix(*stream.DeliveryStreamName, "terraform-kinesis-firehose") && !strings.HasPrefix(*stream.DeliveryStreamName, acctest.ResourcePrefix) {
 			return fmt.Errorf("Bad Stream name: %s", *stream.DeliveryStreamName)
@@ -3290,6 +3337,36 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 
     msk_cluster_arn = aws_msk_serverless_cluster.test.arn
     topic_name      = "test"
+  }
+
+  destination = "extended_s3"
+
+  extended_s3_configuration {
+    role_arn   = aws_iam_role.firehose.arn
+    bucket_arn = aws_s3_bucket.bucket.arn
+  }
+}
+`, rName))
+}
+
+func testAccDeliveryStreamConfig_readFromTimestamp(rName string) string {
+	return acctest.ConfigCompose(
+		testAccDeliveryStreamConfig_base(rName),
+		testAccDeliveryStreamConfig_baseMSKClusterSource(rName),
+		fmt.Sprintf(`
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  depends_on = [aws_iam_role_policy.firehose, aws_iam_role_policy.msk_source, aws_msk_cluster_policy.test]
+  name       = %[1]q
+
+  msk_source_configuration {
+    authentication_configuration {
+      connectivity = "PRIVATE"
+      role_arn     = aws_iam_role.msk_source.arn
+    }
+
+    msk_cluster_arn     = aws_msk_serverless_cluster.test.arn
+    topic_name          = "test"
+    read_from_timestamp = "2025-03-11T14:30:00Z"
   }
 
   destination = "extended_s3"

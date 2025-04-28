@@ -4,6 +4,7 @@ package quicksight
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/quicksight"
@@ -21,38 +22,50 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newFolderMembershipResource,
-			Name:    "Folder Membership",
+			Factory:  newFolderMembershipResource,
+			TypeName: "aws_quicksight_folder_membership",
+			Name:     "Folder Membership",
 		},
 		{
-			Factory: newIAMPolicyAssignmentResource,
-			Name:    "IAM Policy Assignment",
+			Factory:  newIAMPolicyAssignmentResource,
+			TypeName: "aws_quicksight_iam_policy_assignment",
+			Name:     "IAM Policy Assignment",
 		},
 		{
-			Factory: newIngestionResource,
-			Name:    "Ingestion",
+			Factory:  newIngestionResource,
+			TypeName: "aws_quicksight_ingestion",
+			Name:     "Ingestion",
 		},
 		{
-			Factory: newNamespaceResource,
-			Name:    "Namespace",
-			Tags: &types.ServicePackageResourceTags{
+			Factory:  newNamespaceResource,
+			TypeName: "aws_quicksight_namespace",
+			Name:     "Namespace",
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 		{
-			Factory: newRefreshScheduleResource,
-			Name:    "Refresh Schedule",
+			Factory:  newRefreshScheduleResource,
+			TypeName: "aws_quicksight_refresh_schedule",
+			Name:     "Refresh Schedule",
 		},
 		{
-			Factory: newTemplateAliasResource,
-			Name:    "Template Alias",
+			Factory:  newResourceRoleMembership,
+			TypeName: "aws_quicksight_role_membership",
+			Name:     "Role Membership",
 		},
 		{
-			Factory: newVPCConnectionResource,
-			Name:    "VPC Connection",
-			Tags: &types.ServicePackageResourceTags{
+			Factory:  newTemplateAliasResource,
+			TypeName: "aws_quicksight_template_alias",
+			Name:     "Template Alias",
+		},
+		{
+			Factory:  newVPCConnectionResource,
+			TypeName: "aws_quicksight_vpc_connection",
+			Name:     "VPC Connection",
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 	}
 }
@@ -63,9 +76,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Factory:  dataSourceAnalysis,
 			TypeName: "aws_quicksight_analysis",
 			Name:     "Analysis",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 		{
 			Factory:  dataSourceDataSet,
@@ -101,41 +114,41 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceAnalysis,
 			TypeName: "aws_quicksight_analysis",
 			Name:     "Analysis",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 		{
 			Factory:  resourceDashboard,
 			TypeName: "aws_quicksight_dashboard",
 			Name:     "Dashboard",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 		{
 			Factory:  resourceDataSet,
 			TypeName: "aws_quicksight_data_set",
 			Name:     "Data Set",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 		{
 			Factory:  resourceDataSource,
 			TypeName: "aws_quicksight_data_source",
 			Name:     "Data Source",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 		{
 			Factory:  resourceFolder,
 			TypeName: "aws_quicksight_folder",
 			Name:     "Folder",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 		{
 			Factory:  resourceGroup,
@@ -151,17 +164,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceTemplate,
 			TypeName: "aws_quicksight_template",
 			Name:     "Template",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 		{
 			Factory:  resourceTheme,
 			TypeName: "aws_quicksight_theme",
 			Name:     "Theme",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 		{
 			Factory:  resourceUser,
@@ -178,11 +191,31 @@ func (p *servicePackage) ServicePackageName() string {
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*quicksight.Client, error) {
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
-
-	return quicksight.NewFromConfig(cfg,
+	optFns := []func(*quicksight.Options){
 		quicksight.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
-	), nil
+		withExtraOptions(ctx, p, config),
+	}
+
+	return quicksight.NewFromConfig(cfg, optFns...), nil
+}
+
+// withExtraOptions returns a functional option that allows this service package to specify extra API client options.
+// This option is always called after any generated options.
+func withExtraOptions(ctx context.Context, sp conns.ServicePackage, config map[string]any) func(*quicksight.Options) {
+	if v, ok := sp.(interface {
+		withExtraOptions(context.Context, map[string]any) []func(*quicksight.Options)
+	}); ok {
+		optFns := v.withExtraOptions(ctx, config)
+
+		return func(o *quicksight.Options) {
+			for _, optFn := range optFns {
+				optFn(o)
+			}
+		}
+	}
+
+	return func(*quicksight.Options) {}
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

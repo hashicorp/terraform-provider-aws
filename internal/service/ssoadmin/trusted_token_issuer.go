@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -36,7 +35,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Trusted Token Issuer")
+// @FrameworkResource("aws_ssoadmin_trusted_token_issuer", name="Trusted Token Issuer")
 // @Tags
 func newResourceTrustedTokenIssuer(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceTrustedTokenIssuer{}, nil
@@ -48,10 +47,7 @@ const (
 
 type resourceTrustedTokenIssuer struct {
 	framework.ResourceWithConfigure
-}
-
-func (r *resourceTrustedTokenIssuer) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_ssoadmin_trusted_token_issuer"
+	framework.WithImportByID
 }
 
 func (r *resourceTrustedTokenIssuer) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -233,7 +229,7 @@ func (r *resourceTrustedTokenIssuer) Read(ctx context.Context, req resource.Read
 		)
 		return
 	}
-	setTagsOut(ctx, Tags(tags))
+	setTagsOut(ctx, svcTags(tags))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -328,14 +324,6 @@ func (r *resourceTrustedTokenIssuer) Delete(ctx context.Context, req resource.De
 		)
 		return
 	}
-}
-
-func (r *resourceTrustedTokenIssuer) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-}
-
-func (r *resourceTrustedTokenIssuer) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, req, resp)
 }
 
 func findTrustedTokenIssuerByARN(ctx context.Context, conn *ssoadmin.Client, arn string) (*ssoadmin.DescribeTrustedTokenIssuerOutput, error) {

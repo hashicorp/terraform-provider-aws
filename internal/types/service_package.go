@@ -5,6 +5,7 @@ package types
 
 import (
 	"context"
+	"unique"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
@@ -21,24 +22,27 @@ type ServicePackageResourceTags struct {
 // ServicePackageEphemeralResource represents a Terraform Plugin Framework ephemeral resource
 // implemented by a service package.
 type ServicePackageEphemeralResource struct {
-	Factory func(context.Context) (ephemeral.EphemeralResourceWithConfigure, error)
-	Name    string
+	Factory  func(context.Context) (ephemeral.EphemeralResourceWithConfigure, error)
+	TypeName string
+	Name     string
 }
 
 // ServicePackageFrameworkDataSource represents a Terraform Plugin Framework data source
 // implemented by a service package.
 type ServicePackageFrameworkDataSource struct {
-	Factory func(context.Context) (datasource.DataSourceWithConfigure, error)
-	Name    string
-	Tags    *ServicePackageResourceTags
+	Factory  func(context.Context) (datasource.DataSourceWithConfigure, error)
+	TypeName string
+	Name     string
+	Tags     unique.Handle[ServicePackageResourceTags]
 }
 
 // ServicePackageFrameworkResource represents a Terraform Plugin Framework resource
 // implemented by a service package.
 type ServicePackageFrameworkResource struct {
-	Factory func(context.Context) (resource.ResourceWithConfigure, error)
-	Name    string
-	Tags    *ServicePackageResourceTags
+	Factory  func(context.Context) (resource.ResourceWithConfigure, error)
+	TypeName string
+	Name     string
+	Tags     unique.Handle[ServicePackageResourceTags]
 }
 
 // ServicePackageSDKDataSource represents a Terraform Plugin SDK data source
@@ -47,7 +51,7 @@ type ServicePackageSDKDataSource struct {
 	Factory  func() *schema.Resource
 	TypeName string
 	Name     string
-	Tags     *ServicePackageResourceTags
+	Tags     unique.Handle[ServicePackageResourceTags]
 }
 
 // ServicePackageSDKResource represents a Terraform Plugin SDK resource
@@ -56,5 +60,5 @@ type ServicePackageSDKResource struct {
 	Factory  func() *schema.Resource
 	TypeName string
 	Name     string
-	Tags     *ServicePackageResourceTags
+	Tags     unique.Handle[ServicePackageResourceTags]
 }

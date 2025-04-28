@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -111,6 +112,7 @@ func TestAccECSTaskDefinition_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ecs", regexache.MustCompile(fmt.Sprintf(`task-definition/%s:%s$`, rName, "1"))),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "arn_without_revision", "ecs", regexache.MustCompile(fmt.Sprintf(`task-definition/%s$`, rName))),
 					acctest.CheckResourceAttrJMESNotExists(resourceName, "container_definitions", "[0].versionConsistency"),
+					resource.TestCheckResourceAttr(resourceName, "enable_fault_injection", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "revision", "1"),
 					resource.TestCheckResourceAttr(resourceName, "track_latest", acctest.CtFalse),
 				),
@@ -122,6 +124,7 @@ func TestAccECSTaskDefinition_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ecs", regexache.MustCompile(fmt.Sprintf(`task-definition/%s:%s$`, rName, "2"))),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "arn_without_revision", "ecs", regexache.MustCompile(fmt.Sprintf(`task-definition/%s$`, rName))),
 					acctest.CheckResourceAttrJMESNotExists(resourceName, "container_definitions", "[0].versionConsistency"),
+					resource.TestCheckResourceAttr(resourceName, "enable_fault_injection", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "revision", "2"),
 				),
 			},
@@ -1027,6 +1030,36 @@ func TestAccECSTaskDefinition_Fargate_ephemeralStorage(t *testing.T) {
 	})
 }
 
+func TestAccECSTaskDefinition_enableFaultInjection(t *testing.T) {
+	ctx := acctest.Context(t)
+	var def awstypes.TaskDefinition
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_task_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTaskDefinitionConfig_enableFaultInjection(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
+					resource.TestCheckResourceAttr(resourceName, "enable_fault_injection", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
+			},
+		},
+	})
+}
+
 func TestAccECSTaskDefinition_executionRole(t *testing.T) {
 	ctx := acctest.Context(t)
 	var def awstypes.TaskDefinition
@@ -1130,36 +1163,6 @@ func TestAccECSTaskDefinition_proxy(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 					testAccCheckTaskDefinitionProxyConfiguration(&def, containerName, proxyType, ignoredUid, ignoredGid, appPorts, proxyIngressPort, proxyEgressPort, egressIgnoredPorts, egressIgnoredIPs),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateIdFunc:       acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
-			},
-		},
-	})
-}
-
-func TestAccECSTaskDefinition_inferenceAccelerator(t *testing.T) {
-	ctx := acctest.Context(t)
-	var def awstypes.TaskDefinition
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_ecs_task_definition.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccTaskDefinitionConfig_inferenceAccelerator(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
-					resource.TestCheckResourceAttr(resourceName, "inference_accelerator.#", "1"),
 				),
 			},
 			{
@@ -1591,6 +1594,91 @@ func TestAccECSTaskDefinition_containerDefinitionVersionConsistency_nullToEnable
 					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "length(@)", "1"),
 					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].versionConsistency", string(awstypes.VersionConsistencyEnabled)),
 				),
+			},
+		},
+	})
+}
+
+// See https://github.com/hashicorp/terraform-provider-aws/issues/40801.
+func TestAccECSTaskDefinition_DockerVolume_detectChangeInDriverOpts(t *testing.T) {
+	ctx := acctest.Context(t)
+	var def awstypes.TaskDefinition
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_task_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTaskDefinitionConfig_dockerVolumeDriverOpts(rName, "600"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+			{
+				Config: testAccTaskDefinitionConfig_dockerVolumeDriverOpts(rName, "500"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
+// See https://github.com/hashicorp/terraform-provider-aws/issues/38153.
+func TestAccECSTaskDefinition_Volume_detectChangeInConfigureAtLaunch(t *testing.T) {
+	ctx := acctest.Context(t)
+	var def awstypes.TaskDefinition
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_task_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTaskDefinitionConfig_volumeConfigureAtLaunch(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+			{
+				Config: testAccTaskDefinitionConfig_volumeConfigureAtLaunch(rName, true),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+				ExpectError: regexache.MustCompile(`No volume configuration can be configured for volume`),
 			},
 		},
 	})
@@ -3083,48 +3171,6 @@ DEFINITION
 `, rName, tag1Key, tag1Value, tag2Key, tag2Value)
 }
 
-func testAccTaskDefinitionConfig_inferenceAccelerator(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_ecs_task_definition" "test" {
-  family = %[1]q
-
-  container_definitions = <<TASK_DEFINITION
-[
-	{
-		"cpu": 10,
-		"command": ["sleep", "10"],
-		"entryPoint": ["/"],
-		"environment": [
-			{"name": "VARNAME", "value": "VARVAL"}
-		],
-		"essential": true,
-		"image": "jenkins",
-		"memory": 128,
-		"name": "jenkins",
-		"portMappings": [
-			{
-				"containerPort": 80,
-				"hostPort": 8080
-			}
-		],
-        "resourceRequirements":[
-            {
-                "type":"InferenceAccelerator",
-                "value":"device_1"
-            }
-        ]
-	}
-]
-TASK_DEFINITION
-
-  inference_accelerator {
-    device_name = "device_1"
-    device_type = "eia1.medium"
-  }
-}
-`, rName)
-}
-
 func testAccTaskDefinitionConfig_fsxVolume(domain, rName string) string {
 	return acctest.ConfigCompose(
 		testAccFSxWindowsFileSystemSubnetIds1Config(rName, domain),
@@ -3614,4 +3660,98 @@ resource "aws_ecs_task_definition" "test" {
 TASK_DEFINITION
 }
 `, rName)
+}
+
+func testAccTaskDefinitionConfig_dockerVolumeDriverOpts(rName, timeo string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_task_definition" "test" {
+  family = %[1]q
+
+  container_definitions = <<TASK_DEFINITION
+[
+  {
+    "name": "sleep",
+    "image": "busybox",
+    "cpu": 10,
+    "command": ["sleep","360"],
+    "memory": 10,
+    "essential": true
+  }
+]
+TASK_DEFINITION
+
+  volume {
+    name = %[1]q
+
+    docker_volume_configuration {
+      autoprovision = false
+      driver        = "local"
+      scope         = "task"
+
+      driver_opts = {
+        device = "test-efs.internal:/"
+        o      = "addr=test-efs.internal,nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=%[2]s,retrans=2,noresvport"
+        type   = "nfs"
+      }
+    }
+  }
+}
+`, rName, timeo)
+}
+
+func testAccTaskDefinitionConfig_volumeConfigureAtLaunch(rName string, configureAtLaunch bool) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_task_definition" "test" {
+  family = %[1]q
+
+  container_definitions = <<TASK_DEFINITION
+[
+  {
+    "name": "sleep",
+    "image": "busybox",
+    "cpu": 10,
+    "command": ["sleep","360"],
+    "memory": 10,
+    "essential": true,
+    "mountPoints": [
+      {"sourceVolume": "vol1", "containerPath": "/vol1"}
+    ]
+  }
+]
+TASK_DEFINITION
+
+  volume {
+    name                = "vol1"
+    configure_at_launch = %[2]t
+    host_path           = "/host/vol1"
+  }
+}
+`, rName, configureAtLaunch)
+}
+
+func testAccTaskDefinitionConfig_enableFaultInjection(rName string, enableFaultInjection bool) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_task_definition" "test" {
+  enable_fault_injection   = %[2]t
+  family                   = %[1]q
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = "256"
+  memory                   = "512"
+
+  container_definitions = <<TASK_DEFINITION
+[
+  {
+    "name": "sleep",
+    "image": "busybox",
+    "cpu": 10,
+    "command": ["sleep","360"],
+    "memory": 10,
+    "essential": true,
+    "portMappings": [{"protocol": "tcp", "containerPort": 8000}]
+  }
+]
+TASK_DEFINITION
+}
+`, rName, enableFaultInjection)
 }

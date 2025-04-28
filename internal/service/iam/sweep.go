@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"log"
 	"strings"
-	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -408,8 +407,8 @@ func newPolicySweeper(resource *schema.Resource, d *schema.ResourceData, client 
 	}
 }
 
-func (ps policySweeper) Delete(ctx context.Context, timeout time.Duration, optFns ...tfresource.OptionsFunc) error {
-	if err := ps.sweepable.Delete(ctx, timeout, optFns...); err != nil {
+func (ps policySweeper) Delete(ctx context.Context, optFns ...tfresource.OptionsFunc) error {
+	if err := ps.sweepable.Delete(ctx, optFns...); err != nil {
 		accessDenied := regexache.MustCompile(`AccessDenied: .+ with an explicit deny`)
 		if accessDenied.MatchString(err.Error()) {
 			log.Printf("[DEBUG] Skipping IAM Policy (%s): %s", ps.d.Id(), err)
@@ -728,6 +727,12 @@ func sweepVirtualMFADevice(ctx context.Context, client *conns.AWSClient) ([]swee
 			r := resourceVirtualMFADevice()
 			d := r.Data(nil)
 			d.SetId(serialNum)
+
+			if user := device.User; user != nil {
+				if userName := aws.ToString(user.UserName); userName != "" {
+					d.Set(names.AttrUserName, userName)
+				}
+			}
 
 			sweepResources = append(sweepResources, sdk.NewSweepResource(r, d, client))
 		}

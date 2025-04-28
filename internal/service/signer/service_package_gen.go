@@ -4,6 +4,7 @@ package signer
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/signer"
@@ -27,10 +28,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceSigningJob,
 			TypeName: "aws_signer_signing_job",
+			Name:     "Signing Job",
 		},
 		{
 			Factory:  DataSourceSigningProfile,
 			TypeName: "aws_signer_signing_profile",
+			Name:     "Signing Profile",
 		},
 	}
 }
@@ -40,18 +43,20 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceSigningJob,
 			TypeName: "aws_signer_signing_job",
+			Name:     "Signing Job",
 		},
 		{
 			Factory:  ResourceSigningProfile,
 			TypeName: "aws_signer_signing_profile",
 			Name:     "Signing Profile",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 		{
 			Factory:  ResourceSigningProfilePermission,
 			TypeName: "aws_signer_signing_profile_permission",
+			Name:     "Signing Profile Permission",
 		},
 	}
 }
@@ -63,11 +68,31 @@ func (p *servicePackage) ServicePackageName() string {
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*signer.Client, error) {
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
-
-	return signer.NewFromConfig(cfg,
+	optFns := []func(*signer.Options){
 		signer.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
-	), nil
+		withExtraOptions(ctx, p, config),
+	}
+
+	return signer.NewFromConfig(cfg, optFns...), nil
+}
+
+// withExtraOptions returns a functional option that allows this service package to specify extra API client options.
+// This option is always called after any generated options.
+func withExtraOptions(ctx context.Context, sp conns.ServicePackage, config map[string]any) func(*signer.Options) {
+	if v, ok := sp.(interface {
+		withExtraOptions(context.Context, map[string]any) []func(*signer.Options)
+	}); ok {
+		optFns := v.withExtraOptions(ctx, config)
+
+		return func(o *signer.Options) {
+			for _, optFn := range optFns {
+				optFn(o)
+			}
+		}
+	}
+
+	return func(*signer.Options) {}
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -36,7 +35,7 @@ import (
 
 const iamPropagationTimeout = 2 * time.Minute
 
-// @FrameworkResource(name="Assessment")
+// @FrameworkResource("aws_auditmanager_assessment", name="Assessment")
 // @Tags(identifierAttribute="arn")
 func newResourceAssessment(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceAssessment{}, nil
@@ -48,10 +47,7 @@ const (
 
 type resourceAssessment struct {
 	framework.ResourceWithConfigure
-}
-
-func (r *resourceAssessment) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_auditmanager_assessment"
+	framework.WithImportByID
 }
 
 func (r *resourceAssessment) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -363,14 +359,6 @@ func (r *resourceAssessment) Delete(ctx context.Context, req resource.DeleteRequ
 			err.Error(),
 		)
 	}
-}
-
-func (r *resourceAssessment) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-}
-
-func (r *resourceAssessment) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, req, resp)
 }
 
 func FindAssessmentByID(ctx context.Context, conn *auditmanager.Client, id string) (*awstypes.Assessment, error) {

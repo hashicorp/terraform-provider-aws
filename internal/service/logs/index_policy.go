@@ -31,15 +31,12 @@ import (
 // @FrameworkResource("aws_cloudwatch_log_index_policy", name="Index Policy")
 func newIndexPolicyResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &indexPolicyResource{}
+
 	return r, nil
 }
 
 type indexPolicyResource struct {
 	framework.ResourceWithConfigure
-}
-
-func (*indexPolicyResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_cloudwatch_log_index_policy"
 }
 
 func (r *indexPolicyResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {

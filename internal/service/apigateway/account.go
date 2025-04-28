@@ -10,11 +10,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -28,7 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource("aws_api_gateway_account")
+// @FrameworkResource("aws_api_gateway_account", name="Account")
 func newResourceAccount(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceAccount{}
 
@@ -37,10 +34,7 @@ func newResourceAccount(context.Context) (resource.ResourceWithConfigure, error)
 
 type resourceAccount struct {
 	framework.ResourceWithConfigure
-}
-
-func (r *resourceAccount) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_api_gateway_account"
+	framework.WithImportByID
 }
 
 func (r *resourceAccount) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -64,14 +58,7 @@ func (r *resourceAccount) Schema(ctx context.Context, request resource.SchemaReq
 				ElementType: types.StringType,
 				Computed:    true,
 			},
-			names.AttrID: framework.IDAttributeDeprecatedNoReplacement(),
-			"reset_on_delete": schema.BoolAttribute{
-				Optional: true,
-				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.UseStateForUnknown(),
-				},
-				DeprecationMessage: `The "reset_on_delete" attribute will be removed in a future version of the provider`,
-			},
+			names.AttrID:        framework.IDAttributeDeprecatedNoReplacement(),
 			"throttle_settings": framework.DataSourceComputedListOfObjectAttribute[throttleSettingsModel](ctx),
 		},
 	}
@@ -88,7 +75,7 @@ func (r *resourceAccount) Create(ctx context.Context, request resource.CreateReq
 
 	conn := r.Meta().APIGatewayClient(ctx)
 
-	input := &apigateway.UpdateAccountInput{}
+	input := apigateway.UpdateAccountInput{}
 
 	if data.CloudwatchRoleARN.IsNull() || data.CloudwatchRoleARN.ValueString() == "" {
 		input.PatchOperations = []awstypes.PatchOperation{
@@ -110,7 +97,7 @@ func (r *resourceAccount) Create(ctx context.Context, request resource.CreateReq
 
 	output, err := tfresource.RetryGWhen(ctx, propagationTimeout,
 		func() (*apigateway.UpdateAccountOutput, error) {
-			return conn.UpdateAccount(ctx, input)
+			return conn.UpdateAccount(ctx, &input)
 		},
 		func(err error) (bool, error) {
 			if errs.IsAErrorMessageContains[*awstypes.BadRequestException](err, "The role ARN does not have required permissions") {
@@ -170,7 +157,7 @@ func (r *resourceAccount) Update(ctx context.Context, request resource.UpdateReq
 		return
 	}
 
-	diff, d := flex.Calculate(ctx, plan, state)
+	diff, d := flex.Diff(ctx, plan, state)
 	response.Diagnostics.Append(d...)
 	if response.Diagnostics.HasError() {
 		return
@@ -179,7 +166,7 @@ func (r *resourceAccount) Update(ctx context.Context, request resource.UpdateReq
 	if diff.HasChanges() {
 		conn := r.Meta().APIGatewayClient(ctx)
 
-		input := &apigateway.UpdateAccountInput{}
+		input := apigateway.UpdateAccountInput{}
 
 		if plan.CloudwatchRoleARN.IsNull() || plan.CloudwatchRoleARN.ValueString() == "" {
 			input.PatchOperations = []awstypes.PatchOperation{
@@ -201,7 +188,7 @@ func (r *resourceAccount) Update(ctx context.Context, request resource.UpdateReq
 
 		output, err := tfresource.RetryGWhen(ctx, propagationTimeout,
 			func() (*apigateway.UpdateAccountOutput, error) {
-				return conn.UpdateAccount(ctx, input)
+				return conn.UpdateAccount(ctx, &input)
 			},
 			func(err error) (bool, error) {
 				if errs.IsAErrorMessageContains[*awstypes.BadRequestException](err, "The role ARN does not have required permissions") {
@@ -231,33 +218,20 @@ func (r *resourceAccount) Delete(ctx context.Context, request resource.DeleteReq
 		return
 	}
 
-	if data.ResetOnDelete.ValueBool() {
-		conn := r.Meta().APIGatewayClient(ctx)
+	conn := r.Meta().APIGatewayClient(ctx)
 
-		input := &apigateway.UpdateAccountInput{}
+	input := apigateway.UpdateAccountInput{}
 
-		input.PatchOperations = []awstypes.PatchOperation{{
-			Op:    awstypes.OpReplace,
-			Path:  aws.String("/cloudwatchRoleArn"),
-			Value: nil,
-		}}
+	input.PatchOperations = []awstypes.PatchOperation{{
+		Op:    awstypes.OpReplace,
+		Path:  aws.String("/cloudwatchRoleArn"),
+		Value: nil,
+	}}
 
-		_, err := conn.UpdateAccount(ctx, input)
-		if err != nil {
-			response.Diagnostics.AddError("resetting API Gateway Account", err.Error())
-		}
-	} else {
-		response.Diagnostics.AddWarning(
-			"Resource Destruction",
-			"This resource has only been removed from Terraform state. "+
-				"Manually use the AWS Console to fully destroy this resource. "+
-				"Setting the attribute \"reset_on_delete\" will also fully destroy resources of this type.",
-		)
+	_, err := conn.UpdateAccount(ctx, &input)
+	if err != nil {
+		response.Diagnostics.AddError("resetting API Gateway Account", err.Error())
 	}
-}
-
-func (r *resourceAccount) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), request, response)
 }
 
 type resourceAccountModel struct {
@@ -265,7 +239,6 @@ type resourceAccountModel struct {
 	CloudwatchRoleARN types.String                                           `tfsdk:"cloudwatch_role_arn" autoflex:",legacy"`
 	Features          types.Set                                              `tfsdk:"features"`
 	ID                types.String                                           `tfsdk:"id"`
-	ResetOnDelete     types.Bool                                             `tfsdk:"reset_on_delete"`
 	ThrottleSettings  fwtypes.ListNestedObjectValueOf[throttleSettingsModel] `tfsdk:"throttle_settings"`
 }
 
@@ -274,30 +247,10 @@ type throttleSettingsModel struct {
 	RateLimit  types.Float64 `tfsdk:"rate_limit"`
 }
 
-func (r *resourceAccount) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	// If the entire plan is null, the resource is planned for destruction.
-	if request.Plan.Raw.IsNull() {
-		var resetOnDelete types.Bool
-		response.Diagnostics.Append(request.State.GetAttribute(ctx, path.Root("reset_on_delete"), &resetOnDelete)...)
-		if response.Diagnostics.HasError() {
-			return
-		}
-
-		if !resetOnDelete.ValueBool() {
-			response.Diagnostics.AddWarning(
-				"Resource Destruction",
-				"Applying this resource destruction will only remove the resource from Terraform state and will not reset account settings. "+
-					"Either manually use the AWS Console to fully destroy this resource or "+
-					"update the resource with \"reset_on_delete\" set to true.",
-			)
-		}
-	}
-}
-
 func findAccount(ctx context.Context, conn *apigateway.Client) (*apigateway.GetAccountOutput, error) {
-	input := &apigateway.GetAccountInput{}
+	input := apigateway.GetAccountInput{}
 
-	output, err := conn.GetAccount(ctx, input)
+	output, err := conn.GetAccount(ctx, &input)
 
 	if err != nil {
 		return nil, err

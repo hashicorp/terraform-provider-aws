@@ -6,16 +6,21 @@ package glue
 import (
 	"context"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/glue"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Registry")
+// @FrameworkDataSource("aws_glue_registry", name="Registry")
 func newDataSourceRegistry(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceRegistry{}, nil
 }
@@ -26,10 +31,6 @@ const (
 
 type dataSourceRegistry struct {
 	framework.DataSourceWithConfigure
-}
-
-func (d *dataSourceRegistry) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = "aws_glue_registry"
 }
 
 func (d *dataSourceRegistry) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
@@ -55,7 +56,7 @@ func (d *dataSourceRegistry) Read(ctx context.Context, req datasource.ReadReques
 		return
 	}
 
-	out, err := FindRegistryByName(ctx, conn, data.Name.ValueString())
+	out, err := findRegistryByName(ctx, conn, data.Name.ValueString())
 
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -71,6 +72,29 @@ func (d *dataSourceRegistry) Read(ctx context.Context, req datasource.ReadReques
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+}
+
+func findRegistryByName(ctx context.Context, conn *glue.Client, name string) (*glue.GetRegistryOutput, error) {
+	input := &glue.GetRegistryInput{
+		RegistryId: &awstypes.RegistryId{
+			RegistryName: aws.String(name),
+		},
+	}
+
+	output, err := conn.GetRegistry(ctx, input)
+
+	if errs.IsA[*awstypes.EntityNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
 }
 
 type dataSourceRegistryData struct {

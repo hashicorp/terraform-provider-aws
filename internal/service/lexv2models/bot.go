@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -35,7 +34,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Bot")
+// @FrameworkResource("aws_lexv2models_bot", name="Bot")
 // @Tags(identifierAttribute="arn")
 func newResourceBot(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceBot{}
@@ -53,11 +52,8 @@ const (
 
 type resourceBot struct {
 	framework.ResourceWithConfigure
+	framework.WithImportByID
 	framework.WithTimeouts
-}
-
-func (r *resourceBot) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_lexv2models_bot"
 }
 
 func (r *resourceBot) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -246,7 +242,7 @@ func (r *resourceBot) Read(ctx context.Context, req resource.ReadRequest, resp *
 	state.Name = flex.StringToFramework(ctx, out.BotName)
 	state.Type = flex.StringValueToFramework(ctx, out.BotType)
 	state.Description = flex.StringToFramework(ctx, out.Description)
-	state.IdleSessionTTLInSeconds = flex.Int32ToFramework(ctx, out.IdleSessionTTLInSeconds)
+	state.IdleSessionTTLInSeconds = flex.Int32ToFrameworkInt64(ctx, out.IdleSessionTTLInSeconds)
 
 	members, errDiags := flattenMembers(ctx, out.BotMembers)
 	resp.Diagnostics.Append(errDiags...)
@@ -380,14 +376,6 @@ func (r *resourceBot) Delete(ctx context.Context, req resource.DeleteRequest, re
 	}
 }
 
-func (r *resourceBot) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, req, resp)
-}
-
-func (r *resourceBot) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-}
-
 func waitBotCreated(ctx context.Context, conn *lexmodelsv2.Client, id string, timeout time.Duration) (*lexmodelsv2.DescribeBotOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.BotStatusCreating),
@@ -441,7 +429,7 @@ func waitBotDeleted(ctx context.Context, conn *lexmodelsv2.Client, id string, ti
 }
 
 func statusBot(ctx context.Context, conn *lexmodelsv2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := FindBotByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -572,7 +560,7 @@ func (rd *resourceBotData) refreshFromOutput(ctx context.Context, out *lexmodels
 	rd.Name = flex.StringToFramework(ctx, out.BotName)
 	rd.Type = flex.StringToFramework(ctx, (*string)(&out.BotType))
 	rd.Description = flex.StringToFramework(ctx, out.Description)
-	rd.IdleSessionTTLInSeconds = flex.Int32ToFramework(ctx, out.IdleSessionTTLInSeconds)
+	rd.IdleSessionTTLInSeconds = flex.Int32ToFrameworkInt64(ctx, out.IdleSessionTTLInSeconds)
 
 	datap, d := flattenDataPrivacy(out.DataPrivacy)
 	diags.Append(d...)

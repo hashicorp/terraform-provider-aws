@@ -84,6 +84,10 @@ func resourceUser() *schema.Resource {
 					Optional: true,
 					ForceNew: true,
 				},
+				"user_invitation_url": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
 				names.AttrUserName: {
 					Type:         schema.TypeString,
 					Optional:     true,
@@ -108,7 +112,7 @@ func resourceUser() *schema.Resource {
 	}
 }
 
-func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
@@ -146,10 +150,15 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	d.SetId(userCreateResourceID(awsAccountID, namespace, aws.ToString(output.User.UserName)))
 
+	if awstypes.IdentityType(d.Get("identity_type").(string)) == awstypes.IdentityTypeQuicksight {
+		userInvitationUrl := aws.ToString(output.UserInvitationUrl)
+		d.Set("user_invitation_url", userInvitationUrl)
+	}
+
 	return append(diags, resourceUserRead(ctx, d, meta)...)
 }
 
-func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
@@ -180,7 +189,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	return diags
 }
 
-func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
@@ -206,7 +215,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	return append(diags, resourceUserRead(ctx, d, meta)...)
 }
 
-func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 

@@ -34,7 +34,7 @@ func TestAccLogsAnomalyDetector_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckAnomalyDetectorDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLogAnomalyDetectorConfig_basic(rName),
+				Config: testAccAnomalyDetectorConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnomalyDetectorExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "detector_name"),
@@ -70,7 +70,7 @@ func TestAccLogsAnomalyDetector_update(t *testing.T) {
 		CheckDestroy:             testAccCheckAnomalyDetectorDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLogAnomalyDetectorConfig_update(rName, "TEN_MIN", acctest.CtFalse, 7),
+				Config: testAccAnomalyDetectorConfig_update(rName, "TEN_MIN", acctest.CtFalse, 7),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnomalyDetectorExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "detector_name"),
@@ -90,7 +90,7 @@ func TestAccLogsAnomalyDetector_update(t *testing.T) {
 				ImportStateVerifyIgnore:              []string{names.AttrEnabled},
 			},
 			{
-				Config: testAccLogAnomalyDetectorConfig_update(rName, "FIVE_MIN", acctest.CtTrue, 8),
+				Config: testAccAnomalyDetectorConfig_update(rName, "FIVE_MIN", acctest.CtTrue, 8),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnomalyDetectorExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "detector_name"),
@@ -127,7 +127,7 @@ func TestAccLogsAnomalyDetector_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckAnomalyDetectorDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLogAnomalyDetectorConfig_basic(rName),
+				Config: testAccAnomalyDetectorConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnomalyDetectorExists(ctx, resourceName, &v),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tflogs.ResourceAnomalyDetector, resourceName),
@@ -196,7 +196,7 @@ func testAccAnomalyDetectorImportStateIDFunc(n string) resource.ImportStateIdFun
 	}
 }
 
-func testAccLogAnomalyDetectorConfig_basic(rName string) string {
+func testAccAnomalyDetectorConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
   count = 2
@@ -213,7 +213,7 @@ resource "aws_cloudwatch_log_anomaly_detector" "test" {
 `, rName)
 }
 
-func testAccLogAnomalyDetectorConfig_update(rName string, ef string, enabled string, avt int64) string {
+func testAccAnomalyDetectorConfig_update(rName string, ef string, enabled string, avt int64) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
   count = 2

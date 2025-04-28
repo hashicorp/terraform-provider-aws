@@ -50,10 +50,6 @@ type restoreTestingPlanResource struct {
 	framework.ResourceWithConfigure
 }
 
-func (*restoreTestingPlanResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_backup_restore_testing_plan"
-}
-
 func (r *restoreTestingPlanResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -285,9 +281,10 @@ func (r *restoreTestingPlanResource) Delete(ctx context.Context, request resourc
 	conn := r.Meta().BackupClient(ctx)
 
 	name := data.RestoreTestingPlanName.ValueString()
-	_, err := conn.DeleteRestoreTestingPlan(ctx, &backup.DeleteRestoreTestingPlanInput{
+	input := backup.DeleteRestoreTestingPlanInput{
 		RestoreTestingPlanName: aws.String(name),
-	})
+	}
+	_, err := conn.DeleteRestoreTestingPlan(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
@@ -300,12 +297,8 @@ func (r *restoreTestingPlanResource) Delete(ctx context.Context, request resourc
 	}
 }
 
-func (r *restoreTestingPlanResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func (r *restoreTestingPlanResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrName), request.ID)...)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrName), request, response)
 }
 
 func findRestoreTestingPlanByName(ctx context.Context, conn *backup.Client, name string) (*awstypes.RestoreTestingPlanForGet, error) {

@@ -34,7 +34,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Data Cells Filter")
+// @FrameworkResource("aws_lakeformation_data_cells_filter", name="Data Cells Filter")
 func newResourceDataCellsFilter(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceDataCellsFilter{}
 	r.SetDefaultCreateTimeout(2 * time.Minute)
@@ -50,10 +50,6 @@ type resourceDataCellsFilter struct {
 	framework.ResourceWithConfigure
 	framework.WithImportByID
 	framework.WithTimeouts
-}
-
-func (r *resourceDataCellsFilter) Metadata(_ context.Context, _ resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_lakeformation_data_cells_filter"
 }
 
 func (r *resourceDataCellsFilter) Schema(ctx context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -214,7 +210,7 @@ func (r *resourceDataCellsFilter) Create(ctx context.Context, req resource.Creat
 	state.ID = fwflex.StringValueToFramework(ctx, id)
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	outputRaws, err := tfresource.RetryWhenNotFound(ctx, createTimeout, func() (interface{}, error) {
+	outputRaws, err := tfresource.RetryWhenNotFound(ctx, createTimeout, func() (any, error) {
 		return findDataCellsFilterByID(ctx, conn, state.ID.ValueString())
 	})
 

@@ -455,15 +455,14 @@ func resourceRuleGroup() *schema.Resource {
 		CustomizeDiff: customdiff.Sequence(
 			// The stateful rule_order default action can be explicitly or implicitly set,
 			// so ignore spurious diffs if toggling between the two.
-			func(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+			func(_ context.Context, d *schema.ResourceDiff, meta any) error {
 				return forceNewIfNotRuleOrderDefault("rule_group.0.stateful_rule_options.0.rule_order", d)
 			},
-			verify.SetTagsDiff,
 		),
 	}
 }
 
-func resourceRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NetworkFirewallClient(ctx)
 
@@ -480,11 +479,11 @@ func resourceRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	if v, ok := d.GetOk(names.AttrEncryptionConfiguration); ok {
-		input.EncryptionConfiguration = expandEncryptionConfiguration(v.([]interface{}))
+		input.EncryptionConfiguration = expandEncryptionConfiguration(v.([]any))
 	}
 
-	if v, ok := d.GetOk("rule_group"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.RuleGroup = expandRuleGroup(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("rule_group"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.RuleGroup = expandRuleGroup(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("rules"); ok {
@@ -502,7 +501,7 @@ func resourceRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceRuleGroupRead(ctx, d, meta)...)
 }
 
-func resourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NetworkFirewallClient(ctx)
 
@@ -541,13 +540,13 @@ func resourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func resourceRuleGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRuleGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NetworkFirewallClient(ctx)
 
 	if d.HasChanges(names.AttrDescription, names.AttrEncryptionConfiguration, "rule_group", "rules", names.AttrType) {
 		input := &networkfirewall.UpdateRuleGroupInput{
-			EncryptionConfiguration: expandEncryptionConfiguration(d.Get(names.AttrEncryptionConfiguration).([]interface{})),
+			EncryptionConfiguration: expandEncryptionConfiguration(d.Get(names.AttrEncryptionConfiguration).([]any)),
 			RuleGroupArn:            aws.String(d.Id()),
 			Type:                    awstypes.RuleGroupType(d.Get(names.AttrType).(string)),
 			UpdateToken:             aws.String(d.Get("update_token").(string)),
@@ -564,8 +563,8 @@ func resourceRuleGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		if d.HasChange("rules") {
 			input.Rules = aws.String(d.Get("rules").(string))
 		} else if d.HasChange("rule_group") {
-			if v, ok := d.GetOk("rule_group"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.RuleGroup = expandRuleGroup(v.([]interface{})[0].(map[string]interface{}))
+			if v, ok := d.GetOk("rule_group"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.RuleGroup = expandRuleGroup(v.([]any)[0].(map[string]any))
 			}
 		}
 
@@ -575,8 +574,8 @@ func resourceRuleGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		if input.Rules == nil && input.RuleGroup == nil {
 			if v, ok := d.GetOk("rules"); ok {
 				input.Rules = aws.String(v.(string))
-			} else if v, ok := d.GetOk("rule_group"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.RuleGroup = expandRuleGroup(v.([]interface{})[0].(map[string]interface{}))
+			} else if v, ok := d.GetOk("rule_group"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.RuleGroup = expandRuleGroup(v.([]any)[0].(map[string]any))
 			}
 		}
 
@@ -590,7 +589,7 @@ func resourceRuleGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceRuleGroupRead(ctx, d, meta)...)
 }
 
-func resourceRuleGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRuleGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NetworkFirewallClient(ctx)
 
@@ -598,7 +597,7 @@ func resourceRuleGroupDelete(ctx context.Context, d *schema.ResourceData, meta i
 	const (
 		timeout = 10 * time.Minute
 	)
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidOperationException](ctx, timeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidOperationException](ctx, timeout, func() (any, error) {
 		return conn.DeleteRuleGroup(ctx, &networkfirewall.DeleteRuleGroupInput{
 			RuleGroupArn: aws.String(d.Id()),
 		})
@@ -645,7 +644,7 @@ func findRuleGroupByARN(ctx context.Context, conn *networkfirewall.Client, arn s
 }
 
 func statusRuleGroup(ctx context.Context, conn *networkfirewall.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findRuleGroupByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
@@ -677,12 +676,12 @@ func waitRuleGroupDeleted(ctx context.Context, conn *networkfirewall.Client, arn
 	return nil, err
 }
 
-func expandStatefulRuleHeader(tfList []interface{}) *awstypes.Header {
+func expandStatefulRuleHeader(tfList []any) *awstypes.Header {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -711,7 +710,7 @@ func expandStatefulRuleHeader(tfList []interface{}) *awstypes.Header {
 	return apiObject
 }
 
-func expandStatefulRuleOptions(tfList []interface{}) []awstypes.RuleOption {
+func expandStatefulRuleOptions(tfList []any) []awstypes.RuleOption {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -719,7 +718,7 @@ func expandStatefulRuleOptions(tfList []interface{}) []awstypes.RuleOption {
 	apiObjects := make([]awstypes.RuleOption, 0, len(tfList))
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -738,12 +737,12 @@ func expandStatefulRuleOptions(tfList []interface{}) []awstypes.RuleOption {
 	return apiObjects
 }
 
-func expandRulesSourceList(tfList []interface{}) *awstypes.RulesSourceList {
+func expandRulesSourceList(tfList []any) *awstypes.RulesSourceList {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -763,7 +762,7 @@ func expandRulesSourceList(tfList []interface{}) *awstypes.RulesSourceList {
 	return apiObject
 }
 
-func expandStatefulRules(tfList []interface{}) []awstypes.StatefulRule {
+func expandStatefulRules(tfList []any) []awstypes.StatefulRule {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -771,7 +770,7 @@ func expandStatefulRules(tfList []interface{}) []awstypes.StatefulRule {
 	apiObjects := make([]awstypes.StatefulRule, 0, len(tfList))
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -781,7 +780,7 @@ func expandStatefulRules(tfList []interface{}) []awstypes.StatefulRule {
 		if v, ok := tfMap[names.AttrAction].(string); ok && v != "" {
 			apiObject.Action = awstypes.StatefulAction(v)
 		}
-		if v, ok := tfMap[names.AttrHeader].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		if v, ok := tfMap[names.AttrHeader].([]any); ok && len(v) > 0 && v[0] != nil {
 			apiObject.Header = expandStatefulRuleHeader(v)
 		}
 		if v, ok := tfMap["rule_option"].(*schema.Set); ok && v.Len() > 0 {
@@ -794,15 +793,15 @@ func expandStatefulRules(tfList []interface{}) []awstypes.StatefulRule {
 	return apiObjects
 }
 
-func expandRuleGroup(tfMap map[string]interface{}) *awstypes.RuleGroup {
+func expandRuleGroup(tfMap map[string]any) *awstypes.RuleGroup {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.RuleGroup{}
 
-	if v, ok := tfMap["reference_sets"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		if tfMap, ok := v[0].(map[string]interface{}); ok {
+	if v, ok := tfMap["reference_sets"].([]any); ok && len(v) > 0 && v[0] != nil {
+		if tfMap, ok := v[0].(map[string]any); ok {
 			referenceSets := &awstypes.ReferenceSets{}
 
 			if v, ok := tfMap["ip_set_references"].(*schema.Set); ok && v.Len() > 0 {
@@ -813,8 +812,8 @@ func expandRuleGroup(tfMap map[string]interface{}) *awstypes.RuleGroup {
 		}
 	}
 
-	if v, ok := tfMap["rule_variables"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		if tfMap, ok := v[0].(map[string]interface{}); ok {
+	if v, ok := tfMap["rule_variables"].([]any); ok && len(v) > 0 && v[0] != nil {
+		if tfMap, ok := v[0].(map[string]any); ok {
 			ruleVariables := &awstypes.RuleVariables{}
 
 			if v, ok := tfMap["ip_sets"].(*schema.Set); ok && v.Len() > 0 {
@@ -828,20 +827,20 @@ func expandRuleGroup(tfMap map[string]interface{}) *awstypes.RuleGroup {
 		}
 	}
 
-	if v, ok := tfMap["rules_source"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		if tfMap, ok := v[0].(map[string]interface{}); ok {
+	if v, ok := tfMap["rules_source"].([]any); ok && len(v) > 0 && v[0] != nil {
+		if tfMap, ok := v[0].(map[string]any); ok {
 			rulesSource := &awstypes.RulesSource{}
 
-			if v, ok := tfMap["rules_source_list"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+			if v, ok := tfMap["rules_source_list"].([]any); ok && len(v) > 0 && v[0] != nil {
 				rulesSource.RulesSourceList = expandRulesSourceList(v)
 			}
 			if v, ok := tfMap["rules_string"].(string); ok && v != "" {
 				rulesSource.RulesString = aws.String(v)
 			}
-			if v, ok := tfMap["stateful_rule"].([]interface{}); ok && len(v) > 0 {
+			if v, ok := tfMap["stateful_rule"].([]any); ok && len(v) > 0 {
 				rulesSource.StatefulRules = expandStatefulRules(v)
 			}
-			if v, ok := tfMap["stateless_rules_and_custom_actions"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+			if v, ok := tfMap["stateless_rules_and_custom_actions"].([]any); ok && len(v) > 0 && v[0] != nil {
 				rulesSource.StatelessRulesAndCustomActions = expandStatelessRulesAndCustomActions(v)
 			}
 
@@ -849,8 +848,8 @@ func expandRuleGroup(tfMap map[string]interface{}) *awstypes.RuleGroup {
 		}
 	}
 
-	if v, ok := tfMap["stateful_rule_options"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		if tfMap, ok := v[0].(map[string]interface{}); ok {
+	if v, ok := tfMap["stateful_rule_options"].([]any); ok && len(v) > 0 && v[0] != nil {
+		if tfMap, ok := v[0].(map[string]any); ok {
 			statefulRuleOptions := &awstypes.StatefulRuleOptions{}
 
 			if v, ok := tfMap["rule_order"].(string); ok && v != "" {
@@ -864,7 +863,7 @@ func expandRuleGroup(tfMap map[string]interface{}) *awstypes.RuleGroup {
 	return apiObject
 }
 
-func expandIPSetReferences(tfList []interface{}) map[string]awstypes.IPSetReference {
+func expandIPSetReferences(tfList []any) map[string]awstypes.IPSetReference {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -872,14 +871,14 @@ func expandIPSetReferences(tfList []interface{}) map[string]awstypes.IPSetRefere
 	apiObject := make(map[string]awstypes.IPSetReference)
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
 
 		if k, ok := tfMap[names.AttrKey].(string); ok && k != "" {
-			if v, ok := tfMap["ip_set_reference"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-				if tfMap, ok := v[0].(map[string]interface{}); ok {
+			if v, ok := tfMap["ip_set_reference"].([]any); ok && len(v) > 0 && v[0] != nil {
+				if tfMap, ok := v[0].(map[string]any); ok {
 					if v, ok := tfMap["reference_arn"].(string); ok && v != "" {
 						apiObject[k] = awstypes.IPSetReference{
 							ReferenceArn: aws.String(v),
@@ -892,7 +891,7 @@ func expandIPSetReferences(tfList []interface{}) map[string]awstypes.IPSetRefere
 
 	return apiObject
 }
-func expandPortSets(tfList []interface{}) map[string]awstypes.PortSet {
+func expandPortSets(tfList []any) map[string]awstypes.PortSet {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -900,14 +899,14 @@ func expandPortSets(tfList []interface{}) map[string]awstypes.PortSet {
 	apiObject := make(map[string]awstypes.PortSet)
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
 
 		if k, ok := tfMap[names.AttrKey].(string); ok && k != "" {
-			if v, ok := tfMap["port_set"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-				if tfMap, ok := v[0].(map[string]interface{}); ok {
+			if v, ok := tfMap["port_set"].([]any); ok && len(v) > 0 && v[0] != nil {
+				if tfMap, ok := v[0].(map[string]any); ok {
 					if v, ok := tfMap["definition"].(*schema.Set); ok && v.Len() > 0 {
 						apiObject[k] = awstypes.PortSet{
 							Definition: flex.ExpandStringValueSet(v),
@@ -921,7 +920,7 @@ func expandPortSets(tfList []interface{}) map[string]awstypes.PortSet {
 	return apiObject
 }
 
-func expandAddresses(tfList []interface{}) []awstypes.Address {
+func expandAddresses(tfList []any) []awstypes.Address {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -929,7 +928,7 @@ func expandAddresses(tfList []interface{}) []awstypes.Address {
 	apiObjects := make([]awstypes.Address, 0, len(tfList))
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -946,7 +945,7 @@ func expandAddresses(tfList []interface{}) []awstypes.Address {
 	return apiObjects
 }
 
-func expandPortRanges(tfList []interface{}) []awstypes.PortRange {
+func expandPortRanges(tfList []any) []awstypes.PortRange {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -954,7 +953,7 @@ func expandPortRanges(tfList []interface{}) []awstypes.PortRange {
 	apiObjects := make([]awstypes.PortRange, 0, len(tfList))
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -974,7 +973,7 @@ func expandPortRanges(tfList []interface{}) []awstypes.PortRange {
 	return apiObjects
 }
 
-func expandTCPFlags(tfList []interface{}) []awstypes.TCPFlagField {
+func expandTCPFlags(tfList []any) []awstypes.TCPFlagField {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -982,7 +981,7 @@ func expandTCPFlags(tfList []interface{}) []awstypes.TCPFlagField {
 	apiObjects := make([]awstypes.TCPFlagField, 0, len(tfList))
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -1002,12 +1001,12 @@ func expandTCPFlags(tfList []interface{}) []awstypes.TCPFlagField {
 	return apiObjects
 }
 
-func expandMatchAttributes(tfList []interface{}) *awstypes.MatchAttributes {
+func expandMatchAttributes(tfList []any) *awstypes.MatchAttributes {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -1036,12 +1035,12 @@ func expandMatchAttributes(tfList []interface{}) *awstypes.MatchAttributes {
 	return apiObject
 }
 
-func expandRuleDefinition(tfList []interface{}) *awstypes.RuleDefinition {
+func expandRuleDefinition(tfList []any) *awstypes.RuleDefinition {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -1051,14 +1050,14 @@ func expandRuleDefinition(tfList []interface{}) *awstypes.RuleDefinition {
 	if v, ok := tfMap[names.AttrActions].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.Actions = flex.ExpandStringValueSet(v)
 	}
-	if v, ok := tfMap["match_attributes"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap["match_attributes"].([]any); ok && len(v) > 0 && v[0] != nil {
 		apiObject.MatchAttributes = expandMatchAttributes(v)
 	}
 
 	return apiObject
 }
 
-func expandStatelessRules(tfList []interface{}) []awstypes.StatelessRule {
+func expandStatelessRules(tfList []any) []awstypes.StatelessRule {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -1066,7 +1065,7 @@ func expandStatelessRules(tfList []interface{}) []awstypes.StatelessRule {
 	apiObjects := make([]awstypes.StatelessRule, 0, len(tfList))
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -1076,7 +1075,7 @@ func expandStatelessRules(tfList []interface{}) []awstypes.StatelessRule {
 		if v, ok := tfMap[names.AttrPriority].(int); ok && v > 0 {
 			apiObject.Priority = aws.Int32(int32(v))
 		}
-		if v, ok := tfMap["rule_definition"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		if v, ok := tfMap["rule_definition"].([]any); ok && len(v) > 0 && v[0] != nil {
 			apiObject.RuleDefinition = expandRuleDefinition(v)
 		}
 
@@ -1086,14 +1085,14 @@ func expandStatelessRules(tfList []interface{}) []awstypes.StatelessRule {
 	return apiObjects
 }
 
-func expandStatelessRulesAndCustomActions(tfList []interface{}) *awstypes.StatelessRulesAndCustomActions {
+func expandStatelessRulesAndCustomActions(tfList []any) *awstypes.StatelessRulesAndCustomActions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.StatelessRulesAndCustomActions{}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -1108,42 +1107,42 @@ func expandStatelessRulesAndCustomActions(tfList []interface{}) *awstypes.Statel
 	return apiObject
 }
 
-func flattenRuleGroup(apiObject *awstypes.RuleGroup) []interface{} {
+func flattenRuleGroup(apiObject *awstypes.RuleGroup) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"reference_sets":        flattenReferenceSets(apiObject.ReferenceSets),
 		"rule_variables":        flattenRuleVariables(apiObject.RuleVariables),
 		"rules_source":          flattenRulesSource(apiObject.RulesSource),
 		"stateful_rule_options": flattenStatefulRulesOptions(apiObject.StatefulRuleOptions),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenReferenceSets(apiObject *awstypes.ReferenceSets) []interface{} {
+func flattenReferenceSets(apiObject *awstypes.ReferenceSets) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"ip_set_references": flattenIPSetReferences(apiObject.IPSetReferences),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenIPSetReferences(apiObject map[string]awstypes.IPSetReference) []interface{} {
+func flattenIPSetReferences(apiObject map[string]awstypes.IPSetReference) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfList := make([]interface{}, 0, len(apiObject))
+	tfList := make([]any, 0, len(apiObject))
 
 	for k, v := range apiObject {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			"ip_set_reference": flattenIPSetReference(&v),
 			names.AttrKey:      k,
 		}
@@ -1154,40 +1153,40 @@ func flattenIPSetReferences(apiObject map[string]awstypes.IPSetReference) []inte
 	return tfList
 }
 
-func flattenIPSetReference(apiObject *awstypes.IPSetReference) []interface{} {
+func flattenIPSetReference(apiObject *awstypes.IPSetReference) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"reference_arn": aws.ToString(apiObject.ReferenceArn),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenRuleVariables(apiObject *awstypes.RuleVariables) []interface{} {
+func flattenRuleVariables(apiObject *awstypes.RuleVariables) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"ip_sets":   flattenIPSets(apiObject.IPSets),
 		"port_sets": flattenPortSets(apiObject.PortSets),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenPortSets(apiObject map[string]awstypes.PortSet) []interface{} {
+func flattenPortSets(apiObject map[string]awstypes.PortSet) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfList := make([]interface{}, 0, len(apiObject))
+	tfList := make([]any, 0, len(apiObject))
 
 	for k, v := range apiObject {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			names.AttrKey: k,
 			"port_set":    flattenPortSet(&v),
 		}
@@ -1198,56 +1197,56 @@ func flattenPortSets(apiObject map[string]awstypes.PortSet) []interface{} {
 	return tfList
 }
 
-func flattenPortSet(apiObject *awstypes.PortSet) []interface{} {
+func flattenPortSet(apiObject *awstypes.PortSet) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"definition": apiObject.Definition,
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenRulesSource(apiObject *awstypes.RulesSource) []interface{} {
+func flattenRulesSource(apiObject *awstypes.RulesSource) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"rules_source_list":                  flattenRulesSourceList(apiObject.RulesSourceList),
 		"rules_string":                       aws.ToString(apiObject.RulesString),
 		"stateful_rule":                      flattenStatefulRules(apiObject.StatefulRules),
 		"stateless_rules_and_custom_actions": flattenStatelessRulesAndCustomActions(apiObject.StatelessRulesAndCustomActions),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenRulesSourceList(apiObject *awstypes.RulesSourceList) []interface{} {
+func flattenRulesSourceList(apiObject *awstypes.RulesSourceList) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"generated_rules_type": apiObject.GeneratedRulesType,
 		"target_types":         apiObject.TargetTypes,
 		"targets":              apiObject.Targets,
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenStatefulRules(apiObjects []awstypes.StatefulRule) []interface{} {
+func flattenStatefulRules(apiObjects []awstypes.StatefulRule) []any {
 	if apiObjects == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfList := make([]interface{}, 0, len(apiObjects))
+	tfList := make([]any, 0, len(apiObjects))
 
 	for _, apiObject := range apiObjects {
-		m := map[string]interface{}{
+		m := map[string]any{
 			names.AttrAction: apiObject.Action,
 			names.AttrHeader: flattenHeader(apiObject.Header),
 			"rule_option":    flattenRuleOptions(apiObject.RuleOptions),
@@ -1259,12 +1258,12 @@ func flattenStatefulRules(apiObjects []awstypes.StatefulRule) []interface{} {
 	return tfList
 }
 
-func flattenHeader(apiObject *awstypes.Header) []interface{} {
+func flattenHeader(apiObject *awstypes.Header) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		names.AttrDestination: aws.ToString(apiObject.Destination),
 		"destination_port":    aws.ToString(apiObject.DestinationPort),
 		"direction":           apiObject.Direction,
@@ -1273,18 +1272,18 @@ func flattenHeader(apiObject *awstypes.Header) []interface{} {
 		"source_port":         aws.ToString(apiObject.SourcePort),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenRuleOptions(apiObjects []awstypes.RuleOption) []interface{} {
+func flattenRuleOptions(apiObjects []awstypes.RuleOption) []any {
 	if apiObjects == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfList := make([]interface{}, 0, len(apiObjects))
+	tfList := make([]any, 0, len(apiObjects))
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			"keyword":  aws.ToString(apiObject.Keyword),
 			"settings": apiObject.Settings,
 		}
@@ -1295,28 +1294,28 @@ func flattenRuleOptions(apiObjects []awstypes.RuleOption) []interface{} {
 	return tfList
 }
 
-func flattenStatelessRulesAndCustomActions(apiObject *awstypes.StatelessRulesAndCustomActions) []interface{} {
+func flattenStatelessRulesAndCustomActions(apiObject *awstypes.StatelessRulesAndCustomActions) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"custom_action":  flattenCustomActions(apiObject.CustomActions),
 		"stateless_rule": flattenStatelessRules(apiObject.StatelessRules),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenStatelessRules(apiObjects []awstypes.StatelessRule) []interface{} {
+func flattenStatelessRules(apiObjects []awstypes.StatelessRule) []any {
 	if apiObjects == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfList := make([]interface{}, 0, len(apiObjects))
+	tfList := make([]any, 0, len(apiObjects))
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			names.AttrPriority: aws.ToInt32(apiObject.Priority),
 			"rule_definition":  flattenRuleDefinition(apiObject.RuleDefinition),
 		}
@@ -1327,25 +1326,25 @@ func flattenStatelessRules(apiObjects []awstypes.StatelessRule) []interface{} {
 	return tfList
 }
 
-func flattenRuleDefinition(apiObject *awstypes.RuleDefinition) []interface{} {
+func flattenRuleDefinition(apiObject *awstypes.RuleDefinition) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		names.AttrActions:  apiObject.Actions,
 		"match_attributes": flattenMatchAttributes(apiObject.MatchAttributes),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenMatchAttributes(apiObject *awstypes.MatchAttributes) []interface{} {
+func flattenMatchAttributes(apiObject *awstypes.MatchAttributes) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		names.AttrDestination: flattenAddresses(apiObject.Destinations),
 		"destination_port":    flattenPortRanges(apiObject.DestinationPorts),
 		"protocols":           apiObject.Protocols,
@@ -1354,18 +1353,18 @@ func flattenMatchAttributes(apiObject *awstypes.MatchAttributes) []interface{} {
 		"tcp_flag":            flattenTCPFlags(apiObject.TCPFlags),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenAddresses(apiObjects []awstypes.Address) []interface{} {
+func flattenAddresses(apiObjects []awstypes.Address) []any {
 	if apiObjects == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfList := make([]interface{}, 0, len(apiObjects))
+	tfList := make([]any, 0, len(apiObjects))
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			"address_definition": aws.ToString(apiObject.AddressDefinition),
 		}
 
@@ -1375,15 +1374,15 @@ func flattenAddresses(apiObjects []awstypes.Address) []interface{} {
 	return tfList
 }
 
-func flattenPortRanges(apiObjects []awstypes.PortRange) []interface{} {
+func flattenPortRanges(apiObjects []awstypes.PortRange) []any {
 	if apiObjects == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfList := make([]interface{}, 0, len(apiObjects))
+	tfList := make([]any, 0, len(apiObjects))
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			"from_port": apiObject.FromPort,
 			"to_port":   apiObject.ToPort,
 		}
@@ -1394,15 +1393,15 @@ func flattenPortRanges(apiObjects []awstypes.PortRange) []interface{} {
 	return tfList
 }
 
-func flattenTCPFlags(apiObjects []awstypes.TCPFlagField) []interface{} {
+func flattenTCPFlags(apiObjects []awstypes.TCPFlagField) []any {
 	if apiObjects == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfList := make([]interface{}, 0, len(apiObjects))
+	tfList := make([]any, 0, len(apiObjects))
 
 	for _, apiObject := range apiObjects {
-		m := map[string]interface{}{
+		m := map[string]any{
 			"flags": apiObject.Flags,
 			"masks": apiObject.Masks,
 		}
@@ -1413,14 +1412,14 @@ func flattenTCPFlags(apiObjects []awstypes.TCPFlagField) []interface{} {
 	return tfList
 }
 
-func flattenStatefulRulesOptions(apiObject *awstypes.StatefulRuleOptions) []interface{} {
+func flattenStatefulRulesOptions(apiObject *awstypes.StatefulRuleOptions) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"rule_order": apiObject.RuleOrder,
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

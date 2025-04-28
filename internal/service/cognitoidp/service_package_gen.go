@@ -4,6 +4,7 @@ package cognitoidp
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
@@ -17,16 +18,19 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newUserGroupDataSource,
-			Name:    "User Group",
+			Factory:  newUserGroupDataSource,
+			TypeName: "aws_cognito_user_group",
+			Name:     "User Group",
 		},
 		{
-			Factory: newUserGroupsDataSource,
-			Name:    "User Groups",
+			Factory:  newUserGroupsDataSource,
+			TypeName: "aws_cognito_user_groups",
+			Name:     "User Groups",
 		},
 		{
-			Factory: newUserPoolDataSource,
-			Name:    "User Pool",
+			Factory:  newUserPoolDataSource,
+			TypeName: "aws_cognito_user_pool",
+			Name:     "User Pool",
 		},
 	}
 }
@@ -34,12 +38,14 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newManagedUserPoolClientResource,
-			Name:    "Managed User Pool Client",
+			Factory:  newManagedUserPoolClientResource,
+			TypeName: "aws_cognito_managed_user_pool_client",
+			Name:     "Managed User Pool Client",
 		},
 		{
-			Factory: newUserPoolClientResource,
-			Name:    "User Pool Client",
+			Factory:  newUserPoolClientResource,
+			TypeName: "aws_cognito_user_pool_client",
+			Name:     "User Pool Client",
 		},
 	}
 }
@@ -105,9 +111,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceUserPool,
 			TypeName: "aws_cognito_user_pool",
 			Name:     "User Pool",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
 		},
 		{
 			Factory:  resourceUserPoolDomain,
@@ -129,11 +135,31 @@ func (p *servicePackage) ServicePackageName() string {
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*cognitoidentityprovider.Client, error) {
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
-
-	return cognitoidentityprovider.NewFromConfig(cfg,
+	optFns := []func(*cognitoidentityprovider.Options){
 		cognitoidentityprovider.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
-	), nil
+		withExtraOptions(ctx, p, config),
+	}
+
+	return cognitoidentityprovider.NewFromConfig(cfg, optFns...), nil
+}
+
+// withExtraOptions returns a functional option that allows this service package to specify extra API client options.
+// This option is always called after any generated options.
+func withExtraOptions(ctx context.Context, sp conns.ServicePackage, config map[string]any) func(*cognitoidentityprovider.Options) {
+	if v, ok := sp.(interface {
+		withExtraOptions(context.Context, map[string]any) []func(*cognitoidentityprovider.Options)
+	}); ok {
+		optFns := v.withExtraOptions(ctx, config)
+
+		return func(o *cognitoidentityprovider.Options) {
+			for _, optFn := range optFns {
+				optFn(o)
+			}
+		}
+	}
+
+	return func(*cognitoidentityprovider.Options) {}
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

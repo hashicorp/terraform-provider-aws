@@ -150,7 +150,7 @@ sso_start_url = https://d-123456789a.awsapps.com/start#
 			maps.Copy(config, tc.Config)
 
 			if tc.SharedConfigurationFile != "" {
-				file, err := os.CreateTemp("", "aws-sdk-go-base-shared-configuration-file")
+				file, err := os.CreateTemp(t.TempDir(), "aws-sdk-go-base-shared-configuration-file")
 
 				if err != nil {
 					t.Fatalf("unexpected error creating temporary shared configuration file: %s", err)
@@ -173,6 +173,8 @@ sso_start_url = https://d-123456789a.awsapps.com/start#
 			if err != nil {
 				t.Fatal(err)
 			}
+
+			p.TerraformVersion = "1.0.0"
 
 			var diags diag.Diagnostics
 			diags = append(diags, p.Validate(rc)...)
@@ -267,6 +269,8 @@ func (d testCaseDriver) Apply(ctx context.Context, t *testing.T) (context.Contex
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	p.TerraformVersion = "1.0.0"
 
 	var diags diag.Diagnostics
 	diags = append(diags, p.Validate(rc)...)
@@ -598,6 +602,8 @@ func TestProviderConfig_AssumeRole(t *testing.T) { //nolint:paralleltest
 			if err != nil {
 				t.Fatal(err)
 			}
+
+			p.TerraformVersion = "1.0.0"
 
 			var diags diag.Diagnostics
 			diags = append(diags, p.Validate(rc)...)

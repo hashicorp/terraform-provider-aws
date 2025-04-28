@@ -820,6 +820,80 @@ func TestAccSQSQueue_defaultKMSDataKeyReusePeriodSeconds(t *testing.T) {
 	})
 }
 
+// https://github.com/hashicorp/terraform-provider-aws/issues/40728.
+func TestAccSQSQueue_ManagedEncryption_kmsDataKeyReusePeriodSeconds(t *testing.T) {
+	ctx := acctest.Context(t)
+	var queueAttributes map[types.QueueAttributeName]string
+	resourceName := "aws_sqs_queue.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SQSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckQueueDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccQueueConfig_managedEncryptionKMSDataKeyReusePeriodSeconds(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckQueueExists(ctx, resourceName, &queueAttributes),
+					resource.TestCheckResourceAttr(resourceName, "sqs_managed_sse_enabled", acctest.CtTrue),
+				),
+			},
+		},
+	})
+}
+
+func TestAccSQSQueue_timeouts(t *testing.T) {
+	ctx := acctest.Context(t)
+	var queueAttributes map[types.QueueAttributeName]string
+	resourceName := "aws_sqs_queue.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SQSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckQueueDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccQueueConfig_timeouts(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckQueueExists(ctx, resourceName, &queueAttributes),
+				),
+			},
+		},
+	})
+}
+
+// SQS does not return kms_data_key_reuse_period_seconds when not using encryption, even if it is sent in the
+// request, causing hanging when statusQueueAttributeState() waited for the attributes to propagate.
+// https://github.com/hashicorp/terraform-provider-aws/pull/41234
+func TestAccSQSQueue_noEncryptionKMSDataKeyReusePeriodSeconds(t *testing.T) {
+	ctx := acctest.Context(t)
+	var queueAttributes map[types.QueueAttributeName]string
+	resourceName := "aws_sqs_queue.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SQSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckQueueDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccQueueConfig_noManagedEncryptionKMSDataKeyReusePeriodSeconds(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckQueueExists(ctx, resourceName, &queueAttributes),
+					resource.TestCheckResourceAttr(resourceName, "sqs_managed_sse_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "kms_master_key_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "kms_data_key_reuse_period_seconds", "300"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckQueuePolicyAttribute(ctx context.Context, queueAttributes *map[types.QueueAttributeName]string, rName, policyTemplate string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		expectedPolicy := fmt.Sprintf(policyTemplate, acctest.Partition(), acctest.Region(), acctest.AccountID(ctx), rName)
@@ -1222,6 +1296,74 @@ func testAccQueueConfig_defaultKMSDataKeyReusePeriodSeconds(rName string) string
 resource "aws_sqs_queue" "test" {
   name                              = %[1]q
   kms_data_key_reuse_period_seconds = 300
+}
+`, rName)
+}
+
+func testAccQueueConfig_managedEncryptionKMSDataKeyReusePeriodSeconds(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_sqs_queue" "test" {
+  kms_data_key_reuse_period_seconds = "60"
+  max_message_size                  = "261244"
+  message_retention_seconds         = "60"
+  name                              = %[1]q
+  sqs_managed_sse_enabled           = true
+  visibility_timeout_seconds        = "60"
+  receive_wait_time_seconds         = "10"
+}
+`, rName)
+}
+
+// 29497
+func testAccQueueConfig_timeouts(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_sqs_queue" "test" {
+  name = %[1]q
+
+  timeouts {
+    create = "10m"
+  }
+}
+
+resource "aws_sqs_queue_policy" "test" {
+  queue_url = aws_sqs_queue.test.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Sid    = "SQS-Queue-Access-Policy"
+      Effect = "Allow"
+      Principal = {
+        Service = "s3.amazonaws.com"
+      }
+      Action   = "SQS:SendMessage"
+      Resource = aws_sqs_queue.test.arn
+      Condition = {
+        ArnLike = {
+          "aws:SourceArn" = aws_s3_bucket.test.arn
+        }
+      }
+    }]
+  })
+}
+`, rName)
+}
+
+func testAccQueueConfig_noManagedEncryptionKMSDataKeyReusePeriodSeconds(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_sqs_queue" "test" {
+  fifo_queue                        = true
+  kms_data_key_reuse_period_seconds = "60"
+  max_message_size                  = "261244"
+  message_retention_seconds         = "60"
+  name                              = "%[1]s.fifo"
+  receive_wait_time_seconds         = "10"
+  sqs_managed_sse_enabled           = false
+  visibility_timeout_seconds        = "60"
 }
 `, rName)
 }

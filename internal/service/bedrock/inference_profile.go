@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
@@ -54,15 +53,12 @@ const (
 
 type resourceInferenceProfile struct {
 	framework.ResourceWithConfigure
+	framework.WithImportByID
 	framework.WithTimeouts
 }
 
-func (r *resourceInferenceProfile) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_bedrock_inference_profile"
-}
-
 func (r *resourceInferenceProfile) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	modelsAttribute := framework.ResourceComputedListOfObjectAttribute[resourceInferenceProfileModelModel](ctx)
+	modelsAttribute := framework.ResourceComputedListOfObjectsAttribute[resourceInferenceProfileModelModel](ctx)
 	modelsAttribute.PlanModifiers = []planmodifier.List{
 		listplanmodifier.UseStateForUnknown(),
 	}
@@ -278,14 +274,6 @@ func (r *resourceInferenceProfile) Delete(ctx context.Context, req resource.Dele
 	}
 }
 
-func (r *resourceInferenceProfile) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, req, resp)
-}
-
-func (r *resourceInferenceProfile) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-}
-
 func waitInferenceProfileCreated(ctx context.Context, conn *bedrock.Client, id string, timeout time.Duration) (*bedrock.GetInferenceProfileOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
@@ -321,7 +309,7 @@ func waitInferenceProfileDeleted(ctx context.Context, conn *bedrock.Client, id s
 }
 
 func statusInferenceProfile(ctx context.Context, conn *bedrock.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := findInferenceProfileByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil

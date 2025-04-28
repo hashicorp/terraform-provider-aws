@@ -25,7 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Service Integration")
+// @FrameworkResource("aws_devopsguru_service_integration", name="Service Integration")
 func newResourceServiceIntegration(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceServiceIntegration{}, nil
 }
@@ -36,10 +36,7 @@ const (
 
 type resourceServiceIntegration struct {
 	framework.ResourceWithConfigure
-}
-
-func (r *resourceServiceIntegration) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_devopsguru_service_integration"
+	framework.WithImportByID
 }
 
 func (r *resourceServiceIntegration) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -253,10 +250,6 @@ func (r *resourceServiceIntegration) Delete(ctx context.Context, req resource.De
 	// that if users want to disable any settings previously opt-ed into they should
 	// do so by applying those changes to an existing configuration before destroying
 	// this resource.
-}
-
-func (r *resourceServiceIntegration) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func (r *resourceServiceIntegration) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {

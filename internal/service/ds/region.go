@@ -88,12 +88,10 @@ func resourceRegion() *schema.Resource {
 				},
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceRegionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRegionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DSClient(ctx)
 
@@ -105,8 +103,8 @@ func resourceRegionCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		RegionName:  aws.String(regionName),
 	}
 
-	if v, ok := d.GetOk("vpc_settings"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.VPCSettings = expandDirectoryVpcSettings(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("vpc_settings"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.VPCSettings = expandDirectoryVpcSettings(v.([]any)[0].(map[string]any))
 	}
 
 	_, err := conn.AddRegion(ctx, input)
@@ -140,7 +138,7 @@ func resourceRegionCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceRegionRead(ctx, d, meta)...)
 }
 
-func resourceRegionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRegionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DSClient(ctx)
 
@@ -165,7 +163,7 @@ func resourceRegionRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("directory_id", region.DirectoryId)
 	d.Set("region_name", region.RegionName)
 	if region.VpcSettings != nil {
-		if err := d.Set("vpc_settings", []interface{}{flattenDirectoryVpcSettings(region.VpcSettings)}); err != nil {
+		if err := d.Set("vpc_settings", []any{flattenDirectoryVpcSettings(region.VpcSettings)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting vpc_settings: %s", err)
 		}
 	} else {
@@ -182,12 +180,12 @@ func resourceRegionRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "listing tags for Directory Service Directory (%s): %s", directoryID, err)
 	}
 
-	setTagsOut(ctx, Tags(tags))
+	setTagsOut(ctx, svcTags(tags))
 
 	return diags
 }
 
-func resourceRegionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRegionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DSClient(ctx)
 
@@ -218,7 +216,7 @@ func resourceRegionUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceRegionRead(ctx, d, meta)...)
 }
 
-func resourceRegionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRegionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DSClient(ctx)
 
@@ -232,9 +230,10 @@ func resourceRegionDelete(ctx context.Context, d *schema.ResourceData, meta inte
 		o.Region = regionName
 	}
 
-	_, err = conn.RemoveRegion(ctx, &directoryservice.RemoveRegionInput{
+	input := directoryservice.RemoveRegionInput{
 		DirectoryId: aws.String(directoryID),
-	}, optFn)
+	}
+	_, err = conn.RemoveRegion(ctx, &input, optFn)
 
 	if errs.IsA[*awstypes.DirectoryDoesNotExistException](err) {
 		return diags
@@ -327,7 +326,7 @@ func findRegionByTwoPartKey(ctx context.Context, conn *directoryservice.Client, 
 }
 
 func statusRegion(ctx context.Context, conn *directoryservice.Client, directoryID, regionName string, optFns ...func(*directoryservice.Options)) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findRegionByTwoPartKey(ctx, conn, directoryID, regionName, optFns...)
 
 		if tfresource.NotFound(err) {
