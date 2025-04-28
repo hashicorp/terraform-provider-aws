@@ -91,8 +91,8 @@ github.com/aws/aws-sdk-go-v2/service/autoscalingplans v1.25.2 h1:BGKtQa+75o+Djbp
 github.com/aws/aws-sdk-go-v2/service/autoscalingplans v1.25.2/go.mod h1:3PncH8kIHLvjQp14NNyY1ufHK1WeAqySV7N8x/srLLs=
 github.com/aws/aws-sdk-go-v2/service/backup v1.41.2 h1:ZUhpA6CSdSujpAnVkM9KKa/ZLZWtz9ixE/yxjYJsqFA=
 github.com/aws/aws-sdk-go-v2/service/backup v1.41.2/go.mod h1:m+D3BbPUewtKk/9bWmxGVg1mDeNCu5NtPoTdiLQnEM8=
-github.com/aws/aws-sdk-go-v2/service/batch v1.52.2 h1:nE6oDDpKBD/dmEVNAEkEharzI6Kn0gK6N4jkTYwknMo=
-github.com/aws/aws-sdk-go-v2/service/batch v1.52.2/go.mod h1:F8tHrowT/XPtWMERTbDvJDUILrZgUV8W2lg4MmiuMtc=
+github.com/aws/aws-sdk-go-v2/service/batch v1.52.3 h1:OnK28xGcooIEL2FGT8aqwBT4kcPHNlhajo7vMwbgySk=
+github.com/aws/aws-sdk-go-v2/service/batch v1.52.3/go.mod h1:F8tHrowT/XPtWMERTbDvJDUILrZgUV8W2lg4MmiuMtc=
 github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.8.2 h1:7dnMkzLAQi6wQPVQavB4rjBjXTEvZCE5GfRQaI9NLiw=
 github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.8.2/go.mod h1:py9ul1V8YOAOcDtYs9mXfyhWr/tYaJm8kZ5ycgR0SR4=
 github.com/aws/aws-sdk-go-v2/service/bedrock v1.32.0 h1:R3ecGWZx5hQ94C1u5ho8ghDnoEbThTJkZgkpdbWNs+A=
@@ -221,8 +221,8 @@ github.com/aws/aws-sdk-go-v2/service/ecr v1.43.3 h1:YyH8Hk73bYzdbvf6S8NF5z/fb/1s
 github.com/aws/aws-sdk-go-v2/service/ecr v1.43.3/go.mod h1:iQ1skgw1XRK+6Lgkb0I9ODatAP72WoTILh0zXQ5DtbU=
 github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.32.2 h1:aKT7DQn1Nvlr5QNL03/gdYr0m7FarLS9CkNCUfyFRFI=
 github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.32.2/go.mod h1:RZL7ov7c72wSmoM8bIiVxRHgcVdzhNkVW2J36C8RF4s=
-github.com/aws/aws-sdk-go-v2/service/ecs v1.56.1 h1:pbkmAJSlehg//B3pQzetxnyGmOfvtNX+g639f15rVjM=
-github.com/aws/aws-sdk-go-v2/service/ecs v1.56.1/go.mod h1:wAtdeFanDuF9Re/ge4DRDaYe3Wy1OGrU7jG042UcuI4=
+github.com/aws/aws-sdk-go-v2/service/ecs v1.56.2 h1:oYHra2ttm7jOSY/wfuTeEnH164O6Eo3AuygreQKa+Gg=
+github.com/aws/aws-sdk-go-v2/service/ecs v1.56.2/go.mod h1:wAtdeFanDuF9Re/ge4DRDaYe3Wy1OGrU7jG042UcuI4=
 github.com/aws/aws-sdk-go-v2/service/efs v1.35.3 h1:sFmWdaUUJvhuH3qW8khEZH2J2m/L7T9wHtsKhfwT+Tw=
 github.com/aws/aws-sdk-go-v2/service/efs v1.35.3/go.mod h1:XT6hcgC1HV33EBGPWdXnbgyeqND4k43qX3argLyEZM8=
 github.com/aws/aws-sdk-go-v2/service/eks v1.64.0 h1:EYeOThTRysemFtC6J6h6b7dNg3jN03QuO5cg92ojIQE=
@@ -555,8 +555,8 @@ github.com/aws/aws-sdk-go-v2/service/workspaces v1.55.2 h1:9l2DhgQTyTu1TYsiewHus
 github.com/aws/aws-sdk-go-v2/service/workspaces v1.55.2/go.mod h1:/YN7Ft92lmFXqFWyEpl1kLnbhDZjDL82S4ibIxPK7ow=
 github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.27.2 h1:EbMcFJm+qQMnZ7Siyp9sPMzaulTGsiXfy2uTvKmzLZY=
 github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.27.2/go.mod h1:XvRRv60AFt7FKxxcb9OHbx9QxwoFU0hexFUqF7THWR4=
-github.com/aws/aws-sdk-go-v2/service/xray v1.31.3 h1:qpjxj2if0eykPWgRchNVIJVq1xg0XH/jmt8U5SdNdf4=
-github.com/aws/aws-sdk-go-v2/service/xray v1.31.3/go.mod h1:SCgjo2KNA41rc34+CZmwj4DmuTwy3pBBy3+n35rDink=
+github.com/aws/aws-sdk-go-v2/service/xray v1.31.4 h1:daGoSRuWZ6yvV813ugPw8QwWM9I1W97KUyy+TqrX3GA=
+github.com/aws/aws-sdk-go-v2/service/xray v1.31.4/go.mod h1:SCgjo2KNA41rc34+CZmwj4DmuTwy3pBBy3+n35rDink=
 github.com/aws/smithy-go v1.22.3 h1:Z//5NuZCSW6R4PhQ93hShNbyBbn8BWCmCVCt+Q8Io5k=
 github.com/aws/smithy-go v1.22.3/go.mod h1:t1ufH5HMublsJYulve2RKmHDC15xu1f26kHCp/HgceI=
 github.com/beevik/etree v1.5.1 h1:TC3zyxYp+81wAmbsi8SWUpZCurbxa6S8RITYRSkNRwo=
@@ -842,10 +842,10 @@ golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543/go.mod h1:I/5z698sn9Ka8T
 google.golang.org/appengine v1.1.0/go.mod h1:EbEs0AVv82hx2wNQdGPgUI5lhzA/G0D9YwlJXL52JkM=
 google.golang.org/appengine v1.6.8 h1:IhEN5q69dyKagZPYMSdIjS2HqprW324FRQZJcGqPAsM=
 google.golang.org/appengine v1.6.8/go.mod h1:1jJ3jBArFh5pcgW8gCtRJnepW8FzD1V44FJffLiz/Ds=
-google.golang.org/genproto/googleapis/rpc v0.0.0-20250414145226-207652e42e2e h1:ztQaXfzEXTmCBvbtWYRhJxW+0iJcz2qXfd38/e9l7bA=
-google.golang.org/genproto/googleapis/rpc v0.0.0-20250414145226-207652e42e2e/go.mod h1:qQ0YXyHHx3XkvlzUtpXDkS29lDSafHMZBAZDc03LQ3A=
-google.golang.org/grpc v1.71.1 h1:ffsFWr7ygTUscGPI0KKK6TLrGz0476KUvvsbqWK0rPI=
-google.golang.org/grpc v1.71.1/go.mod h1:H0GRtasmQOh9LkFoCPDu3ZrwUtD1YGE+b2vYBYd/8Ec=
+google.golang.org/genproto/googleapis/rpc v0.0.0-20250425173222-7b384671a197 h1:29cjnHVylHwTzH66WfFZqgSQgnxzvWE+jvBwpZCLRxY=
+google.golang.org/genproto/googleapis/rpc v0.0.0-20250425173222-7b384671a197/go.mod h1:qQ0YXyHHx3XkvlzUtpXDkS29lDSafHMZBAZDc03LQ3A=
+google.golang.org/grpc v1.72.0 h1:S7UkcVa60b5AAQTaO6ZKamFp1zMZSU0fGDK2WZLbBnM=
+google.golang.org/grpc v1.72.0/go.mod h1:wH5Aktxcg25y1I3w7H69nHfXdOG3UiadoBtjh3izSDM=
 google.golang.org/protobuf v1.26.0-rc.1/go.mod h1:jlhhOSvTdKEhbULTjvd4ARK9grFBp09yW+WbY/TyQbw=
 google.golang.org/protobuf v1.26.0/go.mod h1:9q0QmTI4eRPtz6boOQmLYwt+qCgq0jsYwAQnmE0givc=
 google.golang.org/protobuf v1.36.6 h1:z1NpPI8ku2WgiWnf+t9wTPsn6eP1L7ksHUlkfLvd9xY=
