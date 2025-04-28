@@ -12,11 +12,13 @@ Provides a resource to manage the access point scope for a directory bucket.
 
 With access points for directory buckets, you can use the access point scope to restrict access to specific prefixes, API actions, or a combination of both. You can specify any amount of prefixes, but the total length of characters of all prefixes must be less than 256 bytes. For more information, see [AWS Documentation](https://docs.aws.amazon.com/AmazonS3/latest/userguide/access-points-directory-buckets-manage-scope.html).
 
-NOTE: Terraform provides two ways to manage S3 Access Points for S3 directory buckets and their scopes. You can use a standalone resource (`aws_s3control_directory_access_point_scope`) or, you can use an in-line scope with the access point for directory bucket resource [`aws_s3_directory_access_point`](aws_s3_directory_access_point.html). You cannot use a standalone resource at the same time as in-line, which will cause an overwrite of each other. You must use one or the other.
+-> For all the services in AWS Local Zones, including Amazon S3, your accountID must be enabled before you can create or access any resource in the Local Zone. You can use the `DescribeAvailabilityZones` API operation to confirm your accountID access to a Local Zone. For more information, see [AWS Documentation](https://docs.aws.amazon.com/AmazonS3/latest/userguide/opt-in-directory-bucket-lz.html)
+
+-> Terraform provides two ways to manage access point scopes. You can use a standalone resource `aws_s3control_directory_access_point_scope` or, an in-line scope with the  [`aws_s3_directory_access_point`](aws_s3_directory_access_point.html) resource. You cannot use a standalone resource at the same time as in-line, which will cause an overwrite of each other. You must use one or the other.
 
 ## Example Usage
 
-### S3 Access Point Scope for a directory bucket in an AWS Availability Zone
+### S3 Access Point Scope for a directory bucket in an AWS Local Zone
 
 ```terraform
 resource "aws_s3_directory_bucket" "example" {
@@ -48,7 +50,7 @@ This resource supports the following arguments:
 
 * `account_id` - (Required) The AWS account ID that owns the specified access point.
 
-* `scope` - (Optional). Scope is used to restrict access to specific prefixes, API operations, or a combination of both. Removing `scope` from your configuration or setting `scope` to null _will not_ delete the scope since it could have been set by `aws_s3_directory_access_point`. To remove the `scope`, set it to `{permissions=[] prefixes=[]}`. The default scope is `{permissions=[] prefixes=[]}`.
+* `scope` - (Optional). Scope is used to restrict access to specific prefixes, API operations, or a combination of both. `scope` can be set in `aws_s3control_directory_access_point_scope` or `aws_s3_directory_access_point`. To remove the `scope`, set it to `{permissions=[] prefixes=[]}`. The default scope is `{permissions=[] prefixes=[]}`.
 
 ### scope Configuration block
 The following arguments are optional:
@@ -57,7 +59,7 @@ The following arguments are optional:
 
 * `prefixes` – (Optional) You can specify a list of prefixes, but the total length of characters of all prefixes must be less than 256 bytes. 
 
-* For more information on scope, see [AWS Documentation](https://docs.aws.amazon.com/AmazonS3/latest/userguide/access-points-directory-buckets-manage-scope.html).
+* For more information on access point scope, see [AWS Documentation](https://docs.aws.amazon.com/AmazonS3/latest/userguide/access-points-directory-buckets-manage-scope.html).
 
 ## Attribute Reference
 

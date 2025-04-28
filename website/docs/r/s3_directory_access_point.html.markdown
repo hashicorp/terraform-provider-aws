@@ -3,17 +3,19 @@ subcategory: "S3 (Simple Storage)"
 layout: "aws"
 page_title: "AWS: aws_s3_directory_access_point"
 description: |-
-  Provides a resource to manage an S3 Access Point for a S3 directory bucket.
+  Provides a resource to manage an S3 Access Point for an S3 directory bucket.
 ---
 # Resource: aws_s3_directory_access_point
-Provides a resource to manage an S3 Access Point for a S3 directory bucket.
+Provides a resource to manage an S3 Access Point for an S3 directory bucket.
 
-NOTE: Terraform provides two ways to manage access point policy and access point scope. You can use standalone resources [`aws_s3control_directory_access_point_policy`](aws_s3control_directory_access_point_policy.html) and  [`aws_s3control_directory_access_point_scope`](aws_s3control_directory_access_point_scope.html) or, you can use in-line resource [`aws_s3_directory_access_point`](aws_s3_directory_access_point.html). You cannot use a standalone resource at the same time as in-line, which will cause an overwrite of each other. You must use one or the other.
+-> For all the services in AWS Local Zones, including Amazon S3, your accountID must be enabled before you can create or access any resource in the Local Zone. You can use the `DescribeAvailabilityZones` API operation to confirm your accountID access to a Local Zone. For more information, see [AWS Documentation](https://docs.aws.amazon.com/AmazonS3/latest/userguide/opt-in-directory-bucket-lz.html)
 
-Bucket type: this resource cannot be used for access points for general purpose buckets, see [`aws_s3_access_point`](s3_access_point.html) for more. 
+-> Terraform provides two ways to manage access point policy and access point scope. You can use standalone resources [`aws_s3control_directory_access_point_policy`](aws_s3control_directory_access_point_policy.html) and  [`aws_s3control_directory_access_point_scope`](aws_s3control_directory_access_point_scope.html) or, you can use in-line resource [`aws_s3_directory_access_point`](aws_s3_directory_access_point.html). You cannot use a standalone resource at the same time as in-line, which will cause an overwrite of each other. You must use one or the other.
+
+-> Bucket type: this resource cannot be used for access points for general purpose buckets, see [`aws_s3_access_point`](s3_access_point.html) for more. 
 
 ## Example Usage
-### S3 Access Point for a directory bucket in an AWS Availability Zone or Local Zone
+### S3 Access Point for a directory bucket in an AWS Local Zone
 ```terraform
 resource "aws_s3_directory_access_point" "example" {
   bucket = "bucket--zoneid--x-s3"
@@ -25,8 +27,8 @@ resource "aws_s3_directory_access_point" "example" {
 ### S3 Access Point for a directory bucket with Scope configuration
 ```
 resource "aws_s3_directory_access_point" "example_local_zone" {
-    bucket = "bucket--lzid--x-s3"
-    name = "example--lzid--xa-s3"
+    bucket = "bucket--zoneid--x-s3"
+    name = "example--zoneid--xa-s3"
     account_id = "123456789012"
     
     scope {
@@ -38,9 +40,9 @@ resource "aws_s3_directory_access_point" "example_local_zone" {
 
 ## Argument Reference
 This resource supports the following arguments:
-* `name` - (Required) The name you want to assign to this access point. The access point name must consist of a base name that you provide and suffix that includes the ZoneID (Amazon Web Services Availability Zone or Local Zone) of your bucket location, followed by `--xa-s3`. Use the [`aws_s3_access_point`](s3_access_point.html) resource to manage access points for general purpose buckets.
+* `name` - (Required) The name you want to assign to this access point. The access point name must consist of a base name that you provide and suffix that includes the ZoneID (AWS Local Zone) of your bucket location, followed by `--xa-s3`. Use the [`aws_s3_access_point`](s3_access_point.html) resource to manage access points for general purpose buckets.
 
-* `bucket` - (Required) The name of the bucket that you want to associate this access point with. The name must be in the format `[bucket_name]--[zoneid]--x-s3`. Use the [`aws_s3_bucket`](s3_bucket.html) resource to manage general purpose buckets.
+* `bucket` - (Required) The directory bucket that you want to associate this access point with. The name must be in the format `[bucket_name]--[zoneid]--x-s3`. Use the [`aws_s3_bucket`](s3_bucket.html) resource to manage general purpose buckets.
 
 * `account_id` - (Required) The AWS account ID for the account that owns the specified access point.
 
@@ -48,9 +50,9 @@ This resource supports the following arguments:
 
 * `policy` - (Optional) Valid JSON document that specifies the policy that you want to apply to this access point. Removing `policy` from your configuration or setting `policy` to null or an empty string (i.e., `policy = ""`) _will not_ delete the policy since it could have been set by `aws_s3control_directory_access_point_policy`. To remove the `policy`, set it to `"{}"` (an empty JSON document).
 
-* `public_access_block_configuration` - (Optional) Configuration block to manage the `PublicAccessBlock` configuration that you want to apply to this directory bucket. Block Public Access is turned on by  default and cannot be changed. For more information, see [AWS Documentation](https://docs.aws.amazon.com/AmazonS3/latest/userguide/access-control-block-public-access.html).
+* `public_access_block_configuration` - (Optional) Block Public Access for directory buckets is turned on by  default and cannot be changed. For more information, see [AWS Documentation](https://docs.aws.amazon.com/AmazonS3/latest/userguide/access-control-block-public-access.html).
 
-* `vpc_configuration` - (Optional) Configuration block to restrict access to this access point to requests from the specified Virtual Private Cloud (VPC).
+* `vpc_configuration` - (Optional) If you include this field, Amazon S3 restricts access to this access point to requests from the specified virtual private cloud (VPC).
 
 * `scope` - (Optional). With access points for directory buckets, you can use the access point scope to restrict access to specific prefixes, API actions, or a combination of both. You can specify any amount of prefixes, but the total length of characters of all prefixes must be less than 256 bytes.
 
@@ -69,7 +71,7 @@ The following arguments are optional:
 
 * `prefixes` – (Optional) You can specify a list of prefixes, but the total length of characters of all prefixes must be less than 256 bytes. 
 
-* For more information on scope, see [AWS Documentation](https://docs.aws.amazon.com/AmazonS3/latest/userguide/access-points-directory-buckets-manage-scope.html).
+* For more information on access point scope, see [AWS Documentation](https://docs.aws.amazon.com/AmazonS3/latest/userguide/access-points-directory-buckets-manage-scope.html).
 
 
 ## Attribute Reference
