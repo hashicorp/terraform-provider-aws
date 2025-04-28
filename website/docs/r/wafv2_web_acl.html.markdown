@@ -461,6 +461,7 @@ This resource supports the following arguments:
 * `captcha_config` - (Optional) Specifies how AWS WAF should handle CAPTCHA evaluations on the ACL level (used by [AWS Bot Control](https://docs.aws.amazon.com/waf/latest/developerguide/aws-managed-rule-groups-bot.html)). See [`captcha_config`](#captcha_config-block) below for details.
 * `challenge_config` - (Optional) Specifies how AWS WAF should handle Challenge evaluations on the ACL level (used by [AWS Bot Control](https://docs.aws.amazon.com/waf/latest/developerguide/aws-managed-rule-groups-bot.html)). See [`challenge_config`](#challenge_config-block) below for details.
 * `custom_response_body` - (Optional) Defines custom response bodies that can be referenced by `custom_response` actions. See [`custom_response_body`](#custom_response_body-block) below for details.
+* `data_protection_config` - (Optional) Specifies data protection to apply to the web request data for the web ACL. This is a web ACL level data protection option. See [`data_protection_config`](#data_protection_config-block) below for details.
 * `default_action` - (Required) Action to perform if none of the `rules` contained in the WebACL match. See [`default_action`](#default_action-block) below for details.
 * `description` - (Optional) Friendly description of the WebACL.
 * `name` - (Optional, Forces new resource) Friendly name of the WebACL. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
@@ -485,6 +486,28 @@ Each `custom_response_body` block supports the following arguments:
 * `key` - (Required) Unique key identifying the custom response body. This is referenced by the `custom_response_body_key` argument in the [`custom_response`](#custom_response-block) block.
 * `content` - (Required) Payload of the custom response.
 * `content_type` - (Required) Type of content in the payload that you are defining in the `content` argument. Valid values are `TEXT_PLAIN`, `TEXT_HTML`, or `APPLICATION_JSON`.
+
+### `data_protection_config` Block
+
+The `data_protection_config` block supports the following arguments:
+
+* `data_protection` - (Required) A block for data protection configurations for specific web request field types. See [`data_protection`](#data_protection-block) block for details.
+
+### `data_protection` Block
+
+Each `data_protection` block supports the following arguments:
+
+* `action` - (Required) Specifies how to protect the field. Valid values are `SUBSTITUTION` or `HASH`.
+* `field` - (Required) Specifies the field type and optional keys to apply the protection behavior to. See [`field`](#field-block) block below for details.
+* `exclude_rate_based_details` - (Optional) Boolean to specify whether to also exclude any rate-based rule details from the data protection you have enabled for a given field.
+* `exclude_rule_match_details` - (Optional) Boolean to specify whether to also exclude any rule match details from the data protection you have enabled for a given field. AWS WAF logs these details for non-terminating matching rules and for the terminating matching rule.
+
+### `field` Block
+
+The `field` block supports the following arguments:
+
+* `field_type` - (Required) Specifies the web request component type to protect. Valid Values are `SINGLE_HEADER`, `SINGLE_COOKIE`, `SINGLE_QUERY_ARGUMENT`, `QUERY_STRING`, `BODY`.
+* `field_keys` - (Optional) Array of strings to specify the keys to protect for the specified field type. If you don't specify any key, then all keys for the field type are protected.
 
 ### `default_action` Block
 
