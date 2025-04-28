@@ -2306,7 +2306,7 @@ resource "aws_subnet" "subnet" {
 }
 
 resource "aws_batch_compute_environment" "test" {
-  compute_environment_name = "%[1]s"
+  name = "%[1]s"
 
   compute_resources {
     instance_role = aws_iam_instance_profile.iam_instance_profile.arn

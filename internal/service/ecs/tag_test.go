@@ -174,9 +174,9 @@ resource "aws_iam_role_policy_attachment" "test" {
 }
 
 resource "aws_batch_compute_environment" "test" {
-  compute_environment_name = %[1]q
-  service_role             = aws_iam_role.test.arn
-  type                     = "UNMANAGED"
+  name         = %[1]q
+  service_role = aws_iam_role.test.arn
+  type         = "UNMANAGED"
 
   depends_on = [aws_iam_role_policy_attachment.test]
 }
