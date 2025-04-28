@@ -13,7 +13,7 @@ on:
       - synchronize
 
 env:
-  START_TEXT: "### :warning: We've detected the following potential issues with your pull request"
+  START_TEXT: "### :warning: Our automation has detected the following potential issues with your pull request"
 
 jobs:
   comment:
@@ -71,11 +71,12 @@ jobs:
           && !github.event.pull_request.maintainer_can_modify
         shell: bash
         run: |
-          echo '#### Maintainer Edit Permissions:
+          echo '<details><summary>:x: Maintainer Edit Permissions (Click to expand)</summary><br>
 
           At times, our maintainers need to make direct edits to pull requests in order to prepare it to be merged. At the time of opening this pull request, your settings do not allow maintainers to make such edits. If possible, update your settings as described in the following document. If your fork is owned by an organization that limits your ability to make this change, please let us know.
 
-          [GitHub: Allowing changes to a pull request branch created from a fork](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/allowing-changes-to-a-pull-request-branch-created-from-a-fork)
+          Please see the GitHub documentation on [allowing changes to a pull request branch created from a fork](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/allowing-changes-to-a-pull-request-branch-created-from-a-fork) for additional details.
+          </details>
           ' >> note.md
 
       - name: Dependencies Updated by Non-Maintainers
@@ -85,20 +86,19 @@ jobs:
           && steps.community_check.outputs.maintainer == 'false'
         shell: bash
         run: |
-          echo '#### Dependency Changes
+          echo '<details><summary>:x: Dependency Changes (Click to expand)</summary><br>
 
           Typically Go dependency changes are handled in this repository by dependabot or the maintainers. This is to prevent pull request merge conflicts and further delay reviews of contributions. For more information, see the [Dependency Updates](https://hashicorp.github.io/terraform-provider-aws/dependency-updates/) section of the contributing guide.
 
           Remove any changes to the `go.mod` or `go.sum` files and commit them into this pull request to prevent delays with reviewing and potentially merging it.
 
-          <details>
-          <summary>Additional details (Click to expand)</summary>
+          Additional details:
 
           * Check [open pull requests with the `dependencies` label](https://github.com/hashicorp/terraform-provider-aws/pulls?q=is%3Aopen+is%3Apr+label%3Adependencies) to view other dependency updates.
           * If this pull request includes an update the AWS Go SDK (or any other dependency) version, only updates submitted via dependabot will be merged. This pull request will need to remove these changes and will need to be rebased after the existing dependency update via dependabot has been merged for this pull request to be reviewed.
           * If this pull request is for supporting a new AWS service:
-            * Ensure the new AWS service changes are following the [Adding a New AWS Service](https://hashicorp.github.io/terraform-provider-aws/add-a-new-service/) section of the contributing guide, in particular that the dependency addition and initial provider support are in a separate pull request from other changes (e.g. new resources). Contributions not following this item will not be reviewed until the changes are split.
-            * If this pull request is already a separate pull request from the above item, you can ignore this message.
+          * Ensure the new AWS service changes are following the [Adding a New AWS Service](https://hashicorp.github.io/terraform-provider-aws/add-a-new-service/) section of the contributing guide, in particular that the dependency addition and initial provider support are in a separate pull request from other changes (e.g. new resources). Contributions not following this item will not be reviewed until the changes are split.
+          * If this pull request is already a separate pull request from the above item, you can ignore this message.
           </details>
           ' >> note.md
 
@@ -109,11 +109,12 @@ jobs:
           && steps.community_check.outputs.maintainer == 'false'
         shell: bash
         run: |
-          echo '#### Unneccessary Changelog Changes
+          echo '<details><summary>:x: Unnecessary Changelog Changes</summary><br>
 
           The `CHANGELOG.md` file contents are handled by the maintainers during merge. This is to prevent pull request merge conflicts, especially for contributions which may not be merged immediately. Please see the [Changelog Process](https://hashicorp.github.io/terraform-provider-aws/changelog-process/) section of the contributing guide for additional information.
 
           Remove any changes to the `CHANGELOG.md` file and commit them in this pull request to prevent delays with reviewing and potentially merging it.
+          </details>
           ' >> note.md
 
       - name: Needs Changelog Entry
@@ -124,9 +125,12 @@ jobs:
           && steps.community_check.outputs.maintainer == 'false'
         shell: bash
         run: |
-          echo '#### Changelog Entry Required
+          echo '<details><summary>:x: Changelog Entry Required</summary><br>
 
           The proposed change requires a changelog entry. Please see the [Changelog Process](https://hashicorp.github.io/terraform-provider-aws/changelog-process/) section of the contributing guide for information on the changelog generation process.
+
+          **Tip:** This check is not triggered for draft pull requests, since the pull request number is not known until the pull request is opened and is required to create a changelog entry. Opening a pull request first as a draft, adding the requisite changelog entry file, and then marking the pull request as ready for review will prevent future warnings.
+           </details>
           ' >> note.md
 
       - name: Add Start Message
@@ -138,7 +142,7 @@ jobs:
           || steps.needs-changelog-entry.outcome != 'skipped'
         shell: bash
         run: |
-          { echo $START_TEXT; echo; cat note.md; } > tmpnote && mv tmpnote note.md
+          { echo $START_TEXT; echo "---"; cat note.md; } > tmpnote && mv tmpnote note.md
 
       - name: Check for Existing Comment
         id: prc
