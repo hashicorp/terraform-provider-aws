@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -43,7 +44,6 @@ func newKeyValueStoreResource(context.Context) (resource.ResourceWithConfigure, 
 
 type keyValueStoreResource struct {
 	framework.ResourceWithConfigure
-	framework.WithImportByID
 	framework.WithTimeouts
 }
 
@@ -135,12 +135,6 @@ func (r *keyValueStoreResource) Read(ctx context.Context, request resource.ReadR
 	var data keyValueStoreResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
-		return
-	}
-
-	if err := data.InitFromID(); err != nil {
-		response.Diagnostics.AddError("parsing resource ID", err.Error())
-
 		return
 	}
 
@@ -322,12 +316,23 @@ type keyValueStoreResourceModel struct {
 	Timeouts         timeouts.Value    `tfsdk:"timeouts"`
 }
 
-func (data *keyValueStoreResourceModel) InitFromID() error {
-	data.Name = data.ID
-
-	return nil
-}
-
 func (data *keyValueStoreResourceModel) setID() {
 	data.ID = data.Name
+}
+
+func (r *keyValueStoreResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	// Import-by-id case
+	if request.ID != "" {
+		resource.ImportStatePassthroughID(ctx, path.Root(names.AttrName), request, response)
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), request.ID)...)
+		return
+	}
+
+	if identity := request.Identity; identity != nil {
+		var name string
+		identity.GetAttribute(ctx, path.Root(names.AttrName), &name)
+
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrName), name)...)
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), name)...)
+	}
 }
