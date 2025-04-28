@@ -8,9 +8,7 @@ import (
 	"fmt"
 	"maps"
 	"slices"
-	"strings"
 
-	tfjson "github.com/hashicorp/terraform-json"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
@@ -51,7 +49,7 @@ func (e expectIdentityRegionalARNFormatCheck) CheckState(ctx context.Context, re
 		return
 	}
 
-	arnString, err := e.populateARNFormat(resource)
+	arnString, err := populateFromResourceState(e.arnFormat, resource)
 	if err != nil {
 		response.Error = err
 		return
@@ -62,35 +60,6 @@ func (e expectIdentityRegionalARNFormatCheck) CheckState(ctx context.Context, re
 		response.Error = fmt.Errorf("checking value for attribute at path: %s.%s, err: %s", e.base.ResourceAddress(), attrPath, err)
 		return
 	}
-}
-
-func (e expectIdentityRegionalARNFormatCheck) populateARNFormat(state *tfjson.StateResource) (string, error) {
-	var buf strings.Builder
-	str := e.arnFormat
-	for str != "" {
-		var (
-			stuff string
-			found bool
-		)
-		stuff, str, found = strings.Cut(str, "{")
-		buf.WriteString(stuff)
-		if found {
-			var param string
-			param, str, found = strings.Cut(str, "}")
-			if !found {
-				return "", fmt.Errorf("missing closing '}' in ARN format %q", e.arnFormat)
-			}
-
-			attr, ok := state.AttributeValues[param]
-			if !ok {
-				return "", fmt.Errorf("attribute %q not found in resource %q, referenced in ARN format %q", param, e.base.resourceAddress, e.arnFormat)
-			}
-			// buf.WriteString(attr)
-			fmt.Fprintf(&buf, "%v", attr)
-		}
-	}
-
-	return buf.String(), nil
 }
 
 func ExpectIdentityRegionalARNFormat(ctx context.Context, resourceAddress string, arnService, arnFormat string) statecheck.StateCheck {
