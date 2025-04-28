@@ -72,10 +72,9 @@ func (w *wrappedDataSource) Schema(ctx context.Context, request datasource.Schem
 			response.Diagnostics.AddError("data source model validation error", w.opts.typeName)
 			return
 		}
+	} else {
+		response.Diagnostics.AddError("missing framework.DataSourceValidateModel", w.opts.typeName)
 	}
-	// else {
-	// 	response.Diagnostics.AddError("missing framework.DataSourceValidateModel", w.opts.typeName)
-	// }
 }
 
 func (w *wrappedDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
