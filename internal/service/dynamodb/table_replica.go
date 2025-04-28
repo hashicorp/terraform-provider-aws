@@ -17,7 +17,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -56,10 +55,6 @@ func resourceTableReplica() *schema.Resource {
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 			Update: schema.DefaultTimeout(20 * time.Minute),
 		},
-
-		CustomizeDiff: customdiff.All(
-			verify.SetTagsDiff,
-		),
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: { // direct to replica
@@ -103,7 +98,7 @@ func resourceTableReplica() *schema.Resource {
 	}
 }
 
-func resourceTableReplicaCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTableReplicaCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
@@ -199,7 +194,7 @@ func resourceTableReplicaCreate(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceTableReplicaUpdate(ctx, d, meta)...)
 }
 
-func resourceTableReplicaRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTableReplicaRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
@@ -272,7 +267,7 @@ func resourceTableReplicaRead(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceTableReplicaReadReplica(ctx, d, meta)...)
 }
 
-func resourceTableReplicaReadReplica(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTableReplicaReadReplica(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
@@ -300,9 +295,10 @@ func resourceTableReplicaReadReplica(ctx context.Context, d *schema.ResourceData
 		d.Set(names.AttrKMSKeyARN, table.SSEDescription.KMSMasterKeyArn)
 	}
 
-	pitrOut, err := conn.DescribeContinuousBackups(ctx, &dynamodb.DescribeContinuousBackupsInput{
+	input := dynamodb.DescribeContinuousBackupsInput{
 		TableName: aws.String(tableName),
-	})
+	}
+	pitrOut, err := conn.DescribeContinuousBackups(ctx, &input)
 	// When a Table is `ARCHIVED`, DescribeContinuousBackups returns `TableNotFoundException`
 	if err != nil && !tfawserr.ErrCodeEquals(err, errCodeUnknownOperationException, errCodeTableNotFoundException) {
 		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionReading, resNameTableReplica, d.Id(), fmt.Errorf("continuous backups: %w", err))
@@ -317,7 +313,7 @@ func resourceTableReplicaReadReplica(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func resourceTableReplicaUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTableReplicaUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
@@ -407,10 +403,11 @@ func resourceTableReplicaUpdate(ctx context.Context, d *schema.ResourceData, met
 		if d.HasChange("deletion_protection_enabled") {
 			log.Printf("[DEBUG] Updating DynamoDB Table Replica deletion protection: %v", d.Get("deletion_protection_enabled").(bool))
 
-			if _, err := conn.UpdateTable(ctx, &dynamodb.UpdateTableInput{
+			input := dynamodb.UpdateTableInput{
 				TableName:                 aws.String(tableName),
 				DeletionProtectionEnabled: aws.Bool(d.Get("deletion_protection_enabled").(bool)),
-			}); err != nil {
+			}
+			if _, err := conn.UpdateTable(ctx, &input); err != nil {
 				return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTableReplica, d.Id(), err)
 			}
 
@@ -426,7 +423,7 @@ func resourceTableReplicaUpdate(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceTableReplicaRead(ctx, d, meta)...)
 }
 
-func resourceTableReplicaDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTableReplicaDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 

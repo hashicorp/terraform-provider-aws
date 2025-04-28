@@ -54,7 +54,7 @@ func resourcePolicyAttachment() *schema.Resource {
 	}
 }
 
-func resourcePolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
@@ -66,7 +66,7 @@ func resourcePolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData,
 		TargetId: aws.String(targetID),
 	}
 
-	_, err := tfresource.RetryWhenIsA[*awstypes.FinalizingOrganizationException](ctx, organizationFinalizationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsA[*awstypes.FinalizingOrganizationException](ctx, organizationFinalizationTimeout, func() (any, error) {
 		return conn.AttachPolicy(ctx, input)
 	})
 
@@ -79,7 +79,7 @@ func resourcePolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData,
 	return append(diags, resourcePolicyAttachmentRead(ctx, d, meta)...)
 }
 
-func resourcePolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
@@ -106,7 +106,7 @@ func resourcePolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func resourcePolicyAttachmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePolicyAttachmentUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Update is just a pass-through to allow skip_destroy to be updated in-place.
@@ -114,7 +114,7 @@ func resourcePolicyAttachmentUpdate(ctx context.Context, d *schema.ResourceData,
 	return append(diags, resourcePolicyAttachmentRead(ctx, d, meta)...)
 }
 
-func resourcePolicyAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePolicyAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 

@@ -25,10 +25,6 @@ type permissionSetsDataSource struct {
 	framework.DataSourceWithConfigure
 }
 
-func (*permissionSetsDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
-	response.TypeName = "aws_ssoadmin_permission_sets"
-}
-
 func (d *permissionSetsDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

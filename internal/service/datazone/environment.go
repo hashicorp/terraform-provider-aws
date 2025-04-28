@@ -54,10 +54,6 @@ type resourceEnvironment struct {
 	framework.WithTimeouts
 }
 
-func (r *resourceEnvironment) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_datazone_environment"
-}
-
 func (r *resourceEnvironment) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -439,7 +435,7 @@ func waitEnvironmentDeleted(ctx context.Context, conn *datazone.Client, domainId
 }
 
 func statusEnvironment(ctx context.Context, conn *datazone.Client, domainId, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := findEnvironmentByID(ctx, conn, domainId, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil

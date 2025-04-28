@@ -102,7 +102,7 @@ func resourcePortfolioShare() *schema.Resource {
 	}
 }
 
-func resourcePortfolioShareCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePortfolioShareCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
@@ -182,7 +182,7 @@ func resourcePortfolioShareCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourcePortfolioShareRead(ctx, d, meta)...)
 }
 
-func resourcePortfolioShareRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePortfolioShareRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
@@ -220,7 +220,7 @@ func resourcePortfolioShareRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourcePortfolioShareUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePortfolioShareUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
@@ -278,7 +278,7 @@ func resourcePortfolioShareUpdate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourcePortfolioShareRead(ctx, d, meta)...)
 }
 
-func resourcePortfolioShareDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePortfolioShareDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 

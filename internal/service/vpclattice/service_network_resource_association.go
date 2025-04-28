@@ -51,10 +51,6 @@ type serviceNetworkResourceAssociationResource struct {
 	framework.WithTimeouts
 }
 
-func (*serviceNetworkResourceAssociationResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_vpclattice_service_network_resource_association"
-}
-
 func (r *serviceNetworkResourceAssociationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -198,10 +194,6 @@ func (r *serviceNetworkResourceAssociationResource) Delete(ctx context.Context, 
 	}
 }
 
-func (r *serviceNetworkResourceAssociationResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func findServiceNetworkResourceAssociationByID(ctx context.Context, conn *vpclattice.Client, id string) (*vpclattice.GetServiceNetworkResourceAssociationOutput, error) {
 	input := vpclattice.GetServiceNetworkResourceAssociationInput{
 		ServiceNetworkResourceAssociationIdentifier: aws.String(id),
@@ -228,7 +220,7 @@ func findServiceNetworkResourceAssociationByID(ctx context.Context, conn *vpclat
 }
 
 func statusServiceNetworkResourceAssociation(ctx context.Context, conn *vpclattice.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findServiceNetworkResourceAssociationByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

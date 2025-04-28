@@ -41,10 +41,6 @@ type accessGrantsInstanceResource struct {
 	framework.WithImportByID
 }
 
-func (r *accessGrantsInstanceResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_s3control_access_grants_instance"
-}
-
 func (r *accessGrantsInstanceResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -169,7 +165,7 @@ func (r *accessGrantsInstanceResource) Read(ctx context.Context, request resourc
 		return
 	}
 
-	setTagsOut(ctx, Tags(tags))
+	setTagsOut(ctx, svcTags(tags))
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -252,10 +248,6 @@ func (r *accessGrantsInstanceResource) Delete(ctx context.Context, request resou
 
 		return
 	}
-}
-
-func (r *accessGrantsInstanceResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func associateAccessGrantsInstanceIdentityCenterInstance(ctx context.Context, conn *s3control.Client, accountID, identityCenterARN string) error {

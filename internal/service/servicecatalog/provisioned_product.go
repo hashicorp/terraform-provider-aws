@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -25,7 +24,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -265,14 +263,11 @@ func resourceProvisionedProduct() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: customdiff.All(
-			refreshOutputsDiff,
-			verify.SetTagsDiff,
-		),
+		CustomizeDiff: refreshOutputsDiff,
 	}
 }
 
-func refreshOutputsDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+func refreshOutputsDiff(_ context.Context, diff *schema.ResourceDiff, meta any) error {
 	if diff.HasChanges("provisioning_parameters", "provisioning_artifact_id", "provisioning_artifact_name") {
 		if err := diff.SetNewComputed("outputs"); err != nil {
 			return err
@@ -282,7 +277,7 @@ func refreshOutputsDiff(_ context.Context, diff *schema.ResourceDiff, meta inter
 	return nil
 }
 
-func resourceProvisionedProductCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProvisionedProductCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
@@ -296,8 +291,8 @@ func resourceProvisionedProductCreate(ctx context.Context, d *schema.ResourceDat
 		input.AcceptLanguage = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("notification_arns"); ok && len(v.([]interface{})) > 0 {
-		input.NotificationArns = flex.ExpandStringValueList(v.([]interface{}))
+	if v, ok := d.GetOk("notification_arns"); ok && len(v.([]any)) > 0 {
+		input.NotificationArns = flex.ExpandStringValueList(v.([]any))
 	}
 
 	if v, ok := d.GetOk("path_id"); ok {
@@ -324,12 +319,12 @@ func resourceProvisionedProductCreate(ctx context.Context, d *schema.ResourceDat
 		input.ProvisioningArtifactName = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("provisioning_parameters"); ok && len(v.([]interface{})) > 0 {
-		input.ProvisioningParameters = expandProvisioningParameters(v.([]interface{}))
+	if v, ok := d.GetOk("provisioning_parameters"); ok && len(v.([]any)) > 0 {
+		input.ProvisioningParameters = expandProvisioningParameters(v.([]any))
 	}
 
-	if v, ok := d.GetOk("stack_set_provisioning_preferences"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.ProvisioningPreferences = expandProvisioningPreferences(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("stack_set_provisioning_preferences"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.ProvisioningPreferences = expandProvisioningPreferences(v.([]any)[0].(map[string]any))
 	}
 
 	var output *servicecatalog.ProvisionProductOutput
@@ -379,7 +374,7 @@ func resourceProvisionedProductCreate(ctx context.Context, d *schema.ResourceDat
 	return append(diags, resourceProvisionedProductRead(ctx, d, meta)...)
 }
 
-func resourceProvisionedProductRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProvisionedProductRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
@@ -483,12 +478,12 @@ func resourceProvisionedProductRead(ctx context.Context, d *schema.ResourceData,
 
 	d.Set("path_id", recordOutput.RecordDetail.PathId)
 
-	setTagsOut(ctx, Tags(recordKeyValueTags(ctx, recordOutput.RecordDetail.RecordTags)))
+	setTagsOut(ctx, svcTags(recordKeyValueTags(ctx, recordOutput.RecordDetail.RecordTags)))
 
 	return diags
 }
 
-func resourceProvisionedProductUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProvisionedProductUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
@@ -524,12 +519,12 @@ func resourceProvisionedProductUpdate(ctx context.Context, d *schema.ResourceDat
 		input.ProvisioningArtifactId = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("provisioning_parameters"); ok && len(v.([]interface{})) > 0 {
-		input.ProvisioningParameters = expandUpdateProvisioningParameters(v.([]interface{}))
+	if v, ok := d.GetOk("provisioning_parameters"); ok && len(v.([]any)) > 0 {
+		input.ProvisioningParameters = expandUpdateProvisioningParameters(v.([]any))
 	}
 
-	if v, ok := d.GetOk("stack_set_provisioning_preferences"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.ProvisioningPreferences = expandUpdateProvisioningPreferences(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("stack_set_provisioning_preferences"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.ProvisioningPreferences = expandUpdateProvisioningPreferences(v.([]any)[0].(map[string]any))
 	}
 
 	// Send tags each time the resource is updated. This is necessary to automatically apply tags
@@ -565,7 +560,7 @@ func resourceProvisionedProductUpdate(ctx context.Context, d *schema.ResourceDat
 	return append(diags, resourceProvisionedProductRead(ctx, d, meta)...)
 }
 
-func resourceProvisionedProductDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProvisionedProductDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
@@ -609,7 +604,7 @@ func resourceProvisionedProductDelete(ctx context.Context, d *schema.ResourceDat
 	return diags
 }
 
-func expandProvisioningParameter(tfMap map[string]interface{}) awstypes.ProvisioningParameter {
+func expandProvisioningParameter(tfMap map[string]any) awstypes.ProvisioningParameter {
 	apiObject := awstypes.ProvisioningParameter{}
 
 	if v, ok := tfMap[names.AttrKey].(string); ok && v != "" {
@@ -623,7 +618,7 @@ func expandProvisioningParameter(tfMap map[string]interface{}) awstypes.Provisio
 	return apiObject
 }
 
-func expandProvisioningParameters(tfList []interface{}) []awstypes.ProvisioningParameter {
+func expandProvisioningParameters(tfList []any) []awstypes.ProvisioningParameter {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -631,7 +626,7 @@ func expandProvisioningParameters(tfList []interface{}) []awstypes.ProvisioningP
 	var apiObjects []awstypes.ProvisioningParameter
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -643,14 +638,14 @@ func expandProvisioningParameters(tfList []interface{}) []awstypes.ProvisioningP
 	return apiObjects
 }
 
-func expandProvisioningPreferences(tfMap map[string]interface{}) *awstypes.ProvisioningPreferences {
+func expandProvisioningPreferences(tfMap map[string]any) *awstypes.ProvisioningPreferences {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.ProvisioningPreferences{}
 
-	if v, ok := tfMap["accounts"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["accounts"].([]any); ok && len(v) > 0 {
 		apiObject.StackSetAccounts = flex.ExpandStringValueList(v)
 	}
 
@@ -670,14 +665,14 @@ func expandProvisioningPreferences(tfMap map[string]interface{}) *awstypes.Provi
 		apiObject.StackSetMaxConcurrencyPercentage = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["regions"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["regions"].([]any); ok && len(v) > 0 {
 		apiObject.StackSetRegions = flex.ExpandStringValueList(v)
 	}
 
 	return apiObject
 }
 
-func expandUpdateProvisioningParameter(tfMap map[string]interface{}) awstypes.UpdateProvisioningParameter {
+func expandUpdateProvisioningParameter(tfMap map[string]any) awstypes.UpdateProvisioningParameter {
 	apiObject := awstypes.UpdateProvisioningParameter{}
 
 	if v, ok := tfMap[names.AttrKey].(string); ok && v != "" {
@@ -695,7 +690,7 @@ func expandUpdateProvisioningParameter(tfMap map[string]interface{}) awstypes.Up
 	return apiObject
 }
 
-func expandUpdateProvisioningParameters(tfList []interface{}) []awstypes.UpdateProvisioningParameter {
+func expandUpdateProvisioningParameters(tfList []any) []awstypes.UpdateProvisioningParameter {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -703,7 +698,7 @@ func expandUpdateProvisioningParameters(tfList []interface{}) []awstypes.UpdateP
 	var apiObjects []awstypes.UpdateProvisioningParameter
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -715,14 +710,14 @@ func expandUpdateProvisioningParameters(tfList []interface{}) []awstypes.UpdateP
 	return apiObjects
 }
 
-func expandUpdateProvisioningPreferences(tfMap map[string]interface{}) *awstypes.UpdateProvisioningPreferences {
+func expandUpdateProvisioningPreferences(tfMap map[string]any) *awstypes.UpdateProvisioningPreferences {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.UpdateProvisioningPreferences{}
 
-	if v, ok := tfMap["accounts"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["accounts"].([]any); ok && len(v) > 0 {
 		apiObject.StackSetAccounts = flex.ExpandStringValueList(v)
 	}
 
@@ -742,7 +737,7 @@ func expandUpdateProvisioningPreferences(tfMap map[string]interface{}) *awstypes
 		apiObject.StackSetMaxConcurrencyPercentage = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["regions"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["regions"].([]any); ok && len(v) > 0 {
 		apiObject.StackSetRegions = flex.ExpandStringValueList(v)
 	}
 
@@ -763,15 +758,15 @@ func flattenCloudWatchDashboards(apiObjects []awstypes.CloudWatchDashboard) []*s
 	return tfList
 }
 
-func flattenRecordOutputs(apiObjects []awstypes.RecordOutput) []interface{} {
+func flattenRecordOutputs(apiObjects []awstypes.RecordOutput) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		m := make(map[string]interface{})
+		m := make(map[string]any)
 
 		if apiObject.Description != nil {
 			m[names.AttrDescription] = aws.ToString(apiObject.Description)

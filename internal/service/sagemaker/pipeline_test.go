@@ -185,7 +185,7 @@ func testAccCheckPipelineDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			return fmt.Errorf("SageMaker Pipeline %s still exists", rs.Primary.ID)
+			return fmt.Errorf("SageMaker AI Pipeline %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -200,7 +200,7 @@ func testAccCheckPipelineExists(ctx context.Context, n string, pipeline *sagemak
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No SageMaker Pipeline ID is set")
+			return fmt.Errorf("No SageMaker AI Pipeline ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)

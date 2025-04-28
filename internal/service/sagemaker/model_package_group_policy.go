@@ -44,7 +44,7 @@ func resourceModelPackageGroupPolicy() *schema.Resource {
 				ValidateFunc:          validation.StringIsJSON,
 				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
 				DiffSuppressOnRefresh: true,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
@@ -53,7 +53,7 @@ func resourceModelPackageGroupPolicy() *schema.Resource {
 	}
 }
 
-func resourceModelPackageGroupPolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceModelPackageGroupPolicyPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -70,7 +70,7 @@ func resourceModelPackageGroupPolicyPut(ctx context.Context, d *schema.ResourceD
 
 	_, err = conn.PutModelPackageGroupPolicy(ctx, input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker Model Package Group Policy %s: %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Model Package Group Policy %s: %s", name, err)
 	}
 
 	d.SetId(name)
@@ -78,27 +78,27 @@ func resourceModelPackageGroupPolicyPut(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourceModelPackageGroupPolicyRead(ctx, d, meta)...)
 }
 
-func resourceModelPackageGroupPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceModelPackageGroupPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
 	mpg, err := findModelPackageGroupPolicyByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] Unable to find SageMaker Model Package Group Policy (%s); removing from state", d.Id())
+		log.Printf("[WARN] Unable to find SageMaker AI Model Package Group Policy (%s); removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SageMaker Model Package Group Policy (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI Model Package Group Policy (%s): %s", d.Id(), err)
 	}
 
 	d.Set("model_package_group_name", d.Id())
 
 	policyToSet, err := verify.PolicyToSet(d.Get("resource_policy").(string), aws.ToString(mpg.ResourcePolicy))
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SageMaker Model Package Group Policy (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI Model Package Group Policy (%s): %s", d.Id(), err)
 	}
 
 	d.Set("resource_policy", policyToSet)
@@ -106,7 +106,7 @@ func resourceModelPackageGroupPolicyRead(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func resourceModelPackageGroupPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceModelPackageGroupPolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -119,7 +119,7 @@ func resourceModelPackageGroupPolicyDelete(ctx context.Context, d *schema.Resour
 			tfawserr.ErrMessageContains(err, ErrCodeValidationException, "Cannot find resource policy") {
 			return diags
 		}
-		return sdkdiag.AppendErrorf(diags, "deleting SageMaker Model Package Group Policy (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SageMaker AI Model Package Group Policy (%s): %s", d.Id(), err)
 	}
 
 	return diags

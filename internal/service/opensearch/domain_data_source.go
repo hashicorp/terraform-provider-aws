@@ -150,6 +150,38 @@ func dataSourceDomain() *schema.Resource {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
+						"node_options": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"node_config": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"count": {
+													Type:     schema.TypeInt,
+													Computed: true,
+												},
+												names.AttrEnabled: {
+													Type:     schema.TypeBool,
+													Computed: true,
+												},
+												names.AttrType: {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+											},
+										},
+									},
+									"node_type": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
 						"warm_count": {
 							Type:     schema.TypeInt,
 							Computed: true,
@@ -296,7 +328,7 @@ func dataSourceDomain() *schema.Resource {
 			"kibana_endpoint": {
 				Type:       schema.TypeString,
 				Computed:   true,
-				Deprecated: "use 'dashboard_endpoint' attribute instead",
+				Deprecated: "kibana_endpoint is deprecated. Use dashboard_endpoint instead.",
 			},
 			"log_publishing_options": {
 				Type:     schema.TypeSet,
@@ -427,7 +459,7 @@ func dataSourceDomain() *schema.Resource {
 	}
 }
 
-func dataSourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceDomainRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpenSearchClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
@@ -478,7 +510,7 @@ func dataSourceDomainRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if dc.AutoTuneOptions != nil {
-		if err := d.Set("auto_tune_options", []interface{}{flattenAutoTuneOptions(dc.AutoTuneOptions.Options)}); err != nil {
+		if err := d.Set("auto_tune_options", []any{flattenAutoTuneOptions(dc.AutoTuneOptions.Options)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting auto_tune_options: %s", err)
 		}
 	}
@@ -508,7 +540,7 @@ func dataSourceDomainRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if ds.VPCOptions != nil {
-		if err := d.Set("vpc_options", []interface{}{flattenVPCDerivedInfo(ds.VPCOptions)}); err != nil {
+		if err := d.Set("vpc_options", []any{flattenVPCDerivedInfo(ds.VPCOptions)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting vpc_options: %s", err)
 		}
 
@@ -555,7 +587,7 @@ func dataSourceDomainRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if ds.OffPeakWindowOptions != nil {
-		if err := d.Set("off_peak_window_options", []interface{}{flattenOffPeakWindowOptions(ds.OffPeakWindowOptions)}); err != nil {
+		if err := d.Set("off_peak_window_options", []any{flattenOffPeakWindowOptions(ds.OffPeakWindowOptions)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting off_peak_window_options: %s", err)
 		}
 	} else {

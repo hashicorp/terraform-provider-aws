@@ -64,8 +64,8 @@ func sweepAccountAssignments(region string) error {
 		return err
 	}
 
-	if v, ok := dsData.GetOk(names.AttrARNs); ok && len(v.([]interface{})) > 0 {
-		instanceArn := v.([]interface{})[0].(string)
+	if v, ok := dsData.GetOk(names.AttrARNs); ok && len(v.([]any)) > 0 {
+		instanceArn := v.([]any)[0].(string)
 
 		// To sweep account assignments, we need to first determine which Permission Sets
 		// are available and then search for their respective assignments
@@ -157,8 +157,8 @@ func sweepApplications(region string) error {
 		return err
 	}
 
-	if v, ok := dsData.GetOk(names.AttrARNs); ok && len(v.([]interface{})) > 0 {
-		instanceArn := v.([]interface{})[0].(string)
+	if v, ok := dsData.GetOk(names.AttrARNs); ok && len(v.([]any)) > 0 {
+		instanceArn := v.([]any)[0].(string)
 
 		input := &ssoadmin.ListApplicationsInput{
 			InstanceArn: aws.String(instanceArn),
@@ -217,8 +217,8 @@ func sweepPermissionSets(region string) error {
 		return err
 	}
 
-	if v, ok := dsData.GetOk(names.AttrARNs); ok && len(v.([]interface{})) > 0 {
-		instanceArn := v.([]interface{})[0].(string)
+	if v, ok := dsData.GetOk(names.AttrARNs); ok && len(v.([]any)) > 0 {
+		instanceArn := v.([]any)[0].(string)
 
 		input := &ssoadmin.ListPermissionSetsInput{
 			InstanceArn: aws.String(instanceArn),

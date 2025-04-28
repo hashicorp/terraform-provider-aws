@@ -54,10 +54,6 @@ type multiRegionClusterResource struct {
 	framework.WithTimeouts
 }
 
-func (*multiRegionClusterResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_memorydb_multi_region_cluster"
-}
-
 func (r *multiRegionClusterResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -204,7 +200,7 @@ func (r *multiRegionClusterResource) Create(ctx context.Context, req resource.Cr
 	}
 	// Account for field name mismatches between the Create
 	// and Describe data structures
-	plan.NumShards = flex.Int32ToFramework(ctx, statusOut.NumberOfShards)
+	plan.NumShards = flex.Int32ToFrameworkInt64(ctx, statusOut.NumberOfShards)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
@@ -240,7 +236,7 @@ func (r *multiRegionClusterResource) Read(ctx context.Context, req resource.Read
 		return
 	}
 	state.MultiRegionClusterNameSuffix = flex.StringToFramework(ctx, &suffix)
-	state.NumShards = flex.Int32ToFramework(ctx, out.NumberOfShards)
+	state.NumShards = flex.Int32ToFrameworkInt64(ctx, out.NumberOfShards)
 
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -423,10 +419,6 @@ func (r *multiRegionClusterResource) ImportState(ctx context.Context, request re
 	resource.ImportStatePassthroughID(ctx, path.Root("multi_region_cluster_name"), request, response)
 }
 
-func (r *multiRegionClusterResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, req, resp)
-}
-
 type multiRegionClusterResourceModel struct {
 	ARN                           types.String   `tfsdk:"arn"`
 	Description                   types.String   `tfsdk:"description"`
@@ -498,7 +490,7 @@ func updateMultiRegionClusterAndWaitAvailable(ctx context.Context, conn *memoryd
 }
 
 func statusMultiRegionCluster(ctx context.Context, conn *memorydb.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findMultiRegionClusterByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {

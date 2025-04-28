@@ -30,10 +30,6 @@ type securityGroupRulesDataSource struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *securityGroupRulesDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
-	response.TypeName = "aws_vpc_security_group_rules"
-}
-
 func (d *securityGroupRulesDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -60,7 +56,7 @@ func (d *securityGroupRulesDataSource) Read(ctx context.Context, request datasou
 	conn := d.Meta().EC2Client(ctx)
 
 	input := &ec2.DescribeSecurityGroupRulesInput{
-		Filters: append(newCustomFilterListFramework(ctx, data.Filters), newTagFilterList(Tags(tftags.New(ctx, data.Tags)))...),
+		Filters: append(newCustomFilterListFramework(ctx, data.Filters), newTagFilterList(svcTags(tftags.New(ctx, data.Tags)))...),
 	}
 
 	if len(input.Filters) == 0 {

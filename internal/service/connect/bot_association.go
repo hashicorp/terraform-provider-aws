@@ -68,7 +68,7 @@ func resourceBotAssociation() *schema.Resource {
 	}
 }
 
-func resourceBotAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBotAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
@@ -77,8 +77,8 @@ func resourceBotAssociationCreate(ctx context.Context, d *schema.ResourceData, m
 		InstanceId: aws.String(instanceID),
 	}
 
-	if v, ok := d.GetOk("lex_bot"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.LexBot = expandLexBot(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("lex_bot"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.LexBot = expandLexBot(v.([]any)[0].(map[string]any))
 		if input.LexBot.LexRegion == nil {
 			input.LexBot.LexRegion = aws.String(meta.(*conns.AWSClient).Region(ctx))
 		}
@@ -89,7 +89,7 @@ func resourceBotAssociationCreate(ctx context.Context, d *schema.ResourceData, m
 	const (
 		timeout = 5 * time.Minute
 	)
-	_, err := tfresource.RetryWhenIsA[*awstypes.InvalidRequestException](ctx, timeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsA[*awstypes.InvalidRequestException](ctx, timeout, func() (any, error) {
 		return conn.AssociateBot(ctx, input)
 	})
 
@@ -102,7 +102,7 @@ func resourceBotAssociationCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceBotAssociationRead(ctx, d, meta)...)
 }
 
-func resourceBotAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBotAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
@@ -131,7 +131,7 @@ func resourceBotAssociationRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceBotAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBotAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
@@ -141,13 +141,14 @@ func resourceBotAssociationDelete(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	log.Printf("[DEBUG] Deleting Connect Bot Association: %s", d.Id())
-	_, err = conn.DisassociateBot(ctx, &connect.DisassociateBotInput{
+	input := connect.DisassociateBotInput{
 		InstanceId: aws.String(instanceID),
 		LexBot: &awstypes.LexBot{
 			Name:      aws.String(name),
 			LexRegion: aws.String(region),
 		},
-	})
+	}
+	_, err = conn.DisassociateBot(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
@@ -244,7 +245,7 @@ func findBots(ctx context.Context, conn *connect.Client, input *connect.ListBots
 	return output, nil
 }
 
-func expandLexBot(tfMap map[string]interface{}) *awstypes.LexBot {
+func expandLexBot(tfMap map[string]any) *awstypes.LexBot {
 	if tfMap == nil {
 		return nil
 	}
@@ -260,15 +261,15 @@ func expandLexBot(tfMap map[string]interface{}) *awstypes.LexBot {
 	return apiObject
 }
 
-func flattenLexBot(apiObject *awstypes.LexBot) []interface{} {
+func flattenLexBot(apiObject *awstypes.LexBot) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"lex_region":   aws.ToString(apiObject.LexRegion),
 		names.AttrName: aws.ToString(apiObject.Name),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

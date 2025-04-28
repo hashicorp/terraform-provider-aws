@@ -60,10 +60,6 @@ type customModelResource struct {
 	framework.WithTimeouts
 }
 
-func (r *customModelResource) Metadata(_ context.Context, request resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_bedrock_custom_model"
-}
-
 func (r *customModelResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	// This resource is a composition of the following APIs. These APIs do not have consitently named attributes, so we will normalize them here.
 	// - CreateModelCustomizationJob
@@ -286,7 +282,7 @@ func (r *customModelResource) Create(ctx context.Context, request resource.Creat
 	input.CustomModelTags = getTagsIn(ctx)
 	input.JobTags = getTagsIn(ctx)
 
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (any, error) {
 		return conn.CreateModelCustomizationJob(ctx, input)
 	}, errCodeValidationException, "Could not assume provided IAM role")
 
@@ -476,10 +472,6 @@ func (r *customModelResource) Delete(ctx context.Context, request resource.Delet
 	}
 }
 
-func (r *customModelResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func findCustomModelByID(ctx context.Context, conn *bedrock.Client, id string) (*bedrock.GetCustomModelOutput, error) {
 	input := &bedrock.GetCustomModelInput{
 		ModelIdentifier: aws.String(id),
@@ -548,7 +540,7 @@ func findModelCustomizationJob(ctx context.Context, conn *bedrock.Client, input 
 }
 
 func statusModelCustomizationJob(ctx context.Context, conn *bedrock.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		input := &bedrock.GetModelCustomizationJobInput{
 			JobIdentifier: aws.String(id),
 		}

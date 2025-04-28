@@ -87,7 +87,7 @@ func ResourceSigningProfilePermission() *schema.Resource {
 	}
 }
 
-func resourceSigningProfilePermissionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSigningProfilePermissionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SignerClient(ctx)
 
@@ -121,7 +121,7 @@ func resourceSigningProfilePermissionCreate(ctx context.Context, d *schema.Resou
 	}
 
 	_, err = tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.AddProfilePermission(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -139,7 +139,7 @@ func resourceSigningProfilePermissionCreate(ctx context.Context, d *schema.Resou
 
 	d.SetId(fmt.Sprintf("%s/%s", profileName, statementID))
 
-	_, err = tfresource.RetryWhenNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, propagationTimeout, func() (any, error) {
 		return findPermissionByTwoPartKey(ctx, conn, profileName, statementID)
 	})
 
@@ -152,7 +152,7 @@ func resourceSigningProfilePermissionCreate(ctx context.Context, d *schema.Resou
 	return append(diags, resourceSigningProfilePermissionRead(ctx, d, meta)...)
 }
 
-func resourceSigningProfilePermissionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSigningProfilePermissionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SignerClient(ctx)
 
@@ -178,7 +178,7 @@ func resourceSigningProfilePermissionRead(ctx context.Context, d *schema.Resourc
 	return diags
 }
 
-func resourceSigningProfilePermissionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSigningProfilePermissionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SignerClient(ctx)
 
@@ -217,7 +217,7 @@ func resourceSigningProfilePermissionDelete(ctx context.Context, d *schema.Resou
 		return sdkdiag.AppendErrorf(diags, "deleting Signer Signing Profile Permission (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, propagationTimeout, func() (any, error) {
 		return findPermissionByTwoPartKey(ctx, conn, profileName, statementID)
 	})
 
@@ -228,7 +228,7 @@ func resourceSigningProfilePermissionDelete(ctx context.Context, d *schema.Resou
 	return diags
 }
 
-func resourceSigningProfilePermissionImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceSigningProfilePermissionImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	idParts := strings.Split(d.Id(), "/")
 	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
 		return nil, fmt.Errorf("unexpected format of ID (%q), expected PROFILE_NAME/STATEMENT_ID", d.Id())

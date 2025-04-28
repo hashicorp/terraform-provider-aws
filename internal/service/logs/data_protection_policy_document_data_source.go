@@ -5,7 +5,6 @@ package logs
 
 import (
 	"context"
-	"encoding/json"
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -14,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -23,6 +23,40 @@ func dataSourceDataProtectionPolicyDocument() *schema.Resource {
 		ReadWithoutTimeout: dataSourceDataProtectionPolicyDocumentRead,
 
 		Schema: map[string]*schema.Schema{
+			names.AttrConfiguration: {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"custom_data_identifier": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 10,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrName: {
+										Type:     schema.TypeString,
+										Required: true,
+										ValidateFunc: validation.All(
+											validation.StringIsNotEmpty,
+											validation.StringLenBetween(1, 128),
+										),
+									},
+									"regex": {
+										Type:     schema.TypeString,
+										Required: true,
+										ValidateFunc: validation.All(
+											validation.StringIsNotEmpty,
+											validation.StringLenBetween(1, 200),
+										),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -35,11 +69,6 @@ func dataSourceDataProtectionPolicyDocument() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringIsNotEmpty,
-			},
-			names.AttrVersion: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "2021-06-01",
 			},
 			"statement": {
 				Type:     schema.TypeList,
@@ -149,101 +178,119 @@ func dataSourceDataProtectionPolicyDocument() *schema.Resource {
 					},
 				},
 			},
+			names.AttrVersion: {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "2021-06-01",
+			},
 		},
 	}
 }
 
-const (
-	DSNameDataProtectionPolicyDocument = "Data Protection Policy Document Data Source"
-)
-
-func dataSourceDataProtectionPolicyDocumentRead(_ context.Context, d *schema.ResourceData, _ interface{}) diag.Diagnostics {
+func dataSourceDataProtectionPolicyDocumentRead(_ context.Context, d *schema.ResourceData, _ any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	document := DataProtectionPolicyDocument{
+	document := dataProtectionPolicyDocument{
 		Description: d.Get(names.AttrDescription).(string),
 		Name:        d.Get(names.AttrName).(string),
 		Version:     d.Get(names.AttrVersion).(string),
 	}
 
-	// unwrap expects m to be a configuration block -- a TypeList schema
+	// unwrap expects v to be a configuration block -- a TypeList schema
 	// element with MaxItems: 1 and with a sub-schema.
-	unwrap := func(m interface{}) (map[string]interface{}, bool) {
-		if m == nil {
+	unwrap := func(v any) (map[string]any, bool) {
+		if v == nil {
 			return nil, false
 		}
 
-		if v, ok := m.([]interface{}); ok && len(v) > 0 {
-			if v[0] == nil {
+		if tfList, ok := v.([]any); ok && len(tfList) > 0 {
+			if tfList[0] == nil {
 				// Configuration block was present, but the sub-schema is empty.
-				return map[string]interface{}{}, true
+				return map[string]any{}, true
 			}
 
-			if m, ok := v[0].(map[string]interface{}); ok && m != nil {
+			if tfMap, ok := tfList[0].(map[string]any); ok && tfMap != nil {
 				// This should be the most typical path.
-				return m, true
+				return tfMap, true
 			}
 		}
 
 		return nil, false
 	}
 
-	for _, statementIface := range d.Get("statement").([]interface{}) {
-		m, ok := statementIface.(map[string]interface{})
+	if tfMap, ok := unwrap(d.Get(names.AttrConfiguration)); ok {
+		document.Configuration = &dataProtectionPolicyStatementConfiguration{}
 
-		if !ok || m == nil {
+		if tfList, ok := tfMap["custom_data_identifier"].([]any); ok && len(tfList) > 0 {
+			for _, tfMapRaw := range tfList {
+				tfMap, ok := tfMapRaw.(map[string]any)
+				if !ok {
+					continue
+				}
+
+				document.Configuration.CustomDataIdentifiers = append(document.Configuration.CustomDataIdentifiers, &dataProtectionPolicyCustomDataIdentifier{
+					Name:  tfMap[names.AttrName].(string),
+					Regex: tfMap["regex"].(string),
+				})
+			}
+		}
+	}
+
+	for _, tfMapRaw := range d.Get("statement").([]any) {
+		tfMap, ok := tfMapRaw.(map[string]any)
+		if !ok || tfMap == nil {
 			continue
 		}
 
-		statement := &DataProtectionPolicyStatement{}
+		statement := &dataProtectionPolicyStatement{}
 		document.Statements = append(document.Statements, statement)
 
-		if v, ok := m["sid"].(string); ok && v != "" {
+		if v, ok := tfMap["sid"].(string); ok && v != "" {
 			statement.Sid = v
 		}
 
-		if v, ok := m["data_identifiers"].(*schema.Set); ok && v.Len() > 0 {
+		if v, ok := tfMap["data_identifiers"].(*schema.Set); ok && v.Len() > 0 {
 			statement.DataIdentifiers = flex.ExpandStringValueSet(v)
 		}
 
-		if m, ok := unwrap(m["operation"]); ok {
-			operation := &DataProtectionPolicyStatementOperation{}
+		if tfMap, ok := unwrap(tfMap["operation"]); ok {
+			operation := &dataProtectionPolicyStatementOperation{}
 			statement.Operation = operation
 
-			if m, ok := unwrap(m["audit"]); ok {
-				audit := &DataProtectionPolicyStatementOperationAudit{}
+			if tfMap, ok := unwrap(tfMap["audit"]); ok {
+				audit := &dataProtectionPolicyStatementOperationAudit{}
 				operation.Audit = audit
 
-				if m, ok := unwrap(m["findings_destination"]); ok {
-					findingsDestination := &DataProtectionPolicyStatementOperationAuditFindingsDestination{}
+				if tfMap, ok := unwrap(tfMap["findings_destination"]); ok {
+					findingsDestination := &dataProtectionPolicyStatementOperationAuditFindingsDestination{}
 					audit.FindingsDestination = findingsDestination
 
-					if m, ok := unwrap(m[names.AttrCloudWatchLogs]); ok {
-						findingsDestination.CloudWatchLogs = &DataProtectionPolicyStatementOperationAuditFindingsDestinationCloudWatchLogs{
-							LogGroup: m["log_group"].(string),
+					if tfMap, ok := unwrap(tfMap[names.AttrCloudWatchLogs]); ok {
+						findingsDestination.CloudWatchLogs = &dataProtectionPolicyStatementOperationAuditFindingsDestinationCloudWatchLogs{
+							LogGroup: tfMap["log_group"].(string),
 						}
 					}
 
-					if m, ok := unwrap(m["firehose"]); ok {
-						findingsDestination.Firehose = &DataProtectionPolicyStatementOperationAuditFindingsDestinationFirehose{
-							DeliveryStream: m["delivery_stream"].(string),
+					if tfMap, ok := unwrap(tfMap["firehose"]); ok {
+						findingsDestination.Firehose = &dataProtectionPolicyStatementOperationAuditFindingsDestinationFirehose{
+							DeliveryStream: tfMap["delivery_stream"].(string),
 						}
 					}
 
-					if m, ok := unwrap(m["s3"]); ok {
-						findingsDestination.S3 = &DataProtectionPolicyStatementOperationAuditFindingsDestinationS3{
-							Bucket: m[names.AttrBucket].(string),
+					if tfMap, ok := unwrap(tfMap["s3"]); ok {
+						findingsDestination.S3 = &dataProtectionPolicyStatementOperationAuditFindingsDestinationS3{
+							Bucket: tfMap[names.AttrBucket].(string),
 						}
 					}
 				}
 			}
 
-			if m, ok := unwrap(m["deidentify"]); ok {
-				deidentify := &DataProtectionPolicyStatementOperationDeidentify{}
+			if tfMap, ok := unwrap(tfMap["deidentify"]); ok {
+				deidentify := &dataProtectionPolicyStatementOperationDeidentify{}
 				operation.Deidentify = deidentify
 
-				if _, ok := unwrap(m["mask_config"]); ok {
-					maskConfig := &DataProtectionPolicyStatementOperationDeidentifyMaskConfig{}
+				if _, ok := unwrap(tfMap["mask_config"]); ok {
+					maskConfig := &dataProtectionPolicyStatementOperationDeidentifyMaskConfig{}
 					deidentify.MaskConfig = maskConfig
 
 					// No fields in this object.
@@ -262,13 +309,11 @@ func dataSourceDataProtectionPolicyDocumentRead(_ context.Context, d *schema.Res
 		return sdkdiag.AppendErrorf(diags, "the second policy statement must contain only the deidentify operation")
 	}
 
-	jsonBytes, err := json.MarshalIndent(document, "", "  ")
+	jsonString, err := tfjson.EncodeToStringIndent(document, "", "  ")
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
-
-	jsonString := string(jsonBytes)
 
 	d.Set(names.AttrJSON, jsonString)
 	d.SetId(strconv.Itoa(create.StringHashcode(jsonString)))
@@ -276,48 +321,58 @@ func dataSourceDataProtectionPolicyDocumentRead(_ context.Context, d *schema.Res
 	return diags
 }
 
-type DataProtectionPolicyDocument struct {
-	Description string                           `json:",omitempty"`
-	Version     string                           `json:",omitempty"`
-	Name        string                           `json:",omitempty"`
-	Statements  []*DataProtectionPolicyStatement `json:"Statement,omitempty"`
+type dataProtectionPolicyDocument struct {
+	Configuration *dataProtectionPolicyStatementConfiguration `json:",omitempty"`
+	Description   string                                      `json:",omitempty"`
+	Name          string                                      `json:",omitempty"`
+	Statements    []*dataProtectionPolicyStatement            `json:"Statement,omitempty"`
+	Version       string                                      `json:",omitempty"`
 }
 
-type DataProtectionPolicyStatement struct {
+type dataProtectionPolicyStatementConfiguration struct {
+	CustomDataIdentifiers []*dataProtectionPolicyCustomDataIdentifier `json:"CustomDataIdentifier,omitempty"`
+}
+
+type dataProtectionPolicyCustomDataIdentifier struct {
+	Name  string `json:",omitempty"`
+	Regex string `json:",omitempty"`
+}
+
+type dataProtectionPolicyStatement struct {
 	Sid             string                                  `json:",omitempty"`
 	DataIdentifiers []string                                `json:"DataIdentifier,omitempty"`
-	Operation       *DataProtectionPolicyStatementOperation `json:",omitempty"`
+	Operation       *dataProtectionPolicyStatementOperation `json:",omitempty"`
 }
 
-type DataProtectionPolicyStatementOperation struct {
-	Audit      *DataProtectionPolicyStatementOperationAudit      `json:",omitempty"`
-	Deidentify *DataProtectionPolicyStatementOperationDeidentify `json:",omitempty"`
+type dataProtectionPolicyStatementOperation struct {
+	Audit      *dataProtectionPolicyStatementOperationAudit      `json:",omitempty"`
+	Deidentify *dataProtectionPolicyStatementOperationDeidentify `json:",omitempty"`
 }
 
-type DataProtectionPolicyStatementOperationAudit struct {
-	FindingsDestination *DataProtectionPolicyStatementOperationAuditFindingsDestination `json:",omitempty"`
+type dataProtectionPolicyStatementOperationAudit struct {
+	FindingsDestination *dataProtectionPolicyStatementOperationAuditFindingsDestination `json:",omitempty"`
 }
 
-type DataProtectionPolicyStatementOperationAuditFindingsDestination struct {
-	CloudWatchLogs *DataProtectionPolicyStatementOperationAuditFindingsDestinationCloudWatchLogs `json:",omitempty"`
-	Firehose       *DataProtectionPolicyStatementOperationAuditFindingsDestinationFirehose       `json:",omitempty"`
-	S3             *DataProtectionPolicyStatementOperationAuditFindingsDestinationS3             `json:",omitempty"`
+type dataProtectionPolicyStatementOperationAuditFindingsDestination struct {
+	CloudWatchLogs *dataProtectionPolicyStatementOperationAuditFindingsDestinationCloudWatchLogs `json:",omitempty"`
+	Firehose       *dataProtectionPolicyStatementOperationAuditFindingsDestinationFirehose       `json:",omitempty"`
+	S3             *dataProtectionPolicyStatementOperationAuditFindingsDestinationS3             `json:",omitempty"`
 }
 
-type DataProtectionPolicyStatementOperationAuditFindingsDestinationCloudWatchLogs struct {
+type dataProtectionPolicyStatementOperationAuditFindingsDestinationCloudWatchLogs struct {
 	LogGroup string `json:",omitempty"`
 }
 
-type DataProtectionPolicyStatementOperationAuditFindingsDestinationFirehose struct {
+type dataProtectionPolicyStatementOperationAuditFindingsDestinationFirehose struct {
 	DeliveryStream string `json:",omitempty"`
 }
 
-type DataProtectionPolicyStatementOperationAuditFindingsDestinationS3 struct {
+type dataProtectionPolicyStatementOperationAuditFindingsDestinationS3 struct {
 	Bucket string `json:",omitempty"`
 }
 
-type DataProtectionPolicyStatementOperationDeidentify struct {
-	MaskConfig *DataProtectionPolicyStatementOperationDeidentifyMaskConfig `json:",omitempty"`
+type dataProtectionPolicyStatementOperationDeidentify struct {
+	MaskConfig *dataProtectionPolicyStatementOperationDeidentifyMaskConfig `json:",omitempty"`
 }
 
-type DataProtectionPolicyStatementOperationDeidentifyMaskConfig struct{}
+type dataProtectionPolicyStatementOperationDeidentifyMaskConfig struct{}

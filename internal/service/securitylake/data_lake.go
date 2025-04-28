@@ -57,10 +57,6 @@ type dataLakeResource struct {
 	framework.WithTimeouts
 }
 
-func (r *dataLakeResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_securitylake_data_lake"
-}
-
 func (r *dataLakeResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -272,7 +268,7 @@ func (r *dataLakeResource) Read(ctx context.Context, request resource.ReadReques
 	// if the data lake's AWS Region isn't the configured one.
 	if region := configuration.Region.ValueString(); region != r.Meta().Region(ctx) {
 		if tags, err := listTags(ctx, conn, data.ID.ValueString(), func(o *securitylake.Options) { o.Region = region }); err == nil {
-			setTagsOut(ctx, Tags(tags))
+			setTagsOut(ctx, svcTags(tags))
 		}
 	}
 
@@ -362,10 +358,6 @@ func (r *dataLakeResource) Delete(ctx context.Context, request resource.DeleteRe
 	}
 }
 
-func (r *dataLakeResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, req, resp)
-}
-
 func findDataLakeByARN(ctx context.Context, conn *securitylake.Client, arn string) (*awstypes.DataLakeResource, error) {
 	region, err := regionFromARNString(arn)
 	if err != nil {
@@ -414,7 +406,7 @@ func findDataLakes(ctx context.Context, conn *securitylake.Client, input *securi
 }
 
 func statusDataLakeCreate(ctx context.Context, conn *securitylake.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findDataLakeByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
@@ -430,7 +422,7 @@ func statusDataLakeCreate(ctx context.Context, conn *securitylake.Client, arn st
 }
 
 func statusDataLakeUpdate(ctx context.Context, conn *securitylake.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findDataLakeByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {

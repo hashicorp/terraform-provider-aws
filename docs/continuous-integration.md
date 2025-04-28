@@ -254,6 +254,10 @@ PKG=rds make golangci-lint2
 
 GoReleaser CI build-32-bit ensures that GoReleaser can build a 32-bit binary. This check catches rare but important edge cases. Currently, we do not offer a `make` target to run this check locally.
 
+### Modern Go Check
+
+This check ensures that code uses current idiomatic Go. Currently, the check is only run on a subset of services. To determine which services must have modern Go, check the `.github/workflows/modern_go.yml` file.
+
 ### Provider Checks
 
 Provider checks are a suite of tests that ensure Go code functions and markdown is correct.

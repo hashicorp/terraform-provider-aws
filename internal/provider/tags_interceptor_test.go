@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/go-cty/cty"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -66,11 +65,7 @@ func TestTagsResourceInterceptor(t *testing.T) {
 	sp := &types.ServicePackageResourceTags{
 		IdentifierAttribute: "id",
 	}
-	tags := tagsResourceInterceptor{
-		tags:       sp,
-		updateFunc: tagsUpdateFunc,
-		readFunc:   tagsReadFunc,
-	}
+	tags := newTagsResourceInterceptor(sp)
 	interceptors = append(interceptors, interceptorItem{
 		when:        Finally,
 		why:         Update,
@@ -81,10 +76,10 @@ func TestTagsResourceInterceptor(t *testing.T) {
 	conn.SetServicePackages(ctx, map[string]conns.ServicePackage{
 		"Test": &mockService{},
 	})
-	conns.SetDefaultTagsConfig(conn, expandDefaultTags(ctx, map[string]interface{}{
+	conns.SetDefaultTagsConfig(conn, expandDefaultTags(ctx, map[string]any{
 		"tag": "",
 	}))
-	conns.SetIgnoreTagsConfig(conn, expandIgnoreTags(ctx, map[string]interface{}{
+	conns.SetIgnoreTagsConfig(conn, expandIgnoreTags(ctx, map[string]any{
 		"tag2": "tag",
 	}))
 
@@ -101,8 +96,13 @@ func TestTagsResourceInterceptor(t *testing.T) {
 	d := &resourceData{}
 
 	for _, v := range interceptors {
-		var diags diag.Diagnostics
-		_, diags = v.interceptor.run(ctx, d, conn, v.when, v.why, diags)
+		opts := interceptorOptions{
+			c:    conn,
+			d:    d,
+			when: v.when,
+			why:  v.why,
+		}
+		diags := v.interceptor.run(ctx, opts)
 		if got, want := len(diags), 1; got != want {
 			t.Errorf("length of diags = %v, want %v", got, want)
 		}
@@ -135,6 +135,10 @@ func (d *resourceData) Get(key string) any {
 	return nil
 }
 
+func (d *resourceData) GetOk(key string) (any, bool) {
+	return nil, false
+}
+
 func (d *resourceData) Id() string {
 	return "id"
 }
@@ -143,10 +147,14 @@ func (d *resourceData) Set(string, any) error {
 	return nil
 }
 
-func (d *resourceData) GetChange(key string) (interface{}, interface{}) {
+func (d *resourceData) GetChange(key string) (any, any) {
 	return nil, nil
 }
 
 func (d *resourceData) HasChange(key string) bool {
+	return false
+}
+
+func (d *resourceData) HasChanges(keys ...string) bool {
 	return false
 }

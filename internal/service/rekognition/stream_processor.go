@@ -92,10 +92,6 @@ type resourceStreamProcessor struct {
 	framework.WithTimeouts
 }
 
-func (r *resourceStreamProcessor) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_rekognition_stream_processor"
-}
-
 func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -217,7 +213,7 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 						objectvalidator.AtLeastOneOf(path.MatchRelative().AtName("bounding_box"), path.MatchRelative().AtName("polygon")),
 					},
 					Blocks: map[string]schema.Block{
-						"bounding_box": schema.SingleNestedBlock{
+						"bounding_box": schema.SingleNestedBlock{ // nosemgrep:ci.avoid-SingleNestedBlock pre-existing, will be converted
 							CustomType:  fwtypes.NewObjectTypeOf[boundingBoxModel](ctx),
 							Description: "The box representing a region of interest on screen.",
 							Validators: []validator.Object{
@@ -614,7 +610,7 @@ func (r *resourceStreamProcessor) Update(ctx context.Context, req resource.Updat
 
 			plannedRegions := make([]awstypes.RegionOfInterest, len(planRegions))
 
-			for i := 0; i < len(planRegions); i++ {
+			for i := range planRegions {
 				planRegion := planRegions[i]
 				plannedRegions[i] = awstypes.RegionOfInterest{}
 
@@ -636,7 +632,7 @@ func (r *resourceStreamProcessor) Update(ctx context.Context, req resource.Updat
 
 					plannedPolygons := make([]awstypes.Point, len(polygons))
 
-					for i := 0; i < len(polygons); i++ {
+					for i := range polygons {
 						polygon := polygons[i]
 						plannedPolygons[i] = awstypes.Point{
 							X: aws.Float32(float32(polygon.X.ValueFloat64())),
@@ -719,10 +715,6 @@ func (r *resourceStreamProcessor) ImportState(ctx context.Context, req resource.
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrName), req, resp)
 }
 
-func (r *resourceStreamProcessor) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func waitStreamProcessorCreated(ctx context.Context, conn *rekognition.Client, name string, timeout time.Duration) (*rekognition.DescribeStreamProcessorOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
@@ -783,7 +775,7 @@ func waitStreamProcessorDeleted(ctx context.Context, conn *rekognition.Client, n
 }
 
 func statusStreamProcessor(ctx context.Context, conn *rekognition.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := findStreamProcessorByName(ctx, conn, name)
 		if tfresource.NotFound(err) {
 			return nil, "", nil

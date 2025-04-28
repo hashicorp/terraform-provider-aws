@@ -47,10 +47,6 @@ type resourceApplication struct {
 	framework.ResourceWithConfigure
 }
 
-func (r *resourceApplication) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_ssoadmin_application"
-}
-
 func (r *resourceApplication) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -267,7 +263,7 @@ func (r *resourceApplication) Read(ctx context.Context, req resource.ReadRequest
 		)
 		return
 	}
-	setTagsOut(ctx, Tags(tags))
+	setTagsOut(ctx, svcTags(tags))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -374,10 +370,6 @@ func (r *resourceApplication) Delete(ctx context.Context, req resource.DeleteReq
 
 func (r *resourceApplication) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-}
-
-func (r *resourceApplication) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, req, resp)
 }
 
 func findApplicationByID(ctx context.Context, conn *ssoadmin.Client, id string) (*ssoadmin.DescribeApplicationOutput, error) {

@@ -176,6 +176,7 @@ This resource supports the following arguments:
 * `idleTimeout` - (Optional) Time in seconds that the connection is allowed to be idle. Only valid for Load Balancers of type `application`. Default: 60.
 * `internal` - (Optional) If true, the LB will be internal. Defaults to `false`.
 * `ipAddressType` - (Optional) Type of IP addresses used by the subnets for your load balancer. The possible values depend upon the load balancer type: `ipv4` (all load balancer types), `dualstack` (all load balancer types), and `dualstack-without-public-ipv4` (type `application` only).
+* `ipamPools` (Optional). The IPAM pools to use with the load balancer.  Only valid for Load Balancers of type `application`. See [ipam_pools](#ipam_pools) for more information.
 * `loadBalancerType` - (Optional) Type of load balancer to create. Possible values are `application`, `gateway`, or `network`. The default value is `application`.
 * `name` - (Optional) Name of the LB. This name must be unique within your AWS account, can have a maximum of 32 characters, must contain only alphanumeric characters or hyphens, and must not begin or end with a hyphen. If not specified, Terraform will autogenerate a name beginning with `tf-lb`.
 * `namePrefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
@@ -197,6 +198,10 @@ This resource supports the following arguments:
 * `bucket` - (Required) S3 bucket name to store the logs in.
 * `enabled` - (Optional) Boolean to enable / disable `connectionLogs`. Defaults to `false`, even when `bucket` is specified.
 * `prefix` - (Optional) S3 bucket prefix. Logs are stored in the root if not configured.
+
+### ipam_pools
+
+* `ipv4IpamPoolId` - (Required) The ID of the IPv4 IPAM pool.
 
 ### subnet_mapping
 
@@ -257,4 +262,4 @@ Using `terraform import`, import LBs using their ARN. For example:
 % terraform import aws_lb.bar arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/my-load-balancer/50dc6c495c0c9188
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-9c78dadcde2db51bc30bb76d213499d27210db0689a739f5d196d50dc2eb7ce0 -->
+<!-- cache-key: cdktf-0.20.8 input-64b470489d8da264aa59172ace8f0bd132c644e4a3ef3893d27a3cec2d5e6a48 -->

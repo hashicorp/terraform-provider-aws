@@ -46,10 +46,6 @@ type probeResource struct {
 	framework.WithImportByID
 }
 
-func (*probeResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_networkmonitor_probe"
-}
-
 func (r *probeResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -171,7 +167,7 @@ func (r *probeResource) Create(ctx context.Context, request resource.CreateReque
 	// Set values for unknowns.
 	data.AddressFamily = fwtypes.StringEnumValue(outputGP.AddressFamily)
 	if data.PacketSize.IsUnknown() {
-		data.PacketSize = fwflex.Int32ToFramework(ctx, outputGP.PacketSize)
+		data.PacketSize = fwflex.Int32ToFrameworkInt64(ctx, outputGP.PacketSize)
 	}
 	data.VpcID = fwflex.StringToFramework(ctx, outputGP.VpcId)
 
@@ -245,10 +241,10 @@ func (r *probeResource) Update(ctx context.Context, request resource.UpdateReque
 			input.Destination = fwflex.StringFromFramework(ctx, new.Destination)
 		}
 		if !new.DestinationPort.Equal(old.DestinationPort) {
-			input.DestinationPort = fwflex.Int32FromFramework(ctx, new.DestinationPort)
+			input.DestinationPort = fwflex.Int32FromFrameworkInt64(ctx, new.DestinationPort)
 		}
 		if !new.PacketSize.Equal(old.PacketSize) {
-			input.PacketSize = fwflex.Int32FromFramework(ctx, new.PacketSize)
+			input.PacketSize = fwflex.Int32FromFrameworkInt64(ctx, new.PacketSize)
 		}
 		if !new.Protocol.Equal(old.Protocol) {
 			input.Protocol = new.Protocol.ValueEnum()
@@ -310,10 +306,6 @@ func (r *probeResource) Delete(ctx context.Context, request resource.DeleteReque
 	}
 }
 
-func (r *probeResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func findProbeByTwoPartKey(ctx context.Context, conn *networkmonitor.Client, monitorName, probeID string) (*networkmonitor.GetProbeOutput, error) {
 	input := &networkmonitor.GetProbeInput{
 		MonitorName: aws.String(monitorName),
@@ -341,7 +333,7 @@ func findProbeByTwoPartKey(ctx context.Context, conn *networkmonitor.Client, mon
 }
 
 func statusProbe(ctx context.Context, conn *networkmonitor.Client, monitorName, probeID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findProbeByTwoPartKey(ctx, conn, monitorName, probeID)
 
 		if tfresource.NotFound(err) {

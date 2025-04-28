@@ -56,10 +56,6 @@ type resourceApplication struct {
 	framework.WithTimeouts
 }
 
-func (r *resourceApplication) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_qbusiness_application"
-}
-
 func (r *resourceApplication) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -319,10 +315,6 @@ func (r *resourceApplication) Delete(ctx context.Context, req resource.DeleteReq
 	}
 }
 
-func (r *resourceApplication) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func findApplicationByID(ctx context.Context, conn *qbusiness.Client, id string) (*qbusiness.GetApplicationOutput, error) {
 	input := &qbusiness.GetApplicationInput{
 		ApplicationId: aws.String(id),
@@ -348,7 +340,7 @@ func findApplicationByID(ctx context.Context, conn *qbusiness.Client, id string)
 }
 
 func statusApplication(ctx context.Context, conn *qbusiness.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findApplicationByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

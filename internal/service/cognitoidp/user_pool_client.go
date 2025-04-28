@@ -55,10 +55,6 @@ type userPoolClientResource struct {
 	framework.ResourceWithConfigure
 }
 
-func (*userPoolClientResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_cognito_user_pool_client"
-}
-
 // Schema returns the schema for this resource.
 func (r *userPoolClientResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{
@@ -448,7 +444,7 @@ func (r *userPoolClientResource) Update(ctx context.Context, request resource.Up
 	const (
 		timeout = 2 * time.Minute
 	)
-	output, err := tfresource.RetryWhenIsA[*awstypes.ConcurrentModificationException](ctx, timeout, func() (interface{}, error) {
+	output, err := tfresource.RetryWhenIsA[*awstypes.ConcurrentModificationException](ctx, timeout, func() (any, error) {
 		return conn.UpdateUserPoolClient(ctx, &input)
 	})
 	if err != nil {
@@ -483,7 +479,7 @@ func (r *userPoolClientResource) Delete(ctx context.Context, request resource.De
 
 	params := state.deleteInput(ctx)
 
-	tflog.Debug(ctx, "deleting Cognito User Pool Client", map[string]interface{}{
+	tflog.Debug(ctx, "deleting Cognito User Pool Client", map[string]any{
 		names.AttrID:         state.ID.ValueString(),
 		names.AttrUserPoolID: state.UserPoolID.ValueString(),
 	})

@@ -53,7 +53,7 @@ func resourceRepositoryPermissionsPolicy() *schema.Resource {
 				ValidateFunc:          validation.StringIsJSON,
 				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
 				DiffSuppressOnRefresh: true,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
@@ -76,7 +76,7 @@ func resourceRepositoryPermissionsPolicy() *schema.Resource {
 	}
 }
 
-func resourceRepositoryPermissionsPolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRepositoryPermissionsPolicyPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeArtifactClient(ctx)
 
@@ -112,7 +112,7 @@ func resourceRepositoryPermissionsPolicyPut(ctx context.Context, d *schema.Resou
 	return append(diags, resourceRepositoryPermissionsPolicyRead(ctx, d, meta)...)
 }
 
-func resourceRepositoryPermissionsPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRepositoryPermissionsPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeArtifactClient(ctx)
 
@@ -154,7 +154,7 @@ func resourceRepositoryPermissionsPolicyRead(ctx context.Context, d *schema.Reso
 	return diags
 }
 
-func resourceRepositoryPermissionsPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRepositoryPermissionsPolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeArtifactClient(ctx)
 
@@ -164,11 +164,12 @@ func resourceRepositoryPermissionsPolicyDelete(ctx context.Context, d *schema.Re
 	}
 
 	log.Printf("[DEBUG] Deleting CodeArtifact Repository Permissions Policy: %s", d.Id())
-	_, err = conn.DeleteRepositoryPermissionsPolicy(ctx, &codeartifact.DeleteRepositoryPermissionsPolicyInput{
+	input := codeartifact.DeleteRepositoryPermissionsPolicyInput{
 		Domain:      aws.String(domainName),
 		DomainOwner: aws.String(owner),
 		Repository:  aws.String(repositoryName),
-	})
+	}
+	_, err = conn.DeleteRepositoryPermissionsPolicy(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags

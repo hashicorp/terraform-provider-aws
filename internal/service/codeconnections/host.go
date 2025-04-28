@@ -34,6 +34,7 @@ import (
 
 // @FrameworkResource("aws_codeconnections_host", name="Host")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/codeconnections/types;types.Host")
 func newHostResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &hostResource{}
 
@@ -52,10 +53,6 @@ type hostResource struct {
 	framework.ResourceWithConfigure
 	framework.WithImportByID
 	framework.WithTimeouts
-}
-
-func (r *hostResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_codeconnections_host"
 }
 
 func (r *hostResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -309,10 +306,6 @@ func (r *hostResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 	}
 }
 
-func (r *hostResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func (r *hostResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrARN), req, resp)
@@ -361,7 +354,7 @@ func waitHostDeleted(ctx context.Context, conn *codeconnections.Client, id strin
 }
 
 func statusHost(ctx context.Context, conn *codeconnections.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := findHostByARN(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil

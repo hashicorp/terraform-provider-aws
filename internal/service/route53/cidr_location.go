@@ -44,10 +44,6 @@ type cidrLocationResource struct {
 	framework.WithImportByID
 }
 
-func (*cidrLocationResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_route53_cidr_location"
-}
-
 func (r *cidrLocationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -255,7 +251,7 @@ func (r *cidrLocationResource) Delete(ctx context.Context, request resource.Dele
 		return
 	}
 
-	tflog.Debug(ctx, "deleting Route 53 CIDR Location", map[string]interface{}{
+	tflog.Debug(ctx, "deleting Route 53 CIDR Location", map[string]any{
 		names.AttrID: data.ID.ValueString(),
 	})
 

@@ -74,6 +74,10 @@ var (
 
 	CreateResourceID = createResourceID
 	ParseResourceID  = parseResourceID
+
+	DirectoryBucketNameRegex = directoryBucketNameRegex
+
+	LifecycleConfigEqual = lifecycleConfigEqual
 )
 
 type (

@@ -271,6 +271,7 @@ This configuration block supports the following arguments:
 * `metric_dimension` - (Optional) Dimensions of the metric.
 * `metric_name` - (Optional) Name of the metric.
 * `namespace` - (Optional) Namespace of the metric.
+* `period` - (Optional) The period of the metric in seconds.
 * `statistic` - (Optional) Statistic of the metric.
 * `unit` - (Optional) Unit of the metric.
 * `metrics` - (Optional) Metrics to include, as a metric data query.

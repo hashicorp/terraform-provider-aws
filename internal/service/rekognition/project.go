@@ -49,10 +49,6 @@ const (
 	ResNameProject = "Project"
 )
 
-func (r *resourceProject) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_rekognition_project"
-}
-
 func (r *resourceProject) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -253,10 +249,6 @@ func (r *resourceProject) Delete(ctx context.Context, req resource.DeleteRequest
 	}
 }
 
-func (r *resourceProject) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, req, resp)
-}
-
 func waitProjectCreated(ctx context.Context, conn *rekognition.Client, name string, feature awstypes.CustomizationFeature, timeout time.Duration) (*awstypes.ProjectDescription, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.ProjectStatusCreating),
@@ -330,7 +322,7 @@ func findProjectByName(ctx context.Context, conn *rekognition.Client, name strin
 }
 
 func statusProject(ctx context.Context, conn *rekognition.Client, name string, feature awstypes.CustomizationFeature) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := findProjectByName(ctx, conn, name, feature)
 		if tfresource.NotFound(err) {
 			return nil, "", nil

@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -162,12 +161,10 @@ func resourceProduct() *schema.Resource {
 				ValidateDiagFunc: enum.Validate[awstypes.ProductType](),
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceProductCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProductCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
@@ -178,7 +175,7 @@ func resourceProductCreate(ctx context.Context, d *schema.ResourceData, meta int
 		Owner:            aws.String(d.Get(names.AttrOwner).(string)),
 		ProductType:      awstypes.ProductType(d.Get(names.AttrType).(string)),
 		ProvisioningArtifactParameters: expandProvisioningArtifactParameters(
-			d.Get("provisioning_artifact_parameters").([]interface{})[0].(map[string]interface{}),
+			d.Get("provisioning_artifact_parameters").([]any)[0].(map[string]any),
 		),
 		Tags: getTagsIn(ctx),
 	}
@@ -207,7 +204,7 @@ func resourceProductCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.SupportUrl = aws.String(v.(string))
 	}
 
-	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidParametersException](ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidParametersException](ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
 		return conn.CreateProduct(ctx, input)
 	}, "profile does not exist")
 
@@ -224,7 +221,7 @@ func resourceProductCreate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceProductRead(ctx, d, meta)...)
 }
 
-func resourceProductRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProductRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
@@ -266,7 +263,7 @@ func resourceProductRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceProductUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProductUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
@@ -316,11 +313,11 @@ func resourceProductUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		if updatedTags := oldTags.Updated(newTags).IgnoreSystem(names.ServiceCatalog); len(updatedTags) > 0 {
-			input.AddTags = Tags(updatedTags)
+			input.AddTags = svcTags(updatedTags)
 		}
 	}
 
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidParametersException](ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidParametersException](ctx, d.Timeout(schema.TimeoutUpdate), func() (any, error) {
 		return conn.UpdateProduct(ctx, input)
 	}, "profile does not exist")
 
@@ -331,7 +328,7 @@ func resourceProductUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceProductRead(ctx, d, meta)...)
 }
 
-func resourceProductDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProductDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
@@ -360,7 +357,7 @@ func resourceProductDelete(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func resourceProductImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceProductImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
 	productData, err := findProductByID(ctx, conn, d.Id())
@@ -392,7 +389,7 @@ func resourceProductImport(ctx context.Context, d *schema.ResourceData, meta int
 	return []*schema.ResourceData{d}, nil
 }
 
-func expandProvisioningArtifactParameters(tfMap map[string]interface{}) *awstypes.ProvisioningArtifactProperties {
+func expandProvisioningArtifactParameters(tfMap map[string]any) *awstypes.ProvisioningArtifactProperties {
 	if tfMap == nil {
 		return nil
 	}
@@ -431,12 +428,12 @@ func expandProvisioningArtifactParameters(tfMap map[string]interface{}) *awstype
 	return apiObject
 }
 
-func flattenProvisioningArtifactParameters(apiObject *servicecatalog.DescribeProvisioningArtifactOutput) []interface{} {
+func flattenProvisioningArtifactParameters(apiObject *servicecatalog.DescribeProvisioningArtifactOutput) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		names.AttrDescription:         aws.ToString(apiObject.ProvisioningArtifactDetail.Description),
 		"disable_template_validation": false, // set default because it cannot be read
 		names.AttrName:                aws.ToString(apiObject.ProvisioningArtifactDetail.Name),
@@ -453,5 +450,5 @@ func flattenProvisioningArtifactParameters(apiObject *servicecatalog.DescribePro
 		}
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }

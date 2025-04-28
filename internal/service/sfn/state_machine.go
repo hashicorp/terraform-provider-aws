@@ -196,12 +196,11 @@ func resourceStateMachine() *schema.Resource {
 		CustomizeDiff: customdiff.Sequence(
 			stateMachineDefinitionValidate,
 			stateMachineUpdateComputedAttributesOnPublish,
-			verify.SetTagsDiff,
 		),
 	}
 }
 
-func resourceStateMachineCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStateMachineCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SFNClient(ctx)
 
@@ -215,23 +214,23 @@ func resourceStateMachineCreate(ctx context.Context, d *schema.ResourceData, met
 		Type:       awstypes.StateMachineType(d.Get(names.AttrType).(string)),
 	}
 
-	if v, ok := d.GetOk(names.AttrEncryptionConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.EncryptionConfiguration = expandEncryptionConfiguration(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk(names.AttrEncryptionConfiguration); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.EncryptionConfiguration = expandEncryptionConfiguration(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk(names.AttrLoggingConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.LoggingConfiguration = expandLoggingConfiguration(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk(names.AttrLoggingConfiguration); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.LoggingConfiguration = expandLoggingConfiguration(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("tracing_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.TracingConfiguration = expandTracingConfiguration(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("tracing_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.TracingConfiguration = expandTracingConfiguration(v.([]any)[0].(map[string]any))
 	}
 
 	// This is done to deal with IAM eventual consistency.
 	// Note: the instance may be in a deleting mode, hence the retry
 	// when creating the step function. This can happen when we are
 	// updating the resource (since there is no update API call).
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
 		return conn.CreateStateMachine(ctx, input)
 	}, "StateMachineDeleting", "AccessDeniedException")
 
@@ -244,7 +243,7 @@ func resourceStateMachineCreate(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceStateMachineRead(ctx, d, meta)...)
 }
 
-func resourceStateMachineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStateMachineRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SFNClient(ctx)
 
@@ -269,14 +268,14 @@ func resourceStateMachineRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("definition", output.Definition)
 	d.Set(names.AttrDescription, output.Description)
 	if output.EncryptionConfiguration != nil {
-		if err := d.Set(names.AttrEncryptionConfiguration, []interface{}{flattenEncryptionConfiguration(output.EncryptionConfiguration)}); err != nil {
+		if err := d.Set(names.AttrEncryptionConfiguration, []any{flattenEncryptionConfiguration(output.EncryptionConfiguration)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting encryption_configuration: %s", err)
 		}
 	} else {
 		d.Set(names.AttrEncryptionConfiguration, nil)
 	}
 	if output.LoggingConfiguration != nil {
-		if err := d.Set(names.AttrLoggingConfiguration, []interface{}{flattenLoggingConfiguration(output.LoggingConfiguration)}); err != nil {
+		if err := d.Set(names.AttrLoggingConfiguration, []any{flattenLoggingConfiguration(output.LoggingConfiguration)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting logging_configuration: %s", err)
 		}
 	} else {
@@ -289,7 +288,7 @@ func resourceStateMachineRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set(names.AttrRoleARN, output.RoleArn)
 	d.Set(names.AttrStatus, output.Status)
 	if output.TracingConfiguration != nil {
-		if err := d.Set("tracing_configuration", []interface{}{flattenTracingConfiguration(output.TracingConfiguration)}); err != nil {
+		if err := d.Set("tracing_configuration", []any{flattenTracingConfiguration(output.TracingConfiguration)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting tracing_configuration: %s", err)
 		}
 	} else {
@@ -317,7 +316,7 @@ func resourceStateMachineRead(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func resourceStateMachineUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStateMachineUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SFNClient(ctx)
 
@@ -332,20 +331,20 @@ func resourceStateMachineUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 
 		if d.HasChange(names.AttrEncryptionConfiguration) {
-			if v, ok := d.GetOk(names.AttrEncryptionConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.EncryptionConfiguration = expandEncryptionConfiguration(v.([]interface{})[0].(map[string]interface{}))
+			if v, ok := d.GetOk(names.AttrEncryptionConfiguration); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.EncryptionConfiguration = expandEncryptionConfiguration(v.([]any)[0].(map[string]any))
 			}
 		}
 
 		if d.HasChange(names.AttrLoggingConfiguration) {
-			if v, ok := d.GetOk(names.AttrLoggingConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.LoggingConfiguration = expandLoggingConfiguration(v.([]interface{})[0].(map[string]interface{}))
+			if v, ok := d.GetOk(names.AttrLoggingConfiguration); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.LoggingConfiguration = expandLoggingConfiguration(v.([]any)[0].(map[string]any))
 			}
 		}
 
 		if d.HasChange("tracing_configuration") {
-			if v, ok := d.GetOk("tracing_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.TracingConfiguration = expandTracingConfiguration(v.([]interface{})[0].(map[string]interface{}))
+			if v, ok := d.GetOk("tracing_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.TracingConfiguration = expandTracingConfiguration(v.([]any)[0].(map[string]any))
 			}
 		}
 
@@ -390,7 +389,7 @@ func resourceStateMachineUpdate(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceStateMachineRead(ctx, d, meta)...)
 }
 
-func resourceStateMachineDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStateMachineDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SFNClient(ctx)
 
@@ -436,7 +435,7 @@ func findStateMachineByARN(ctx context.Context, conn *sfn.Client, arn string) (*
 }
 
 func statusStateMachine(ctx context.Context, conn *sfn.Client, stateMachineArn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findStateMachineByARN(ctx, conn, stateMachineArn)
 
 		if tfresource.NotFound(err) {
@@ -468,7 +467,7 @@ func waitStateMachineDeleted(ctx context.Context, conn *sfn.Client, stateMachine
 	return nil, err
 }
 
-func expandLoggingConfiguration(tfMap map[string]interface{}) *awstypes.LoggingConfiguration {
+func expandLoggingConfiguration(tfMap map[string]any) *awstypes.LoggingConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -494,12 +493,12 @@ func expandLoggingConfiguration(tfMap map[string]interface{}) *awstypes.LoggingC
 	return apiObject
 }
 
-func flattenLoggingConfiguration(apiObject *awstypes.LoggingConfiguration) map[string]interface{} {
+func flattenLoggingConfiguration(apiObject *awstypes.LoggingConfiguration) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"include_execution_data": apiObject.IncludeExecutionData,
 		"level":                  apiObject.Level,
 	}
@@ -511,7 +510,7 @@ func flattenLoggingConfiguration(apiObject *awstypes.LoggingConfiguration) map[s
 	return tfMap
 }
 
-func expandTracingConfiguration(tfMap map[string]interface{}) *awstypes.TracingConfiguration {
+func expandTracingConfiguration(tfMap map[string]any) *awstypes.TracingConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -525,19 +524,19 @@ func expandTracingConfiguration(tfMap map[string]interface{}) *awstypes.TracingC
 	return apiObject
 }
 
-func flattenTracingConfiguration(apiObject *awstypes.TracingConfiguration) map[string]interface{} {
+func flattenTracingConfiguration(apiObject *awstypes.TracingConfiguration) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		names.AttrEnabled: apiObject.Enabled,
 	}
 
 	return tfMap
 }
 
-func stateMachineUpdateComputedAttributesOnPublish(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+func stateMachineUpdateComputedAttributesOnPublish(_ context.Context, d *schema.ResourceDiff, meta any) error {
 	if publish := d.Get("publish").(bool); publish && stateMachineNeedsConfigUpdate(d) {
 		d.SetNewComputed("revision_id")
 		d.SetNewComputed("state_machine_version_arn")
@@ -561,7 +560,7 @@ func stateMachineNeedsConfigUpdate(d sdkv2.ResourceDiffer) bool {
 	return false
 }
 
-func stateMachineDefinitionValidate(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
+func stateMachineDefinitionValidate(ctx context.Context, d *schema.ResourceDiff, meta any) error {
 	conn := meta.(*conns.AWSClient).SFNClient(ctx)
 
 	if d.HasChange("definition") {

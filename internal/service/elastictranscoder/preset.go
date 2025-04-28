@@ -507,7 +507,7 @@ func ResourcePreset() *schema.Resource {
 	}
 }
 
-func resourcePresetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePresetCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticTranscoderClient(ctx)
 
@@ -548,11 +548,11 @@ func expandETThumbnails(d *schema.ResourceData) *awstypes.Thumbnails {
 		return nil
 	}
 
-	l := list.([]interface{})
+	l := list.([]any)
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
-	t := l[0].(map[string]interface{})
+	t := l[0].(map[string]any)
 
 	thumbnails := &awstypes.Thumbnails{}
 
@@ -597,11 +597,11 @@ func expandETAudioParams(d *schema.ResourceData) *awstypes.AudioParameters {
 		return nil
 	}
 
-	l := list.([]interface{})
+	l := list.([]any)
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
-	audio := l[0].(map[string]interface{})
+	audio := l[0].(map[string]any)
 
 	ap := &awstypes.AudioParameters{
 		AudioPackingMode: aws.String(audio["audio_packing_mode"].(string)),
@@ -619,12 +619,12 @@ func expandETAudioParams(d *schema.ResourceData) *awstypes.AudioParameters {
 }
 
 func expandETAudioCodecOptions(d *schema.ResourceData) *awstypes.AudioCodecOptions {
-	l := d.Get("audio_codec_options").([]interface{})
+	l := d.Get("audio_codec_options").([]any)
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	codec := l[0].(map[string]interface{})
+	codec := l[0].(map[string]any)
 
 	codecOpts := &awstypes.AudioCodecOptions{}
 
@@ -648,18 +648,18 @@ func expandETAudioCodecOptions(d *schema.ResourceData) *awstypes.AudioCodecOptio
 }
 
 func expandETVideoParams(d *schema.ResourceData) *awstypes.VideoParameters {
-	l := d.Get("video").([]interface{})
+	l := d.Get("video").([]any)
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
-	p := l[0].(map[string]interface{})
+	p := l[0].(map[string]any)
 
 	etVideoParams := &awstypes.VideoParameters{
 		Watermarks: expandETVideoWatermarks(d),
 	}
 
-	if v, ok := d.GetOk("video_codec_options"); ok && len(v.(map[string]interface{})) > 0 {
-		etVideoParams.CodecOptions = flex.ExpandStringValueMap(v.(map[string]interface{}))
+	if v, ok := d.GetOk("video_codec_options"); ok && len(v.(map[string]any)) > 0 {
+		etVideoParams.CodecOptions = flex.ExpandStringValueMap(v.(map[string]any))
 	} else {
 		etVideoParams.CodecOptions = make(map[string]string)
 	}
@@ -735,7 +735,7 @@ func expandETVideoWatermarks(d *schema.ResourceData) []awstypes.PresetWatermark 
 			continue
 		}
 
-		p := w.(map[string]interface{})
+		p := w.(map[string]any)
 		watermark := awstypes.PresetWatermark{
 			HorizontalAlign:  aws.String(p["horizontal_align"].(string)),
 			HorizontalOffset: aws.String(p["horizontal_offset"].(string)),
@@ -754,7 +754,7 @@ func expandETVideoWatermarks(d *schema.ResourceData) []awstypes.PresetWatermark 
 	return watermarks
 }
 
-func resourcePresetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePresetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticTranscoderClient(ctx)
 
@@ -819,12 +819,12 @@ func resourcePresetRead(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func flattenETAudioParameters(audio *awstypes.AudioParameters) []map[string]interface{} {
+func flattenETAudioParameters(audio *awstypes.AudioParameters) []map[string]any {
 	if audio == nil {
 		return nil
 	}
 
-	result := map[string]interface{}{
+	result := map[string]any{
 		"audio_packing_mode": aws.ToString(audio.AudioPackingMode),
 		"channels":           aws.ToString(audio.Channels),
 		"codec":              aws.ToString(audio.Codec),
@@ -835,30 +835,30 @@ func flattenETAudioParameters(audio *awstypes.AudioParameters) []map[string]inte
 		result["bit_rate"] = aws.ToString(audio.BitRate)
 	}
 
-	return []map[string]interface{}{result}
+	return []map[string]any{result}
 }
 
-func flattenETAudioCodecOptions(opts *awstypes.AudioCodecOptions) []map[string]interface{} {
+func flattenETAudioCodecOptions(opts *awstypes.AudioCodecOptions) []map[string]any {
 	if opts == nil {
 		return nil
 	}
 
-	result := map[string]interface{}{
+	result := map[string]any{
 		"bit_depth":       aws.ToString(opts.BitDepth),
 		"bit_order":       aws.ToString(opts.BitOrder),
 		names.AttrProfile: aws.ToString(opts.Profile),
 		"signed":          aws.ToString(opts.Signed),
 	}
 
-	return []map[string]interface{}{result}
+	return []map[string]any{result}
 }
 
-func flattenETThumbnails(thumbs *awstypes.Thumbnails) []map[string]interface{} {
+func flattenETThumbnails(thumbs *awstypes.Thumbnails) []map[string]any {
 	if thumbs == nil {
 		return nil
 	}
 
-	result := map[string]interface{}{
+	result := map[string]any{
 		"aspect_ratio":     aws.ToString(thumbs.AspectRatio),
 		names.AttrFormat:   aws.ToString(thumbs.Format),
 		names.AttrInterval: aws.ToString(thumbs.Interval),
@@ -869,15 +869,15 @@ func flattenETThumbnails(thumbs *awstypes.Thumbnails) []map[string]interface{} {
 		"sizing_policy":    aws.ToString(thumbs.SizingPolicy),
 	}
 
-	return []map[string]interface{}{result}
+	return []map[string]any{result}
 }
 
-func flattenETVideoParams(video *awstypes.VideoParameters) []map[string]interface{} {
+func flattenETVideoParams(video *awstypes.VideoParameters) []map[string]any {
 	if video == nil {
 		return nil
 	}
 
-	result := map[string]interface{}{
+	result := map[string]any{
 		"aspect_ratio":         aws.ToString(video.AspectRatio),
 		"bit_rate":             aws.ToString(video.BitRate),
 		"codec":                aws.ToString(video.Codec),
@@ -893,14 +893,14 @@ func flattenETVideoParams(video *awstypes.VideoParameters) []map[string]interfac
 		"sizing_policy":        aws.ToString(video.SizingPolicy),
 	}
 
-	return []map[string]interface{}{result}
+	return []map[string]any{result}
 }
 
-func flattenETWatermarks(watermarks []awstypes.PresetWatermark) []map[string]interface{} {
-	var watermarkSet []map[string]interface{}
+func flattenETWatermarks(watermarks []awstypes.PresetWatermark) []map[string]any {
+	var watermarkSet []map[string]any
 
 	for _, w := range watermarks {
-		watermark := map[string]interface{}{
+		watermark := map[string]any{
 			"horizontal_align":  aws.ToString(w.HorizontalAlign),
 			"horizontal_offset": aws.ToString(w.HorizontalOffset),
 			names.AttrID:        aws.ToString(w.Id),
@@ -919,7 +919,7 @@ func flattenETWatermarks(watermarks []awstypes.PresetWatermark) []map[string]int
 	return watermarkSet
 }
 
-func resourcePresetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePresetDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticTranscoderClient(ctx)
 

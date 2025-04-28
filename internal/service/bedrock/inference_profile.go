@@ -57,10 +57,6 @@ type resourceInferenceProfile struct {
 	framework.WithTimeouts
 }
 
-func (r *resourceInferenceProfile) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_bedrock_inference_profile"
-}
-
 func (r *resourceInferenceProfile) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	modelsAttribute := framework.ResourceComputedListOfObjectsAttribute[resourceInferenceProfileModelModel](ctx)
 	modelsAttribute.PlanModifiers = []planmodifier.List{
@@ -278,10 +274,6 @@ func (r *resourceInferenceProfile) Delete(ctx context.Context, req resource.Dele
 	}
 }
 
-func (r *resourceInferenceProfile) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, req, resp)
-}
-
 func (r *resourceInferenceProfile) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
@@ -321,7 +313,7 @@ func waitInferenceProfileDeleted(ctx context.Context, conn *bedrock.Client, id s
 }
 
 func statusInferenceProfile(ctx context.Context, conn *bedrock.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := findInferenceProfileByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil

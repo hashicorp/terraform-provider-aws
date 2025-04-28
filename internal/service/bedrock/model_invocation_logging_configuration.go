@@ -34,17 +34,13 @@ type resourceModelInvocationLoggingConfiguration struct {
 	framework.WithImportByID
 }
 
-func (r *resourceModelInvocationLoggingConfiguration) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_bedrock_model_invocation_logging_configuration"
-}
-
 func (r *resourceModelInvocationLoggingConfiguration) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: framework.IDAttribute(),
 		},
 		Blocks: map[string]schema.Block{
-			"logging_config": schema.SingleNestedBlock{
+			"logging_config": schema.SingleNestedBlock{ // nosemgrep:ci.avoid-SingleNestedBlock pre-existing, will be converted
 				CustomType: fwtypes.NewObjectTypeOf[loggingConfigModel](ctx),
 				Validators: []validator.Object{
 					objectvalidator.IsRequired(),
@@ -72,7 +68,7 @@ func (r *resourceModelInvocationLoggingConfiguration) Schema(ctx context.Context
 					},
 				},
 				Blocks: map[string]schema.Block{
-					"cloudwatch_config": schema.SingleNestedBlock{
+					"cloudwatch_config": schema.SingleNestedBlock{ // nosemgrep:ci.avoid-SingleNestedBlock pre-existing, will be converted
 						CustomType: fwtypes.NewObjectTypeOf[cloudWatchConfigModel](ctx),
 						Attributes: map[string]schema.Attribute{
 							names.AttrLogGroupName: schema.StringAttribute{
@@ -87,7 +83,7 @@ func (r *resourceModelInvocationLoggingConfiguration) Schema(ctx context.Context
 							},
 						},
 						Blocks: map[string]schema.Block{
-							"large_data_delivery_s3_config": schema.SingleNestedBlock{
+							"large_data_delivery_s3_config": schema.SingleNestedBlock{ // nosemgrep:ci.avoid-SingleNestedBlock pre-existing, will be converted
 								CustomType: fwtypes.NewObjectTypeOf[s3ConfigModel](ctx),
 								Attributes: map[string]schema.Attribute{
 									names.AttrBucketName: schema.StringAttribute{
@@ -101,7 +97,7 @@ func (r *resourceModelInvocationLoggingConfiguration) Schema(ctx context.Context
 							},
 						},
 					},
-					"s3_config": schema.SingleNestedBlock{
+					"s3_config": schema.SingleNestedBlock{ // nosemgrep:ci.avoid-SingleNestedBlock pre-existing, will be converted
 						CustomType: fwtypes.NewObjectTypeOf[s3ConfigModel](ctx),
 						Attributes: map[string]schema.Attribute{
 							names.AttrBucketName: schema.StringAttribute{
@@ -217,7 +213,7 @@ func (r *resourceModelInvocationLoggingConfiguration) putModelInvocationLoggingC
 	//   ValidationException: Failed to validate permissions for log group: <group>, with role: <role>. Verify
 	//   the IAM role permissions are correct.
 	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ValidationException](ctx, propagationTimeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.PutModelInvocationLoggingConfiguration(ctx, input)
 		},
 		"Failed to validate permissions for log group",

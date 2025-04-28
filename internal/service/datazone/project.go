@@ -54,10 +54,6 @@ type resourceProject struct {
 	framework.WithTimeouts
 }
 
-func (r *resourceProject) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_datazone_project"
-}
-
 func (r *resourceProject) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -360,7 +356,7 @@ func waitProjectDeleted(ctx context.Context, conn *datazone.Client, domain strin
 }
 
 func statusProject(ctx context.Context, conn *datazone.Client, domain string, identifier string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := findProjectByID(ctx, conn, domain, identifier)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
