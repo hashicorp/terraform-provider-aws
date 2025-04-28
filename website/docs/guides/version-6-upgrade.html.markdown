@@ -66,6 +66,7 @@ Upgrade topics:
 - [resource/aws_spot_instance_request](#resourceaws_spot_instance_request)
 - [resource/aws_ssm_association](#resourceaws_ssm_association)
 - [resource/aws_verifiedpermissions_schema](#resourceaws_verifiedpermissions_schema)
+- [resource/aws_wafv2_web_acl](#resourceaws_wafv2_web_acl)
 
 <!-- /TOC -->
 
@@ -461,3 +462,8 @@ Remove `instance_id` from configuration—it no longer exists. Use `targets` ins
 The `definition` argument is now a list nested block instead of a single nested block.
 When referencing this argument, the index must now be included in the attribute address.
 For example, `definition.value` would now be referenced as `definition[0].value`.
+
+## resource/aws_wafv2_web_acl
+
+The default value for `rule.statement.managed_rule_group_statement.managed_rule_group_configs.aws_managed_rules_bot_control_rule_set.enable_machine_learning` is now `false`.
+To retain the previous behavior in configurations which omit this argument, explicitly set the value to `true`.
