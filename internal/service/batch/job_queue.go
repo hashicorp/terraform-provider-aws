@@ -55,7 +55,6 @@ func newJobQueueResource(_ context.Context) (resource.ResourceWithConfigure, err
 
 type jobQueueResource struct {
 	framework.ResourceWithConfigure
-	framework.WithImportByID
 	framework.WithTimeouts
 }
 
@@ -202,12 +201,6 @@ func (r *jobQueueResource) Read(ctx context.Context, request resource.ReadReques
 	var data jobQueueResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
-		return
-	}
-
-	if err := data.InitFromID(); err != nil {
-		response.Diagnostics.AddError("parsing resource ID", err.Error())
-
 		return
 	}
 
@@ -548,12 +541,6 @@ type jobQueueResourceModel struct {
 	Timeouts                 timeouts.Value                                                `tfsdk:"timeouts"`
 }
 
-func (model *jobQueueResourceModel) InitFromID() error {
-	model.JobQueueARN = model.ID
-
-	return nil
-}
-
 func (model *jobQueueResourceModel) setID() {
 	model.ID = model.JobQueueARN
 }
@@ -591,4 +578,21 @@ func flattenComputeEnvironments(ctx context.Context, apiObjects []awstypes.Compu
 	return fwflex.FlattenFrameworkStringListLegacy(ctx, tfslices.ApplyToAll(apiObjects, func(v awstypes.ComputeEnvironmentOrder) *string {
 		return v.ComputeEnvironment
 	}))
+}
+
+func (r *jobQueueResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	// Import-by-id case
+	if request.ID != "" {
+		resource.ImportStatePassthroughID(ctx, path.Root(names.AttrARN), request, response)
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), request.ID)...)
+		return
+	}
+
+	if identity := request.Identity; identity != nil {
+		var arn string
+		identity.GetAttribute(ctx, path.Root(names.AttrARN), &arn)
+
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrARN), arn)...)
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), arn)...)
+	}
 }
