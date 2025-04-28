@@ -1,5 +1,9 @@
 ## 5.97.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_ec2_default_credit_specification` ([#42345](https://github.com/hashicorp/terraform-provider-aws/issues/42345))
+
 ENHANCEMENTS:
 
 * data-source/aws_imagebuilder_infrastructure_configuration: Add `placement` attribute ([#42347](https://github.com/hashicorp/terraform-provider-aws/issues/42347))
