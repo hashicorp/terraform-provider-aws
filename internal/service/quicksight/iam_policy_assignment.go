@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/quicksight"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -350,13 +349,6 @@ func iamPolicyAssignmentParseResourceID(id string) (string, string, string, erro
 
 	return parts[0], parts[1], parts[2], nil
 }
-
-var (
-	identitiesAttrTypes = map[string]attr.Type{
-		"user":  types.SetType{ElemType: types.StringType},
-		"group": types.SetType{ElemType: types.StringType},
-	}
-)
 
 type iamPolicyAssignmentResourceModel struct {
 	framework.WithRegionModel

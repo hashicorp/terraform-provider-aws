@@ -246,7 +246,7 @@ func (r *botResource) Update(ctx context.Context, request resource.UpdateRequest
 			return
 		}
 
-		if _, err := waitBotDeleted(ctx, conn, botID, r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
+		if _, err := waitBotUpdated(ctx, conn, botID, r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("waiting for Lex v2 Bot (%s) update", botID), err.Error())
 
 			return
