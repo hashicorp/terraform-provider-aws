@@ -14,6 +14,7 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/batch/types"
+	"github.com/hashicorp/terraform-plugin-testing/compare"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -107,6 +108,7 @@ func TestAccBatchJobDefinition_Identity_Basic(t *testing.T) {
 					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
 					tfstatecheck.ExpectIdentityRegionalARNFormat(ctx, resourceName, "batch", "job-definition/{name}:{revision}"),
 				},
 			},
