@@ -56,10 +56,6 @@ type resourceFilter struct {
 	framework.WithTimeouts
 }
 
-func (r *resourceFilter) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_inspector2_filter"
-}
-
 func (r *resourceFilter) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	const (
 		defaultFilterSchemaMaxSize = 20
@@ -564,11 +560,10 @@ func (r *resourceFilter) Delete(ctx context.Context, req resource.DeleteRequest,
 		)
 		return
 	}
-
 }
 
 func (r *resourceFilter) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("arn"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrARN), req, resp)
 }
 
 func findFilterByARN(ctx context.Context, conn *inspector2.Client, arn string) (*awstypes.Filter, error) {
