@@ -5,9 +5,7 @@ package cognitoidp
 
 import (
 	"context"
-	"fmt"
 	"log"
-	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
@@ -19,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -57,29 +56,33 @@ func resourceUserInGroup() *schema.Resource {
 	}
 }
 
+const userInGroupIDPartCount = 3
+
 func resourceUserInGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 
-	groupName := d.Get("group_name").(string)
-	userPoolId := d.Get("user_pool_id").(string)
-	username := d.Get("username").(string)
+	groupName := d.Get(names.AttrGroupName).(string)
+	userPoolId := d.Get(names.AttrUserPoolID).(string)
+	username := d.Get(names.AttrUsername).(string)
+	idParts := []string{userPoolId, groupName, username}
 
-	input := &cognitoidentityprovider.AdminAddUserToGroupInput{
+	input := cognitoidentityprovider.AdminAddUserToGroupInput{
 		GroupName:  aws.String(groupName),
 		UserPoolId: aws.String(userPoolId),
 		Username:   aws.String(username),
 	}
 
-	_, err := conn.AdminAddUserToGroup(ctx, input)
-
+	_, err := conn.AdminAddUserToGroup(ctx, &input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Cognito Group User: %s", err)
 	}
 
-	d.SetId(
-		fmt.Sprintf("%s/%s/%s", userPoolId, groupName, username),
-	)
+	id, err := flex.FlattenResourceId(idParts, userInGroupIDPartCount, false)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "creating Cognito Group User: %s", err)
+	}
+	d.SetId(id)
 
 	return append(diags, resourceUserInGroupRead(ctx, d, meta)...)
 }
@@ -88,24 +91,29 @@ func resourceUserInGroupRead(ctx context.Context, d *schema.ResourceData, meta a
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 
-	id := strings.Split(d.Id(), "/")
-	userPoolId := id[0]
-	groupName := id[1]
-	username := id[2]
-	err := findGroupUserByThreePartKey(ctx, conn, groupName, userPoolId, username)
+	parts, err := flex.ExpandResourceId(d.Id(), userInGroupIDPartCount, false)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Cognito Group User (%s): %s", d.Id(), err)
+	}
+	userPoolId := parts[0]
+	groupName := parts[1]
+	username := parts[2]
 
+	err = findGroupUserByThreePartKey(ctx, conn, groupName, userPoolId, username)
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Cognito Group User %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
-	d.Set("group_name", groupName)
-	d.Set("user_pool_id", userPoolId)
-	d.Set("username", username)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Cognito Group User (%s): %s", d.Id(), err)
 	}
+
+	// Set attributes explicitly to support import from ID
+	d.Set(names.AttrGroupName, groupName)
+	d.Set(names.AttrUserPoolID, userPoolId)
+	d.Set(names.AttrUsername, username)
 
 	return diags
 }
@@ -120,8 +128,8 @@ func resourceUserInGroupDelete(ctx context.Context, d *schema.ResourceData, meta
 		Username:   aws.String(d.Get(names.AttrUsername).(string)),
 		UserPoolId: aws.String(d.Get(names.AttrUserPoolID).(string)),
 	}
-	_, err := conn.AdminRemoveUserFromGroup(ctx, &input)
 
+	_, err := conn.AdminRemoveUserFromGroup(ctx, &input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Cognito Group User (%s): %s", d.Id(), err)
 	}
