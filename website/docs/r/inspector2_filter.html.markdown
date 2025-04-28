@@ -13,6 +13,7 @@ TIP: A few guiding principles for writing documentation:
 4. Document your feature as it exists now; do not mention the future or past if you can help it.
 5. Use accessible and inclusive language.
 --->`
+
 # Resource: aws_inspector2_filter
 
 Terraform resource for managing an AWS Inspector Filter.
@@ -23,7 +24,7 @@ Terraform resource for managing an AWS Inspector Filter.
 
 ```terraform
 resource "aws_inspector2_filter" "example" {
-  name = "test""
+  name   = "test"
   action = "NONE"
   filter_criteria {
     aws_account_id {
@@ -158,7 +159,7 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 
 ```terraform
 import {
-  to = aws_inspector2_filter.example
+  to  = aws_inspector2_filter.example
   arn = "arn:aws:inspector2:us-east-1:111222333444:owner/111222333444/filter/abcdefgh12345678"
 }
 ```

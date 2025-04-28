@@ -8,7 +8,7 @@ provider "aws" {
 }
 
 resource "aws_inspector2_filter" "test" {
-  name = var.rName
+  name   = var.rName
   action = "NONE"
   filter_criteria {
     aws_account_id {

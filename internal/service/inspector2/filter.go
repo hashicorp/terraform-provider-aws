@@ -26,7 +26,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -67,15 +66,15 @@ func (r *resourceFilter) Schema(ctx context.Context, req resource.SchemaRequest,
 	)
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttributeComputedOnly(),
-			"action": schema.StringAttribute{
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			names.AttrAction: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.FilterAction](),
 				Required:   true,
 			},
-			"description": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 			},
-			"name": schema.StringAttribute{
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -141,7 +140,7 @@ func (r *resourceFilter) Schema(ctx context.Context, req resource.SchemaRequest,
 					},
 				},
 			},
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,
@@ -310,7 +309,7 @@ func packageFilterSchemaFramework(ctx context.Context, maxSize int) schema.SetNe
 						},
 					},
 				},
-				"name": schema.ListNestedBlock{
+				names.AttrName: schema.ListNestedBlock{
 					CustomType: fwtypes.NewListNestedObjectTypeOf[stringFilterModel](ctx),
 					Validators: []validator.List{
 						listvalidator.SizeAtMost(1),
@@ -378,7 +377,7 @@ func packageFilterSchemaFramework(ctx context.Context, maxSize int) schema.SetNe
 						},
 					},
 				},
-				"version": schema.ListNestedBlock{
+				names.AttrVersion: schema.ListNestedBlock{
 					CustomType: fwtypes.NewListNestedObjectTypeOf[stringFilterModel](ctx),
 					Validators: []validator.List{
 						listvalidator.SizeAtMost(1),
@@ -433,7 +432,7 @@ func (r *resourceFilter) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
-	plan.ARN = fwflex.StringToFramework(ctx, out.Arn)
+	plan.ARN = flex.StringToFramework(ctx, out.Arn)
 
 	filter_out, err := findFilterByARN(ctx, conn, plan.ARN.ValueString())
 	if err != nil {
@@ -486,7 +485,6 @@ func (r *resourceFilter) Read(ctx context.Context, req resource.ReadRequest, res
 }
 
 func (r *resourceFilter) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-
 	conn := r.Meta().Inspector2Client(ctx)
 
 	var plan, state resourceFilterModel
@@ -501,7 +499,6 @@ func (r *resourceFilter) Update(ctx context.Context, req resource.UpdateRequest,
 		!plan.Reason.Equal(state.Reason) ||
 		!plan.Action.Equal(state.Action) ||
 		!plan.FilterCriteria.Equal(state.FilterCriteria) {
-
 		var input inspector2.UpdateFilterInput
 		resp.Diagnostics.Append(flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("Filter"))...)
 		if resp.Diagnostics.HasError() {
@@ -543,7 +540,6 @@ func (r *resourceFilter) Update(ctx context.Context, req resource.UpdateRequest,
 }
 
 func (r *resourceFilter) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-
 	conn := r.Meta().Inspector2Client(ctx)
 
 	var state resourceFilterModel

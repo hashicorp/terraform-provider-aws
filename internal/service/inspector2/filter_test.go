@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/inspector2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/inspector2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -55,14 +54,14 @@ func testAccInspector2Filter_basic(t *testing.T) {
 				Config: testAccFilterConfig_basic(rName, action_1, description_1, reason_1, comparison_1, account_id_1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFilterExists(ctx, resourceName, &filter),
-					resource.TestCheckResourceAttr(resourceName, "description", description_1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description_1),
 					resource.TestCheckResourceAttr(resourceName, "reason", reason_1),
-					resource.TestCheckResourceAttr(resourceName, "action", action_1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAction, action_1),
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.aws_account_id.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter_criteria.0.aws_account_id.*", map[string]string{
-						"comparison": comparison_1,
-						"value":      account_id_1,
+						"comparison":    comparison_1,
+						names.AttrValue: account_id_1,
 					}),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "inspector2", regexache.MustCompile(`owner/\d{12}/filter/.+$`)),
 				),
@@ -113,14 +112,14 @@ func testAccInspector2Filter_update(t *testing.T) {
 				Config: testAccFilterConfig_basic(rName, action_1, description_1, reason_1, comparison_1, account_id_1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFilterExists(ctx, resourceName, &filter),
-					resource.TestCheckResourceAttr(resourceName, "description", description_1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description_1),
 					resource.TestCheckResourceAttr(resourceName, "reason", reason_1),
-					resource.TestCheckResourceAttr(resourceName, "action", action_1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAction, action_1),
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.aws_account_id.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter_criteria.0.aws_account_id.*", map[string]string{
-						"comparison": comparison_1,
-						"value":      account_id_1,
+						"comparison":    comparison_1,
+						names.AttrValue: account_id_1,
 					}),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "inspector2", regexache.MustCompile(`owner/\d{12}/filter/.+$`)),
 				),
@@ -136,14 +135,14 @@ func testAccInspector2Filter_update(t *testing.T) {
 				Config: testAccFilterConfig_basic(rName, action_2, description_2, reason_2, comparison_2, account_id_2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFilterExists(ctx, resourceName, &filter),
-					resource.TestCheckResourceAttr(resourceName, "description", description_2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description_2),
 					resource.TestCheckResourceAttr(resourceName, "reason", reason_2),
-					resource.TestCheckResourceAttr(resourceName, "action", action_2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAction, action_2),
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.aws_account_id.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter_criteria.0.aws_account_id.*", map[string]string{
-						"comparison": comparison_2,
-						"value":      account_id_2,
+						"comparison":    comparison_2,
+						names.AttrValue: account_id_2,
 					}),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "inspector2", regexache.MustCompile(`owner/\d{12}/filter/.+$`)),
 				),
@@ -194,14 +193,14 @@ func testAccInspector2Filter_stringFilters(t *testing.T) {
 				Config: testAccFilterConfig_stringFilters(rName, action_1, description_1, reason_1, comparison_1, value_1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFilterExists(ctx, resourceName, &filter),
-					resource.TestCheckResourceAttr(resourceName, "description", description_1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description_1),
 					resource.TestCheckResourceAttr(resourceName, "reason", reason_1),
-					resource.TestCheckResourceAttr(resourceName, "action", action_1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAction, action_1),
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.code_vulnerability_detector_name.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter_criteria.0.code_vulnerability_detector_name.*", map[string]string{
-						"comparison": comparison_1,
-						"value":      value_1,
+						"comparison":    comparison_1,
+						names.AttrValue: value_1,
 					}),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "inspector2", regexache.MustCompile(`owner/\d{12}/filter/.+$`)),
 				),
@@ -217,14 +216,14 @@ func testAccInspector2Filter_stringFilters(t *testing.T) {
 				Config: testAccFilterConfig_stringFilters(rName, action_2, description_2, reason_2, comparison_2, value_2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFilterExists(ctx, resourceName, &filter),
-					resource.TestCheckResourceAttr(resourceName, "description", description_2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description_2),
 					resource.TestCheckResourceAttr(resourceName, "reason", reason_2),
-					resource.TestCheckResourceAttr(resourceName, "action", action_2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAction, action_2),
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.code_vulnerability_detector_name.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter_criteria.0.code_vulnerability_detector_name.*", map[string]string{
-						"comparison": comparison_2,
-						"value":      value_2,
+						"comparison":    comparison_2,
+						names.AttrValue: value_2,
 					}),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "inspector2", regexache.MustCompile(`owner/\d{12}/filter/.+$`)),
 				),
@@ -275,9 +274,9 @@ func testAccInspector2Filter_numberFilters(t *testing.T) {
 				Config: testAccFilterConfig_numberFilters(rName, action_1, description_1, reason_1, lower_inclusive_value_1, upper_inclusive_value_1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFilterExists(ctx, resourceName, &filter),
-					resource.TestCheckResourceAttr(resourceName, "description", description_1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description_1),
 					resource.TestCheckResourceAttr(resourceName, "reason", reason_1),
-					resource.TestCheckResourceAttr(resourceName, "action", action_1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAction, action_1),
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.epss_score.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter_criteria.0.epss_score.*", map[string]string{
@@ -298,9 +297,9 @@ func testAccInspector2Filter_numberFilters(t *testing.T) {
 				Config: testAccFilterConfig_numberFilters(rName, action_2, description_2, reason_2, lower_inclusive_value_2, upper_inclusive_value_2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFilterExists(ctx, resourceName, &filter),
-					resource.TestCheckResourceAttr(resourceName, "description", description_2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description_2),
 					resource.TestCheckResourceAttr(resourceName, "reason", reason_2),
-					resource.TestCheckResourceAttr(resourceName, "action", action_2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAction, action_2),
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.epss_score.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter_criteria.0.epss_score.*", map[string]string{
@@ -356,9 +355,9 @@ func testAccInspector2Filter_dateFilters(t *testing.T) {
 				Config: testAccFilterConfig_dateFilters(rName, action_1, description_1, reason_1, start_inclusive_value_1, end_inclusive_value_1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFilterExists(ctx, resourceName, &filter),
-					resource.TestCheckResourceAttr(resourceName, "description", description_1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description_1),
 					resource.TestCheckResourceAttr(resourceName, "reason", reason_1),
-					resource.TestCheckResourceAttr(resourceName, "action", action_1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAction, action_1),
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.ecr_image_pushed_at.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter_criteria.0.ecr_image_pushed_at.*", map[string]string{
@@ -379,9 +378,9 @@ func testAccInspector2Filter_dateFilters(t *testing.T) {
 				Config: testAccFilterConfig_dateFilters(rName, action_2, description_2, reason_2, start_inclusive_value_2, end_inclusive_value_2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFilterExists(ctx, resourceName, &filter),
-					resource.TestCheckResourceAttr(resourceName, "description", description_2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description_2),
 					resource.TestCheckResourceAttr(resourceName, "reason", reason_2),
-					resource.TestCheckResourceAttr(resourceName, "action", action_2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAction, action_2),
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.ecr_image_pushed_at.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter_criteria.0.ecr_image_pushed_at.*", map[string]string{
@@ -439,15 +438,15 @@ func testAccInspector2Filter_mapFilters(t *testing.T) {
 				Config: testAccFilterConfig_mapFilters(rName, action_1, description_1, reason_1, comparison, key_1, value_1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFilterExists(ctx, resourceName, &filter),
-					resource.TestCheckResourceAttr(resourceName, "description", description_1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description_1),
 					resource.TestCheckResourceAttr(resourceName, "reason", reason_1),
-					resource.TestCheckResourceAttr(resourceName, "action", action_1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAction, action_1),
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.resource_tags.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter_criteria.0.resource_tags.*", map[string]string{
-						"comparison": comparison,
-						"key":        key_1,
-						"value":      value_1,
+						"comparison":    comparison,
+						names.AttrKey:   key_1,
+						names.AttrValue: value_1,
 					}),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "inspector2", regexache.MustCompile(`owner/\d{12}/filter/.+$`)),
 				),
@@ -463,15 +462,15 @@ func testAccInspector2Filter_mapFilters(t *testing.T) {
 				Config: testAccFilterConfig_mapFilters(rName, action_2, description_2, reason_2, comparison, key_2, value_2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFilterExists(ctx, resourceName, &filter),
-					resource.TestCheckResourceAttr(resourceName, "description", description_2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description_2),
 					resource.TestCheckResourceAttr(resourceName, "reason", reason_2),
-					resource.TestCheckResourceAttr(resourceName, "action", action_2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAction, action_2),
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.resource_tags.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter_criteria.0.resource_tags.*", map[string]string{
-						"comparison": comparison,
-						"key":        key_2,
-						"value":      value_2,
+						"comparison":    comparison,
+						names.AttrKey:   key_2,
+						names.AttrValue: value_2,
 					}),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "inspector2", regexache.MustCompile(`owner/\d{12}/filter/.+$`)),
 				),
@@ -522,9 +521,9 @@ func testAccInspector2Filter_portRangeFilters(t *testing.T) {
 				Config: testAccFilterConfig_portRangeFilters(rName, action_1, description_1, reason_1, begin_inclusive_value_1, end_inclusive_value_1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFilterExists(ctx, resourceName, &filter),
-					resource.TestCheckResourceAttr(resourceName, "description", description_1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description_1),
 					resource.TestCheckResourceAttr(resourceName, "reason", reason_1),
-					resource.TestCheckResourceAttr(resourceName, "action", action_1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAction, action_1),
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.port_range.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.port_range.0.begin_inclusive", strconv.Itoa(begin_inclusive_value_1)),
@@ -543,9 +542,9 @@ func testAccInspector2Filter_portRangeFilters(t *testing.T) {
 				Config: testAccFilterConfig_portRangeFilters(rName, action_2, description_2, reason_2, begin_inclusive_value_2, end_inclusive_value_2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFilterExists(ctx, resourceName, &filter),
-					resource.TestCheckResourceAttr(resourceName, "description", description_2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description_2),
 					resource.TestCheckResourceAttr(resourceName, "reason", reason_2),
-					resource.TestCheckResourceAttr(resourceName, "action", action_2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAction, action_2),
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.port_range.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.port_range.0.begin_inclusive", strconv.Itoa(begin_inclusive_value_2)),
@@ -597,15 +596,15 @@ func testAccInspector2Filter_packageFilters(t *testing.T) {
 				Config: testAccFilterConfig_packageFilter_1(rName, action_1, description_1, reason_1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFilterExists(ctx, resourceName, &filter),
-					resource.TestCheckResourceAttr(resourceName, "description", description_1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description_1),
 					resource.TestCheckResourceAttr(resourceName, "reason", reason_1),
-					resource.TestCheckResourceAttr(resourceName, "action", action_1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAction, action_1),
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.vulnerable_packages.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.vulnerable_packages.0.architecture.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter_criteria.0.vulnerable_packages.0.architecture.*", map[string]string{
-						"comparison": comparison,
-						"value":      "arch_1",
+						"comparison":    comparison,
+						names.AttrValue: "arch_1",
 					}),
 
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.vulnerable_packages.0.epoch.#", "1"),
@@ -616,38 +615,38 @@ func testAccInspector2Filter_packageFilters(t *testing.T) {
 
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.vulnerable_packages.0.file_path.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter_criteria.0.vulnerable_packages.0.file_path.*", map[string]string{
-						"comparison": comparison,
-						"value":      "file_path_1",
+						"comparison":    comparison,
+						names.AttrValue: "file_path_1",
 					}),
 
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.vulnerable_packages.0.name.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter_criteria.0.vulnerable_packages.0.name.*", map[string]string{
-						"comparison": comparison,
-						"value":      "name_1",
+						"comparison":    comparison,
+						names.AttrValue: "name_1",
 					}),
 
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.vulnerable_packages.0.release.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter_criteria.0.vulnerable_packages.0.release.*", map[string]string{
-						"comparison": comparison,
-						"value":      "release_1",
+						"comparison":    comparison,
+						names.AttrValue: "release_1",
 					}),
 
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.vulnerable_packages.0.source_lambda_layer_arn.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter_criteria.0.vulnerable_packages.0.source_lambda_layer_arn.*", map[string]string{
-						"comparison": comparison,
-						"value":      "source_lambda_layer_arn_1",
+						"comparison":    comparison,
+						names.AttrValue: "source_lambda_layer_arn_1",
 					}),
 
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.vulnerable_packages.0.source_layer_hash.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter_criteria.0.vulnerable_packages.0.source_layer_hash.*", map[string]string{
-						"comparison": comparison,
-						"value":      "source_layer_hash_1",
+						"comparison":    comparison,
+						names.AttrValue: "source_layer_hash_1",
 					}),
 
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.vulnerable_packages.0.version.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter_criteria.0.vulnerable_packages.0.version.*", map[string]string{
-						"comparison": comparison,
-						"value":      "version_1",
+						"comparison":    comparison,
+						names.AttrValue: "version_1",
 					}),
 
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "inspector2", regexache.MustCompile(`owner/\d{12}/filter/.+$`)),
@@ -664,16 +663,16 @@ func testAccInspector2Filter_packageFilters(t *testing.T) {
 				Config: testAccFilterConfig_packageFilter_2(rName, action_2, description_2, reason_2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFilterExists(ctx, resourceName, &filter),
-					resource.TestCheckResourceAttr(resourceName, "description", description_2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description_2),
 					resource.TestCheckResourceAttr(resourceName, "reason", reason_2),
-					resource.TestCheckResourceAttr(resourceName, "action", action_2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAction, action_2),
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.vulnerable_packages.#", "1"),
 
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.vulnerable_packages.0.architecture.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter_criteria.0.vulnerable_packages.0.architecture.*", map[string]string{
-						"comparison": comparison,
-						"value":      "arch_2",
+						"comparison":    comparison,
+						names.AttrValue: "arch_2",
 					}),
 
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.vulnerable_packages.0.epoch.#", "1"),
@@ -684,38 +683,38 @@ func testAccInspector2Filter_packageFilters(t *testing.T) {
 
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.vulnerable_packages.0.file_path.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter_criteria.0.vulnerable_packages.0.file_path.*", map[string]string{
-						"comparison": comparison,
-						"value":      "file_path_2",
+						"comparison":    comparison,
+						names.AttrValue: "file_path_2",
 					}),
 
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.vulnerable_packages.0.name.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter_criteria.0.vulnerable_packages.0.name.*", map[string]string{
-						"comparison": comparison,
-						"value":      "name_2",
+						"comparison":    comparison,
+						names.AttrValue: "name_2",
 					}),
 
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.vulnerable_packages.0.release.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter_criteria.0.vulnerable_packages.0.release.*", map[string]string{
-						"comparison": comparison,
-						"value":      "release_2",
+						"comparison":    comparison,
+						names.AttrValue: "release_2",
 					}),
 
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.vulnerable_packages.0.source_lambda_layer_arn.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter_criteria.0.vulnerable_packages.0.source_lambda_layer_arn.*", map[string]string{
-						"comparison": comparison,
-						"value":      "source_lambda_layer_arn_2",
+						"comparison":    comparison,
+						names.AttrValue: "source_lambda_layer_arn_2",
 					}),
 
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.vulnerable_packages.0.source_layer_hash.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter_criteria.0.vulnerable_packages.0.source_layer_hash.*", map[string]string{
-						"comparison": comparison,
-						"value":      "source_layer_hash_2",
+						"comparison":    comparison,
+						names.AttrValue: "source_layer_hash_2",
 					}),
 
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.vulnerable_packages.0.version.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter_criteria.0.vulnerable_packages.0.version.*", map[string]string{
-						"comparison": comparison,
-						"value":      "version_2",
+						"comparison":    comparison,
+						names.AttrValue: "version_2",
 					}),
 
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "inspector2", regexache.MustCompile(`owner/\d{12}/filter/.+$`)),
@@ -844,23 +843,13 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccCheckFilterNotRecreated(before, after *awstypes.Filter) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if beforeArn, afterArn := aws.ToString(before.Arn), aws.ToString(after.Arn); beforeArn != afterArn {
-			return create.Error(names.Inspector2, create.ErrActionCheckingNotRecreated, tfinspector2.ResNameFilter, beforeArn, errors.New("recreated"))
-		}
-
-		return nil
-	}
-}
-
 func testAccFilterConfig_basic(rName, action, description, reason, comparison, value string) string {
 	return fmt.Sprintf(`
 resource "aws_inspector2_filter" "test" {
-  name             	= %[1]q
-  action			= %[2]q
-  description 		= %[3]q
-  reason 			= %[4]q
+  name        = %[1]q
+  action      = %[2]q
+  description = %[3]q
+  reason      = %[4]q
   filter_criteria {
     aws_account_id {
       comparison = %[5]q
@@ -874,10 +863,10 @@ resource "aws_inspector2_filter" "test" {
 func testAccFilterConfig_stringFilters(rName, action, description, reason, comparison, value string) string {
 	return fmt.Sprintf(`
 resource "aws_inspector2_filter" "test" {
-  name             	= %[1]q
-  action			= %[2]q
-  description 		= %[3]q
-  reason 			= %[4]q
+  name        = %[1]q
+  action      = %[2]q
+  description = %[3]q
+  reason      = %[4]q
   filter_criteria {
     code_vulnerability_detector_name {
       comparison = %[5]q
@@ -891,14 +880,14 @@ resource "aws_inspector2_filter" "test" {
 func testAccFilterConfig_numberFilters(rName, action, description, reason, lower_inclusive_value, upper_inclusive_value string) string {
 	return fmt.Sprintf(`
 resource "aws_inspector2_filter" "test" {
-  name             	= %[1]q
-  action			= %[2]q
-  description 		= %[3]q
-  reason 			= %[4]q
+  name        = %[1]q
+  action      = %[2]q
+  description = %[3]q
+  reason      = %[4]q
   filter_criteria {
     epss_score {
       lower_inclusive = %[5]q
-      upper_inclusive      = %[6]q
+      upper_inclusive = %[6]q
     }
   }
 }
@@ -908,14 +897,14 @@ resource "aws_inspector2_filter" "test" {
 func testAccFilterConfig_dateFilters(rName, action, description, reason, start_inclusive_value, end_inclusive_value string) string {
 	return fmt.Sprintf(`
 resource "aws_inspector2_filter" "test" {
-  name             	= %[1]q
-  action			= %[2]q
-  description 		= %[3]q
-  reason 			= %[4]q
+  name        = %[1]q
+  action      = %[2]q
+  description = %[3]q
+  reason      = %[4]q
   filter_criteria {
     ecr_image_pushed_at {
-      start_inclusive    = %[5]q
-      end_inclusive      = %[6]q
+      start_inclusive = %[5]q
+      end_inclusive   = %[6]q
     }
   }
 }
@@ -925,15 +914,15 @@ resource "aws_inspector2_filter" "test" {
 func testAccFilterConfig_mapFilters(rName, action, description, reason, comparison, key, value string) string {
 	return fmt.Sprintf(`
 resource "aws_inspector2_filter" "test" {
-  name             	= %[1]q
-  action			= %[2]q
-  description 		= %[3]q
-  reason 			= %[4]q
+  name        = %[1]q
+  action      = %[2]q
+  description = %[3]q
+  reason      = %[4]q
   filter_criteria {
     resource_tags {
-	  comparison = %[5]q
-      key = %[6]q
-      value = %[7]q
+      comparison = %[5]q
+      key        = %[6]q
+      value      = %[7]q
     }
   }
 }
@@ -943,14 +932,14 @@ resource "aws_inspector2_filter" "test" {
 func testAccFilterConfig_portRangeFilters(rName, action, description, reason string, begin_inclusive_value, end_inclusive_value int) string {
 	return fmt.Sprintf(`
 resource "aws_inspector2_filter" "test" {
-  name             	= %[1]q
-  action			= %[2]q
-  description 		= %[3]q
-  reason 			= %[4]q
+  name        = %[1]q
+  action      = %[2]q
+  description = %[3]q
+  reason      = %[4]q
   filter_criteria {
     port_range {
-      begin_inclusive    = %[5]d
-      end_inclusive      = %[6]d
+      begin_inclusive = %[5]d
+      end_inclusive   = %[6]d
     }
   }
 }
@@ -960,45 +949,45 @@ resource "aws_inspector2_filter" "test" {
 func testAccFilterConfig_packageFilter_1(rName, action, description, reason string) string {
 	return fmt.Sprintf(`
 resource "aws_inspector2_filter" "test" {
-  name             	= %[1]q
-  action			= %[2]q
-  description 		= %[3]q
-  reason 			= %[4]q
+  name        = %[1]q
+  action      = %[2]q
+  description = %[3]q
+  reason      = %[4]q
   filter_criteria {
-  	vulnerable_packages{
-		architecture {
-			comparison = "EQUALS"
-			value      = "arch_1"
-		}
-		epoch {
-			lower_inclusive = "10"
-			upper_inclusive = "20"
-		}
-		file_path {
-			comparison = "EQUALS"
-			value      = "file_path_1"
-		}
-		name {
-			comparison = "EQUALS"
-			value      = "name_1"
-		}
-		release {
-			comparison = "EQUALS"
-			value      = "release_1"
-		}
-		source_lambda_layer_arn {
-			comparison = "EQUALS"
-			value      = "source_lambda_layer_arn_1"
-		}
-		source_layer_hash {
-			comparison = "EQUALS"
-			value      = "source_layer_hash_1"
-		}
-		version {
-			comparison = "EQUALS"
-			value      = "version_1"
-		}
-	}
+    vulnerable_packages {
+      architecture {
+        comparison = "EQUALS"
+        value      = "arch_1"
+      }
+      epoch {
+        lower_inclusive = "10"
+        upper_inclusive = "20"
+      }
+      file_path {
+        comparison = "EQUALS"
+        value      = "file_path_1"
+      }
+      name {
+        comparison = "EQUALS"
+        value      = "name_1"
+      }
+      release {
+        comparison = "EQUALS"
+        value      = "release_1"
+      }
+      source_lambda_layer_arn {
+        comparison = "EQUALS"
+        value      = "source_lambda_layer_arn_1"
+      }
+      source_layer_hash {
+        comparison = "EQUALS"
+        value      = "source_layer_hash_1"
+      }
+      version {
+        comparison = "EQUALS"
+        value      = "version_1"
+      }
+    }
   }
 }
 `, rName, action, description, reason)
@@ -1007,46 +996,46 @@ resource "aws_inspector2_filter" "test" {
 func testAccFilterConfig_packageFilter_2(rName, action, description, reason string) string {
 	return fmt.Sprintf(`
 resource "aws_inspector2_filter" "test" {
-  name             	= %[1]q
-  action			= %[2]q
-  description 		= %[3]q
-  reason 			= %[4]q
-	filter_criteria {
-		vulnerable_packages{
-			architecture {
-				comparison = "EQUALS"
-				value      = "arch_2"
-			}
-			epoch {
-				lower_inclusive = "21"
-				upper_inclusive = "30"
-			}
-			file_path {
-				comparison = "EQUALS"
-				value      = "file_path_2"
-			}
-			name {
-				comparison = "EQUALS"
-				value      = "name_2"
-			}
-			release {
-				comparison = "EQUALS"
-				value      = "release_2"
-			}
-			source_lambda_layer_arn {
-				comparison = "EQUALS"
-				value      = "source_lambda_layer_arn_2"
-			}
-			source_layer_hash {
-				comparison = "EQUALS"
-				value      = "source_layer_hash_2"
-			}
-			version {
-				comparison = "EQUALS"
-				value      = "version_2"
-			}
-		}
-  	}
+  name        = %[1]q
+  action      = %[2]q
+  description = %[3]q
+  reason      = %[4]q
+  filter_criteria {
+    vulnerable_packages {
+      architecture {
+        comparison = "EQUALS"
+        value      = "arch_2"
+      }
+      epoch {
+        lower_inclusive = "21"
+        upper_inclusive = "30"
+      }
+      file_path {
+        comparison = "EQUALS"
+        value      = "file_path_2"
+      }
+      name {
+        comparison = "EQUALS"
+        value      = "name_2"
+      }
+      release {
+        comparison = "EQUALS"
+        value      = "release_2"
+      }
+      source_lambda_layer_arn {
+        comparison = "EQUALS"
+        value      = "source_lambda_layer_arn_2"
+      }
+      source_layer_hash {
+        comparison = "EQUALS"
+        value      = "source_layer_hash_2"
+      }
+      version {
+        comparison = "EQUALS"
+        value      = "version_2"
+      }
+    }
+  }
 }
 `, rName, action, description, reason)
 }
