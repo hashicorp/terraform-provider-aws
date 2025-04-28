@@ -49,7 +49,7 @@ func TestComputeEnvironmentStateUpgradeV0(t *testing.T) {
 				"compute_environment_name_prefix": "test-prefix",
 			},
 			expected: map[string]any{
-				names.AttrName:        "test-environment",
+				names.AttrName:       "test-environment",
 				names.AttrNamePrefix: "test-prefix",
 			},
 		},
@@ -61,9 +61,9 @@ func TestComputeEnvironmentStateUpgradeV0(t *testing.T) {
 				"other_key":                       "other-value",
 			},
 			expected: map[string]any{
-				names.AttrName:        "test-environment",
+				names.AttrName:       "test-environment",
 				names.AttrNamePrefix: "test-prefix",
-				"other_key":   "other-value",
+				"other_key":          "other-value",
 			},
 		},
 		{
