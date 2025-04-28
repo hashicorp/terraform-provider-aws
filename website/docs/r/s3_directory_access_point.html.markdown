@@ -3,10 +3,10 @@ subcategory: "S3 (Simple Storage)"
 layout: "aws"
 page_title: "AWS: aws_s3_directory_access_point"
 description: |-
-  Provides a resource to manage an S3 Access Point for an S3 directory bucket.
+  Provides a resource to manage an access point for a directory bucket.
 ---
 # Resource: aws_s3_directory_access_point
-Provides a resource to manage an S3 Access Point for an S3 directory bucket.
+Provides a resource to manage an access point for a directory bucket.
 
 -> For all the services in AWS Local Zones, including Amazon S3, your accountID must be enabled before you can create or access any resource in the Local Zone. You can use the `DescribeAvailabilityZones` API operation to confirm your accountID access to a Local Zone. For more information, see [AWS Documentation](https://docs.aws.amazon.com/AmazonS3/latest/userguide/opt-in-directory-bucket-lz.html)
 
