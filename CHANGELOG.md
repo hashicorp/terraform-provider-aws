@@ -8,6 +8,7 @@ ENHANCEMENTS:
 
 * data-source/aws_imagebuilder_infrastructure_configuration: Add `placement` attribute ([#42347](https://github.com/hashicorp/terraform-provider-aws/issues/42347))
 * resource/aws_accessanalyzer_analyzer: Add `configuration.unused_access.analysis_rule` argument ([#42332](https://github.com/hashicorp/terraform-provider-aws/issues/42332))
+* resource/aws_fis_experiment_template: Add support for `ManagedResources` to `action.*.target` ([#42376](https://github.com/hashicorp/terraform-provider-aws/issues/42376))
 * resource/aws_imagebuilder_infrastructure_configuration: Add `placement` argument ([#42347](https://github.com/hashicorp/terraform-provider-aws/issues/42347))
 
 ## 5.96.0 (April 24, 2025)
