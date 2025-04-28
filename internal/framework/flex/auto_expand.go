@@ -817,8 +817,8 @@ func (expander autoExpander) map_(ctx context.Context, vFrom basetypes.MapValuab
 	}
 
 	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
-		"from map[string, %s]": v.ElementType(ctx),
-		"to":                   vTo.Kind(),
+		"from": fmt.Sprintf("map[string, %s]", v.ElementType(ctx)),
+		"to":   vTo.Kind(),
 	})
 
 	return diags
@@ -872,8 +872,8 @@ func (expander autoExpander) mapOfString(ctx context.Context, vFrom basetypes.Ma
 	}
 
 	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
-		"from map[string, %s]": vFrom.ElementType(ctx),
-		"to":                   vTo.Kind(),
+		"from": fmt.Sprintf("map[string, %s]", vFrom.ElementType(ctx)),
+		"to":   vTo.Kind(),
 	})
 
 	return diags

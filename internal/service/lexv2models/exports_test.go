@@ -14,6 +14,7 @@ var (
 
 	FindBotByID                 = findBotByID
 	FindBotLocaleByThreePartKey = findBotLocaleByThreePartKey
+	FindBotVersionByTwoPartKey  = findBotVersionByTwoPartKey
 	FindSlotByID                = findSlotByID
 
 	IntentFlexOpt = intentFlexOpt

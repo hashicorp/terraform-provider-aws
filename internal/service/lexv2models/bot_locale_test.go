@@ -168,9 +168,9 @@ func testAccCheckBotLocaleExists(ctx context.Context, n string, v *lexmodelsv2.D
 	}
 }
 
-func testAccBotLocaleConfigBase(rName string) string {
+func testAccBotLocaleConfig_base(rName string) string {
 	return acctest.ConfigCompose(
-		testAccBotBaseConfig(rName),
+		testAccBotConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_lexv2models_bot" "test" {
   name                        = %[1]q
@@ -185,7 +185,7 @@ resource "aws_lexv2models_bot" "test" {
 
 func testAccBotLocaleConfig_basic(rName, localeID string, thres float64) string {
 	return acctest.ConfigCompose(
-		testAccBotLocaleConfigBase(rName),
+		testAccBotLocaleConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_lexv2models_bot_locale" "test" {
   locale_id                        = %[1]q
@@ -198,7 +198,7 @@ resource "aws_lexv2models_bot_locale" "test" {
 
 func testAccBotLocaleConfig_voiceSettings(rName, voiceID, engine string) string {
 	return acctest.ConfigCompose(
-		testAccBotLocaleConfigBase(rName),
+		testAccBotLocaleConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_lexv2models_bot_locale" "test" {
   locale_id                        = "en_US"

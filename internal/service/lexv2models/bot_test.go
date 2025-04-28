@@ -229,7 +229,7 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccBotBaseConfig(rName string) string {
+func testAccBotConfig_base(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -259,7 +259,7 @@ resource "aws_iam_role_policy_attachment" "test" {
 
 func testAccBotConfig_basic(rName string, ttl int, dp bool) string {
 	return acctest.ConfigCompose(
-		testAccBotBaseConfig(rName),
+		testAccBotConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_lexv2models_bot" "test" {
   name                        = %[1]q
@@ -275,7 +275,7 @@ resource "aws_lexv2models_bot" "test" {
 
 func testAccBotConfig_tags1(rName string, ttl int, dp bool, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(
-		testAccBotBaseConfig(rName),
+		testAccBotConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_lexv2models_bot" "test" {
   name                        = %[1]q
@@ -295,7 +295,7 @@ resource "aws_lexv2models_bot" "test" {
 
 func testAccBotConfig_tags2(rName string, ttl int, dp bool, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(
-		testAccBotBaseConfig(rName),
+		testAccBotConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_lexv2models_bot" "test" {
   name                        = %[1]q
@@ -316,7 +316,7 @@ resource "aws_lexv2models_bot" "test" {
 
 func testAccBotConfig_type(rName string, ttl int, dp bool, botType string) string {
 	return acctest.ConfigCompose(
-		testAccBotBaseConfig(rName),
+		testAccBotConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_lexv2models_bot" "test" {
   name                        = %[1]q
