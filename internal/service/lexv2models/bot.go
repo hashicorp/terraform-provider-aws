@@ -377,7 +377,7 @@ func waitBotUpdated(ctx context.Context, conn *lexmodelsv2.Client, id string, ti
 	return nil, err
 }
 
-func waitBotDeleted(ctx context.Context, conn *lexmodelsv2.Client, id string, timeout time.Duration) (*lexmodelsv2.DescribeBotOutput, error) {
+func waitBotDeleted(ctx context.Context, conn *lexmodelsv2.Client, id string, timeout time.Duration) (*lexmodelsv2.DescribeBotOutput, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.BotStatusDeleting),
 		Target:  []string{},

@@ -182,7 +182,7 @@ func (r *trustedTokenIssuerResource) Read(ctx context.Context, request resource.
 	}
 
 	// Additional fields.
-	instanceARN, _ := trustedTokenIssuerParseInstanceARN(ctx, r.Meta(), data.TrustedTokenIssuerARN.ValueString())
+	instanceARN := trustedTokenIssuerParseInstanceARN(ctx, r.Meta(), data.TrustedTokenIssuerARN.ValueString())
 	data.InstanceARN = fwflex.StringToFrameworkARN(ctx, aws.String(instanceARN))
 
 	// listTags requires both trusted token issuer and instance ARN, so must be called
@@ -294,15 +294,14 @@ func findTrustedTokenIssuerByARN(ctx context.Context, conn *ssoadmin.Client, arn
 
 // Instance ARN is not returned by DescribeTrustedTokenIssuer but is needed for schema consistency when importing and tagging.
 // Instance ARN can be extracted from the Trusted Token Issuer ARN.
-func trustedTokenIssuerParseInstanceARN(ctx context.Context, c *conns.AWSClient, id string) (string, diag.Diagnostics) {
-	var diags diag.Diagnostics
+func trustedTokenIssuerParseInstanceARN(ctx context.Context, c *conns.AWSClient, id string) string {
 	parts := strings.Split(id, "/")
 
 	if len(parts) == 3 && parts[0] != "" && parts[1] != "" && parts[2] != "" {
-		return c.GlobalARNNoAccount(ctx, "sso", "instance/"+parts[1]), diags
+		return c.GlobalARNNoAccount(ctx, "sso", "instance/"+parts[1])
 	}
 
-	return "", diags
+	return ""
 }
 
 type trustedTokenIssuerResourceModel struct {
