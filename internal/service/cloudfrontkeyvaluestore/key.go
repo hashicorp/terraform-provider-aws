@@ -45,7 +45,7 @@ type keyResource struct {
 func (r *keyResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrID: framework.IDAttribute(),
+			names.AttrID: framework.IDAttributeDeprecatedNoReplacement(),
 			names.AttrKey: schema.StringAttribute{
 				Required:            true,
 				MarkdownDescription: "The key to put.",
