@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	tfbatch "github.com/hashicorp/terraform-provider-aws/internal/service/batch"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestComputeEnvironmentStateUpgradeV0(t *testing.T) {
