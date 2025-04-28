@@ -37,6 +37,15 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			}),
 		},
 		{
+			Factory:  newVPCEndpointAssociationsDataSource,
+			TypeName: "aws_vpc_endpoint_associations",
+			Name:     "VPC Endpoint Associations",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
+			}),
+		},
+		{
 			Factory:  newIPAMDataSource,
 			TypeName: "aws_vpc_ipam",
 			Name:     "IPAM",
@@ -1323,8 +1332,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_ec2_image_block_public_access",
 			Name:     "Image Block Public Access",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
+				IsOverrideEnabled: false,
 			}),
 		},
 		{

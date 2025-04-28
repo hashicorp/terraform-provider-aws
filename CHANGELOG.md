@@ -6,6 +6,7 @@ BREAKING CHANGES:
 * data-source/aws_ecs_task_definition: Remove `inference_accelerator` attribute. Amazon Elastic Inference reached end of life on April, 2024. ([#42137](https://github.com/hashicorp/terraform-provider-aws/issues/42137))
 * data-source/aws_ecs_task_execution: Remove `inference_accelerator_overrides` attribute. Amazon Elastic Inference reached end of life on April, 2024. ([#42137](https://github.com/hashicorp/terraform-provider-aws/issues/42137))
 * data-source/aws_elbv2_listener_rule: The `action.authenticate_cognito`, `action.authenticate_oidc`, `action.fixed_response`, `action.forward`, `action.forward.stickiness`, `action.redirect`, `condition.host_header`, `condition.http_header`, `condition.http_request_method`, `condition.path_pattern`, `condition.query_string`, and `condition.source_ip` attributes are now list nested blocks instead of single nested blocks ([#42283](https://github.com/hashicorp/terraform-provider-aws/issues/42283))
+* data-source/aws_identitystore_user: `filter` has been removed ([#42325](https://github.com/hashicorp/terraform-provider-aws/issues/42325))
 * data-source/aws_launch_template: Remove `elastic_inference_accelerator` attribute. Amazon Elastic Inference reached end of life on April, 2024. ([#42137](https://github.com/hashicorp/terraform-provider-aws/issues/42137))
 * data-source/aws_launch_template: `elastic_gpu_specifications` has been removed ([#42312](https://github.com/hashicorp/terraform-provider-aws/issues/42312))
 * data-source/aws_opensearch_domain: `kibana_endpoint` has been removed ([#42268](https://github.com/hashicorp/terraform-provider-aws/issues/42268))
@@ -43,10 +44,19 @@ resource/aws_batch_compute_environment: Rename `compute_environment_name_prefix`
 * resource/aws_bedrock_model_invocation_logging_configuration: `logging_config`, `logging_config.cloudwatch_config`, `logging_config.cloudwatch_config.large_data_delivery_s3_config`, and `logging_config.s3_config` are now list nested blocks instead of single nested blocks ([#42307](https://github.com/hashicorp/terraform-provider-aws/issues/42307))
 * resource/aws_cloudfront_key_value_store: Attribute `id` is now set to remote object's `Id` instead of `name` ([#42230](https://github.com/hashicorp/terraform-provider-aws/issues/42230))
 * resource/aws_cloudfront_response_headers_policy: The `etag` argument is now computed only ([#38448](https://github.com/hashicorp/terraform-provider-aws/issues/38448))
+* resource/aws_db_instance: `character_set_name` now cannot be set with `replicate_source_db`, `restore_to_point_in_time`, `s3_import`, or `snapshot_identifier`. ([#42348](https://github.com/hashicorp/terraform-provider-aws/issues/42348))
+* resource/aws_dms_endpoint: Remove `s3_settings` attribute. Use `aws_dms_s3_endpoint` instead ([#42379](https://github.com/hashicorp/terraform-provider-aws/issues/42379))
+* resource/aws_dx_gateway_association: `vpn_gateway_id` has been removed ([#42323](https://github.com/hashicorp/terraform-provider-aws/issues/42323))
 * resource/aws_ec2_spot_instance_request: Remove `block_duration_minutes` attribute ([#42060](https://github.com/hashicorp/terraform-provider-aws/issues/42060))
 * resource/aws_ecs_task_definition: Remove `inference_accelerator` attribute. Amazon Elastic Inference reached end of life on April, 2024. ([#42137](https://github.com/hashicorp/terraform-provider-aws/issues/42137))
+* resource/aws_eip: `vpc` has been removed. Use `domain` instead. ([#42340](https://github.com/hashicorp/terraform-provider-aws/issues/42340))
+* resource/aws_eks_addon: `resolve_conflicts` has been removed. Use `resolve_conflicts_on_create` and `resolve_conflicts_on_update` instead. ([#42318](https://github.com/hashicorp/terraform-provider-aws/issues/42318))
+* resource/aws_elasticache_replication_group: `auth_token_update_strategy` no longer has a default value. If `auth_token` is set, `auth_token_update_strategy` must also be explicitly configured. ([#42336](https://github.com/hashicorp/terraform-provider-aws/issues/42336))
+* resource/aws_flow_log: `log_group_name` has been removed. Use `log_destination` instead. ([#42333](https://github.com/hashicorp/terraform-provider-aws/issues/42333))
 * resource/aws_globalaccelerator_accelerator: The `id` attribute is now computed only ([#42097](https://github.com/hashicorp/terraform-provider-aws/issues/42097))
 * resource/aws_guardduty_organization_configuration: The `auto_enable` attribute has been removed ([#42251](https://github.com/hashicorp/terraform-provider-aws/issues/42251))
+* resource/aws_identitystore_group: `filter` has been removed ([#42325](https://github.com/hashicorp/terraform-provider-aws/issues/42325))
+* resource/aws_instance: Remove `cpu_core_count` and `cpu_threads_per_core`. Instead, use `cpu_options`. ([#42280](https://github.com/hashicorp/terraform-provider-aws/issues/42280))
 * resource/aws_instance: `user_data` now displays cleartext instead of a hash. Base64 encoded content should use `user_data_base64` instead. ([#42078](https://github.com/hashicorp/terraform-provider-aws/issues/42078))
 * resource/aws_launch_template: Remove `elastic_inference_accelerator` attribute. Amazon Elastic Inference reached end of life on April, 2024. ([#42137](https://github.com/hashicorp/terraform-provider-aws/issues/42137))
 * resource/aws_launch_template: `elastic_gpu_specifications` has been removed ([#42312](https://github.com/hashicorp/terraform-provider-aws/issues/42312))
@@ -64,10 +74,13 @@ resource/aws_batch_compute_environment: Rename `compute_environment_name_prefix`
 * resource/aws_sagemaker_notebook_instance: Remove `accelerator_types` from your configuration—it no longer exists. Instead, use `instance_type` to use [Inferentia](https://docs.aws.amazon.com/sagemaker/latest/dg/neo-supported-cloud.html). ([#42099](https://github.com/hashicorp/terraform-provider-aws/issues/42099))
 * resource/aws_ssm_association: Remove `instance_id` argument ([#42224](https://github.com/hashicorp/terraform-provider-aws/issues/42224))
 * resource/aws_verifiedpermissions_schema: `definition` is now a list nested block instead of a single nested block ([#42305](https://github.com/hashicorp/terraform-provider-aws/issues/42305))
+* resource/aws_wafv2_web_acl: `rule.statement.managed_rule_group_statement.managed_rule_group_configs.aws_managed_rules_bot_control_rule_set.enable_machine_learning` now defaults to `false` ([#39858](https://github.com/hashicorp/terraform-provider-aws/issues/39858))
 
 NOTES:
 
+* data-source/aws_cloudtrail_service_account: This data source is deprecated. AWS recommends using a service principal name instead of an AWS account ID in any relevant IAM policy. ([#42320](https://github.com/hashicorp/terraform-provider-aws/issues/42320))
 * provider: Practitioners using Terraform 0.12 must [pin the version](https://developer.hashicorp.com/terraform/language/providers/requirements#v0-12-compatible-provider-requirements) of the AWS Provider to an exact version so as not to install a pre-release ([#41722](https://github.com/hashicorp/terraform-provider-aws/issues/41722))
+* provider: Support for the global S3 endpoint is deprecated, along with the `s3_us_east_1_regional_endpoint` argument. The ability to use the global S3 endpoint will be removed in `v7.0.0`. ([#42375](https://github.com/hashicorp/terraform-provider-aws/issues/42375))
 * resource/aws_codeconnections_host: Deprecates `id` in favor of `arn` ([#42232](https://github.com/hashicorp/terraform-provider-aws/issues/42232))
 * resource/aws_elastictranscoder_pipeline: This resource is deprecated. Use [AWS Elemental MediaConvert](https://aws.amazon.com/blogs/media/migrating-workflows-from-amazon-elastic-transcoder-to-aws-elemental-mediaconvert/) instead. ([#42313](https://github.com/hashicorp/terraform-provider-aws/issues/42313))
 * resource/aws_elastictranscoder_preset: This resource is deprecated. Use [AWS Elemental MediaConvert](https://aws.amazon.com/blogs/media/migrating-workflows-from-amazon-elastic-transcoder-to-aws-elemental-mediaconvert/) instead. ([#42313](https://github.com/hashicorp/terraform-provider-aws/issues/42313))
@@ -88,6 +101,34 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_rekognition_stream_processor: Fix `regions_of_interest.bounding_box` and `regions_of_interest.polygon` argument validation ([#41380](https://github.com/hashicorp/terraform-provider-aws/issues/41380))
+
+## 5.96.0 (April 24, 2025)
+
+FEATURES:
+
+* **New Data Source:** `aws_fis_experiment_templates` ([#37060](https://github.com/hashicorp/terraform-provider-aws/issues/37060))
+* **New Data Source:** `aws_vpc_endpoint_associations` ([#41918](https://github.com/hashicorp/terraform-provider-aws/issues/41918))
+
+ENHANCEMENTS:
+
+* data-source/aws_api_gateway_domain_name: Add `endpoint_configuration.ip_address_type` attribute ([#42146](https://github.com/hashicorp/terraform-provider-aws/issues/42146))
+* data-source/aws_api_gateway_rest_api: Add `endpoint_configuration.ip_address_type` attribute ([#42146](https://github.com/hashicorp/terraform-provider-aws/issues/42146))
+* data-source/aws_apigatewayv2_api: Add `ip_address_type` attribute ([#42145](https://github.com/hashicorp/terraform-provider-aws/issues/42145))
+* data-source/aws_dms_endpoint: Add `kinesis_settings.use_large_integer_value` attribute ([#42300](https://github.com/hashicorp/terraform-provider-aws/issues/42300))
+* data-source/aws_guardduty_detector: Add `arn` attribute ([#42344](https://github.com/hashicorp/terraform-provider-aws/issues/42344))
+* data-source/aws_guardduty_detector: Add `tags` attribute ([#42344](https://github.com/hashicorp/terraform-provider-aws/issues/42344))
+* resource/aws_api_gateway_domain_name: Add `endpoint_configuration.ip_address_type` argument to support dual-stack (IPv4 and IPv6) endpoints ([#42146](https://github.com/hashicorp/terraform-provider-aws/issues/42146))
+* resource/aws_api_gateway_rest_api: Add `endpoint_configuration.ip_address_type` argument to support dual-stack (IPv4 and IPv6) endpoints ([#42146](https://github.com/hashicorp/terraform-provider-aws/issues/42146))
+* resource/aws_apigatewayv2_api: Add `ip_address_type` argument to support dual-stack (IPv4 and IPv6) endpoints ([#42145](https://github.com/hashicorp/terraform-provider-aws/issues/42145))
+* resource/aws_apigatewayv2_domain_name: Add `domain_name_configuration.ip_address_type` argument to support dual-stack (IPv4 and IPv6) endpoints ([#42145](https://github.com/hashicorp/terraform-provider-aws/issues/42145))
+* resource/aws_dms_endpoint: Add `kinesis_settings.use_large_integer_value` argument ([#42300](https://github.com/hashicorp/terraform-provider-aws/issues/42300))
+* resource/aws_fis_experiment_template: Add `experiment_report_configuration` argument ([#41120](https://github.com/hashicorp/terraform-provider-aws/issues/41120))
+
+BUG FIXES:
+
+* resource/aws_elasticache_replication_group: Fix `malformed version` error when parsing 7.x redis engine versions ([#42346](https://github.com/hashicorp/terraform-provider-aws/issues/42346))
+* resource/aws_iam_user: Retry `ConcurrentModificationException`s during user creation ([#42081](https://github.com/hashicorp/terraform-provider-aws/issues/42081))
+* resource/aws_rds_cluster: Fix `InvalidParameterValue: SecondsUntilAutoPause can only be specified when minimum capacity is 0` errors when removing `serverlessv2_scaling_configuration.seconds_until_auto_pause` ([#41180](https://github.com/hashicorp/terraform-provider-aws/issues/41180))
 
 ## 5.95.0 (April 17, 2025)
 

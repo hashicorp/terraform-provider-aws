@@ -35,6 +35,7 @@ import (
 
 // @FrameworkResource("aws_codeconnections_connection", name="Connection")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/codeconnections/types;types.Connection")
 func newConnectionResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &connectionResource{}
 
