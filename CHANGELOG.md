@@ -74,11 +74,13 @@ resource/aws_batch_compute_environment: Rename `compute_environment_name_prefix`
 * resource/aws_sagemaker_notebook_instance: Remove `accelerator_types` from your configuration—it no longer exists. Instead, use `instance_type` to use [Inferentia](https://docs.aws.amazon.com/sagemaker/latest/dg/neo-supported-cloud.html). ([#42099](https://github.com/hashicorp/terraform-provider-aws/issues/42099))
 * resource/aws_ssm_association: Remove `instance_id` argument ([#42224](https://github.com/hashicorp/terraform-provider-aws/issues/42224))
 * resource/aws_verifiedpermissions_schema: `definition` is now a list nested block instead of a single nested block ([#42305](https://github.com/hashicorp/terraform-provider-aws/issues/42305))
+* resource/aws_wafv2_web_acl: `rule.statement.managed_rule_group_statement.managed_rule_group_configs.aws_managed_rules_bot_control_rule_set.enable_machine_learning` now defaults to `false` ([#39858](https://github.com/hashicorp/terraform-provider-aws/issues/39858))
 
 NOTES:
 
 * data-source/aws_cloudtrail_service_account: This data source is deprecated. AWS recommends using a service principal name instead of an AWS account ID in any relevant IAM policy. ([#42320](https://github.com/hashicorp/terraform-provider-aws/issues/42320))
 * provider: Practitioners using Terraform 0.12 must [pin the version](https://developer.hashicorp.com/terraform/language/providers/requirements#v0-12-compatible-provider-requirements) of the AWS Provider to an exact version so as not to install a pre-release ([#41722](https://github.com/hashicorp/terraform-provider-aws/issues/41722))
+* provider: Support for the global S3 endpoint is deprecated, along with the `s3_us_east_1_regional_endpoint` argument. The ability to use the global S3 endpoint will be removed in `v7.0.0`. ([#42375](https://github.com/hashicorp/terraform-provider-aws/issues/42375))
 * resource/aws_codeconnections_host: Deprecates `id` in favor of `arn` ([#42232](https://github.com/hashicorp/terraform-provider-aws/issues/42232))
 * resource/aws_elastictranscoder_pipeline: This resource is deprecated. Use [AWS Elemental MediaConvert](https://aws.amazon.com/blogs/media/migrating-workflows-from-amazon-elastic-transcoder-to-aws-elemental-mediaconvert/) instead. ([#42313](https://github.com/hashicorp/terraform-provider-aws/issues/42313))
 * resource/aws_elastictranscoder_preset: This resource is deprecated. Use [AWS Elemental MediaConvert](https://aws.amazon.com/blogs/media/migrating-workflows-from-amazon-elastic-transcoder-to-aws-elemental-mediaconvert/) instead. ([#42313](https://github.com/hashicorp/terraform-provider-aws/issues/42313))
