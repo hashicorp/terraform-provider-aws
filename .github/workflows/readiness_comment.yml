@@ -109,7 +109,7 @@ jobs:
           && steps.community_check.outputs.maintainer == 'false'
         shell: bash
         run: |
-          echo '<details><summary>:x: Unnecessary Changelog Changes</summary><br>
+          echo '<details><summary>:x: Unnecessary Changelog Changes (Click to expand)</summary><br>
 
           The `CHANGELOG.md` file contents are handled by the maintainers during merge. This is to prevent pull request merge conflicts, especially for contributions which may not be merged immediately. Please see the [Changelog Process](https://hashicorp.github.io/terraform-provider-aws/changelog-process/) section of the contributing guide for additional information.
 
@@ -125,7 +125,7 @@ jobs:
           && steps.community_check.outputs.maintainer == 'false'
         shell: bash
         run: |
-          echo '<details><summary>:x: Changelog Entry Required</summary><br>
+          echo '<details><summary>:x: Changelog Entry Required (Click to expand)</summary><br>
 
           The proposed change requires a changelog entry. Please see the [Changelog Process](https://hashicorp.github.io/terraform-provider-aws/changelog-process/) section of the contributing guide for information on the changelog generation process.
 
