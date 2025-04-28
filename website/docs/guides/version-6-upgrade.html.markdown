@@ -22,12 +22,15 @@ Upgrade topics:
 - [AWS OpsWorks Stacks End of Life](#aws-opsworks-stacks-end-of-life)
 - [AWS CloudWatch Evidently Deprecation](#aws-cloudwatch-evidently-deprecation)
 - [Amazon Elastic Transcoder Deprecation](#amazon-elastic-transcoder-deprecation)
+- [S3 Global Endpoint Support Deprecation](#s3-global-endpoint-support-deprecation)
 - [data-source/aws_ami](#data-sourceaws_ami)
 - [data-source/aws_batch_compute_environment](#data-sourceaws_batch_compute_environment)
 - [data-source/aws_ecs_task_definition](#data-sourceaws_ecs_task_definition)
 - [data-source/aws_ecs_task_execution](#data-sourceaws_ecs_task_execution)
 - [data-source/aws_elbv2_listener_rule](#data-sourceaws_elbv2_listener_rule)
 - [data-source/aws_globalaccelerator_accelerator](#data-sourceaws_globalaccelerator_accelerator)
+- [data-source/aws_identitystore_user](#data-sourceaws_identitystore_group)
+- [data-source/aws_identitystore_user](#data-sourceaws_identitystore_user)
 - [data-source/aws_launch_template](#data-sourceaws_launch_template)
 - [data-source/aws_opensearch_domain](#data-sourceaws_opensearch_domain)
 - [data-source/aws_opensearchserverless_security_config](#data-sourceaws_opensearchserverless_security_config)
@@ -44,8 +47,15 @@ Upgrade topics:
 - [resource/aws_cloudfront_key_value_store](#resourceaws_cloudfront_key_value_store)
 - [resource/aws_cloudfront_response_headers_policy](#resourceaws_cloudfront_response_headers_policy)
 - [resource/aws_config_aggregate_authorization](#resourceawsconfig_aggregate_authorization)
+- [resource/aws_db_instance](#resourceaws_db_instance)
+- [resource/aws_dms_endpoint](#resourceaws_dms_endpoint)
+- [resource/aws_dx_gateway_association](#resourceaws_dx_gateway_association)
 - [resource/aws_dx_hosted_connection](#resourceaws_dx_hosted_connection)
 - [resource/aws_ecs_task_definition](#resourceaws_ecs_task_definition)
+- [resource/aws_eip](#resourceaws_eip)
+- [resource/aws_elasticache_replication_group](#resourceaws_elasticache_replication_group)
+- [resource/aws_eks_addon](#resourceaws_eks_addon)
+- [resource/aws_flow_log](#resourceaws_flow_log)
 - [resource/aws_guardduty_organization_configuration](#resourceaws_guardduty_organization_configuration)
 - [resource/aws_instance](#resourceaws_instance)
 - [resource/aws_kinesis_analytics_application](#resourceaws_kinesis_analytics_application)
@@ -65,6 +75,7 @@ Upgrade topics:
 - [resource/aws_spot_instance_request](#resourceaws_spot_instance_request)
 - [resource/aws_ssm_association](#resourceaws_ssm_association)
 - [resource/aws_verifiedpermissions_schema](#resourceaws_verifiedpermissions_schema)
+- [resource/aws_wafv2_web_acl](#resourceaws_wafv2_web_acl)
 
 <!-- /TOC -->
 
@@ -175,6 +186,13 @@ The following resources have been deprecated and will be removed in a future maj
 
 Use [AWS Elemental MediaConvert](https://aws.amazon.com/blogs/media/migrating-workflows-from-amazon-elastic-transcoder-to-aws-elemental-mediaconvert/) instead.
 
+## S3 Global Endpoint Support Deprecation
+
+Support for the global S3 endpoint is deprecated, along with the `s3_us_east_1_regional_endpoint` argument.
+The ability to use the global S3 endpoint will be removed in `v7.0.0`.
+This change only affects S3 resources in `us-east-1` (excluding directory buckets), where `s3_us_east_1_regional_endpoint` is set to `legacy` in the provider configuration.
+Impacted configurations can remove the `s3_us_east_1_regional_endpoint` provider argument, or switch the value to `regional` to verify connectivity with the regional S3 endpoint in `us-east-1` prior to this option being removed.
+
 ## data-source/aws_ami
 
 Configurations with `most_recent` set to `true` and no owner or image ID filters will now trigger an error diagnostic.
@@ -190,6 +208,16 @@ This is not recommended.
 ## data-source/aws_globalaccelerator_accelerator
 
 `id` is now computed only.
+
+## data-source/aws_identitystore_group
+
+`filter` has been removed.
+Use `alternate_identifier` instead.
+
+## data-source/aws_identitystore_user
+
+`filter` has been removed.
+Use `alternate_identifier` instead.
 
 ## data-source/aws_ecs_task_definition
 
@@ -340,6 +368,19 @@ The `etag` argument is now computed only.
 
 The `region` attribute has been deprecated. All configurations using `region` should be updated to use the `authorized_aws_region` attribute instead.
 
+## resource/aws_db_instance
+
+The `character_set_name` now cannot be set with `replicate_source_db`, `restore_to_point_in_time`, `s3_import`, or `snapshot_identifier`.
+
+## resource/aws_dms_endpoint
+
+`s3_settings` has been removed. Use `aws_dms_s3_endpoint` instead.
+
+## resource/aws_dx_gateway_association
+
+The `vpn_gateway_id` attribute has been removed.
+Use the `associated_gateway_id` attribute instead.
+
 ## resource/aws_dx_hosted_connection
 
 The `region` attribute has been deprecated. All configurations using `region` should be updated to use the `connection_region` attribute instead.
@@ -347,6 +388,20 @@ The `region` attribute has been deprecated. All configurations using `region` sh
 ## resource/aws_ecs_task_definition
 
 Remove `inference_accelerator` from your configuration—it no longer exists. Amazon Elastic Inference reached end of life in April 2024.
+
+## resource/aws_eip
+
+The `vpc` argument has been removed.
+Use `domain` instead.
+
+## resource/aws_elasticache_replication_group
+
+The `auth_token_update_strategy` argument no longer has a default value.
+If `auth_token` is set, this argument must also be explicitly configured.
+
+## resource/aws_eks_addon
+
+The `resolve_conflicts` argument has been removed. Use `resolve_conflicts_on_create` and `resolve_conflicts_on_update` instead.
 
 ## resource/aws_guardduty_organization_configuration
 
@@ -368,9 +423,15 @@ This resource is deprecated and will be removed in a future version. AWS has [an
 
 This resource is deprecated and will be removed in a future version. AWS has [announced](https://aws.amazon.com/blogs/media/support-for-aws-elemental-mediastore-ending-soon/) the discontinuation of AWS Elemental MediaStore, effective November 13, 2025. Users should begin transitioning to alternative solutions as soon as possible. For simple live streaming workflows, AWS recommends migrating to Amazon S3. For advanced use cases that require features such as packaging, DRM, or cross-region redundancy, consider using AWS Elemental MediaPackage.
 
+## resource/aws_flow_log
+
+Remove `log_group_name` from your configuration—it no longer exists.
+Use `log_destination` instead.
+
 ## resource/aws_instance
 
-The `user_data` attribute no longer applies hashing and is now stored in clear text. **Do not include passwords or sensitive information** in `user_data`, as it will be visible in plaintext. Follow [AWS Best Practices](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-metadata.html) to secure your instance metadata. If you need to provide base64-encoded user data, use the `user_data_base64` attribute instead.
+* The `user_data` attribute no longer applies hashing and is now stored in clear text. **Do not include passwords or sensitive information** in `user_data`, as it will be visible in plaintext. Follow [AWS Best Practices](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-metadata.html) to secure your instance metadata. If you need to provide base64-encoded user data, use the `user_data_base64` attribute instead.
+* Remove `cpu_core_count` and `cpu_threads_per_core` from your configuration—they no longer exist. Instead, use the `cpu_options` configuration block with `core_count` and `threads_per_core`.
 
 ## resource/aws_kinesis_analytics_application
 
@@ -449,3 +510,8 @@ Remove `instance_id` from configuration—it no longer exists. Use `targets` ins
 The `definition` argument is now a list nested block instead of a single nested block.
 When referencing this argument, the index must now be included in the attribute address.
 For example, `definition.value` would now be referenced as `definition[0].value`.
+
+## resource/aws_wafv2_web_acl
+
+The default value for `rule.statement.managed_rule_group_statement.managed_rule_group_configs.aws_managed_rules_bot_control_rule_set.enable_machine_learning` is now `false`.
+To retain the previous behavior in configurations which omit this argument, explicitly set the value to `true`.

@@ -85,7 +85,7 @@ func resourceReplicationGroup() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.AuthTokenUpdateStrategyType](),
-				Default:          awstypes.AuthTokenUpdateStrategyTypeRotate,
+				RequiredWith:     []string{"auth_token"},
 			},
 			names.AttrAutoMinorVersionUpgrade: {
 				Type:         nullable.TypeNullableBool,
@@ -371,7 +371,7 @@ func resourceReplicationGroup() *schema.Resource {
 			},
 		},
 
-		SchemaVersion: 2,
+		SchemaVersion: 3,
 		// SchemaVersion: 1 did not include any state changes via MigrateState.
 		// Perform a no-operation state upgrade for Terraform 0.12 compatibility.
 		// Future state migrations should be performed with StateUpgraders.
@@ -386,8 +386,15 @@ func resourceReplicationGroup() *schema.Resource {
 			// must be written to state via a state upgrader.
 			{
 				Type:    resourceReplicationGroupConfigV1().CoreConfigSchema().ImpliedType(),
-				Upgrade: replicationGroupStateUpgradeV1,
+				Upgrade: replicationGroupStateUpgradeFromV1,
 				Version: 1,
+			},
+			// v6.0.0 removed the default auth_token_update_strategy value. To prevent
+			// differences, the default value is removed when auth_token is not set.
+			{
+				Type:    resourceReplicationGroupConfigV2().CoreConfigSchema().ImpliedType(),
+				Upgrade: replicationGroupStateUpgradeFromV2,
+				Version: 2,
 			},
 		},
 
@@ -979,6 +986,11 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 		if requestUpdate {
 			updateFuncs = append(updateFuncs, func() error {
 				_, err := conn.ModifyReplicationGroup(ctx, &input)
+				// modifying to match out of band operations may result in this error
+				if errs.IsAErrorMessageContains[*awstypes.InvalidParameterCombinationException](err, "No modifications were requested") {
+					return nil
+				}
+
 				if err != nil {
 					return fmt.Errorf("modifying ElastiCache Replication Group (%s): %s", d.Id(), err)
 				}
@@ -996,6 +1008,11 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 
 			updateFuncs = append(updateFuncs, func() error {
 				_, err := conn.ModifyReplicationGroup(ctx, &authInput)
+				// modifying to match out of band operations may result in this error
+				if errs.IsAErrorMessageContains[*awstypes.InvalidParameterCombinationException](err, "No modifications were requested") {
+					return nil
+				}
+
 				if err != nil {
 					return fmt.Errorf("modifying ElastiCache Replication Group (%s) authentication: %s", d.Id(), err)
 				}

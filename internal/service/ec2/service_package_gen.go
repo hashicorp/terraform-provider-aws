@@ -35,6 +35,14 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			}),
 		},
 		{
+			Factory:  newVPCEndpointAssociationsDataSource,
+			TypeName: "aws_vpc_endpoint_associations",
+			Name:     "VPC Endpoint Associations",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			}),
+		},
+		{
 			Factory:  newIPAMDataSource,
 			TypeName: "aws_vpc_ipam",
 			Name:     "IPAM",

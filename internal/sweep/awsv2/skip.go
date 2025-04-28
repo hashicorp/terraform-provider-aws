@@ -90,6 +90,10 @@ func SkipSweepError(err error) bool {
 	if tfawserr.ErrMessageContains(err, "InvalidParameterValueException", "Access Denied to API Version") {
 		return true
 	}
+	// Example (GovCloud): The AppStream 2.0 user pool feature is not supported in the us-gov-west-1 AWS Region
+	if tfawserr.ErrMessageContains(err, "InvalidParameterValueException", "feature is not supported") {
+		return true
+	}
 	// Example (GovCloud): InvalidParameterValueException: This API operation is currently unavailable
 	if tfawserr.ErrMessageContains(err, "InvalidParameterValueException", "This API operation is currently unavailable") {
 		return true

@@ -59,6 +59,8 @@ func dataSourceServiceAccount() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceServiceAccountRead,
 
+		DeprecationMessage: "This data source is deprecated. AWS recommends using a service principal name instead of an AWS account ID in any relevant IAM policy.",
+
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,

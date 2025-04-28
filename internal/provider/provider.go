@@ -678,7 +678,20 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 	}
 
 	if v, ok := d.Get("s3_us_east_1_regional_endpoint").(string); ok && v != "" {
-		config.S3USEast1RegionalEndpoint = conns.NormalizeS3USEast1RegionalEndpoint(v)
+		endpoint := conns.NormalizeS3USEast1RegionalEndpoint(v)
+		if endpoint == "legacy" {
+			diags = append(diags,
+				errs.NewAttributeWarningDiagnostic(
+					cty.GetAttrPath("s3_us_east_1_regional_endpoint"),
+					"Global S3 Endpoint Support Deprecated",
+					"Support for the global S3 endpoint is deprecated. The \"s3_us_east_1_regional_endpoint\" "+
+						"argument will be removed in a future major version. Remove this argument from the "+
+						"configuration, or set it to \"regional\" to verify connectivity with the regional "+
+						"S3 endpoint instead.",
+				),
+			)
+		}
+		config.S3USEast1RegionalEndpoint = endpoint
 	}
 
 	if v, ok := d.GetOk("allowed_account_ids"); ok && v.(*schema.Set).Len() > 0 {

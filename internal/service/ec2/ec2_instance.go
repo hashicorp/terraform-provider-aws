@@ -61,8 +61,15 @@ func resourceInstance() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		SchemaVersion: 1,
+		SchemaVersion: 2,
 		MigrateState:  instanceMigrateState,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    resourceInstanceV1().CoreConfigSchema().ImpliedType(),
+				Upgrade: instanceStateUpgradeV1,
+				Version: 1,
+			},
+		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
@@ -155,37 +162,19 @@ func resourceInstance() *schema.Resource {
 							},
 						},
 						"core_count": {
-							Type:          schema.TypeInt,
-							Optional:      true,
-							Computed:      true,
-							ForceNew:      true,
-							ConflictsWith: []string{"cpu_core_count"},
+							Type:     schema.TypeInt,
+							Optional: true,
+							Computed: true,
+							ForceNew: true,
 						},
 						"threads_per_core": {
-							Type:          schema.TypeInt,
-							Optional:      true,
-							Computed:      true,
-							ForceNew:      true,
-							ConflictsWith: []string{"cpu_threads_per_core"},
+							Type:     schema.TypeInt,
+							Optional: true,
+							Computed: true,
+							ForceNew: true,
 						},
 					},
 				},
-			},
-			"cpu_core_count": {
-				Type:          schema.TypeInt,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				Deprecated:    "cpu_core_count is deprecated. Use cpu_options instead.",
-				ConflictsWith: []string{"cpu_options.0.core_count"},
-			},
-			"cpu_threads_per_core": {
-				Type:          schema.TypeInt,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				Deprecated:    "cpu_threads_per_core is deprecated. Use cpu_options instead.",
-				ConflictsWith: []string{"cpu_options.0.threads_per_core"},
 			},
 			"credit_specification": {
 				Type:     schema.TypeList,
@@ -305,8 +294,8 @@ func resourceInstance() *schema.Resource {
 				Set: func(v any) int {
 					var buf bytes.Buffer
 					m := v.(map[string]any)
-					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrDeviceName].(string)))
-					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrSnapshotID].(string)))
+					fmt.Fprintf(&buf, "%s-", m[names.AttrDeviceName].(string))
+					fmt.Fprintf(&buf, "%s-", m[names.AttrSnapshotID].(string))
 					return create.StringHashcode(buf.String())
 				},
 			},
@@ -361,10 +350,10 @@ func resourceInstance() *schema.Resource {
 				Set: func(v any) int {
 					var buf bytes.Buffer
 					m := v.(map[string]any)
-					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrDeviceName].(string)))
-					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrVirtualName].(string)))
+					fmt.Fprintf(&buf, "%s-", m[names.AttrDeviceName].(string))
+					fmt.Fprintf(&buf, "%s-", m[names.AttrVirtualName].(string))
 					if v, ok := m["no_device"].(bool); ok && v {
-						buf.WriteString(fmt.Sprintf("%t-", v))
+						fmt.Fprintf(&buf, "%t-", v)
 					}
 					return create.StringHashcode(buf.String())
 				},
@@ -1206,12 +1195,6 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta any)
 		d.Set("placement_partition_number", v.PartitionNumber)
 
 		d.Set("tenancy", v.Tenancy)
-	}
-
-	// preserved to maintain backward compatibility
-	if v := instance.CpuOptions; v != nil {
-		d.Set("cpu_core_count", v.CoreCount)
-		d.Set("cpu_threads_per_core", v.ThreadsPerCore)
 	}
 
 	if err := d.Set("cpu_options", flattenCPUOptions(instance.CpuOptions)); err != nil {
@@ -3132,16 +3115,6 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta any) (*
 
 	if v, ok := d.GetOk("cpu_options"); ok {
 		opts.CpuOptions = expandCPUOptions(v.([]any))
-	} else if v := d.Get("cpu_core_count").(int); v > 0 {
-		// preserved to maintain backward compatibility
-		tc := d.Get("cpu_threads_per_core").(int)
-		if tc < 0 {
-			tc = 2
-		}
-		opts.CpuOptions = &awstypes.CpuOptionsRequest{
-			CoreCount:      aws.Int32(int32(v)),
-			ThreadsPerCore: aws.Int32(int32(tc)),
-		}
 	}
 
 	if v := d.Get("hibernation"); v != "" {

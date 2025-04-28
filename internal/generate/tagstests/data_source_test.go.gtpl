@@ -22,7 +22,11 @@ resource.{{ if and .Serialize (not .SerializeParallelTests) }}Test{{ else }}Para
 {{- end }}
 
 {{ define "TestCaseSetupNoProviders" -}}
-	PreCheck:   func() { acctest.PreCheck(ctx, t){{ if .PreCheck }}; testAccPreCheck(ctx, t){{ end }} },
+	PreCheck:     func() { acctest.PreCheck(ctx, t)
+		{{- range .PreChecks }}
+		{{ .Code }}
+		{{ end -}}
+	},
 	ErrorCheck: acctest.ErrorCheck(t, names.{{ .PackageProviderNameUpper }}ServiceID),
 {{- end }}
 

@@ -2768,43 +2768,6 @@ func TestAccRDSInstance_ReplicateSourceDB_characterSet_Source(t *testing.T) {
 	})
 }
 
-func TestAccRDSInstance_ReplicateSourceDB_characterSet_Replica(t *testing.T) {
-	ctx := acctest.Context(t)
-
-	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var dbInstance, sourceDbInstance types.DBInstance
-
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	sourceResourceName := "aws_db_instance.source"
-	resourceName := "aws_db_instance.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.SkipBelow(tfversion.Version1_11_0),
-		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccInstanceConfig_ReplicateSourceDB_characterSet_Replica(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
-					resource.TestCheckResourceAttr(sourceResourceName, "character_set_name", "WE8ISO8859P15"),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
-					resource.TestCheckResourceAttrPair(resourceName, "replicate_source_db", sourceResourceName, names.AttrIdentifier),
-					resource.TestCheckResourceAttr(resourceName, "character_set_name", "WE8ISO8859P15"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccRDSInstance_ReplicateSourceDB_replicaMode(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -8718,8 +8681,6 @@ resource "aws_db_instance" "test" {
   username                   = "tfacctest"
   backup_retention_period    = 0
 
-  character_set_name = "WE8ISO8859P15"
-
   parameter_group_name = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
   skip_final_snapshot  = true
   multi_az             = false
@@ -9260,11 +9221,10 @@ resource "aws_security_group_rule" "test" {
 }
 
 resource "aws_directory_service_directory" "directory" {
-  name                = %[2]q
-  password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
-  password_wo_version = 1
-  type                = "MicrosoftAD"
-  edition             = "Standard"
+  name     = %[2]q
+  password = "SuperSecretPassw0rd"
+  type     = "MicrosoftAD"
+  edition  = "Standard"
 
   vpc_settings {
     vpc_id     = aws_vpc.test.id
@@ -9299,11 +9259,10 @@ resource "aws_db_instance" "test" {
 }
 
 resource "aws_directory_service_directory" "directory-2" {
-  name                = %[2]q
-  password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
-  password_wo_version = 1
-  type                = "MicrosoftAD"
-  edition             = "Standard"
+  name     = %[2]q
+  password = "SuperSecretPassw0rd"
+  type     = "MicrosoftAD"
+  edition  = "Standard"
 
   vpc_settings {
     vpc_id     = aws_vpc.test.id
@@ -9337,11 +9296,10 @@ resource "aws_db_instance" "test" {
 }
 
 resource "aws_directory_service_directory" "directory-2" {
-  name                = %[2]q
-  password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
-  password_wo_version = 1
-  type                = "MicrosoftAD"
-  edition             = "Standard"
+  name     = %[2]q
+  password = "SuperSecretPassw0rd"
+  type     = "MicrosoftAD"
+  edition  = "Standard"
 
   vpc_settings {
     vpc_id     = aws_vpc.test.id
@@ -11907,41 +11865,6 @@ resource "aws_db_instance" "source" {
 `, rName))
 }
 
-func testAccInstanceConfig_ReplicateSourceDB_characterSet_Replica(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigRandomPassword(),
-		testAccInstanceConfig_orderableClassOracleEnterprise(),
-		fmt.Sprintf(`
-resource "aws_db_instance" "test" {
-  identifier          = %[1]q
-  replicate_source_db = aws_db_instance.source.identifier
-  instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  skip_final_snapshot = true
-  apply_immediately   = true
-
-  character_set_name = "NE8ISO8859P10"
-}
-
-resource "aws_db_instance" "source" {
-  identifier              = "%[1]s-source"
-  allocated_storage       = 20
-  engine                  = data.aws_rds_orderable_db_instance.test.engine
-  engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
-  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  storage_type            = data.aws_rds_orderable_db_instance.test.storage_type
-  db_name                 = "MAINDB"
-  username                = "oadmin"
-  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
-  password_wo_version     = 1
-  skip_final_snapshot     = true
-  apply_immediately       = true
-  backup_retention_period = 1
-
-  character_set_name = "WE8ISO8859P15"
-}
-`, rName))
-}
-
 func testAccInstanceConfig_ReplicateSourceDB_replicaMode(rName, replicaMode string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigRandomPassword(),
@@ -13751,7 +13674,7 @@ func testAccInstanceConfig_dedicatedLogVolumeEnabled(rName string, enabled bool)
 resource "aws_db_instance" "test" {
   # Dedicated log volumes do not support PG 16 instances.
   engine              = "postgres"
-  engine_version      = "15.6"
+  engine_version      = "15.12"
   identifier          = %[1]q
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
   password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
