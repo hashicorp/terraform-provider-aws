@@ -69,7 +69,7 @@ func (r *jobQueueResource) Schema(ctx context.Context, request resource.SchemaRe
 				Optional:           true,
 				DeprecationMessage: "This parameter will be replaced by `compute_environment_order`.",
 			},
-			names.AttrID: framework.IDAttribute(),
+			names.AttrID: framework.IDAttributeDeprecatedWithAlternate(path.Root(names.AttrARN)),
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
