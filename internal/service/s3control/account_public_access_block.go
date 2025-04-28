@@ -5,6 +5,7 @@ package s3control
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"reflect"
 	"strconv"
@@ -35,7 +36,30 @@ func resourceAccountPublicAccessBlock() *schema.Resource {
 		DeleteWithoutTimeout: resourceAccountPublicAccessBlockDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: func(_ context.Context, rd *schema.ResourceData, _ any) ([]*schema.ResourceData, error) {
+				// Import-by-id case
+				if rd.Id() != "" {
+					return []*schema.ResourceData{rd}, nil
+				}
+
+				identity, err := rd.Identity()
+				if err != nil {
+					return nil, err
+				}
+
+				accountIDRaw, ok := identity.GetOk("account_id")
+				if !ok {
+					return nil, fmt.Errorf("identity attribute %q is required", "account_id")
+				}
+				accountID, ok := accountIDRaw.(string)
+				if !ok {
+					return nil, fmt.Errorf("identity attribute %q: expected string, got %T", "account_id", accountIDRaw)
+				}
+				rd.Set("account_id", accountID)
+				rd.SetId(accountID)
+
+				return []*schema.ResourceData{rd}, nil
+			},
 		},
 
 		Schema: map[string]*schema.Schema{
