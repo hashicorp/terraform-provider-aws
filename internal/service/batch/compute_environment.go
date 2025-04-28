@@ -48,6 +48,15 @@ func resourceComputeEnvironment() *schema.Resource {
 
 		CustomizeDiff: resourceComputeEnvironmentCustomizeDiff,
 
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    computeEnvironmentSchemaV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: computeEnvironmentStateUpgradeV0,
+				Version: 0,
+			},
+		},
+
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,
