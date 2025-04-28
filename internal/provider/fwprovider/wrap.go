@@ -323,10 +323,9 @@ func (w *wrappedResource) Schema(ctx context.Context, request resource.SchemaReq
 			response.Diagnostics.AddError("resource model validation error", w.opts.typeName)
 			return
 		}
+	} else if w.opts.typeName != "aws_lexv2models_bot_version" { // Hacky yukkery caused by attribute of type map[string]Object.
+		response.Diagnostics.AddError("missing framework.ResourceValidateModel", w.opts.typeName)
 	}
-	// else {
-	// 	response.Diagnostics.AddError("missing framework.ResourceValidateModel", w.opts.typeName)
-	// }
 }
 
 func (w *wrappedResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
