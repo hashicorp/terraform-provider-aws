@@ -357,4 +357,30 @@ func (r *keyResource) ImportState(ctx context.Context, request resource.ImportSt
 
 		return
 	}
+
+	if identity := request.Identity; identity != nil {
+		var arn string
+		identity.GetAttribute(ctx, path.Root("key_value_store_arn"), &arn)
+
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("key_value_store_arn"), arn)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		var key string
+		identity.GetAttribute(ctx, path.Root("key"), &key)
+
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("key"), key)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		parts := []string{
+			arn,
+			key,
+		}
+		id, _ := flex.FlattenResourceId(parts, keyResourceIDPartCount, false)
+
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("id"), id)...)
+	}
 }
