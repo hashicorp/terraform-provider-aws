@@ -338,6 +338,45 @@ func TestAccBatchJobQueue_jobStateTimeLimitActionsMultiple(t *testing.T) {
 	})
 }
 
+func TestAccBatchJobQueue_upgradeComputeEnvironments(t *testing.T) {
+	ctx := acctest.Context(t)
+	var jobQueue1 awstypes.JobQueueDetail
+	resourceName := "aws_batch_job_queue.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.BatchServiceID),
+		CheckDestroy: testAccCheckJobQueueDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.95.0",
+					},
+				},
+				Config: testAccJobQueueConfig_StateUpgradeComputeEnvironments_initial(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckJobQueueExists(ctx, resourceName, &jobQueue1),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccJobQueueConfig_StateUpgradeComputeEnvironments_updated(rName),
+				PlanOnly:                 true,
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccJobQueueConfig_StateUpgradeComputeEnvironments_updated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckJobQueueExists(ctx, resourceName, &jobQueue1),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckJobQueueExists(ctx context.Context, n string, v *awstypes.JobQueueDetail) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -793,6 +832,139 @@ resource "aws_batch_job_queue" "test" {
     reason           = "MISCONFIGURATION:COMPUTE_ENVIRONMENT_MAX_RESOURCE"
     state            = "RUNNABLE"
   }
+}
+`, rName))
+}
+
+// testAccJobQueueConfig_base returns the base configuration for the Terraform AWS Provider v5.95.0.
+// WARNING: Legacy configuration, breaking changes have been made to the aws_batch_compute_environment resource.
+func testAccJobQueueConfig_legacyBase(rName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name               = %[1]q
+  assume_role_policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+    {
+        "Action": "sts:AssumeRole",
+        "Effect": "Allow",
+        "Principal": {
+        "Service": "batch.${data.aws_partition.current.dns_suffix}"
+        }
+    }
+    ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  role       = aws_iam_role.test.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSBatchServiceRole"
+}
+
+resource "aws_iam_role" "ecs_instance_role" {
+  name = "%[1]s-ecs"
+
+  assume_role_policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+    {
+        "Action": "sts:AssumeRole",
+        "Effect": "Allow",
+        "Principal": {
+        "Service": "ec2.${data.aws_partition.current.dns_suffix}"
+        }
+    }
+    ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "ecs_instance_role" {
+  role       = aws_iam_role.ecs_instance_role.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role"
+}
+
+resource "aws_iam_instance_profile" "ecs_instance_role" {
+  name = aws_iam_role.ecs_instance_role.name
+  role = aws_iam_role_policy_attachment.ecs_instance_role.role
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  cidr_block = "10.1.1.0/24"
+  vpc_id     = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_batch_compute_environment" "test" {
+  compute_environment_name = %[1]q
+  service_role             = aws_iam_role.test.arn
+  type                     = "MANAGED"
+
+  compute_resources {
+    instance_role      = aws_iam_instance_profile.ecs_instance_role.arn
+    instance_type      = ["c5", "m5", "r5"]
+    max_vcpus          = 1
+    min_vcpus          = 0
+    security_group_ids = [aws_security_group.test.id]
+    subnets            = [aws_subnet.test.id]
+    type               = "EC2"
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.test]
+}
+`, rName)
+}
+
+func testAccJobQueueConfig_StateUpgradeComputeEnvironments_initial(rName string) string {
+	return acctest.ConfigCompose(
+		testAccJobQueueConfig_legacyBase(rName),
+		fmt.Sprintf(`
+resource "aws_batch_job_queue" "test" {
+  compute_environments = [aws_batch_compute_environment.test.arn]
+  name                 = %[1]q
+  priority             = 1
+  state                = "ENABLED"
+}
+`, rName))
+}
+
+func testAccJobQueueConfig_StateUpgradeComputeEnvironments_updated(rName string) string {
+	return acctest.ConfigCompose(
+		testAccJobQueueConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_batch_job_queue" "test" {
+  compute_environment_order {
+    compute_environment = aws_batch_compute_environment.test.arn
+    order               = 0
+  }
+  name     = %[1]q
+  priority = 1
+  state    = "ENABLED"
 }
 `, rName))
 }
