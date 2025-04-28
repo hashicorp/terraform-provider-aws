@@ -102,7 +102,7 @@ func (r *assessmentResource) Schema(ctx context.Context, request resource.Schema
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"role_arn": schema.StringAttribute{
+						names.AttrRoleARN: schema.StringAttribute{
 							CustomType: fwtypes.ARNType,
 							Required:   true,
 						},
