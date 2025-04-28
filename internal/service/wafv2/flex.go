@@ -1796,8 +1796,8 @@ func expandDataProtections(tfList []any) []awstypes.DataProtection {
 		}
 		tfMap := tfMapRaw.(map[string]any)
 		apiObject := &awstypes.DataProtection{
-			Action: awstypes.DataProtectionAction(tfMap["action"].(string)),
-			Field:  expandField(tfMap["field"].([]any)),
+			Action: awstypes.DataProtectionAction(tfMap[names.AttrAction].(string)),
+			Field:  expandField(tfMap[names.AttrField].([]any)),
 		}
 
 		if v, ok := tfMap["exclude_rate_based_details"].(bool); ok {
@@ -3286,8 +3286,8 @@ func flattenDataProtections(apiObjects []awstypes.DataProtection) any {
 
 	for _, apiObject := range apiObjects {
 		tfMap := map[string]any{
-			"action":                     apiObject.Action,
-			"field":                      flattenField(apiObject.Field),
+			names.AttrAction:             apiObject.Action,
+			names.AttrField:              flattenField(apiObject.Field),
 			"exclude_rate_based_details": apiObject.ExcludeRateBasedDetails,
 			"exclude_rule_match_details": apiObject.ExcludeRuleMatchDetails,
 		}
