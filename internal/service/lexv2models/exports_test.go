@@ -12,8 +12,9 @@ var (
 	ResourceSlot       = newSlotResource
 	ResourceSlotType   = newSlotTypeResource
 
-	FindBotByID  = findBotByID
-	FindSlotByID = findSlotByID
+	FindBotByID                 = findBotByID
+	FindBotLocaleByThreePartKey = findBotLocaleByThreePartKey
+	FindSlotByID                = findSlotByID
 
 	IntentFlexOpt = intentFlexOpt
 )
