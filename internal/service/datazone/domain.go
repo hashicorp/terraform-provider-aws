@@ -46,9 +46,7 @@ func newDomainResource(_ context.Context) (resource.ResourceWithConfigure, error
 }
 
 type domainResource struct {
-	framework.ResourceWithConfigure
-	// TODO REGION Use AutoFlEx.
-	// framework.ResourceWithModel[domainResourceModel]
+	framework.ResourceWithModel[domainResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }
