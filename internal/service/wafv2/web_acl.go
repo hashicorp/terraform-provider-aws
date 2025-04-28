@@ -75,6 +75,63 @@ func resourceWebACL() *schema.Resource {
 				"captcha_config":       outerCaptchaConfigSchema(),
 				"challenge_config":     outerChallengeConfigSchema(),
 				"custom_response_body": customResponseBodySchema(),
+				"data_protection_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"data_protection": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 26,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrAction: {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.DataProtectionAction](),
+										},
+										names.AttrField: {
+											Type:     schema.TypeList,
+											Required: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"field_type": {
+														Type:             schema.TypeString,
+														Required:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.FieldToProtectType](),
+													},
+													"field_keys": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 100,
+														Elem: &schema.Schema{
+															Type: schema.TypeString,
+															ValidateFunc: validation.All(
+																validation.StringLenBetween(1, 64),
+																validation.StringMatch(regexache.MustCompile(`^.*\S.*$`), ""),
+															),
+														},
+													},
+												},
+											},
+										},
+										"exclude_rate_based_details": {
+											Type:     schema.TypeBool,
+											Optional: true,
+										},
+										"exclude_rule_match_details": {
+											Type:     schema.TypeBool,
+											Optional: true,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
 				names.AttrDefaultAction: {
 					Type:     schema.TypeList,
 					Required: true,
@@ -233,6 +290,10 @@ func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		input.CustomResponseBodies = expandCustomResponseBodies(v.(*schema.Set).List())
 	}
 
+	if v, ok := d.GetOk("data_protection_config"); ok && len(v.([]any)) > 0 {
+		input.DataProtectionConfig = expandDataProtectionConfig(v.([]any))
+	}
+
 	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
@@ -291,6 +352,9 @@ func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	}
 	if err := d.Set("custom_response_body", flattenCustomResponseBodies(webACL.CustomResponseBodies)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting custom_response_body: %s", err)
+	}
+	if err := d.Set("data_protection_config", flattenDataProtectionConfig(webACL.DataProtectionConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting data_protection_config: %s", err)
 	}
 	if err := d.Set(names.AttrDefaultAction, flattenDefaultAction(webACL.DefaultAction)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting default_action: %s", err)
@@ -357,16 +421,17 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 		}
 
 		input := &wafv2.UpdateWebACLInput{
-			AssociationConfig: expandAssociationConfig(d.Get("association_config").([]any)),
-			CaptchaConfig:     expandCaptchaConfig(d.Get("captcha_config").([]any)),
-			ChallengeConfig:   expandChallengeConfig(d.Get("challenge_config").([]any)),
-			DefaultAction:     expandDefaultAction(d.Get(names.AttrDefaultAction).([]any)),
-			Id:                aws.String(d.Id()),
-			LockToken:         aws.String(aclLockToken),
-			Name:              aws.String(aclName),
-			Rules:             rules,
-			Scope:             awstypes.Scope(aclScope),
-			VisibilityConfig:  expandVisibilityConfig(d.Get("visibility_config").([]any)),
+			AssociationConfig:    expandAssociationConfig(d.Get("association_config").([]any)),
+			CaptchaConfig:        expandCaptchaConfig(d.Get("captcha_config").([]any)),
+			ChallengeConfig:      expandChallengeConfig(d.Get("challenge_config").([]any)),
+			DataProtectionConfig: expandDataProtectionConfig(d.Get("data_protection_config").([]any)),
+			DefaultAction:        expandDefaultAction(d.Get(names.AttrDefaultAction).([]any)),
+			Id:                   aws.String(d.Id()),
+			LockToken:            aws.String(aclLockToken),
+			Name:                 aws.String(aclName),
+			Rules:                rules,
+			Scope:                awstypes.Scope(aclScope),
+			VisibilityConfig:     expandVisibilityConfig(d.Get("visibility_config").([]any)),
 		}
 
 		if v, ok := d.GetOk("custom_response_body"); ok && v.(*schema.Set).Len() > 0 {
