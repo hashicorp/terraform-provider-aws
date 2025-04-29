@@ -73,13 +73,19 @@ plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), know
 {{ end }}
 {{- end }}
 
-{{ define "ImportBody" }}
+{{ define "ImportCommandWithIDBody" }}
 {{ template "CommonImportBody" . -}}
 {{- if gt (len .ImportIgnore) 0 -}}
 	ImportStateVerifyIgnore: []string{
 	{{ range $i, $v := .ImportIgnore }}{{ $v }},{{ end }}
 	},
 {{- end }}
+{{ end }}
+
+{{ define "ImportBlockWithIDBody" }}
+	ResourceName:    resourceName,
+	ImportState:     true,
+	ImportStateKind: resource.ImportBlockWithID,
 {{ end }}
 
 {{ define "testname" -}}
@@ -153,7 +159,15 @@ func {{ template "testname" . }}_Identity_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
 					{{ template "AdditionalTfVars" . }}
 				},
-				{{- template "ImportBody" . -}}
+				{{- template "ImportCommandWithIDBody" . -}}
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/basic/"),
+				ConfigVariables: config.Variables{ {{ if .Generator }}
+					acctest.CtRName: config.StringVariable(rName),{{ end }}
+					{{ template "AdditionalTfVars" . }}
+				},
+				{{- template "ImportBlockWithIDBody" . -}}
 			},
 			{{- end }}
 		},
