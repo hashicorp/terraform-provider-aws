@@ -82,38 +82,6 @@ plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), know
 {{- end }}
 {{ end }}
 
-{{ define "ImportBodyIgnoreKey1" }}
-{{ template "CommonImportBody" . -}}
-{{ if eq .Implementation "framework" -}}
-	ImportStateVerifyIgnore: []string{
-        acctest.CtTagsKey1, // The canonical value returned by the AWS API is ""
-		{{ if gt (len .ImportIgnore) 0 -}}
-		{{ range $i, $v := .ImportIgnore }}{{ $v }},{{ end }}
-		{{ end -}}
-	},
-{{- else if gt (len .ImportIgnore) 0 -}}
-	ImportStateVerifyIgnore: []string{
-		{{ range $i, $v := .ImportIgnore }}{{ $v }},{{ end }}
-	},
-{{- end }}
-{{ end }}
-
-{{ define "ImportBodyIgnoreResourceKey1" }}
-{{ template "CommonImportBody" . -}}
-{{ if eq .Implementation "framework" -}}
-	ImportStateVerifyIgnore: []string{
-        "tags.resourcekey1", // The canonical value returned by the AWS API is ""
-		{{ if gt (len .ImportIgnore) 0 -}}
-		{{ range $i, $v := .ImportIgnore }}{{ $v }},{{ end }}
-		{{ end -}}
-	},
-{{ else if gt (len .ImportIgnore) 0 -}}
-	ImportStateVerifyIgnore: []string{
-		{{ range $i, $v := .ImportIgnore }}{{ $v }},{{ end }}
-	},
-{{- end }}
-{{ end }}
-
 {{ define "testname" -}}
 {{ if .Serialize }}testAcc{{ else }}TestAcc{{ end }}{{ .ResourceProviderNameUpper }}{{ .Name }}
 {{- end }}
