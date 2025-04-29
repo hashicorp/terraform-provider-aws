@@ -303,7 +303,7 @@ The `name` attribute has been deprecated. All configurations using `name` should
 
 ## data-source/aws_s3_bucket
 
-The `bucket_region` attribute has been added. We encourage use of the `bucket_region` attribute instead of the `region` attribute (which is now used for [Enhanced Multi-Region Support]()).
+The `bucket_region` attribute has been added. We encourage use of the `bucket_region` attribute instead of the `region` attribute (which is now used for [Enhanced Multi-Region Support](#enhanced-multi-region-support)).
 
 ## data-source/aws_service_discovery_service
 
@@ -527,7 +527,7 @@ For example, `policy.az.rpo` would now be referenced as `policy[0].az[0].rpo`.
 
 ## resource/aws_s3_bucket
 
-The `bucket_region` attribute has been added. We encourage use of the `bucket_region` attribute instead of the `region` attribute (which is now used for [Enhanced Multi-Region Support]()).
+The `bucket_region` attribute has been added. We encourage use of the `bucket_region` attribute instead of the `region` attribute (which is now used for [Enhanced Multi-Region Support](#enhanced-multi-region-support)).
 
 ## resource/aws_sagemaker_notebook_instance
 
