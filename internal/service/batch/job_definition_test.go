@@ -79,9 +79,6 @@ func TestAccBatchJobDefinition_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"deregister_on_new_revision",
-				},
 			},
 		},
 	})
@@ -363,9 +360,6 @@ func TestAccBatchJobDefinition_attributes(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"deregister_on_new_revision",
-				},
 			},
 			{
 				Config: testAccJobDefinitionConfig_attributes(rName, 1, false, 1, 60, true),
@@ -462,9 +456,6 @@ func TestAccBatchJobDefinition_PlatformCapabilities_ec2(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"deregister_on_new_revision",
-				},
 			},
 		},
 	})
@@ -509,9 +500,6 @@ func TestAccBatchJobDefinition_PlatformCapabilitiesFargate_containerPropertiesDe
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"deregister_on_new_revision",
-				},
 			},
 		},
 	})
@@ -556,9 +544,6 @@ func TestAccBatchJobDefinition_PlatformCapabilities_fargate(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"deregister_on_new_revision",
-				},
 			},
 		},
 	})
@@ -626,9 +611,6 @@ func TestAccBatchJobDefinition_ContainerProperties_advanced(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"deregister_on_new_revision",
-				},
 			},
 			{
 				Config: testAccJobDefinitionConfig_containerPropertiesAdvanced(rName, "val3", 1, 60),
@@ -787,9 +769,6 @@ func TestAccBatchJobDefinition_ContainerProperties_EmptyField(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"deregister_on_new_revision",
-				},
 			},
 		},
 	})
@@ -866,9 +845,6 @@ func TestAccBatchJobDefinition_NodeProperties_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"deregister_on_new_revision",
-				},
 			},
 		},
 	})
@@ -935,9 +911,6 @@ func TestAccBatchJobDefinition_NodeProperties_advanced(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"deregister_on_new_revision",
-				},
 			},
 			{
 				Config: testAccJobDefinitionConfig_nodePropertiesAdvancedUpdate(rName),
@@ -1080,9 +1053,6 @@ func TestAccBatchJobDefinition_NodeProperties_withECS(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"deregister_on_new_revision",
-				},
 			},
 		},
 	})
@@ -1115,9 +1085,6 @@ func TestAccBatchJobDefinition_EKSProperties_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"deregister_on_new_revision",
-				},
 			},
 		},
 	})
@@ -1156,9 +1123,6 @@ func TestAccBatchJobDefinition_EKSProperties_update(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"deregister_on_new_revision",
-				},
 			},
 		},
 	})
@@ -1197,9 +1161,6 @@ func TestAccBatchJobDefinition_EKSProperties_imagePullSecrets(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"deregister_on_new_revision",
-				},
 			},
 		},
 	})
@@ -1228,9 +1189,6 @@ func TestAccBatchJobDefinition_EKSProperties_multiContainers(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"deregister_on_new_revision",
-				},
 			},
 		},
 	})
@@ -1295,9 +1253,6 @@ func TestAccBatchJobDefinition_schedulingPriority(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"deregister_on_new_revision",
-				},
 			},
 		},
 	})
