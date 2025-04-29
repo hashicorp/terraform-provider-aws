@@ -203,7 +203,6 @@ BUG FIXES:
 * resource/aws_sns_topic_subscription: Fix to handle eventually consistent subscription read operations ([#42093](https://github.com/hashicorp/terraform-provider-aws/issues/42093))
 * resource/aws_sqs_queue: Fix `waiting for SQS Queue... attributes create: timeout while waiting` errors when `sqs_managed_sse_enabled = false` or omitted and `kms_master_key_id` is not set but `kms_data_key_reuse_period_seconds` is set to a non-default value. ([#42062](https://github.com/hashicorp/terraform-provider-aws/issues/42062))
 * resource/aws_workspaces_workspace: Properly update `workspace_properties.running_mode_auto_stop_timeout_in_minutes` when modified ([#40953](https://github.com/hashicorp/terraform-provider-aws/issues/40953))
->>>>>>> v5.94.0
 
 ## 5.93.0 (March 27, 2025)
 

@@ -15,7 +15,7 @@ compute environment within AWS Batch.
 
 ```terraform
 data "aws_batch_compute_environment" "batch-mongo" {
-  compute_environment_name = "batch-mongo-production"
+  name = "batch-mongo-production"
 }
 ```
 
@@ -23,7 +23,7 @@ data "aws_batch_compute_environment" "batch-mongo" {
 
 This data source supports the following arguments:
 
-* `compute_environment_name` - (Required) Name of the Batch Compute Environment
+* `name` - (Required) Name of the Batch Compute Environment
 
 ## Attribute Reference
 

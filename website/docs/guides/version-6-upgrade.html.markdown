@@ -38,6 +38,7 @@ Upgrade topics:
 - [resource/aws_api_gateway_account](#resourceaws_api_gateway_account)
 - [resource/aws_api_gateway_deployment](#resourceaws_api_gateway_deployment)
 - [resource/aws_batch_compute_environment](#resourceaws_batch_compute_environment)
+- [resource/aws_batch_job_queue](#resourceaws_batch_job_queue)
 - [resource/aws_bedrock_model_invocation_logging_configuration](#resourceaws_bedrock_model_invocation_logging_configuration)
 - [resource/aws_cloudfront_key_value_store](#resourceaws_cloudfront_key_value_store)
 - [resource/aws_cloudfront_response_headers_policy](#resourceaws_cloudfront_response_headers_policy)
@@ -314,6 +315,10 @@ terraform import aws_api_gateway_stage.prod <rest_api_id>/<stage_name>
 
 * `compute_environment_name` has been renamed to `name`.
 * `compute_environment_name_prefix` has been renamed to `name_prefix`.
+
+## resource/aws_batch_job_queue
+
+`compute_environments` has been removed. Instead, use `compute_environment_order`.
 
 ## resource/aws_bedrock_model_invocation_logging_configuration
 
