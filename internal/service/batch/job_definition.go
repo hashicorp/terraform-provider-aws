@@ -43,7 +43,16 @@ func resourceJobDefinition() *schema.Resource {
 		DeleteWithoutTimeout: resourceJobDefinitionDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: func(_ context.Context, rd *schema.ResourceData, _ any) ([]*schema.ResourceData, error) {
+				// Import-by-id case
+				if rd.Id() != "" {
+					rd.Set("deregister_on_new_revision", true)
+
+					return []*schema.ResourceData{rd}, nil
+				}
+
+				return []*schema.ResourceData{rd}, nil
+			},
 		},
 
 		Schema: map[string]*schema.Schema{
