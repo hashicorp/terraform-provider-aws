@@ -12,6 +12,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/batch"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/batch/types"
 	"github.com/hashicorp/go-cty/cty"
@@ -65,6 +66,13 @@ func resourceJobDefinition() *schema.Resource {
 				if !ok {
 					return nil, fmt.Errorf("identity attribute %q: expected string, got %T", "arn", arnRaw)
 				}
+
+				arnARN, err := arn.Parse(arnVal)
+				if err != nil {
+					return nil, fmt.Errorf("identity attribute %q: could not parse as ARN: %q", "arn", arnVal)
+				}
+
+				rd.Set("region", arnARN.Region)
 
 				rd.Set("arn", arnVal)
 				rd.SetId(arnVal)

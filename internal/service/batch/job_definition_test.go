@@ -121,6 +121,7 @@ func TestAccBatchJobDefinition_Identity_Basic(t *testing.T) {
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("arn"), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("id"), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("region"), knownvalue.StringExact(acctest.Region())),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("deregister_on_new_revision"), knownvalue.Bool(true)),
 					},
 				},
@@ -133,6 +134,7 @@ func TestAccBatchJobDefinition_Identity_Basic(t *testing.T) {
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("arn"), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("id"), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("region"), knownvalue.StringExact(acctest.Region())),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("deregister_on_new_revision"), knownvalue.Bool(true)),
 					},
 				},
@@ -145,6 +147,7 @@ func TestAccBatchJobDefinition_Identity_Basic(t *testing.T) {
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("arn"), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("id"), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("region"), knownvalue.StringExact(acctest.Region())),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("deregister_on_new_revision"), knownvalue.Bool(true)),
 					},
 				},
@@ -197,6 +200,7 @@ func TestAccBatchJobDefinition_Identity_Update(t *testing.T) {
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("arn"), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("id"), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("region"), knownvalue.StringExact(acctest.Region())),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("deregister_on_new_revision"), knownvalue.Bool(true)),
 					},
 				},
@@ -209,6 +213,20 @@ func TestAccBatchJobDefinition_Identity_Update(t *testing.T) {
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("arn"), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("id"), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("region"), knownvalue.StringExact(acctest.Region())),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("deregister_on_new_revision"), knownvalue.Bool(true)),
+					},
+				},
+			},
+			{
+				ResourceName:    resourceName,
+				ImportState:     true,
+				ImportStateKind: resource.ImportBlockWithResourceIdentity,
+				ImportPlanChecks: resource.ImportPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("arn"), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("id"), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("region"), knownvalue.StringExact(acctest.Region())),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("deregister_on_new_revision"), knownvalue.Bool(true)),
 					},
 				},
@@ -247,6 +265,7 @@ func TestAccBatchJobDefinition_Identity_RegionOverride(t *testing.T) {
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("arn"), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("id"), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("region"), knownvalue.StringExact(acctest.AlternateRegion())),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("deregister_on_new_revision"), knownvalue.Bool(true)),
 					},
 				},
@@ -260,6 +279,20 @@ func TestAccBatchJobDefinition_Identity_RegionOverride(t *testing.T) {
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("arn"), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("id"), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("region"), knownvalue.StringExact(acctest.AlternateRegion())),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("deregister_on_new_revision"), knownvalue.Bool(true)),
+					},
+				},
+			},
+			{
+				ResourceName:    resourceName,
+				ImportState:     true,
+				ImportStateKind: resource.ImportBlockWithResourceIdentity,
+				ImportPlanChecks: resource.ImportPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("arn"), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("id"), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("region"), knownvalue.StringExact(acctest.AlternateRegion())),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("deregister_on_new_revision"), knownvalue.Bool(true)),
 					},
 				},
