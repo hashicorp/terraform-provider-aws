@@ -35,6 +35,7 @@ import (
 // @SDKResource("aws_batch_job_definition", name="Job Definition")
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
+// @MutableIdentity
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/batch/types;types.JobDefinition")
 func resourceJobDefinition() *schema.Resource {
 	return &schema.Resource{
@@ -858,14 +859,6 @@ func resourceJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	d.SetId(aws.ToString(output.JobDefinitionArn))
-	identity, err := d.Identity()
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-	err = identity.Set(names.AttrARN, aws.ToString(output.JobDefinitionArn))
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
 
 	return append(diags, resourceJobDefinitionRead(ctx, d, meta)...)
 }
