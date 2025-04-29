@@ -34,6 +34,7 @@ import (
 
 // @FrameworkResource("aws_codeconnections_host", name="Host")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/codeconnections/types;types.Host")
 func newHostResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &hostResource{}
 
@@ -49,8 +50,7 @@ const (
 )
 
 type hostResource struct {
-	framework.ResourceWithConfigure
-	framework.WithImportByID
+	framework.ResourceWithModel[hostResourceModel]
 	framework.WithTimeouts
 }
 
@@ -58,7 +58,7 @@ func (r *hostResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			names.AttrID:  framework.IDAttribute(),
+			names.AttrID:  framework.IDAttributeDeprecatedWithAlternate(path.Root(names.AttrARN)),
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -402,6 +402,7 @@ func findHostByARN(ctx context.Context, conn *codeconnections.Client, arn string
 }
 
 type hostResourceModel struct {
+	framework.WithRegionModel
 	HostArn          types.String                                                      `tfsdk:"arn"`
 	ID               types.String                                                      `tfsdk:"id"`
 	Name             types.String                                                      `tfsdk:"name"`

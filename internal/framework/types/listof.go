@@ -28,7 +28,6 @@ var (
 	ListOfARNType = listTypeOf[ARN]{basetypes.ListType{ElemType: ARNType}}
 )
 
-// TODO Replace with Go 1.24 generic type alias when available.
 func ListOfStringEnumType[T enum.Valueser[T]]() listTypeOf[StringEnum[T]] {
 	return listTypeOf[StringEnum[T]]{basetypes.ListType{ElemType: StringEnumType[T]()}}
 }
@@ -107,8 +106,9 @@ type ListValueOf[T attr.Value] struct {
 }
 
 type (
-	ListOfString = ListValueOf[basetypes.StringValue]
-	ListOfARN    = ListValueOf[ARN]
+	ListOfString                         = ListValueOf[basetypes.StringValue]
+	ListOfARN                            = ListValueOf[ARN]
+	ListOfStringEnum[T enum.Valueser[T]] = ListValueOf[StringEnum[T]]
 )
 
 func (v ListValueOf[T]) Equal(o attr.Value) bool {

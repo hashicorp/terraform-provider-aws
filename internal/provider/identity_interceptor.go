@@ -10,17 +10,17 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-var _ interceptor = identityInterceptor{}
+var _ crudInterceptor = identityInterceptor{}
 
 type identityInterceptor struct {
 	attributes []string
 }
 
-func (r identityInterceptor) run(ctx context.Context, opts interceptorOptions) diag.Diagnostics {
+func (r identityInterceptor) run(ctx context.Context, opts crudInterceptorOptions) diag.Diagnostics {
 	var diags diag.Diagnostics
 	awsClient := opts.c
 
@@ -69,19 +69,19 @@ func (r identityInterceptor) getAttributeOk(d schemaResourceData, name string) (
 	return v.(string), ok
 }
 
-func newIdentityInterceptor(attributes []types.IdentityAttribute) interceptorItem {
-	return interceptorItem{
+func newIdentityInterceptor(attributes []inttypes.IdentityAttribute) interceptorInvocation {
+	return interceptorInvocation{
 		when: After,
 		why:  Create, // TODO: probably need to do this after Read and Update as well
 		interceptor: identityInterceptor{
-			attributes: tfslices.ApplyToAll(attributes, func(v types.IdentityAttribute) string {
+			attributes: tfslices.ApplyToAll(attributes, func(v inttypes.IdentityAttribute) string {
 				return v.Name
 			}),
 		},
 	}
 }
 
-func newResourceIdentity(v types.Identity) *schema.ResourceIdentity {
+func newResourceIdentity(v inttypes.Identity) *schema.ResourceIdentity {
 	return &schema.ResourceIdentity{
 		SchemaFunc: func() map[string]*schema.Schema {
 			return newIdentitySchema(v.Attributes)
@@ -89,7 +89,7 @@ func newResourceIdentity(v types.Identity) *schema.ResourceIdentity {
 	}
 }
 
-func newIdentitySchema(attributes []types.IdentityAttribute) map[string]*schema.Schema {
+func newIdentitySchema(attributes []inttypes.IdentityAttribute) map[string]*schema.Schema {
 	identitySchema := make(map[string]*schema.Schema, len(attributes))
 	for _, attr := range attributes {
 		identitySchema[attr.Name] = newIdentityAttribute(attr)
@@ -97,7 +97,7 @@ func newIdentitySchema(attributes []types.IdentityAttribute) map[string]*schema.
 	return identitySchema
 }
 
-func newIdentityAttribute(attribute types.IdentityAttribute) *schema.Schema {
+func newIdentityAttribute(attribute inttypes.IdentityAttribute) *schema.Schema {
 	attr := &schema.Schema{
 		Type: schema.TypeString,
 	}

@@ -55,7 +55,7 @@ func newCustomModelResource(context.Context) (resource.ResourceWithConfigure, er
 }
 
 type customModelResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[customModelResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }
@@ -597,6 +597,7 @@ func waitModelCustomizationJobStopped(ctx context.Context, conn *bedrock.Client,
 }
 
 type customModelResourceModel struct {
+	framework.WithRegionModel
 	BaseModelIdentifier  fwtypes.ARN                                                `tfsdk:"base_model_identifier"`
 	CustomModelARN       types.String                                               `tfsdk:"custom_model_arn"`
 	CustomModelKmsKeyID  fwtypes.ARN                                                `tfsdk:"custom_model_kms_key_id"`

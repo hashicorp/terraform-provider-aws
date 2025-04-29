@@ -210,7 +210,7 @@ func upgradeBucketLifeCycleConfigurationResourceStateFromV0(ctx context.Context,
 		return
 	}
 
-	new := resourceBucketLifecycleConfigurationModel{
+	new := bucketLifecycleConfigurationResourceModel{
 		Bucket:                             old.Bucket,
 		ExpectedBucketOwner:                old.ExpectedBucketOwner,
 		ID:                                 old.ID,

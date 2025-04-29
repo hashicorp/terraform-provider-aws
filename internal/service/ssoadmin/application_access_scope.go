@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
@@ -29,8 +28,8 @@ import (
 )
 
 // @FrameworkResource("aws_ssoadmin_application_access_scope", name="Application Access Scope")
-func newResourceApplicationAccessScope(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceApplicationAccessScope{}, nil
+func newApplicationAccessScopeResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &applicationAccessScopeResource{}, nil
 }
 
 const (
@@ -39,11 +38,12 @@ const (
 	applicationAccessScopeIDPartCount = 2
 )
 
-type resourceApplicationAccessScope struct {
-	framework.ResourceWithConfigure
+type applicationAccessScopeResource struct {
+	framework.ResourceWithModel[applicationAccessScopeResourceModel]
+	framework.WithImportByID
 }
 
-func (r *resourceApplicationAccessScope) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *applicationAccessScopeResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"application_arn": schema.StringAttribute{
@@ -54,6 +54,7 @@ func (r *resourceApplicationAccessScope) Schema(ctx context.Context, req resourc
 				},
 			},
 			"authorized_targets": schema.ListAttribute{
+				CustomType:  fwtypes.ListOfStringType,
 				ElementType: types.StringType,
 				Optional:    true,
 				PlanModifiers: []planmodifier.List{
@@ -71,10 +72,10 @@ func (r *resourceApplicationAccessScope) Schema(ctx context.Context, req resourc
 	}
 }
 
-func (r *resourceApplicationAccessScope) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *applicationAccessScopeResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().SSOAdminClient(ctx)
 
-	var plan resourceApplicationAccessScopeData
+	var plan applicationAccessScopeResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -123,10 +124,10 @@ func (r *resourceApplicationAccessScope) Create(ctx context.Context, req resourc
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceApplicationAccessScope) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *applicationAccessScopeResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().SSOAdminClient(ctx)
 
-	var state resourceApplicationAccessScopeData
+	var state applicationAccessScopeResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -157,20 +158,20 @@ func (r *resourceApplicationAccessScope) Read(ctx context.Context, req resource.
 	}
 
 	state.ApplicationARN = fwtypes.ARNValue(parts[0])
-	state.AuthorizedTargets = flex.FlattenFrameworkStringValueList(ctx, out.AuthorizedTargets)
+	state.AuthorizedTargets = flex.FlattenFrameworkStringValueListOfString(ctx, out.AuthorizedTargets)
 	state.Scope = flex.StringToFramework(ctx, out.Scope)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceApplicationAccessScope) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *applicationAccessScopeResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	//Update is no-op.
 }
 
-func (r *resourceApplicationAccessScope) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *applicationAccessScopeResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().SSOAdminClient(ctx)
 
-	var state resourceApplicationAccessScopeData
+	var state applicationAccessScopeResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -192,10 +193,6 @@ func (r *resourceApplicationAccessScope) Delete(ctx context.Context, req resourc
 		)
 		return
 	}
-}
-
-func (r *resourceApplicationAccessScope) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func findApplicationAccessScopeByID(ctx context.Context, conn *ssoadmin.Client, id string) (*ssoadmin.GetApplicationAccessScopeOutput, error) {
@@ -228,9 +225,10 @@ func findApplicationAccessScopeByID(ctx context.Context, conn *ssoadmin.Client, 
 	return out, nil
 }
 
-type resourceApplicationAccessScopeData struct {
-	ApplicationARN    fwtypes.ARN  `tfsdk:"application_arn"`
-	AuthorizedTargets types.List   `tfsdk:"authorized_targets"`
-	ID                types.String `tfsdk:"id"`
-	Scope             types.String `tfsdk:"scope"`
+type applicationAccessScopeResourceModel struct {
+	framework.WithRegionModel
+	ApplicationARN    fwtypes.ARN          `tfsdk:"application_arn"`
+	AuthorizedTargets fwtypes.ListOfString `tfsdk:"authorized_targets"`
+	ID                types.String         `tfsdk:"id"`
+	Scope             types.String         `tfsdk:"scope"`
 }

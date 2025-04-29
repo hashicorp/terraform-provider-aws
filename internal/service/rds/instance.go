@@ -189,20 +189,10 @@ func resourceInstance() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 				ConflictsWith: []string{
+					"replicate_source_db",
 					"s3_import",
-				},
-				DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
-					for _, conflictAttr := range []string{
-						"replicate_source_db",
-						// s3_import is handled by the schema ConflictsWith
-						"snapshot_identifier",
-						"restore_to_point_in_time",
-					} {
-						if _, ok := d.GetOk(conflictAttr); ok {
-							return true
-						}
-					}
-					return false
+					"restore_to_point_in_time",
+					"snapshot_identifier",
 				},
 			},
 			"copy_tags_to_snapshot": {
@@ -770,23 +760,6 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 	identifier := create.Name(d.Get(names.AttrIdentifier).(string), d.Get("identifier_prefix").(string))
 
 	var resourceID string // will be assigned depending on how it is created
-
-	if _, ok := d.GetOk("character_set_name"); ok {
-		charSetPath := cty.GetAttrPath("character_set_name")
-		for _, conflictAttr := range []string{
-			"replicate_source_db",
-			// s3_import is handled by the schema ConflictsWith
-			"snapshot_identifier",
-			"restore_to_point_in_time",
-		} {
-			if _, ok := d.GetOk(conflictAttr); ok {
-				diags = append(diags, errs.NewAttributeConflictsWillBeError(
-					charSetPath,
-					cty.GetAttrPath(conflictAttr),
-				))
-			}
-		}
-	}
 
 	// get write-only value from configuration
 	passwordWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("password_wo"))
@@ -2514,6 +2487,8 @@ func dbInstancePopulateModify(input *rds.ModifyDBInstanceInput, d *schema.Resour
 
 	if d.HasChange("database_insights_mode") {
 		input.DatabaseInsightsMode = types.DatabaseInsightsMode(d.Get("database_insights_mode").(string))
+		input.EnablePerformanceInsights = aws.Bool(d.Get("performance_insights_enabled").(bool))
+		input.PerformanceInsightsRetentionPeriod = aws.Int32(int32(d.Get("performance_insights_retention_period").(int)))
 	}
 
 	if d.HasChange("db_subnet_group_name") {

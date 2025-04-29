@@ -5,6 +5,7 @@ package ssm_test
 import (
 	"context"
 	"testing"
+	"unique"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	"github.com/hashicorp/terraform-plugin-testing/config"
@@ -2358,8 +2359,8 @@ func TestAccSSMActivation_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 }
 
 func expectFullActivationResourceTags(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullResourceTagsSpecTags(tfssm.ServicePackage(ctx), resourceAddress, &types.ServicePackageResourceTags{
+	return tfstatecheck.ExpectFullResourceTagsSpecTags(tfssm.ServicePackage(ctx), resourceAddress, unique.Make(types.ServicePackageResourceTags{
 		IdentifierAttribute: names.AttrID,
 		ResourceType:        "Activation",
-	}, knownValue)
+	}), knownValue)
 }

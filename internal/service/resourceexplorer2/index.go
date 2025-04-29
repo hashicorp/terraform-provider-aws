@@ -43,7 +43,7 @@ func newIndexResource(context.Context) (resource.ResourceWithConfigure, error) {
 }
 
 type indexResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[indexResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }
@@ -236,6 +236,7 @@ func (r *indexResource) Delete(ctx context.Context, request resource.DeleteReque
 
 // See https://docs.aws.amazon.com/resource-explorer/latest/apireference/API_Index.html.
 type indexResourceModel struct {
+	framework.WithRegionModel
 	ARN      types.String                           `tfsdk:"arn"`
 	ID       types.String                           `tfsdk:"id"`
 	Tags     tftags.Map                             `tfsdk:"tags"`

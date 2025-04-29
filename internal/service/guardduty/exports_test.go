@@ -6,7 +6,9 @@ package guardduty
 // Exports for use in tests only.
 var (
 	ResourceInviteAccepter        = resourceInviteAccepter
-	ResourceMalwareProtectionPlan = newResourceMalwareProtectionPlan
+	ResourceMalwareProtectionPlan = newMalwareProtectionPlanResource
 
 	FindMemberDetectorFeatureByThreePartKey = findMemberDetectorFeatureByThreePartKey
+
+	GetOrganizationAdminAccount = getOrganizationAdminAccount
 )

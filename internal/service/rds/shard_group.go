@@ -50,7 +50,7 @@ func newShardGroupResource(_ context.Context) (resource.ResourceWithConfigure, e
 }
 
 type shardGroupResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[shardGroupResourceModel]
 	framework.WithTimeouts
 }
 
@@ -428,6 +428,7 @@ func waitShardGroupDeleted(ctx context.Context, conn *rds.Client, id string, tim
 }
 
 type shardGroupResourceModel struct {
+	framework.WithRegionModel
 	ComputeRedundancy      types.Int64    `tfsdk:"compute_redundancy"`
 	DBClusterIdentifier    types.String   `tfsdk:"db_cluster_identifier"`
 	DBShardGroupARN        types.String   `tfsdk:"arn"`

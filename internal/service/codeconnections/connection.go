@@ -35,6 +35,7 @@ import (
 
 // @FrameworkResource("aws_codeconnections_connection", name="Connection")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/codeconnections/types;types.Connection")
 func newConnectionResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &connectionResource{}
 
@@ -50,7 +51,7 @@ const (
 )
 
 type connectionResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[connectionResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }
@@ -265,10 +266,6 @@ func (r *connectionResource) Delete(ctx context.Context, req resource.DeleteRequ
 	}
 }
 
-func (r *connectionResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-}
-
 func waitConnectionCreated(ctx context.Context, conn *codeconnections.Client, id string, timeout time.Duration) (*awstypes.Connection, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
@@ -345,6 +342,7 @@ func findConnectionByARN(ctx context.Context, conn *codeconnections.Client, arn 
 }
 
 type connectionResourceModel struct {
+	framework.WithRegionModel
 	ConnectionArn    types.String                                  `tfsdk:"arn"`
 	ConnectionName   types.String                                  `tfsdk:"name"`
 	ConnectionStatus fwtypes.StringEnum[awstypes.ConnectionStatus] `tfsdk:"connection_status"`

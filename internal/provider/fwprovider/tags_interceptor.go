@@ -6,16 +6,16 @@ package fwprovider
 import (
 	"context"
 	"fmt"
+	"unique"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/interceptors"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -23,16 +23,6 @@ import (
 // tagsDataSourceInterceptor implements transparent tagging for data sources.
 type tagsDataSourceInterceptor struct {
 	tagsInterceptor
-}
-
-func newTagsDataSourceInterceptor(servicePackageResourceTags *types.ServicePackageResourceTags) dataSourceInterceptor {
-	return &tagsDataSourceInterceptor{
-		tagsInterceptor: tagsInterceptor{
-			WithTaggingMethods: interceptors.WithTaggingMethods{
-				ServicePackageResourceTags: servicePackageResourceTags,
-			},
-		},
-	}
 }
 
 func (r tagsDataSourceInterceptor) read(ctx context.Context, opts interceptorOptions[datasource.ReadRequest, datasource.ReadResponse]) diag.Diagnostics {
@@ -81,19 +71,20 @@ func (r tagsDataSourceInterceptor) read(ctx context.Context, opts interceptorOpt
 	return diags
 }
 
-// tagsResourceInterceptor implements transparent tagging for resources.
-type tagsResourceInterceptor struct {
-	tagsInterceptor
-}
-
-func newTagsResourceInterceptor(servicePackageResourceTags *types.ServicePackageResourceTags) resourceInterceptor {
-	return &tagsResourceInterceptor{
+func dataSourceTransparentTagging(servicePackageResourceTags unique.Handle[inttypes.ServicePackageResourceTags]) dataSourceCRUDInterceptor {
+	return &tagsDataSourceInterceptor{
 		tagsInterceptor: tagsInterceptor{
 			WithTaggingMethods: interceptors.WithTaggingMethods{
 				ServicePackageResourceTags: servicePackageResourceTags,
 			},
 		},
 	}
+}
+
+// tagsResourceInterceptor implements transparent tagging for resources.
+type tagsResourceInterceptor struct {
+	resourceNoOpCRUDInterceptor
+	tagsInterceptor
 }
 
 func (r tagsResourceInterceptor) create(ctx context.Context, opts interceptorOptions[resource.CreateRequest, resource.CreateResponse]) diag.Diagnostics {
@@ -249,10 +240,50 @@ func (r tagsResourceInterceptor) update(ctx context.Context, opts interceptorOpt
 	return diags
 }
 
-func (r tagsResourceInterceptor) delete(ctx context.Context, opts interceptorOptions[resource.DeleteRequest, resource.DeleteResponse]) diag.Diagnostics {
+func (r tagsResourceInterceptor) modifyPlan(ctx context.Context, opts interceptorOptions[resource.ModifyPlanRequest, resource.ModifyPlanResponse]) diag.Diagnostics {
+	c := opts.c
 	var diags diag.Diagnostics
 
+	switch request, response, when := opts.request, opts.response, opts.when; when {
+	case Before:
+		// If the entire plan is null, the resource is planned for destruction.
+		if request.Plan.Raw.IsNull() {
+			return diags
+		}
+
+		// Calculate the new value for the `tags_all` attribute.
+		var planTags tftags.Map
+		diags.Append(request.Plan.GetAttribute(ctx, path.Root(names.AttrTags), &planTags)...)
+		if diags.HasError() {
+			return diags
+		}
+
+		if planTags.IsWhollyKnown() {
+			allTags := c.DefaultTagsConfig(ctx).MergeTags(tftags.New(ctx, planTags)).IgnoreConfig(c.IgnoreTagsConfig(ctx))
+			diags.Append(response.Plan.SetAttribute(ctx, path.Root(names.AttrTagsAll), fwflex.FlattenFrameworkStringValueMapLegacy(ctx, allTags.Map()))...)
+		} else {
+			diags.Append(response.Plan.SetAttribute(ctx, path.Root(names.AttrTagsAll), tftags.Unknown)...)
+		}
+
+		if diags.HasError() {
+			return diags
+		}
+	}
+
 	return diags
+}
+
+func resourceTransparentTagging(servicePackageResourceTags unique.Handle[inttypes.ServicePackageResourceTags]) interface {
+	resourceCRUDInterceptor
+	resourceModifyPlanInterceptor
+} {
+	return &tagsResourceInterceptor{
+		tagsInterceptor: tagsInterceptor{
+			WithTaggingMethods: interceptors.WithTaggingMethods{
+				ServicePackageResourceTags: servicePackageResourceTags,
+			},
+		},
+	}
 }
 
 type tagsInterceptor struct {
@@ -265,30 +296,9 @@ func (r tagsInterceptor) getIdentifier(ctx context.Context, d interface {
 }) string {
 	var identifier string
 
-	if identifierAttribute := r.ServicePackageResourceTags.IdentifierAttribute; identifierAttribute != "" {
+	if identifierAttribute := r.ServicePackageResourceTags.Value().IdentifierAttribute; identifierAttribute != "" {
 		d.GetAttribute(ctx, path.Root(identifierAttribute), &identifier)
 	}
 
 	return identifier
-}
-
-// setTagsAll is a plan modifier that calculates the new value for the `tags_all` attribute.
-func setTagsAll(ctx context.Context, meta *conns.AWSClient, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	// If the entire plan is null, the resource is planned for destruction.
-	if request.Plan.Raw.IsNull() {
-		return
-	}
-
-	var planTags tftags.Map
-	response.Diagnostics.Append(request.Plan.GetAttribute(ctx, path.Root(names.AttrTags), &planTags)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	if planTags.IsWhollyKnown() {
-		allTags := meta.DefaultTagsConfig(ctx).MergeTags(tftags.New(ctx, planTags)).IgnoreConfig(meta.IgnoreTagsConfig(ctx))
-		response.Diagnostics.Append(response.Plan.SetAttribute(ctx, path.Root(names.AttrTagsAll), fwflex.FlattenFrameworkStringValueMapLegacy(ctx, allTags.Map()))...)
-	} else {
-		response.Diagnostics.Append(response.Plan.SetAttribute(ctx, path.Root(names.AttrTagsAll), tftags.Unknown)...)
-	}
 }

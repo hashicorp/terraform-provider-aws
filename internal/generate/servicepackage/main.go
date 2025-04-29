@@ -147,8 +147,8 @@ func main() {
 type ResourceDatum struct {
 	FactoryName                       string
 	Name                              string // Friendly name (without service name), e.g. "Topic", not "SNS Topic"
-	IsGlobal                          bool   // Is the resource global?
-	RegionOverrideEnabled             bool
+	IsGlobal                          bool
+	regionOverrideEnabled             bool
 	TransparentTagging                bool
 	TagsIdentifierAttribute           string
 	TagsResourceType                  string
@@ -168,6 +168,10 @@ type identityAttribute struct {
 type goImport struct {
 	Path  string
 	Alias string
+}
+
+func (d ResourceDatum) RegionOverrideEnabled() bool {
+	return d.regionOverrideEnabled && !d.IsGlobal
 }
 
 type ServiceDatum struct {
@@ -252,7 +256,8 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 	v.functionName = funcDecl.Name.Name
 
 	d := ResourceDatum{
-		RegionOverrideEnabled:             true,
+		IsGlobal:                          false,
+		regionOverrideEnabled:             true,
 		ValidateRegionOverrideInPartition: true,
 	}
 
@@ -283,7 +288,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					} else {
 						d.IsGlobal = global
 						if global {
-							d.RegionOverrideEnabled = false
+							d.regionOverrideEnabled = false
 							d.ValidateRegionOverrideInPartition = false
 						}
 					}
@@ -292,7 +297,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					if enabled, err := strconv.ParseBool(attr); err != nil {
 						v.errs = append(v.errs, fmt.Errorf("invalid Region/overrideEnabled value (%s): %s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
 					} else {
-						d.RegionOverrideEnabled = enabled
+						d.regionOverrideEnabled = enabled
 					}
 				}
 				if attr, ok := args.Keyword["validateOverrideInPartition"]; ok {
@@ -388,8 +393,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				if _, ok := v.ephemeralResources[typeName]; ok {
 					v.errs = append(v.errs, fmt.Errorf("duplicate Ephemeral Resource (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				} else {
-					// TODO REGION Temporarily disabled for FW resources.
-					d.RegionOverrideEnabled = false
 					v.ephemeralResources[typeName] = d
 				}
 			case "FrameworkDataSource":
@@ -413,8 +416,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				if _, ok := v.frameworkDataSources[typeName]; ok {
 					v.errs = append(v.errs, fmt.Errorf("duplicate Framework Data Source (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				} else {
-					// TODO REGION Temporarily disabled for FW resources.
-					d.RegionOverrideEnabled = false
 					v.frameworkDataSources[typeName] = d
 				}
 			case "FrameworkResource":
@@ -438,8 +439,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				if _, ok := v.frameworkResources[typeName]; ok {
 					v.errs = append(v.errs, fmt.Errorf("duplicate Framework Resource (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				} else {
-					// TODO REGION Temporarily disabled for FW resources.
-					d.RegionOverrideEnabled = false
 					v.frameworkResources[typeName] = d
 				}
 			case "SDKDataSource":

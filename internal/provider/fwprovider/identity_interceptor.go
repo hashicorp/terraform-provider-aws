@@ -11,11 +11,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-var _ resourceInterceptor = identityInterceptor{}
+var _ resourceCRUDInterceptor = identityInterceptor{}
 
 type identityInterceptor struct {
 	attributes []string
@@ -79,9 +79,9 @@ func (r identityInterceptor) delete(ctx context.Context, opts interceptorOptions
 	return diags
 }
 
-func newIdentityInterceptor(attributes []itypes.IdentityAttribute) resourceInterceptor {
+func newIdentityInterceptor(attributes []inttypes.IdentityAttribute) identityInterceptor {
 	return identityInterceptor{
-		attributes: tfslices.ApplyToAll(attributes, func(v itypes.IdentityAttribute) string {
+		attributes: tfslices.ApplyToAll(attributes, func(v inttypes.IdentityAttribute) string {
 			return v.Name
 		}),
 	}

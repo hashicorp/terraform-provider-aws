@@ -35,7 +35,7 @@ func newResourcePolicyResource(_ context.Context) (resource.ResourceWithConfigur
 }
 
 type resourcePolicyResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[resourcePolicyResourceModel]
 	framework.WithImportByID
 }
 
@@ -229,6 +229,7 @@ func findResourcePolicyByARN(ctx context.Context, conn *dynamodb.Client, arn str
 }
 
 type resourcePolicyResourceModel struct {
+	framework.WithRegionModel
 	ConfirmRemoveSelfResourceAccess types.Bool        `tfsdk:"confirm_remove_self_resource_access"`
 	ID                              types.String      `tfsdk:"id"`
 	Policy                          fwtypes.IAMPolicy `tfsdk:"policy"`

@@ -632,12 +632,14 @@ func resourceUserPool() *schema.Resource {
 			"username_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"case_sensitive": {
 							Type:     schema.TypeBool,
-							Required: true,
+							Optional: true,
+							Computed: true,
 							ForceNew: true,
 						},
 					},
@@ -2520,11 +2522,11 @@ func resourceUserPoolSchemaHash(v any) int {
 		return 0
 	}
 
-	buf.WriteString(fmt.Sprintf("%s-", m[names.AttrName].(string)))
-	buf.WriteString(fmt.Sprintf("%s-", m["attribute_data_type"].(string)))
-	buf.WriteString(fmt.Sprintf("%t-", m["developer_only_attribute"].(bool)))
-	buf.WriteString(fmt.Sprintf("%t-", m["mutable"].(bool)))
-	buf.WriteString(fmt.Sprintf("%t-", m["required"].(bool)))
+	fmt.Fprintf(&buf, "%s-", m[names.AttrName].(string))
+	fmt.Fprintf(&buf, "%s-", m["attribute_data_type"].(string))
+	fmt.Fprintf(&buf, "%t-", m["developer_only_attribute"].(bool))
+	fmt.Fprintf(&buf, "%t-", m["mutable"].(bool))
+	fmt.Fprintf(&buf, "%t-", m["required"].(bool))
 
 	if v, ok := m["string_attribute_constraints"]; ok {
 		data := v.([]any)
@@ -2534,11 +2536,11 @@ func resourceUserPoolSchemaHash(v any) int {
 			m, _ := data[0].(map[string]any)
 			if ok {
 				if l, ok := m["min_length"]; ok && l.(string) != "" {
-					buf.WriteString(fmt.Sprintf("%s-", l.(string)))
+					fmt.Fprintf(&buf, "%s-", l.(string))
 				}
 
 				if l, ok := m["max_length"]; ok && l.(string) != "" {
-					buf.WriteString(fmt.Sprintf("%s-", l.(string)))
+					fmt.Fprintf(&buf, "%s-", l.(string))
 				}
 			}
 		}
@@ -2552,11 +2554,11 @@ func resourceUserPoolSchemaHash(v any) int {
 			m, _ := data[0].(map[string]any)
 			if ok {
 				if l, ok := m["min_value"]; ok && l.(string) != "" {
-					buf.WriteString(fmt.Sprintf("%s-", l.(string)))
+					fmt.Fprintf(&buf, "%s-", l.(string))
 				}
 
 				if l, ok := m["max_value"]; ok && l.(string) != "" {
-					buf.WriteString(fmt.Sprintf("%s-", l.(string)))
+					fmt.Fprintf(&buf, "%s-", l.(string))
 				}
 			}
 		}

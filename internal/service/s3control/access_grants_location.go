@@ -38,7 +38,7 @@ func newAccessGrantsLocationResource(context.Context) (resource.ResourceWithConf
 }
 
 type accessGrantsLocationResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[accessGrantsLocationResourceModel]
 	framework.WithImportByID
 }
 
@@ -176,7 +176,7 @@ func (r *accessGrantsLocationResource) Read(ctx context.Context, request resourc
 		return
 	}
 
-	setTagsOut(ctx, Tags(tags))
+	setTagsOut(ctx, svcTags(tags))
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -286,6 +286,7 @@ func findAccessGrantsLocationByTwoPartKey(ctx context.Context, conn *s3control.C
 }
 
 type accessGrantsLocationResourceModel struct {
+	framework.WithRegionModel
 	AccessGrantsLocationARN types.String `tfsdk:"access_grants_location_arn"`
 	AccessGrantsLocationID  types.String `tfsdk:"access_grants_location_id"`
 	AccountID               types.String `tfsdk:"account_id"`

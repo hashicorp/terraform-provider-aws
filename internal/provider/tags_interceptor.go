@@ -6,25 +6,25 @@ package provider
 import (
 	"context"
 	"fmt"
+	"unique"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/interceptors"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// tagsResourceInterceptor implements transparent tagging for resources.
-type tagsResourceInterceptor struct {
+// tagsResourceCRUDInterceptor implements transparent tagging on CRUD operations for resources.
+type tagsResourceCRUDInterceptor struct {
 	tagsInterceptor
 }
 
-func newTagsResourceInterceptor(servicePackageResourceTags *types.ServicePackageResourceTags) interceptor {
-	return &tagsResourceInterceptor{
+func resourceTransparentTagging(servicePackageResourceTags unique.Handle[inttypes.ServicePackageResourceTags]) crudInterceptor {
+	return &tagsResourceCRUDInterceptor{
 		tagsInterceptor: tagsInterceptor{
 			WithTaggingMethods: interceptors.WithTaggingMethods{
 				ServicePackageResourceTags: servicePackageResourceTags,
@@ -33,7 +33,7 @@ func newTagsResourceInterceptor(servicePackageResourceTags *types.ServicePackage
 	}
 }
 
-func (r tagsResourceInterceptor) run(ctx context.Context, opts interceptorOptions) diag.Diagnostics {
+func (r tagsResourceCRUDInterceptor) run(ctx context.Context, opts crudInterceptorOptions) diag.Diagnostics {
 	c := opts.c
 	var diags diag.Diagnostics
 
@@ -176,13 +176,13 @@ func (r tagsResourceInterceptor) run(ctx context.Context, opts interceptorOption
 	return diags
 }
 
-// tagsResourceInterceptor implements transparent tagging for data sources.
-type tagsDataSourceInterceptor struct {
+// tagsDataSourceCRUDInterceptor implements transparent tagging on CRUD operations for data sources.
+type tagsDataSourceCRUDInterceptor struct {
 	tagsInterceptor
 }
 
-func newTagsDataSourceInterceptor(servicePackageResourceTags *types.ServicePackageResourceTags) interceptor {
-	return &tagsDataSourceInterceptor{
+func dataSourceTransparentTagging(servicePackageResourceTags unique.Handle[inttypes.ServicePackageResourceTags]) crudInterceptor {
+	return &tagsDataSourceCRUDInterceptor{
 		tagsInterceptor: tagsInterceptor{
 			WithTaggingMethods: interceptors.WithTaggingMethods{
 				ServicePackageResourceTags: servicePackageResourceTags,
@@ -191,7 +191,7 @@ func newTagsDataSourceInterceptor(servicePackageResourceTags *types.ServicePacka
 	}
 }
 
-func (r tagsDataSourceInterceptor) run(ctx context.Context, opts interceptorOptions) diag.Diagnostics {
+func (r tagsDataSourceCRUDInterceptor) run(ctx context.Context, opts crudInterceptorOptions) diag.Diagnostics {
 	c := opts.c
 	var diags diag.Diagnostics
 
@@ -252,7 +252,7 @@ type tagsInterceptor struct {
 func (r tagsInterceptor) getIdentifier(d schemaResourceData) string {
 	var identifier string
 
-	if identifierAttribute := r.ServicePackageResourceTags.IdentifierAttribute; identifierAttribute != "" {
+	if identifierAttribute := r.ServicePackageResourceTags.Value().IdentifierAttribute; identifierAttribute != "" {
 		if identifierAttribute == "id" {
 			identifier = d.Id()
 		} else {
@@ -263,56 +263,64 @@ func (r tagsInterceptor) getIdentifier(d schemaResourceData) string {
 	return identifier
 }
 
-// setTagsAll is a CustomizeDiff function that calculates the new value for the `tags_all` attribute.
-func setTagsAll(ctx context.Context, d *schema.ResourceDiff, meta any) error {
-	c := meta.(*conns.AWSClient)
+func setTagsAll() customizeDiffInterceptor {
+	return interceptorFunc1[*schema.ResourceDiff, error](func(ctx context.Context, opts customizeDiffInterceptorOptions) error {
+		c := opts.c
 
-	if !d.GetRawPlan().GetAttr(names.AttrTags).IsWhollyKnown() {
-		if err := d.SetNewComputed(names.AttrTagsAll); err != nil {
-			return fmt.Errorf("setting tags_all to Computed: %w", err)
+		switch d, when, why := opts.d, opts.when, opts.why; when {
+		case Before:
+			switch why {
+			case CustomizeDiff:
+				// Calculate the new value for the `tags_all` attribute.
+				if !d.GetRawPlan().GetAttr(names.AttrTags).IsWhollyKnown() {
+					if err := d.SetNewComputed(names.AttrTagsAll); err != nil {
+						return fmt.Errorf("setting tags_all to Computed: %w", err)
+					}
+					return nil
+				}
+
+				newTags := tftags.New(ctx, d.Get(names.AttrTags).(map[string]any))
+				allTags := c.DefaultTagsConfig(ctx).MergeTags(newTags).IgnoreConfig(c.IgnoreTagsConfig(ctx))
+				if d.HasChange(names.AttrTags) {
+					if newTags.HasZeroValue() {
+						if err := d.SetNewComputed(names.AttrTagsAll); err != nil {
+							return fmt.Errorf("setting tags_all to Computed: %w", err)
+						}
+					}
+
+					if len(allTags) > 0 && (!newTags.HasZeroValue() || !allTags.HasZeroValue()) {
+						if err := d.SetNew(names.AttrTagsAll, allTags.Map()); err != nil {
+							return fmt.Errorf("setting new tags_all diff: %w", err)
+						}
+					}
+
+					if len(allTags) == 0 {
+						if err := d.SetNew(names.AttrTagsAll, allTags.Map()); err != nil {
+							return fmt.Errorf("setting new tags_all diff: %w", err)
+						}
+					}
+				} else {
+					if len(allTags) > 0 && !allTags.HasZeroValue() {
+						if err := d.SetNew(names.AttrTagsAll, allTags.Map()); err != nil {
+							return fmt.Errorf("setting new tags_all diff: %w", err)
+						}
+						return nil
+					}
+
+					var newTagsAll tftags.KeyValueTags
+					if v, ok := d.Get(names.AttrTagsAll).(map[string]any); ok {
+						newTagsAll = tftags.New(ctx, v)
+					}
+					if len(allTags) > 0 && !newTagsAll.DeepEqual(allTags) && allTags.HasZeroValue() {
+						if err := d.SetNewComputed(names.AttrTagsAll); err != nil {
+							return fmt.Errorf("setting tags_all to Computed: %w", err)
+						}
+						return nil
+					}
+				}
+			}
 		}
+
 		return nil
-	}
-
-	newTags := tftags.New(ctx, d.Get(names.AttrTags).(map[string]any))
-	allTags := c.DefaultTagsConfig(ctx).MergeTags(newTags).IgnoreConfig(c.IgnoreTagsConfig(ctx))
-	if d.HasChange(names.AttrTags) {
-		if newTags.HasZeroValue() {
-			if err := d.SetNewComputed(names.AttrTagsAll); err != nil {
-				return fmt.Errorf("setting tags_all to Computed: %w", err)
-			}
-		}
-
-		if len(allTags) > 0 && (!newTags.HasZeroValue() || !allTags.HasZeroValue()) {
-			if err := d.SetNew(names.AttrTagsAll, allTags.Map()); err != nil {
-				return fmt.Errorf("setting new tags_all diff: %w", err)
-			}
-		}
-
-		if len(allTags) == 0 {
-			if err := d.SetNew(names.AttrTagsAll, allTags.Map()); err != nil {
-				return fmt.Errorf("setting new tags_all diff: %w", err)
-			}
-		}
-	} else {
-		if len(allTags) > 0 && !allTags.HasZeroValue() {
-			if err := d.SetNew(names.AttrTagsAll, allTags.Map()); err != nil {
-				return fmt.Errorf("setting new tags_all diff: %w", err)
-			}
-			return nil
-		}
-
-		var newTagsAll tftags.KeyValueTags
-		if v, ok := d.Get(names.AttrTagsAll).(map[string]any); ok {
-			newTagsAll = tftags.New(ctx, v)
-		}
-		if len(allTags) > 0 && !newTagsAll.DeepEqual(allTags) && allTags.HasZeroValue() {
-			if err := d.SetNewComputed(names.AttrTagsAll); err != nil {
-				return fmt.Errorf("setting tags_all to Computed: %w", err)
-			}
-			return nil
-		}
-	}
-
-	return nil
+	})
 }

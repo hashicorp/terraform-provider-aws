@@ -28,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	tfunique "github.com/hashicorp/terraform-provider-aws/internal/unique"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -340,21 +341,23 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 			}
 
 			var isRegionOverrideEnabled bool
-			if v := v.Region; v != nil && v.IsOverrideEnabled {
+			if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
 				isRegionOverrideEnabled = true
 			}
 
-			var interceptors interceptorItems
+			var interceptors interceptorInvocations
 
 			if isRegionOverrideEnabled {
-				v := v.Region
+				v := v.Region.Value()
 				s := r.SchemaMap()
 
 				if _, ok := s[names.AttrRegion]; !ok {
 					// Inject a top-level "region" attribute.
 					regionSchema := &schema.Schema{
-						Type:     schema.TypeString,
-						Optional: true,
+						Type:        schema.TypeString,
+						Optional:    true,
+						Computed:    true,
+						Description: `The AWS Region to use for API operations. Overrides the Region set in the provider configuration.`,
 					}
 
 					if f := r.SchemaFunc; f != nil {
@@ -368,39 +371,45 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 					}
 				}
 
-				interceptors = append(interceptors, interceptorItem{
-					when:        Before | After,
+				if v.IsValidateOverrideInPartition {
+					interceptors = append(interceptors, interceptorInvocation{
+						when:        Before,
+						why:         Read,
+						interceptor: dataSourceValidateRegion(),
+					})
+				}
+				interceptors = append(interceptors, interceptorInvocation{
+					when:        After,
 					why:         Read,
-					interceptor: newRegionDataSourceInterceptor(v.IsValidateOverrideInPartition),
+					interceptor: setRegionInState(),
 				})
 			}
 
-			if v.Tags != nil {
-				interceptors = append(interceptors, interceptorItem{
+			if !tfunique.IsHandleNil(v.Tags) {
+				interceptors = append(interceptors, interceptorInvocation{
 					when:        Before | After,
 					why:         Read,
-					interceptor: newTagsDataSourceInterceptor(v.Tags),
+					interceptor: dataSourceTransparentTagging(v.Tags),
 				})
 			}
 
 			opts := wrappedDataSourceOptions{
-				bootstrapContext: func(ctx context.Context, getAttribute getAttributeFunc, meta any) (context.Context, diag.Diagnostics) {
-					var diags diag.Diagnostics
+				bootstrapContext: func(ctx context.Context, getAttribute getAttributeFunc, meta any) (context.Context, error) {
 					var overrideRegion string
 
-					if v := v.Region; v != nil && v.IsOverrideEnabled && getAttribute != nil {
+					if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled && getAttribute != nil {
 						if region, ok := getAttribute(names.AttrRegion); ok {
 							overrideRegion = region.(string)
 						}
 					}
 
-					ctx = conns.NewDataSourceContext(ctx, servicePackageName, v.Name, overrideRegion)
+					ctx = conns.NewResourceContext(ctx, servicePackageName, v.Name, overrideRegion)
 					if c, ok := meta.(*conns.AWSClient); ok {
 						ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx))
 						ctx = c.RegisterLogger(ctx)
 					}
 
-					return ctx, diags
+					return ctx, nil
 				},
 				interceptors: interceptors,
 				typeName:     typeName,
@@ -438,24 +447,23 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 			}
 
 			var isRegionOverrideEnabled bool
-			if v := v.Region; v != nil && v.IsOverrideEnabled {
+			if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
 				isRegionOverrideEnabled = true
 			}
 
-			var customizeDiffFuncs []schema.CustomizeDiffFunc
-			var importFuncs []schema.StateContextFunc
-			var interceptors interceptorItems
+			var interceptors interceptorInvocations
 
 			if isRegionOverrideEnabled {
-				v := v.Region
+				v := v.Region.Value()
 				s := r.SchemaMap()
 
 				if _, ok := s[names.AttrRegion]; !ok {
 					// Inject a top-level "region" attribute.
 					regionSchema := &schema.Schema{
-						Type:     schema.TypeString,
-						Optional: true,
-						Computed: true,
+						Type:        schema.TypeString,
+						Optional:    true,
+						Computed:    true,
+						Description: `The AWS Region to use for API operations. Overrides the Region set in the provider configuration.`,
 					}
 					// If the resource defines no Update handler then add a stub to fake out 'Provider.Validate'.
 					if r.UpdateWithoutTimeout == nil {
@@ -474,21 +482,47 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 				}
 
 				if v.IsValidateOverrideInPartition {
-					customizeDiffFuncs = append(customizeDiffFuncs, verifyRegionValueInConfiguredPartition)
+					interceptors = append(interceptors, interceptorInvocation{
+						when:        Before,
+						why:         CustomizeDiff,
+						interceptor: resourceValidateRegion(),
+					})
 				}
-				customizeDiffFuncs = append(customizeDiffFuncs, defaultRegionValue)
-				if !v.IsGlobal {
-					customizeDiffFuncs = append(customizeDiffFuncs, forceNewIfRegionValueChanges)
-				}
-				importFuncs = append(importFuncs, importRegion)
+				interceptors = append(interceptors, interceptorInvocation{
+					when:        Before,
+					why:         CustomizeDiff,
+					interceptor: defaultRegion(),
+				})
+				interceptors = append(interceptors, interceptorInvocation{
+					when:        After,
+					why:         Read,
+					interceptor: setRegionInState(),
+				})
+				// We can't just set the injected "region" attribute to ForceNew because if
+				// a plan is run with '-refresh=false', then after provider v5 to v6 upgrade
+				// the region attribute is not set in state and its value shows a change.
+				interceptors = append(interceptors, interceptorInvocation{
+					when:        Before,
+					why:         CustomizeDiff,
+					interceptor: forceNewIfRegionChanges(),
+				})
+				interceptors = append(interceptors, interceptorInvocation{
+					when:        Before,
+					why:         Import,
+					interceptor: importRegion(),
+				})
 			}
 
-			if v.Tags != nil {
-				customizeDiffFuncs = append(customizeDiffFuncs, setTagsAll)
-				interceptors = append(interceptors, interceptorItem{
+			if !tfunique.IsHandleNil(v.Tags) {
+				interceptors = append(interceptors, interceptorInvocation{
 					when:        Before | After | Finally,
 					why:         Create | Read | Update,
-					interceptor: newTagsResourceInterceptor(v.Tags),
+					interceptor: resourceTransparentTagging(v.Tags),
+				})
+				interceptors = append(interceptors, interceptorInvocation{
+					when:        Before,
+					why:         CustomizeDiff,
+					interceptor: setTagsAll(),
 				})
 			}
 
@@ -500,8 +534,7 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 
 			opts := wrappedResourceOptions{
 				// bootstrapContext is run on all wrapped methods before any interceptors.
-				bootstrapContext: func(ctx context.Context, getAttribute getAttributeFunc, meta any) (context.Context, diag.Diagnostics) {
-					var diags diag.Diagnostics
+				bootstrapContext: func(ctx context.Context, getAttribute getAttributeFunc, meta any) (context.Context, error) {
 					var overrideRegion string
 
 					if isRegionOverrideEnabled && getAttribute != nil {
@@ -516,12 +549,10 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 						ctx = c.RegisterLogger(ctx)
 					}
 
-					return ctx, diags
+					return ctx, nil
 				},
-				customizeDiffFuncs: customizeDiffFuncs,
-				importFuncs:        importFuncs,
-				interceptors:       interceptors,
-				typeName:           typeName,
+				interceptors: interceptors,
+				typeName:     typeName,
 			}
 			wrapResource(r, opts)
 			provider.ResourcesMap[typeName] = r
@@ -541,14 +572,14 @@ func validateResourceSchemas(ctx context.Context) error {
 			r := v.Factory()
 			s := r.SchemaMap()
 
-			if v := v.Region; v != nil && v.IsOverrideEnabled {
+			if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
 				if _, ok := s[names.AttrRegion]; ok {
 					errs = append(errs, fmt.Errorf("`%s` attribute is defined: %s data source", names.AttrRegion, typeName))
 					continue
 				}
 			}
 
-			if v.Tags != nil {
+			if !tfunique.IsHandleNil(v.Tags) {
 				// The data source has opted in to transparent tagging.
 				// Ensure that the schema look OK.
 				if v, ok := s[names.AttrTags]; ok {
@@ -568,14 +599,14 @@ func validateResourceSchemas(ctx context.Context) error {
 			r := v.Factory()
 			s := r.SchemaMap()
 
-			if v := v.Region; v != nil && v.IsOverrideEnabled {
+			if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
 				if _, ok := s[names.AttrRegion]; ok {
 					errs = append(errs, fmt.Errorf("`%s` attribute is defined: %s resource", names.AttrRegion, typeName))
 					continue
 				}
 			}
 
-			if v.Tags != nil {
+			if !tfunique.IsHandleNil(v.Tags) {
 				// The resource has opted in to transparent tagging.
 				// Ensure that the schema look OK.
 				if v, ok := s[names.AttrTags]; ok {
@@ -656,7 +687,20 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 	}
 
 	if v, ok := d.Get("s3_us_east_1_regional_endpoint").(string); ok && v != "" {
-		config.S3USEast1RegionalEndpoint = conns.NormalizeS3USEast1RegionalEndpoint(v)
+		endpoint := conns.NormalizeS3USEast1RegionalEndpoint(v)
+		if endpoint == "legacy" {
+			diags = append(diags,
+				errs.NewAttributeWarningDiagnostic(
+					cty.GetAttrPath("s3_us_east_1_regional_endpoint"),
+					"Global S3 Endpoint Support Deprecated",
+					"Support for the global S3 endpoint is deprecated. The \"s3_us_east_1_regional_endpoint\" "+
+						"argument will be removed in a future major version. Remove this argument from the "+
+						"configuration, or set it to \"regional\" to verify connectivity with the regional "+
+						"S3 endpoint instead.",
+				),
+			)
+		}
+		config.S3USEast1RegionalEndpoint = endpoint
 	}
 
 	if v, ok := d.GetOk("allowed_account_ids"); ok && v.(*schema.Set).Len() > 0 {

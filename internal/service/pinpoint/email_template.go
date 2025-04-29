@@ -31,8 +31,8 @@ import (
 
 // @FrameworkResource("aws_pinpoint_email_template", name="Email Template")
 // @Tags(identifierAttribute="arn")
-func newResourceEmailTemplate(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceEmailTemplate{}
+func newEmailTemplateResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &emailTemplateResource{}
 
 	r.SetDefaultCreateTimeout(40 * time.Minute)
 	r.SetDefaultUpdateTimeout(80 * time.Minute)
@@ -45,13 +45,12 @@ const (
 	ResNameEmailTemplate = "Email Template"
 )
 
-type resourceEmailTemplate struct {
-	framework.ResourceWithConfigure
-	framework.WithImportByID
+type emailTemplateResource struct {
+	framework.ResourceWithModel[emailTemplateResourceModel]
 	framework.WithTimeouts
 }
 
-func (r *resourceEmailTemplate) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *emailTemplateResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
@@ -109,10 +108,10 @@ func (r *resourceEmailTemplate) Schema(ctx context.Context, req resource.SchemaR
 	}
 }
 
-func (r *resourceEmailTemplate) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *emailTemplateResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().PinpointClient(ctx)
 
-	var plan emailTemplateData
+	var plan emailTemplateResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -147,10 +146,10 @@ func (r *resourceEmailTemplate) Create(ctx context.Context, req resource.CreateR
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceEmailTemplate) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *emailTemplateResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().PinpointClient(ctx)
 
-	var state emailTemplateData
+	var state emailTemplateResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -177,10 +176,10 @@ func (r *resourceEmailTemplate) Read(ctx context.Context, req resource.ReadReque
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceEmailTemplate) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *emailTemplateResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().PinpointClient(ctx)
 
-	var old, new emailTemplateData
+	var old, new emailTemplateResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &old)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &new)...)
 	if resp.Diagnostics.HasError() {
@@ -219,9 +218,9 @@ func (r *resourceEmailTemplate) Update(ctx context.Context, req resource.UpdateR
 	resp.Diagnostics.Append(resp.State.Set(ctx, &new)...)
 }
 
-func (r *resourceEmailTemplate) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *emailTemplateResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().PinpointClient(ctx)
-	var state emailTemplateData
+	var state emailTemplateResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -244,7 +243,7 @@ func (r *resourceEmailTemplate) Delete(ctx context.Context, req resource.DeleteR
 	}
 }
 
-func (r *resourceEmailTemplate) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+func (r *emailTemplateResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("template_name"), request, response)
 }
 
@@ -271,7 +270,8 @@ func findEmailTemplateByName(ctx context.Context, conn *pinpoint.Client, name st
 	return out, nil
 }
 
-type emailTemplateData struct {
+type emailTemplateResourceModel struct {
+	framework.WithRegionModel
 	TemplateName  types.String                                   `tfsdk:"template_name"`
 	EmailTemplate fwtypes.ListNestedObjectValueOf[emailTemplate] `tfsdk:"email_template"`
 	Arn           types.String                                   `tfsdk:"arn"`

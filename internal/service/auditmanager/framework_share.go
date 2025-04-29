@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/auditmanager"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/auditmanager/types"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -27,19 +26,20 @@ import (
 )
 
 // @FrameworkResource("aws_auditmanager_framework_share", name="Framework Share")
-func newResourceFrameworkShare(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceFrameworkShare{}, nil
+func newFrameworkShareResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &frameworkShareResource{}, nil
 }
 
 const (
 	ResNameFrameworkShare = "FrameworkShare"
 )
 
-type resourceFrameworkShare struct {
-	framework.ResourceWithConfigure
+type frameworkShareResource struct {
+	framework.ResourceWithModel[frameworkShareResourceModel]
+	framework.WithImportByID
 }
 
-func (r *resourceFrameworkShare) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *frameworkShareResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrComment: schema.StringAttribute{
@@ -77,10 +77,10 @@ func (r *resourceFrameworkShare) Schema(ctx context.Context, req resource.Schema
 	}
 }
 
-func (r *resourceFrameworkShare) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *frameworkShareResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().AuditManagerClient(ctx)
 
-	var plan resourceFrameworkShareData
+	var plan frameworkShareResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -115,10 +115,10 @@ func (r *resourceFrameworkShare) Create(ctx context.Context, req resource.Create
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
 }
 
-func (r *resourceFrameworkShare) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *frameworkShareResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().AuditManagerClient(ctx)
 
-	var state resourceFrameworkShareData
+	var state frameworkShareResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -143,13 +143,13 @@ func (r *resourceFrameworkShare) Read(ctx context.Context, req resource.ReadRequ
 
 // Update is a no-op. Changing any of account, region, or framework_id will result
 // a destroy and replace.
-func (r *resourceFrameworkShare) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *frameworkShareResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 }
 
-func (r *resourceFrameworkShare) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *frameworkShareResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().AuditManagerClient(ctx)
 
-	var state resourceFrameworkShareData
+	var state frameworkShareResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -182,10 +182,6 @@ func (r *resourceFrameworkShare) Delete(ctx context.Context, req resource.Delete
 			err.Error(),
 		)
 	}
-}
-
-func (r *resourceFrameworkShare) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func FindFrameworkShareByID(ctx context.Context, conn *auditmanager.Client, id string) (*awstypes.AssessmentFrameworkShareRequest, error) {
@@ -223,7 +219,8 @@ func CanBeRevoked(status string) bool {
 	return !slices.Contains(nonRevokable, status)
 }
 
-type resourceFrameworkShareData struct {
+type frameworkShareResourceModel struct {
+	framework.WithRegionModel
 	Comment            types.String `tfsdk:"comment"`
 	DestinationAccount types.String `tfsdk:"destination_account"`
 	DestinationRegion  types.String `tfsdk:"destination_region"`
@@ -233,7 +230,7 @@ type resourceFrameworkShareData struct {
 }
 
 // refreshFromOutput writes state data from an AWS response object
-func (rd *resourceFrameworkShareData) refreshFromOutput(ctx context.Context, out *awstypes.AssessmentFrameworkShareRequest) {
+func (rd *frameworkShareResourceModel) refreshFromOutput(ctx context.Context, out *awstypes.AssessmentFrameworkShareRequest) {
 	if out == nil {
 		return
 	}

@@ -22,11 +22,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tffunction "github.com/hashicorp/terraform-provider-aws/internal/function"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	tfunique "github.com/hashicorp/terraform-provider-aws/internal/unique"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -403,12 +404,25 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 				continue
 			}
 
-			var interceptors dataSourceInterceptors
+			var isRegionOverrideEnabled bool
+			if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
+				isRegionOverrideEnabled = true
+			}
 
-			// TODO REGION Inject a top-level "region" attribute.
+			var interceptors interceptorInvocations
 
-			if v.Tags != nil {
-				interceptors = append(interceptors, newTagsDataSourceInterceptor(v.Tags))
+			if isRegionOverrideEnabled {
+				v := v.Region.Value()
+
+				interceptors = append(interceptors, dataSourceInjectRegionAttribute())
+				if v.IsValidateOverrideInPartition {
+					interceptors = append(interceptors, dataSourceValidateRegion())
+				}
+				interceptors = append(interceptors, dataSourceSetRegionInState())
+			}
+
+			if !tfunique.IsHandleNil(v.Tags) {
+				interceptors = append(interceptors, dataSourceTransparentTagging(v.Tags))
 			}
 
 			opts := wrappedDataSourceOptions{
@@ -417,18 +431,21 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 					var diags diag.Diagnostics
 					var overrideRegion string
 
-					if v.Region != nil && v.Region.IsOverrideEnabled && getAttribute != nil {
-						diags.Append(getAttribute(ctx, path.Root(names.AttrRegion), &overrideRegion)...)
+					if !tfunique.IsHandleNil(v.Region) && v.Region.Value().IsOverrideEnabled && getAttribute != nil {
+						var target types.String
+						diags.Append(getAttribute(ctx, path.Root(names.AttrRegion), &target)...)
 						if diags.HasError() {
 							return ctx, diags
 						}
+
+						overrideRegion = target.ValueString()
 					}
 
-					ctx = conns.NewDataSourceContext(ctx, servicePackageName, v.Name, overrideRegion)
+					ctx = conns.NewResourceContext(ctx, servicePackageName, v.Name, overrideRegion)
 					if c != nil {
 						ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx))
 						ctx = c.RegisterLogger(ctx)
-						ctx = flex.RegisterLogger(ctx)
+						ctx = fwflex.RegisterLogger(ctx)
 					}
 
 					return ctx, diags
@@ -451,9 +468,22 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 					continue
 				}
 
-				var interceptors ephemeralResourceInterceptors
+				var isRegionOverrideEnabled bool
+				if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
+					isRegionOverrideEnabled = true
+				}
 
-				// TODO REGION Inject a top-level "region" attribute.
+				var interceptors interceptorInvocations
+
+				if isRegionOverrideEnabled {
+					v := v.Region.Value()
+
+					interceptors = append(interceptors, ephemeralResourceInjectRegionAttribute())
+					if v.IsValidateOverrideInPartition {
+						interceptors = append(interceptors, ephemeralResourceValidateRegion())
+					}
+					interceptors = append(interceptors, ephemeralResourceSetRegionInResult())
+				}
 
 				opts := wrappedEphemeralResourceOptions{
 					// bootstrapContext is run on all wrapped methods before any interceptors.
@@ -461,17 +491,20 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 						var diags diag.Diagnostics
 						var overrideRegion string
 
-						if v.Region != nil && v.Region.IsOverrideEnabled && getAttribute != nil {
-							diags.Append(getAttribute(ctx, path.Root(names.AttrRegion), &overrideRegion)...)
+						if !tfunique.IsHandleNil(v.Region) && v.Region.Value().IsOverrideEnabled && getAttribute != nil {
+							var target types.String
+							diags.Append(getAttribute(ctx, path.Root(names.AttrRegion), &target)...)
 							if diags.HasError() {
 								return ctx, diags
 							}
+
+							overrideRegion = target.ValueString()
 						}
 
-						ctx = conns.NewEphemeralResourceContext(ctx, servicePackageName, v.Name, overrideRegion)
+						ctx = conns.NewResourceContext(ctx, servicePackageName, v.Name, overrideRegion)
 						if c != nil {
 							ctx = c.RegisterLogger(ctx)
-							ctx = flex.RegisterLogger(ctx)
+							ctx = fwflex.RegisterLogger(ctx)
 							ctx = logging.MaskSensitiveValuesByKey(ctx, logging.HTTPKeyRequestBody, logging.HTTPKeyResponseBody)
 						}
 						return ctx, diags
@@ -494,14 +527,28 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 				continue
 			}
 
-			var modifyPlanFuncs []modifyPlanFunc
-			var interceptors resourceInterceptors
+			var isRegionOverrideEnabled bool
+			if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
+				isRegionOverrideEnabled = true
+			}
 
-			// TODO REGION Inject a top-level "region" attribute.
+			var interceptors interceptorInvocations
 
-			if v.Tags != nil {
-				modifyPlanFuncs = append(modifyPlanFuncs, setTagsAll)
-				interceptors = append(interceptors, newTagsResourceInterceptor(v.Tags))
+			if isRegionOverrideEnabled {
+				v := v.Region.Value()
+
+				interceptors = append(interceptors, resourceInjectRegionAttribute())
+				if v.IsValidateOverrideInPartition {
+					interceptors = append(interceptors, resourceValidateRegion())
+				}
+				interceptors = append(interceptors, resourceDefaultRegion())
+				interceptors = append(interceptors, resourceForceNewIfRegionChanges())
+				interceptors = append(interceptors, resourceSetRegionInState())
+				interceptors = append(interceptors, resourceImportRegion())
+			}
+
+			if !tfunique.IsHandleNil(v.Tags) {
+				interceptors = append(interceptors, resourceTransparentTagging(v.Tags))
 			}
 
 			opts := wrappedResourceOptions{
@@ -510,25 +557,27 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 					var diags diag.Diagnostics
 					var overrideRegion string
 
-					if v.Region != nil && v.Region.IsOverrideEnabled && getAttribute != nil {
-						diags.Append(getAttribute(ctx, path.Root(names.AttrRegion), &overrideRegion)...)
+					if !tfunique.IsHandleNil(v.Region) && v.Region.Value().IsOverrideEnabled && getAttribute != nil {
+						var target types.String
+						diags.Append(getAttribute(ctx, path.Root(names.AttrRegion), &target)...)
 						if diags.HasError() {
 							return ctx, diags
 						}
+
+						overrideRegion = target.ValueString()
 					}
 
 					ctx = conns.NewResourceContext(ctx, servicePackageName, v.Name, overrideRegion)
 					if c != nil {
 						ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx))
 						ctx = c.RegisterLogger(ctx)
-						ctx = flex.RegisterLogger(ctx)
+						ctx = fwflex.RegisterLogger(ctx)
 					}
 
 					return ctx, diags
 				},
-				interceptors:    interceptors,
-				modifyPlanFuncs: modifyPlanFuncs,
-				typeName:        typeName,
+				interceptors: interceptors,
+				typeName:     typeName,
 			}
 			if len(v.Identity.Attributes) > 0 {
 				opts.identity = v.Identity
@@ -561,14 +610,14 @@ func (p *fwprovider) validateResourceSchemas(ctx context.Context) error {
 			schemaResponse := datasource.SchemaResponse{}
 			ds.Schema(ctx, datasource.SchemaRequest{}, &schemaResponse)
 
-			if v := v.Region; v != nil && v.IsOverrideEnabled {
+			if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
 				if _, ok := schemaResponse.Schema.Attributes[names.AttrRegion]; ok {
 					errs = append(errs, fmt.Errorf("`%s` attribute is defined: %s data source", names.AttrRegion, typeName))
 					continue
 				}
 			}
 
-			if v.Tags != nil {
+			if !tfunique.IsHandleNil(v.Tags) {
 				// The data source has opted in to transparent tagging.
 				// Ensure that the schema look OK.
 				if v, ok := schemaResponse.Schema.Attributes[names.AttrTags]; ok {
@@ -596,7 +645,7 @@ func (p *fwprovider) validateResourceSchemas(ctx context.Context) error {
 				schemaResponse := ephemeral.SchemaResponse{}
 				er.Schema(ctx, ephemeral.SchemaRequest{}, &schemaResponse)
 
-				if v := v.Region; v != nil && v.IsOverrideEnabled {
+				if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
 					if _, ok := schemaResponse.Schema.Attributes[names.AttrRegion]; ok {
 						errs = append(errs, fmt.Errorf("`%s` attribute is defined: %s ephemeral resource", names.AttrRegion, typeName))
 						continue
@@ -617,14 +666,14 @@ func (p *fwprovider) validateResourceSchemas(ctx context.Context) error {
 			schemaResponse := resource.SchemaResponse{}
 			r.Schema(ctx, resource.SchemaRequest{}, &schemaResponse)
 
-			if v := v.Region; v != nil && v.IsOverrideEnabled {
+			if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
 				if _, ok := schemaResponse.Schema.Attributes[names.AttrRegion]; ok {
 					errs = append(errs, fmt.Errorf("`%s` attribute is defined: %s resource", names.AttrRegion, typeName))
 					continue
 				}
 			}
 
-			if v.Tags != nil {
+			if !tfunique.IsHandleNil(v.Tags) {
 				// The resource has opted in to transparent tagging.
 				// Ensure that the schema look OK.
 				if v, ok := schemaResponse.Schema.Attributes[names.AttrTags]; ok {

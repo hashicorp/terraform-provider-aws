@@ -36,7 +36,7 @@ const (
 )
 
 type templateAliasResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[templateAliasResourceModel]
 	framework.WithImportByID
 }
 
@@ -75,7 +75,7 @@ func (r *templateAliasResource) Schema(ctx context.Context, req resource.SchemaR
 func (r *templateAliasResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().QuickSightClient(ctx)
 
-	var plan resourceTemplateAliasData
+	var plan templateAliasResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -117,7 +117,7 @@ func (r *templateAliasResource) Create(ctx context.Context, req resource.CreateR
 func (r *templateAliasResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().QuickSightClient(ctx)
 
-	var state resourceTemplateAliasData
+	var state templateAliasResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -157,7 +157,7 @@ func (r *templateAliasResource) Read(ctx context.Context, req resource.ReadReque
 func (r *templateAliasResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().QuickSightClient(ctx)
 
-	var plan, state resourceTemplateAliasData
+	var plan, state templateAliasResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -206,7 +206,7 @@ func (r *templateAliasResource) Update(ctx context.Context, req resource.UpdateR
 func (r *templateAliasResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().QuickSightClient(ctx)
 
-	var state resourceTemplateAliasData
+	var state templateAliasResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -290,7 +290,8 @@ func templateAliasParseResourceID(id string) (string, string, string, error) {
 	return parts[0], parts[1], parts[2], nil
 }
 
-type resourceTemplateAliasData struct {
+type templateAliasResourceModel struct {
+	framework.WithRegionModel
 	AliasName             types.String `tfsdk:"alias_name"`
 	ARN                   types.String `tfsdk:"arn"`
 	AWSAccountID          types.String `tfsdk:"aws_account_id"`

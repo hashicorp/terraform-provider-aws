@@ -32,19 +32,20 @@ import (
 )
 
 // @FrameworkResource("aws_redshift_data_share_consumer_association", name="Data Share Consumer Association")
-func newResourceDataShareConsumerAssociation(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceDataShareConsumerAssociation{}, nil
+func newDataShareConsumerAssociationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &dataShareConsumerAssociationResource{}, nil
 }
 
 const (
 	ResNameDataShareConsumerAssociation = "Data Share Consumer Association"
 )
 
-type resourceDataShareConsumerAssociation struct {
-	framework.ResourceWithConfigure
+type dataShareConsumerAssociationResource struct {
+	framework.ResourceWithModel[dataShareConsumerAssociationResourceModel]
+	framework.WithImportByID
 }
 
-func (r *resourceDataShareConsumerAssociation) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *dataShareConsumerAssociationResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"allow_writes": schema.BoolAttribute{
@@ -99,10 +100,10 @@ func (r *resourceDataShareConsumerAssociation) Schema(ctx context.Context, req r
 
 const dataShareConsumerAssociationIDPartCount = 4
 
-func (r *resourceDataShareConsumerAssociation) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *dataShareConsumerAssociationResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().RedshiftClient(ctx)
 
-	var plan resourceDataShareConsumerAssociationData
+	var plan dataShareConsumerAssociationResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -170,10 +171,10 @@ func (r *resourceDataShareConsumerAssociation) Create(ctx context.Context, req r
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceDataShareConsumerAssociation) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *dataShareConsumerAssociationResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().RedshiftClient(ctx)
 
-	var state resourceDataShareConsumerAssociationData
+	var state dataShareConsumerAssociationResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -218,14 +219,14 @@ func (r *resourceDataShareConsumerAssociation) Read(ctx context.Context, req res
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceDataShareConsumerAssociation) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *dataShareConsumerAssociationResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	// Update is a no-op
 }
 
-func (r *resourceDataShareConsumerAssociation) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *dataShareConsumerAssociationResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().RedshiftClient(ctx)
 
-	var state resourceDataShareConsumerAssociationData
+	var state dataShareConsumerAssociationResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -259,10 +260,7 @@ func (r *resourceDataShareConsumerAssociation) Delete(ctx context.Context, req r
 	}
 }
 
-func (r *resourceDataShareConsumerAssociation) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-}
-func (r *resourceDataShareConsumerAssociation) ConfigValidators(_ context.Context) []resource.ConfigValidator {
+func (r *dataShareConsumerAssociationResource) ConfigValidators(_ context.Context) []resource.ConfigValidator {
 	return []resource.ConfigValidator{
 		resourcevalidator.ExactlyOneOf(
 			path.MatchRoot("associate_entire_account"),
@@ -330,7 +328,8 @@ func findDataShareConsumerAssociationByID(ctx context.Context, conn *redshift.Cl
 	}
 }
 
-type resourceDataShareConsumerAssociationData struct {
+type dataShareConsumerAssociationResourceModel struct {
+	framework.WithRegionModel
 	AllowWrites            types.Bool   `tfsdk:"allow_writes"`
 	AssociateEntireAccount types.Bool   `tfsdk:"associate_entire_account"`
 	ConsumerARN            fwtypes.ARN  `tfsdk:"consumer_arn"`

@@ -54,7 +54,7 @@ func newJobQueueResource(_ context.Context) (resource.ResourceWithConfigure, err
 }
 
 type jobQueueResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[jobQueueResourceModel]
 	framework.WithTimeouts
 }
 
@@ -64,6 +64,7 @@ func (r *jobQueueResource) Schema(ctx context.Context, request resource.SchemaRe
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"compute_environments": schema.ListAttribute{
+				CustomType:         fwtypes.ListOfStringType,
 				ElementType:        fwtypes.ARNType,
 				Optional:           true,
 				DeprecationMessage: "This parameter will be replaced by `compute_environment_order`.",
@@ -527,7 +528,8 @@ func waitJobQueueDeleted(ctx context.Context, conn *batch.Client, id string, tim
 }
 
 type jobQueueResourceModel struct {
-	ComputeEnvironments      types.List                                                    `tfsdk:"compute_environments"`
+	framework.WithRegionModel
+	ComputeEnvironments      fwtypes.ListOfString                                          `tfsdk:"compute_environments"`
 	ComputeEnvironmentOrder  fwtypes.ListNestedObjectValueOf[computeEnvironmentOrderModel] `tfsdk:"compute_environment_order"`
 	ID                       types.String                                                  `tfsdk:"id"`
 	JobQueueARN              types.String                                                  `tfsdk:"arn"`
@@ -557,7 +559,7 @@ type jobStateTimeLimitActionModel struct {
 	State          fwtypes.StringEnum[awstypes.JobStateTimeLimitActionsState]  `tfsdk:"state"`
 }
 
-func expandComputeEnvironments(ctx context.Context, tfList types.List) []awstypes.ComputeEnvironmentOrder {
+func expandComputeEnvironments(ctx context.Context, tfList fwtypes.ListOfString) []awstypes.ComputeEnvironmentOrder {
 	var apiObjects []awstypes.ComputeEnvironmentOrder
 
 	for i, env := range fwflex.ExpandFrameworkStringList(ctx, tfList) {
@@ -570,13 +572,13 @@ func expandComputeEnvironments(ctx context.Context, tfList types.List) []awstype
 	return apiObjects
 }
 
-func flattenComputeEnvironments(ctx context.Context, apiObjects []awstypes.ComputeEnvironmentOrder) types.List {
+func flattenComputeEnvironments(ctx context.Context, apiObjects []awstypes.ComputeEnvironmentOrder) fwtypes.ListOfString {
 	slices.SortFunc(apiObjects, func(a, b awstypes.ComputeEnvironmentOrder) int {
 		return cmp.Compare(aws.ToInt32(a.Order), aws.ToInt32(b.Order))
 	})
 
-	return fwflex.FlattenFrameworkStringListLegacy(ctx, tfslices.ApplyToAll(apiObjects, func(v awstypes.ComputeEnvironmentOrder) *string {
-		return v.ComputeEnvironment
+	return fwflex.FlattenFrameworkStringValueListOfStringLegacy(ctx, tfslices.ApplyToAll(apiObjects, func(v awstypes.ComputeEnvironmentOrder) string {
+		return aws.ToString(v.ComputeEnvironment)
 	}))
 }
 

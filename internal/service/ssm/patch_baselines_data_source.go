@@ -20,26 +20,22 @@ import (
 )
 
 // @FrameworkDataSource("aws_ssm_patch_baselines", name="Patch Baselines")
-func newDataSourcePatchBaselines(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourcePatchBaselines{}, nil
+func newPatchBaselinesDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &patchBaselinesDataSource{}, nil
 }
 
 const (
 	DSNamePatchBaselines = "Patch Baselines Data Source"
 )
 
-type dataSourcePatchBaselines struct {
-	framework.DataSourceWithConfigure
+type patchBaselinesDataSource struct {
+	framework.DataSourceWithModel[patchBaselinesDataSourceModel]
 }
 
-func (d *dataSourcePatchBaselines) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *patchBaselinesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"baseline_identities": schema.ListAttribute{
-				CustomType:  fwtypes.NewListNestedObjectTypeOf[baselineIdentityModel](ctx),
-				Computed:    true,
-				ElementType: fwtypes.NewObjectTypeOf[baselineIdentityModel](ctx),
-			},
+			"baseline_identities": framework.DataSourceComputedListOfObjectAttribute[baselineIdentityModel](ctx),
 			"default_baselines": schema.BoolAttribute{
 				Optional: true,
 			},
@@ -62,10 +58,10 @@ func (d *dataSourcePatchBaselines) Schema(ctx context.Context, req datasource.Sc
 		},
 	}
 }
-func (d *dataSourcePatchBaselines) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *patchBaselinesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().SSMClient(ctx)
 
-	var data dataSourcePatchBaselinesModel
+	var data patchBaselinesDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -116,7 +112,8 @@ func findPatchBaselines(ctx context.Context, conn *ssm.Client, input *ssm.Descri
 	return baselines, nil
 }
 
-type dataSourcePatchBaselinesModel struct {
+type patchBaselinesDataSourceModel struct {
+	framework.WithRegionModel
 	BaselineIdentities fwtypes.ListNestedObjectValueOf[baselineIdentityModel] `tfsdk:"baseline_identities"`
 	Filter             fwtypes.ListNestedObjectValueOf[filterModel]           `tfsdk:"filter"`
 	DefaultBaselines   types.Bool                                             `tfsdk:"default_baselines"`

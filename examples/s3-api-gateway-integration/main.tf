@@ -170,5 +170,10 @@ resource "aws_api_gateway_integration_response" "IntegrationResponse500" {
 resource "aws_api_gateway_deployment" "S3APIDeployment" {
   depends_on  = [aws_api_gateway_integration.S3Integration]
   rest_api_id = aws_api_gateway_rest_api.MyS3.id
-  stage_name  = "MyS3"
+}
+
+resource "aws_api_gateway_stage" "MyS3" {
+  rest_api_id   = aws_api_gateway_rest_api.MyS3.id
+  stage_name    = "MyS3"
+  deployment_id = aws_api_gateway_deployment.S3APIDeployment.id
 }

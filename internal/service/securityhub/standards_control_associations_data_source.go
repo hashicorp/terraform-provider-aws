@@ -28,7 +28,7 @@ func newStandardsControlAssociationsDataSource(context.Context) (datasource.Data
 }
 
 type standardsControlAssociationsDataSource struct {
-	framework.DataSourceWithConfigure
+	framework.DataSourceWithModel[standardsControlAssociationsDataSourceModel]
 }
 
 func (d *standardsControlAssociationsDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -38,13 +38,7 @@ func (d *standardsControlAssociationsDataSource) Schema(ctx context.Context, req
 			"security_control_id": schema.StringAttribute{
 				Required: true,
 			},
-			"standards_control_associations": schema.ListAttribute{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[standardsControlAssociationData](ctx),
-				Computed:   true,
-				ElementType: types.ObjectType{
-					AttrTypes: fwtypes.AttributeTypesMust[standardsControlAssociationData](ctx),
-				},
-			},
+			"standards_control_associations": framework.DataSourceComputedListOfObjectAttribute[standardsControlAssociationSummaryModel](ctx),
 		},
 	}
 }
@@ -76,14 +70,15 @@ func (d *standardsControlAssociationsDataSource) Read(ctx context.Context, reque
 }
 
 type standardsControlAssociationsDataSourceModel struct {
-	ID                           types.String                                                     `tfsdk:"id"`
-	SecurityControlID            types.String                                                     `tfsdk:"security_control_id"`
-	StandardsControlAssociations fwtypes.ListNestedObjectValueOf[standardsControlAssociationData] `tfsdk:"standards_control_associations"`
+	framework.WithRegionModel
+	ID                           types.String                                                             `tfsdk:"id"`
+	SecurityControlID            types.String                                                             `tfsdk:"security_control_id"`
+	StandardsControlAssociations fwtypes.ListNestedObjectValueOf[standardsControlAssociationSummaryModel] `tfsdk:"standards_control_associations"`
 }
 
-type standardsControlAssociationData struct {
+type standardsControlAssociationSummaryModel struct {
 	AssociationStatus           fwtypes.StringEnum[awstypes.AssociationStatus] `tfsdk:"association_status"`
-	RelatedRequirements         fwtypes.ListValueOf[types.String]              `tfsdk:"related_requirements"`
+	RelatedRequirements         fwtypes.ListOfString                           `tfsdk:"related_requirements"`
 	SecurityControlARN          types.String                                   `tfsdk:"security_control_arn"`
 	SecurityControlID           types.String                                   `tfsdk:"security_control_id"`
 	StandardsARN                types.String                                   `tfsdk:"standards_arn"`

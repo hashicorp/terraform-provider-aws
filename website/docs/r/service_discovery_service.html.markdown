@@ -112,7 +112,7 @@ The `health_check_config` configuration block supports the following arguments:
 
 The `health_check_custom_config` configuration block supports the following arguments:
 
-* `failure_threshold` - (Optional, Forces new resource) The number of 30-second intervals that you want service discovery to wait before it changes the health status of a service instance.  Maximum value of 10.
+* `failure_threshold` - (Optional, **Deprecated** Forces new resource) The number of 30-second intervals that you want service discovery to wait before it changes the health status of a service instance.  Value is always set to 1.
 
 ## Attribute Reference
 
@@ -120,7 +120,6 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The ID of the service.
 * `arn` - The ARN of the service.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

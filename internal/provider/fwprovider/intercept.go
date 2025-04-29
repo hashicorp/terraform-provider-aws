@@ -11,37 +11,55 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/slices"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 )
 
 type interceptorOptions[Request, Response any] struct {
 	c        *conns.AWSClient
-	request  Request
+	request  *Request
 	response *Response
 	when     when
 }
 
 type interceptorFunc[Request, Response any] func(context.Context, interceptorOptions[Request, Response]) diag.Diagnostics
 
+type interceptorInvocations []any
+
 // A data source interceptor is functionality invoked during the data source's CRUD request lifecycle.
 // If a Before interceptor returns Diagnostics indicating an error occurred then
 // no further interceptors in the chain are run and neither is the schema's method.
 // In other cases all interceptors in the chain are run.
-type dataSourceInterceptor interface {
+type dataSourceCRUDInterceptor interface {
 	// read is invoked for a Read call.
 	read(context.Context, interceptorOptions[datasource.ReadRequest, datasource.ReadResponse]) diag.Diagnostics
 }
 
-type dataSourceInterceptors []dataSourceInterceptor
-
-// read returns a slice of interceptors that run on data source Read.
-func (s dataSourceInterceptors) read() []interceptorFunc[datasource.ReadRequest, datasource.ReadResponse] {
-	return slices.ApplyToAll(s, func(e dataSourceInterceptor) interceptorFunc[datasource.ReadRequest, datasource.ReadResponse] {
-		return e.read
+// dataSourceRead returns a slice of interceptors that run on data source Read.
+func (s interceptorInvocations) dataSourceRead() []interceptorFunc[datasource.ReadRequest, datasource.ReadResponse] {
+	return tfslices.ApplyToAll(tfslices.Filter(s, func(e any) bool {
+		_, ok := e.(dataSourceCRUDInterceptor)
+		return ok
+	}), func(e any) interceptorFunc[datasource.ReadRequest, datasource.ReadResponse] {
+		return e.(dataSourceCRUDInterceptor).read
 	})
 }
 
-type ephemeralResourceInterceptor interface {
+type dataSourceSchemaInterceptor interface {
+	// schema is invoked for a Schema call.
+	schema(context.Context, interceptorOptions[datasource.SchemaRequest, datasource.SchemaResponse]) diag.Diagnostics
+}
+
+// dataSourceSchema returns a slice of interceptors that run on data source Schema.
+func (s interceptorInvocations) dataSourceSchema() []interceptorFunc[datasource.SchemaRequest, datasource.SchemaResponse] {
+	return tfslices.ApplyToAll(tfslices.Filter(s, func(e any) bool {
+		_, ok := e.(dataSourceSchemaInterceptor)
+		return ok
+	}), func(e any) interceptorFunc[datasource.SchemaRequest, datasource.SchemaResponse] {
+		return e.(dataSourceSchemaInterceptor).schema
+	})
+}
+
+type ephemeralResourceORCInterceptor interface {
 	// open is invoked for an Open call.
 	open(context.Context, interceptorOptions[ephemeral.OpenRequest, ephemeral.OpenResponse]) diag.Diagnostics
 	// renew is invoked for a Renew call.
@@ -50,26 +68,70 @@ type ephemeralResourceInterceptor interface {
 	close(context.Context, interceptorOptions[ephemeral.CloseRequest, ephemeral.CloseResponse]) diag.Diagnostics
 }
 
-type ephemeralResourceInterceptors []ephemeralResourceInterceptor
-
-// open returns a slice of interceptors that run on ephemeral resource Open.
-func (s ephemeralResourceInterceptors) open() []interceptorFunc[ephemeral.OpenRequest, ephemeral.OpenResponse] {
-	return slices.ApplyToAll(s, func(e ephemeralResourceInterceptor) interceptorFunc[ephemeral.OpenRequest, ephemeral.OpenResponse] {
-		return e.open
+// ephemeralResourceOpen returns a slice of interceptors that run on ephemeral resource Open.
+func (s interceptorInvocations) ephemeralResourceOpen() []interceptorFunc[ephemeral.OpenRequest, ephemeral.OpenResponse] {
+	return tfslices.ApplyToAll(tfslices.Filter(s, func(e any) bool {
+		_, ok := e.(ephemeralResourceORCInterceptor)
+		return ok
+	}), func(e any) interceptorFunc[ephemeral.OpenRequest, ephemeral.OpenResponse] {
+		return e.(ephemeralResourceORCInterceptor).open
 	})
 }
 
-// renew returns a slice of interceptors that run on ephemeral resource Renew.
-func (s ephemeralResourceInterceptors) renew() []interceptorFunc[ephemeral.RenewRequest, ephemeral.RenewResponse] {
-	return slices.ApplyToAll(s, func(e ephemeralResourceInterceptor) interceptorFunc[ephemeral.RenewRequest, ephemeral.RenewResponse] {
-		return e.renew
+// ephemeralResourceRenew returns a slice of interceptors that run on ephemeral resource Renew.
+func (s interceptorInvocations) ephemeralResourceRenew() []interceptorFunc[ephemeral.RenewRequest, ephemeral.RenewResponse] {
+	return tfslices.ApplyToAll(tfslices.Filter(s, func(e any) bool {
+		_, ok := e.(ephemeralResourceORCInterceptor)
+		return ok
+	}), func(e any) interceptorFunc[ephemeral.RenewRequest, ephemeral.RenewResponse] {
+		return e.(ephemeralResourceORCInterceptor).renew
 	})
 }
 
-// close returns a slice of interceptors that run on ephemeral resource Renew.
-func (s ephemeralResourceInterceptors) close() []interceptorFunc[ephemeral.CloseRequest, ephemeral.CloseResponse] {
-	return slices.ApplyToAll(s, func(e ephemeralResourceInterceptor) interceptorFunc[ephemeral.CloseRequest, ephemeral.CloseResponse] {
-		return e.close
+// ephemeralResourceRenew returns a slice of interceptors that run on ephemeral resource Close.
+func (s interceptorInvocations) ephemeralResourceClose() []interceptorFunc[ephemeral.CloseRequest, ephemeral.CloseResponse] {
+	return tfslices.ApplyToAll(tfslices.Filter(s, func(e any) bool {
+		_, ok := e.(ephemeralResourceORCInterceptor)
+		return ok
+	}), func(e any) interceptorFunc[ephemeral.CloseRequest, ephemeral.CloseResponse] {
+		return e.(ephemeralResourceORCInterceptor).close
+	})
+}
+
+// ephemeralResourceNoOpORCInterceptor is a no-op implementation of the ephemeralResourceORCInterceptor interface.
+// It can be embedded into a struct to provide default behavior for the open, renew, and close methods.
+type ephemeralResourceNoOpORCInterceptor struct{}
+
+func (r ephemeralResourceNoOpORCInterceptor) open(ctx context.Context, opts interceptorOptions[ephemeral.OpenRequest, ephemeral.OpenResponse]) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	return diags
+}
+
+func (r ephemeralResourceNoOpORCInterceptor) renew(ctx context.Context, opts interceptorOptions[ephemeral.RenewRequest, ephemeral.RenewResponse]) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	return diags
+}
+
+func (r ephemeralResourceNoOpORCInterceptor) close(ctx context.Context, opts interceptorOptions[ephemeral.CloseRequest, ephemeral.CloseResponse]) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	return diags
+}
+
+type ephemeralResourceSchemaInterceptor interface {
+	// schema is invoked for a Schema call.
+	schema(context.Context, interceptorOptions[ephemeral.SchemaRequest, ephemeral.SchemaResponse]) diag.Diagnostics
+}
+
+// ephemeralResourceSchema returns a slice of interceptors that run on ephemeral resource Schema.
+func (s interceptorInvocations) ephemeralResourceSchema() []interceptorFunc[ephemeral.SchemaRequest, ephemeral.SchemaResponse] {
+	return tfslices.ApplyToAll(tfslices.Filter(s, func(e any) bool {
+		_, ok := e.(ephemeralResourceSchemaInterceptor)
+		return ok
+	}), func(e any) interceptorFunc[ephemeral.SchemaRequest, ephemeral.SchemaResponse] {
+		return e.(ephemeralResourceSchemaInterceptor).schema
 	})
 }
 
@@ -77,7 +139,7 @@ func (s ephemeralResourceInterceptors) close() []interceptorFunc[ephemeral.Close
 // If a Before interceptor returns Diagnostics indicating an error occurred then
 // no further interceptors in the chain are run and neither is the schema's method.
 // In other cases all interceptors in the chain are run.
-type resourceInterceptor interface {
+type resourceCRUDInterceptor interface {
 	// create is invoked for a Create call.
 	create(context.Context, interceptorOptions[resource.CreateRequest, resource.CreateResponse]) diag.Diagnostics
 	// read is invoked for a Read call.
@@ -88,33 +150,116 @@ type resourceInterceptor interface {
 	delete(context.Context, interceptorOptions[resource.DeleteRequest, resource.DeleteResponse]) diag.Diagnostics
 }
 
-type resourceInterceptors []resourceInterceptor
-
-// create returns a slice of interceptors that run on resource Create.
-func (s resourceInterceptors) create() []interceptorFunc[resource.CreateRequest, resource.CreateResponse] {
-	return slices.ApplyToAll(s, func(e resourceInterceptor) interceptorFunc[resource.CreateRequest, resource.CreateResponse] {
-		return e.create
+// resourceCreate returns a slice of interceptors that run on resource Create.
+func (s interceptorInvocations) resourceCreate() []interceptorFunc[resource.CreateRequest, resource.CreateResponse] {
+	return tfslices.ApplyToAll(tfslices.Filter(s, func(e any) bool {
+		_, ok := e.(resourceCRUDInterceptor)
+		return ok
+	}), func(e any) interceptorFunc[resource.CreateRequest, resource.CreateResponse] {
+		return e.(resourceCRUDInterceptor).create
 	})
 }
 
-// read returns a slice of interceptors that run on resource Read.
-func (s resourceInterceptors) read() []interceptorFunc[resource.ReadRequest, resource.ReadResponse] {
-	return slices.ApplyToAll(s, func(e resourceInterceptor) interceptorFunc[resource.ReadRequest, resource.ReadResponse] {
-		return e.read
+// resourceRead returns a slice of interceptors that run on resource Read.
+func (s interceptorInvocations) resourceRead() []interceptorFunc[resource.ReadRequest, resource.ReadResponse] {
+	return tfslices.ApplyToAll(tfslices.Filter(s, func(e any) bool {
+		_, ok := e.(resourceCRUDInterceptor)
+		return ok
+	}), func(e any) interceptorFunc[resource.ReadRequest, resource.ReadResponse] {
+		return e.(resourceCRUDInterceptor).read
 	})
 }
 
-// update returns a slice of interceptors that run on resource Update.
-func (s resourceInterceptors) update() []interceptorFunc[resource.UpdateRequest, resource.UpdateResponse] {
-	return slices.ApplyToAll(s, func(e resourceInterceptor) interceptorFunc[resource.UpdateRequest, resource.UpdateResponse] {
-		return e.update
+// resourceUpdate returns a slice of interceptors that run on resource Update.
+func (s interceptorInvocations) resourceUpdate() []interceptorFunc[resource.UpdateRequest, resource.UpdateResponse] {
+	return tfslices.ApplyToAll(tfslices.Filter(s, func(e any) bool {
+		_, ok := e.(resourceCRUDInterceptor)
+		return ok
+	}), func(e any) interceptorFunc[resource.UpdateRequest, resource.UpdateResponse] {
+		return e.(resourceCRUDInterceptor).update
 	})
 }
 
-// delete returns a slice of interceptors that run on resource Delete.
-func (s resourceInterceptors) delete() []interceptorFunc[resource.DeleteRequest, resource.DeleteResponse] {
-	return slices.ApplyToAll(s, func(e resourceInterceptor) interceptorFunc[resource.DeleteRequest, resource.DeleteResponse] {
-		return e.delete
+// resourceDelete returns a slice of interceptors that run on resource Delete.
+func (s interceptorInvocations) resourceDelete() []interceptorFunc[resource.DeleteRequest, resource.DeleteResponse] {
+	return tfslices.ApplyToAll(tfslices.Filter(s, func(e any) bool {
+		_, ok := e.(resourceCRUDInterceptor)
+		return ok
+	}), func(e any) interceptorFunc[resource.DeleteRequest, resource.DeleteResponse] {
+		return e.(resourceCRUDInterceptor).delete
+	})
+}
+
+// resourceNoOpCRUDInterceptor is a no-op implementation of the resourceCRUDInterceptor interface.
+// It can be embedded into a struct to provide default behavior for the create, read, update, and delete methods.
+type resourceNoOpCRUDInterceptor struct{}
+
+func (r resourceNoOpCRUDInterceptor) create(ctx context.Context, opts interceptorOptions[resource.CreateRequest, resource.CreateResponse]) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	return diags
+}
+
+func (r resourceNoOpCRUDInterceptor) read(ctx context.Context, opts interceptorOptions[resource.ReadRequest, resource.ReadResponse]) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	return diags
+}
+
+func (r resourceNoOpCRUDInterceptor) update(ctx context.Context, opts interceptorOptions[resource.UpdateRequest, resource.UpdateResponse]) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	return diags
+}
+
+func (r resourceNoOpCRUDInterceptor) delete(ctx context.Context, opts interceptorOptions[resource.DeleteRequest, resource.DeleteResponse]) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	return diags
+}
+
+type resourceSchemaInterceptor interface {
+	// schema is invoked for a Schema call.
+	schema(context.Context, interceptorOptions[resource.SchemaRequest, resource.SchemaResponse]) diag.Diagnostics
+}
+
+// resourceSchema returns a slice of interceptors that run on resource Schema.
+func (s interceptorInvocations) resourceSchema() []interceptorFunc[resource.SchemaRequest, resource.SchemaResponse] {
+	return tfslices.ApplyToAll(tfslices.Filter(s, func(e any) bool {
+		_, ok := e.(resourceSchemaInterceptor)
+		return ok
+	}), func(e any) interceptorFunc[resource.SchemaRequest, resource.SchemaResponse] {
+		return e.(resourceSchemaInterceptor).schema
+	})
+}
+
+type resourceModifyPlanInterceptor interface {
+	// modifyPlan is invoked for a ModifyPlan call.
+	modifyPlan(context.Context, interceptorOptions[resource.ModifyPlanRequest, resource.ModifyPlanResponse]) diag.Diagnostics
+}
+
+// resourceModifyPlan returns a slice of interceptors that run on resource ModifyPlan.
+func (s interceptorInvocations) resourceModifyPlan() []interceptorFunc[resource.ModifyPlanRequest, resource.ModifyPlanResponse] {
+	return tfslices.ApplyToAll(tfslices.Filter(s, func(e any) bool {
+		_, ok := e.(resourceModifyPlanInterceptor)
+		return ok
+	}), func(e any) interceptorFunc[resource.ModifyPlanRequest, resource.ModifyPlanResponse] {
+		return e.(resourceModifyPlanInterceptor).modifyPlan
+	})
+}
+
+type resourceImportStateInterceptor interface {
+	// importState is invoked for an ImportState call.
+	importState(context.Context, interceptorOptions[resource.ImportStateRequest, resource.ImportStateResponse]) diag.Diagnostics
+}
+
+// resourceSchema returns a slice of interceptors that run on resource Schema.
+func (s interceptorInvocations) resourceImportState() []interceptorFunc[resource.ImportStateRequest, resource.ImportStateResponse] {
+	return tfslices.ApplyToAll(tfslices.Filter(s, func(e any) bool {
+		_, ok := e.(resourceImportStateInterceptor)
+		return ok
+	}), func(e any) interceptorFunc[resource.ImportStateRequest, resource.ImportStateResponse] {
+		return e.(resourceImportStateInterceptor).importState
 	})
 }
 
@@ -131,17 +276,41 @@ const (
 
 // interceptedRequest represents a Plugin Framework request type that can be intercepted.
 type interceptedRequest interface {
-	datasource.ReadRequest | ephemeral.OpenRequest | ephemeral.RenewRequest | ephemeral.CloseRequest | resource.CreateRequest | resource.ReadRequest | resource.UpdateRequest | resource.DeleteRequest
+	datasource.SchemaRequest |
+		datasource.ReadRequest |
+		ephemeral.SchemaRequest |
+		ephemeral.OpenRequest |
+		ephemeral.RenewRequest |
+		ephemeral.CloseRequest |
+		resource.SchemaRequest |
+		resource.CreateRequest |
+		resource.ReadRequest |
+		resource.UpdateRequest |
+		resource.DeleteRequest |
+		resource.ModifyPlanRequest |
+		resource.ImportStateRequest
 }
 
 // interceptedResponse represents a Plugin Framework response type that can be intercepted.
 type interceptedResponse interface {
-	datasource.ReadResponse | ephemeral.OpenResponse | ephemeral.RenewResponse | ephemeral.CloseResponse | resource.CreateResponse | resource.ReadResponse | resource.UpdateResponse | resource.DeleteResponse
+	datasource.SchemaResponse |
+		datasource.ReadResponse |
+		ephemeral.SchemaResponse |
+		ephemeral.OpenResponse |
+		ephemeral.RenewResponse |
+		ephemeral.CloseResponse |
+		resource.SchemaResponse |
+		resource.CreateResponse |
+		resource.ReadResponse |
+		resource.UpdateResponse |
+		resource.DeleteResponse |
+		resource.ModifyPlanResponse |
+		resource.ImportStateResponse
 }
 
 // interceptedHandler returns a handler that runs any interceptors.
-func interceptedHandler[Request interceptedRequest, Response interceptedResponse](interceptors []interceptorFunc[Request, Response], f func(context.Context, Request, *Response) diag.Diagnostics, c *conns.AWSClient) func(context.Context, Request, *Response) diag.Diagnostics {
-	return func(ctx context.Context, request Request, response *Response) diag.Diagnostics {
+func interceptedHandler[Request interceptedRequest, Response interceptedResponse](interceptors []interceptorFunc[Request, Response], f func(context.Context, *Request, *Response) diag.Diagnostics, c *conns.AWSClient) func(context.Context, *Request, *Response) diag.Diagnostics {
+	return func(ctx context.Context, request *Request, response *Response) diag.Diagnostics {
 		var diags diag.Diagnostics
 		// Before interceptors are run first to last.
 		forward := interceptors
@@ -163,7 +332,7 @@ func interceptedHandler[Request interceptedRequest, Response interceptedResponse
 		}
 
 		// All other interceptors are run last to first.
-		reverse := slices.Reverse(forward)
+		reverse := tfslices.Reverse(forward)
 		diags = f(ctx, request, response)
 
 		if diags.HasError() {

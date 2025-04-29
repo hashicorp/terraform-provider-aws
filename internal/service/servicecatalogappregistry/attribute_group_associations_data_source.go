@@ -18,27 +18,29 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkDataSource("aws_servicecatalogappregistry_attribute_group_associations", name="Attribute Group Associations")
-func newDataSourceAttributeGroupAssociations(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceAttributeGroupAssociations{}, nil
+func newAttributeGroupAssociationsDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &attributeGroupAssociationsDataSource{}, nil
 }
 
 const (
 	DSNameAttributeGroupAssociations = "Attribute Group Associations Data Source"
 )
 
-type dataSourceAttributeGroupAssociations struct {
-	framework.DataSourceWithConfigure
+type attributeGroupAssociationsDataSource struct {
+	framework.DataSourceWithModel[attributeGroupAssociationsDataSourceModel]
 }
 
-func (d *dataSourceAttributeGroupAssociations) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *attributeGroupAssociationsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"attribute_group_ids": schema.SetAttribute{
+				CustomType:  fwtypes.SetOfStringType,
 				Computed:    true,
 				ElementType: types.StringType,
 			},
@@ -52,7 +54,7 @@ func (d *dataSourceAttributeGroupAssociations) Schema(ctx context.Context, req d
 	}
 }
 
-func (d *dataSourceAttributeGroupAssociations) ConfigValidators(_ context.Context) []datasource.ConfigValidator {
+func (d *attributeGroupAssociationsDataSource) ConfigValidators(_ context.Context) []datasource.ConfigValidator {
 	return []datasource.ConfigValidator{
 		datasourcevalidator.ExactlyOneOf(
 			path.MatchRoot(names.AttrID),
@@ -61,10 +63,10 @@ func (d *dataSourceAttributeGroupAssociations) ConfigValidators(_ context.Contex
 	}
 }
 
-func (d *dataSourceAttributeGroupAssociations) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *attributeGroupAssociationsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().ServiceCatalogAppRegistryClient(ctx)
 
-	var data dataSourceAttributeGroupAssociationsData
+	var data attributeGroupAssociationsDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -86,7 +88,7 @@ func (d *dataSourceAttributeGroupAssociations) Read(ctx context.Context, req dat
 		return
 	}
 
-	data.AttributeGroups = flex.FlattenFrameworkStringValueSet(ctx, out)
+	data.AttributeGroups = fwflex.FlattenFrameworkStringValueSetOfString(ctx, out)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
@@ -116,8 +118,9 @@ func findAttributeGroupAssociationsByID(ctx context.Context, conn *servicecatalo
 	return out, nil
 }
 
-type dataSourceAttributeGroupAssociationsData struct {
-	AttributeGroups types.Set    `tfsdk:"attribute_group_ids"`
-	ID              types.String `tfsdk:"id"`
-	Name            types.String `tfsdk:"name"`
+type attributeGroupAssociationsDataSourceModel struct {
+	framework.WithRegionModel
+	AttributeGroups fwtypes.SetOfString `tfsdk:"attribute_group_ids"`
+	ID              types.String        `tfsdk:"id"`
+	Name            types.String        `tfsdk:"name"`
 }

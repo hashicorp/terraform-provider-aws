@@ -22,6 +22,7 @@ func jobQueueSchema0(ctx context.Context) schema.Schema {
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"compute_environments": schema.ListAttribute{
+				CustomType:  fwtypes.ListOfStringType,
 				ElementType: types.StringType,
 				Required:    true,
 			},
@@ -53,16 +54,16 @@ func jobQueueSchema0(ctx context.Context) schema.Schema {
 
 func upgradeJobQueueResourceStateV0toV1(ctx context.Context, request resource.UpgradeStateRequest, response *resource.UpgradeStateResponse) {
 	type resourceJobQueueDataV0 struct {
-		ComputeEnvironments types.List     `tfsdk:"compute_environments"`
-		ID                  types.String   `tfsdk:"id"`
-		JobQueueARN         types.String   `tfsdk:"arn"`
-		JobQueueName        types.String   `tfsdk:"name"`
-		Priority            types.Int64    `tfsdk:"priority"`
-		SchedulingPolicyARN types.String   `tfsdk:"scheduling_policy_arn"`
-		State               types.String   `tfsdk:"state"`
-		Tags                tftags.Map     `tfsdk:"tags"`
-		TagsAll             tftags.Map     `tfsdk:"tags_all"`
-		Timeouts            timeouts.Value `tfsdk:"timeouts"`
+		ComputeEnvironments fwtypes.ListOfString `tfsdk:"compute_environments"`
+		ID                  types.String         `tfsdk:"id"`
+		JobQueueARN         types.String         `tfsdk:"arn"`
+		JobQueueName        types.String         `tfsdk:"name"`
+		Priority            types.Int64          `tfsdk:"priority"`
+		SchedulingPolicyARN types.String         `tfsdk:"scheduling_policy_arn"`
+		State               types.String         `tfsdk:"state"`
+		Tags                tftags.Map           `tfsdk:"tags"`
+		TagsAll             tftags.Map           `tfsdk:"tags_all"`
+		Timeouts            timeouts.Value       `tfsdk:"timeouts"`
 	}
 
 	var jobQueueDataV0 resourceJobQueueDataV0

@@ -36,8 +36,8 @@ import (
 // @Tags(identifierAttribute="id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bcmdataexports;bcmdataexports.GetExportOutput")
 // @Testing(skipEmptyTags=true, skipNullTags=true)
-func newResourceExport(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceExport{}
+func newExportResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &exportResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
@@ -49,13 +49,13 @@ const (
 	ResNameExport = "Export"
 )
 
-type resourceExport struct {
-	framework.ResourceWithConfigure
+type exportResource struct {
+	framework.ResourceWithModel[exportResourceModel]
 	framework.WithTimeouts
 	framework.WithImportByID
 }
 
-func (r *resourceExport) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *exportResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	dataQueryLNB := schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[dataQueryData](ctx),
 		NestedObject: schema.NestedBlockObject{
@@ -210,10 +210,10 @@ func (r *resourceExport) Schema(ctx context.Context, req resource.SchemaRequest,
 	}
 }
 
-func (r *resourceExport) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *exportResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().BCMDataExportsClient(ctx)
 
-	var plan resourceExportData
+	var plan exportResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -265,10 +265,10 @@ func (r *resourceExport) Create(ctx context.Context, req resource.CreateRequest,
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceExport) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *exportResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().BCMDataExportsClient(ctx)
 
-	var state resourceExportData
+	var state exportResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -298,10 +298,10 @@ func (r *resourceExport) Read(ctx context.Context, req resource.ReadRequest, res
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceExport) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *exportResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().BCMDataExportsClient(ctx)
 
-	var plan, state resourceExportData
+	var plan, state exportResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -349,10 +349,10 @@ func (r *resourceExport) Update(ctx context.Context, req resource.UpdateRequest,
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceExport) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *exportResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().BCMDataExportsClient(ctx)
 
-	var state resourceExportData
+	var state exportResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -452,7 +452,8 @@ func findExportByID(ctx context.Context, conn *bcmdataexports.Client, exportArn 
 	return out, nil
 }
 
-type resourceExportData struct {
+type exportResourceModel struct {
+	framework.WithRegionModel
 	Export   fwtypes.ListNestedObjectValueOf[exportData] `tfsdk:"export"`
 	ID       types.String                                `tfsdk:"id"`
 	Tags     tftags.Map                                  `tfsdk:"tags"`

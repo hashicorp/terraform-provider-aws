@@ -4,123 +4,112 @@ package shield
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/shield"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*itypes.ServicePackageFrameworkDataSource {
-	return []*itypes.ServicePackageFrameworkDataSource{
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
+	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:  newDataSourceProtection,
+			Factory:  newProtectionDataSource,
 			TypeName: "aws_shield_protection",
 			Name:     "Protection",
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:          true,
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled: false,
-			},
+			}),
 		},
 	}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.ServicePackageFrameworkResource {
-	return []*itypes.ServicePackageFrameworkResource{
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
+	return []*inttypes.ServicePackageFrameworkResource{
 		{
 			Factory:  newApplicationLayerAutomaticResponseResource,
 			TypeName: "aws_shield_application_layer_automatic_response",
 			Name:     "Application Layer Automatic Response",
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:          true,
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled: false,
-			},
+			}),
 		},
 		{
 			Factory:  newDRTAccessLogBucketAssociationResource,
 			TypeName: "aws_shield_drt_access_log_bucket_association",
 			Name:     "DRT Log Bucket Association",
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:          true,
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled: false,
-			},
+			}),
 		},
 		{
 			Factory:  newDRTAccessRoleARNAssociationResource,
 			TypeName: "aws_shield_drt_access_role_arn_association",
 			Name:     "DRT Role ARN Association",
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:          true,
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled: false,
-			},
+			}),
 		},
 		{
 			Factory:  newProactiveEngagementResource,
 			TypeName: "aws_shield_proactive_engagement",
 			Name:     "Proactive Engagement",
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:          true,
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled: false,
-			},
+			}),
 		},
 		{
-			Factory:  newResourceSubscription,
+			Factory:  newSubscriptionResource,
 			TypeName: "aws_shield_subscription",
 			Name:     "Subscription",
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:          true,
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled: false,
-			},
+			}),
 		},
 	}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) []*itypes.ServicePackageSDKDataSource {
-	return []*itypes.ServicePackageSDKDataSource{}
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
+	return []*inttypes.ServicePackageSDKDataSource{}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePackageSDKResource {
-	return []*itypes.ServicePackageSDKResource{
+func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePackageSDKResource {
+	return []*inttypes.ServicePackageSDKResource{
 		{
 			Factory:  resourceProtection,
 			TypeName: "aws_shield_protection",
 			Name:     "Protection",
-			Tags: &itypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			},
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			}),
 		},
 		{
 			Factory:  ResourceProtectionGroup,
 			TypeName: "aws_shield_protection_group",
 			Name:     "Protection Group",
-			Tags: &itypes.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: "protection_group_arn",
-			},
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			},
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			}),
 		},
 		{
 			Factory:  ResourceProtectionHealthCheckAssociation,
 			TypeName: "aws_shield_protection_health_check_association",
 			Name:     "Protection Health Check Association",
-			Region: &itypes.ServicePackageResourceRegion{
-				IsGlobal:                      true,
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			},
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			}),
 		},
 	}
 }

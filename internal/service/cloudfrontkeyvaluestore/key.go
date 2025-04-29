@@ -39,7 +39,7 @@ func newKeyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 }
 
 type keyResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[keyResourceModel]
 }
 
 func (r *keyResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {

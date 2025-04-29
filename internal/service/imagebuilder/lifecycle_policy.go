@@ -41,7 +41,7 @@ func newLifecyclePolicyResource(_ context.Context) (resource.ResourceWithConfigu
 }
 
 type lifecyclePolicyResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[lifecyclePolicyResourceModel]
 	framework.WithImportByID
 }
 
@@ -471,6 +471,7 @@ func findLifecyclePolicyByARN(ctx context.Context, conn *imagebuilder.Client, ar
 }
 
 type lifecyclePolicyResourceModel struct {
+	framework.WithRegionModel
 	Description        types.String                                                           `tfsdk:"description"`
 	ExecutionRole      fwtypes.ARN                                                            `tfsdk:"execution_role"`
 	ID                 types.String                                                           `tfsdk:"id"`

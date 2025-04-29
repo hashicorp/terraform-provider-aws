@@ -51,7 +51,7 @@ func newDomainResource(context.Context) (resource.ResourceWithConfigure, error) 
 }
 
 type domainResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[domainResourceModel]
 	framework.WithTimeouts
 }
 

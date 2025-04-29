@@ -682,9 +682,9 @@ resource "aws_subnet" "test" {
 }
 
 resource "aws_batch_compute_environment" "test" {
-  compute_environment_name = %[1]q
-  service_role             = aws_iam_role.test.arn
-  type                     = "MANAGED"
+  name         = %[1]q
+  service_role = aws_iam_role.test.arn
+  type         = "MANAGED"
 
   compute_resources {
     instance_role      = aws_iam_instance_profile.ecs_instance_role.arn
@@ -813,9 +813,9 @@ resource "aws_batch_job_queue" "test" {
 resource "aws_batch_compute_environment" "more" {
   count = 2
 
-  compute_environment_name = "%[1]s-${count.index + 1}"
-  service_role             = aws_iam_role.test.arn
-  type                     = "MANAGED"
+  name         = "%[1]s-${count.index + 1}"
+  service_role = aws_iam_role.test.arn
+  type         = "MANAGED"
 
   compute_resources {
     instance_role      = aws_iam_instance_profile.ecs_instance_role.arn
@@ -860,9 +860,9 @@ resource "aws_batch_job_queue" "test" {
 resource "aws_batch_compute_environment" "more" {
   count = 2
 
-  compute_environment_name = "%[1]s-${count.index + 1}"
-  service_role             = aws_iam_role.test.arn
-  type                     = "MANAGED"
+  name         = "%[1]s-${count.index + 1}"
+  service_role = aws_iam_role.test.arn
+  type         = "MANAGED"
 
   compute_resources {
     instance_role      = aws_iam_instance_profile.ecs_instance_role.arn
@@ -897,9 +897,9 @@ resource "aws_batch_job_queue" "test" {
 resource "aws_batch_compute_environment" "more" {
   count = 2
 
-  compute_environment_name = "%[1]s-${count.index + 1}"
-  service_role             = aws_iam_role.test.arn
-  type                     = "MANAGED"
+  name         = "%[1]s-${count.index + 1}"
+  service_role = aws_iam_role.test.arn
+  type         = "MANAGED"
 
   compute_resources {
     instance_role      = aws_iam_instance_profile.ecs_instance_role.arn

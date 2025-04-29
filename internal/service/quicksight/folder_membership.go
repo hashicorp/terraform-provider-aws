@@ -39,7 +39,7 @@ const (
 )
 
 type folderMembershipResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[folderMembershipResourceModel]
 	framework.WithNoUpdate
 	framework.WithImportByID
 }
@@ -84,7 +84,7 @@ func (r *folderMembershipResource) Schema(ctx context.Context, req resource.Sche
 func (r *folderMembershipResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().QuickSightClient(ctx)
 
-	var plan resourceFolderMembershipData
+	var plan folderMembershipResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -125,7 +125,7 @@ func (r *folderMembershipResource) Create(ctx context.Context, req resource.Crea
 func (r *folderMembershipResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().QuickSightClient(ctx)
 
-	var state resourceFolderMembershipData
+	var state folderMembershipResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -164,7 +164,7 @@ func (r *folderMembershipResource) Read(ctx context.Context, req resource.ReadRe
 func (r *folderMembershipResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().QuickSightClient(ctx)
 
-	var state resourceFolderMembershipData
+	var state folderMembershipResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -266,7 +266,8 @@ func folderMembershipParseResourceID(id string) (string, string, string, string,
 	return parts[0], parts[1], parts[2], parts[3], nil
 }
 
-type resourceFolderMembershipData struct {
+type folderMembershipResourceModel struct {
+	framework.WithRegionModel
 	AWSAccountID types.String `tfsdk:"aws_account_id"`
 	FolderID     types.String `tfsdk:"folder_id"`
 	ID           types.String `tfsdk:"id"`

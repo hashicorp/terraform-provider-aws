@@ -77,15 +77,7 @@ func resourceCoreNetwork() *schema.Resource {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
-				ConflictsWith: []string{"base_policy_region", "base_policy_regions"},
-			},
-			"base_policy_region": {
-				Deprecated: "base_policy_region is deprecated. Use base_policy_regions instead. " +
-					"This argument will be removed in the next major version of the provider.",
-				Type:          schema.TypeString,
-				Optional:      true,
-				ValidateFunc:  verify.ValidRegionName,
-				ConflictsWith: []string{"base_policy_document", "base_policy_regions"},
+				ConflictsWith: []string{"base_policy_regions"},
 			},
 			"base_policy_regions": {
 				Type:     schema.TypeSet,
@@ -94,7 +86,7 @@ func resourceCoreNetwork() *schema.Resource {
 					Type:         schema.TypeString,
 					ValidateFunc: verify.ValidRegionName,
 				},
-				ConflictsWith: []string{"base_policy_document", "base_policy_region"},
+				ConflictsWith: []string{"base_policy_document"},
 			},
 			"create_base_policy": {
 				Type:     schema.TypeBool,
@@ -194,11 +186,9 @@ func resourceCoreNetworkCreate(ctx context.Context, d *schema.ResourceData, meta
 		if v, ok := d.GetOk("base_policy_document"); ok {
 			input.PolicyDocument = aws.String(v.(string))
 		} else {
-			// if user supplies a region or multiple regions use it in the base policy, otherwise use current region
+			// If user supplies regions, use them in the base policy. Otherwise use current region.
 			regions := []any{meta.(*conns.AWSClient).Region(ctx)}
-			if v, ok := d.GetOk("base_policy_region"); ok {
-				regions = []any{v.(string)}
-			} else if v, ok := d.GetOk("base_policy_regions"); ok && v.(*schema.Set).Len() > 0 {
+			if v, ok := d.GetOk("base_policy_regions"); ok && v.(*schema.Set).Len() > 0 {
 				regions = v.(*schema.Set).List()
 			}
 
@@ -285,11 +275,9 @@ func resourceCoreNetworkUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 	if d.HasChange("create_base_policy") {
 		if _, ok := d.GetOk("create_base_policy"); ok {
-			// if user supplies a region or multiple regions use it in the base policy, otherwise use current region
+			// If user supplies regions, use them in the base policy. Otherwise use current region.
 			regions := []any{meta.(*conns.AWSClient).Region(ctx)}
-			if v, ok := d.GetOk("base_policy_region"); ok {
-				regions = []any{v.(string)}
-			} else if v, ok := d.GetOk("base_policy_regions"); ok && v.(*schema.Set).Len() > 0 {
+			if v, ok := d.GetOk("base_policy_regions"); ok && v.(*schema.Set).Len() > 0 {
 				regions = v.(*schema.Set).List()
 			}
 

@@ -41,7 +41,7 @@ func newDeliveryDestinationResource(context.Context) (resource.ResourceWithConfi
 }
 
 type deliveryDestinationResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[deliveryDestinationResourceModel]
 }
 
 func (r *deliveryDestinationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -281,6 +281,7 @@ func requiresReplaceIfARNServiceChanges(ctx context.Context, request planmodifie
 }
 
 type deliveryDestinationResourceModel struct {
+	framework.WithRegionModel
 	ARN                              types.String                                                           `tfsdk:"arn"`
 	DeliveryDestinationConfiguration fwtypes.ListNestedObjectValueOf[deliveryDestinationConfigurationModel] `tfsdk:"delivery_destination_configuration"`
 	DeliveryDestinationType          fwtypes.StringEnum[awstypes.DeliveryDestinationType]                   `tfsdk:"delivery_destination_type"`

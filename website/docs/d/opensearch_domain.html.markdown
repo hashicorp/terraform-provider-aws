@@ -89,7 +89,6 @@ This data source exports the following attributes in addition to the arguments a
 * `endpoint` – Domain-specific endpoint used to submit index, search, and data upload requests.
 * `endpoint_v2` - V2 domain-specific endpoint that works with both IPv4 and IPv6 addresses, used to submit index, search, and data upload requests.
 * `ip_address_type` - Type of IP addresses supported by the endpoint for the domain.
-* `kibana_endpoint` - (**Deprecated**) Domain-specific endpoint for kibana without https scheme. Use the `dashboard_endpoint` attribute instead.
 * `log_publishing_options` - Domain log publishing related options.
     * `log_type` - Type of OpenSearch log being published.
     * `cloudwatch_log_group_arn` - CloudWatch Log Group where the logs are published.

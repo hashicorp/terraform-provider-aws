@@ -5,24 +5,20 @@ package provider
 
 import (
 	"context"
-	"slices"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 // Implemented by (schema.ResourceData|schema.ResourceDiff).GetOk().
 type getAttributeFunc func(string) (any, bool)
 
 // contextFunc augments Context.
-type contextFunc func(context.Context, getAttributeFunc, any) (context.Context, diag.Diagnostics)
+type contextFunc func(context.Context, getAttributeFunc, any) (context.Context, error)
 
 type wrappedDataSourceOptions struct {
 	// bootstrapContext is run on all wrapped methods before any interceptors.
 	bootstrapContext contextFunc
-	interceptors     interceptorItems
+	interceptors     interceptorInvocations
 	typeName         string
 }
 
@@ -42,17 +38,14 @@ func wrapDataSource(r *schema.Resource, opts wrappedDataSourceOptions) {
 }
 
 func (w *wrappedDataSource) read(f schema.ReadContextFunc) schema.ReadContextFunc {
-	return interceptedHandler(w.opts.bootstrapContext, w.opts.interceptors, f, Read)
+	return interceptedCRUDHandler(w.opts.bootstrapContext, w.opts.interceptors, f, Read)
 }
 
 type wrappedResourceOptions struct {
 	// bootstrapContext is run on all wrapped methods before any interceptors.
-	bootstrapContext   contextFunc
-	customizeDiffFuncs []schema.CustomizeDiffFunc
-	// importsFuncs are called before bootstrapContext.
-	importFuncs  []schema.StateContextFunc
-	interceptors interceptorItems
-	typeName     string
+	bootstrapContext contextFunc
+	interceptors     interceptorInvocations
+	typeName         string
 }
 
 // wrappedResource represents an interceptor dispatcher for a Plugin SDK v2 resource.
@@ -79,83 +72,27 @@ func wrapResource(r *schema.Resource, opts wrappedResourceOptions) {
 }
 
 func (w *wrappedResource) create(f schema.CreateContextFunc) schema.CreateContextFunc {
-	if f == nil {
-		return nil
-	}
-
-	return interceptedHandler(w.opts.bootstrapContext, w.opts.interceptors, f, Create)
+	return interceptedCRUDHandler(w.opts.bootstrapContext, w.opts.interceptors, f, Create)
 }
 
 func (w *wrappedResource) read(f schema.ReadContextFunc) schema.ReadContextFunc {
-	if f == nil {
-		return nil
-	}
-
-	return interceptedHandler(w.opts.bootstrapContext, w.opts.interceptors, f, Read)
+	return interceptedCRUDHandler(w.opts.bootstrapContext, w.opts.interceptors, f, Read)
 }
 
 func (w *wrappedResource) update(f schema.UpdateContextFunc) schema.UpdateContextFunc {
-	if f == nil {
-		return nil
-	}
-
-	return interceptedHandler(w.opts.bootstrapContext, w.opts.interceptors, f, Update)
+	return interceptedCRUDHandler(w.opts.bootstrapContext, w.opts.interceptors, f, Update)
 }
 
 func (w *wrappedResource) delete(f schema.DeleteContextFunc) schema.DeleteContextFunc {
-	if f == nil {
-		return nil
-	}
-
-	return interceptedHandler(w.opts.bootstrapContext, w.opts.interceptors, f, Delete)
+	return interceptedCRUDHandler(w.opts.bootstrapContext, w.opts.interceptors, f, Delete)
 }
 
 func (w *wrappedResource) import_(f schema.StateContextFunc) schema.StateContextFunc {
-	if f == nil {
-		return nil
-	}
-
-	return func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-		for _, f := range w.opts.importFuncs {
-			if _, err := f(ctx, d, meta); err != nil {
-				return nil, err
-			}
-		}
-
-		ctx, diags := w.opts.bootstrapContext(ctx, d.GetOk, meta)
-		if diags.HasError() {
-			return nil, sdkdiag.DiagnosticsError(diags)
-		}
-
-		return f(ctx, d, meta)
-	}
+	return interceptedImportHandler(w.opts.bootstrapContext, w.opts.interceptors, f)
 }
 
 func (w *wrappedResource) customizeDiff(f schema.CustomizeDiffFunc) schema.CustomizeDiffFunc {
-	if len(w.opts.customizeDiffFuncs) > 0 {
-		customizeDiffFuncs := slices.Clone(w.opts.customizeDiffFuncs)
-		if f != nil {
-			customizeDiffFuncs = append(customizeDiffFuncs, f)
-		}
-		return w.customizeDiffWithBootstrappedContext(customdiff.Sequence(customizeDiffFuncs...))
-	}
-
-	if f == nil {
-		return nil
-	}
-
-	return w.customizeDiffWithBootstrappedContext(f)
-}
-
-func (w *wrappedResource) customizeDiffWithBootstrappedContext(f schema.CustomizeDiffFunc) schema.CustomizeDiffFunc {
-	return func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
-		ctx, diags := w.opts.bootstrapContext(ctx, d.GetOk, meta)
-		if diags.HasError() {
-			return sdkdiag.DiagnosticsError(diags)
-		}
-
-		return f(ctx, d, meta)
-	}
+	return interceptedCustomizeDiffHandler(w.opts.bootstrapContext, w.opts.interceptors, f)
 }
 
 func (w *wrappedResource) stateUpgrade(f schema.StateUpgradeFunc) schema.StateUpgradeFunc {
@@ -164,9 +101,9 @@ func (w *wrappedResource) stateUpgrade(f schema.StateUpgradeFunc) schema.StateUp
 	}
 
 	return func(ctx context.Context, rawState map[string]any, meta any) (map[string]any, error) {
-		ctx, diags := w.opts.bootstrapContext(ctx, func(key string) (any, bool) { v, ok := rawState[key]; return v, ok }, meta)
-		if diags.HasError() {
-			return nil, sdkdiag.DiagnosticsError(diags)
+		ctx, err := w.opts.bootstrapContext(ctx, func(key string) (any, bool) { v, ok := rawState[key]; return v, ok }, meta)
+		if err != nil {
+			return nil, err
 		}
 
 		return f(ctx, rawState, meta)

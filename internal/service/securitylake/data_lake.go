@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
@@ -52,7 +53,7 @@ func newDataLakeResource(context.Context) (resource.ResourceWithConfigure, error
 }
 
 type dataLakeResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[dataLakeResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }
@@ -207,6 +208,7 @@ func (r *dataLakeResource) Create(ctx context.Context, request resource.CreateRe
 	dataLake, err = waitDataLakeCreated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
 
 	if err != nil {
+		response.State.SetAttribute(ctx, path.Root(names.AttrID), data.ID) // Set 'id' so as to taint the resource.
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for Security Lake Data Lake (%s) create", data.ID.ValueString()), err.Error())
 
 		return
@@ -268,7 +270,7 @@ func (r *dataLakeResource) Read(ctx context.Context, request resource.ReadReques
 	// if the data lake's AWS Region isn't the configured one.
 	if region := configuration.Region.ValueString(); region != r.Meta().Region(ctx) {
 		if tags, err := listTags(ctx, conn, data.ID.ValueString(), func(o *securitylake.Options) { o.Region = region }); err == nil {
-			setTagsOut(ctx, Tags(tags))
+			setTagsOut(ctx, svcTags(tags))
 		}
 	}
 
@@ -489,7 +491,7 @@ func waitDataLakeUpdated(ctx context.Context, conn *securitylake.Client, arn str
 
 func waitDataLakeDeleted(ctx context.Context, conn *securitylake.Client, arn string, timeout time.Duration) (*awstypes.DataLakeResource, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.DataLakeStatusInitialized, awstypes.DataLakeStatusCompleted),
+		Pending: enum.Slice(awstypes.DataLakeStatusInitialized, awstypes.DataLakeStatusCompleted, awstypes.DataLakeStatusFailed),
 		Target:  []string{},
 		Refresh: statusDataLakeCreate(ctx, conn, arn),
 		Timeout: timeout,
@@ -522,6 +524,7 @@ func regionFromARNString(s string) (string, error) {
 }
 
 type dataLakeResourceModel struct {
+	framework.WithRegionModel
 	Configurations          fwtypes.ListNestedObjectValueOf[dataLakeConfigurationModel] `tfsdk:"configuration"`
 	DataLakeARN             types.String                                                `tfsdk:"arn"`
 	ID                      types.String                                                `tfsdk:"id"`

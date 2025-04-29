@@ -13,7 +13,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53profiles/types"
 	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -31,8 +30,8 @@ import (
 )
 
 // @FrameworkResource("aws_route53profiles_resource_association", name="ResourceAssociation")
-func newResourceResourceAssociation(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceResourceAssociation{}
+func newResourceAssociationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &resourceAssociationResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
@@ -45,14 +44,14 @@ const (
 	ResNameResourceAssociation = "ResourceAssociation"
 )
 
-type resourceResourceAssociation struct {
-	framework.ResourceWithConfigure
+type resourceAssociationResource struct {
+	framework.ResourceWithModel[resourceAssociationResourceModel]
 	framework.WithNoUpdate
 	framework.WithTimeouts
 	framework.WithImportByID
 }
 
-func (r *resourceResourceAssociation) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *resourceAssociationResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: framework.IDAttribute(),
@@ -102,7 +101,7 @@ func (r *resourceResourceAssociation) Schema(ctx context.Context, req resource.S
 	}
 }
 
-func (r *resourceResourceAssociation) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *resourceAssociationResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().Route53ProfilesClient(ctx)
 
 	var state resourceAssociationResourceModel
@@ -152,7 +151,7 @@ func (r *resourceResourceAssociation) Create(ctx context.Context, req resource.C
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
 }
 
-func (r *resourceResourceAssociation) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *resourceAssociationResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().Route53ProfilesClient(ctx)
 
 	var state resourceAssociationResourceModel
@@ -182,7 +181,7 @@ func (r *resourceResourceAssociation) Read(ctx context.Context, req resource.Rea
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceResourceAssociation) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *resourceAssociationResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().Route53ProfilesClient(ctx)
 
 	var state resourceAssociationResourceModel
@@ -217,10 +216,6 @@ func (r *resourceResourceAssociation) Delete(ctx context.Context, req resource.D
 		)
 		return
 	}
-}
-
-func (r *resourceResourceAssociation) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func waitResourceAssociationCreated(ctx context.Context, conn *route53profiles.Client, id string, timeout time.Duration) (*awstypes.ProfileResourceAssociation, error) {
@@ -297,6 +292,7 @@ func findResourceAssociationByID(ctx context.Context, conn *route53profiles.Clie
 }
 
 type resourceAssociationResourceModel struct {
+	framework.WithRegionModel
 	ID                 types.String                               `tfsdk:"id"`
 	Name               types.String                               `tfsdk:"name"`
 	OwnerId            types.String                               `tfsdk:"owner_id"`

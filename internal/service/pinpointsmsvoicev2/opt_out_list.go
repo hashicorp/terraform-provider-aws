@@ -38,7 +38,7 @@ func newOptOutListResource(context.Context) (resource.ResourceWithConfigure, err
 }
 
 type optOutListResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[optOutListResourceModel]
 	framework.WithNoOpUpdate[optOutListResourceModel]
 	framework.WithImportByID
 }
@@ -158,6 +158,7 @@ func (r *optOutListResource) Delete(ctx context.Context, request resource.Delete
 }
 
 type optOutListResourceModel struct {
+	framework.WithRegionModel
 	ID             types.String `tfsdk:"id"`
 	OptOutListARN  types.String `tfsdk:"arn"`
 	OptOutListName types.String `tfsdk:"name"`

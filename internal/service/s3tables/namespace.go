@@ -34,20 +34,20 @@ import (
 )
 
 // @FrameworkResource("aws_s3tables_namespace", name="Namespace")
-func newResourceNamespace(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceNamespace{}, nil
+func newNamespaceResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &namespaceResource{}, nil
 }
 
 const (
 	resNameNamespace = "Namespace"
 )
 
-type resourceNamespace struct {
-	framework.ResourceWithConfigure
+type namespaceResource struct {
+	framework.ResourceWithModel[namespaceResourceModel]
 	framework.WithNoUpdate
 }
 
-func (r *resourceNamespace) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *namespaceResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrCreatedAt: schema.StringAttribute{
@@ -87,10 +87,10 @@ func (r *resourceNamespace) Schema(ctx context.Context, req resource.SchemaReque
 	}
 }
 
-func (r *resourceNamespace) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *namespaceResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().S3TablesClient(ctx)
 
-	var plan resourceNamespaceModel
+	var plan namespaceResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -137,10 +137,10 @@ func (r *resourceNamespace) Create(ctx context.Context, req resource.CreateReque
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceNamespace) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *namespaceResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().S3TablesClient(ctx)
 
-	var state resourceNamespaceModel
+	var state namespaceResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -167,10 +167,10 @@ func (r *resourceNamespace) Read(ctx context.Context, req resource.ReadRequest, 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceNamespace) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *namespaceResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().S3TablesClient(ctx)
 
-	var state resourceNamespaceModel
+	var state namespaceResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -195,7 +195,7 @@ func (r *resourceNamespace) Delete(ctx context.Context, req resource.DeleteReque
 	}
 }
 
-func (r *resourceNamespace) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *namespaceResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	identifier, err := parseNamespaceIdentifier(req.ID)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -234,7 +234,8 @@ func findNamespace(ctx context.Context, conn *s3tables.Client, bucketARN, name s
 	return out, nil
 }
 
-type resourceNamespaceModel struct {
+type namespaceResourceModel struct {
+	framework.WithRegionModel
 	CreatedAt      timetypes.RFC3339 `tfsdk:"created_at"`
 	CreatedBy      types.String      `tfsdk:"created_by"`
 	Namespace      types.String      `tfsdk:"namespace" autoflex:"-"`

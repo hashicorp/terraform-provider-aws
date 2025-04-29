@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/verifiedpermissions"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/verifiedpermissions/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -30,8 +29,8 @@ import (
 )
 
 // @FrameworkResource("aws_verifiedpermissions_policy_store", name="Policy Store")
-func newResourcePolicyStore(context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourcePolicyStore{}
+func newPolicyStoreResource(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &policyStoreResource{}
 
 	return r, nil
 }
@@ -40,11 +39,12 @@ const (
 	ResNamePolicyStore = "Policy Store"
 )
 
-type resourcePolicyStore struct {
-	framework.ResourceWithConfigure
+type policyStoreResource struct {
+	framework.ResourceWithModel[policyStoreResourceModel]
+	framework.WithImportByID
 }
 
-func (r *resourcePolicyStore) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+func (r *policyStoreResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
@@ -81,9 +81,9 @@ func (r *resourcePolicyStore) Schema(ctx context.Context, request resource.Schem
 	response.Schema = s
 }
 
-func (r *resourcePolicyStore) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+func (r *policyStoreResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	conn := r.Meta().VerifiedPermissionsClient(ctx)
-	var plan resourcePolicyStoreData
+	var plan policyStoreResourceModel
 
 	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
 
@@ -123,9 +123,9 @@ func (r *resourcePolicyStore) Create(ctx context.Context, request resource.Creat
 	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
 }
 
-func (r *resourcePolicyStore) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+func (r *policyStoreResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	conn := r.Meta().VerifiedPermissionsClient(ctx)
-	var state resourcePolicyStoreData
+	var state policyStoreResourceModel
 
 	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
 
@@ -157,9 +157,9 @@ func (r *resourcePolicyStore) Read(ctx context.Context, request resource.ReadReq
 	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
 }
 
-func (r *resourcePolicyStore) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+func (r *policyStoreResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	conn := r.Meta().VerifiedPermissionsClient(ctx)
-	var state, plan resourcePolicyStoreData
+	var state, plan policyStoreResourceModel
 
 	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
 
@@ -197,9 +197,9 @@ func (r *resourcePolicyStore) Update(ctx context.Context, request resource.Updat
 	response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
 }
 
-func (r *resourcePolicyStore) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+func (r *policyStoreResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	conn := r.Meta().VerifiedPermissionsClient(ctx)
-	var state resourcePolicyStoreData
+	var state policyStoreResourceModel
 
 	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
 
@@ -230,11 +230,8 @@ func (r *resourcePolicyStore) Delete(ctx context.Context, request resource.Delet
 	}
 }
 
-func (r *resourcePolicyStore) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), request, response)
-}
-
-type resourcePolicyStoreData struct {
+type policyStoreResourceModel struct {
+	framework.WithRegionModel
 	ARN                types.String                                        `tfsdk:"arn"`
 	Description        types.String                                        `tfsdk:"description"`
 	ID                 types.String                                        `tfsdk:"id"`

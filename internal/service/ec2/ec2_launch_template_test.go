@@ -47,7 +47,6 @@ func TestAccEC2LaunchTemplate_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "disable_api_stop", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "disable_api_termination", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", ""),
-					resource.TestCheckResourceAttr(resourceName, "elastic_inference_accelerator.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "enclave_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "hibernation_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iam_instance_profile.#", "0"),
@@ -327,43 +326,6 @@ func TestAccEC2LaunchTemplate_ebsOptimized(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
 					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", ""),
-				),
-			},
-		},
-	})
-}
-
-func TestAccEC2LaunchTemplate_elasticInferenceAccelerator(t *testing.T) {
-	ctx := acctest.Context(t)
-	var template1 awstypes.LaunchTemplate
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_launch_template.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLaunchTemplateDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccLaunchTemplateConfig_elasticInferenceAccelerator(rName, "eia1.medium"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLaunchTemplateExists(ctx, resourceName, &template1),
-					resource.TestCheckResourceAttr(resourceName, "elastic_inference_accelerator.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "elastic_inference_accelerator.0.type", "eia1.medium"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccLaunchTemplateConfig_elasticInferenceAccelerator(rName, "eia1.large"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLaunchTemplateExists(ctx, resourceName, &template1),
-					resource.TestCheckResourceAttr(resourceName, "elastic_inference_accelerator.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "elastic_inference_accelerator.0.type", "eia1.large"),
 				),
 			},
 		},
@@ -3591,18 +3553,6 @@ resource "aws_launch_template" "test" {
   name          = %[2]q
 }
 `, ebsOptimized, rName)
-}
-
-func testAccLaunchTemplateConfig_elasticInferenceAccelerator(rName, elasticInferenceAcceleratorType string) string {
-	return fmt.Sprintf(`
-resource "aws_launch_template" "test" {
-  name = %[1]q
-
-  elastic_inference_accelerator {
-    type = %[2]q
-  }
-}
-`, rName, elasticInferenceAcceleratorType)
 }
 
 func testAccLaunchTemplateConfig_data(rName string) string {

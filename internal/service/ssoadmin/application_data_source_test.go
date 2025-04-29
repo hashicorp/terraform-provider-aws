@@ -26,7 +26,6 @@ func TestAccSSOAdminApplicationDataSource_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationDataSourceConfig_basic(rName, testAccApplicationProviderARN),
@@ -44,9 +43,7 @@ func TestAccSSOAdminApplicationDataSource_basic(t *testing.T) {
 }
 
 func testAccApplicationDataSourceConfig_basic(rName, applicationProviderARN string) string {
-	return acctest.ConfigCompose(
-		testAccApplicationConfig_basic(rName, applicationProviderARN),
-		`
+	return acctest.ConfigCompose(testAccApplicationConfig_basic(rName, applicationProviderARN), `
 data "aws_ssoadmin_application" "test" {
   application_arn = aws_ssoadmin_application.test.application_arn
 }

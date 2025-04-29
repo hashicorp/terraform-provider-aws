@@ -40,7 +40,7 @@ func newCIDRLocationResource(context.Context) (resource.ResourceWithConfigure, e
 }
 
 type cidrLocationResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[cidrLocationResourceModel]
 	framework.WithImportByID
 }
 
@@ -48,6 +48,7 @@ func (r *cidrLocationResource) Schema(ctx context.Context, request resource.Sche
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"cidr_blocks": schema.SetAttribute{
+				CustomType:  fwtypes.NewSetTypeOf[fwtypes.CIDRBlock](ctx),
 				Required:    true,
 				ElementType: fwtypes.CIDRBlockType,
 			},
@@ -154,9 +155,9 @@ func (r *cidrLocationResource) Read(ctx context.Context, request resource.ReadRe
 		for i, cidrBlock := range cidrBlocks {
 			elems[i] = fwtypes.CIDRBlockValue(cidrBlock)
 		}
-		data.CIDRBlocks = types.SetValueMust(fwtypes.CIDRBlockType, elems)
+		data.CIDRBlocks = fwtypes.NewSetValueOfMust[fwtypes.CIDRBlock](ctx, elems)
 	} else {
-		data.CIDRBlocks = types.SetNull(fwtypes.CIDRBlockType)
+		data.CIDRBlocks = fwtypes.NewSetValueOfNull[fwtypes.CIDRBlock](ctx)
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
@@ -279,10 +280,10 @@ func (r *cidrLocationResource) Delete(ctx context.Context, request resource.Dele
 }
 
 type cidrLocationResourceModel struct {
-	CIDRBlocks       types.Set    `tfsdk:"cidr_blocks"`
-	CIDRCollectionID types.String `tfsdk:"cidr_collection_id"`
-	ID               types.String `tfsdk:"id"`
-	Name             types.String `tfsdk:"name"`
+	CIDRBlocks       fwtypes.SetValueOf[fwtypes.CIDRBlock] `tfsdk:"cidr_blocks"`
+	CIDRCollectionID types.String                          `tfsdk:"cidr_collection_id"`
+	ID               types.String                          `tfsdk:"id"`
+	Name             types.String                          `tfsdk:"name"`
 }
 
 const (

@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
@@ -38,8 +37,8 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bedrock;bedrock.GetInferenceProfileOutput")
 // @Testing(importIgnore="model_source.#;model_source.0.%;model_source.0.copy_from")
-func newResourceInferenceProfile(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceInferenceProfile{}
+func newInferenceProfileResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &inferenceProfileResource{}
 
 	r.SetDefaultCreateTimeout(5 * time.Minute)
 	r.SetDefaultUpdateTimeout(5 * time.Minute)
@@ -52,12 +51,13 @@ const (
 	ResNameInferenceProfile = "Inference Profile"
 )
 
-type resourceInferenceProfile struct {
-	framework.ResourceWithConfigure
+type inferenceProfileResource struct {
+	framework.ResourceWithModel[inferenceProfileResourceModel]
+	framework.WithImportByID
 	framework.WithTimeouts
 }
 
-func (r *resourceInferenceProfile) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *inferenceProfileResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	modelsAttribute := framework.ResourceComputedListOfObjectsAttribute[resourceInferenceProfileModelModel](ctx)
 	modelsAttribute.PlanModifiers = []planmodifier.List{
 		listplanmodifier.UseStateForUnknown(),
@@ -144,10 +144,10 @@ func (r *resourceInferenceProfile) Schema(ctx context.Context, req resource.Sche
 	}
 }
 
-func (r *resourceInferenceProfile) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *inferenceProfileResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().BedrockClient(ctx)
 
-	var plan resourceInferenceProfileModel
+	var plan inferenceProfileResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -195,10 +195,10 @@ func (r *resourceInferenceProfile) Create(ctx context.Context, req resource.Crea
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceInferenceProfile) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *inferenceProfileResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().BedrockClient(ctx)
 
-	var state resourceInferenceProfileModel
+	var state inferenceProfileResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -225,8 +225,8 @@ func (r *resourceInferenceProfile) Read(ctx context.Context, req resource.ReadRe
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceInferenceProfile) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var new resourceInferenceProfileModel
+func (r *inferenceProfileResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var new inferenceProfileResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &new)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -237,10 +237,10 @@ func (r *resourceInferenceProfile) Update(ctx context.Context, req resource.Upda
 	resp.Diagnostics.Append(resp.State.Set(ctx, &new)...)
 }
 
-func (r *resourceInferenceProfile) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *inferenceProfileResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().BedrockClient(ctx)
 
-	var state resourceInferenceProfileModel
+	var state inferenceProfileResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -272,10 +272,6 @@ func (r *resourceInferenceProfile) Delete(ctx context.Context, req resource.Dele
 		)
 		return
 	}
-}
-
-func (r *resourceInferenceProfile) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func waitInferenceProfileCreated(ctx context.Context, conn *bedrock.Client, id string, timeout time.Duration) (*bedrock.GetInferenceProfileOutput, error) {
@@ -327,7 +323,8 @@ func statusInferenceProfile(ctx context.Context, conn *bedrock.Client, id string
 	}
 }
 
-type resourceInferenceProfileModel struct {
+type inferenceProfileResourceModel struct {
+	framework.WithRegionModel
 	ARN         types.String                                                        `tfsdk:"arn"`
 	ID          types.String                                                        `tfsdk:"id"`
 	ModelSource fwtypes.ListNestedObjectValueOf[inferenceProfileModelModelSource]   `tfsdk:"model_source"`
