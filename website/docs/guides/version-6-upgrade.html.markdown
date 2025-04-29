@@ -139,7 +139,7 @@ To address this, there is now an additional top-level `region` argument in most 
 
 The new top-level `region` argument is [_Optional_ and _Computed_](https://developer.hashicorp.com/terraform/plugin/framework/handling-data/attributes/string#configurability), with a default value of the Region from the provider configuration. The value of the `region` argument is validated as being in the configured [partition](https://docs.aws.amazon.com/whitepapers/latest/aws-fault-isolation-boundaries/partitions.html). A change to the argument's value forces resource replacement. To [import](https://developer.hashicorp.com/terraform/cli/import) a resource in a specific Region append `@<region>` to the [import ID](https://developer.hashicorp.com/terraform/language/import#import-id), for example `terraform import aws_vpc.test_vpc vpc-a01106c2@eu-west-1`.
 
-For example, to use a singe provider configuration to create an S3 bucket in multiple Regions:
+For example, to use a singe provider configuration to create S3 buckets in multiple Regions:
 
 ```terraform
 locals {
@@ -151,7 +151,7 @@ locals {
   ]
 }
 
-resource "aws_s3_bucket" "test" {
+resource "aws_s3_bucket" "example" {
   count  = length(local.regions)
   region = local.regions[count.index]
 
