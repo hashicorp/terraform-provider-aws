@@ -595,7 +595,7 @@ func expandFieldToMatch(l []any) *awstypes.FieldToMatch {
 	}
 
 	if v, ok := m["uri_fragment"]; ok && len(v.([]any)) > 0 {
-		f.UriFragment = expandUriFragment(v.([]any))
+		f.UriFragment = expandURIFragment(v.([]any))
 	}
 
 	if v, ok := m["uri_path"]; ok && len(v.([]any)) > 0 {
@@ -781,7 +781,7 @@ func expandSingleQueryArgument(l []any) *awstypes.SingleQueryArgument {
 	}
 }
 
-func expandUriFragment(tfList []any) *awstypes.UriFragment {
+func expandURIFragment(tfList []any) *awstypes.UriFragment {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -2213,7 +2213,7 @@ func flattenFieldToMatch(f *awstypes.FieldToMatch) any {
 	}
 
 	if f.UriFragment != nil {
-		m["uri_fragment"] = flattenUriFragment(f.UriFragment)
+		m["uri_fragment"] = flattenURIFragment(f.UriFragment)
 	}
 
 	if f.UriPath != nil {
@@ -2372,7 +2372,7 @@ func flattenSingleQueryArgument(s *awstypes.SingleQueryArgument) any {
 	return []any{m}
 }
 
-func flattenUriFragment(apiObject *awstypes.UriFragment) any {
+func flattenURIFragment(apiObject *awstypes.UriFragment) any {
 	if apiObject == nil {
 		return nil
 	}

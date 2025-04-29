@@ -1510,7 +1510,7 @@ func TestAccWAFV2WebACL_ByteMatchStatement_urlFragment(t *testing.T) {
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebACLConfig_byteMatchStatementUriFragment(webACLName, string(awstypes.FallbackBehaviorMatch)),
+				Config: testAccWebACLConfig_byteMatchStatementURIFragment(webACLName, string(awstypes.FallbackBehaviorMatch)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/webacl/.+$`)),
@@ -1523,7 +1523,7 @@ func TestAccWAFV2WebACL_ByteMatchStatement_urlFragment(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccWebACLConfig_byteMatchStatementUriFragment(webACLName, string(awstypes.OversizeHandlingNoMatch)),
+				Config: testAccWebACLConfig_byteMatchStatementURIFragment(webACLName, string(awstypes.OversizeHandlingNoMatch)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/webacl/.+$`)),
@@ -3949,7 +3949,7 @@ resource "aws_wafv2_web_acl" "test" {
 `, rName, oversizeHandling)
 }
 
-func testAccWebACLConfig_byteMatchStatementUriFragment(rName, fallbackBehavior string) string {
+func testAccWebACLConfig_byteMatchStatementURIFragment(rName, fallbackBehavior string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
   name        = %[1]q
@@ -3972,7 +3972,7 @@ resource "aws_wafv2_web_acl" "test" {
       byte_match_statement {
         search_string = "abc"
         field_to_match {
-          uri_fragment { 
+          uri_fragment {
             fallback_behavior = %[2]q
           }
         }
