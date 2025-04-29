@@ -42,7 +42,7 @@ func TestAccDirectConnectGateway_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrGlobalARNFormat(ctx, resourceName, names.AttrARN, "directconnect", "dx-gateway/{id}"),
-					resource.TestCheckResourceAttrWith(resourceName, names.AttrID, directConnectGateway_CheckID(&v)),
+					resource.TestCheckResourceAttrWith(resourceName, names.AttrID, gateway_CheckID(&v)),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerAccountID),
 				),
 			},
@@ -77,7 +77,7 @@ func TestAccDirectConnectGateway_Identity_Basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
 					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
-						names.AttrID:        knownvalue.StringFunc(directConnectGateway_CheckID(&v)),
+						names.AttrID:        knownvalue.StringFunc(gateway_CheckID(&v)),
 					}),
 				},
 			},
@@ -233,7 +233,7 @@ func testAccCheckGatewayExists(ctx context.Context, n string, v *awstypes.Direct
 	}
 }
 
-func directConnectGateway_CheckID(v *awstypes.DirectConnectGateway) func(string) error {
+func gateway_CheckID(v *awstypes.DirectConnectGateway) func(string) error {
 	return func(s string) error {
 		expected := aws.ToString(v.DirectConnectGatewayId)
 		if s != expected {
