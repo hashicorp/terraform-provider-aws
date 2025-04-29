@@ -555,7 +555,10 @@ func testAccPreCheckDBClusters(ctx context.Context, t *testing.T) {
 func testAccCheckDBClusterNotRecreated(before, after *timestreaminfluxdb.GetDbClusterOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if before, after := aws.ToString(before.Id), aws.ToString(after.Id); before != after {
-			return create.Error(names.TimestreamInfluxDB, create.ErrActionCheckingNotRecreated, tftimestreaminfluxdb.ResNameDBCluster, before, errors.New("recreated"))
+			return create.Error(names.TimestreamInfluxDB, create.ErrActionCheckingNotRecreated, 
+                tftimestreaminfluxdb.ResNameDBCluster, 
+                fmt.Sprintf("before: %s, after: %s", beforeID, afterID), 
+                errors.New("resource was recreated when it should have been updated in-place"))
 		}
 
 		return nil
