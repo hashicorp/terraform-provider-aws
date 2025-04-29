@@ -138,6 +138,26 @@ To manage resources in multiple Regions with a single set of Terraform modules, 
 To address this, there is now an additional top-level `region` argument in most Regional resources' [schema](https://developer.hashicorp.com/terraform/plugin/framework/handling-data/schemas) which allows that resource to be managed in a Region other than the one defined in the provider configuration. For those resources that had a pre-existing top-level `region` argument, that argument is now deprecated and in a future version of the provider the `region` argument will be used to implement enhanced multi-Region support.
 The new top-level `region` argument is [_Optional_ and _Computed_](https://developer.hashicorp.com/terraform/plugin/framework/handling-data/attributes/string#configurability), with a default value of the Region from the provider configuration. The value of the `region` argument is validated as being in the configured [partition](https://docs.aws.amazon.com/whitepapers/latest/aws-fault-isolation-boundaries/partitions.html). A change to the argument's value forces resource replacement. To [import](https://developer.hashicorp.com/terraform/cli/import) a resource in a specific Region append `@<region>` to the [import ID](https://developer.hashicorp.com/terraform/language/import#import-id), for example `terraform import aws_vpc.test_vpc vpc-a01106c2@eu-west-1`.
 
+For example, to use a singe provider configuration to create an S3 bucket in multiple Regions:
+
+```terraform
+locals {
+  regions = [
+    "us-east-1",
+    "us-west-2",
+    "ap-northeast-1",
+    "eu-central-1",
+  ]
+}
+
+resource "aws_s3_bucket" "test" {
+  count  = length(local.regions)
+  region = local.regions[count.index]
+
+  bucket = "yournamehere-${local.regions[count.index]}"
+}
+```
+
 ## Dropping Support For Amazon SimpleDB
 
 As the [AWS SDK for Go v2](https://docs.aws.amazon.com/sdk-for-go/v2/developer-guide/welcome.html) does not support Amazon SimpleDB, the `aws_simpledb_domain` resource has been removed.
