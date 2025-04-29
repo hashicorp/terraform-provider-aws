@@ -362,6 +362,7 @@ func dbClusterDBParameterGroupIdentifierReplaceIf(ctx context.Context, req planm
 		return
 	}
 
+	// If the DBParameterGroupIdentifier is being removed, the cluster must be recreated.
 	dbParameterGroupIdentifierRemoved := !state.DBParameterGroupIdentifier.IsNull() && plan.DBParameterGroupIdentifier.IsNull()
 
 	resp.RequiresReplace = dbParameterGroupIdentifierRemoved
@@ -393,10 +394,18 @@ func (r *resourceDBCluster) Create(ctx context.Context, req resource.CreateReque
 		return
 	}
 
-	if out == nil || out.DbClusterId == nil {
+	if out == nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionCreating, ResNameDBCluster, plan.Name.String(), nil),
 			errors.New("empty output").Error(),
+		)
+		return
+	}
+
+	if out.DbClusterId == nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionCreating, ResNameDBCluster, plan.Name.String(), nil),
+			errors.New("received response with nil DbClusterId").Error(),
 		)
 		return
 	}
