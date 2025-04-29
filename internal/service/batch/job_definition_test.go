@@ -117,20 +117,12 @@ func TestAccBatchJobDefinition_Identity_Basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateKind:   resource.ImportCommandWithID,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"deregister_on_new_revision",
-				},
 			},
-			// Can't test plannable import due to `deregister_on_new_revision`
-			// {
-			// 	ResourceName:      resourceName,
-			// 	ImportState:       true,
-			// 	ImportStateKind:   resource.ImportBlockWithID,
-			// 	ImportStateVerify: true,
-			// 	ImportStateVerifyIgnore: []string{
-			// 		"deregister_on_new_revision",
-			// 	},
-			// },
+			{
+				ResourceName:    resourceName,
+				ImportState:     true,
+				ImportStateKind: resource.ImportBlockWithID,
+			},
 		},
 	})
 }
@@ -175,20 +167,12 @@ func TestAccBatchJobDefinition_Identity_Update(t *testing.T) {
 				ImportState:       true,
 				ImportStateKind:   resource.ImportCommandWithID,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"deregister_on_new_revision",
-				},
 			},
-			// Can't test plannable import due to `deregister_on_new_revision`
-			// {
-			// 	ResourceName:      resourceName,
-			// 	ImportState:       true,
-			// 	ImportStateKind:   resource.ImportBlockWithID,
-			// 	ImportStateVerify: true,
-			// 	ImportStateVerifyIgnore: []string{
-			// 		"deregister_on_new_revision",
-			// 	},
-			// },
+			{
+				ResourceName:    resourceName,
+				ImportState:     true,
+				ImportStateKind: resource.ImportBlockWithID,
+			},
 		},
 	})
 }
@@ -219,21 +203,13 @@ func TestAccBatchJobDefinition_Identity_RegionOverride(t *testing.T) {
 				ImportState:       true,
 				ImportStateKind:   resource.ImportCommandWithID,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"deregister_on_new_revision",
-				},
 			},
-			// Can't test plannable import due to `deregister_on_new_revision`
-			// {
-			// 	ResourceName:      resourceName,
-			// 	ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
-			// 	ImportState:       true,
-			// 	ImportStateKind:   resource.ImportBlockWithID,
-			// 	ImportStateVerify: true,
-			// 	ImportStateVerifyIgnore: []string{
-			// 		"deregister_on_new_revision",
-			// 	},
-			// },
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
+				ImportState:       true,
+				ImportStateKind:   resource.ImportBlockWithID,
+			},
 		},
 	})
 }
