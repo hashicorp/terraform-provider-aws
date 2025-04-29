@@ -31,6 +31,8 @@ jobs:
               - 'go.sum'
             changelog:
               - 'CHANGELOG.md'
+            new-service:
+              - added: 'internal/service/*'
 
       - name: Determine if Changelog Entry is Needed
         if: |
@@ -61,7 +63,7 @@ jobs:
         id: community_check
         uses: ./.github/actions/community_check
         with:
-          user_login: ${{ env.AUTHOR }}
+          user_login: ${{ github.event.pull_request.user.login }}
           maintainers: ${{ secrets.MAINTAINERS }}
 
       - name: Check Maintainer Editability
@@ -83,6 +85,7 @@ jobs:
         id: dependencies
         if: |
           steps.filter.outputs.dependencies == 'true'
+          && steps.filter.outputs.new-service == 'false'
           && steps.community_check.outputs.maintainer == 'false'
         shell: bash
         run: |
