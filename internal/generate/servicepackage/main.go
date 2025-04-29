@@ -156,6 +156,7 @@ type ResourceDatum struct {
 	IdentityAttributes                []identityAttribute
 	ARNIdentity                       bool
 	SingletonIdentity                 bool
+	MutableIdentity                   bool
 	goImports                         []goImport
 }
 
@@ -343,6 +344,9 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			case "ArnIdentity":
 				d.ARNIdentity = true
 
+			case "MutableIdentity":
+				d.MutableIdentity = true
+
 			case "SingletonIdentity":
 				d.SingletonIdentity = true
 			}
@@ -485,7 +489,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					v.sdkResources[typeName] = d
 				}
 
-			case "IdentityAttribute", "ArnIdentity", "SingletonIdentity", "Region", "Tags":
+			case "IdentityAttribute", "ArnIdentity", "MutableIdentity", "SingletonIdentity", "Region", "Tags":
 				// Handled above.
 			case "Testing":
 				// Ignored.

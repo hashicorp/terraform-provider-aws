@@ -106,27 +106,29 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*itypes.Servi
 				IsValidateOverrideInPartition: {{ $value.ValidateRegionOverrideInPartition }},
 			{{- end }}
 			},
-			{{- if gt (len $value.IdentityAttributes) 0 }}
-				{{- if or $.IsGlobal $value.IsGlobal }}
-					Identity: itypes.GlobalParameterizedIdentity(
-						{{- range $value.IdentityAttributes }}
-							{{ template "IdentifierAttribute" . }}
-						{{- end }}
-					),
-				{{ else }}
-					Identity: itypes.ParameterizedIdentity(
-						{{- range $value.IdentityAttributes }}
-							{{ template "IdentifierAttribute" . }}
-						{{- end }}
-					),
-				{{- end }}
-			{{- else if $value.ARNIdentity }}
-				Identity: itypes.ARNIdentity(),
-			{{- else if $value.SingletonIdentity }}
-				{{- if or $.IsGlobal $value.IsGlobal }}
-					Identity: itypes.GlobalSingletonIdentity(),
-				{{ else }}
-					Identity: itypes.RegionalSingletonIdentity(),
+			{{- if not $value.MutableIdentity }}
+				{{- if gt (len $value.IdentityAttributes) 0 }}
+					{{- if or $.IsGlobal $value.IsGlobal }}
+						Identity: itypes.GlobalParameterizedIdentity(
+							{{- range $value.IdentityAttributes }}
+								{{ template "IdentifierAttribute" . }}
+							{{- end }}
+						),
+					{{ else }}
+						Identity: itypes.ParameterizedIdentity(
+							{{- range $value.IdentityAttributes }}
+								{{ template "IdentifierAttribute" . }}
+							{{- end }}
+						),
+					{{- end }}
+				{{- else if $value.ARNIdentity }}
+					Identity: itypes.ARNIdentity(),
+				{{- else if $value.SingletonIdentity }}
+					{{- if or $.IsGlobal $value.IsGlobal }}
+						Identity: itypes.GlobalSingletonIdentity(),
+					{{ else }}
+						Identity: itypes.RegionalSingletonIdentity(),
+					{{- end }}
 				{{- end }}
 			{{- end }}
 		},
@@ -187,27 +189,29 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*itypes.ServicePack
 				IsValidateOverrideInPartition: {{ $value.ValidateRegionOverrideInPartition }},
 				{{- end }}
 			},
-			{{- if gt (len $value.IdentityAttributes) 0 }}
-				{{- if or $.IsGlobal $value.IsGlobal }}
-					Identity: itypes.GlobalParameterizedIdentity(
-						{{- range $value.IdentityAttributes }}
-							{{ template "IdentifierAttribute" . }}
-						{{- end }}
-					),
-				{{ else }}
-					Identity: itypes.ParameterizedIdentity(
-						{{- range $value.IdentityAttributes }}
-							{{ template "IdentifierAttribute" . }}
-						{{- end }}
-					),
-				{{- end }}
-			{{- else if $value.ARNIdentity }}
-				Identity: itypes.ARNIdentity(),
-			{{- else if $value.SingletonIdentity }}
-				{{- if or $.IsGlobal $value.IsGlobal }}
-					Identity: itypes.GlobalSingletonIdentity(),
-				{{ else }}
-					Identity: itypes.RegionalSingletonIdentity(),
+			{{- if not $value.MutableIdentity }}
+				{{- if gt (len $value.IdentityAttributes) 0 }}
+					{{- if or $.IsGlobal $value.IsGlobal }}
+						Identity: itypes.GlobalParameterizedIdentity(
+							{{- range $value.IdentityAttributes }}
+								{{ template "IdentifierAttribute" . }}
+							{{- end }}
+						),
+					{{ else }}
+						Identity: itypes.ParameterizedIdentity(
+							{{- range $value.IdentityAttributes }}
+								{{ template "IdentifierAttribute" . }}
+							{{- end }}
+						),
+					{{- end }}
+				{{- else if $value.ARNIdentity }}
+					Identity: itypes.ARNIdentity(),
+				{{- else if $value.SingletonIdentity }}
+					{{- if or $.IsGlobal $value.IsGlobal }}
+						Identity: itypes.GlobalSingletonIdentity(),
+					{{ else }}
+						Identity: itypes.RegionalSingletonIdentity(),
+					{{- end }}
 				{{- end }}
 			{{- end }}
 		},
