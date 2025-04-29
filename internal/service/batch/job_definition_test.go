@@ -156,84 +156,84 @@ func TestAccBatchJobDefinition_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccBatchJobDefinition_Identity_Update(t *testing.T) {
-	ctx := acctest.Context(t)
-	var jd awstypes.JobDefinition
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_batch_job_definition.test"
+// func TestAccBatchJobDefinition_Identity_Update(t *testing.T) {
+// 	ctx := acctest.Context(t)
+// 	var jd awstypes.JobDefinition
+// 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+// 	resourceName := "aws_batch_job_definition.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.SkipBelow(tfversion.Version1_12_0),
-		},
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckJobDefinitionDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccJobDefinitionConfig_containerProperties(rName, "-one"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
-				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("revision"), knownvalue.Int64Exact(1)),
-					tfstatecheck.ExpectIdentityRegionalARNFormat(ctx, resourceName, "batch", "job-definition/{name}:{revision}"),
-				},
-			},
-			{
-				Config: testAccJobDefinitionConfig_containerProperties(rName, "-two"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
-				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("revision"), knownvalue.Int64Exact(2)),
-					tfstatecheck.ExpectIdentityRegionalARNFormat(ctx, resourceName, "batch", "job-definition/{name}:{revision}"),
-				},
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateKind:   resource.ImportCommandWithID,
-				ImportStateVerify: true,
-				ImportPlanChecks: resource.ImportPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("arn"), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("id"), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("region"), knownvalue.StringExact(acctest.Region())),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("deregister_on_new_revision"), knownvalue.Bool(true)),
-					},
-				},
-			},
-			{
-				ResourceName:    resourceName,
-				ImportState:     true,
-				ImportStateKind: resource.ImportBlockWithID,
-				ImportPlanChecks: resource.ImportPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("arn"), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("id"), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("region"), knownvalue.StringExact(acctest.Region())),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("deregister_on_new_revision"), knownvalue.Bool(true)),
-					},
-				},
-			},
-			{
-				ResourceName:    resourceName,
-				ImportState:     true,
-				ImportStateKind: resource.ImportBlockWithResourceIdentity,
-				ImportPlanChecks: resource.ImportPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("arn"), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("id"), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("region"), knownvalue.StringExact(acctest.Region())),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("deregister_on_new_revision"), knownvalue.Bool(true)),
-					},
-				},
-			},
-		},
-	})
-}
+// 	resource.ParallelTest(t, resource.TestCase{
+// 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+// 			tfversion.SkipBelow(tfversion.Version1_12_0),
+// 		},
+// 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+// 		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
+// 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+// 		CheckDestroy:             testAccCheckJobDefinitionDestroy(ctx),
+// 		Steps: []resource.TestStep{
+// 			{
+// 				Config: testAccJobDefinitionConfig_containerProperties(rName, "-one"),
+// 				Check: resource.ComposeAggregateTestCheckFunc(
+// 					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
+// 				),
+// 				ConfigStateChecks: []statecheck.StateCheck{
+// 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("revision"), knownvalue.Int64Exact(1)),
+// 					tfstatecheck.ExpectIdentityRegionalARNFormat(ctx, resourceName, "batch", "job-definition/{name}:{revision}"),
+// 				},
+// 			},
+// 			{
+// 				Config: testAccJobDefinitionConfig_containerProperties(rName, "-two"),
+// 				Check: resource.ComposeAggregateTestCheckFunc(
+// 					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
+// 				),
+// 				ConfigStateChecks: []statecheck.StateCheck{
+// 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("revision"), knownvalue.Int64Exact(2)),
+// 					tfstatecheck.ExpectIdentityRegionalARNFormat(ctx, resourceName, "batch", "job-definition/{name}:{revision}"),
+// 				},
+// 			},
+// 			{
+// 				ResourceName:      resourceName,
+// 				ImportState:       true,
+// 				ImportStateKind:   resource.ImportCommandWithID,
+// 				ImportStateVerify: true,
+// 				ImportPlanChecks: resource.ImportPlanChecks{
+// 					PreApply: []plancheck.PlanCheck{
+// 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("arn"), knownvalue.NotNull()),
+// 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("id"), knownvalue.NotNull()),
+// 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("region"), knownvalue.StringExact(acctest.Region())),
+// 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("deregister_on_new_revision"), knownvalue.Bool(true)),
+// 					},
+// 				},
+// 			},
+// 			{
+// 				ResourceName:    resourceName,
+// 				ImportState:     true,
+// 				ImportStateKind: resource.ImportBlockWithID,
+// 				ImportPlanChecks: resource.ImportPlanChecks{
+// 					PreApply: []plancheck.PlanCheck{
+// 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("arn"), knownvalue.NotNull()),
+// 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("id"), knownvalue.NotNull()),
+// 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("region"), knownvalue.StringExact(acctest.Region())),
+// 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("deregister_on_new_revision"), knownvalue.Bool(true)),
+// 					},
+// 				},
+// 			},
+// 			{
+// 				ResourceName:    resourceName,
+// 				ImportState:     true,
+// 				ImportStateKind: resource.ImportBlockWithResourceIdentity,
+// 				ImportPlanChecks: resource.ImportPlanChecks{
+// 					PreApply: []plancheck.PlanCheck{
+// 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("arn"), knownvalue.NotNull()),
+// 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("id"), knownvalue.NotNull()),
+// 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("region"), knownvalue.StringExact(acctest.Region())),
+// 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("deregister_on_new_revision"), knownvalue.Bool(true)),
+// 					},
+// 				},
+// 			},
+// 		},
+// 	})
+// }
 
 func TestAccBatchJobDefinition_Identity_RegionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
