@@ -182,7 +182,7 @@ func resourceBucketPublicAccessBlockDelete(ctx context.Context, d *schema.Resour
 		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
 
-	log.Printf("[DEBUG] Deleting S3 Bucket Ownership Controls: %s", d.Id())
+	log.Printf("[DEBUG] Deleting S3 Bucket Public Access Block: %s", d.Id())
 	_, err := conn.DeletePublicAccessBlock(ctx, &s3.DeletePublicAccessBlockInput{
 		Bucket: aws.String(bucket),
 	})

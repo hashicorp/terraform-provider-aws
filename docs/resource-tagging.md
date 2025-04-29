@@ -472,6 +472,16 @@ If a resource or data source type supports tags but does not use transparent tag
 
 Additional `@Testing(...)` parameters can be used to control the generated tests.
 
+##### PreCheck parameters
+
+All generated tagging tests include the standard `acctest.PreCheck` PreCheck function.
+In some cases, acceptance tests will require additional PreCheck functions.
+Specify them with the annotation `@Testing(preCheck=<reference>)`.
+The reference optionally contains a Go package path and package alias, using the format
+`[<package path>;[<package alias>;]]<function name>`.
+The function is assumed to have the signature `func(ctx context.Context, t *testing.T)`.
+Multiple `@Testing(preCheck)` annotations are allowed.
+
 ##### Required Argument parameters
 
 Most testing configurations take a single parameter, often a name or a domain name.
