@@ -47,15 +47,15 @@ func resourceAccountPublicAccessBlock() *schema.Resource {
 					return nil, err
 				}
 
-				accountIDRaw, ok := identity.GetOk("account_id")
+				accountIDRaw, ok := identity.GetOk(names.AttrAccountID)
 				if !ok {
-					return nil, fmt.Errorf("identity attribute %q is required", "account_id")
+					return nil, fmt.Errorf("identity attribute %q is required", names.AttrAccountID)
 				}
 				accountID, ok := accountIDRaw.(string)
 				if !ok {
-					return nil, fmt.Errorf("identity attribute %q: expected string, got %T", "account_id", accountIDRaw)
+					return nil, fmt.Errorf("identity attribute %q: expected string, got %T", names.AttrAccountID, accountIDRaw)
 				}
-				rd.Set("account_id", accountID)
+				rd.Set(names.AttrAccountID, accountID)
 				rd.SetId(accountID)
 
 				return []*schema.ResourceData{rd}, nil

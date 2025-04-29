@@ -352,7 +352,7 @@ func (r *keyResource) ImportState(ctx context.Context, request resource.ImportSt
 		}
 
 		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("key_value_store_arn"), parts[0])...)
-		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("key"), parts[1])...)
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrKey), parts[1])...)
 		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), request.ID)...)
 
 		return
@@ -368,9 +368,9 @@ func (r *keyResource) ImportState(ctx context.Context, request resource.ImportSt
 		}
 
 		var key string
-		identity.GetAttribute(ctx, path.Root("key"), &key)
+		identity.GetAttribute(ctx, path.Root(names.AttrKey), &key)
 
-		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("key"), key)...)
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrKey), key)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -381,6 +381,6 @@ func (r *keyResource) ImportState(ctx context.Context, request resource.ImportSt
 		}
 		id, _ := flex.FlattenResourceId(parts, keyResourceIDPartCount, false)
 
-		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("id"), id)...)
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), id)...)
 	}
 }

@@ -108,8 +108,8 @@ func TestAccBatchJobQueue_Identity_Basic(t *testing.T) {
 				ImportStateVerify: true,
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("arn"), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("id"), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
 						// plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("region"), knownvalue.StringExact(acctest.Region())),
 					},
 				},
@@ -120,8 +120,8 @@ func TestAccBatchJobQueue_Identity_Basic(t *testing.T) {
 				ImportStateKind: resource.ImportBlockWithID,
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("arn"), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("id"), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
 						// plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("region"), knownvalue.StringExact(acctest.Region())),
 					},
 				},
@@ -132,8 +132,8 @@ func TestAccBatchJobQueue_Identity_Basic(t *testing.T) {
 				ImportStateKind: resource.ImportBlockWithResourceIdentity,
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("arn"), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("id"), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
 						// plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("region"), knownvalue.StringExact(acctest.Region())),
 					},
 				},

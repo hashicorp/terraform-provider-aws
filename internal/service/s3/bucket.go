@@ -69,7 +69,7 @@ func resourceBucket() *schema.Resource {
 			StateContext: func(_ context.Context, rd *schema.ResourceData, _ any) ([]*schema.ResourceData, error) {
 				// Import-by-id case
 				if rd.Id() != "" {
-					rd.Set("bucket", rd.Id())
+					rd.Set(names.AttrBucket, rd.Id())
 					return []*schema.ResourceData{rd}, nil
 				}
 
@@ -78,24 +78,24 @@ func resourceBucket() *schema.Resource {
 					return nil, err
 				}
 
-				regionRaw, ok := identity.GetOk("region")
+				regionRaw, ok := identity.GetOk(names.AttrRegion)
 				if ok {
 					region, ok := regionRaw.(string)
 					if !ok {
-						return nil, fmt.Errorf("identity attribute %q: expected string, got %T", "region", regionRaw)
+						return nil, fmt.Errorf("identity attribute %q: expected string, got %T", names.AttrRegion, regionRaw)
 					}
-					rd.Set("region", region)
+					rd.Set(names.AttrRegion, region)
 				}
 
-				bucketRaw, ok := identity.GetOk("bucket")
+				bucketRaw, ok := identity.GetOk(names.AttrBucket)
 				if !ok {
-					return nil, fmt.Errorf("identity attribute %q is required", "bucket")
+					return nil, fmt.Errorf("identity attribute %q is required", names.AttrBucket)
 				}
 				bucket, ok := bucketRaw.(string)
 				if !ok {
-					return nil, fmt.Errorf("identity attribute %q: expected string, got %T", "bucket", bucketRaw)
+					return nil, fmt.Errorf("identity attribute %q: expected string, got %T", names.AttrBucket, bucketRaw)
 				}
-				rd.Set("bucket", bucket)
+				rd.Set(names.AttrBucket, bucket)
 				rd.SetId(bucket)
 
 				return []*schema.ResourceData{rd}, nil

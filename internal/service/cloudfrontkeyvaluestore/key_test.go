@@ -111,8 +111,8 @@ func TestAccCloudFrontKeyValueStoreKey_Identity_Basic(t *testing.T) {
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("key_value_store_arn"), knownvalue.NotNull()), // TODO: needs pair
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("key"), knownvalue.StringExact(rName)),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("id"), knownvalue.NotNull()), // TODO: needs tfplancheck.ExpectAttributeFormat
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrKey), knownvalue.StringExact(rName)),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()), // TODO: needs tfplancheck.ExpectAttributeFormat
 					},
 				},
 			},

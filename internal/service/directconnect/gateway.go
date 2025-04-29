@@ -49,14 +49,14 @@ func resourceGateway() *schema.Resource {
 					return nil, err
 				}
 
-				idRaw, ok := identity.GetOk("id")
+				idRaw, ok := identity.GetOk(names.AttrID)
 				if !ok {
-					return nil, fmt.Errorf("identity attribute %q is required", "id")
+					return nil, fmt.Errorf("identity attribute %q is required", names.AttrID)
 				}
 
 				id, ok := idRaw.(string)
 				if !ok {
-					return nil, fmt.Errorf("identity attribute %q: expected string, got %T", "id", idRaw)
+					return nil, fmt.Errorf("identity attribute %q: expected string, got %T", names.AttrID, idRaw)
 				}
 
 				rd.SetId(id)

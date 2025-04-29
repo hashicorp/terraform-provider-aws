@@ -58,24 +58,24 @@ func resourceJobDefinition() *schema.Resource {
 					return nil, err
 				}
 
-				arnRaw, ok := identity.GetOk("arn")
+				arnRaw, ok := identity.GetOk(names.AttrARN)
 				if !ok {
-					return nil, fmt.Errorf("identity attribute %q is required", "arn")
+					return nil, fmt.Errorf("identity attribute %q is required", names.AttrARN)
 				}
 
 				arnVal, ok := arnRaw.(string)
 				if !ok {
-					return nil, fmt.Errorf("identity attribute %q: expected string, got %T", "arn", arnRaw)
+					return nil, fmt.Errorf("identity attribute %q: expected string, got %T", names.AttrARN, arnRaw)
 				}
 
 				arnARN, err := arn.Parse(arnVal)
 				if err != nil {
-					return nil, fmt.Errorf("identity attribute %q: could not parse as ARN: %q", "arn", arnVal)
+					return nil, fmt.Errorf("identity attribute %q: could not parse as ARN: %q", names.AttrARN, arnVal)
 				}
 
-				rd.Set("region", arnARN.Region)
+				rd.Set(names.AttrRegion, arnARN.Region)
 
-				rd.Set("arn", arnVal)
+				rd.Set(names.AttrARN, arnVal)
 				rd.SetId(arnVal)
 
 				rd.Set("deregister_on_new_revision", true)

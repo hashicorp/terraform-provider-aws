@@ -62,14 +62,14 @@ func resourceRole() *schema.Resource {
 					return nil, err
 				}
 
-				nameRaw, ok := identity.GetOk("name")
+				nameRaw, ok := identity.GetOk(names.AttrName)
 				if !ok {
-					return nil, fmt.Errorf("identity attribute %q is required", "name")
+					return nil, fmt.Errorf("identity attribute %q is required", names.AttrName)
 				}
 
 				name, ok := nameRaw.(string)
 				if !ok {
-					return nil, fmt.Errorf("identity attribute %q: expected string, got %T", "name", nameRaw)
+					return nil, fmt.Errorf("identity attribute %q: expected string, got %T", names.AttrName, nameRaw)
 				}
 
 				rd.SetId(name)

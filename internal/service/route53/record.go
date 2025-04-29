@@ -81,25 +81,25 @@ func resourceRecord() *schema.Resource {
 				}
 				d.Set("zone_id", zoneID)
 
-				nameRaw, ok := identity.GetOk("name")
+				nameRaw, ok := identity.GetOk(names.AttrName)
 				if !ok {
-					return nil, fmt.Errorf("identity attribute %q is required", "name")
+					return nil, fmt.Errorf("identity attribute %q is required", names.AttrName)
 				}
 				name, ok := nameRaw.(string)
 				if !ok {
-					return nil, fmt.Errorf("identity attribute %q: expected string, got %T", "name", nameRaw)
+					return nil, fmt.Errorf("identity attribute %q: expected string, got %T", names.AttrName, nameRaw)
 				}
-				d.Set("name", name)
+				d.Set(names.AttrName, name)
 
-				typeRaw, ok := identity.GetOk("type")
+				typeRaw, ok := identity.GetOk(names.AttrType)
 				if !ok {
-					return nil, fmt.Errorf("identity attribute %q is required", "type")
+					return nil, fmt.Errorf("identity attribute %q is required", names.AttrType)
 				}
 				typ, ok := typeRaw.(string)
 				if !ok {
-					return nil, fmt.Errorf("identity attribute %q: expected string, got %T", "type", typeRaw)
+					return nil, fmt.Errorf("identity attribute %q: expected string, got %T", names.AttrType, typeRaw)
 				}
-				d.Set("type", typ)
+				d.Set(names.AttrType, typ)
 
 				vars := []string{
 					zoneID,
