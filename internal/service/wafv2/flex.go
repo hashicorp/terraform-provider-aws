@@ -594,6 +594,10 @@ func expandFieldToMatch(l []any) *awstypes.FieldToMatch {
 		f.SingleQueryArgument = expandSingleQueryArgument(m["single_query_argument"].([]any))
 	}
 
+	if v, ok := m["uri_fragment"]; ok && len(v.([]any)) > 0 {
+		f.UriFragment = expandUriFragment(v.([]any))
+	}
+
 	if v, ok := m["uri_path"]; ok && len(v.([]any)) > 0 {
 		f.UriPath = &awstypes.UriPath{}
 	}
@@ -775,6 +779,21 @@ func expandSingleQueryArgument(l []any) *awstypes.SingleQueryArgument {
 	return &awstypes.SingleQueryArgument{
 		Name: aws.String(m[names.AttrName].(string)),
 	}
+}
+
+func expandUriFragment(tfList []any) *awstypes.UriFragment {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+	tfMap := tfList[0].(map[string]any)
+
+	apiObject := &awstypes.UriFragment{}
+
+	if v, ok := tfMap["fallback_behavior"].(string); ok && v != "" {
+		apiObject.FallbackBehavior = awstypes.FallbackBehavior(v)
+	}
+
+	return apiObject
 }
 
 func expandTextTransformations(l []any) []awstypes.TextTransformation {
@@ -2193,6 +2212,10 @@ func flattenFieldToMatch(f *awstypes.FieldToMatch) any {
 		m["single_query_argument"] = flattenSingleQueryArgument(f.SingleQueryArgument)
 	}
 
+	if f.UriFragment != nil {
+		m["uri_fragment"] = flattenUriFragment(f.UriFragment)
+	}
+
 	if f.UriPath != nil {
 		m["uri_path"] = make([]map[string]any, 1)
 	}
@@ -2347,6 +2370,19 @@ func flattenSingleQueryArgument(s *awstypes.SingleQueryArgument) any {
 	}
 
 	return []any{m}
+}
+
+func flattenUriFragment(apiObject *awstypes.UriFragment) any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.FallbackBehavior; v != "" {
+		tfMap["fallback_behavior"] = v
+	}
+	return []any{tfMap}
 }
 
 func flattenTextTransformations(l []awstypes.TextTransformation) []any {
