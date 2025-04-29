@@ -51,6 +51,26 @@ func resourceJobDefinition() *schema.Resource {
 					return []*schema.ResourceData{rd}, nil
 				}
 
+				identity, err := rd.Identity()
+				if err != nil {
+					return nil, err
+				}
+
+				arnRaw, ok := identity.GetOk("arn")
+				if !ok {
+					return nil, fmt.Errorf("identity attribute %q is required", "arn")
+				}
+
+				arnVal, ok := arnRaw.(string)
+				if !ok {
+					return nil, fmt.Errorf("identity attribute %q: expected string, got %T", "arn", arnRaw)
+				}
+
+				rd.Set("arn", arnVal)
+				rd.SetId(arnVal)
+
+				rd.Set("deregister_on_new_revision", true)
+
 				return []*schema.ResourceData{rd}, nil
 			},
 		},

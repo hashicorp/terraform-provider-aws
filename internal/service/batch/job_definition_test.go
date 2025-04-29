@@ -137,6 +137,18 @@ func TestAccBatchJobDefinition_Identity_Basic(t *testing.T) {
 					},
 				},
 			},
+			{
+				ResourceName:    resourceName,
+				ImportState:     true,
+				ImportStateKind: resource.ImportBlockWithResourceIdentity,
+				ImportPlanChecks: resource.ImportPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("arn"), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("id"), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("deregister_on_new_revision"), knownvalue.Bool(true)),
+					},
+				},
+			},
 		},
 	})
 }
