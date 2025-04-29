@@ -292,7 +292,7 @@ require (
 	github.com/hashicorp/terraform-plugin-log v0.9.0
 	github.com/hashicorp/terraform-plugin-mux v0.19.0-alpha.1
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.37.0-beta.1
-	github.com/hashicorp/terraform-plugin-testing v1.13.0-beta.1
+	github.com/hashicorp/terraform-plugin-testing v1.13.0-beta.1.0.20250507142402-712b939733de
 	github.com/jmespath/go-jmespath v0.4.0
 	github.com/mattbaird/jsonpatch v0.0.0-20240118010651-0ba75a80ca38
 	github.com/mitchellh/copystructure v1.2.0
