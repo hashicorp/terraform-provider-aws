@@ -3315,9 +3315,9 @@ resource "aws_security_group" "target" {
 }
 
 resource "aws_batch_compute_environment" "target" {
-  compute_environment_name = "%[1]s-target"
-  service_role             = aws_iam_role.target.arn
-  type                     = "MANAGED"
+  name         = "%[1]s-target"
+  service_role = aws_iam_role.target.arn
+  type         = "MANAGED"
 
   compute_resources {
     instance_role      = aws_iam_instance_profile.ecs_instance_role.arn
@@ -3333,10 +3333,14 @@ resource "aws_batch_compute_environment" "target" {
 }
 
 resource "aws_batch_job_queue" "target" {
-  compute_environments = [aws_batch_compute_environment.target.arn]
-  name                 = "%[1]s-target"
-  priority             = 1
-  state                = "ENABLED"
+  compute_environment_order {
+    compute_environment = aws_batch_compute_environment.target.arn
+    order               = 1
+  }
+
+  name     = "%[1]s-target"
+  priority = 1
+  state    = "ENABLED"
 }
 
 resource "aws_batch_job_definition" "target" {
