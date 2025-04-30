@@ -431,7 +431,7 @@ func TestAccImageBuilderInfrastructureConfiguration_placementAvailabilityZone(t 
 	})
 }
 
-func TestAccImageBuilderInfrastructureConfiguration_placementHostResourceGroupArn(t *testing.T) {
+func TestAccImageBuilderInfrastructureConfiguration_placementHostResourceGroupARN(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceGroupNme := "aws_resourcegroups_group.test"
