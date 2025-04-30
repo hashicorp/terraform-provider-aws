@@ -22,6 +22,7 @@ Upgrade topics:
 - [AWS CloudWatch Evidently Deprecation](#aws-cloudwatch-evidently-deprecation)
 - [Amazon Elastic Transcoder Deprecation](#amazon-elastic-transcoder-deprecation)
 - [S3 Global Endpoint Support Deprecation](#s3-global-endpoint-support-deprecation)
+- [Updated TypeNullableBool Validation](#updated-typenullablebool-validation)
 - [data-source/aws_ami](#data-sourceaws_ami)
 - [data-source/aws_batch_compute_environment](#data-sourceaws_batch_compute_environment)
 - [data-source/aws_ecs_task_definition](#data-sourceaws_ecs_task_definition)
@@ -184,6 +185,45 @@ Support for the global S3 endpoint is deprecated, along with the `s3_us_east_1_r
 The ability to use the global S3 endpoint will be removed in `v7.0.0`.
 This change only affects S3 resources in `us-east-1` (excluding directory buckets), where `s3_us_east_1_regional_endpoint` is set to `legacy` in the provider configuration.
 Impacted configurations can remove the `s3_us_east_1_regional_endpoint` provider argument, or switch the value to `regional` to verify connectivity with the regional S3 endpoint in `us-east-1` prior to this option being removed.
+
+## Updated `TypeNullableBool` Validation
+
+`TypeNullableBool` arguments now only accept one of `""` (empty string), `true`, or `false`.
+The ability to provide `0` or `1` to these arguments was previously deprecated and will now result in a plan-time validation error instead.
+
+The following resource arguments are impacted by this change:
+
+- `aws_accessanalyzer_archive_rule`
+    - `filter.exists`
+- `aws_cloudtrail_event_data_store`
+    - `suspend`
+- `aws_ec2_spot_instance_fleet`
+    - `terminate_instances_on_delete`
+- `aws_elasticache_cluster`
+    - `auto_minor_version_upgrade`
+- `aws_elasticache_replication_group`
+    - `at_rest_encryption_enabled`
+    - `auto_minor_version_upgrade`
+- `aws_evidently_feature`
+    - `variations.value.bool_value`
+- `aws_imagebuilder_container_recipe`
+    - `instance_configuration.block_device_mapping.ebs.delete_on_termination`
+    - `instance_configuration.block_device_mapping.ebs.encrypted`
+- `aws_imagebuilder_image_recipe`
+    - `block_device_mapping.ebs.delete_on_termination`
+    - `block_device_mapping.ebs.encrypted`
+- `aws_launch_template`
+    - `block_device_mappings.ebs.delete_on_termination`
+    - `block_device_mappings.ebs.encrypted`
+    - `ebs_optimized`
+    - `network_interfaces.associate_carrier_ip_address`
+    - `network_interfaces.associate_public_ip_address`
+    - `network_interfaces.delete_on_termination`
+    - `network_interfaces.primary_ipv6`
+- `aws_lb_target_group`, `aws_alb_target_group`
+    - `preserve_client_ip`
+- `aws_mq_broker`
+    - `logs.audit`
 
 ## data-source/aws_ami
 
