@@ -7,4 +7,6 @@ package ssmincidents
 var (
 	ResourceReplicationSet = resourceReplicationSet
 	ResourceResponsePlan   = resourceResponsePlan
+
+	FindReplicationSetByID = findReplicationSetByID
 )

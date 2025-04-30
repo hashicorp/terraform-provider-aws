@@ -76,6 +76,7 @@ Upgrade topics:
 - [resource/aws_sagemaker_notebook_instance](#resourceaws_sagemaker_notebook_instance)
 - [resource/aws_spot_instance_request](#resourceaws_spot_instance_request)
 - [resource/aws_ssm_association](#resourceaws_ssm_association)
+- [resource/aws_ssmincidents_replication_set](#resourceaws_ssmincidents_replication_set)
 - [resource/aws_verifiedpermissions_schema](#resourceaws_verifiedpermissions_schema)
 - [resource/aws_wafv2_web_acl](#resourceaws_wafv2_web_acl)
 
@@ -514,6 +515,10 @@ Remove `block_duration_minutes` from your configuration—it no longer exists.
 ## resource/aws_ssm_association
 
 Remove `instance_id` from configuration—it no longer exists. Use `targets` instead.
+
+## resource/aws_ssmincidents_replication_set
+
+The `region` attribute has been deprecated. All configurations using `region` should be updated to use the `regions` attribute instead.
 
 ## resource/aws_verifiedpermissions_schema
 

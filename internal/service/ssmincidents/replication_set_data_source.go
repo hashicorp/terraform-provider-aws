@@ -71,11 +71,11 @@ func dataSourceReplicationSet() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrName: {
+						names.AttrKMSKeyARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrKMSKeyARN: {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -101,10 +101,10 @@ func dataSourceReplicationSet() *schema.Resource {
 
 func dataSourceReplicationSetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	client := meta.(*conns.AWSClient).SSMIncidentsClient(ctx)
+	conn := meta.(*conns.AWSClient).SSMIncidentsClient(ctx)
 
 	var input ssmincidents.ListReplicationSetsInput
-	arn, err := findReplicationSetARN(ctx, client, &input)
+	arn, err := findReplicationSetARN(ctx, conn, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading SSMIncidents Replication Set: %s", err)
@@ -112,7 +112,7 @@ func dataSourceReplicationSetRead(ctx context.Context, d *schema.ResourceData, m
 
 	d.SetId(aws.ToString(arn))
 
-	replicationSet, err := FindReplicationSetByID(ctx, client, d.Id())
+	replicationSet, err := findReplicationSetByID(ctx, conn, d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading SSMIncidents Replication Set (%s): %s", d.Id(), err)
@@ -122,10 +122,10 @@ func dataSourceReplicationSetRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("created_by", replicationSet.CreatedBy)
 	d.Set("deletion_protected", replicationSet.DeletionProtected)
 	d.Set("last_modified_by", replicationSet.LastModifiedBy)
-	if err := d.Set(names.AttrRegion, flattenRegions(replicationSet.RegionMap)); err != nil {
+	if err := d.Set(names.AttrRegion, flattenRegionInfos(replicationSet.RegionMap)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting region: %s", err)
 	}
-	if err := d.Set("regions", flattenRegions(replicationSet.RegionMap)); err != nil {
+	if err := d.Set("regions", flattenRegionInfos(replicationSet.RegionMap)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting regions: %s", err)
 	}
 	d.Set(names.AttrStatus, replicationSet.Status)
