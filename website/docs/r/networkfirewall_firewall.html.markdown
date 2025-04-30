@@ -40,31 +40,20 @@ resource "aws_networkfirewall_firewall" "example" {
 This resource supports the following arguments:
 
 * `delete_protection` - (Optional) A flag indicating whether the firewall is protected against deletion. Use this setting to protect against accidentally deleting a firewall that is in use. Defaults to `false`.
-
 * `description` - (Optional) A friendly description of the firewall.
-
 * `enabled_analysis_types` - (Optional) Set of types for which to collect analysis metrics. See [Reporting on network traffic in Network Firewall](https://docs.aws.amazon.com/network-firewall/latest/developerguide/reporting.html) for details on how to use the data. Valid values: `TLS_SNI`, `HTTP_HOST`. Defaults to `[]`.
-
 * `encryption_configuration` - (Optional) KMS encryption configuration settings. See [Encryption Configuration](#encryption-configuration) below for details.
-
 * `firewall_policy_arn` - (Required) The Amazon Resource Name (ARN) of the VPC Firewall policy.
-
 * `firewall_policy_change_protection` - (Optional) A flag indicating whether the firewall is protected against a change to the firewall policy association. Use this setting to protect against accidentally modifying the firewall policy for a firewall that is in use. Defaults to `false`.
-
 * `name` - (Required, Forces new resource) A friendly name of the firewall.
-
 * `subnet_change_protection` - (Optional) A flag indicating whether the firewall is protected against changes to the subnet associations. Use this setting to protect against accidentally modifying the subnet associations for a firewall that is in use. Defaults to `false`.
-
 * `subnet_mapping` - (Required) Set of configuration blocks describing the public subnets. Each subnet must belong to a different Availability Zone in the VPC. AWS Network Firewall creates a firewall endpoint in each subnet. See [Subnet Mapping](#subnet-mapping) below for details.
-
 * `tags` - (Optional) Map of resource tags to associate with the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-
 * `vpc_id` - (Required, Forces new resource) The unique identifier of the VPC where AWS Network Firewall should create the firewall.
 
 ### Encryption Configuration
 
 `encryption_configuration` settings for customer managed KMS keys. Remove this block to use the default AWS-managed KMS encryption (rather than setting `type` to `AWS_OWNED_KMS_KEY`).
-
 * `key_id` - (Optional) The ID of the customer managed key. You can use any of the [key identifiers](https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html#key-id) that KMS supports, unless you're using a key that's managed by another account. If you're using a key managed by another account, then specify the key ARN.
 * `type` - (Required) The type of AWS KMS key to use for encryption of your Network Firewall resources. Valid values are `CUSTOMER_KMS` and `AWS_OWNED_KMS_KEY`.
 
@@ -80,18 +69,14 @@ The `subnet_mapping` block supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The Amazon Resource Name (ARN) that identifies the firewall.
-
 * `arn` - The Amazon Resource Name (ARN) that identifies the firewall.
-
 * `firewall_status` - Nested list of information about the current status of the firewall.
     * `sync_states` - Set of subnets configured for use by the firewall.
         * `attachment` - Nested list describing the attachment status of the firewall's association with a single VPC subnet.
             * `endpoint_id` - The identifier of the firewall endpoint that AWS Network Firewall has instantiated in the subnet. You use this to identify the firewall endpoint in the VPC route tables, when you redirect the VPC traffic through the endpoint.
             * `subnet_id` - The unique identifier of the subnet that you've specified to be used for a firewall endpoint.
         * `availability_zone` - The Availability Zone where the subnet is configured.
-
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-
 * `update_token` - A string token used when updating a firewall.
 
 ## Timeouts

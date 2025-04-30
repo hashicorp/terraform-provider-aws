@@ -173,7 +173,7 @@ func dataSourceFirewall() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						names.AttrSubnetID: {
 							Type:     schema.TypeString,
-							Required: true,
+							Computed: true,
 						},
 					},
 				},
@@ -195,7 +195,7 @@ func dataSourceFirewallResourceRead(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NetworkFirewallClient(ctx)
 
-	input := &networkfirewall.DescribeFirewallInput{}
+	var input networkfirewall.DescribeFirewallInput
 	if v, ok := d.GetOk(names.AttrARN); ok {
 		input.FirewallArn = aws.String(v.(string))
 	}
@@ -203,7 +203,7 @@ func dataSourceFirewallResourceRead(ctx context.Context, d *schema.ResourceData,
 		input.FirewallName = aws.String(v.(string))
 	}
 
-	output, err := findFirewall(ctx, conn, input)
+	output, err := findFirewall(ctx, conn, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading NetworkFirewall Firewall: %s", err)
