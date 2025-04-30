@@ -1024,7 +1024,7 @@ resource "aws_imagebuilder_infrastructure_configuration" "test" {
 `, rName, azIndex))
 }
 
-func testAccInfrastructureConfigurationConfig_placementHostResourceGroupArn(rName string) string {
+func testAccInfrastructureConfigurationConfig_placementHostResourceGroupARN(rName string) string {
 	return acctest.ConfigCompose(
 		testAccInfrastructureConfigurationConfig_base(rName),
 		fmt.Sprintf(`
