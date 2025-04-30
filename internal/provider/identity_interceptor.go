@@ -5,6 +5,7 @@ package provider
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -107,4 +108,34 @@ func newIdentityAttribute(attribute inttypes.IdentityAttribute) *schema.Schema {
 		attr.OptionalForImport = true
 	}
 	return attr
+}
+
+func newIdentityImporter(v inttypes.Identity) *schema.ResourceImporter {
+	importer := &schema.ResourceImporter{
+		StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+			if rd.Id() != "" {
+				return []*schema.ResourceData{rd}, nil
+			}
+
+			identity, err := rd.Identity()
+			if err != nil {
+				return nil, err
+			}
+
+			idRaw, ok := identity.GetOk(names.AttrID)
+			if !ok {
+				return nil, fmt.Errorf("identity attribute %q is required", names.AttrID)
+			}
+
+			id, ok := idRaw.(string)
+			if !ok {
+				return nil, fmt.Errorf("identity attribute %q: expected string, got %T", names.AttrID, idRaw)
+			}
+
+			rd.SetId(id)
+
+			return []*schema.ResourceData{rd}, nil
+		},
+	}
+	return importer
 }
