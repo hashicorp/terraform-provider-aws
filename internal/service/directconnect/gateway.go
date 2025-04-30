@@ -6,7 +6,6 @@ package directconnect
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log"
 	"time"
 
@@ -36,34 +35,6 @@ func resourceGateway() *schema.Resource {
 		ReadWithoutTimeout:   resourceGatewayRead,
 		UpdateWithoutTimeout: resourceGatewayUpdate,
 		DeleteWithoutTimeout: resourceGatewayDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: func(_ context.Context, rd *schema.ResourceData, _ any) ([]*schema.ResourceData, error) {
-				// Import-by-id case
-				if rd.Id() != "" {
-					return []*schema.ResourceData{rd}, nil
-				}
-
-				identity, err := rd.Identity()
-				if err != nil {
-					return nil, err
-				}
-
-				idRaw, ok := identity.GetOk(names.AttrID)
-				if !ok {
-					return nil, fmt.Errorf("identity attribute %q is required", names.AttrID)
-				}
-
-				id, ok := idRaw.(string)
-				if !ok {
-					return nil, fmt.Errorf("identity attribute %q: expected string, got %T", names.AttrID, idRaw)
-				}
-
-				rd.SetId(id)
-
-				return []*schema.ResourceData{rd}, nil
-			},
-		},
 
 		Schema: map[string]*schema.Schema{
 			"amazon_side_asn": {
