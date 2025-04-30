@@ -154,6 +154,7 @@ This resource supports the following arguments:
 
 * `directory_id` - (Required) The directory identifier for registration in WorkSpaces service.
 * `subnet_ids` - (Optional) The identifiers of the subnets where the directory resides.
+* `tenancy` - (Optional) This identifies the tenancy of the directory(Shared or Dedicated)
 * `ip_group_ids` – (Optional) The identifiers of the IP access control groups associated with the directory.
 * `tags` – (Optional) A map of tags assigned to the WorkSpaces directory. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `saml_properties` – (Optional) Configuration of SAML authentication integration. Defined below.

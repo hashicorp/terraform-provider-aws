@@ -236,6 +236,13 @@ func resourceDirectory() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"tenancy": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				Default:          types.TenancyShared,
+				ValidateDiagFunc: enum.Validate[types.Tenancy](),
+			},
 		},
 	}
 }
@@ -245,11 +252,15 @@ func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta a
 	conn := meta.(*conns.AWSClient).WorkSpacesClient(ctx)
 
 	directoryID := d.Get("directory_id").(string)
+	tenancy := types.TenancyShared
+	if v, ok := d.GetOk("tenancy"); ok {
+		tenancy = types.Tenancy(v.(string))
+	}
 	input := &workspaces.RegisterWorkspaceDirectoryInput{
 		DirectoryId:       aws.String(directoryID),
 		EnableSelfService: aws.Bool(false), // this is handled separately below
 		EnableWorkDocs:    aws.Bool(false),
-		Tenancy:           types.TenancyShared,
+		Tenancy:           tenancy,
 		Tags:              getTagsIn(ctx),
 	}
 
@@ -381,6 +392,7 @@ func resourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta any
 		return sdkdiag.AppendErrorf(diags, "setting workspace_creation_properties: %s", err)
 	}
 	d.Set("workspace_security_group_id", directory.WorkspaceSecurityGroupId)
+	d.Set("tenancy", directory.Tenancy)
 
 	return diags
 }
