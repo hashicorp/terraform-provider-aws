@@ -13,6 +13,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/batch"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/batch/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -591,10 +592,22 @@ func (r *jobQueueResource) ImportState(ctx context.Context, request resource.Imp
 	}
 
 	if identity := request.Identity; identity != nil {
-		var arn string
-		identity.GetAttribute(ctx, path.Root(names.AttrARN), &arn)
+		arnPath := path.Root(names.AttrARN)
+		var arnVal string
+		identity.GetAttribute(ctx, arnPath, &arnVal)
 
-		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrARN), arn)...)
-		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), arn)...)
+		arnARN, err := arn.Parse(arnVal)
+		if err != nil {
+			response.Diagnostics.AddAttributeError(
+				arnPath,
+				"Invalid Import Attribute Value",
+				fmt.Sprintf("Attribute %q is not a valid ARN, got: %s", arnPath, arnVal),
+			)
+			return
+		}
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrRegion), arnARN.Region)...)
+
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrARN), arnVal)...)
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), arnVal)...)
 	}
 }
