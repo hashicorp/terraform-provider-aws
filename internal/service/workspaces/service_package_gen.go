@@ -81,6 +81,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
+			Factory:  ResourcePool,
+			TypeName: "aws_workspaces_pool",
+			Name:     "Pool",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			},
+		},
+		{
 			Factory:  resourceWorkspace,
 			TypeName: "aws_workspaces_workspace",
 			Name:     "Workspace",
