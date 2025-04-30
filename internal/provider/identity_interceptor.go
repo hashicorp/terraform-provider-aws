@@ -46,7 +46,7 @@ func (r identityInterceptor) run(ctx context.Context, opts crudInterceptorOption
 					}
 
 				default:
-					val, ok := r.getAttributeOk(d, attr)
+					val, ok := getAttributeOk(d, attr)
 					if !ok {
 						continue
 					}
@@ -61,7 +61,7 @@ func (r identityInterceptor) run(ctx context.Context, opts crudInterceptorOption
 	return diags
 }
 
-func (r identityInterceptor) getAttributeOk(d schemaResourceData, name string) (string, bool) {
+func getAttributeOk(d schemaResourceData, name string) (string, bool) {
 	if name == "id" {
 		return d.Id(), true
 	}
