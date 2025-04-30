@@ -157,6 +157,7 @@ type ResourceDatum struct {
 	ARNIdentity                       bool
 	SingletonIdentity                 bool
 	MutableIdentity                   bool
+	WrappedImport                     bool
 	goImports                         []goImport
 }
 
@@ -345,6 +346,9 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				}
 
 				d.IdentityAttributes = append(d.IdentityAttributes, identityAttribute)
+
+			case "WrappedImport":
+				d.WrappedImport = true
 
 			case "ArnIdentity":
 				d.ARNIdentity = true

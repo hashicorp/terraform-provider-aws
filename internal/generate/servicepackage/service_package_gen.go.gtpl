@@ -198,7 +198,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 								{{ template "IdentifierAttribute" . }}
 							{{- end }}
 						),
-					{{ else }}
+					{{- else }}
 						Identity: inttypes.ParameterizedIdentity(
 							{{- range $value.IdentityAttributes }}
 								{{ template "IdentifierAttribute" . }}
@@ -214,6 +214,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 						Identity: inttypes.RegionalSingletonIdentity(),
 					{{- end }}
 				{{- end }}
+			{{- end }}
+			{{- if $value.WrappedImport }}
+				Import: inttypes.Import{
+					WrappedImport: true,
+				},
 			{{- end }}
 		},
 {{- end }}
