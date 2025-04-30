@@ -1,3 +1,7 @@
 ```release-note:enhancement
 resource/aws_ec2_client_vpn_endpoint: Add `client_route_enforcement_options.enforced` argument
 ```
+
+```release-note:enhancement
+data-source/aws_ec2_client_vpn_endpoint: Add `client_route_enforcement_options.enforced` attribute
+```
