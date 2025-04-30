@@ -109,6 +109,7 @@ interpolation.
 * `imds_support` - Instance Metadata Service (IMDS) support mode for the image. Set to `v2.0` if instances ran from this image enforce IMDSv2.
 * `kernel_id` - Kernel associated with the image, if any. Only applicable
   for machine images.
+* `last_launched_time` - Date and time, in ISO 8601 date-time format , when the AMI was last used to launch an EC2 instance. When the AMI is used to launch an instance, there is a 24-hour delay before that usage is reported. For more information, see the following [AWS document](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ami-last-launched-time.html).
 * `name` - Name of the AMI that was provided during image creation.
 * `owner_id` - AWS account ID of the image owner.
 * `platform` - Value is Windows for `Windows` AMIs; otherwise blank.
@@ -147,4 +148,4 @@ interpolation.
 
 [1]: http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-images.html
 
-<!-- cache-key: cdktf-0.20.8 input-6bfc785d19c21a4c97610e6294c1165146c55e004a58d2acdf72762d82db7ef8 -->
+<!-- cache-key: cdktf-0.20.8 input-001f6f9d65f91435da56c242347f43a07ad28c6093d0f3fa2f0d69e7e6053d8f -->

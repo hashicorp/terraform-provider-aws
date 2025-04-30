@@ -66,30 +66,30 @@ The following arguments are required:
 
 The following argument is optional:
 
-* `maintenance_configuration` - (Optional) A single table bucket maintenance configuration block.
+* `maintenance_configuration` - (Optional) A single table bucket maintenance configuration object.
   [See `maintenance_configuration` below](#maintenance_configuration).
 
 ### `maintenance_configuration`
 
-The `maintenance_configuration` configuration block supports the following arguments:
+The `maintenance_configuration` object supports the following arguments:
 
-* `iceberg_compaction` - (Required) A single Iceberg compaction settings block.
+* `iceberg_compaction` - (Required) A single Iceberg compaction settings object.
   [See `iceberg_compaction` below](#iceberg_compaction).
-* `iceberg_snapshot_management` - (Required) A single Iceberg snapshot management settings block.
+* `iceberg_snapshot_management` - (Required) A single Iceberg snapshot management settings object.
   [See `iceberg_snapshot_management` below](#iceberg_snapshot_management).
 
 ### `iceberg_compaction`
 
-The `iceberg_compaction` configuration block supports the following arguments:
+The `iceberg_compaction` object supports the following arguments:
 
-* `settings` - (Required) Settings for compaction.
+* `settings` - (Required) Settings object for compaction.
   [See `iceberg_compaction.settings` below](#iceberg_compactionsettings).
 * `status` - (Required) Whether the configuration is enabled.
   Valid values are `enabled` and `disabled`.
 
 ### `iceberg_compaction.settings`
 
-The `iceberg_compaction.settings` configuration block supports the following argument:
+The `iceberg_compaction.settings` object supports the following argument:
 
 * `target_file_size_mb` - (Required) Data objects smaller than this size may be combined with others to improve query performance.
   Must be between `64` and `512`.
@@ -98,14 +98,14 @@ The `iceberg_compaction.settings` configuration block supports the following arg
 
 The `iceberg_snapshot_management` configuration block supports the following arguments:
 
-* `settings` - (Required) Settings for snapshot management.
+* `settings` - (Required) Settings object for snapshot management.
   [See `iceberg_snapshot_management.settings` below](#iceberg_snapshot_managementsettings).
 * `status` - (Required) Whether the configuration is enabled.
   Valid values are `enabled` and `disabled`.
 
 ### `iceberg_snapshot_management.settings`
 
-The `iceberg_snapshot_management.settings` configuration block supports the following argument:
+The `iceberg_snapshot_management.settings` object supports the following argument:
 
 * `max_snapshot_age_hours` - (Required) Snapshots older than this will be marked for deletiion.
   Must be at least `1`.
@@ -153,4 +153,4 @@ Using `terraform import`, import S3 Tables Table using the `table_bucket_arn`, t
 % terraform import aws_s3tables_table.example 'arn:aws:s3tables:us-west-2:123456789012:bucket/example-bucket;example-namespace;example-table'
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-1b0334bf078537baac156fabb7f8bff27cbf2351a1e4db60cfa59ebb04a9a318 -->
+<!-- cache-key: cdktf-0.20.8 input-3189b3495b8a3a1d13dc53b7e36632bed7f78b1ee826b83e8ee5712ea21b5a40 -->

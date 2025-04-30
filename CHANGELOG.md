@@ -1,4 +1,78 @@
-## 5.95.0 (Unreleased)
+## 5.97.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `aws_ec2_default_credit_specification` ([#42345](https://github.com/hashicorp/terraform-provider-aws/issues/42345))
+
+ENHANCEMENTS:
+
+* data-source/aws_imagebuilder_infrastructure_configuration: Add `placement` attribute ([#42347](https://github.com/hashicorp/terraform-provider-aws/issues/42347))
+* resource/aws_accessanalyzer_analyzer: Add `configuration.unused_access.analysis_rule` argument ([#42332](https://github.com/hashicorp/terraform-provider-aws/issues/42332))
+* resource/aws_fis_experiment_template: Add support for `ManagedResources` to `action.*.target` ([#42376](https://github.com/hashicorp/terraform-provider-aws/issues/42376))
+* resource/aws_imagebuilder_infrastructure_configuration: Add `placement` argument ([#42347](https://github.com/hashicorp/terraform-provider-aws/issues/42347))
+
+## 5.96.0 (April 24, 2025)
+
+FEATURES:
+
+* **New Data Source:** `aws_fis_experiment_templates` ([#37060](https://github.com/hashicorp/terraform-provider-aws/issues/37060))
+* **New Data Source:** `aws_vpc_endpoint_associations` ([#41918](https://github.com/hashicorp/terraform-provider-aws/issues/41918))
+
+ENHANCEMENTS:
+
+* data-source/aws_api_gateway_domain_name: Add `endpoint_configuration.ip_address_type` attribute ([#42146](https://github.com/hashicorp/terraform-provider-aws/issues/42146))
+* data-source/aws_api_gateway_rest_api: Add `endpoint_configuration.ip_address_type` attribute ([#42146](https://github.com/hashicorp/terraform-provider-aws/issues/42146))
+* data-source/aws_apigatewayv2_api: Add `ip_address_type` attribute ([#42145](https://github.com/hashicorp/terraform-provider-aws/issues/42145))
+* data-source/aws_dms_endpoint: Add `kinesis_settings.use_large_integer_value` attribute ([#42300](https://github.com/hashicorp/terraform-provider-aws/issues/42300))
+* data-source/aws_guardduty_detector: Add `arn` attribute ([#42344](https://github.com/hashicorp/terraform-provider-aws/issues/42344))
+* data-source/aws_guardduty_detector: Add `tags` attribute ([#42344](https://github.com/hashicorp/terraform-provider-aws/issues/42344))
+* resource/aws_api_gateway_domain_name: Add `endpoint_configuration.ip_address_type` argument to support dual-stack (IPv4 and IPv6) endpoints ([#42146](https://github.com/hashicorp/terraform-provider-aws/issues/42146))
+* resource/aws_api_gateway_rest_api: Add `endpoint_configuration.ip_address_type` argument to support dual-stack (IPv4 and IPv6) endpoints ([#42146](https://github.com/hashicorp/terraform-provider-aws/issues/42146))
+* resource/aws_apigatewayv2_api: Add `ip_address_type` argument to support dual-stack (IPv4 and IPv6) endpoints ([#42145](https://github.com/hashicorp/terraform-provider-aws/issues/42145))
+* resource/aws_apigatewayv2_domain_name: Add `domain_name_configuration.ip_address_type` argument to support dual-stack (IPv4 and IPv6) endpoints ([#42145](https://github.com/hashicorp/terraform-provider-aws/issues/42145))
+* resource/aws_dms_endpoint: Add `kinesis_settings.use_large_integer_value` argument ([#42300](https://github.com/hashicorp/terraform-provider-aws/issues/42300))
+* resource/aws_fis_experiment_template: Add `experiment_report_configuration` argument ([#41120](https://github.com/hashicorp/terraform-provider-aws/issues/41120))
+
+BUG FIXES:
+
+* resource/aws_elasticache_replication_group: Fix `malformed version` error when parsing 7.x redis engine versions ([#42346](https://github.com/hashicorp/terraform-provider-aws/issues/42346))
+* resource/aws_iam_user: Retry `ConcurrentModificationException`s during user creation ([#42081](https://github.com/hashicorp/terraform-provider-aws/issues/42081))
+* resource/aws_rds_cluster: Fix `InvalidParameterValue: SecondsUntilAutoPause can only be specified when minimum capacity is 0` errors when removing `serverlessv2_scaling_configuration.seconds_until_auto_pause` ([#41180](https://github.com/hashicorp/terraform-provider-aws/issues/41180))
+
+## 5.95.0 (April 17, 2025)
+
+NOTES:
+
+* resource/aws_api_gateway_deployment: Computed attributes `invoke_url` and `execution_arn` are deprecated. Use the `invoke_url` and `execution_arn` attributes of the `aws_api_gateway_stage` resource instead. ([#42244](https://github.com/hashicorp/terraform-provider-aws/issues/42244))
+
+FEATURES:
+
+* **New Resource:** `aws_redshift_integration` ([#42105](https://github.com/hashicorp/terraform-provider-aws/issues/42105))
+
+ENHANCEMENTS:
+
+* data-source/aws_ec2_network_insights_path: Support `filter_at_destination` and `filter_at_source` attributes ([#42214](https://github.com/hashicorp/terraform-provider-aws/issues/42214))
+* resource/aws_amplify_app: Add `compute_role_arn` argument ([#41650](https://github.com/hashicorp/terraform-provider-aws/issues/41650))
+* resource/aws_codebuild_webhook: Add `manual_creation` argument ([#40155](https://github.com/hashicorp/terraform-provider-aws/issues/40155))
+* resource/aws_cognito_user_pool_domain: Add `managed_login_version` argument ([#40855](https://github.com/hashicorp/terraform-provider-aws/issues/40855))
+* resource/aws_ec2_network_insights_path: Add `filter_at_destination` and `filter_at_source` configuration blocks ([#42214](https://github.com/hashicorp/terraform-provider-aws/issues/42214))
+* resource/aws_eks_cluster: Add `force_update_version` argument ([#42134](https://github.com/hashicorp/terraform-provider-aws/issues/42134))
+* resource/aws_prometheus_scraper: Allow `alias`, `destination`, `role_configuration`, and `scrape_configuration` to be updated in-place ([#42109](https://github.com/hashicorp/terraform-provider-aws/issues/42109))
+* resource/aws_redshiftserverless_workgroup: Add `price_performance_target` argument ([#40946](https://github.com/hashicorp/terraform-provider-aws/issues/40946))
+* resource/aws_sagemaker_image_version: Add `horovod`, `job_type`, `ml_framework`, `processor`, `programming_lang`, `release_notes`, and `vendor_guidance` arguments ([#42143](https://github.com/hashicorp/terraform-provider-aws/issues/42143))
+* resource/aws_sagemaker_notebook_lifecycle_configuration: Add `tags` argument and `tags_all` attribute ([#42141](https://github.com/hashicorp/terraform-provider-aws/issues/42141))
+* resource/aws_transfer_server: Add `TransferSecurityPolicy-2025-03`, `TransferSecurityPolicy-FIPS-2025-03`, and `TransferSecurityPolicy-SshAuditCompliant-2025-02` as valid values for `security_policy_name` ([#42164](https://github.com/hashicorp/terraform-provider-aws/issues/42164))
+
+BUG FIXES:
+
+* resource/aws_elasticache_serverless_cache: Fix to allow in-place updates when `engine` is changed from `redis` to `valkey` ([#42208](https://github.com/hashicorp/terraform-provider-aws/issues/42208))
+* resource/aws_kms_custom_key_store: Fix `panic: runtime error: invalid memory address or nil pointer dereference` when no `XksProxyConfiguration` is returned ([#42241](https://github.com/hashicorp/terraform-provider-aws/issues/42241))
+* resource/aws_s3_bucket_lifecycle_configuration: Fix errors when removing `rule` from top of list ([#42228](https://github.com/hashicorp/terraform-provider-aws/issues/42228))
+* resource/aws_s3_bucket_lifecycle_configuration: Fix potential eventual consistency errors in some regions ([#41764](https://github.com/hashicorp/terraform-provider-aws/issues/41764))
+* resource/aws_s3_bucket_lifecycle_configuration: No longer allows empty `rule.filter.and.tags` ([#42041](https://github.com/hashicorp/terraform-provider-aws/issues/42041))
+* resource/aws_sagemaker_domain: Allow `default_user_settings.custom_file_system_config` and `default_space_settings.custom_file_system_config` to be removed on Update ([#42144](https://github.com/hashicorp/terraform-provider-aws/issues/42144))
+* resource/aws_sagemaker_user_profile: Allow `user_settings.custom_file_system_config` to be removed on Update ([#42144](https://github.com/hashicorp/terraform-provider-aws/issues/42144))
+
 ## 5.94.1 (April  4, 2025)
 
 BUG FIXES:

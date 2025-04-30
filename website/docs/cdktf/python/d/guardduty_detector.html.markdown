@@ -37,6 +37,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source exports the following attributes in addition to the arguments above:
 
+* `arn` - ARN of the detector.
 * `features` - Current configuration of the detector features.
     * `additional_configuration` - Additional feature configuration.
         * `name` - The name of the additional configuration.
@@ -46,5 +47,6 @@ This data source exports the following attributes in addition to the arguments a
 * `finding_publishing_frequency` - The frequency of notifications sent about subsequent finding occurrences.
 * `service_role_arn` - Service-linked role that grants GuardDuty access to the resources in the AWS account.
 * `status` - Current status of the detector.
+* `tags` - Map of tags for the resource.
 
-<!-- cache-key: cdktf-0.20.8 input-07755259e17c1389ef594d13cf31fa96fecc80102f8edf0b3ec9e035aef6985e -->
+<!-- cache-key: cdktf-0.20.8 input-de509741a4fa567a4a9a05208c725a17ed0ab4cdf9a3e3170aed16bc108bed25 -->
