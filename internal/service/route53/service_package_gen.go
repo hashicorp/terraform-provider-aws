@@ -149,12 +149,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
 				IsOverrideEnabled: false,
 			}),
-			Identity: inttypes.GlobalParameterizedIdentity(
-				inttypes.StringIdentityAttribute("zone_id", true),
-				inttypes.StringIdentityAttribute(names.AttrName, true),
-				inttypes.StringIdentityAttribute(names.AttrType, true),
-				inttypes.StringIdentityAttribute("set_identifier", false),
-			),
 		},
 		{
 			Factory:  resourceTrafficPolicy,

@@ -35,6 +35,7 @@ import (
 // @IdentityAttribute("name")
 // @IdentityAttribute("type")
 // @IdentityAttribute("set_identifier", optional="true")
+// @MutableIdentity
 func resourceRecord() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{

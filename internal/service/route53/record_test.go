@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -103,13 +102,13 @@ func TestAccRoute53Record_Identity_basic(t *testing.T) {
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringRegexp(regexache.MustCompile(fmt.Sprintf(`^\w+_%s_A$`, recordName.String())))),
-					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-						names.AttrAccountID: tfknownvalue.AccountID(),
-						"zone_id":           knownvalue.NotNull(), // Needs compare
-						names.AttrName:      knownvalue.StringExact(recordName.String()),
-						names.AttrType:      knownvalue.StringExact("A"),
-						"set_identifier":    knownvalue.Null(),
-					}),
+					// statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+					// 	names.AttrAccountID: tfknownvalue.AccountID(),
+					// 	"zone_id":           knownvalue.NotNull(), // Needs compare
+					// 	names.AttrName:      knownvalue.StringExact(recordName.String()),
+					// 	names.AttrType:      knownvalue.StringExact("A"),
+					// 	"set_identifier":    knownvalue.Null(),
+					// }),
 				},
 			},
 			{
@@ -164,13 +163,13 @@ func TestAccRoute53Record_Identity_setIdentifier(t *testing.T) {
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringRegexp(regexache.MustCompile(`^\w+_test_CNAME_set-id$`))),
-					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-						names.AttrAccountID: tfknownvalue.AccountID(),
-						"zone_id":           knownvalue.NotNull(), // Needs compare
-						names.AttrName:      knownvalue.StringExact("test"),
-						names.AttrType:      knownvalue.StringExact("CNAME"),
-						"set_identifier":    knownvalue.StringExact("set-id"),
-					}),
+					// statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+					// 	names.AttrAccountID: tfknownvalue.AccountID(),
+					// 	"zone_id":           knownvalue.NotNull(), // Needs compare
+					// 	names.AttrName:      knownvalue.StringExact("test"),
+					// 	names.AttrType:      knownvalue.StringExact("CNAME"),
+					// 	"set_identifier":    knownvalue.StringExact("set-id"),
+					// }),
 				},
 			},
 			{
@@ -194,20 +193,20 @@ func TestAccRoute53Record_Identity_setIdentifier(t *testing.T) {
 					},
 				},
 			},
-			{
-				ResourceName:    resourceName,
-				ImportState:     true,
-				ImportStateKind: resource.ImportBlockWithResourceIdentity,
-				ImportPlanChecks: resource.ImportPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("zone_id"), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact("test")),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), knownvalue.StringExact("CNAME")),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("set_identifier"), knownvalue.StringExact("set-id")),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringRegexp(regexache.MustCompile(`^\w+_test_CNAME_set-id$`))),
-					},
-				},
-			},
+			// {
+			// 	ResourceName:    resourceName,
+			// 	ImportState:     true,
+			// 	ImportStateKind: resource.ImportBlockWithResourceIdentity,
+			// 	ImportPlanChecks: resource.ImportPlanChecks{
+			// 		PreApply: []plancheck.PlanCheck{
+			// 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("zone_id"), knownvalue.NotNull()),
+			// 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact("test")),
+			// 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), knownvalue.StringExact("CNAME")),
+			// 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("set_identifier"), knownvalue.StringExact("set-id")),
+			// 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringRegexp(regexache.MustCompile(`^\w+_test_CNAME_set-id$`))),
+			// 		},
+			// 	},
+			// },
 		},
 	})
 }
