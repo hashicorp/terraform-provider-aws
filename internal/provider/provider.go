@@ -529,7 +529,7 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 			if len(v.Identity.Attributes) > 0 {
 				r.Identity = newResourceIdentity(v.Identity)
 
-				if len(v.Identity.Attributes) == 2 && v.Identity.Attributes[0].Name == "account_id" && v.Identity.Attributes[1].Name == "id" {
+				if v.Import.WrappedImport {
 					r.Importer = newIdentityImporter(v.Identity)
 				}
 

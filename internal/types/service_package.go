@@ -75,10 +75,12 @@ type ServicePackageSDKResource struct {
 	Tags     unique.Handle[ServicePackageResourceTags]
 	Region   unique.Handle[ServicePackageResourceRegion]
 	Identity Identity
+	Import   Import
 }
 
 type Identity struct {
-	Attributes []IdentityAttribute
+	IDAttrShadowsAttr string
+	Attributes        []IdentityAttribute
 }
 
 func ParameterizedIdentity(attributes ...IdentityAttribute) Identity {
@@ -93,9 +95,13 @@ func ParameterizedIdentity(attributes ...IdentityAttribute) Identity {
 		},
 	}
 	baseAttributes = slices.Grow(baseAttributes, len(attributes))
-	return Identity{
+	identity := Identity{
 		Attributes: append(baseAttributes, attributes...),
 	}
+	if len(attributes) == 1 {
+		identity.IDAttrShadowsAttr = attributes[0].Name
+	}
+	return identity
 }
 
 type IdentityAttribute struct {
@@ -129,9 +135,13 @@ func GlobalParameterizedIdentity(attributes ...IdentityAttribute) Identity {
 		},
 	}
 	baseAttributes = slices.Grow(baseAttributes, len(attributes))
-	return Identity{
+	identity := Identity{
 		Attributes: append(baseAttributes, attributes...),
 	}
+	if len(attributes) == 1 {
+		identity.IDAttrShadowsAttr = attributes[0].Name
+	}
+	return identity
 }
 
 func GlobalSingletonIdentity() Identity {
@@ -158,4 +168,8 @@ func RegionalSingletonIdentity() Identity {
 			},
 		},
 	}
+}
+
+type Import struct {
+	WrappedImport bool
 }

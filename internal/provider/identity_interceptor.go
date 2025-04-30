@@ -114,6 +114,9 @@ func newIdentityImporter(v inttypes.Identity) *schema.ResourceImporter {
 	importer := &schema.ResourceImporter{
 		StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 			if rd.Id() != "" {
+				if v.IDAttrShadowsAttr != "id" {
+					rd.Set(v.IDAttrShadowsAttr, rd.Id())
+				}
 				return []*schema.ResourceData{rd}, nil
 			}
 
@@ -122,20 +125,49 @@ func newIdentityImporter(v inttypes.Identity) *schema.ResourceImporter {
 				return nil, err
 			}
 
-			idRaw, ok := identity.GetOk(names.AttrID)
-			if !ok {
-				return nil, fmt.Errorf("identity attribute %q is required", names.AttrID)
-			}
+			for _, attr := range v.Attributes {
+				var val string
+				switch attr.Name {
+				case names.AttrAccountID:
+					// TODO: validate this is the correct account
 
-			id, ok := idRaw.(string)
-			if !ok {
-				return nil, fmt.Errorf("identity attribute %q: expected string, got %T", names.AttrID, idRaw)
-			}
+				case names.AttrRegion:
+					regionRaw, ok := identity.GetOk(names.AttrRegion)
+					if ok {
+						val, ok = regionRaw.(string)
+						if !ok {
+							return nil, fmt.Errorf("identity attribute %q: expected string, got %T", names.AttrRegion, regionRaw)
+						}
+						rd.Set(names.AttrRegion, val)
+					}
 
-			rd.SetId(id)
+				default:
+					valRaw, ok := identity.GetOk(attr.Name)
+					if attr.Required && !ok {
+						return nil, fmt.Errorf("identity attribute %q is required", attr.Name)
+					}
+					val, ok = valRaw.(string)
+					if !ok {
+						return nil, fmt.Errorf("identity attribute %q: expected string, got %T", attr.Name, valRaw)
+					}
+					setAttribute(rd, attr.Name, val)
+				}
+
+				if attr.Name == v.IDAttrShadowsAttr {
+					rd.SetId(val)
+				}
+			}
 
 			return []*schema.ResourceData{rd}, nil
 		},
 	}
 	return importer
+}
+
+func setAttribute(d *schema.ResourceData, name, value string) {
+	if name == "id" {
+		d.SetId(value)
+	} else {
+		d.Set(name, value)
+	}
 }
