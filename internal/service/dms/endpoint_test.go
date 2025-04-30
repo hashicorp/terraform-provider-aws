@@ -823,6 +823,7 @@ func TestAccDMSEndpoint_kinesis(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "kinesis_settings.0.include_transaction_details", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "kinesis_settings.0.message_format", names.AttrJSON),
 					resource.TestCheckResourceAttr(resourceName, "kinesis_settings.0.partition_include_schema_table", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "kinesis_settings.0.use_large_integer_value", acctest.CtFalse),
 					resource.TestCheckResourceAttrPair(resourceName, "kinesis_settings.0.service_access_role_arn", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "kinesis_settings.0.stream_arn", stream1ResourceName, names.AttrARN),
 				),
@@ -845,6 +846,7 @@ func TestAccDMSEndpoint_kinesis(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "kinesis_settings.0.include_transaction_details", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "kinesis_settings.0.message_format", names.AttrJSON),
 					resource.TestCheckResourceAttr(resourceName, "kinesis_settings.0.partition_include_schema_table", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "kinesis_settings.0.use_large_integer_value", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, "kinesis_settings.0.service_access_role_arn", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "kinesis_settings.0.stream_arn", stream2ResourceName, names.AttrARN),
 				),
@@ -3515,6 +3517,7 @@ resource "aws_dms_endpoint" "test" {
     include_table_alter_operations = true
     include_transaction_details    = true
     partition_include_schema_table = true
+    use_large_integer_value        = false
 
     service_access_role_arn = aws_iam_role.test.arn
     stream_arn              = aws_kinesis_stream.test1.arn
@@ -3539,6 +3542,7 @@ resource "aws_dms_endpoint" "test" {
     include_table_alter_operations = false
     include_transaction_details    = false
     partition_include_schema_table = false
+    use_large_integer_value        = true
 
     service_access_role_arn = aws_iam_role.test.arn
     stream_arn              = aws_kinesis_stream.test2.arn
