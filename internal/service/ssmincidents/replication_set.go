@@ -283,13 +283,14 @@ func updateRegionsInput(d *schema.ResourceData, input *ssmincidents.UpdateReplic
 func resourceReplicationSetImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	client := meta.(*conns.AWSClient).SSMIncidentsClient(ctx)
 
-	arn, err := getReplicationSetARN(ctx, client)
+	var input ssmincidents.ListReplicationSetsInput
+	arn, err := findReplicationSetARN(ctx, client, &input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	d.SetId(arn)
+	d.SetId(aws.ToString(arn))
 
 	return []*schema.ResourceData{d}, nil
 }

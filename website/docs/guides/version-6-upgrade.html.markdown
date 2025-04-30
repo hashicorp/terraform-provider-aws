@@ -37,6 +37,7 @@ Upgrade topics:
 - [data-source/aws_quicksight_data_set](#data-sourceaws_quicksight_data_set)
 - [data-source/aws_s3_bucket](#data-sourceaws_s3_bucket)
 - [data-source/aws_service_discovery_service](#data-sourceaws_service_discovery_service)
+- [data-source/aws_ssmincidents_replication_set](#data-sourceaws_ssmincidents_replication_set)
 - [data-source/aws_vpc_endpoint_service](#data-sourceaws_vpc_endpoint_service)
 - [data-source/aws_vpc_peering_connection](#data-sourceaws_vpc_peering_connection)
 - [resource/aws_api_gateway_account](#resourceaws_api_gateway_account)
@@ -277,6 +278,10 @@ The `bucket_region` attribute has been added. We encourage use of the `bucket_re
 ## data-source/aws_service_discovery_service
 
 `tags_all` has been removed.
+
+## data-source/aws_ssmincidents_replication_set
+
+The `region` attribute has been deprecated. All configurations using `region` should be updated to use the `regions` attribute instead.
 
 ## data-source/aws_vpc_endpoint_service
 

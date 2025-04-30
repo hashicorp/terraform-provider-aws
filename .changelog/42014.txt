@@ -33,3 +33,7 @@ data-source/aws_vpc_endpoint_service: The `region` attribute has been deprecated
 ```release-note:note
 data-source/aws_vpc_peering_connection: The `region` attribute has been deprecated. All configurations using `region` should be updated to use the `requester_region` attribute instead
 ```
+
+```release-note:note
+data-source/aws_ssmincidents_replication_set: The `region` attribute has been deprecated. All configurations using `region` should be updated to use the `regions` attribute instead
+```
