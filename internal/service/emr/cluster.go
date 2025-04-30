@@ -147,9 +147,9 @@ func resourceCluster() *schema.Resource {
 									},
 									names.AttrPriority: {
 										Type:     schema.TypeFloat,
+										Computed: true,
 										Optional: true,
 										ForceNew: true,
-										Default:  -1,
 									},
 									"weighted_capacity": {
 										Type:     schema.TypeInt,
@@ -2151,7 +2151,7 @@ func flattenInstanceTypeSpecifications(apiObjects []awstypes.InstanceTypeSpecifi
 		tfMap["ebs_config"] = flattenEBSConfig(apiObject.EbsBlockDevices)
 		tfMap[names.AttrInstanceType] = aws.ToString(apiObject.InstanceType)
 		tfMap["weighted_capacity"] = int(aws.ToInt32(apiObject.WeightedCapacity))
-		tfMap[names.AttrPriority] = float64(aws.ToFloat64(apiObject.Priority))
+		tfMap[names.AttrPriority] = aws.ToFloat64(apiObject.Priority)
 
 		tfList = append(tfList, tfMap)
 	}
@@ -2273,7 +2273,7 @@ func expandInstanceTypeConfigs(tfList []any) []awstypes.InstanceTypeConfig {
 			apiObject.EbsConfiguration = expandEBSConfiguration(v.List())
 		}
 
-		if v, ok := tfMap[names.AttrPriority].(float64); ok && v != -1 {
+		if v, ok := tfMap[names.AttrPriority].(float64); ok && v != 0 {
 			apiObject.Priority = aws.Float64(v)
 		}
 
@@ -2367,7 +2367,7 @@ func resourceInstanceTypeHashConfig(v any) int {
 	if v, ok := m["weighted_capacity"]; ok && v.(int) > 0 {
 		buf.WriteString(fmt.Sprintf("%d-", v.(int)))
 	}
-	if v, ok := m[names.AttrPriority]; ok && v.(float64) > 0 {
+	if v, ok := m[names.AttrPriority]; ok {
 		buf.WriteString(fmt.Sprintf("%.6f-", v.(float64)))
 	}
 	if v, ok := m["bid_price_as_percentage_of_on_demand_price"]; ok && v.(float64) != 0 {
