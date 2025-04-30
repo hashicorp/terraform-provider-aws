@@ -257,7 +257,6 @@ func TestAccS3ControlAccessPointForDirectoryBucket_scope(t *testing.T) {
 	resourceName := "aws_s3_directory_access_point.test_ap"
 
 	expectedScope1 := func() *types.Scope {
-
 		permissions := []types.ScopePermission{
 			types.ScopePermission("GetObject"),
 			types.ScopePermission("PutObject"),
@@ -272,7 +271,6 @@ func TestAccS3ControlAccessPointForDirectoryBucket_scope(t *testing.T) {
 	}
 
 	expectedScope2 := func() *types.Scope {
-
 		permissions := []types.ScopePermission{
 			types.ScopePermission("GetObject"),
 		}

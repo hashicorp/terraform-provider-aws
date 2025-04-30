@@ -264,5 +264,4 @@ resource "aws_s3control_directory_access_point_policy" "test_policy" {
   })
 }
 `)
-
 }

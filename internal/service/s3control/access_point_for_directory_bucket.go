@@ -461,7 +461,6 @@ func AccessPointForDirectoryBucketCreateResourceIDFromARN(accessPointARN string)
 }
 
 func AccessPointForDirectoryBucketCreateResourceID(accessPointName string, accountID string) (string, error) {
-
 	if accessPointName == "" || accountID == "" {
 		return "", fmt.Errorf("unexpected access point name for directory bucket: %s or accountID: %s", accessPointName, accountID)
 	}
@@ -528,9 +527,7 @@ func flattenScope(scope *types.Scope) map[string]any {
 		for _, p := range scope.Permissions {
 			permissions = append(permissions, string(p))
 		}
-		for _, p := range scope.Prefixes {
-			prefixes = append(prefixes, p)
-		}
+		prefixes = append(prefixes, scope.Prefixes...)
 	}
 
 	return map[string]any{
