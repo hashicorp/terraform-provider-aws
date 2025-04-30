@@ -9,7 +9,6 @@ import (
 
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -30,17 +29,16 @@ func TestAccGlueConnectionDataSource_basic(t *testing.T) {
 			{
 				Config: testAccConnectionDataSourceConfig_basic(rName, jdbcConnectionUrl),
 				Check: resource.ComposeTestCheckFunc(
-					testAccConnectionCheckDataSource(datasourceName),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrCatalogID, resourceName, names.AttrCatalogID),
 					resource.TestCheckResourceAttrPair(datasourceName, "connection_type", resourceName, "connection_type"),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(datasourceName, "athena_properties", resourceName, "athena_properties"),
+					resource.TestCheckResourceAttrPair(datasourceName, "athena_properties.%", resourceName, "athena_properties.%"),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDescription, resourceName, names.AttrDescription),
-					resource.TestCheckResourceAttrPair(datasourceName, "connection_properties", resourceName, "connection_properties"),
-					resource.TestCheckResourceAttrPair(datasourceName, "physical_connection_requirements", resourceName, "physical_connection_requirements"),
-					resource.TestCheckResourceAttrPair(datasourceName, "match_criteria", resourceName, "match_criteria"),
-					resource.TestCheckResourceAttrPair(datasourceName, names.AttrTags, resourceName, names.AttrTags),
+					resource.TestCheckResourceAttrPair(datasourceName, "connection_properties.%", resourceName, "connection_properties.%"),
+					resource.TestCheckResourceAttrPair(datasourceName, "physical_connection_requirements.#", resourceName, "physical_connection_requirements.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "match_criteria.#", resourceName, "match_criteria.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 				),
 			},
 		},
@@ -63,32 +61,20 @@ func TestAccGlueConnectionDataSource_dynamoDB(t *testing.T) {
 			{
 				Config: testAccConnectionDataSourceConfig_dynamoDB(rName, region, bucketName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccConnectionCheckDataSource(datasourceName),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrCatalogID, resourceName, names.AttrCatalogID),
 					resource.TestCheckResourceAttrPair(datasourceName, "connection_type", resourceName, "connection_type"),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(datasourceName, "athena_properties", resourceName, "athena_properties"),
+					resource.TestCheckResourceAttrPair(datasourceName, "athena_properties.%", resourceName, "athena_properties.%"),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDescription, resourceName, names.AttrDescription),
-					resource.TestCheckResourceAttrPair(datasourceName, "connection_properties", resourceName, "connection_properties"),
-					resource.TestCheckResourceAttrPair(datasourceName, "physical_connection_requirements", resourceName, "physical_connection_requirements"),
-					resource.TestCheckResourceAttrPair(datasourceName, "match_criteria", resourceName, "match_criteria"),
-					resource.TestCheckResourceAttrPair(datasourceName, names.AttrTags, resourceName, names.AttrTags),
+					resource.TestCheckResourceAttrPair(datasourceName, "connection_properties.%", resourceName, "connection_properties.%"),
+					resource.TestCheckResourceAttrPair(datasourceName, "physical_connection_requirements.#", resourceName, "physical_connection_requirements.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "match_criteria.#", resourceName, "match_criteria.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 				),
 			},
 		},
 	})
-}
-
-func testAccConnectionCheckDataSource(name string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		_, ok := s.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("root module has no resource called %s", name)
-		}
-
-		return nil
-	}
 }
 
 func testAccConnectionDataSourceConfig_basic(rName, jdbcConnectionUrl string) string {

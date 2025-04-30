@@ -565,27 +565,22 @@ func TestAccGlueConnection_snowflake(t *testing.T) {
 	})
 }
 
-func testAccCheckConnectionExists(ctx context.Context, resourceName string, connection *awstypes.Connection) resource.TestCheckFunc {
+func testAccCheckConnectionExists(ctx context.Context, n string, v *awstypes.Connection) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
 
-		catalogID, connectionName, err := tfglue.DecodeConnectionID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		output, err := tfglue.FindConnectionByTwoPartKey(ctx, conn, connectionName, catalogID)
+		output, err := tfglue.FindConnectionByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrName], rs.Primary.Attributes[names.AttrCatalogID])
 
 		if err != nil {
 			return err
 		}
 
-		*connection = *output
+		*v = *output
 
 		return nil
 	}
@@ -599,12 +594,8 @@ func testAccCheckConnectionDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
-			catalogID, connectionName, err := tfglue.DecodeConnectionID(rs.Primary.ID)
-			if err != nil {
-				return err
-			}
 
-			_, err = tfglue.FindConnectionByTwoPartKey(ctx, conn, connectionName, catalogID)
+			_, err := tfglue.FindConnectionByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrName], rs.Primary.Attributes[names.AttrCatalogID])
 
 			if tfresource.NotFound(err) {
 				continue
