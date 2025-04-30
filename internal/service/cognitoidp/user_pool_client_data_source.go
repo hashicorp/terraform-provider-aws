@@ -295,7 +295,7 @@ func flattenUserPoolClientRefreshTokenRotation(apiObject *awstypes.RefreshTokenR
 		return nil
 	}
 
-	if apiObject.Feature == "" && *apiObject.RetryGracePeriodSeconds == 0 {
+	if apiObject.Feature == "" && apiObject.RetryGracePeriodSeconds == nil {
 		return nil
 	}
 
