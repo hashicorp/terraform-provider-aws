@@ -297,19 +297,6 @@ func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta a
 		return sdkdiag.AppendErrorf(diags, "waiting for WorkSpaces Directory (%s) create: %s", d.Id(), err)
 	}
 
-	if v, ok := d.GetOk("certificate_based_auth_properties"); ok {
-		input := workspaces.ModifyCertificateBasedAuthPropertiesInput{
-			CertificateBasedAuthProperties: expandCertificateBasedAuthProperties(v.([]any)),
-			ResourceId:                     aws.String(d.Id()),
-		}
-
-		_, err := conn.ModifyCertificateBasedAuthProperties(ctx, &input)
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting WorkSpaces Directory (%s) certificate-based authentication properties: %s", d.Id(), err)
-		}
-	}
-
 	if v, ok := d.GetOk("saml_properties"); ok {
 		input := workspaces.ModifySamlPropertiesInput{
 			ResourceId:     aws.String(d.Id()),
@@ -320,6 +307,20 @@ func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta a
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting WorkSpaces Directory (%s) SAML properties: %s", d.Id(), err)
+		}
+	}
+
+	// SAML needs to be enabled for directory before enabling certificate based authentication.
+	if v, ok := d.GetOk("certificate_based_auth_properties"); ok {
+		input := workspaces.ModifyCertificateBasedAuthPropertiesInput{
+			CertificateBasedAuthProperties: expandCertificateBasedAuthProperties(v.([]any)),
+			ResourceId:                     aws.String(d.Id()),
+		}
+
+		_, err := conn.ModifyCertificateBasedAuthProperties(ctx, &input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting WorkSpaces Directory (%s) certificate-based authentication properties: %s", d.Id(), err)
 		}
 	}
 
@@ -427,28 +428,6 @@ func resourceDirectoryUpdate(ctx context.Context, d *schema.ResourceData, meta a
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WorkSpacesClient(ctx)
 
-	if d.HasChange("certificate_based_auth_properties") {
-		tfList := d.Get("certificate_based_auth_properties").([]any)
-		tfMap := tfList[0].(map[string]any)
-
-		var dels []types.DeletableCertificateBasedAuthProperty
-		if tfMap["certificate_authority_arn"].(string) == "" {
-			dels = append(dels, types.DeletableCertificateBasedAuthPropertyCertificateBasedAuthPropertiesCertificateAuthorityArn)
-		}
-
-		input := &workspaces.ModifyCertificateBasedAuthPropertiesInput{
-			CertificateBasedAuthProperties: expandCertificateBasedAuthProperties(tfList),
-			PropertiesToDelete:             dels,
-			ResourceId:                     aws.String(d.Id()),
-		}
-
-		_, err := conn.ModifyCertificateBasedAuthProperties(ctx, input)
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating WorkSpaces Directory (%s) certificate-based authentication properties: %s", d.Id(), err)
-		}
-	}
-
 	if d.HasChange("saml_properties") {
 		tfList := d.Get("saml_properties").([]any)
 		tfMap := tfList[0].(map[string]any)
@@ -471,6 +450,29 @@ func resourceDirectoryUpdate(ctx context.Context, d *schema.ResourceData, meta a
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating WorkSpaces Directory (%s) SAML properties: %s", d.Id(), err)
+		}
+	}
+
+	// SAML needs to be enabled for directory before enabling certificate based authentication
+	if d.HasChange("certificate_based_auth_properties") {
+		tfList := d.Get("certificate_based_auth_properties").([]any)
+		tfMap := tfList[0].(map[string]any)
+
+		var dels []types.DeletableCertificateBasedAuthProperty
+		if tfMap["certificate_authority_arn"].(string) == "" {
+			dels = append(dels, types.DeletableCertificateBasedAuthPropertyCertificateBasedAuthPropertiesCertificateAuthorityArn)
+		}
+
+		input := &workspaces.ModifyCertificateBasedAuthPropertiesInput{
+			CertificateBasedAuthProperties: expandCertificateBasedAuthProperties(tfList),
+			PropertiesToDelete:             dels,
+			ResourceId:                     aws.String(d.Id()),
+		}
+
+		_, err := conn.ModifyCertificateBasedAuthProperties(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating WorkSpaces Directory (%s) certificate-based authentication properties: %s", d.Id(), err)
 		}
 	}
 
