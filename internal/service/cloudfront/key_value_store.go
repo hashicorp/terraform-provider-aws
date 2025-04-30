@@ -319,7 +319,10 @@ func (r *keyValueStoreResource) ImportState(ctx context.Context, request resourc
 
 	if identity := request.Identity; identity != nil {
 		var name string
-		identity.GetAttribute(ctx, path.Root(names.AttrName), &name)
+		response.Diagnostics.Append(identity.GetAttribute(ctx, path.Root(names.AttrName), &name)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
 
 		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrName), name)...)
 		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), name)...)
