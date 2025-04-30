@@ -54,6 +54,7 @@ func resourceRole() *schema.Resource {
 			StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 				// Import-by-id case
 				if rd.Id() != "" {
+					rd.Set(names.AttrName, rd.Id())
 					return resourceRoleImport(ctx, rd, meta)
 				}
 
@@ -72,6 +73,7 @@ func resourceRole() *schema.Resource {
 					return nil, fmt.Errorf("identity attribute %q: expected string, got %T", names.AttrName, nameRaw)
 				}
 
+				rd.Set(names.AttrName, name)
 				rd.SetId(name)
 
 				return resourceRoleImport(ctx, rd, meta)
