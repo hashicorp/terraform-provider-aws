@@ -126,6 +126,7 @@ type ResourceDatum struct {
 	ValidateRegionOverrideInPartition bool
 	ARNIdentity                       bool
 	SingletonIdentity                 bool
+	WrappedImport                     bool
 }
 
 type ServiceDatum struct {
@@ -248,6 +249,9 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				if attr, ok := args.Keyword["resourceType"]; ok {
 					d.TagsResourceType = attr
 				}
+
+			case "WrappedImport":
+				d.WrappedImport = true
 
 			case "ArnIdentity":
 				d.ARNIdentity = true
