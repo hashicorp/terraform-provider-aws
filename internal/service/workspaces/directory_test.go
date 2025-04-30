@@ -796,7 +796,7 @@ resource "aws_workspaces_directory" "main" {
   directory_id = aws_directory_service_directory.main.id
 
   certificate_based_auth_properties {
-    status                   = "ENABLED"
+    status                    = "ENABLED"
     certificate_authority_arn = "arn:${data.aws_partition.current.partition}:acm-pca:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:certificate-authority/%[3]s"
   }
 
@@ -825,7 +825,7 @@ resource "aws_workspaces_directory" "main" {
   directory_id = aws_directory_service_directory.main.id
 
   certificate_based_auth_properties {
-    status                   = "DISABLED"
+    status                    = "DISABLED"
     certificate_authority_arn = ""
   }
 
@@ -848,7 +848,7 @@ resource "aws_workspaces_directory" "main" {
   directory_id = aws_directory_service_directory.main.id
 
   certificate_based_auth_properties {
-    status                   = "DISABLED"
+    status                    = "DISABLED"
     certificate_authority_arn = "arn:${data.aws_partition.current.partition}:acm-pca:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:certificate-authority/%[3]s"
   }
 

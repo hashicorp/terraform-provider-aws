@@ -98,7 +98,7 @@ resource "aws_workspaces_directory" "test" {
   directory_id = aws_directory_service_directory.main.id
 
   certificate_based_auth_properties {
-    status = "ENABLED"
+    status                    = "ENABLED"
     certificate_authority_arn = "arn:${data.aws_partition.current.partition}:acm-pca:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:certificate-authority/12345678-1234-1234-1234-123456789012"
   }
 
