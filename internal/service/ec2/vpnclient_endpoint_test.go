@@ -951,7 +951,7 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
   }
 
   client_route_enforcement_options {
-	enforced = %[2]t
+    enforced = %[2]t
   }
 
   connection_log_options {
