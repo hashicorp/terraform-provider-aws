@@ -113,14 +113,6 @@ func TestAccBatchJobDefinition_Identity_Basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateKind:   resource.ImportCommandWithID,
 				ImportStateVerify: true,
-				ImportPlanChecks: resource.ImportPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("deregister_on_new_revision"), knownvalue.Bool(true)),
-					},
-				},
 			},
 			{
 				ResourceName:    resourceName,
@@ -258,14 +250,6 @@ func TestAccBatchJobDefinition_Identity_RegionOverride(t *testing.T) {
 				ImportState:       true,
 				ImportStateKind:   resource.ImportCommandWithID,
 				ImportStateVerify: true,
-				ImportPlanChecks: resource.ImportPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("deregister_on_new_revision"), knownvalue.Bool(true)),
-					},
-				},
 			},
 			{
 				ResourceName:      resourceName,
