@@ -11,6 +11,13 @@ ENHANCEMENTS:
 * resource/aws_fis_experiment_template: Add support for `ManagedResources` to `action.*.target` ([#42376](https://github.com/hashicorp/terraform-provider-aws/issues/42376))
 * resource/aws_imagebuilder_infrastructure_configuration: Add `placement` argument ([#42347](https://github.com/hashicorp/terraform-provider-aws/issues/42347))
 
+BUG FIXES:
+
+* resource/aws_vpclattice_listener_rule: Prevents error when setting `listener_identifier` to ARN. ([#42215](https://github.com/hashicorp/terraform-provider-aws/issues/42215))
+* resource/aws_vpclattice_listener_rule: Prevents error when setting `service_identifier` to ARN. ([#42215](https://github.com/hashicorp/terraform-provider-aws/issues/42215))
+* resource/aws_vpclattice_listener_rule: Requires `match.http_match`. ([#42215](https://github.com/hashicorp/terraform-provider-aws/issues/42215))
+* resource/aws_vpclattice_listener_rule: Requires exactly one of `action.fixed_response` or `action.forward`. ([#42215](https://github.com/hashicorp/terraform-provider-aws/issues/42215))
+
 ## 5.96.0 (April 24, 2025)
 
 FEATURES:
