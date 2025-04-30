@@ -25,6 +25,22 @@ func dataSourceDirectory() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"certificate_based_auth_properties": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"certificate_authority_arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						names.AttrStatus: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"customer_user_name": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -58,22 +74,6 @@ func dataSourceDirectory() *schema.Resource {
 			"registration_code": {
 				Type:     schema.TypeString,
 				Computed: true,
-			},
-			"certificate_based_auth_properties": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"certificate_authority_arn": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrStatus: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
 			},
 			"saml_properties": {
 				Type:     schema.TypeList,
@@ -218,6 +218,9 @@ func dataSourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta a
 
 	d.SetId(directoryID)
 	d.Set(names.AttrAlias, directory.Alias)
+	if err := d.Set("certificate_based_auth_properties", flattenCertificateBasedAuthProperties(directory.CertificateBasedAuthProperties)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting certificate_based_auth_properties: %s", err)
+	}
 	d.Set("directory_id", directory.DirectoryId)
 	d.Set("directory_name", directory.DirectoryName)
 	d.Set("directory_type", directory.DirectoryType)
@@ -225,9 +228,6 @@ func dataSourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta a
 	d.Set("iam_role_id", directory.IamRoleId)
 	d.Set("ip_group_ids", directory.IpGroupIds)
 	d.Set("registration_code", directory.RegistrationCode)
-	if err := d.Set("certificate_based_auth_properties", flattenCertificateBasedAuthProperties(directory.CertificateBasedAuthProperties)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting certificate_based_auth_properties: %s", err)
-	}
 	if err := d.Set("self_service_permissions", flattenSelfservicePermissions(directory.SelfservicePermissions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting self_service_permissions: %s", err)
 	}
