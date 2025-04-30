@@ -33,6 +33,15 @@ func resourceUserInGroup() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    resourceUserInGroupV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: userInGroupStateUpgradeV0,
+				Version: 0,
+			},
+		},
+
 		Schema: map[string]*schema.Schema{
 			names.AttrGroupName: {
 				Type:         schema.TypeString,

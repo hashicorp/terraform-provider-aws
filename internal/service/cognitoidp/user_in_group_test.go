@@ -79,6 +79,53 @@ func TestAccCognitoIDPUserInGroup_disappears(t *testing.T) {
 	})
 }
 
+func TestAccCognitoIDPUserInGroup_upgrade_v6_0_0(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cognito_user_in_group.test"
+	userPoolResourceName := "aws_cognito_user_pool.test"
+	userGroupResourceName := "aws_cognito_user_group.test"
+	userResourceName := "aws_cognito_user.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.CognitoIDPServiceID),
+		CheckDestroy: testAccCheckUserInGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.96.0",
+					},
+				},
+				Config: testAccUserInGroupConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserInGroupExists(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrUserPoolID, userPoolResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrGroupName, userGroupResourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrUsername, userResourceName, names.AttrUsername),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccUserInGroupConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserInGroupExists(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrUserPoolID, userPoolResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrGroupName, userGroupResourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrUsername, userResourceName, names.AttrUsername),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckUserInGroupExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
