@@ -124,6 +124,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Identity: inttypes.GlobalParameterizedIdentity(
 				inttypes.StringIdentityAttribute(names.AttrID, true),
 			),
+			Import: inttypes.Import{
+				WrappedImport: true,
+			},
 		},
 		{
 			Factory:  resourceGatewayAssociation,
