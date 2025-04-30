@@ -641,6 +641,8 @@ data "aws_region" "current" {}
 
 data "aws_caller_identity" "current" {}
 
+data "aws_partition" "current" {}
+
 locals {
   region_workspaces_az_ids = {
     "us-east-1" = formatlist("use1-az%%d", [2, 4, 6])
@@ -795,7 +797,7 @@ resource "aws_workspaces_directory" "main" {
 
   certificate_based_auth_properties {
     status                   = "ENABLED"
-    certificate_authority_arn = "arn:aws:acm-pca:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:certificate-authority/%[3]s"
+    certificate_authority_arn = "arn:${data.aws_partition.current.partition}:acm-pca:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:certificate-authority/%[3]s"
   }
 
   saml_properties {
@@ -847,7 +849,7 @@ resource "aws_workspaces_directory" "main" {
 
   certificate_based_auth_properties {
     status                   = "DISABLED"
-    certificate_authority_arn = "arn:aws:acm-pca:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:certificate-authority/%[3]s"
+    certificate_authority_arn = "arn:${data.aws_partition.current.partition}:acm-pca:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:certificate-authority/%[3]s"
   }
 
   saml_properties {
