@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/apigatewayv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -85,6 +84,18 @@ func resourceDomainName() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						names.AttrIPAddressType: {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.IpAddressType](),
+						},
+						"ownership_verification_certificate_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: verify.ValidARN,
+						},
 						"security_policy": {
 							Type:         schema.TypeString,
 							Required:     true,
@@ -93,12 +104,6 @@ func resourceDomainName() *schema.Resource {
 						"target_domain_name": {
 							Type:     schema.TypeString,
 							Computed: true,
-						},
-						"ownership_verification_certificate_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: verify.ValidARN,
 						},
 					},
 				},
@@ -131,14 +136,14 @@ func resourceDomainNameCreate(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	domainName := d.Get(names.AttrDomainName).(string)
-	input := &apigatewayv2.CreateDomainNameInput{
+	input := apigatewayv2.CreateDomainNameInput{
 		DomainName:               aws.String(domainName),
 		DomainNameConfigurations: expandDomainNameConfigurations(d.Get("domain_name_configuration").([]any)),
-		MutualTlsAuthentication:  expandMutualTLSAuthentication(d.Get("mutual_tls_authentication").([]any)),
+		MutualTlsAuthentication:  expandMutualTLSAuthenticationInput(d.Get("mutual_tls_authentication").([]any)),
 		Tags:                     getTagsIn(ctx),
 	}
 
-	output, err := conn.CreateDomainName(ctx, input)
+	output, err := conn.CreateDomainName(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating API Gateway v2 Domain Name (%s): %s", domainName, err)
@@ -155,7 +160,8 @@ func resourceDomainNameCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.APIGatewayV2Client(ctx)
 
 	output, err := findDomainName(ctx, conn, d.Id())
 
@@ -170,13 +176,7 @@ func resourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta an
 	}
 
 	d.Set("api_mapping_selection_expression", output.ApiMappingSelectionExpression)
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   "apigateway",
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		Resource:  "/domainnames/" + d.Id(),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, domainNameARN(ctx, c, d.Id()))
 	d.Set(names.AttrDomainName, output.DomainName)
 	if err := d.Set("domain_name_configuration", flattenDomainNameConfiguration(output.DomainNameConfigurations[0])); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting domain_name_configuration: %s", err)
@@ -195,7 +195,7 @@ func resourceDomainNameUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	if d.HasChanges("domain_name_configuration", "mutual_tls_authentication") {
-		input := &apigatewayv2.UpdateDomainNameInput{
+		input := apigatewayv2.UpdateDomainNameInput{
 			DomainName:               aws.String(d.Id()),
 			DomainNameConfigurations: expandDomainNameConfigurations(d.Get("domain_name_configuration").([]any)),
 		}
@@ -221,7 +221,7 @@ func resourceDomainNameUpdate(ctx context.Context, d *schema.ResourceData, meta 
 			}
 		}
 
-		_, err := conn.UpdateDomainName(ctx, input)
+		_, err := conn.UpdateDomainName(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating API Gateway v2 Domain Name (%s): %s", d.Id(), err)
@@ -327,12 +327,16 @@ func expandDomainNameConfiguration(tfMap map[string]any) awstypes.DomainNameConf
 		apiObject.EndpointType = awstypes.EndpointType(v)
 	}
 
-	if v, ok := tfMap["security_policy"].(string); ok && v != "" {
-		apiObject.SecurityPolicy = awstypes.SecurityPolicy(v)
+	if v, ok := tfMap[names.AttrIPAddressType].(string); ok && v != "" {
+		apiObject.IpAddressType = awstypes.IpAddressType(v)
 	}
 
 	if v, ok := tfMap["ownership_verification_certificate_arn"].(string); ok && v != "" {
 		apiObject.OwnershipVerificationCertificateArn = aws.String(v)
+	}
+
+	if v, ok := tfMap["security_policy"].(string); ok && v != "" {
+		apiObject.SecurityPolicy = awstypes.SecurityPolicy(v)
 	}
 
 	return apiObject
@@ -352,40 +356,39 @@ func expandDomainNameConfigurations(tfList []any) []awstypes.DomainNameConfigura
 			continue
 		}
 
-		apiObject := expandDomainNameConfiguration(tfMap)
-		apiObjects = append(apiObjects, apiObject)
+		apiObjects = append(apiObjects, expandDomainNameConfiguration(tfMap))
 	}
 
 	return apiObjects
 }
 
 func flattenDomainNameConfiguration(apiObject awstypes.DomainNameConfiguration) []any {
-	tfMap := map[string]any{}
+	tfMap := map[string]any{
+		names.AttrEndpointType:  apiObject.EndpointType,
+		names.AttrIPAddressType: apiObject.IpAddressType,
+		"security_policy":       apiObject.SecurityPolicy,
+	}
 
 	if v := apiObject.CertificateArn; v != nil {
 		tfMap[names.AttrCertificateARN] = aws.ToString(v)
 	}
 
-	tfMap[names.AttrEndpointType] = string(apiObject.EndpointType)
-
 	if v := apiObject.HostedZoneId; v != nil {
 		tfMap[names.AttrHostedZoneID] = aws.ToString(v)
-	}
-
-	tfMap["security_policy"] = string(apiObject.SecurityPolicy)
-
-	if v := apiObject.ApiGatewayDomainName; v != nil {
-		tfMap["target_domain_name"] = aws.ToString(v)
 	}
 
 	if v := apiObject.OwnershipVerificationCertificateArn; v != nil {
 		tfMap["ownership_verification_certificate_arn"] = aws.ToString(v)
 	}
 
+	if v := apiObject.ApiGatewayDomainName; v != nil {
+		tfMap["target_domain_name"] = aws.ToString(v)
+	}
+
 	return []any{tfMap}
 }
 
-func expandMutualTLSAuthentication(tfList []any) *awstypes.MutualTlsAuthenticationInput {
+func expandMutualTLSAuthenticationInput(tfList []any) *awstypes.MutualTlsAuthenticationInput {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -421,4 +424,8 @@ func flattenMutualTLSAuthentication(apiObject *awstypes.MutualTlsAuthentication)
 	}
 
 	return []any{tfMap}
+}
+
+func domainNameARN(ctx context.Context, c *conns.AWSClient, name string) string {
+	return c.RegionalARNNoAccount(ctx, "apigateway", "/domainnames/"+name)
 }
