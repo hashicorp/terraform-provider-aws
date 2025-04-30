@@ -42,6 +42,7 @@ Upgrade topics:
 - [resource/aws_bedrock_model_invocation_logging_configuration](#resourceaws_bedrock_model_invocation_logging_configuration)
 - [resource/aws_cloudfront_key_value_store](#resourceaws_cloudfront_key_value_store)
 - [resource/aws_cloudfront_response_headers_policy](#resourceaws_cloudfront_response_headers_policy)
+- [resource/aws_cognito_user_in_group](#resourceaws_cognito_user_in_group)
 - [resource/aws_db_instance](#resourceaws_db_instance)
 - [resource/aws_dms_endpoint](#resourceaws_dms_endpoint)
 - [resource/aws_dx_gateway_association](#resourceaws_dx_gateway_association)
@@ -342,6 +343,10 @@ For the name, use the `name` attribute.
 ## resource/aws_cloudfront_response_headers_policy
 
 The `etag` argument is now computed only.
+
+## resource/aws_cognito_user_in_group
+
+The `id` attribute is now a comma-delimited string concatenating the `user_pool_id`, `group_name`, and `username` arguments.
 
 ## resource/aws_db_instance
 
