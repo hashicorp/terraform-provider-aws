@@ -32,7 +32,7 @@ const (
 // @SDKResource("aws_ssmincidents_replication_set", name="Replication Set")
 // @Tags(identifierAttribute="id")
 // @Region(overrideEnabled=false)
-func ResourceReplicationSet() *schema.Resource {
+func resourceReplicationSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReplicationSetCreate,
 		ReadWithoutTimeout:   resourceReplicationSetRead,

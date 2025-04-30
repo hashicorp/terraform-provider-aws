@@ -48,7 +48,7 @@ func sweepReplicationSets(region string) error {
 		}
 
 		for _, id := range page.ReplicationSetArns {
-			r := ResourceReplicationSet()
+			r := resourceReplicationSet()
 			d := r.Data(nil)
 			d.SetId(id)
 

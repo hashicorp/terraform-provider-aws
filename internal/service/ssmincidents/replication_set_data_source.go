@@ -16,7 +16,7 @@ import (
 
 // @SDKDataSource("aws_ssmincidents_replication_set", name="Replication Set")
 // @Region(overrideEnabled=false)
-func DataSourceReplicationSet() *schema.Resource {
+func dataSourceReplicationSet() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceReplicationSetRead,
 
