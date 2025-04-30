@@ -49,10 +49,11 @@ func ResourceDetector() *schema.Resource {
 				Computed: true,
 			},
 			"datasources": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Computed: true,
+				Type:       schema.TypeList,
+				MaxItems:   1,
+				Optional:   true,
+				Computed:   true,
+				Deprecated: "datasources is deprecated. Use aws_guardduty_detector_feature resources instead.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"kubernetes": {
