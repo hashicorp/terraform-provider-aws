@@ -142,9 +142,6 @@ func newIdentityImporter(v inttypes.Identity) *schema.ResourceImporter {
 						if !ok {
 							return nil, fmt.Errorf("identity attribute %q: expected string, got %T", names.AttrAccountID, accountIDRaw)
 						}
-						if v.IDAttrShadowsAttr == names.AttrAccountID {
-							rd.Set(names.AttrAccountID, val)
-						}
 					}
 
 				case names.AttrRegion:

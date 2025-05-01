@@ -148,9 +148,8 @@ func GlobalParameterizedIdentity(attributes ...IdentityAttribute) Identity {
 
 func GlobalSingletonIdentity() Identity {
 	return Identity{
-		Global:            true,
-		Singleton:         true,
-		IDAttrShadowsAttr: "account_id",
+		Global:    true,
+		Singleton: true,
 		Attributes: []IdentityAttribute{
 			{
 				Name:     "account_id",
