@@ -1556,6 +1556,34 @@ func TestAccELBV2Listener_mutualAuthenticationPassthrough_validate(t *testing.T)
 	})
 }
 
+func TestAccELBV2Listener_mutualAuthenticationOff_validate(t *testing.T) {
+	ctx := acctest.Context(t)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccListenerConfig_mutualAuthentication_validate_Advertise(rName, "off", key, certificate),
+				ExpectError: regexache.MustCompile(`Attribute "mutual_authentication\[0\]\.advertise_trust_store_ca_names" cannot be specified when "mutual_authentication\[0\]\.mode" is "off"`),
+			},
+			{
+				Config:      testAccListenerConfig_mutualAuthentication_validate_IgnoreClient(rName, "off", key, certificate),
+				ExpectError: regexache.MustCompile(`Attribute "mutual_authentication\[0\]\.ignore_client_certificate_expiry" cannot be specified when "mutual_authentication\[0\]\.mode" is "off"`),
+			},
+			{
+				Config:      testAccListenerConfig_mutualAuthentication_validate_TrustStore(rName, "off", key, certificate),
+				ExpectError: regexache.MustCompile(`Attribute "mutual_authentication\[0\]\.trust_store_arn" cannot be specified when "mutual_authentication\[0\]\.mode" is "off"`),
+			},
+		},
+	})
+}
+
 func TestAccELBV2Listener_mutualAuthenticationAdvertiseCASubject(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Listener
