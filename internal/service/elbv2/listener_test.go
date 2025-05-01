@@ -3946,7 +3946,7 @@ resource "aws_lb_listener" "test" {
 
   mutual_authentication {
     mode                           = %[1]q
-	advertise_trust_store_ca_names = "on"
+    advertise_trust_store_ca_names = "on"
   }
 }
 `, mode))
@@ -3969,8 +3969,8 @@ resource "aws_lb_listener" "test" {
   }
 
   mutual_authentication {
-    mode                           = %[1]q
-	ignore_client_certificate_expiry = true
+    mode                             = %[1]q
+    ignore_client_certificate_expiry = true
   }
 }
 `, mode))
@@ -3994,8 +3994,8 @@ resource "aws_lb_listener" "test" {
   }
 
   mutual_authentication {
-    mode                           = %[1]q
-	trust_store_arn = aws_lb_trust_store.test.arn
+    mode            = %[1]q
+    trust_store_arn = aws_lb_trust_store.test.arn
   }
 }
 
