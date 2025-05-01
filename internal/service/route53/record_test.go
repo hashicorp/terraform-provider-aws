@@ -1071,6 +1071,9 @@ func TestAccRoute53Record_nameChange(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(ctx, resourceName, &record1),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact("sample")),
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -1078,13 +1081,20 @@ func TestAccRoute53Record_nameChange(t *testing.T) {
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"allow_overwrite"},
 			},
-			// Cause a change, which will trigger a refresh
 			{
 				Config: testAccRecordConfig_nameChangePost,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(ctx, resourceName, &record2),
 					testAccCheckRecordDoesNotExist(ctx, "aws_route53_zone.main", "sample", "CNAME"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact("sample-new")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
 			},
 		},
 	})
