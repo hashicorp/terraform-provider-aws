@@ -225,8 +225,10 @@ func testAccReplicaKeyConfig_basic(rName string) string {
 resource "aws_kms_key" "test" {
   provider = awsalternate
 
-  description  = %[1]q
-  multi_region = true
+  description             = %[1]q
+  multi_region            = true
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_replica_key" "test" {
@@ -244,6 +246,7 @@ resource "aws_kms_key" "test" {
   multi_region = true
 
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_replica_key" "test" {
@@ -265,6 +268,7 @@ resource "aws_kms_key" "test" {
   multi_region = true
 
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_replica_key" "test" {
@@ -289,6 +293,7 @@ resource "aws_kms_key" "test" {
   multi_region = true
 
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_replica_key" "test1" {

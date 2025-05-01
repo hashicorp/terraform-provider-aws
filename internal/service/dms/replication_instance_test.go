@@ -582,6 +582,7 @@ data "aws_partition" "current" {}
 
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_dms_replication_instance" "test" {

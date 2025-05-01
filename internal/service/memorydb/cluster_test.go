@@ -1419,7 +1419,10 @@ func testAccClusterConfig_kms(rName string) string {
 	return acctest.ConfigCompose(
 		testAccClusterConfig_baseNetwork(rName),
 		fmt.Sprintf(`
-resource "aws_kms_key" "test" {}
+resource "aws_kms_key" "test" {
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+}
 
 resource "aws_memorydb_cluster" "test" {
   acl_name               = "open-access"

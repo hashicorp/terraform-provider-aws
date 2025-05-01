@@ -372,6 +372,7 @@ func testAccDomainConfig_kms_key_identifier(rName string) string {
 		fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_datazone_domain" "test" {

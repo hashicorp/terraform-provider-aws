@@ -198,7 +198,9 @@ resource "aws_auditmanager_account_registration" "test" {
 
 func testAccAccountRegistrationConfig_KMSKey() string {
 	return `
-resource "aws_kms_key" "test" {}
+resource "aws_kms_key" "test" {
+  enable_key_rotation = true
+}
 
 resource "aws_auditmanager_account_registration" "test" {
   kms_key = aws_kms_key.test.arn

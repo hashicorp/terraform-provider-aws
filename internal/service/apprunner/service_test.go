@@ -688,6 +688,7 @@ func testAccServiceConfig_ImageRepository_encryptionConfiguration(rName string) 
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
   description             = %[1]q
+  enable_key_rotation     = true
 }
 
 resource "aws_apprunner_service" "test" {

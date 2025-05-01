@@ -958,7 +958,9 @@ resource "aws_sagemaker_notebook_instance" "test" {
 func testAccNotebookInstanceConfig_kms(rName string) string {
 	return acctest.ConfigCompose(testAccNotebookInstanceBaseConfig(rName), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description = %[1]q
+  description             = %[1]q
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 
   policy = <<POLICY
 {

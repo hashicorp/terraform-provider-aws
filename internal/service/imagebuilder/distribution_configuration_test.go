@@ -1340,6 +1340,7 @@ func testAccDistributionConfigurationConfig_amiKMSKeyID1(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 data "aws_region" "current" {}
@@ -1362,6 +1363,7 @@ func testAccDistributionConfigurationConfig_amiKMSKeyID2(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test2" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 data "aws_region" "current" {}

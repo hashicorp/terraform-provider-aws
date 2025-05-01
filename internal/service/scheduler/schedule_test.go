@@ -1807,7 +1807,9 @@ func testAccScheduleConfig_kmsKeyARN(name string, index int) string {
 resource "aws_sqs_queue" "test" {}
 
 resource "aws_kms_key" "test" {
-  count = 2
+  count                   = 2
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_scheduler_schedule" "test" {
