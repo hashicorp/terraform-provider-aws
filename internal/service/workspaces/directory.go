@@ -24,6 +24,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -53,8 +54,9 @@ func resourceDirectory() *schema.Resource {
 							Required: true,
 						},
 						"service_account_secret_arn": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: verify.ValidARN,
 						},
 					},
 				},
@@ -275,17 +277,15 @@ func resourceDirectory() *schema.Resource {
 			},
 			"workspace_type": {
 				Type:             schema.TypeString,
-				Default:          "PERSONAL",
+				Default:          types.WorkspaceTypePersonal,
 				ForceNew:         true,
 				Optional:         true,
 				ValidateDiagFunc: enum.Validate[types.WorkspaceType](),
 			},
 		},
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
-			workspaceType := d.Get("workspace_type").(string)
-
-			switch workspaceType {
-			case string(types.WorkspaceTypePools):
+			switch workspaceType := types.WorkspaceType(d.Get("workspace_type").(string)); workspaceType {
+			case types.WorkspaceTypePools:
 				if _, ok := d.GetOk("workspace_directory_description"); !ok {
 					return fmt.Errorf("`workspace_directory_description` is required when `workspace_type` is set to `POOLS`")
 				}
@@ -298,34 +298,36 @@ func resourceDirectory() *schema.Resource {
 				if _, ok := d.GetOk("self_service_permissions"); ok {
 					return fmt.Errorf("`self_service_permissions` cannot be set when `workspace_type` is set to `POOLS`")
 				}
-			case string(types.WorkspaceTypePersonal):
+
+				if v, ok := d.GetOk("workspace_creation_properties"); ok {
+					tfList := v.([]any)
+					if len(tfList) > 0 {
+						tfMap := tfList[0].(map[string]any)
+						if tfMap["enable_maintenance_mode"].(bool) {
+							return fmt.Errorf("`workspace_creation_properties.enable_maintenance_mode` is not supported when `workspace_type` is set to `pools`")
+						}
+						if tfMap["user_enabled_as_local_administrator"].(bool) {
+							return fmt.Errorf("`workspace_creation_properties.user_enabled_as_local_administrator` is not supported when `workspace_type` is set to `pools`")
+						}
+					}
+					if _, ok := d.GetOk("active_directory_config"); !ok {
+						if len(tfList) > 0 {
+							tfMap := tfList[0].(map[string]any)
+							if tfMap["default_ou"].(string) != "" {
+								return fmt.Errorf("`workspace_creation_properties.default_ou` can only be set if `active_directory_config` is provided and `workspace_type` is set to `POOLS`")
+							}
+						}
+					}
+				}
+			case types.WorkspaceTypePersonal:
 				if _, ok := d.GetOk("workspace_directory_description"); ok {
 					return fmt.Errorf("`workspace_directory_description` cannot be set when `workspace_type` is set to `PERSONAL`")
 				}
 				if _, ok := d.GetOk("workspace_directory_name"); ok {
 					return fmt.Errorf("`workspace_directory_name` cannot be set when `workspace_type` is set to `PERSONAL`")
 				}
-			}
-			if workspaceType == string(types.WorkspaceTypePools) {
-				if v, ok := d.GetOk("workspace_creation_properties"); ok {
-					creationProps := v.([]interface{})
-					if len(creationProps) > 0 {
-						props := creationProps[0].(map[string]interface{})
-						if props["enable_maintenance_mode"].(bool) {
-							return fmt.Errorf("`enable_maintenance_mode` is not supported when `workspace_type` is set to `pools`")
-						}
-						if props["user_enabled_as_local_administrator"].(bool) {
-							return fmt.Errorf("`user_enabled_as_local_administrator` is not supported when `workspace_type` is set to `pools`")
-						}
-					}
-					if _, ok := d.GetOk("active_directory_config"); !ok {
-						if len(creationProps) > 0 {
-							props := creationProps[0].(map[string]interface{})
-							if props["default_ou"].(string) != "" {
-								return fmt.Errorf("`default_ou` can only be set if `active_directory_config` is provided and `workspace_type` is set to `POOLS`")
-							}
-						}
-					}
+				if _, ok := d.GetOk("directory_id"); !ok {
+					return fmt.Errorf("`directory_id` must be set when `workspace_type` is set to `PERSONAL`")
 				}
 			}
 
@@ -343,12 +345,6 @@ func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta a
 	userIdentityType := d.Get("user_identity_type").(string)
 	workspaceDirectoryName := d.Get("workspace_directory_name").(string)
 	workspaceDirectoryDescription := d.Get("workspace_directory_description").(string)
-
-	if workspaceType == string(types.WorkspaceTypePersonal) {
-		if _, ok := d.GetOk("directory_id"); !ok {
-			return sdkdiag.AppendErrorf(diags, "`directory_id` must be set when `workspace_type` is `PERSONAL`")
-		}
-	}
 
 	input := &workspaces.RegisterWorkspaceDirectoryInput{
 		Tenancy:       types.TenancyShared,
