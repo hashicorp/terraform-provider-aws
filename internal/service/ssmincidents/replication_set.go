@@ -306,7 +306,6 @@ func statusReplicationSet(ctx context.Context, conn *ssmincidents.Client, arn st
 
 		return output, string(output.Status), nil
 	}
-
 }
 
 func waitReplicationSetCreated(ctx context.Context, conn *ssmincidents.Client, arn string, timeout time.Duration) (*awstypes.ReplicationSet, error) {
