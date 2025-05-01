@@ -39,15 +39,18 @@ Upgrade topics:
 - [data-source/aws_s3_bucket](#data-sourceaws_s3_bucket)
 - [data-source/aws_service_discovery_service](#data-sourceaws_service_discovery_service)
 - [data-source/aws_servicequotas_templates](#data-sourceaws_servicequotas_templates)
+- [data-source/aws_ssmincidents_replication_set](#data-sourceaws_ssmincidents_replication_set)
 - [data-source/aws_vpc_endpoint_service](#data-sourceaws_vpc_endpoint_service)
 - [data-source/aws_vpc_peering_connection](#data-sourceaws_vpc_peering_connection)
 - [resource/aws_api_gateway_account](#resourceaws_api_gateway_account)
 - [resource/aws_api_gateway_deployment](#resourceaws_api_gateway_deployment)
 - [resource/aws_batch_compute_environment](#resourceaws_batch_compute_environment)
+- [resource/aws_batch_job_queue](#resourceaws_batch_job_queue)
 - [resource/aws_bedrock_model_invocation_logging_configuration](#resourceaws_bedrock_model_invocation_logging_configuration)
 - [resource/aws_cloudformation_stack_set_instance](#resourceaws_cloudformation_stack_set_instance)
 - [resource/aws_cloudfront_key_value_store](#resourceaws_cloudfront_key_value_store)
 - [resource/aws_cloudfront_response_headers_policy](#resourceaws_cloudfront_response_headers_policy)
+- [resource/aws_cognito_user_in_group](#resourceaws_cognito_user_in_group)
 - [resource/aws_config_aggregate_authorization](#resourceawsconfig_aggregate_authorization)
 - [resource/aws_db_instance](#resourceaws_db_instance)
 - [resource/aws_dms_endpoint](#resourceaws_dms_endpoint)
@@ -56,6 +59,8 @@ Upgrade topics:
 - [resource/aws_ecs_task_definition](#resourceaws_ecs_task_definition)
 - [resource/aws_eip](#resourceaws_eip)
 - [resource/aws_elasticache_replication_group](#resourceaws_elasticache_replication_group)
+- [resource/aws_elasticache_user](#resourceaws_elasticache_user)
+- [resource/aws_elasticache_user_group](#resourceaws_elasticache_user_group)
 - [resource/aws_eks_addon](#resourceaws_eks_addon)
 - [resource/aws_flow_log](#resourceaws_flow_log)
 - [resource/aws_guardduty_organization_configuration](#resourceaws_guardduty_organization_configuration)
@@ -77,6 +82,7 @@ Upgrade topics:
 - [resource/aws_servicequotas_template](#resourceaws_servicequotas_template)
 - [resource/aws_spot_instance_request](#resourceaws_spot_instance_request)
 - [resource/aws_ssm_association](#resourceaws_ssm_association)
+- [resource/aws_ssmincidents_replication_set](#resourceaws_ssmincidents_replication_set)
 - [resource/aws_verifiedpermissions_schema](#resourceaws_verifiedpermissions_schema)
 - [resource/aws_wafv2_web_acl](#resourceaws_wafv2_web_acl)
 
@@ -313,6 +319,10 @@ The `bucket_region` attribute has been added. We encourage use of the `bucket_re
 
 The `region` attribute has been deprecated. All configurations using `region` should be updated to use the `aws_region` attribute instead.
 
+## data-source/aws_ssmincidents_replication_set
+
+The `region` attribute has been deprecated. All configurations using `region` should be updated to use the `regions` attribute instead.
+
 ## data-source/aws_vpc_endpoint_service
 
 The `region` attribute has been deprecated. All configurations using `region` should be updated to use the `service_region` attribute instead.
@@ -375,6 +385,10 @@ terraform import aws_api_gateway_stage.prod <rest_api_id>/<stage_name>
 * `compute_environment_name` has been renamed to `name`.
 * `compute_environment_name_prefix` has been renamed to `name_prefix`.
 
+## resource/aws_batch_job_queue
+
+`compute_environments` has been removed. Instead, use `compute_environment_order`.
+
 ## resource/aws_bedrock_model_invocation_logging_configuration
 
 The following arguments are now list nested blocks instead of single nested blocks.
@@ -399,6 +413,10 @@ For the name, use the `name` attribute.
 ## resource/aws_cloudfront_response_headers_policy
 
 The `etag` argument is now computed only.
+
+## resource/aws_cognito_user_in_group
+
+The `id` attribute is now a comma-delimited string concatenating the `user_pool_id`, `group_name`, and `username` arguments.
 
 ## resource/aws_config_aggregate_authorization
 
@@ -434,6 +452,19 @@ Use `domain` instead.
 
 The `auth_token_update_strategy` argument no longer has a default value.
 If `auth_token` is set, this argument must also be explicitly configured.
+
+The ability to provide an uppercase `engine` value is deprecated.
+In `v7.0.0`, plan-time validation of the `engine` argument will require an entirely lowercase value to match the returned value from the AWS API without diff suppression.
+
+## resource/aws_elasticache_user
+
+The ability to provide an uppercase `engine` value is deprecated.
+In `v7.0.0`, plan-time validation of the `engine` argument will require an entirely lowercase value to match the returned value from the AWS API without diff suppression.
+
+## resource/aws_elasticache_user_group
+
+The ability to provide an uppercase `engine` value is deprecated.
+In `v7.0.0`, plan-time validation of the `engine` argument will require an entirely lowercase value to match the returned value from the AWS API without diff suppression.
 
 ## resource/aws_eks_addon
 
@@ -544,6 +575,10 @@ Remove `block_duration_minutes` from your configuration—it no longer exists.
 ## resource/aws_ssm_association
 
 Remove `instance_id` from configuration—it no longer exists. Use `targets` instead.
+
+## resource/aws_ssmincidents_replication_set
+
+The `region` attribute has been deprecated. All configurations using `region` should be updated to use the `regions` attribute instead.
 
 ## resource/aws_verifiedpermissions_schema
 
