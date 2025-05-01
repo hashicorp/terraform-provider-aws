@@ -199,7 +199,7 @@ func TestAccKMSReplicaKey_twoReplicas(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 3)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 3),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckKeyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
@@ -281,9 +281,9 @@ resource "aws_kms_replica_key" "test" {
 }
 
 func testAccReplicaKeyConfig_two(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigMultipleRegionProvider(3), fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  provider = awsalternate
+  region = %[2]q
 
   description  = %[1]q
   multi_region = true
@@ -299,12 +299,12 @@ resource "aws_kms_replica_key" "test1" {
 }
 
 resource "aws_kms_replica_key" "test2" {
-  provider = awsthird
+  region = %[3]q
 
   description     = %[1]q
   primary_key_arn = aws_kms_key.test.arn
 
   deletion_window_in_days = 7
 }
-`, rName))
+`, rName, acctest.AlternateRegion(), acctest.ThirdRegion())
 }
