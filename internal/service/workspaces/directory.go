@@ -306,51 +306,48 @@ func resourceDirectory() *schema.Resource {
 				ValidateDiagFunc: enum.Validate[types.WorkspaceType](),
 			},
 		},
-		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
-			switch workspaceType := types.WorkspaceType(d.Get("workspace_type").(string)); workspaceType {
-			case types.WorkspaceTypePools:
-				if _, ok := d.GetOk("workspace_directory_description"); !ok {
-					return fmt.Errorf("`workspace_directory_description` is required when `workspace_type` is set to `POOLS`")
-				}
-				if _, ok := d.GetOk("workspace_directory_name"); !ok {
-					return fmt.Errorf("`workspace_directory_name` is required when `workspace_type` is set to `POOLS`")
-				}
-				if d.HasChange("directory_id") {
-					return fmt.Errorf("`directory_id` cannot be set manually when `workspace_type` is set to `POOLS`")
-				}
-				if _, ok := d.GetOk("self_service_permissions"); ok {
-					return fmt.Errorf("`self_service_permissions` cannot be set when `workspace_type` is set to `POOLS`")
-				}
+		CustomizeDiff: func(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
+			plan := diff.GetRawPlan()
 
-				if v, ok := d.GetOk("workspace_creation_properties"); ok {
-					tfList := v.([]any)
-					if len(tfList) > 0 {
-						tfMap := tfList[0].(map[string]any)
-						if tfMap["enable_maintenance_mode"].(bool) {
-							return fmt.Errorf("`workspace_creation_properties.enable_maintenance_mode` is not supported when `workspace_type` is set to `pools`")
-						}
-						if tfMap["user_enabled_as_local_administrator"].(bool) {
-							return fmt.Errorf("`workspace_creation_properties.user_enabled_as_local_administrator` is not supported when `workspace_type` is set to `pools`")
-						}
+			if plan.IsNull() {
+				return nil
+			}
+
+			switch workspaceType := types.WorkspaceType(diff.Get("workspace_type").(string)); workspaceType {
+			case types.WorkspaceTypePools:
+				if v := plan.GetAttr("directory_id"); v.IsKnown() && !v.IsNull() && v.AsString() != "" {
+					return fmt.Errorf("`directory_id` cannot be set when `workspace_type` is set to `%[1]s`", workspaceType)
+				}
+				if v := plan.GetAttr("self_service_permissions"); v.IsWhollyKnown() && !v.IsNull() && v.LengthInt() > 0 {
+					return fmt.Errorf("`self_service_permissions` cannot be set when `workspace_type` is set to `%[1]s`", workspaceType)
+				}
+				for _, name := range []string{"workspace_directory_description", "workspace_directory_name"} {
+					if v := plan.GetAttr(name); v.IsKnown() && (v.IsNull() || v.AsString() == "") {
+						return fmt.Errorf("`%[1]s` must be set when `workspace_type` is set to `%[2]s`", name, workspaceType)
 					}
-					if _, ok := d.GetOk("active_directory_config"); !ok {
-						if len(tfList) > 0 {
-							tfMap := tfList[0].(map[string]any)
-							if tfMap["default_ou"].(string) != "" {
-								return fmt.Errorf("`workspace_creation_properties.default_ou` can only be set if `active_directory_config` is provided and `workspace_type` is set to `POOLS`")
-							}
+				}
+				if v := plan.GetAttr("workspace_creation_properties"); v.IsWhollyKnown() && !v.IsNull() && v.LengthInt() > 0 {
+					tfMap := diff.Get("workspace_creation_properties").([]any)[0].(map[string]any)
+					if tfMap["enable_maintenance_mode"].(bool) {
+						return fmt.Errorf("`workspace_creation_properties.enable_maintenance_mode` cannot be set when when `workspace_type` is set to `%[1]s`", workspaceType)
+					}
+					if tfMap["user_enabled_as_local_administrator"].(bool) {
+						return fmt.Errorf("`workspace_creation_properties.user_enabled_as_local_administrator` cannot be set when when `workspace_type` is set to `%[1]s`", workspaceType)
+					}
+					if v := plan.GetAttr("active_directory_config"); v.IsWhollyKnown() && (v.IsNull() || v.LengthInt() == 0) {
+						if tfMap["default_ou"].(string) != "" {
+							return fmt.Errorf("`workspace_creation_properties.default_ou` can only be set if `active_directory_config` is set and `workspace_type` is set to `%[1]s`", workspaceType)
 						}
 					}
 				}
 			case types.WorkspaceTypePersonal:
-				if _, ok := d.GetOk("workspace_directory_description"); ok {
-					return fmt.Errorf("`workspace_directory_description` cannot be set when `workspace_type` is set to `PERSONAL`")
+				if v := plan.GetAttr("directory_id"); v.IsKnown() && (v.IsNull() || v.AsString() == "") {
+					return fmt.Errorf("`directory_id` must be set when `workspace_type` is set to `%[1]s`", workspaceType)
 				}
-				if _, ok := d.GetOk("workspace_directory_name"); ok {
-					return fmt.Errorf("`workspace_directory_name` cannot be set when `workspace_type` is set to `PERSONAL`")
-				}
-				if _, ok := d.GetOk("directory_id"); !ok {
-					return fmt.Errorf("`directory_id` must be set when `workspace_type` is set to `PERSONAL`")
+				for _, name := range []string{"workspace_directory_description", "workspace_directory_name"} {
+					if v := plan.GetAttr(name); v.IsKnown() && !v.IsNull() && v.AsString() != "" {
+						return fmt.Errorf("`%[1]s` cannot be set when `workspace_type` is set to `%[2]s`", name, workspaceType)
+					}
 				}
 			}
 
