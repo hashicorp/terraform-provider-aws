@@ -1528,6 +1528,26 @@ func TestAccELBV2Listener_mutualAuthenticationPassthrough(t *testing.T) {
 	})
 }
 
+func TestAccELBV2Listener_mutualAuthenticationPassthrough_validate(t *testing.T) {
+	ctx := acctest.Context(t)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccListenerConfig_mutualAuthenticationPassthrough_validate_Advertise(rName, key, certificate),
+				ExpectError: regexache.MustCompile(`Attribute "mutual_authentication\[0\]\.advertise_trust_store_ca_names" cannot be specified when "mutual_authentication\[0\]\.mode" is "passthrough"`),
+			},
+		},
+	})
+}
+
 func TestAccELBV2Listener_mutualAuthenticationAdvertiseCASubject(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Listener
@@ -3867,6 +3887,29 @@ resource "aws_lb_listener" "test" {
 
   mutual_authentication {
     mode = "passthrough"
+  }
+}
+`)
+}
+
+func testAccListenerConfig_mutualAuthenticationPassthrough_validate_Advertise(rName, key, certificate string) string {
+	return acctest.ConfigCompose(
+		testAccListenerConfig_baseHTTPS(rName, key, certificate), `
+resource "aws_lb_listener" "test" {
+  load_balancer_arn = aws_lb.test.id
+  protocol          = "HTTPS"
+  port              = "443"
+  ssl_policy        = "ELBSecurityPolicy-2016-08"
+  certificate_arn   = aws_iam_server_certificate.test.arn
+
+  default_action {
+    target_group_arn = aws_lb_target_group.test.id
+    type             = "forward"
+  }
+
+  mutual_authentication {
+    mode                           = "passthrough"
+	advertise_trust_store_ca_names = "on"
   }
 }
 `)
