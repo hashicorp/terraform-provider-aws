@@ -1544,6 +1544,10 @@ func TestAccELBV2Listener_mutualAuthenticationPassthrough_validate(t *testing.T)
 				Config:      testAccListenerConfig_mutualAuthenticationPassthrough_validate_Advertise(rName, key, certificate),
 				ExpectError: regexache.MustCompile(`Attribute "mutual_authentication\[0\]\.advertise_trust_store_ca_names" cannot be specified when "mutual_authentication\[0\]\.mode" is "passthrough"`),
 			},
+			{
+				Config:      testAccListenerConfig_mutualAuthenticationPassthrough_validate_IgnoreClient(rName, key, certificate),
+				ExpectError: regexache.MustCompile(`Attribute "mutual_authentication\[0\]\.ignore_client_certificate_expiry" cannot be specified when "mutual_authentication\[0\]\.mode" is "passthrough"`),
+			},
 		},
 	})
 }
@@ -3910,6 +3914,29 @@ resource "aws_lb_listener" "test" {
   mutual_authentication {
     mode                           = "passthrough"
 	advertise_trust_store_ca_names = "on"
+  }
+}
+`)
+}
+
+func testAccListenerConfig_mutualAuthenticationPassthrough_validate_IgnoreClient(rName, key, certificate string) string {
+	return acctest.ConfigCompose(
+		testAccListenerConfig_baseHTTPS(rName, key, certificate), `
+resource "aws_lb_listener" "test" {
+  load_balancer_arn = aws_lb.test.id
+  protocol          = "HTTPS"
+  port              = "443"
+  ssl_policy        = "ELBSecurityPolicy-2016-08"
+  certificate_arn   = aws_iam_server_certificate.test.arn
+
+  default_action {
+    target_group_arn = aws_lb_target_group.test.id
+    type             = "forward"
+  }
+
+  mutual_authentication {
+    mode                             = "passthrough"
+	ignore_client_certificate_expiry = true
   }
 }
 `)
