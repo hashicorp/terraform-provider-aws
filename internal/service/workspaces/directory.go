@@ -60,7 +60,7 @@ func resourceDirectory() *schema.Resource {
 						names.AttrStatus: {
 							Type:             schema.TypeString,
 							Optional:         true,
-							Default:          types.CertificateBasedAuthStatusEnumDisabled,
+							Computed:         true,
 							ValidateDiagFunc: enum.Validate[types.CertificateBasedAuthStatusEnum](),
 						},
 					},
