@@ -86,7 +86,6 @@ resource "aws_kms_replica_key" "replica" {
 }
 ```
 
-
 ### S3 Bucket Replication Configuration
 
 #### Terraform AWS Provider v5 (and below)
