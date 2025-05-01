@@ -427,9 +427,9 @@ func resourceParameterHash(v any) int {
 	var buf bytes.Buffer
 	m := v.(map[string]any)
 	// Store the value as a lower case string, to match how we store them in FlattenParameters
-	buf.WriteString(fmt.Sprintf("%s-", strings.ToLower(m[names.AttrName].(string))))
-	buf.WriteString(fmt.Sprintf("%s-", strings.ToLower(m["apply_method"].(string))))
-	buf.WriteString(fmt.Sprintf("%s-", m[names.AttrValue].(string)))
+	fmt.Fprintf(&buf, "%s-", strings.ToLower(m[names.AttrName].(string)))
+	fmt.Fprintf(&buf, "%s-", strings.ToLower(m["apply_method"].(string)))
+	fmt.Fprintf(&buf, "%s-", m[names.AttrValue].(string))
 
 	// This hash randomly affects the "order" of the set, which affects in what order parameters
 	// are applied, when there are more than 20 (chunked).

@@ -23,6 +23,7 @@ func TestAccWorkSpaces_serial(t *testing.T) {
 			"workspaceAccessProperties":   testAccDirectory_workspaceAccessProperties,
 			"workspaceCreationProperties": testAccDirectory_workspaceCreationProperties,
 			"workspaceCreationProperties_customSecurityGroupId_defaultOu": testAccDirectory_workspaceCreationProperties_customSecurityGroupId_defaultOu,
+			"workspaceCertificateBasedAuthProperties":                     testAccDirectory_CertificateBasedAuthProperties,
 			"workspaceSamlProperties":                                     testAccDirectory_SamlProperties,
 			"workspacePoolsBasic":                                         testAccDirectory_poolsBasic,
 			"workspacePoolsADConfig":                                      testAccDirectory_poolsADConfig,

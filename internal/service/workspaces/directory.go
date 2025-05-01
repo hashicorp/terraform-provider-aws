@@ -65,6 +65,27 @@ func resourceDirectory() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"certificate_based_auth_properties": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"certificate_authority_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+						names.AttrStatus: {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ValidateDiagFunc: enum.Validate[types.CertificateBasedAuthStatusEnum](),
+						},
+					},
+				},
+			},
 			"customer_user_name": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -346,7 +367,7 @@ func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta a
 	workspaceDirectoryName := d.Get("workspace_directory_name").(string)
 	workspaceDirectoryDescription := d.Get("workspace_directory_description").(string)
 
-	input := &workspaces.RegisterWorkspaceDirectoryInput{
+	input := workspaces.RegisterWorkspaceDirectoryInput{
 		Tenancy:       types.TenancyShared,
 		Tags:          getTagsIn(ctx),
 		WorkspaceType: types.WorkspaceType(workspaceType),
@@ -376,7 +397,7 @@ func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta a
 	)
 	output, err := tfresource.RetryWhenIsA[*types.InvalidResourceStateException](ctx, timeout,
 		func() (any, error) {
-			return conn.RegisterWorkspaceDirectory(ctx, input)
+			return conn.RegisterWorkspaceDirectory(ctx, &input)
 		})
 
 	if err != nil {
@@ -395,25 +416,39 @@ func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta a
 	}
 
 	if v, ok := d.GetOk("saml_properties"); ok {
-		input := &workspaces.ModifySamlPropertiesInput{
+		input := workspaces.ModifySamlPropertiesInput{
 			ResourceId:     aws.String(d.Id()),
 			SamlProperties: expandSAMLProperties(v.([]any)),
 		}
 
-		_, err := conn.ModifySamlProperties(ctx, input)
+		_, err := conn.ModifySamlProperties(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting WorkSpaces Directory (%s) SAML properties: %s", d.Id(), err)
 		}
 	}
 
+	// SAML needs to be enabled for directory before enabling certificate based authentication.
+	if v, ok := d.GetOk("certificate_based_auth_properties"); ok {
+		input := workspaces.ModifyCertificateBasedAuthPropertiesInput{
+			CertificateBasedAuthProperties: expandCertificateBasedAuthProperties(v.([]any)),
+			ResourceId:                     aws.String(d.Id()),
+		}
+
+		_, err := conn.ModifyCertificateBasedAuthProperties(ctx, &input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting WorkSpaces Directory (%s) certificate-based authentication properties: %s", d.Id(), err)
+		}
+	}
+
 	if v, ok := d.GetOk("self_service_permissions"); ok {
-		input := &workspaces.ModifySelfservicePermissionsInput{
+		input := workspaces.ModifySelfservicePermissionsInput{
 			ResourceId:             aws.String(d.Id()),
 			SelfservicePermissions: expandSelfservicePermissions(v.([]any)),
 		}
 
-		_, err := conn.ModifySelfservicePermissions(ctx, input)
+		_, err := conn.ModifySelfservicePermissions(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting WorkSpaces Directory (%s) self-service permissions: %s", d.Id(), err)
@@ -421,12 +456,12 @@ func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta a
 	}
 
 	if v, ok := d.GetOk("workspace_access_properties"); ok {
-		input := &workspaces.ModifyWorkspaceAccessPropertiesInput{
+		input := workspaces.ModifyWorkspaceAccessPropertiesInput{
 			ResourceId:                aws.String(d.Id()),
 			WorkspaceAccessProperties: expandWorkspaceAccessProperties(v.([]any)),
 		}
 
-		_, err := conn.ModifyWorkspaceAccessProperties(ctx, input)
+		_, err := conn.ModifyWorkspaceAccessProperties(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting WorkSpaces Directory (%s) access properties: %s", d.Id(), err)
@@ -434,12 +469,12 @@ func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta a
 	}
 
 	if v, ok := d.GetOk("workspace_creation_properties"); ok {
-		input := &workspaces.ModifyWorkspaceCreationPropertiesInput{
+		input := workspaces.ModifyWorkspaceCreationPropertiesInput{
 			ResourceId:                  aws.String(d.Id()),
 			WorkspaceCreationProperties: expandWorkspaceCreationProperties(v.([]any), workspaceType),
 		}
 
-		_, err := conn.ModifyWorkspaceCreationProperties(ctx, input)
+		_, err := conn.ModifyWorkspaceCreationProperties(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting WorkSpaces Directory (%s) creation properties: %s", d.Id(), err)
@@ -447,12 +482,12 @@ func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta a
 	}
 
 	if v, ok := d.GetOk("ip_group_ids"); ok && v.(*schema.Set).Len() > 0 {
-		input := &workspaces.AssociateIpGroupsInput{
+		input := workspaces.AssociateIpGroupsInput{
 			DirectoryId: aws.String(d.Id()),
 			GroupIds:    flex.ExpandStringValueSet(v.(*schema.Set)),
 		}
 
-		_, err := conn.AssociateIpGroups(ctx, input)
+		_, err := conn.AssociateIpGroups(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "asassociating WorkSpaces Directory (%s) IP Groups: %s", d.Id(), err)
@@ -481,6 +516,9 @@ func resourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta any
 	d.Set(names.AttrAlias, directory.Alias)
 	if err := d.Set("active_directory_config", flattenActiveDirectoryConfig(directory.ActiveDirectoryConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting active_directory_config: %s", err)
+	}
+	if err := d.Set("certificate_based_auth_properties", flattenCertificateBasedAuthProperties(directory.CertificateBasedAuthProperties)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting certificate_based_auth_properties: %s", err)
 	}
 	d.Set("directory_id", directory.DirectoryId)
 	d.Set("directory_name", directory.DirectoryName)
@@ -516,8 +554,8 @@ func resourceDirectoryUpdate(ctx context.Context, d *schema.ResourceData, meta a
 	conn := meta.(*conns.AWSClient).WorkSpacesClient(ctx)
 
 	if d.HasChange("saml_properties") {
-		tfListSAMLProperties := d.Get("saml_properties").([]any)
-		tfMap := tfListSAMLProperties[0].(map[string]any)
+		tfList := d.Get("saml_properties").([]any)
+		tfMap := tfList[0].(map[string]any)
 
 		var dels []types.DeletableSamlProperty
 		if tfMap["relay_state_parameter_name"].(string) == "" {
@@ -527,26 +565,49 @@ func resourceDirectoryUpdate(ctx context.Context, d *schema.ResourceData, meta a
 			dels = append(dels, types.DeletableSamlPropertySamlPropertiesUserAccessUrl)
 		}
 
-		input := &workspaces.ModifySamlPropertiesInput{
+		input := workspaces.ModifySamlPropertiesInput{
 			PropertiesToDelete: dels,
 			ResourceId:         aws.String(d.Id()),
-			SamlProperties:     expandSAMLProperties(tfListSAMLProperties),
+			SamlProperties:     expandSAMLProperties(tfList),
 		}
 
-		_, err := conn.ModifySamlProperties(ctx, input)
+		_, err := conn.ModifySamlProperties(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating WorkSpaces Directory (%s) SAML properties: %s", d.Id(), err)
 		}
 	}
 
+	// SAML needs to be enabled for directory before enabling certificate based authentication
+	if d.HasChange("certificate_based_auth_properties") {
+		tfList := d.Get("certificate_based_auth_properties").([]any)
+		tfMap := tfList[0].(map[string]any)
+
+		var dels []types.DeletableCertificateBasedAuthProperty
+		if tfMap["certificate_authority_arn"].(string) == "" {
+			dels = append(dels, types.DeletableCertificateBasedAuthPropertyCertificateBasedAuthPropertiesCertificateAuthorityArn)
+		}
+
+		input := &workspaces.ModifyCertificateBasedAuthPropertiesInput{
+			CertificateBasedAuthProperties: expandCertificateBasedAuthProperties(tfList),
+			PropertiesToDelete:             dels,
+			ResourceId:                     aws.String(d.Id()),
+		}
+
+		_, err := conn.ModifyCertificateBasedAuthProperties(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating WorkSpaces Directory (%s) certificate-based authentication properties: %s", d.Id(), err)
+		}
+	}
+
 	if d.HasChange("self_service_permissions") {
-		input := &workspaces.ModifySelfservicePermissionsInput{
+		input := workspaces.ModifySelfservicePermissionsInput{
 			ResourceId:             aws.String(d.Id()),
 			SelfservicePermissions: expandSelfservicePermissions(d.Get("self_service_permissions").([]any)),
 		}
 
-		_, err := conn.ModifySelfservicePermissions(ctx, input)
+		_, err := conn.ModifySelfservicePermissions(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating WorkSpaces Directory (%s) self-service permissions: %s", d.Id(), err)
@@ -554,12 +615,12 @@ func resourceDirectoryUpdate(ctx context.Context, d *schema.ResourceData, meta a
 	}
 
 	if d.HasChange("workspace_access_properties") {
-		input := &workspaces.ModifyWorkspaceAccessPropertiesInput{
+		input := workspaces.ModifyWorkspaceAccessPropertiesInput{
 			ResourceId:                aws.String(d.Id()),
 			WorkspaceAccessProperties: expandWorkspaceAccessProperties(d.Get("workspace_access_properties").([]any)),
 		}
 
-		_, err := conn.ModifyWorkspaceAccessProperties(ctx, input)
+		_, err := conn.ModifyWorkspaceAccessProperties(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating WorkSpaces Directory (%s) access properties: %s", d.Id(), err)
@@ -568,12 +629,12 @@ func resourceDirectoryUpdate(ctx context.Context, d *schema.ResourceData, meta a
 
 	if d.HasChange("workspace_creation_properties") {
 		workspaceType := d.Get("workspace_type").(string)
-		input := &workspaces.ModifyWorkspaceCreationPropertiesInput{
+		input := workspaces.ModifyWorkspaceCreationPropertiesInput{
 			ResourceId:                  aws.String(d.Id()),
 			WorkspaceCreationProperties: expandWorkspaceCreationProperties(d.Get("workspace_creation_properties").([]any), workspaceType),
 		}
 
-		_, err := conn.ModifyWorkspaceCreationProperties(ctx, input)
+		_, err := conn.ModifyWorkspaceCreationProperties(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating WorkSpaces Directory (%s) creation properties: %s", d.Id(), err)
@@ -586,12 +647,12 @@ func resourceDirectoryUpdate(ctx context.Context, d *schema.ResourceData, meta a
 		add, del := ns.Difference(os), os.Difference(ns)
 
 		if add.Len() > 0 {
-			input := &workspaces.AssociateIpGroupsInput{
+			input := workspaces.AssociateIpGroupsInput{
 				DirectoryId: aws.String(d.Id()),
 				GroupIds:    flex.ExpandStringValueSet(add),
 			}
 
-			_, err := conn.AssociateIpGroups(ctx, input)
+			_, err := conn.AssociateIpGroups(ctx, &input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "associating WorkSpaces Directory (%s) IP Groups: %s", d.Id(), err)
@@ -599,12 +660,12 @@ func resourceDirectoryUpdate(ctx context.Context, d *schema.ResourceData, meta a
 		}
 
 		if del.Len() > 0 {
-			input := &workspaces.DisassociateIpGroupsInput{
+			input := workspaces.DisassociateIpGroupsInput{
 				DirectoryId: aws.String(d.Id()),
 				GroupIds:    flex.ExpandStringValueSet(del),
 			}
 
-			_, err := conn.DisassociateIpGroups(ctx, input)
+			_, err := conn.DisassociateIpGroups(ctx, &input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "disassociating WorkSpaces Directory (%s) IP Groups: %s", d.Id(), err)
@@ -620,14 +681,15 @@ func resourceDirectoryDelete(ctx context.Context, d *schema.ResourceData, meta a
 	conn := meta.(*conns.AWSClient).WorkSpacesClient(ctx)
 
 	log.Printf("[DEBUG] Deleting WorkSpaces Directory: %s", d.Id())
+	input := workspaces.DeregisterWorkspaceDirectoryInput{
+		DirectoryId: aws.String(d.Id()),
+	}
 	const (
 		timeout = 2 * time.Minute
 	)
 	_, err := tfresource.RetryWhenIsA[*types.InvalidResourceStateException](ctx, timeout,
 		func() (any, error) {
-			return conn.DeregisterWorkspaceDirectory(ctx, &workspaces.DeregisterWorkspaceDirectoryInput{
-				DirectoryId: aws.String(d.Id()),
-			})
+			return conn.DeregisterWorkspaceDirectory(ctx, &input)
 		})
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
@@ -646,11 +708,11 @@ func resourceDirectoryDelete(ctx context.Context, d *schema.ResourceData, meta a
 }
 
 func findDirectoryByID(ctx context.Context, conn *workspaces.Client, id string) (*types.WorkspaceDirectory, error) {
-	input := &workspaces.DescribeWorkspaceDirectoriesInput{
+	input := workspaces.DescribeWorkspaceDirectoriesInput{
 		DirectoryIds: []string{id},
 	}
 
-	output, err := findDirectory(ctx, conn, input)
+	output, err := findDirectory(ctx, conn, &input)
 
 	if err != nil {
 		return nil, err
@@ -823,6 +885,25 @@ func expandActiveDirectoryConfig(tfList []any) *types.ActiveDirectoryConfig {
 	return apiObject
 }
 
+func expandCertificateBasedAuthProperties(tfList []any) *types.CertificateBasedAuthProperties {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	apiObject := &types.CertificateBasedAuthProperties{}
+	tfMap := tfList[0].(map[string]any)
+
+	if tfMap["certificate_authority_arn"].(string) != "" {
+		apiObject.CertificateAuthorityArn = aws.String(tfMap["certificate_authority_arn"].(string))
+	}
+
+	if tfMap[names.AttrStatus].(string) != "" {
+		apiObject.Status = types.CertificateBasedAuthStatusEnum(tfMap[names.AttrStatus].(string))
+	}
+
+	return apiObject
+}
+
 func expandSAMLProperties(tfList []any) *types.SamlProperties {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
@@ -928,6 +1009,19 @@ func flattenWorkspaceAccessProperties(apiObject *types.WorkspaceAccessProperties
 			"device_type_web":        apiObject.DeviceTypeWeb,
 			"device_type_windows":    apiObject.DeviceTypeWindows,
 			"device_type_zeroclient": apiObject.DeviceTypeZeroClient,
+		},
+	}
+}
+
+func flattenCertificateBasedAuthProperties(apiObject *types.CertificateBasedAuthProperties) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	return []any{
+		map[string]any{
+			"certificate_authority_arn": aws.ToString(apiObject.CertificateAuthorityArn),
+			names.AttrStatus:            apiObject.Status,
 		},
 	}
 }

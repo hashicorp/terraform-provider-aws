@@ -26,6 +26,11 @@ resource "aws_workspaces_directory" "example" {
     Example = true
   }
 
+  certificate_based_auth_properties {
+    certificate_authority_arn = "arn:aws:acm-pca:us-east-1:123456789012:certificate-authority/12345678-1234-1234-1234-123456789012"
+    status                    = "ENABLED"
+  }
+
   saml_properties {
     user_access_url = "https://sso.example.com/"
     status          = "ENABLED"
@@ -195,6 +200,7 @@ This resource supports the following arguments:
 * `subnet_ids` - (Optional) The identifiers of the subnets where the directory resides.
 * `ip_group_ids` – (Optional) The identifiers of the IP access control groups associated with the directory.
 * `tags` – (Optional) A map of tags assigned to the WorkSpaces directory. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `certificate_based_auth_properties` - (Optional) Configuration of certificate-based authentication (CBA) integration. Requires SAML authentication to be enabled. Defined below.
 * `saml_properties` – (Optional) Configuration of SAML authentication integration. Defined below.
 * `self_service_permissions` – (Optional) Permissions to enable or disable self-service capabilities when `workspace_type` is set to `PERSONAL`.. Defined below.
 * `workspace_access_properties` – (Optional) Specifies which devices and operating systems users can use to access their WorkSpaces. Defined below.
@@ -206,6 +212,11 @@ This resource supports the following arguments:
 * `user_identity_type` - (Required for `POOLS`) Specifies the user identity type for the WorkSpaces directory. Valid values are `CUSTOMER_MANAGED`, `AWS_DIRECTORY_SERVICE`, `AWS_IAM_IDENTITY_CENTER`.
 
 -> **Note:** When `workspace_type` is set to `POOLS`, the `directory_id` is automatically generated and cannot be manually set.
+
+### certificate_based_auth_properties
+
+* `certificate_authority_arn` - (Optional) The Amazon Resource Name (ARN) of the certificate manager private certificate authority (ACM-PCA) that is used for certificate-based authentication.
+* `status` - (Optional) Status of certificate-based authentication. Default `DISABLED`.
 
 ### saml_properties
 
