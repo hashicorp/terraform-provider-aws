@@ -12,6 +12,7 @@ import (
 	_ "github.com/aws/aws-sdk-go-v2/service/batch" // Required for go:linkname
 	awstypes "github.com/aws/aws-sdk-go-v2/service/batch/types"
 	smithyjson "github.com/aws/smithy-go/encoding/json"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 )
@@ -141,7 +142,7 @@ func equivalentECSPropertiesJSON(str1, str2 string) (bool, error) {
 	return tfjson.EqualBytes(b1, b2), nil
 }
 
-func expandECSProperties(tfString string) (*awstypes.EcsProperties, error) {
+func expandECSPropertiesJSON(tfString string) (*awstypes.EcsProperties, error) {
 	apiObject := &awstypes.EcsProperties{}
 
 	if err := tfjson.DecodeFromString(tfString, apiObject); err != nil {
@@ -170,4 +171,9 @@ func flattenECSProperties(apiObject *awstypes.EcsProperties) (string, error) {
 	}
 
 	return jsonEncoder.String(), nil
+}
+
+func ecsPropertiesSchema() *schema.Resource {
+	// TODO
+	return &schema.Resource{}
 }

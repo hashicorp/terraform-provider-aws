@@ -45,6 +45,15 @@ func resourceJobDefinition() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    resourceJobDefinitionV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: jobDefinitionStateUpgradeV0,
+				Version: 0,
+			},
+		},
+
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,
@@ -94,357 +103,7 @@ func resourceJobDefinition() *schema.Resource {
 				MaxItems:      1,
 				Optional:      true,
 				ConflictsWith: []string{"ecs_properties", "container_properties", "node_properties"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"pod_properties": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Required: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"containers": {
-										Type:     schema.TypeList,
-										Required: true,
-										MaxItems: 10,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"args": {
-													Type:     schema.TypeList,
-													Optional: true,
-													Elem:     &schema.Schema{Type: schema.TypeString},
-												},
-												"command": {
-													Type:     schema.TypeList,
-													Optional: true,
-													Elem:     &schema.Schema{Type: schema.TypeString},
-												},
-												"env": {
-													Type:     schema.TypeSet,
-													Optional: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															names.AttrName: {
-																Type:     schema.TypeString,
-																Required: true,
-															},
-															names.AttrValue: {
-																Type:     schema.TypeString,
-																Required: true,
-															},
-														},
-													},
-												},
-												"image": {
-													Type:     schema.TypeString,
-													Required: true,
-												},
-												"image_pull_policy": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: validation.StringInSlice(imagePullPolicy_Values(), false),
-												},
-												names.AttrName: {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-												names.AttrResources: {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"limits": {
-																Type:     schema.TypeMap,
-																Optional: true,
-																Elem:     &schema.Schema{Type: schema.TypeString},
-															},
-															"requests": {
-																Type:     schema.TypeMap,
-																Optional: true,
-																Elem:     &schema.Schema{Type: schema.TypeString},
-															},
-														},
-													},
-												},
-												"security_context": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"privileged": {
-																Type:     schema.TypeBool,
-																Optional: true,
-															},
-															"read_only_root_file_system": {
-																Type:     schema.TypeBool,
-																Optional: true,
-															},
-															"run_as_group": {
-																Type:     schema.TypeInt,
-																Optional: true,
-															},
-															"run_as_non_root": {
-																Type:     schema.TypeBool,
-																Optional: true,
-															},
-															"run_as_user": {
-																Type:     schema.TypeInt,
-																Optional: true,
-															},
-														},
-													},
-												},
-												"volume_mounts": {
-													Type:     schema.TypeList,
-													Optional: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"mount_path": {
-																Type:     schema.TypeString,
-																Required: true,
-															},
-															names.AttrName: {
-																Type:     schema.TypeString,
-																Required: true,
-															},
-															"read_only": {
-																Type:     schema.TypeBool,
-																Optional: true,
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-									"dns_policy": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringInSlice(dnsPolicy_Values(), false),
-									},
-									"host_network": {
-										Type:     schema.TypeBool,
-										Optional: true,
-										Default:  true,
-									},
-									"image_pull_secret": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrName: {
-													Type:     schema.TypeString,
-													Required: true,
-												},
-											},
-										},
-									},
-									"init_containers": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 10,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"args": {
-													Type:     schema.TypeList,
-													Optional: true,
-													Elem:     &schema.Schema{Type: schema.TypeString},
-												},
-												"command": {
-													Type:     schema.TypeList,
-													Optional: true,
-													Elem:     &schema.Schema{Type: schema.TypeString},
-												},
-												"env": {
-													Type:     schema.TypeSet,
-													Optional: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															names.AttrName: {
-																Type:     schema.TypeString,
-																Required: true,
-															},
-															names.AttrValue: {
-																Type:     schema.TypeString,
-																Required: true,
-															},
-														},
-													},
-												},
-												"image": {
-													Type:     schema.TypeString,
-													Required: true,
-												},
-												"image_pull_policy": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: validation.StringInSlice(imagePullPolicy_Values(), false),
-												},
-												names.AttrName: {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-												names.AttrResources: {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"limits": {
-																Type:     schema.TypeMap,
-																Optional: true,
-																Elem:     &schema.Schema{Type: schema.TypeString},
-															},
-															"requests": {
-																Type:     schema.TypeMap,
-																Optional: true,
-																Elem:     &schema.Schema{Type: schema.TypeString},
-															},
-														},
-													},
-												},
-												"security_context": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"privileged": {
-																Type:     schema.TypeBool,
-																Optional: true,
-															},
-															"read_only_root_file_system": {
-																Type:     schema.TypeBool,
-																Optional: true,
-															},
-															"run_as_group": {
-																Type:     schema.TypeInt,
-																Optional: true,
-															},
-															"run_as_non_root": {
-																Type:     schema.TypeBool,
-																Optional: true,
-															},
-															"run_as_user": {
-																Type:     schema.TypeInt,
-																Optional: true,
-															},
-														},
-													},
-												},
-												"volume_mounts": {
-													Type:     schema.TypeList,
-													Optional: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"mount_path": {
-																Type:     schema.TypeString,
-																Required: true,
-															},
-															names.AttrName: {
-																Type:     schema.TypeString,
-																Required: true,
-															},
-															"read_only": {
-																Type:     schema.TypeBool,
-																Optional: true,
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-									"metadata": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"labels": {
-													Type:     schema.TypeMap,
-													Optional: true,
-													Elem:     &schema.Schema{Type: schema.TypeString},
-												},
-											},
-										},
-									},
-									"service_account_name": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"share_process_namespace": {
-										Type:     schema.TypeBool,
-										Optional: true,
-									},
-									"volumes": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"empty_dir": {
-													Type:     schema.TypeList,
-													MaxItems: 1,
-													Optional: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"medium": {
-																Type:         schema.TypeString,
-																Optional:     true,
-																Default:      "",
-																ValidateFunc: validation.StringInSlice([]string{"", "Memory"}, true),
-															},
-															"size_limit": {
-																Type:     schema.TypeString,
-																Required: true,
-															},
-														},
-													},
-												},
-												"host_path": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															names.AttrPath: {
-																Type:     schema.TypeString,
-																Required: true,
-															},
-														},
-													},
-												},
-												names.AttrName: {
-													Type:     schema.TypeString,
-													Optional: true,
-													Default:  "Default",
-												},
-												"secret": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"optional": {
-																Type:     schema.TypeBool,
-																Optional: true,
-															},
-															"secret_name": {
-																Type:     schema.TypeString,
-																Required: true,
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-					},
-				},
+				Elem:          eksPropertiesSchema(),
 			},
 			names.AttrName: {
 				Type:         schema.TypeString,
@@ -734,7 +393,7 @@ func resourceJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, me
 		}
 
 		if v, ok := d.GetOk("container_properties"); ok {
-			props, err := expandContainerProperties(v.(string))
+			props, err := expandContainerPropertiesJSON(v.(string))
 			if err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
 			}
@@ -744,7 +403,7 @@ func resourceJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, me
 		}
 
 		if v, ok := d.GetOk("ecs_properties"); ok {
-			props, err := expandECSProperties(v.(string))
+			props, err := expandECSPropertiesJSON(v.(string))
 			if err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
 			}
@@ -779,7 +438,7 @@ func resourceJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, me
 		}
 
 		if v, ok := d.GetOk("node_properties"); ok {
-			props, err := expandJobNodeProperties(v.(string))
+			props, err := expandJobNodePropertiesJSON(v.(string))
 			if err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
 			}
@@ -906,7 +565,7 @@ func resourceJobDefinitionUpdate(ctx context.Context, d *schema.ResourceData, me
 		switch jobDefinitionType {
 		case awstypes.JobDefinitionTypeContainer:
 			if v, ok := d.GetOk("container_properties"); ok {
-				props, err := expandContainerProperties(v.(string))
+				props, err := expandContainerPropertiesJSON(v.(string))
 				if err != nil {
 					return sdkdiag.AppendFromErr(diags, err)
 				}
@@ -916,7 +575,7 @@ func resourceJobDefinitionUpdate(ctx context.Context, d *schema.ResourceData, me
 			}
 
 			if v, ok := d.GetOk("ecs_properties"); ok {
-				props, err := expandECSProperties(v.(string))
+				props, err := expandECSPropertiesJSON(v.(string))
 				if err != nil {
 					return sdkdiag.AppendFromErr(diags, err)
 				}
@@ -941,7 +600,7 @@ func resourceJobDefinitionUpdate(ctx context.Context, d *schema.ResourceData, me
 
 		case awstypes.JobDefinitionTypeMultinode:
 			if v, ok := d.GetOk("node_properties"); ok {
-				props, err := expandJobNodeProperties(v.(string))
+				props, err := expandJobNodePropertiesJSON(v.(string))
 				if err != nil {
 					return sdkdiag.AppendFromErr(diags, err)
 				}
@@ -1092,7 +751,7 @@ func findJobDefinitions(ctx context.Context, conn *batch.Client, input *batch.De
 
 func validJobContainerProperties(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
-	_, err := expandContainerProperties(value)
+	_, err := expandContainerPropertiesJSON(value)
 	if err != nil {
 		errors = append(errors, fmt.Errorf("AWS Batch Job container_properties is invalid: %s", err))
 	}
@@ -1101,7 +760,7 @@ func validJobContainerProperties(v any, k string) (ws []string, errors []error) 
 
 func validJobECSProperties(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
-	_, err := expandECSProperties(value)
+	_, err := expandECSPropertiesJSON(value)
 	if err != nil {
 		errors = append(errors, fmt.Errorf("AWS Batch Job ecs_properties is invalid: %s", err))
 	}
@@ -1110,7 +769,7 @@ func validJobECSProperties(v any, k string) (ws []string, errors []error) {
 
 func validJobNodeProperties(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
-	_, err := expandJobNodeProperties(value)
+	_, err := expandJobNodePropertiesJSON(value)
 	if err != nil {
 		errors = append(errors, fmt.Errorf("AWS Batch Job node_properties is invalid: %s", err))
 	}

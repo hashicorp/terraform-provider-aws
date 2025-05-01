@@ -11,8 +11,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	_ "github.com/aws/aws-sdk-go-v2/service/batch" // Required for go:linkname
 	awstypes "github.com/aws/aws-sdk-go-v2/service/batch/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type eksProperties awstypes.EksProperties
@@ -130,4 +133,358 @@ func equivalentEKSPropertiesJSON(str1, str2 string) (bool, error) {
 	}
 
 	return tfjson.EqualBytes(b1, b2), nil
+}
+
+func eksPropertiesSchema() *schema.Resource {
+	return &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"pod_properties": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Required: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"containers": {
+							Type:     schema.TypeList,
+							Required: true,
+							MaxItems: 10,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"args": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+									"command": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+									"env": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												names.AttrName: {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												names.AttrValue: {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+											},
+										},
+									},
+									"image": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"image_pull_policy": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringInSlice(imagePullPolicy_Values(), false),
+									},
+									names.AttrName: {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									names.AttrResources: {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"limits": {
+													Type:     schema.TypeMap,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+												"requests": {
+													Type:     schema.TypeMap,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+											},
+										},
+									},
+									"security_context": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"privileged": {
+													Type:     schema.TypeBool,
+													Optional: true,
+												},
+												"read_only_root_file_system": {
+													Type:     schema.TypeBool,
+													Optional: true,
+												},
+												"run_as_group": {
+													Type:     schema.TypeInt,
+													Optional: true,
+												},
+												"run_as_non_root": {
+													Type:     schema.TypeBool,
+													Optional: true,
+												},
+												"run_as_user": {
+													Type:     schema.TypeInt,
+													Optional: true,
+												},
+											},
+										},
+									},
+									"volume_mounts": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"mount_path": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												names.AttrName: {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												"read_only": {
+													Type:     schema.TypeBool,
+													Optional: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"dns_policy": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(dnsPolicy_Values(), false),
+						},
+						"host_network": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
+						},
+						"image_pull_secret": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrName: {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+						},
+						"init_containers": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 10,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"args": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+									"command": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+									"env": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												names.AttrName: {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												names.AttrValue: {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+											},
+										},
+									},
+									"image": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"image_pull_policy": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringInSlice(imagePullPolicy_Values(), false),
+									},
+									names.AttrName: {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									names.AttrResources: {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"limits": {
+													Type:     schema.TypeMap,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+												"requests": {
+													Type:     schema.TypeMap,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+											},
+										},
+									},
+									"security_context": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"privileged": {
+													Type:     schema.TypeBool,
+													Optional: true,
+												},
+												"read_only_root_file_system": {
+													Type:     schema.TypeBool,
+													Optional: true,
+												},
+												"run_as_group": {
+													Type:     schema.TypeInt,
+													Optional: true,
+												},
+												"run_as_non_root": {
+													Type:     schema.TypeBool,
+													Optional: true,
+												},
+												"run_as_user": {
+													Type:     schema.TypeInt,
+													Optional: true,
+												},
+											},
+										},
+									},
+									"volume_mounts": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"mount_path": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												names.AttrName: {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												"read_only": {
+													Type:     schema.TypeBool,
+													Optional: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"metadata": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"labels": {
+										Type:     schema.TypeMap,
+										Optional: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+								},
+							},
+						},
+						"service_account_name": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"share_process_namespace": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"volumes": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"empty_dir": {
+										Type:     schema.TypeList,
+										MaxItems: 1,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"medium": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													Default:      "",
+													ValidateFunc: validation.StringInSlice([]string{"", "Memory"}, true),
+												},
+												"size_limit": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+											},
+										},
+									},
+									"host_path": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												names.AttrPath: {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+											},
+										},
+									},
+									names.AttrName: {
+										Type:     schema.TypeString,
+										Optional: true,
+										Default:  "Default",
+									},
+									"secret": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"optional": {
+													Type:     schema.TypeBool,
+													Optional: true,
+												},
+												"secret_name": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
 }

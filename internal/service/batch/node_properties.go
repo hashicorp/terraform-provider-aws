@@ -9,6 +9,7 @@ import (
 	_ "github.com/aws/aws-sdk-go-v2/service/batch" // Required for go:linkname
 	awstypes "github.com/aws/aws-sdk-go-v2/service/batch/types"
 	smithyjson "github.com/aws/smithy-go/encoding/json"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 )
 
@@ -75,7 +76,7 @@ func equivalentNodePropertiesJSON(str1, str2 string) (bool, error) {
 	return tfjson.EqualBytes(b1, b2), nil
 }
 
-func expandJobNodeProperties(tfString string) (*awstypes.NodeProperties, error) {
+func expandJobNodePropertiesJSON(tfString string) (*awstypes.NodeProperties, error) {
 	apiObject := &awstypes.NodeProperties{}
 
 	if err := tfjson.DecodeFromString(tfString, apiObject); err != nil {
@@ -104,4 +105,85 @@ func flattenNodeProperties(apiObject *awstypes.NodeProperties) (string, error) {
 	}
 
 	return jsonEncoder.String(), nil
+}
+
+func nodePropertiesSchema() *schema.Resource {
+	return &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"main_node": {
+				Type:     schema.TypeInt,
+				Required: true,
+			},
+			"node_range_properties": {
+				Type:     schema.TypeList,
+				Required: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"consumable_resource_properties": {
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"consumable_resource_list": {
+										Type:     schema.TypeList,
+										MaxItems: 1,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"consumable_resource": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												"quantity": {
+													Type:     schema.TypeFloat,
+													Optional: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"container": {
+							Type:          schema.TypeList,
+							MaxItems:      1,
+							Optional:      true,
+							ConflictsWith: []string{"ecs_properties", "eks_properties"},
+							Elem:          containerPropertiesSchema(),
+						},
+						"ecs_properties": {
+							Type:          schema.TypeList,
+							MaxItems:      1,
+							Optional:      true,
+							ConflictsWith: []string{"container", "eks_properties"},
+							Elem:          ecsPropertiesSchema(),
+						},
+						"eks_properties": {
+							Type:          schema.TypeList,
+							MaxItems:      1,
+							Optional:      true,
+							ConflictsWith: []string{"container", "ecs_properties"},
+							Elem:          eksPropertiesSchema(),
+						},
+						"instance_types": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+						"target_nodes": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+			},
+			"num_nodes": {
+				Type:     schema.TypeInt,
+				Required: true,
+			},
+		},
+	}
 }
