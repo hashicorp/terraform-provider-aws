@@ -197,7 +197,7 @@ func globalSingletonImporter(ctx context.Context, rd *schema.ResourceData, meta 
 		if !ok {
 			return nil, fmt.Errorf("identity attribute %q: expected string, got %T", names.AttrAccountID, accountIDRaw)
 		}
-		if accountID == client.AccountID(ctx) {
+		if accountID != client.AccountID(ctx) {
 			return nil, fmt.Errorf("Unable to import\n\nidentity attribute %q: Provider configured with Account ID %q, got %q", names.AttrAccountID, client.AccountID(ctx), accountID)
 		}
 	} else {
