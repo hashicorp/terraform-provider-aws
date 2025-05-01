@@ -138,7 +138,7 @@ Version 6.0.0 removes these `provider` arguments:
 
 ## Enhanced Multi-Region Support
 
-See the [Enhanced Multi-Region Support guide](./enhanced-multi-region)
+See the [Multi-Region Support guide](./multi-region)
 
 ## Dropping Support For Amazon SimpleDB
 

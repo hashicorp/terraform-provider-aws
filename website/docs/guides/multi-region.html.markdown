@@ -1,12 +1,12 @@
 ---
 subcategory: ""
 layout: "aws"
-page_title: "Terraform AWS Provider Enhanced Multi-Region Support"
+page_title: "Terraform AWS Provider Multi-Region Support"
 description: |-
-  Enhanced multi-Region support with the Terraform AWS Provider.
+  Multi-Region support with the Terraform AWS Provider.
 ---
 
-# Enhanced Multi-Region Support
+# Multi-Region Support
 
 Most AWS resources are Regional – they are created and exist in a single AWS Region, and to manage these resources the Terraform AWS Provider directs API calls to endpoints in the Region. The AWS Region used to provision a resource with the provider is defined in the [provider configuration](https://developer.hashicorp.com/terraform/language/providers/configuration) used by the resource, either implicitly via [environment variables](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#environment-variables) or [shared configuration files](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#shared-configuration-and-credentials-files), or explicitly via the [`region` argument](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#region).
 To manage resources in multiple Regions with a single set of Terraform modules, resources had to use the [`provider` meta-argument](https://developer.hashicorp.com/terraform/language/meta-arguments/resource-provider) along with a separate provider configuration for each Region. For large configurations this adds considerable complexity – today AWS operates in [36 Regions](https://aws.amazon.com/about-aws/global-infrastructure/), with 4 further Regions announced.
