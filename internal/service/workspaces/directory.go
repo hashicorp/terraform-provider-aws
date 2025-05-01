@@ -306,7 +306,7 @@ func resourceDirectory() *schema.Resource {
 				ValidateDiagFunc: enum.Validate[types.WorkspaceType](),
 			},
 		},
-		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
 			switch workspaceType := types.WorkspaceType(d.Get("workspace_type").(string)); workspaceType {
 			case types.WorkspaceTypePools:
 				if _, ok := d.GetOk("workspace_directory_description"); !ok {
