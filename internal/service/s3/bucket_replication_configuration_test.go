@@ -1282,7 +1282,7 @@ func testAccCheckBucketReplicationConfigurationExists(ctx context.Context, n str
 }
 
 func testAccBucketReplicationConfigurationConfig_base(rName string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigMultipleRegionProvider(2), fmt.Sprintf(`
 data "aws_partition" "current" {}
 data "aws_service_principal" "current" {
   service_name = "s3"
@@ -1310,10 +1310,13 @@ POLICY
 
 resource "aws_s3_bucket" "destination" {
   provider = "awsalternate"
-  bucket   = "%[1]s-destination"
+
+  bucket = "%[1]s-destination"
 }
 
 resource "aws_s3_bucket_versioning" "destination" {
+  provider = "awsalternate"
+
   bucket = aws_s3_bucket.destination.id
   versioning_configuration {
     status = "Enabled"
@@ -1330,7 +1333,7 @@ resource "aws_s3_bucket_versioning" "source" {
     status = "Enabled"
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccBucketReplicationConfigurationConfig_basic(rName, storageClass string) string {
@@ -1482,10 +1485,13 @@ func testAccBucketReplicationConfigurationConfig_multipleDestinationsEmptyFilter
 	return acctest.ConfigCompose(testAccBucketReplicationConfigurationConfig_base(rName), fmt.Sprintf(`
 resource "aws_s3_bucket" "destination2" {
   provider = "awsalternate"
-  bucket   = "%[1]s-destination2"
+
+  bucket = "%[1]s-destination2"
 }
 
 resource "aws_s3_bucket_versioning" "destination2" {
+  provider = "awsalternate"
+
   bucket = aws_s3_bucket.destination2.id
   versioning_configuration {
     status = "Enabled"
@@ -1494,10 +1500,13 @@ resource "aws_s3_bucket_versioning" "destination2" {
 
 resource "aws_s3_bucket" "destination3" {
   provider = "awsalternate"
-  bucket   = "%[1]s-destination3"
+
+  bucket = "%[1]s-destination3"
 }
 
 resource "aws_s3_bucket_versioning" "destination3" {
+  provider = "awsalternate"
+
   bucket = aws_s3_bucket.destination3.id
   versioning_configuration {
     status = "Enabled"
@@ -1573,10 +1582,13 @@ func testAccBucketReplicationConfigurationConfig_multipleDestinationsNonEmptyFil
 	return acctest.ConfigCompose(testAccBucketReplicationConfigurationConfig_base(rName), fmt.Sprintf(`
 resource "aws_s3_bucket" "destination2" {
   provider = "awsalternate"
-  bucket   = "%[1]s-destination2"
+
+  bucket = "%[1]s-destination2"
 }
 
 resource "aws_s3_bucket_versioning" "destination2" {
+  provider = "awsalternate"
+
   bucket = aws_s3_bucket.destination2.id
   versioning_configuration {
     status = "Enabled"
@@ -1589,6 +1601,8 @@ resource "aws_s3_bucket" "destination3" {
 }
 
 resource "aws_s3_bucket_versioning" "destination3" {
+  provider = "awsalternate"
+
   bucket = aws_s3_bucket.destination3.id
   versioning_configuration {
     status = "Enabled"
@@ -1677,10 +1691,13 @@ func testAccBucketReplicationConfigurationConfig_multipleDestinationsTwoDestinat
 	return acctest.ConfigCompose(testAccBucketReplicationConfigurationConfig_base(rName), fmt.Sprintf(`
 resource "aws_s3_bucket" "destination2" {
   provider = "awsalternate"
-  bucket   = "%[1]s-destination2"
+
+  bucket = "%[1]s-destination2"
 }
 
 resource "aws_s3_bucket_versioning" "destination2" {
+  provider = "awsalternate"
+
   bucket = aws_s3_bucket.destination2.id
   versioning_configuration {
     status = "Enabled"
@@ -2315,7 +2332,7 @@ resource "aws_s3_bucket_replication_configuration" "test" {
 }
 
 func testAccBucketReplicationConfigurationConfig_migrationBase(rName string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigMultipleRegionProvider(2), fmt.Sprintf(`
 data "aws_partition" "current" {}
 data "aws_service_principal" "current" {
   service_name = "s3"
@@ -2354,21 +2371,23 @@ resource "aws_s3_bucket_versioning" "source" {
 
 resource "aws_s3_bucket" "destination" {
   provider = "awsalternate"
-  bucket   = "%[1]s-destination"
+
+  bucket = "%[1]s-destination"
 }
 
 resource "aws_s3_bucket_versioning" "destination" {
   provider = "awsalternate"
-  bucket   = aws_s3_bucket.destination.id
+
+  bucket = aws_s3_bucket.destination.id
   versioning_configuration {
     status = "Enabled"
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccBucketReplicationConfigurationConfig_migrateNoChange(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigMultipleRegionProvider(2), testAccBucketReplicationConfigurationConfig_migrationBase(rName), `
+	return acctest.ConfigCompose(testAccBucketReplicationConfigurationConfig_migrationBase(rName), `
 resource "aws_s3_bucket_replication_configuration" "test" {
   depends_on = [
     aws_s3_bucket_versioning.source,
@@ -2408,7 +2427,7 @@ resource "aws_s3_bucket_replication_configuration" "test" {
 }
 
 func testAccBucketReplicationConfigurationConfig_migrateChange(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigMultipleRegionProvider(2), testAccBucketReplicationConfigurationConfig_migrationBase(rName), `
+	return acctest.ConfigCompose(testAccBucketReplicationConfigurationConfig_migrationBase(rName), `
 resource "aws_s3_bucket_replication_configuration" "test" {
   depends_on = [
     aws_s3_bucket_versioning.source,
@@ -2448,13 +2467,16 @@ resource "aws_s3_directory_bucket" "test" {
     name = local.location_name
   }
 }
+
 resource "aws_s3_bucket_replication_configuration" "test" {
   depends_on = [
     aws_s3_bucket_versioning.source,
     aws_s3_bucket_versioning.destination
   ]
+
   bucket = aws_s3_directory_bucket.test.bucket
   role   = aws_iam_role.test.arn
+
   rule {
     id     = "foobar"
     prefix = "foo"
