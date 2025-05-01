@@ -138,7 +138,22 @@ Version 6.0.0 removes these `provider` arguments:
 
 ## Enhanced Multi-Region Support
 
-See the [Multi-Region Support guide](./multi-region)
+See the [Multi-Region Support guide](./multi-region).
+
+These Regional resources and data sources with an existing top-level `region` attribute have had those attributes deprecated.
+
+* `aws_cloudformation_stack_set_instance` resource
+* `aws_config_aggregate_authorization` resource
+* `aws_dx_hosted_connection` resource
+* `aws_region` data source
+* `aws_s3_bucket` data source
+* `aws_servicequotas_template` resource
+* `aws_servicequotas_templates` data source
+* `aws_ssmincidents_replication_set` resource and data source
+* `aws_vpc_endpoint_service` data source
+* `aws_vpc_peering_connection` data source
+
+See each individual sections of this guide for details.
 
 ## Dropping Support For Amazon SimpleDB
 

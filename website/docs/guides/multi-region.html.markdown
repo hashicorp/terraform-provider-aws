@@ -110,36 +110,42 @@ All resources for the following services will be considered _global_:
 Some Regional services have subsets of resources that are global:
 
 * Audit Manager
-  * `aws_auditmanager_organization_admin_account_registration` is global
+    * `aws_auditmanager_organization_admin_account_registration` is global
 * Backup
-  * `aws_backup_global_settings` is global
+    * `aws_backup_global_settings` is global
 * Billing
-  * `aws_billing_service_account` data source is global
+    * `aws_billing_service_account` data source is global
 * Chime SDK Voice
-  * `aws_chimesdkvoice_global_settings` is global
+    * `aws_chimesdkvoice_global_settings` is global
 * CloudTrail
-  * `aws_cloudtrail_organization_delegated_admin_account` is global
+    * `aws_cloudtrail_organization_delegated_admin_account` is global
 * Detective
-  * `aws_detective_organization_admin_account` is global
+    * `aws_detective_organization_admin_account` is global
 * Direct Connect
-  * `aws_dx_gateway` is global
+    * `aws_dx_gateway` is global
 * EC2
-  * `aws_ec2_image_block_public_access` is global
+    * `aws_ec2_image_block_public_access` is global
 * Firewall Manager
-  * `aws_fms_admin_account` is global
+    * `aws_fms_admin_account` is global
 * Guard Duty
-  * `aws_guardduty_organization_admin_account` is global
+    * `aws_guardduty_organization_admin_account` is global
 * Inspector
-  * `aws_inspector2_delegated_admin_account` is global
+    * `aws_inspector2_delegated_admin_account` is global
 * IPAM
-  * `aws_vpc_ipam_organization_admin_account` is global
+    * `aws_vpc_ipam_organization_admin_account` is global
 * Macie
-  * `aws_macie2_organization_admin_account` is global
-  * `aws_macie2_organization_configuration` is global
+    * `aws_macie2_organization_admin_account` is global
+    * `aws_macie2_organization_configuration` is global
 * S3
-  * `aws_s3_account_public_access_block` is global
+    * `aws_s3_account_public_access_block` is global
 * Security Hub
-  * `aws_securityhub_organization_admin_account` is global
+    * `aws_securityhub_organization_admin_account` is global
+
+#### Meta Data Sources
+
+The `aws_default_tags`, `aws_partition`, and `aws_regions` data sources are effectively global.
+
+The `region` attribute of the `aws_arn` data source stays as-is.
 
 #### Policy Document Data Sources
 
@@ -147,7 +153,3 @@ Some data sources convert HCL into JSON policy documents and are effectively glo
 
 * `aws_cloudwatch_log_data_protection_policy_document`
 * `aws_ecr_lifecycle_policy_document`
-
-#### Other Data Sources
-
-The `aws_default_tags` data source is effectively global.
