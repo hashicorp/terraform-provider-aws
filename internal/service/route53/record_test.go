@@ -1036,6 +1036,12 @@ func TestAccRoute53Record_typeChange(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(ctx, resourceName, &record1),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), knownvalue.StringExact("CNAME")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("records"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact("www.terraform.io"),
+					})),
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -1043,13 +1049,23 @@ func TestAccRoute53Record_typeChange(t *testing.T) {
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"allow_overwrite"},
 			},
-
-			// Cause a change, which will trigger a refresh
 			{
 				Config: testAccRecordConfig_typeChangePost,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(ctx, resourceName, &record2),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), knownvalue.StringExact("A")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("records"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact("127.0.0.1"),
+						knownvalue.StringExact("8.8.8.8"),
+					})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
 			},
 		},
 	})
