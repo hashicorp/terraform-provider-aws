@@ -1541,15 +1541,15 @@ func TestAccELBV2Listener_mutualAuthenticationPassthrough_validate(t *testing.T)
 		CheckDestroy:             testAccCheckListenerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccListenerConfig_mutualAuthenticationPassthrough_validate_Advertise(rName, "passthrough", key, certificate),
+				Config:      testAccListenerConfig_mutualAuthentication_validate_Advertise(rName, "passthrough", key, certificate),
 				ExpectError: regexache.MustCompile(`Attribute "mutual_authentication\[0\]\.advertise_trust_store_ca_names" cannot be specified when "mutual_authentication\[0\]\.mode" is "passthrough"`),
 			},
 			{
-				Config:      testAccListenerConfig_mutualAuthenticationPassthrough_validate_IgnoreClient(rName, "passthrough", key, certificate),
+				Config:      testAccListenerConfig_mutualAuthentication_validate_IgnoreClient(rName, "passthrough", key, certificate),
 				ExpectError: regexache.MustCompile(`Attribute "mutual_authentication\[0\]\.ignore_client_certificate_expiry" cannot be specified when "mutual_authentication\[0\]\.mode" is "passthrough"`),
 			},
 			{
-				Config:      testAccListenerConfig_mutualAuthenticationPassthrough_validate_TrustStore(rName, "passthrough", key, certificate),
+				Config:      testAccListenerConfig_mutualAuthentication_validate_TrustStore(rName, "passthrough", key, certificate),
 				ExpectError: regexache.MustCompile(`Attribute "mutual_authentication\[0\]\.trust_store_arn" cannot be specified when "mutual_authentication\[0\]\.mode" is "passthrough"`),
 			},
 		},
@@ -3900,7 +3900,7 @@ resource "aws_lb_listener" "test" {
 `)
 }
 
-func testAccListenerConfig_mutualAuthenticationPassthrough_validate_Advertise(rName, mode, key, certificate string) string {
+func testAccListenerConfig_mutualAuthentication_validate_Advertise(rName, mode, key, certificate string) string {
 	return acctest.ConfigCompose(
 		testAccListenerConfig_baseHTTPS(rName, key, certificate),
 		fmt.Sprintf(`
@@ -3924,7 +3924,7 @@ resource "aws_lb_listener" "test" {
 `, mode))
 }
 
-func testAccListenerConfig_mutualAuthenticationPassthrough_validate_IgnoreClient(rName, mode, key, certificate string) string {
+func testAccListenerConfig_mutualAuthentication_validate_IgnoreClient(rName, mode, key, certificate string) string {
 	return acctest.ConfigCompose(
 		testAccListenerConfig_baseHTTPS(rName, key, certificate),
 		fmt.Sprintf(`
@@ -3948,7 +3948,7 @@ resource "aws_lb_listener" "test" {
 `, mode))
 }
 
-func testAccListenerConfig_mutualAuthenticationPassthrough_validate_TrustStore(rName, mode, key, certificate string) string {
+func testAccListenerConfig_mutualAuthentication_validate_TrustStore(rName, mode, key, certificate string) string {
 	return acctest.ConfigCompose(
 		testAccListenerConfig_baseHTTPS(rName, key, certificate),
 		testAccTrustStoreConfig_baseS3BucketCA(rName),
