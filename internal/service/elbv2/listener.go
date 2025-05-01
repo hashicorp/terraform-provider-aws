@@ -1937,13 +1937,13 @@ func validateMutualAuthenticationCustomDiff(_ context.Context, d *schema.Resourc
 	var diags diag.Diagnostics
 
 	configRaw := d.GetRawConfig()
-	if !configRaw.IsWhollyKnown() || configRaw.IsNull() {
+	if !configRaw.IsKnown() || configRaw.IsNull() {
 		return nil
 	}
 
 	mutualAuthPath := cty.GetAttrPath("mutual_authentication")
 	mutualAuth := configRaw.GetAttr("mutual_authentication")
-	if mutualAuth.IsKnown() && !mutualAuth.IsNull() {
+	if mutualAuth.IsWhollyKnown() && !mutualAuth.IsNull() {
 		mutualAuthListPlantimeValidate(mutualAuthPath, mutualAuth, &diags)
 	}
 
