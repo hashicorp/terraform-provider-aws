@@ -273,7 +273,7 @@ func (r *resourceDBCluster) Schema(ctx context.Context, req resource.SchemaReque
 					you to access the InfluxDB UI to perform various administrative tasks 
 					and also use the InfluxDB CLI to create an operator token. These 
 					attributes will be stored in a Secret created in Amazon Secrets 
-					Manager in your account`,
+					Manager in your account.`,
 			},
 			names.AttrVPCSecurityGroupIDs: schema.SetAttribute{
 				CustomType: fwtypes.SetOfStringType,
