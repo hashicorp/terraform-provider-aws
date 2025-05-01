@@ -146,6 +146,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Identity: inttypes.ParameterizedIdentity(
 				inttypes.StringIdentityAttribute(names.AttrBucket, true),
 			),
+			Import: inttypes.Import{
+				WrappedImport: true,
+			},
 		},
 		{
 			Factory:  resourceBucketAccelerateConfiguration,

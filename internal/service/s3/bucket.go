@@ -50,6 +50,7 @@ const (
 // @SDKResource("aws_s3_bucket", name="Bucket")
 // @Tags(identifierAttribute="bucket", resourceType="Bucket")
 // @IdentityAttribute("bucket")
+// @WrappedImport
 // @Testing(importIgnore="force_destroy")
 func resourceBucket() *schema.Resource {
 	return &schema.Resource{
@@ -63,43 +64,6 @@ func resourceBucket() *schema.Resource {
 			Read:   schema.DefaultTimeout(20 * time.Minute),
 			Update: schema.DefaultTimeout(20 * time.Minute),
 			Delete: schema.DefaultTimeout(60 * time.Minute),
-		},
-
-		Importer: &schema.ResourceImporter{
-			StateContext: func(_ context.Context, rd *schema.ResourceData, _ any) ([]*schema.ResourceData, error) {
-				// Import-by-id case
-				if rd.Id() != "" {
-					rd.Set(names.AttrBucket, rd.Id())
-					return []*schema.ResourceData{rd}, nil
-				}
-
-				identity, err := rd.Identity()
-				if err != nil {
-					return nil, err
-				}
-
-				regionRaw, ok := identity.GetOk(names.AttrRegion)
-				if ok {
-					region, ok := regionRaw.(string)
-					if !ok {
-						return nil, fmt.Errorf("identity attribute %q: expected string, got %T", names.AttrRegion, regionRaw)
-					}
-					rd.Set(names.AttrRegion, region)
-				}
-
-				bucketRaw, ok := identity.GetOk(names.AttrBucket)
-				if !ok {
-					return nil, fmt.Errorf("identity attribute %q is required", names.AttrBucket)
-				}
-				bucket, ok := bucketRaw.(string)
-				if !ok {
-					return nil, fmt.Errorf("identity attribute %q: expected string, got %T", names.AttrBucket, bucketRaw)
-				}
-				rd.Set(names.AttrBucket, bucket)
-				rd.SetId(bucket)
-
-				return []*schema.ResourceData{rd}, nil
-			},
 		},
 
 		Schema: map[string]*schema.Schema{
