@@ -41,6 +41,7 @@ BREAKING CHANGES:
 * resource/aws_batch_compute_environment: Rename `compute_environment_name` to `name`
 resource/aws_batch_compute_environment: Rename `compute_environment_name_prefix` to `name_prefix` ([#38050](https://github.com/hashicorp/terraform-provider-aws/issues/38050))
 * resource/aws_batch_compute_environment_data_source: Rename `compute_environment_name` to `name` ([#38050](https://github.com/hashicorp/terraform-provider-aws/issues/38050))
+* resource/aws_batch_job_queue: Remove deprecated parameter `compute_environments` in place of `compute_environment_order` ([#40751](https://github.com/hashicorp/terraform-provider-aws/issues/40751))
 * resource/aws_bedrock_model_invocation_logging_configuration: `logging_config`, `logging_config.cloudwatch_config`, `logging_config.cloudwatch_config.large_data_delivery_s3_config`, and `logging_config.s3_config` are now list nested blocks instead of single nested blocks ([#42307](https://github.com/hashicorp/terraform-provider-aws/issues/42307))
 * resource/aws_cloudfront_key_value_store: Attribute `id` is now set to remote object's `Id` instead of `name` ([#42230](https://github.com/hashicorp/terraform-provider-aws/issues/42230))
 * resource/aws_cloudfront_response_headers_policy: The `etag` argument is now computed only ([#38448](https://github.com/hashicorp/terraform-provider-aws/issues/38448))
@@ -82,6 +83,9 @@ NOTES:
 * provider: Practitioners using Terraform 0.12 must [pin the version](https://developer.hashicorp.com/terraform/language/providers/requirements#v0-12-compatible-provider-requirements) of the AWS Provider to an exact version so as not to install a pre-release ([#41722](https://github.com/hashicorp/terraform-provider-aws/issues/41722))
 * provider: Support for the global S3 endpoint is deprecated, along with the `s3_us_east_1_regional_endpoint` argument. The ability to use the global S3 endpoint will be removed in `v7.0.0`. ([#42375](https://github.com/hashicorp/terraform-provider-aws/issues/42375))
 * resource/aws_codeconnections_host: Deprecates `id` in favor of `arn` ([#42232](https://github.com/hashicorp/terraform-provider-aws/issues/42232))
+* resource/aws_elasticache_replication_group: The ability to provide an uppercase `engine` value is deprecated ([#42419](https://github.com/hashicorp/terraform-provider-aws/issues/42419))
+* resource/aws_elasticache_user: The ability to provide an uppercase `engine` value is deprecated ([#42419](https://github.com/hashicorp/terraform-provider-aws/issues/42419))
+* resource/aws_elasticache_user_group: The ability to provide an uppercase `engine` value is deprecated ([#42419](https://github.com/hashicorp/terraform-provider-aws/issues/42419))
 * resource/aws_elastictranscoder_pipeline: This resource is deprecated. Use [AWS Elemental MediaConvert](https://aws.amazon.com/blogs/media/migrating-workflows-from-amazon-elastic-transcoder-to-aws-elemental-mediaconvert/) instead. ([#42313](https://github.com/hashicorp/terraform-provider-aws/issues/42313))
 * resource/aws_elastictranscoder_preset: This resource is deprecated. Use [AWS Elemental MediaConvert](https://aws.amazon.com/blogs/media/migrating-workflows-from-amazon-elastic-transcoder-to-aws-elemental-mediaconvert/) instead. ([#42313](https://github.com/hashicorp/terraform-provider-aws/issues/42313))
 * resource/aws_evidently_feature: This resource is deprecated. Use [AWS AppConfig feature flags](https://aws.amazon.com/blogs/mt/using-aws-appconfig-feature-flags/) instead. ([#42227](https://github.com/hashicorp/terraform-provider-aws/issues/42227))

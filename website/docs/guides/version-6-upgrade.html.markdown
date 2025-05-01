@@ -48,6 +48,7 @@ Upgrade topics:
 - [resource/aws_cloudformation_stack_set_instance](#resourceaws_cloudformation_stack_set_instance)
 - [resource/aws_cloudfront_key_value_store](#resourceaws_cloudfront_key_value_store)
 - [resource/aws_cloudfront_response_headers_policy](#resourceaws_cloudfront_response_headers_policy)
+- [resource/aws_cognito_user_in_group](#resourceaws_cognito_user_in_group)
 - [resource/aws_config_aggregate_authorization](#resourceawsconfig_aggregate_authorization)
 - [resource/aws_db_instance](#resourceaws_db_instance)
 - [resource/aws_dms_endpoint](#resourceaws_dms_endpoint)
@@ -56,6 +57,8 @@ Upgrade topics:
 - [resource/aws_ecs_task_definition](#resourceaws_ecs_task_definition)
 - [resource/aws_eip](#resourceaws_eip)
 - [resource/aws_elasticache_replication_group](#resourceaws_elasticache_replication_group)
+- [resource/aws_elasticache_user](#resourceaws_elasticache_user)
+- [resource/aws_elasticache_user_group](#resourceaws_elasticache_user_group)
 - [resource/aws_eks_addon](#resourceaws_eks_addon)
 - [resource/aws_flow_log](#resourceaws_flow_log)
 - [resource/aws_guardduty_organization_configuration](#resourceaws_guardduty_organization_configuration)
@@ -375,6 +378,10 @@ For the name, use the `name` attribute.
 
 The `etag` argument is now computed only.
 
+## resource/aws_cognito_user_in_group
+
+The `id` attribute is now a comma-delimited string concatenating the `user_pool_id`, `group_name`, and `username` arguments.
+
 ## resource/aws_config_aggregate_authorization
 
 The `region` attribute has been deprecated. All configurations using `region` should be updated to use the `authorized_aws_region` attribute instead.
@@ -409,6 +416,19 @@ Use `domain` instead.
 
 The `auth_token_update_strategy` argument no longer has a default value.
 If `auth_token` is set, this argument must also be explicitly configured.
+
+The ability to provide an uppercase `engine` value is deprecated.
+In `v7.0.0`, plan-time validation of the `engine` argument will require an entirely lowercase value to match the returned value from the AWS API without diff suppression.
+
+## resource/aws_elasticache_user
+
+The ability to provide an uppercase `engine` value is deprecated.
+In `v7.0.0`, plan-time validation of the `engine` argument will require an entirely lowercase value to match the returned value from the AWS API without diff suppression.
+
+## resource/aws_elasticache_user_group
+
+The ability to provide an uppercase `engine` value is deprecated.
+In `v7.0.0`, plan-time validation of the `engine` argument will require an entirely lowercase value to match the returned value from the AWS API without diff suppression.
 
 ## resource/aws_eks_addon
 
