@@ -88,7 +88,7 @@ func testAccDirectoryDataSource_basic(t *testing.T) {
 
 func testAccDirectoryDataSourceConfig_basic(rName, domain string) string {
 	return acctest.ConfigCompose(
-		testAccDirectoryConfig_Prerequisites(rName, domain),
+		testAccDirectoryConfig_base(rName, domain),
 		fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name   = "tf-testacc-workspaces-directory-%[1]s"

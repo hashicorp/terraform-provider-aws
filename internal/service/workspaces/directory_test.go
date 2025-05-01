@@ -632,15 +632,13 @@ func testAccPreCheckDirectory(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccDirectoryConfig_Prerequisites(rName, domain string) string {
+func testAccDirectoryConfig_base(rName, domain string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		//lintignore:AWSAT003
 		fmt.Sprintf(`
 data "aws_region" "current" {}
-
 data "aws_caller_identity" "current" {}
-
 data "aws_partition" "current" {}
 
 locals {
@@ -698,7 +696,7 @@ resource "aws_directory_service_directory" "main" {
 
 func testAccDirectoryConfig_basic(rName, domain string) string {
 	return acctest.ConfigCompose(
-		testAccDirectoryConfig_Prerequisites(rName, domain),
+		testAccDirectoryConfig_base(rName, domain),
 		fmt.Sprintf(`
 resource "aws_workspaces_directory" "main" {
   directory_id = aws_directory_service_directory.main.id
@@ -716,7 +714,7 @@ data "aws_iam_role" "workspaces-default" {
 
 func testAccDirectoryConfig_samlPropertiesFull(rName, domain, rspn, uau string) string {
 	return acctest.ConfigCompose(
-		testAccDirectoryConfig_Prerequisites(rName, domain),
+		testAccDirectoryConfig_base(rName, domain),
 		fmt.Sprintf(`
 resource "aws_workspaces_directory" "main" {
   directory_id = aws_directory_service_directory.main.id
@@ -736,7 +734,7 @@ resource "aws_workspaces_directory" "main" {
 
 func testAccDirectoryConfig_samlPropertiesRSPN(rName, domain, rspn string) string {
 	return acctest.ConfigCompose(
-		testAccDirectoryConfig_Prerequisites(rName, domain),
+		testAccDirectoryConfig_base(rName, domain),
 		fmt.Sprintf(`
 resource "aws_workspaces_directory" "main" {
   directory_id = aws_directory_service_directory.main.id
@@ -755,7 +753,7 @@ resource "aws_workspaces_directory" "main" {
 
 func testAccDirectoryConfig_samlPropertiesUAU(rName, domain, uau string) string {
 	return acctest.ConfigCompose(
-		testAccDirectoryConfig_Prerequisites(rName, domain),
+		testAccDirectoryConfig_base(rName, domain),
 		fmt.Sprintf(`
 resource "aws_workspaces_directory" "main" {
   directory_id = aws_directory_service_directory.main.id
@@ -774,7 +772,7 @@ resource "aws_workspaces_directory" "main" {
 
 func testAccDirectoryConfig_samlPropertiesEmpty(rName, domain string) string {
 	return acctest.ConfigCompose(
-		testAccDirectoryConfig_Prerequisites(rName, domain),
+		testAccDirectoryConfig_base(rName, domain),
 		fmt.Sprintf(`
 resource "aws_workspaces_directory" "main" {
   directory_id = aws_directory_service_directory.main.id
@@ -790,7 +788,7 @@ resource "aws_workspaces_directory" "main" {
 
 func testAccDirectoryConfig_certificateBasedAuthPropertiesEnabled(rName, domain, certificateAuthorityID string) string {
 	return acctest.ConfigCompose(
-		testAccDirectoryConfig_Prerequisites(rName, domain),
+		testAccDirectoryConfig_base(rName, domain),
 		fmt.Sprintf(`
 resource "aws_workspaces_directory" "main" {
   directory_id = aws_directory_service_directory.main.id
@@ -819,7 +817,7 @@ data "aws_iam_role" "workspaces-default" {
 
 func testAccDirectoryConfig_certificateBasedAuthPropertiesDisabled(rName, domain string) string {
 	return acctest.ConfigCompose(
-		testAccDirectoryConfig_Prerequisites(rName, domain),
+		testAccDirectoryConfig_base(rName, domain),
 		fmt.Sprintf(`
 resource "aws_workspaces_directory" "main" {
   directory_id = aws_directory_service_directory.main.id
@@ -842,7 +840,7 @@ data "aws_iam_role" "workspaces-default" {
 
 func testAccDirectoryConfig_certificateBasedAuthPropertiesDisabledARN(rName, domain, certificateAuthorityID string) string {
 	return acctest.ConfigCompose(
-		testAccDirectoryConfig_Prerequisites(rName, domain),
+		testAccDirectoryConfig_base(rName, domain),
 		fmt.Sprintf(`
 resource "aws_workspaces_directory" "main" {
   directory_id = aws_directory_service_directory.main.id
@@ -870,7 +868,7 @@ data "aws_iam_role" "workspaces-default" {
 
 func testAccDirectoryConfig_certificateBasedAuthPropertiesEmpty(rName, domain string) string {
 	return acctest.ConfigCompose(
-		testAccDirectoryConfig_Prerequisites(rName, domain),
+		testAccDirectoryConfig_base(rName, domain),
 		fmt.Sprintf(`
 resource "aws_workspaces_directory" "main" {
   directory_id = aws_directory_service_directory.main.id
@@ -890,7 +888,7 @@ data "aws_iam_role" "workspaces-default" {
 
 func testAccDirectoryConfig_selfServicePermissions(rName, domain string) string {
 	return acctest.ConfigCompose(
-		testAccDirectoryConfig_Prerequisites(rName, domain),
+		testAccDirectoryConfig_base(rName, domain),
 		fmt.Sprintf(`
 resource "aws_workspaces_directory" "main" {
   directory_id = aws_directory_service_directory.main.id
@@ -912,7 +910,7 @@ resource "aws_workspaces_directory" "main" {
 
 func testAccDirectoryConfig_subnetIDs(rName, domain string) string {
 	return acctest.ConfigCompose(
-		testAccDirectoryConfig_Prerequisites(rName, domain),
+		testAccDirectoryConfig_base(rName, domain),
 		fmt.Sprintf(`
 resource "aws_workspaces_directory" "main" {
   directory_id = aws_directory_service_directory.main.id
@@ -927,7 +925,7 @@ resource "aws_workspaces_directory" "main" {
 
 func testAccDirectoryConfig_tags1(rName, domain, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(
-		testAccDirectoryConfig_Prerequisites(rName, domain),
+		testAccDirectoryConfig_base(rName, domain),
 		fmt.Sprintf(`
 resource "aws_workspaces_directory" "main" {
   directory_id = aws_directory_service_directory.main.id
@@ -941,7 +939,7 @@ resource "aws_workspaces_directory" "main" {
 
 func testAccDirectoryConfig_tags2(rName, domain, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(
-		testAccDirectoryConfig_Prerequisites(rName, domain),
+		testAccDirectoryConfig_base(rName, domain),
 		fmt.Sprintf(`
 resource "aws_workspaces_directory" "main" {
   directory_id = aws_directory_service_directory.main.id
@@ -956,7 +954,7 @@ resource "aws_workspaces_directory" "main" {
 
 func testAccDirectoryConfig_workspaceAccessProperties(rName, domain string) string {
 	return acctest.ConfigCompose(
-		testAccDirectoryConfig_Prerequisites(rName, domain),
+		testAccDirectoryConfig_base(rName, domain),
 		fmt.Sprintf(`
 resource "aws_workspaces_directory" "main" {
   directory_id = aws_directory_service_directory.main.id
@@ -981,7 +979,7 @@ resource "aws_workspaces_directory" "main" {
 
 func testAccDirectoryConfig_workspaceCreationProperties(rName, domain string) string {
 	return acctest.ConfigCompose(
-		testAccDirectoryConfig_Prerequisites(rName, domain),
+		testAccDirectoryConfig_base(rName, domain),
 		fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name   = "tf-acctest-%[1]s"
@@ -1008,7 +1006,7 @@ resource "aws_workspaces_directory" "main" {
 
 func testAccDirectoryConfig_creationPropertiesCustomSecurityGroupIdDefaultOUAbsent(rName, domain string) string {
 	return acctest.ConfigCompose(
-		testAccDirectoryConfig_Prerequisites(rName, domain),
+		testAccDirectoryConfig_base(rName, domain),
 		fmt.Sprintf(`
 resource "aws_workspaces_directory" "main" {
   directory_id = aws_directory_service_directory.main.id
@@ -1028,7 +1026,7 @@ resource "aws_workspaces_directory" "main" {
 
 func testAccDirectoryConfig_creationPropertiesCustomSecurityGroupIdDefaultOUPresent(rName, domain string) string {
 	return acctest.ConfigCompose(
-		testAccDirectoryConfig_Prerequisites(rName, domain),
+		testAccDirectoryConfig_base(rName, domain),
 		fmt.Sprintf(`
 resource "aws_security_group" "test" {
   vpc_id = aws_vpc.main.id
@@ -1055,7 +1053,7 @@ resource "aws_workspaces_directory" "main" {
 
 func testAccDirectoryConfig_ipGroupIdsCreate(rName, domain string) string {
 	return acctest.ConfigCompose(
-		testAccDirectoryConfig_Prerequisites(rName, domain),
+		testAccDirectoryConfig_base(rName, domain),
 		fmt.Sprintf(`
 resource "aws_workspaces_ip_group" "test_alpha" {
   name = "%[1]s-alpha"
@@ -1077,7 +1075,7 @@ resource "aws_workspaces_directory" "test" {
 
 func testAccDirectoryConfig_ipGroupIdsUpdate(rName, domain string) string {
 	return acctest.ConfigCompose(
-		testAccDirectoryConfig_Prerequisites(rName, domain),
+		testAccDirectoryConfig_base(rName, domain),
 		fmt.Sprintf(`
 resource "aws_workspaces_ip_group" "test_beta" {
   name = "%[1]s-beta"
@@ -1258,14 +1256,14 @@ func testAccDirectory_poolsWorkspaceCreationAD(t *testing.T) {
 	})
 }
 
-func testAccDirectoryConfig_PoolsPrerequisites(rName string) string {
+func testAccDirectoryConfig_basePools(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		//lintignore:AWSAT003
 		fmt.Sprintf(`
 data "aws_region" "current" {}
-
 data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
 
 data "aws_iam_policy_document" "kms_policy" {
   statement {
@@ -1275,7 +1273,7 @@ data "aws_iam_policy_document" "kms_policy" {
     resources = ["*"]
     principals {
       type        = "AWS"
-      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
+      identifiers = ["arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"]
     }
   }
   statement {
@@ -1356,9 +1354,9 @@ resource "aws_kms_key_policy" "main" {
 }
 
 resource "aws_secretsmanager_secret" "main" {
-name       								= "tf-testacc-workspaces-directory-%[1]s"
-  kms_key_id 							= aws_kms_key.main.arn
-	recovery_window_in_days = 0
+  name                    = "tf-testacc-workspaces-directory-%[1]s"
+  kms_key_id              = aws_kms_key.main.arn
+  recovery_window_in_days = 0
 }
 
 resource "aws_secretsmanager_secret_policy" "main" {
@@ -1378,86 +1376,93 @@ resource "aws_secretsmanager_secret_version" "main" {
 
 func testAccDirectoryConfig_poolsBasic(rName string) string {
 	return acctest.ConfigCompose(
-		testAccDirectoryConfig_PoolsPrerequisites(rName),
+		testAccDirectoryConfig_basePools(rName),
 		fmt.Sprintf(`
 resource "aws_workspaces_directory" "pool" {
-  subnet_ids   = [aws_subnet.primary.id, aws_subnet.secondary.id]
+  subnet_ids                      = [aws_subnet.primary.id, aws_subnet.secondary.id]
   workspace_type                  = "POOLS"
   workspace_directory_name        = "tf-testacc-workspaces-directory-%[1]s"
   workspace_directory_description = "tf-testacc-workspaces-directory-%[1]s"
   user_identity_type              = "CUSTOMER_MANAGED"
-	tags = {
-		Name = "tf-testacc-workspaces-directory-%[1]s"
-	}
+
+  tags = {
+    Name = "tf-testacc-workspaces-directory-%[1]s"
+  }
 }
 `, rName))
 }
 
 func testAccDirectoryConfig_poolsADConfig(rName, domain string) string {
 	return acctest.ConfigCompose(
-		testAccDirectoryConfig_PoolsPrerequisites(rName),
+		testAccDirectoryConfig_basePools(rName),
 		fmt.Sprintf(`
-
 resource "aws_workspaces_directory" "pool" {
-  subnet_ids   = [aws_subnet.primary.id, aws_subnet.secondary.id]
+  subnet_ids                      = [aws_subnet.primary.id, aws_subnet.secondary.id]
   workspace_type                  = "POOLS"
   workspace_directory_name        = "tf-testacc-workspaces-directory-%[1]s"
   workspace_directory_description = "tf-testacc-workspaces-directory-%[1]s"
   user_identity_type              = "CUSTOMER_MANAGED"
+
   active_directory_config {
-    domain_name                = "%[2]s"
+    domain_name                = %[2]q
     service_account_secret_arn = aws_secretsmanager_secret.main.arn
   }
-	tags = {
-		Name = "tf-testacc-workspaces-directory-%[1]s"
-	}
+
+  tags = {
+    Name = "tf-testacc-workspaces-directory-%[1]s"
+  }
 }
 `, rName, domain))
 }
 
 func testAccDirectoryConfig_poolsWorkspaceCreation(rName string) string {
 	return acctest.ConfigCompose(
-		testAccDirectoryConfig_PoolsPrerequisites(rName),
+		testAccDirectoryConfig_basePools(rName),
 		fmt.Sprintf(`
 resource "aws_workspaces_directory" "pool" {
-  subnet_ids   = [aws_subnet.primary.id, aws_subnet.secondary.id]
+  subnet_ids                      = [aws_subnet.primary.id, aws_subnet.secondary.id]
   workspace_type                  = "POOLS"
   workspace_directory_name        = "tf-testacc-workspaces-directory-%[1]s"
   workspace_directory_description = "tf-testacc-workspaces-directory-%[1]s"
   user_identity_type              = "CUSTOMER_MANAGED"
+
   workspace_creation_properties {
     custom_security_group_id = aws_security_group.test.id
     enable_internet_access   = true
   }
-	tags = {
-		Name = "tf-testacc-workspaces-directory-%[1]s"
-	}
+
+  tags = {
+    Name = "tf-testacc-workspaces-directory-%[1]s"
+  }
 }
 `, rName))
 }
 
 func testAccDirectoryConfig_poolsWorkspaceCreationAD(rName, domain string) string {
 	return acctest.ConfigCompose(
-		testAccDirectoryConfig_PoolsPrerequisites(rName),
+		testAccDirectoryConfig_basePools(rName),
 		fmt.Sprintf(`
 resource "aws_workspaces_directory" "pool" {
-  subnet_ids   = [aws_subnet.primary.id, aws_subnet.secondary.id]
+  subnet_ids                      = [aws_subnet.primary.id, aws_subnet.secondary.id]
   workspace_type                  = "POOLS"
   workspace_directory_name        = "tf-testacc-workspaces-directory-%[1]s"
   workspace_directory_description = "tf-testacc-workspaces-directory-%[1]s"
   user_identity_type              = "CUSTOMER_MANAGED"
-	active_directory_config {
-    domain_name                = "%[2]s"
+
+  active_directory_config {
+    domain_name                = %[2]q
     service_account_secret_arn = aws_secretsmanager_secret.main.arn
   }
+
   workspace_creation_properties {
     custom_security_group_id = aws_security_group.test.id
     default_ou               = "OU=AWS,DC=Workgroup,DC=Example,DC=com"
     enable_internet_access   = true
   }
-	tags = {
-		Name = "tf-testacc-workspaces-directory-%[1]s"
-	}
+
+  tags = {
+    Name = "tf-testacc-workspaces-directory-%[1]s"
+  }
 }
 `, rName, domain))
 }
