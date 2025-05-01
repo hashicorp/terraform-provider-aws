@@ -140,7 +140,7 @@ Version 6.0.0 removes these `provider` arguments:
 
 See the [Multi-Region Support guide](./multi-region).
 
-These Regional resources and data sources with an existing top-level `region` attribute have had those attributes deprecated.
+The following Regional resources and data sources with an existing top-level `region` attribute have had that attribute deprecated.
 
 * `aws_cloudformation_stack_set_instance` resource
 * `aws_config_aggregate_authorization` resource
