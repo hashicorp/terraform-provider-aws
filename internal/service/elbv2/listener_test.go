@@ -2185,6 +2185,46 @@ resource "aws_security_group" "test" {
 `, rName))
 }
 
+func testAccListenerConfig_baseHTTPS(rName, key, certificate string) string {
+	return acctest.ConfigCompose(
+		testAccListenerConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_lb" "test" {
+  name            = %[1]q
+  internal        = true
+  security_groups = [aws_security_group.test.id]
+  subnets         = aws_subnet.test[*].id
+
+  idle_timeout               = 30
+  enable_deletion_protection = false
+}
+
+resource "aws_lb_target_group" "test" {
+  name     = %[1]q
+  port     = 8080
+  protocol = "HTTP"
+  vpc_id   = aws_vpc.test.id
+
+  health_check {
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
+    unhealthy_threshold = 3
+    matcher             = "200-299"
+  }
+}
+
+resource "aws_iam_server_certificate" "test" {
+  name             = %[1]q
+  certificate_body = "%[2]s"
+  private_key      = "%[3]s"
+}
+`, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)))
+}
+
 func testAccListenerConfig_Application_basic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccListenerConfig_base(rName), fmt.Sprintf(`
@@ -3812,8 +3852,7 @@ resource "aws_iam_server_certificate" "test" {
 
 func testAccListenerConfig_mutualAuthenticationPassthrough(rName, key, certificate string) string {
 	return acctest.ConfigCompose(
-		testAccListenerConfig_base(rName),
-		fmt.Sprintf(`
+		testAccListenerConfig_baseHTTPS(rName, key, certificate), `
 resource "aws_lb_listener" "test" {
   load_balancer_arn = aws_lb.test.id
   protocol          = "HTTPS"
@@ -3830,49 +3869,7 @@ resource "aws_lb_listener" "test" {
     mode = "passthrough"
   }
 }
-
-resource "aws_lb" "test" {
-  name            = %[1]q
-  internal        = true
-  security_groups = [aws_security_group.test.id]
-  subnets         = aws_subnet.test[*].id
-
-  idle_timeout               = 30
-  enable_deletion_protection = false
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_lb_target_group" "test" {
-  name     = %[1]q
-  port     = 8080
-  protocol = "HTTP"
-  vpc_id   = aws_vpc.test.id
-
-  health_check {
-    path                = "/health"
-    interval            = 60
-    port                = 8081
-    protocol            = "HTTP"
-    timeout             = 3
-    healthy_threshold   = 3
-    unhealthy_threshold = 3
-    matcher             = "200-299"
-  }
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_iam_server_certificate" "test" {
-  name             = %[1]q
-  certificate_body = "%[2]s"
-  private_key      = "%[3]s"
-}
-`, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)))
+`)
 }
 
 func testAccListenerConfig_mutualAuthentication_IgnoreClientCertificateExpiry(rName, key, certificate string) string {
