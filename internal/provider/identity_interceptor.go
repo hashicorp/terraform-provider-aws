@@ -130,6 +130,16 @@ func newIdentityImporter(v inttypes.Identity) *schema.ResourceImporter {
 				switch attr.Name {
 				case names.AttrAccountID:
 					// TODO: validate this is the correct account
+					accountIDRaw, ok := identity.GetOk(names.AttrAccountID)
+					if ok {
+						val, ok = accountIDRaw.(string)
+						if !ok {
+							return nil, fmt.Errorf("identity attribute %q: expected string, got %T", names.AttrAccountID, accountIDRaw)
+						}
+						if v.IDAttrShadowsAttr == names.AttrAccountID {
+							rd.Set(names.AttrAccountID, val)
+						}
+					}
 
 				case names.AttrRegion:
 					regionRaw, ok := identity.GetOk(names.AttrRegion)
