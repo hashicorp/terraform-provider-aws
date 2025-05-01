@@ -79,6 +79,8 @@ type ServicePackageSDKResource struct {
 }
 
 type Identity struct {
+	Global            bool
+	Singleton         bool
 	IDAttrShadowsAttr string
 	Attributes        []IdentityAttribute
 }
@@ -146,6 +148,8 @@ func GlobalParameterizedIdentity(attributes ...IdentityAttribute) Identity {
 
 func GlobalSingletonIdentity() Identity {
 	return Identity{
+		Global:            true,
+		Singleton:         true,
 		IDAttrShadowsAttr: "account_id",
 		Attributes: []IdentityAttribute{
 			{

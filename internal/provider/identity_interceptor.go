@@ -111,6 +111,11 @@ func newIdentityAttribute(attribute inttypes.IdentityAttribute) *schema.Schema {
 }
 
 func newIdentityImporter(v inttypes.Identity) *schema.ResourceImporter {
+	if v.Global && v.Singleton {
+		return &schema.ResourceImporter{
+			StateContext: globalSingletonImporter,
+		}
+	}
 	importer := &schema.ResourceImporter{
 		StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 			if rd.Id() != "" {
@@ -172,6 +177,32 @@ func newIdentityImporter(v inttypes.Identity) *schema.ResourceImporter {
 		},
 	}
 	return importer
+}
+
+func globalSingletonImporter(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+	if rd.Id() != "" {
+		rd.Set(names.AttrAccountID, rd.Id())
+		return []*schema.ResourceData{rd}, nil
+	}
+
+	identity, err := rd.Identity()
+	if err != nil {
+		return nil, err
+	}
+
+	accountIDRaw, ok := identity.GetOk(names.AttrAccountID)
+	if !ok {
+		return nil, fmt.Errorf("identity attribute %q is required", names.AttrAccountID)
+	}
+	accountID, ok := accountIDRaw.(string)
+	if !ok {
+		return nil, fmt.Errorf("identity attribute %q: expected string, got %T", names.AttrAccountID, accountIDRaw)
+	}
+	rd.Set(names.AttrAccountID, accountID)
+	rd.SetId(accountID)
+
+	return []*schema.ResourceData{rd}, nil
+
 }
 
 func setAttribute(d *schema.ResourceData, name, value string) {
