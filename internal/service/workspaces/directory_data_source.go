@@ -217,11 +217,11 @@ func dataSourceDirectory() *schema.Resource {
 					},
 				},
 			},
-			"workspace_directory_name": {
+			"workspace_directory_description": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"workspace_directory_description": {
+			"workspace_directory_name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},

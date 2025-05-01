@@ -27,6 +27,7 @@ data "aws_workspaces_directory" "example" {
 This data source exports the following attributes in addition to the arguments above:
 
 * `id` - WorkSpaces directory identifier.
+* `active_directory_config` - Configuration for Active Directory integration when `workspace_type` is set to `POOLS`.
 * `alias` - Directory alias.
 * `customer_user_name` - User name for the service account.
 * `directory_name` - Name of the directory.
@@ -38,9 +39,13 @@ This data source exports the following attributes in addition to the arguments a
 * `self_service_permissions` – The permissions to enable or disable self-service capabilities.
 * `subnet_ids` - Identifiers of the subnets where the directory resides.
 * `tags` – A map of tags assigned to the WorkSpaces directory.
+* `user_identity_type` - The user identity type for the WorkSpaces directory.
+* `workspace_access_properties` – Specifies which devices and operating systems users can use to access their WorkSpaces. Defined below.
 * `workspace_creation_properties` – The default properties that are used for creating WorkSpaces. Defined below.
-* `workspace_access_properties` – (Optional) Specifies which devices and operating systems users can use to access their WorkSpaces. Defined below.
+* `workspace_directory_description` - The description of the WorkSpaces directory when `workspace_type` is set to `POOLS`.
+* `workspace_directory_name` - The name of the WorkSpaces directory when `workspace_type` is set to `POOLS`.
 * `workspace_security_group_id` - The identifier of the security group that is assigned to new WorkSpaces. Defined below.
+* `workspace_type` - The type of WorkSpaces directory.
 
 ### self_service_permissions
 
