@@ -145,14 +145,17 @@ resource "aws_workspaces_directory" "example" {
     aws_subnet.example_c.id,
     aws_subnet.example_d.id
   ]
+
   workspace_type                  = "POOLS"
   workspace_directory_name        = "Pool directory"
   workspace_directory_description = "WorkSpaces Pools directory"
   user_identity_type              = "CUSTOMER_MANAGED"
+
   active_directory_config {
     domain_name                = "example.internal"
     service_account_secret_arn = aws_secretsmanager_secret.example.arn
   }
+
   workspace_access_properties {
     device_type_android    = "ALLOW"
     device_type_chromeos   = "ALLOW"
@@ -163,11 +166,13 @@ resource "aws_workspaces_directory" "example" {
     device_type_windows    = "DENY"
     device_type_zeroclient = "DENY"
   }
+
   workspace_creation_properties {
-    custom_security_group_id            = aws_security_group.example.id
-    default_ou                          = "OU=AWS,DC=Workgroup,DC=Example,DC=com"
-    enable_internet_access              = true
+    custom_security_group_id = aws_security_group.example.id
+    default_ou               = "OU=AWS,DC=Workgroup,DC=Example,DC=com"
+    enable_internet_access   = true
   }
+
   saml_properties {
     relay_state_parameter_name = "RelayState"
     user_access_url            = "https://sso.example.com/"
