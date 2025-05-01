@@ -10,7 +10,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-testing/compare"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -3321,7 +3323,7 @@ func TestAccS3BucketLifecycleConfiguration_directoryBucket(t *testing.T) {
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccDirectoryBucketPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
@@ -3744,7 +3746,31 @@ func testAccCheckBucketLifecycleConfigurationExists(ctx context.Context, n strin
 			conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
 		}
 
-		_, err = tfs3.FindBucketLifecycleConfiguration(ctx, conn, bucket, expectedBucketOwner)
+		const (
+			lifecycleConfigurationRulesSteadyTimeout = 2 * time.Minute
+		)
+		var lastOutput, output *s3.GetBucketLifecycleConfigurationOutput
+		err = retry.RetryContext(ctx, lifecycleConfigurationRulesSteadyTimeout, func() *retry.RetryError {
+			var err error
+
+			output, err = tfs3.FindBucketLifecycleConfiguration(ctx, conn, bucket, expectedBucketOwner)
+			if tfresource.NotFound(err) {
+				return retry.RetryableError(err)
+			}
+			if err != nil {
+				return retry.NonRetryableError(err)
+			}
+
+			if lastOutput == nil || !tfs3.LifecycleConfigEqual(lastOutput.TransitionDefaultMinimumObjectSize, lastOutput.Rules, output.TransitionDefaultMinimumObjectSize, output.Rules) {
+				lastOutput = output
+				return retry.RetryableError(fmt.Errorf("S3 Bucket Lifecycle Configuration (%s) has not stablized; retrying", bucket))
+			}
+
+			return nil
+		})
+		if tfresource.TimedOut(err) {
+			output, err = tfs3.FindBucketLifecycleConfiguration(ctx, conn, bucket, expectedBucketOwner)
+		}
 
 		return err
 	}

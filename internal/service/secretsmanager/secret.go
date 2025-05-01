@@ -112,11 +112,11 @@ func resourceSecret() *schema.Resource {
 					m := v.(map[string]any)
 
 					if v, ok := m[names.AttrKMSKeyID].(string); ok {
-						buf.WriteString(fmt.Sprintf("%s-", v))
+						fmt.Fprintf(&buf, "%s-", v)
 					}
 
 					if v, ok := m[names.AttrRegion].(string); ok {
-						buf.WriteString(fmt.Sprintf("%s-", v))
+						fmt.Fprintf(&buf, "%s-", v)
 					}
 
 					return create.StringHashcode(buf.String())
