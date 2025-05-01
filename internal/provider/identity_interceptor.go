@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -191,12 +192,15 @@ func globalSingletonImporter(ctx context.Context, rd *schema.ResourceData, meta 
 	}
 
 	accountIDRaw, ok := identity.GetOk(names.AttrAccountID)
-	if !ok {
-		return nil, fmt.Errorf("identity attribute %q is required", names.AttrAccountID)
-	}
-	accountID, ok := accountIDRaw.(string)
-	if !ok {
-		return nil, fmt.Errorf("identity attribute %q: expected string, got %T", names.AttrAccountID, accountIDRaw)
+	var accountID string
+	if ok {
+		accountID, ok = accountIDRaw.(string)
+		if !ok {
+			return nil, fmt.Errorf("identity attribute %q: expected string, got %T", names.AttrAccountID, accountIDRaw)
+		}
+	} else {
+		client := meta.(*conns.AWSClient)
+		accountID = client.AccountID(ctx)
 	}
 	rd.Set(names.AttrAccountID, accountID)
 	rd.SetId(accountID)
