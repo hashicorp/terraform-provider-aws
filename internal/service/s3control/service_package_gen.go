@@ -105,6 +105,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IsOverrideEnabled: false,
 			}),
 			Identity: inttypes.GlobalSingletonIdentity(),
+			Import: inttypes.Import{
+				WrappedImport: true,
+			},
 		},
 		{
 			Factory:  resourceAccessPointPolicy,
