@@ -99,6 +99,7 @@ func testAccAccountPublicAccessBlock_Identity_Basic(t *testing.T) {
 					testAccCheckAccountPublicAccessBlockExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), tfknownvalue.AccountID()),
 					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 					}),
