@@ -84,7 +84,7 @@ func testAccAccountPublicAccessBlock_Identity_Basic(t *testing.T) {
 	var v types.PublicAccessBlockConfiguration
 	resourceName := "aws_s3_account_public_access_block.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
