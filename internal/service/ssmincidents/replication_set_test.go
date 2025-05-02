@@ -523,14 +523,19 @@ resource "aws_ssmincidents_replication_set" "test" {
 
 func testAccReplicationSetConfig_baseKeyDefaultRegion() string {
 	return `
-resource "aws_kms_key" "default" {}
+resource "aws_kms_key" "default" {
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+}
 `
 }
 
 func testAccReplicationSetConfig_baseKeyAlternateRegion() string {
 	return acctest.ConfigCompose(acctest.ConfigMultipleRegionProvider(2), `
 resource "aws_kms_key" "alternate" {
-  provider = awsalternate
+  provider                = awsalternate
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 `)
 }

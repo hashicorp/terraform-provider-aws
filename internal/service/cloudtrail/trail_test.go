@@ -1221,7 +1221,8 @@ resource "aws_cloudtrail" "test" {
 func testAccCloudTrailConfig_kmsKey(rName string) string {
 	return acctest.ConfigCompose(testAccCloudTrailConfig_base(rName), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description = %[1]q
+  description         = %[1]q
+  enable_key_rotation = true
 
   policy = jsonencode({
     Version = "2012-10-17"

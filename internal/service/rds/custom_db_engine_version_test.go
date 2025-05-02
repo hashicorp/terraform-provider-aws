@@ -390,7 +390,9 @@ resource "aws_rds_custom_db_engine_version" "test" {
 func testAccCustomDBEngineVersionConfig_oracle(rName, bucket string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "rdscfo_kms_key" {
-  description = "KMS symmetric key for RDS Custom for Oracle"
+  description             = "KMS symmetric key for RDS Custom for Oracle"
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_rds_custom_db_engine_version" "test" {
@@ -410,7 +412,9 @@ resource "aws_rds_custom_db_engine_version" "test" {
 func testAccCustomDBEngineVersionConfig_manifestFile(rName, bucket, filename string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "rdscfo_kms_key" {
-  description = "KMS symmetric key for RDS Custom for Oracle"
+  description             = "KMS symmetric key for RDS Custom for Oracle"
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_rds_custom_db_engine_version" "test" {
