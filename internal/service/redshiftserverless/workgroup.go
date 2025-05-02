@@ -280,7 +280,7 @@ func resourceWorkgroupCreate(ctx context.Context, d *schema.ResourceData, meta a
 		input.SubnetIds = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("track_name"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("track_name"); ok {
 		input.TrackName = aws.String(v.(string))
 	}
 
