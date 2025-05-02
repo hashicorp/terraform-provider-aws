@@ -112,11 +112,18 @@ func newIdentityAttribute(attribute inttypes.IdentityAttribute) *schema.Schema {
 }
 
 func newIdentityImporter(v inttypes.Identity) *schema.ResourceImporter {
-	if v.Global && v.Singleton {
-		return &schema.ResourceImporter{
-			StateContext: globalSingletonImporter,
+	if v.Singleton {
+		if v.Global {
+			return &schema.ResourceImporter{
+				StateContext: globalSingletonImporter,
+			}
+		} else {
+			return &schema.ResourceImporter{
+				StateContext: regionalSingletonImporter,
+			}
 		}
 	}
+
 	importer := &schema.ResourceImporter{
 		StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 			if rd.Id() != "" {
@@ -135,7 +142,6 @@ func newIdentityImporter(v inttypes.Identity) *schema.ResourceImporter {
 				var val string
 				switch attr.Name {
 				case names.AttrAccountID:
-					// TODO: validate this is the correct account
 					accountIDRaw, ok := identity.GetOk(names.AttrAccountID)
 					if ok {
 						accountID, ok := accountIDRaw.(string)
@@ -211,7 +217,47 @@ func globalSingletonImporter(ctx context.Context, rd *schema.ResourceData, meta 
 	rd.SetId(accountID)
 
 	return []*schema.ResourceData{rd}, nil
+}
 
+func regionalSingletonImporter(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+	if rd.Id() != "" {
+		rd.Set("region", rd.Id())
+		return []*schema.ResourceData{rd}, nil
+	}
+
+	identity, err := rd.Identity()
+	if err != nil {
+		return nil, err
+	}
+
+	client := meta.(*conns.AWSClient)
+
+	accountIDRaw, ok := identity.GetOk(names.AttrAccountID)
+	var accountID string
+	if ok {
+		accountID, ok = accountIDRaw.(string)
+		if !ok {
+			return nil, fmt.Errorf("identity attribute %q: expected string, got %T", names.AttrAccountID, accountIDRaw)
+		}
+		if accountID != client.AccountID(ctx) {
+			return nil, fmt.Errorf("Unable to import\n\nidentity attribute %q: Provider configured with Account ID %q, got %q", names.AttrAccountID, client.AccountID(ctx), accountID)
+		}
+	}
+
+	regionRaw, ok := identity.GetOk("region")
+	var region string
+	if ok {
+		region, ok = regionRaw.(string)
+		if !ok {
+			return nil, fmt.Errorf("identity attribute %q: expected string, got %T", "region", regionRaw)
+		}
+	} else {
+		region = client.Region(ctx)
+	}
+	rd.Set("region", region)
+	rd.SetId(region)
+
+	return []*schema.ResourceData{rd}, nil
 }
 
 func setAttribute(d *schema.ResourceData, name, value string) {

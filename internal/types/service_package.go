@@ -161,6 +161,8 @@ func GlobalSingletonIdentity() Identity {
 
 func RegionalSingletonIdentity() Identity {
 	return Identity{
+		Global:    false,
+		Singleton: true,
 		Attributes: []IdentityAttribute{
 			{
 				Name:     "account_id",
