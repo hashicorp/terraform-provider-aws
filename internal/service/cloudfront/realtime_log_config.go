@@ -95,7 +95,7 @@ func resourceRealtimeLogConfig() *schema.Resource {
 	}
 }
 
-func resourceRealtimeLogConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRealtimeLogConfigCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
@@ -104,8 +104,8 @@ func resourceRealtimeLogConfigCreate(ctx context.Context, d *schema.ResourceData
 		Name: aws.String(name),
 	}
 
-	if v, ok := d.GetOk(names.AttrEndpoint); ok && len(v.([]interface{})) > 0 {
-		input.EndPoints = expandEndPoints(v.([]interface{}))
+	if v, ok := d.GetOk(names.AttrEndpoint); ok && len(v.([]any)) > 0 {
+		input.EndPoints = expandEndPoints(v.([]any))
 	}
 
 	if v, ok := d.GetOk("fields"); ok && v.(*schema.Set).Len() > 0 {
@@ -127,7 +127,7 @@ func resourceRealtimeLogConfigCreate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceRealtimeLogConfigRead(ctx, d, meta)...)
 }
 
-func resourceRealtimeLogConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRealtimeLogConfigRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
@@ -154,7 +154,7 @@ func resourceRealtimeLogConfigRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func resourceRealtimeLogConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRealtimeLogConfigUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
@@ -166,8 +166,8 @@ func resourceRealtimeLogConfigUpdate(ctx context.Context, d *schema.ResourceData
 		ARN: aws.String(d.Id()),
 	}
 
-	if v, ok := d.GetOk(names.AttrEndpoint); ok && len(v.([]interface{})) > 0 {
-		input.EndPoints = expandEndPoints(v.([]interface{}))
+	if v, ok := d.GetOk(names.AttrEndpoint); ok && len(v.([]any)) > 0 {
+		input.EndPoints = expandEndPoints(v.([]any))
 	}
 
 	if v, ok := d.GetOk("fields"); ok && v.(*schema.Set).Len() > 0 {
@@ -187,14 +187,15 @@ func resourceRealtimeLogConfigUpdate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceRealtimeLogConfigRead(ctx, d, meta)...)
 }
 
-func resourceRealtimeLogConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRealtimeLogConfigDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
 	log.Printf("[DEBUG] Deleting CloudFront Real-time Log Config: %s", d.Id())
-	_, err := conn.DeleteRealtimeLogConfig(ctx, &cloudfront.DeleteRealtimeLogConfigInput{
+	input := cloudfront.DeleteRealtimeLogConfigInput{
 		ARN: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteRealtimeLogConfig(ctx, &input)
 
 	if errs.IsA[*awstypes.NoSuchRealtimeLogConfig](err) {
 		return diags
@@ -236,15 +237,15 @@ func findRealtimeLogConfig(ctx context.Context, conn *cloudfront.Client, input *
 	return output.RealtimeLogConfig, nil
 }
 
-func expandEndPoint(tfMap map[string]interface{}) *awstypes.EndPoint {
+func expandEndPoint(tfMap map[string]any) *awstypes.EndPoint {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.EndPoint{}
 
-	if v, ok := tfMap["kinesis_stream_config"].([]interface{}); ok && len(v) > 0 {
-		apiObject.KinesisStreamConfig = expandKinesisStreamConfig(v[0].(map[string]interface{}))
+	if v, ok := tfMap["kinesis_stream_config"].([]any); ok && len(v) > 0 {
+		apiObject.KinesisStreamConfig = expandKinesisStreamConfig(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["stream_type"].(string); ok && v != "" {
@@ -254,7 +255,7 @@ func expandEndPoint(tfMap map[string]interface{}) *awstypes.EndPoint {
 	return apiObject
 }
 
-func expandEndPoints(tfList []interface{}) []awstypes.EndPoint {
+func expandEndPoints(tfList []any) []awstypes.EndPoint {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -262,7 +263,7 @@ func expandEndPoints(tfList []interface{}) []awstypes.EndPoint {
 	var apiObjects []awstypes.EndPoint
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -280,7 +281,7 @@ func expandEndPoints(tfList []interface{}) []awstypes.EndPoint {
 	return apiObjects
 }
 
-func expandKinesisStreamConfig(tfMap map[string]interface{}) *awstypes.KinesisStreamConfig {
+func expandKinesisStreamConfig(tfMap map[string]any) *awstypes.KinesisStreamConfig {
 	if tfMap == nil {
 		return nil
 	}
@@ -298,15 +299,15 @@ func expandKinesisStreamConfig(tfMap map[string]interface{}) *awstypes.KinesisSt
 	return apiObject
 }
 
-func flattenEndPoint(apiObject *awstypes.EndPoint) map[string]interface{} {
+func flattenEndPoint(apiObject *awstypes.EndPoint) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := flattenKinesisStreamConfig(apiObject.KinesisStreamConfig); len(v) > 0 {
-		tfMap["kinesis_stream_config"] = []interface{}{v}
+		tfMap["kinesis_stream_config"] = []any{v}
 	}
 
 	if v := apiObject.StreamType; v != nil {
@@ -316,12 +317,12 @@ func flattenEndPoint(apiObject *awstypes.EndPoint) map[string]interface{} {
 	return tfMap
 }
 
-func flattenEndPoints(apiObjects []awstypes.EndPoint) []interface{} {
+func flattenEndPoints(apiObjects []awstypes.EndPoint) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		if v := flattenEndPoint(&apiObject); len(v) > 0 {
@@ -332,12 +333,12 @@ func flattenEndPoints(apiObjects []awstypes.EndPoint) []interface{} {
 	return tfList
 }
 
-func flattenKinesisStreamConfig(apiObject *awstypes.KinesisStreamConfig) map[string]interface{} {
+func flattenKinesisStreamConfig(apiObject *awstypes.KinesisStreamConfig) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.RoleARN; v != nil {
 		tfMap[names.AttrRoleARN] = aws.ToString(v)

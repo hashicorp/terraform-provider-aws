@@ -10,9 +10,13 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awsTypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
+	"github.com/hashicorp/terraform-plugin-testing/compare"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -27,7 +31,6 @@ func TestAccCognitoIDPUserPoolDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			// acctest.PreCheckPartitionHasService(t, names.CognitoIDPServiceID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -37,9 +40,13 @@ func TestAccCognitoIDPUserPoolDataSource_basic(t *testing.T) {
 				Config: testAccUserPoolDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserPoolExists(ctx, dataSourceName, &userpool),
-					acctest.MatchResourceAttrRegionalARN(dataSourceName, names.AttrARN, "cognito-idp", regexache.MustCompile(`userpool/.*`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, dataSourceName, names.AttrARN, "cognito-idp", regexache.MustCompile(`userpool/.*`)),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, rName),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New("user_pool_tags"), knownvalue.MapExact(map[string]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
+				},
 			},
 		},
 	})
@@ -72,6 +79,37 @@ func TestAccCognitoIDPUserPoolDataSource_schemaAttributes(t *testing.T) {
 	})
 }
 
+func TestAccCognitoIDPUserPoolDataSource_userPoolTags(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var userpool awsTypes.UserPoolType
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSourceName := "data.aws_cognito_user_pool.test"
+	resourceName := "aws_cognito_user_pool.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserPoolDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserPoolDataSourceConfig_userPoolTags(rName, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserPoolExists(ctx, dataSourceName, &userpool),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, rName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New("user_pool_tags"), resourceName, tfjsonpath.New(names.AttrTagsAll), compare.ValuesSame()),
+					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New(names.AttrTags), resourceName, tfjsonpath.New(names.AttrTagsAll), compare.ValuesSame()),
+				},
+			},
+		},
+	})
+}
+
 func testSchemaAttributes(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -93,7 +131,7 @@ func testSchemaAttributes(n string) resource.TestCheckFunc {
 		checksCompleted := map[string]bool{
 			names.AttrEmail: false,
 		}
-		for i := 0; i < numAttributes; i++ {
+		for i := range numAttributes {
 			// Get the attribute
 			attribute := fmt.Sprintf("schema_attributes.%d.name", i)
 			name, ok := rs.Primary.Attributes[attribute]
@@ -119,22 +157,37 @@ func testSchemaAttributes(n string) resource.TestCheckFunc {
 
 func testAccUserPoolDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "test" {
-  name = %[1]q
-}
-
 data "aws_cognito_user_pool" "test" {
   user_pool_id = aws_cognito_user_pool.test.id
+}
+
+resource "aws_cognito_user_pool" "test" {
+  name = %[1]q
 }
 `, rName)
 }
 
 func testAccUserPoolDataSourceConfig_schemaAttributes(rName string) string {
 	return acctest.ConfigCompose(
-		testAccUserPoolConfig_schemaAttributes(rName),
-		`
+		testAccUserPoolConfig_schemaAttributes(rName), `
 data "aws_cognito_user_pool" "test" {
   user_pool_id = aws_cognito_user_pool.test.id
 }
 `)
+}
+
+func testAccUserPoolDataSourceConfig_userPoolTags(rName, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+data "aws_cognito_user_pool" "test" {
+  user_pool_id = aws_cognito_user_pool.test.id
+}
+
+resource "aws_cognito_user_pool" "test" {
+  name = %[1]q
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1)
 }

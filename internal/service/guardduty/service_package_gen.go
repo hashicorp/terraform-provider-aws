@@ -5,12 +5,8 @@ package guardduty
 import (
 	"context"
 
-	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
-	guardduty_sdkv2 "github.com/aws/aws-sdk-go-v2/service/guardduty"
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
-	guardduty_sdkv1 "github.com/aws/aws-sdk-go/service/guardduty"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/guardduty"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -21,8 +17,9 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newDataSourceFindingIds,
-			Name:    "Finding Ids",
+			Factory:  newDataSourceFindingIds,
+			TypeName: "aws_guardduty_finding_ids",
+			Name:     "Finding Ids",
 		},
 	}
 }
@@ -30,11 +27,17 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newResourceMalwareProtectionPlan,
-			Name:    "Malware Protection Plan",
+			Factory:  newResourceMalwareProtectionPlan,
+			TypeName: "aws_guardduty_malware_protection_plan",
+			Name:     "Malware Protection Plan",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+		},
+		{
+			Factory:  newMemberDetectorFeatureResource,
+			TypeName: "aws_guardduty_member_detector_feature",
+			Name:     "Member Detector Feature",
 		},
 	}
 }
@@ -44,6 +47,8 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceDetector,
 			TypeName: "aws_guardduty_detector",
+			Name:     "Detector",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 	}
 }
@@ -72,8 +77,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceInviteAccepter,
+			Factory:  resourceInviteAccepter,
 			TypeName: "aws_guardduty_invite_accepter",
+			Name:     "Invite Accepter",
 		},
 		{
 			Factory:  ResourceIPSet,
@@ -86,10 +92,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceMember,
 			TypeName: "aws_guardduty_member",
+			Name:     "Member",
 		},
 		{
 			Factory:  ResourceOrganizationAdminAccount,
 			TypeName: "aws_guardduty_organization_admin_account",
+			Name:     "Organization Admin Account",
 		},
 		{
 			Factory:  ResourceOrganizationConfiguration,
@@ -104,6 +112,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourcePublishingDestination,
 			TypeName: "aws_guardduty_publishing_destination",
+			Name:     "Publishing Destination",
 		},
 		{
 			Factory:  ResourceThreatIntelSet,
@@ -120,32 +129,34 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.GuardDuty
 }
 
-// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
-func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*guardduty_sdkv1.GuardDuty, error) {
-	sess := config[names.AttrSession].(*session_sdkv1.Session)
-
-	cfg := aws_sdkv1.Config{}
-
-	if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
-		tflog.Debug(ctx, "setting endpoint", map[string]any{
-			"tf_aws.endpoint": endpoint,
-		})
-		cfg.Endpoint = aws_sdkv1.String(endpoint)
-	} else {
-		cfg.EndpointResolver = newEndpointResolverSDKv1(ctx)
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*guardduty.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
+	optFns := []func(*guardduty.Options){
+		guardduty.WithEndpointResolverV2(newEndpointResolverV2()),
+		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+		withExtraOptions(ctx, p, config),
 	}
 
-	return guardduty_sdkv1.New(sess.Copy(&cfg)), nil
+	return guardduty.NewFromConfig(cfg, optFns...), nil
 }
 
-// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
-func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*guardduty_sdkv2.Client, error) {
-	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
+// withExtraOptions returns a functional option that allows this service package to specify extra API client options.
+// This option is always called after any generated options.
+func withExtraOptions(ctx context.Context, sp conns.ServicePackage, config map[string]any) func(*guardduty.Options) {
+	if v, ok := sp.(interface {
+		withExtraOptions(context.Context, map[string]any) []func(*guardduty.Options)
+	}); ok {
+		optFns := v.withExtraOptions(ctx, config)
 
-	return guardduty_sdkv2.NewFromConfig(cfg,
-		guardduty_sdkv2.WithEndpointResolverV2(newEndpointResolverSDKv2()),
-		withBaseEndpoint(config[names.AttrEndpoint].(string)),
-	), nil
+		return func(o *guardduty.Options) {
+			for _, optFn := range optFns {
+				optFn(o)
+			}
+		}
+	}
+
+	return func(*guardduty.Options) {}
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

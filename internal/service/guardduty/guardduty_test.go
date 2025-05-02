@@ -24,9 +24,10 @@ func TestAccGuardDuty_serial(t *testing.T) {
 			"datasources_kubernetes_audit_logs": testAccDetector_datasources_kubernetes_audit_logs,
 			"datasources_malware_protection":    testAccDetector_datasources_malware_protection,
 			"datasources_all":                   testAccDetector_datasources_all,
-			"tags":                              testAccDetector_tags,
+			"tags":                              testAccGuardDutyDetector_tagsSerial,
 			"datasource_basic":                  testAccDetectorDataSource_basic,
 			"datasource_id":                     testAccDetectorDataSource_ID,
+			"datasource_tags":                   testAccGuardDutyDetectorDataSource_tagsSerial,
 		},
 		"DetectorFeature": {
 			acctest.CtBasic:            testAccDetectorFeature_basic,
@@ -36,7 +37,7 @@ func TestAccGuardDuty_serial(t *testing.T) {
 		"Filter": {
 			acctest.CtBasic:      testAccFilter_basic,
 			"update":             testAccFilter_update,
-			"tags":               testAccFilter_tags,
+			"tags":               testAccGuardDutyFilter_tagsSerial,
 			acctest.CtDisappears: testAccFilter_disappears,
 		},
 		"FindingIDs": {
@@ -47,7 +48,7 @@ func TestAccGuardDuty_serial(t *testing.T) {
 		},
 		"IPSet": {
 			acctest.CtBasic: testAccIPSet_basic,
-			"tags":          testAccIPSet_tags,
+			"tags":          testAccGuardDutyIPSet_tagsSerial,
 		},
 		"OrganizationAdminAccount": {
 			acctest.CtBasic: testAccOrganizationAdminAccount_basic,
@@ -64,9 +65,14 @@ func TestAccGuardDuty_serial(t *testing.T) {
 			"additional_configuration": testAccOrganizationConfigurationFeature_additionalConfiguration,
 			"multiple":                 testAccOrganizationConfigurationFeature_multiple,
 		},
+		"MemberDetectorFeature": {
+			acctest.CtBasic:            testAccMemberDetectorFeature_basic,
+			"additional_configuration": testAccMemberDetectorFeature_additionalConfiguration,
+			"multiple":                 testAccMemberDetectorFeature_multiple,
+		},
 		"ThreatIntelSet": {
 			acctest.CtBasic: testAccThreatIntelSet_basic,
-			"tags":          testAccThreatIntelSet_tags,
+			"tags":          testAccGuardDutyThreatIntelSet_tagsSerial,
 		},
 		"Member": {
 			acctest.CtBasic:      testAccMember_basic,
@@ -101,9 +107,20 @@ func testAccMemberFromEnv(t *testing.T) (string, string) {
 	return accountID, email
 }
 
+func testAccMemberAccountFromEnv(t *testing.T) string {
+	accountID := os.Getenv("AWS_GUARDDUTY_MEMBER_ACCOUNT_ID")
+	if accountID == "" {
+		t.Skip(
+			"Environment variable AWS_GUARDDUTY_MEMBER_ACCOUNT_ID is not set. " +
+				"To properly test GuardDuty member accounts, " +
+				"a valid AWS account ID must be provided.")
+	}
+	return accountID
+}
+
 // testAccPreCheckDetectorExists verifies the current account has a single active GuardDuty detector configured.
 func testAccPreCheckDetectorExists(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyClient(ctx)
 
 	_, err := tfguardduty.FindDetector(ctx, conn)
 
@@ -118,7 +135,7 @@ func testAccPreCheckDetectorExists(ctx context.Context, t *testing.T) {
 
 // testAccPreCheckDetectorNotExists verifies the current account has no active GuardDuty detector configured.
 func testAccPreCheckDetectorNotExists(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyClient(ctx)
 
 	_, err := tfguardduty.FindDetector(ctx, conn)
 

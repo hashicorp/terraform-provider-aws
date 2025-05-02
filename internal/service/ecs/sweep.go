@@ -180,6 +180,7 @@ func sweepServices(region string) error {
 					d := r.Data(nil)
 					d.SetId(v)
 					d.Set("cluster", clusterARN)
+					d.Set(names.AttrForceDelete, true)
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}

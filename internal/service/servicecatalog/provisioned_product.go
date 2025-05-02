@@ -10,28 +10,29 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/servicecatalog"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_servicecatalog_provisioned_product", name="Provisioned Product")
 // @Tags
-// @Testing(existsType="github.com/aws/aws-sdk-go/service/servicecatalog;servicecatalog.ProvisionedProductDetail",importIgnore="accept_language;ignore_errors;provisioning_artifact_name;provisioning_parameters;retain_physical_resources", skipEmptyTags=true, noRemoveTags=true)
-func ResourceProvisionedProduct() *schema.Resource {
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/servicecatalog/types;awstypes;awstypes.ProvisionedProductDetail",importIgnore="accept_language;ignore_errors;provisioning_artifact_name;provisioning_parameters;retain_physical_resources", skipEmptyTags=true, noRemoveTags=true)
+// @Testing(tagsIdentifierAttribute="id", tagsResourceType="Provisioned Product")
+// @Testing(tagsUpdateGetTagsIn=true)
+func resourceProvisionedProduct() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProvisionedProductCreate,
 		ReadWithoutTimeout:   resourceProvisionedProductRead,
@@ -53,8 +54,8 @@ func ResourceProvisionedProduct() *schema.Resource {
 			"accept_language": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Default:      "en",
-				ValidateFunc: validation.StringInSlice(AcceptLanguage_Values(), false),
+				Default:      acceptLanguageEnglish,
+				ValidateFunc: validation.StringInSlice(acceptLanguage_Values(), false),
 			},
 			names.AttrARN: {
 				Type:     schema.TypeString,
@@ -262,14 +263,11 @@ func ResourceProvisionedProduct() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: customdiff.All(
-			refreshOutputsDiff,
-			verify.SetTagsDiff,
-		),
+		CustomizeDiff: refreshOutputsDiff,
 	}
 }
 
-func refreshOutputsDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+func refreshOutputsDiff(_ context.Context, diff *schema.ResourceDiff, meta any) error {
 	if diff.HasChanges("provisioning_parameters", "provisioning_artifact_id", "provisioning_artifact_name") {
 		if err := diff.SetNewComputed("outputs"); err != nil {
 			return err
@@ -279,9 +277,9 @@ func refreshOutputsDiff(_ context.Context, diff *schema.ResourceDiff, meta inter
 	return nil
 }
 
-func resourceProvisionedProductCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProvisionedProductCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
+	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
 	input := &servicecatalog.ProvisionProductInput{
 		ProvisionToken:         aws.String(id.UniqueId()),
@@ -293,8 +291,8 @@ func resourceProvisionedProductCreate(ctx context.Context, d *schema.ResourceDat
 		input.AcceptLanguage = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("notification_arns"); ok && len(v.([]interface{})) > 0 {
-		input.NotificationArns = flex.ExpandStringList(v.([]interface{}))
+	if v, ok := d.GetOk("notification_arns"); ok && len(v.([]any)) > 0 {
+		input.NotificationArns = flex.ExpandStringValueList(v.([]any))
 	}
 
 	if v, ok := d.GetOk("path_id"); ok {
@@ -321,12 +319,12 @@ func resourceProvisionedProductCreate(ctx context.Context, d *schema.ResourceDat
 		input.ProvisioningArtifactName = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("provisioning_parameters"); ok && len(v.([]interface{})) > 0 {
-		input.ProvisioningParameters = expandProvisioningParameters(v.([]interface{}))
+	if v, ok := d.GetOk("provisioning_parameters"); ok && len(v.([]any)) > 0 {
+		input.ProvisioningParameters = expandProvisioningParameters(v.([]any))
 	}
 
-	if v, ok := d.GetOk("stack_set_provisioning_preferences"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.ProvisioningPreferences = expandProvisioningPreferences(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("stack_set_provisioning_preferences"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.ProvisioningPreferences = expandProvisioningPreferences(v.([]any)[0].(map[string]any))
 	}
 
 	var output *servicecatalog.ProvisionProductOutput
@@ -334,13 +332,13 @@ func resourceProvisionedProductCreate(ctx context.Context, d *schema.ResourceDat
 	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
 		var err error
 
-		output, err = conn.ProvisionProductWithContext(ctx, input)
+		output, err = conn.ProvisionProduct(ctx, input)
 
-		if tfawserr.ErrMessageContains(err, servicecatalog.ErrCodeInvalidParametersException, "profile does not exist") {
+		if errs.IsAErrorMessageContains[*awstypes.InvalidParametersException](err, "profile does not exist") {
 			return retry.RetryableError(err)
 		}
 
-		if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return retry.RetryableError(err)
 		}
 
@@ -352,7 +350,7 @@ func resourceProvisionedProductCreate(ctx context.Context, d *schema.ResourceDat
 	})
 
 	if tfresource.TimedOut(err) {
-		output, err = conn.ProvisionProductWithContext(ctx, input)
+		output, err = conn.ProvisionProduct(ctx, input)
 	}
 
 	if err != nil {
@@ -367,18 +365,18 @@ func resourceProvisionedProductCreate(ctx context.Context, d *schema.ResourceDat
 		return sdkdiag.AppendErrorf(diags, "provisioning Service Catalog Product: no product view detail or summary")
 	}
 
-	d.SetId(aws.StringValue(output.RecordDetail.ProvisionedProductId))
+	d.SetId(aws.ToString(output.RecordDetail.ProvisionedProductId))
 
-	if _, err := WaitProvisionedProductReady(ctx, conn, d.Get("accept_language").(string), d.Id(), "", d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitProvisionedProductReady(ctx, conn, d.Get("accept_language").(string), d.Id(), "", d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Service Catalog Provisioned Product (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceProvisionedProductRead(ctx, d, meta)...)
 }
 
-func resourceProvisionedProductRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProvisionedProductRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
+	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
 	// There are two API operations for getting information about provisioned products:
 	// 1. DescribeProvisionedProduct (used in WaitProvisionedProductReady) and
@@ -387,7 +385,7 @@ func resourceProvisionedProductRead(ctx context.Context, d *schema.ResourceData,
 	// They provide some overlapping information. Most of the unique information available from
 	// DescribeRecord is available in the data source aws_servicecatalog_record.
 
-	acceptLanguage := AcceptLanguageEnglish
+	acceptLanguage := acceptLanguageEnglish
 
 	if v, ok := d.GetOk("accept_language"); ok {
 		acceptLanguage = v.(string)
@@ -398,9 +396,9 @@ func resourceProvisionedProductRead(ctx context.Context, d *schema.ResourceData,
 		AcceptLanguage: aws.String(acceptLanguage),
 	}
 
-	output, err := conn.DescribeProvisionedProductWithContext(ctx, input)
+	output, err := conn.DescribeProvisionedProduct(ctx, input)
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		log.Printf("[WARN] Service Catalog Provisioned Product (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -417,7 +415,7 @@ func resourceProvisionedProductRead(ctx context.Context, d *schema.ResourceData,
 	detail := output.ProvisionedProductDetail
 
 	d.Set(names.AttrARN, detail.Arn)
-	d.Set("cloudwatch_dashboard_names", aws.StringValueSlice(flattenCloudWatchDashboards(output.CloudWatchDashboards)))
+	d.Set("cloudwatch_dashboard_names", flattenCloudWatchDashboards(output.CloudWatchDashboards))
 
 	if detail.CreatedTime != nil {
 		d.Set(names.AttrCreatedTime, detail.CreatedTime.Format(time.RFC3339))
@@ -445,19 +443,19 @@ func resourceProvisionedProductRead(ctx context.Context, d *schema.ResourceData,
 		AcceptLanguage: aws.String(acceptLanguage),
 	}
 
-	recordOutput, err := conn.DescribeRecordWithContext(ctx, recordInput)
+	recordOutput, err := conn.DescribeRecord(ctx, recordInput)
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
-		log.Printf("[WARN] Service Catalog Provisioned Product (%s) Record (%s) not found, unable to set tags", d.Id(), aws.StringValue(detail.LastProvisioningRecordId))
+	if !d.IsNewResource() && errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		log.Printf("[WARN] Service Catalog Provisioned Product (%s) Record (%s) not found, unable to set tags", d.Id(), aws.ToString(detail.LastProvisioningRecordId))
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "describing Service Catalog Provisioned Product (%s) Record (%s): %s", d.Id(), aws.StringValue(detail.LastProvisioningRecordId), err)
+		return sdkdiag.AppendErrorf(diags, "describing Service Catalog Provisioned Product (%s) Record (%s): %s", d.Id(), aws.ToString(detail.LastProvisioningRecordId), err)
 	}
 
 	if recordOutput == nil || recordOutput.RecordDetail == nil {
-		return sdkdiag.AppendErrorf(diags, "getting Service Catalog Provisioned Product (%s) Record (%s): empty response", d.Id(), aws.StringValue(detail.LastProvisioningRecordId))
+		return sdkdiag.AppendErrorf(diags, "getting Service Catalog Provisioned Product (%s) Record (%s): empty response", d.Id(), aws.ToString(detail.LastProvisioningRecordId))
 	}
 
 	// To enable debugging of potential v, log as a warning
@@ -468,10 +466,10 @@ func resourceProvisionedProductRead(ctx context.Context, d *schema.ResourceData,
 		var errs []error
 
 		for _, err := range v {
-			errs = append(errs, fmt.Errorf("%s: %s", aws.StringValue(err.Code), aws.StringValue(err.Description)))
+			errs = append(errs, fmt.Errorf("%s: %s", aws.ToString(err.Code), aws.ToString(err.Description)))
 		}
 
-		log.Printf("[WARN] Errors found when describing Service Catalog Provisioned Product (%s) Record (%s): %s", d.Id(), aws.StringValue(detail.LastProvisioningRecordId), errors.Join(errs...))
+		log.Printf("[WARN] Errors found when describing Service Catalog Provisioned Product (%s) Record (%s): %s", d.Id(), aws.ToString(detail.LastProvisioningRecordId), errors.Join(errs...))
 	}
 
 	if err := d.Set("outputs", flattenRecordOutputs(recordOutput.RecordOutputs)); err != nil {
@@ -480,14 +478,14 @@ func resourceProvisionedProductRead(ctx context.Context, d *schema.ResourceData,
 
 	d.Set("path_id", recordOutput.RecordDetail.PathId)
 
-	setTagsOut(ctx, Tags(recordKeyValueTags(ctx, recordOutput.RecordDetail.RecordTags)))
+	setTagsOut(ctx, svcTags(recordKeyValueTags(ctx, recordOutput.RecordDetail.RecordTags)))
 
 	return diags
 }
 
-func resourceProvisionedProductUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProvisionedProductUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
+	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
 	input := &servicecatalog.UpdateProvisionedProductInput{
 		UpdateToken:          aws.String(id.UniqueId()),
@@ -521,12 +519,12 @@ func resourceProvisionedProductUpdate(ctx context.Context, d *schema.ResourceDat
 		input.ProvisioningArtifactId = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("provisioning_parameters"); ok && len(v.([]interface{})) > 0 {
-		input.ProvisioningParameters = expandUpdateProvisioningParameters(v.([]interface{}))
+	if v, ok := d.GetOk("provisioning_parameters"); ok && len(v.([]any)) > 0 {
+		input.ProvisioningParameters = expandUpdateProvisioningParameters(v.([]any))
 	}
 
-	if v, ok := d.GetOk("stack_set_provisioning_preferences"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.ProvisioningPreferences = expandUpdateProvisioningPreferences(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("stack_set_provisioning_preferences"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.ProvisioningPreferences = expandUpdateProvisioningPreferences(v.([]any)[0].(map[string]any))
 	}
 
 	// Send tags each time the resource is updated. This is necessary to automatically apply tags
@@ -534,9 +532,9 @@ func resourceProvisionedProductUpdate(ctx context.Context, d *schema.ResourceDat
 	input.Tags = getTagsIn(ctx)
 
 	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate), func() *retry.RetryError {
-		_, err := conn.UpdateProvisionedProductWithContext(ctx, input)
+		_, err := conn.UpdateProvisionedProduct(ctx, input)
 
-		if tfawserr.ErrMessageContains(err, servicecatalog.ErrCodeInvalidParametersException, "profile does not exist") {
+		if errs.IsAErrorMessageContains[*awstypes.InvalidParametersException](err, "profile does not exist") {
 			return retry.RetryableError(err)
 		}
 
@@ -548,23 +546,23 @@ func resourceProvisionedProductUpdate(ctx context.Context, d *schema.ResourceDat
 	})
 
 	if tfresource.TimedOut(err) {
-		_, err = conn.UpdateProvisionedProductWithContext(ctx, input)
+		_, err = conn.UpdateProvisionedProduct(ctx, input)
 	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Service Catalog Provisioned Product (%s): %s", d.Id(), err)
 	}
 
-	if _, err := WaitProvisionedProductReady(ctx, conn, d.Get("accept_language").(string), d.Id(), "", d.Timeout(schema.TimeoutUpdate)); err != nil {
+	if _, err := waitProvisionedProductReady(ctx, conn, d.Get("accept_language").(string), d.Id(), "", d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Service Catalog Provisioned Product (%s) update: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceProvisionedProductRead(ctx, d, meta)...)
 }
 
-func resourceProvisionedProductDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProvisionedProductDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
+	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
 	input := &servicecatalog.TerminateProvisionedProductInput{
 		TerminateToken:       aws.String(id.UniqueId()),
@@ -576,16 +574,16 @@ func resourceProvisionedProductDelete(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if v, ok := d.GetOk("ignore_errors"); ok {
-		input.IgnoreErrors = aws.Bool(v.(bool))
+		input.IgnoreErrors = v.(bool)
 	}
 
 	if v, ok := d.GetOk("retain_physical_resources"); ok {
-		input.RetainPhysicalResources = aws.Bool(v.(bool))
+		input.RetainPhysicalResources = v.(bool)
 	}
 
-	_, err := conn.TerminateProvisionedProductWithContext(ctx, input)
+	_, err := conn.TerminateProvisionedProduct(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -593,9 +591,9 @@ func resourceProvisionedProductDelete(ctx context.Context, d *schema.ResourceDat
 		return sdkdiag.AppendErrorf(diags, "terminating Service Catalog Provisioned Product (%s): %s", d.Id(), err)
 	}
 
-	err = WaitProvisionedProductTerminated(ctx, conn, d.Get("accept_language").(string), d.Id(), "", d.Timeout(schema.TimeoutDelete))
+	err = waitProvisionedProductTerminated(ctx, conn, d.Get("accept_language").(string), d.Id(), "", d.Timeout(schema.TimeoutDelete))
 
-	if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -606,12 +604,8 @@ func resourceProvisionedProductDelete(ctx context.Context, d *schema.ResourceDat
 	return diags
 }
 
-func expandProvisioningParameter(tfMap map[string]interface{}) *servicecatalog.ProvisioningParameter {
-	if tfMap == nil {
-		return nil
-	}
-
-	apiObject := &servicecatalog.ProvisioningParameter{}
+func expandProvisioningParameter(tfMap map[string]any) awstypes.ProvisioningParameter {
+	apiObject := awstypes.ProvisioningParameter{}
 
 	if v, ok := tfMap[names.AttrKey].(string); ok && v != "" {
 		apiObject.Key = aws.String(v)
@@ -624,79 +618,69 @@ func expandProvisioningParameter(tfMap map[string]interface{}) *servicecatalog.P
 	return apiObject
 }
 
-func expandProvisioningParameters(tfList []interface{}) []*servicecatalog.ProvisioningParameter {
+func expandProvisioningParameters(tfList []any) []awstypes.ProvisioningParameter {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var apiObjects []*servicecatalog.ProvisioningParameter
+	var apiObjects []awstypes.ProvisioningParameter
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
 		}
 
-		apiObject := expandProvisioningParameter(tfMap)
-
-		if apiObject == nil {
-			continue
-		}
-
-		apiObjects = append(apiObjects, apiObject)
+		apiObjects = append(apiObjects, expandProvisioningParameter(tfMap))
 	}
 
 	return apiObjects
 }
 
-func expandProvisioningPreferences(tfMap map[string]interface{}) *servicecatalog.ProvisioningPreferences {
+func expandProvisioningPreferences(tfMap map[string]any) *awstypes.ProvisioningPreferences {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &servicecatalog.ProvisioningPreferences{}
+	apiObject := &awstypes.ProvisioningPreferences{}
 
-	if v, ok := tfMap["accounts"].([]interface{}); ok && len(v) > 0 {
-		apiObject.StackSetAccounts = flex.ExpandStringList(v)
+	if v, ok := tfMap["accounts"].([]any); ok && len(v) > 0 {
+		apiObject.StackSetAccounts = flex.ExpandStringValueList(v)
 	}
 
 	if v, ok := tfMap["failure_tolerance_count"].(int); ok && v != 0 {
-		apiObject.StackSetFailureToleranceCount = aws.Int64(int64(v))
+		apiObject.StackSetFailureToleranceCount = aws.Int32(int32(v))
 	}
 
 	if v, ok := tfMap["failure_tolerance_percentage"].(int); ok && v != 0 {
-		apiObject.StackSetFailureTolerancePercentage = aws.Int64(int64(v))
+		apiObject.StackSetFailureTolerancePercentage = aws.Int32(int32(v))
 	}
 
 	if v, ok := tfMap["max_concurrency_count"].(int); ok && v != 0 {
-		apiObject.StackSetMaxConcurrencyCount = aws.Int64(int64(v))
+		apiObject.StackSetMaxConcurrencyCount = aws.Int32(int32(v))
 	}
 
 	if v, ok := tfMap["max_concurrency_percentage"].(int); ok && v != 0 {
-		apiObject.StackSetMaxConcurrencyPercentage = aws.Int64(int64(v))
+		apiObject.StackSetMaxConcurrencyPercentage = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["regions"].([]interface{}); ok && len(v) > 0 {
-		apiObject.StackSetRegions = flex.ExpandStringList(v)
+	if v, ok := tfMap["regions"].([]any); ok && len(v) > 0 {
+		apiObject.StackSetRegions = flex.ExpandStringValueList(v)
 	}
 
 	return apiObject
 }
 
-func expandUpdateProvisioningParameter(tfMap map[string]interface{}) *servicecatalog.UpdateProvisioningParameter {
-	if tfMap == nil {
-		return nil
-	}
-
-	apiObject := &servicecatalog.UpdateProvisioningParameter{}
+func expandUpdateProvisioningParameter(tfMap map[string]any) awstypes.UpdateProvisioningParameter {
+	apiObject := awstypes.UpdateProvisioningParameter{}
 
 	if v, ok := tfMap[names.AttrKey].(string); ok && v != "" {
 		apiObject.Key = aws.String(v)
 	}
 
 	if v, ok := tfMap["use_previous_value"].(bool); ok && v {
-		apiObject.UsePreviousValue = aws.Bool(v)
+		apiObject.UsePreviousValue = v
 	}
 
 	if v, ok := tfMap[names.AttrValue].(string); ok {
@@ -706,67 +690,61 @@ func expandUpdateProvisioningParameter(tfMap map[string]interface{}) *servicecat
 	return apiObject
 }
 
-func expandUpdateProvisioningParameters(tfList []interface{}) []*servicecatalog.UpdateProvisioningParameter {
+func expandUpdateProvisioningParameters(tfList []any) []awstypes.UpdateProvisioningParameter {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var apiObjects []*servicecatalog.UpdateProvisioningParameter
+	var apiObjects []awstypes.UpdateProvisioningParameter
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
 		}
 
-		apiObject := expandUpdateProvisioningParameter(tfMap)
-
-		if apiObject == nil {
-			continue
-		}
-
-		apiObjects = append(apiObjects, apiObject)
+		apiObjects = append(apiObjects, expandUpdateProvisioningParameter(tfMap))
 	}
 
 	return apiObjects
 }
 
-func expandUpdateProvisioningPreferences(tfMap map[string]interface{}) *servicecatalog.UpdateProvisioningPreferences {
+func expandUpdateProvisioningPreferences(tfMap map[string]any) *awstypes.UpdateProvisioningPreferences {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &servicecatalog.UpdateProvisioningPreferences{}
+	apiObject := &awstypes.UpdateProvisioningPreferences{}
 
-	if v, ok := tfMap["accounts"].([]interface{}); ok && len(v) > 0 {
-		apiObject.StackSetAccounts = flex.ExpandStringList(v)
+	if v, ok := tfMap["accounts"].([]any); ok && len(v) > 0 {
+		apiObject.StackSetAccounts = flex.ExpandStringValueList(v)
 	}
 
 	if v, ok := tfMap["failure_tolerance_count"].(int); ok && v != 0 {
-		apiObject.StackSetFailureToleranceCount = aws.Int64(int64(v))
+		apiObject.StackSetFailureToleranceCount = aws.Int32(int32(v))
 	}
 
 	if v, ok := tfMap["failure_tolerance_percentage"].(int); ok && v != 0 {
-		apiObject.StackSetFailureTolerancePercentage = aws.Int64(int64(v))
+		apiObject.StackSetFailureTolerancePercentage = aws.Int32(int32(v))
 	}
 
 	if v, ok := tfMap["max_concurrency_count"].(int); ok && v != 0 {
-		apiObject.StackSetMaxConcurrencyCount = aws.Int64(int64(v))
+		apiObject.StackSetMaxConcurrencyCount = aws.Int32(int32(v))
 	}
 
 	if v, ok := tfMap["max_concurrency_percentage"].(int); ok && v != 0 {
-		apiObject.StackSetMaxConcurrencyPercentage = aws.Int64(int64(v))
+		apiObject.StackSetMaxConcurrencyPercentage = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["regions"].([]interface{}); ok && len(v) > 0 {
-		apiObject.StackSetRegions = flex.ExpandStringList(v)
+	if v, ok := tfMap["regions"].([]any); ok && len(v) > 0 {
+		apiObject.StackSetRegions = flex.ExpandStringValueList(v)
 	}
 
 	return apiObject
 }
 
-func flattenCloudWatchDashboards(apiObjects []*servicecatalog.CloudWatchDashboard) []*string {
+func flattenCloudWatchDashboards(apiObjects []awstypes.CloudWatchDashboard) []*string {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -774,40 +752,32 @@ func flattenCloudWatchDashboards(apiObjects []*servicecatalog.CloudWatchDashboar
 	var tfList []*string
 
 	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
 		tfList = append(tfList, apiObject.Name)
 	}
 
 	return tfList
 }
 
-func flattenRecordOutputs(apiObjects []*servicecatalog.RecordOutput) []interface{} {
+func flattenRecordOutputs(apiObjects []awstypes.RecordOutput) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
-		m := make(map[string]interface{})
+		m := make(map[string]any)
 
 		if apiObject.Description != nil {
-			m[names.AttrDescription] = aws.StringValue(apiObject.Description)
+			m[names.AttrDescription] = aws.ToString(apiObject.Description)
 		}
 
 		if apiObject.OutputKey != nil {
-			m[names.AttrKey] = aws.StringValue(apiObject.OutputKey)
+			m[names.AttrKey] = aws.ToString(apiObject.OutputKey)
 		}
 
 		if apiObject.OutputValue != nil {
-			m[names.AttrValue] = aws.StringValue(apiObject.OutputValue)
+			m[names.AttrValue] = aws.ToString(apiObject.OutputValue)
 		}
 
 		tfList = append(tfList, m)

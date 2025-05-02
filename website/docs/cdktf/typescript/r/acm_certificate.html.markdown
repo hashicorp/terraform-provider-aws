@@ -227,9 +227,7 @@ This resource supports the following arguments:
       Represented by either
       a subset of [RFC 3339 duration](https://www.rfc-editor.org/rfc/rfc3339) supporting years, months, and days (e.g., `P90D`),
       or a string such as `2160h`.
-* `subjectAlternativeNames` - (Optional) Set of domains that should be SANs in the issued certificate.
-  To remove all elements of a previously configured list, set this value equal to an empty list (`[]`)
-  or use the [`terraform taint` command](https://www.terraform.io/docs/commands/taint.html) to trigger recreation.
+    * `subjectAlternativeNames` - (Optional) Set of domains that should be SANs in the issued certificate.  To remove all elements of a previously configured list, set this value equal to an empty list (`[]`) or use the [`terraform taint` command](https://www.terraform.io/docs/commands/taint.html) to trigger recreation.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## options Configuration Block
@@ -311,4 +309,4 @@ Using `terraform import`, import certificates using their ARN. For example:
 % terraform import aws_acm_certificate.cert arn:aws:acm:eu-central-1:123456789012:certificate/7e7a28d2-163f-4b8f-b9cd-822f96c08d6a
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-c80a3dff24b24852fc756e20499946eadf1eb17acb6f063f880e0aa8ef51169a -->
+<!-- cache-key: cdktf-0.20.8 input-b0184e44a610d694fba3952a6de11a4086e481248f8db1399c06aaf61e3615fa -->

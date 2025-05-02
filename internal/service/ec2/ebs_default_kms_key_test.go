@@ -19,12 +19,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccEC2EBSDefaultKMSKey_basic(t *testing.T) {
+func testAccEBSDefaultKMSKey_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ebs_default_kms_key.test"
 	resourceNameKey := "aws_kms_key.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -55,7 +55,8 @@ func testAccCheckEBSDefaultKMSKeyDestroy(ctx context.Context) resource.TestCheck
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		resp, err := conn.GetEbsDefaultKmsKeyId(ctx, &ec2.GetEbsDefaultKmsKeyIdInput{})
+		input := ec2.GetEbsDefaultKmsKeyIdInput{}
+		resp, err := conn.GetEbsDefaultKmsKeyId(ctx, &input)
 		if err != nil {
 			return err
 		}
@@ -87,7 +88,8 @@ func testAccCheckEBSDefaultKMSKey(ctx context.Context, name string) resource.Tes
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		resp, err := conn.GetEbsDefaultKmsKeyId(ctx, &ec2.GetEbsDefaultKmsKeyIdInput{})
+		input := ec2.GetEbsDefaultKmsKeyIdInput{}
+		resp, err := conn.GetEbsDefaultKmsKeyId(ctx, &input)
 		if err != nil {
 			return err
 		}

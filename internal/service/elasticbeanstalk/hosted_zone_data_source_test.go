@@ -57,7 +57,7 @@ func TestAccElasticBeanstalkHostedZoneDataSource_region(t *testing.T) {
 			},
 			{
 				Config:      testAccHostedZoneDataSourceConfig_byRegion("ss-pluto-1"),
-				ExpectError: regexache.MustCompile("Unsupported region"),
+				ExpectError: regexache.MustCompile("unsupported Elastic Beanstalk Region"),
 			},
 		},
 	})

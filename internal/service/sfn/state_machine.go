@@ -5,6 +5,7 @@ package sfn
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -14,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sfn"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sfn/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -23,6 +25,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -65,6 +69,31 @@ func resourceStateMachine() *schema.Resource {
 			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			names.AttrEncryptionConfiguration: {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"kms_data_key_reuse_period_seconds": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(60, 900),
+						},
+						names.AttrKMSKeyID: {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						names.AttrType: {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.EncryptionType](),
+						},
+					},
+				},
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 			},
 			names.AttrLoggingConfiguration: {
 				Type:     schema.TypeList,
@@ -117,20 +146,20 @@ func resourceStateMachine() *schema.Resource {
 				Default:  false,
 				Optional: true,
 			},
+			"revision_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrRoleARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"revision_id": {
+			"state_machine_version_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"state_machine_version_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -164,11 +193,14 @@ func resourceStateMachine() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
+		CustomizeDiff: customdiff.Sequence(
+			stateMachineDefinitionValidate,
+			stateMachineUpdateComputedAttributesOnPublish,
+		),
 	}
 }
 
-func resourceStateMachineCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStateMachineCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SFNClient(ctx)
 
@@ -182,19 +214,23 @@ func resourceStateMachineCreate(ctx context.Context, d *schema.ResourceData, met
 		Type:       awstypes.StateMachineType(d.Get(names.AttrType).(string)),
 	}
 
-	if v, ok := d.GetOk(names.AttrLoggingConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.LoggingConfiguration = expandLoggingConfiguration(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk(names.AttrEncryptionConfiguration); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.EncryptionConfiguration = expandEncryptionConfiguration(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("tracing_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.TracingConfiguration = expandTracingConfiguration(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk(names.AttrLoggingConfiguration); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.LoggingConfiguration = expandLoggingConfiguration(v.([]any)[0].(map[string]any))
+	}
+
+	if v, ok := d.GetOk("tracing_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.TracingConfiguration = expandTracingConfiguration(v.([]any)[0].(map[string]any))
 	}
 
 	// This is done to deal with IAM eventual consistency.
 	// Note: the instance may be in a deleting mode, hence the retry
 	// when creating the step function. This can happen when we are
 	// updating the resource (since there is no update API call).
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
 		return conn.CreateStateMachine(ctx, input)
 	}, "StateMachineDeleting", "AccessDeniedException")
 
@@ -202,13 +238,12 @@ func resourceStateMachineCreate(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "creating Step Functions State Machine (%s): %s", name, err)
 	}
 
-	arn := aws.ToString(outputRaw.(*sfn.CreateStateMachineOutput).StateMachineArn)
-	d.SetId(arn)
+	d.SetId(aws.ToString(outputRaw.(*sfn.CreateStateMachineOutput).StateMachineArn))
 
 	return append(diags, resourceStateMachineRead(ctx, d, meta)...)
 }
 
-func resourceStateMachineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStateMachineRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SFNClient(ctx)
 
@@ -232,8 +267,15 @@ func resourceStateMachineRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 	d.Set("definition", output.Definition)
 	d.Set(names.AttrDescription, output.Description)
+	if output.EncryptionConfiguration != nil {
+		if err := d.Set(names.AttrEncryptionConfiguration, []any{flattenEncryptionConfiguration(output.EncryptionConfiguration)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting encryption_configuration: %s", err)
+		}
+	} else {
+		d.Set(names.AttrEncryptionConfiguration, nil)
+	}
 	if output.LoggingConfiguration != nil {
-		if err := d.Set(names.AttrLoggingConfiguration, []interface{}{flattenLoggingConfiguration(output.LoggingConfiguration)}); err != nil {
+		if err := d.Set(names.AttrLoggingConfiguration, []any{flattenLoggingConfiguration(output.LoggingConfiguration)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting logging_configuration: %s", err)
 		}
 	} else {
@@ -242,11 +284,11 @@ func resourceStateMachineRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set(names.AttrName, output.Name)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(output.Name)))
 	d.Set("publish", d.Get("publish").(bool))
-	d.Set(names.AttrRoleARN, output.RoleArn)
 	d.Set("revision_id", output.RevisionId)
+	d.Set(names.AttrRoleARN, output.RoleArn)
 	d.Set(names.AttrStatus, output.Status)
 	if output.TracingConfiguration != nil {
-		if err := d.Set("tracing_configuration", []interface{}{flattenTracingConfiguration(output.TracingConfiguration)}); err != nil {
+		if err := d.Set("tracing_configuration", []any{flattenTracingConfiguration(output.TracingConfiguration)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting tracing_configuration: %s", err)
 		}
 	} else {
@@ -274,33 +316,40 @@ func resourceStateMachineRead(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func resourceStateMachineUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStateMachineUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SFNClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		// "You must include at least one of definition or roleArn or you will receive a MissingRequiredParameter error"
+		publish := d.Get("publish").(bool)
 		input := &sfn.UpdateStateMachineInput{
 			Definition:      aws.String(d.Get("definition").(string)),
+			Publish:         publish,
 			RoleArn:         aws.String(d.Get(names.AttrRoleARN).(string)),
 			StateMachineArn: aws.String(d.Id()),
-			Publish:         d.Get("publish").(bool),
 		}
 
-		if v, ok := d.GetOk("publish"); ok && v == true {
-			input.VersionDescription = aws.String(d.Get("version_description").(string))
+		if d.HasChange(names.AttrEncryptionConfiguration) {
+			if v, ok := d.GetOk(names.AttrEncryptionConfiguration); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.EncryptionConfiguration = expandEncryptionConfiguration(v.([]any)[0].(map[string]any))
+			}
 		}
 
 		if d.HasChange(names.AttrLoggingConfiguration) {
-			if v, ok := d.GetOk(names.AttrLoggingConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.LoggingConfiguration = expandLoggingConfiguration(v.([]interface{})[0].(map[string]interface{}))
+			if v, ok := d.GetOk(names.AttrLoggingConfiguration); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.LoggingConfiguration = expandLoggingConfiguration(v.([]any)[0].(map[string]any))
 			}
 		}
 
 		if d.HasChange("tracing_configuration") {
-			if v, ok := d.GetOk("tracing_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.TracingConfiguration = expandTracingConfiguration(v.([]interface{})[0].(map[string]interface{}))
+			if v, ok := d.GetOk("tracing_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.TracingConfiguration = expandTracingConfiguration(v.([]any)[0].(map[string]any))
 			}
+		}
+
+		if publish {
+			input.VersionDescription = aws.String(d.Get("version_description").(string))
 		}
 
 		_, err := conn.UpdateStateMachine(ctx, input)
@@ -322,7 +371,10 @@ func resourceStateMachineUpdate(ctx context.Context, d *schema.ResourceData, met
 				//d.HasChange("publish") && aws.Bool(output.Publish) != d.Get("publish").(bool) ||
 				d.HasChange("tracing_configuration.0.enabled") && output.TracingConfiguration != nil && output.TracingConfiguration.Enabled != d.Get("tracing_configuration.0.enabled").(bool) ||
 				d.HasChange("logging_configuration.0.include_execution_data") && output.LoggingConfiguration != nil && output.LoggingConfiguration.IncludeExecutionData != d.Get("logging_configuration.0.include_execution_data").(bool) ||
-				d.HasChange("logging_configuration.0.level") && output.LoggingConfiguration != nil && string(output.LoggingConfiguration.Level) != d.Get("logging_configuration.0.level").(string) {
+				d.HasChange("logging_configuration.0.level") && output.LoggingConfiguration != nil && string(output.LoggingConfiguration.Level) != d.Get("logging_configuration.0.level").(string) ||
+				d.HasChange("encryption_configuration.0.kms_key_id") && output.EncryptionConfiguration != nil && output.EncryptionConfiguration.KmsKeyId != nil && aws.ToString(output.EncryptionConfiguration.KmsKeyId) != d.Get("encryption_configuration.0.kms_key_id") ||
+				d.HasChange("encryption_configuration.0.encryption_type") && output.EncryptionConfiguration != nil && string(output.EncryptionConfiguration.Type) != d.Get("encryption_configuration.0.encryption_type").(string) ||
+				d.HasChange("encryption_configuration.0.kms_data_key_reuse_period_seconds") && output.EncryptionConfiguration != nil && output.EncryptionConfiguration.KmsDataKeyReusePeriodSeconds != nil && aws.ToInt32(output.EncryptionConfiguration.KmsDataKeyReusePeriodSeconds) != int32(d.Get("encryption_configuration.0.kms_data_key_reuse_period_seconds").(int)) {
 				return retry.RetryableError(fmt.Errorf("Step Functions State Machine (%s) eventual consistency", d.Id()))
 			}
 
@@ -337,7 +389,7 @@ func resourceStateMachineUpdate(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceStateMachineRead(ctx, d, meta)...)
 }
 
-func resourceStateMachineDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStateMachineDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SFNClient(ctx)
 
@@ -383,7 +435,7 @@ func findStateMachineByARN(ctx context.Context, conn *sfn.Client, arn string) (*
 }
 
 func statusStateMachine(ctx context.Context, conn *sfn.Client, stateMachineArn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findStateMachineByARN(ctx, conn, stateMachineArn)
 
 		if tfresource.NotFound(err) {
@@ -415,7 +467,7 @@ func waitStateMachineDeleted(ctx context.Context, conn *sfn.Client, stateMachine
 	return nil, err
 }
 
-func expandLoggingConfiguration(tfMap map[string]interface{}) *awstypes.LoggingConfiguration {
+func expandLoggingConfiguration(tfMap map[string]any) *awstypes.LoggingConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -441,12 +493,12 @@ func expandLoggingConfiguration(tfMap map[string]interface{}) *awstypes.LoggingC
 	return apiObject
 }
 
-func flattenLoggingConfiguration(apiObject *awstypes.LoggingConfiguration) map[string]interface{} {
+func flattenLoggingConfiguration(apiObject *awstypes.LoggingConfiguration) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"include_execution_data": apiObject.IncludeExecutionData,
 		"level":                  apiObject.Level,
 	}
@@ -458,7 +510,7 @@ func flattenLoggingConfiguration(apiObject *awstypes.LoggingConfiguration) map[s
 	return tfMap
 }
 
-func expandTracingConfiguration(tfMap map[string]interface{}) *awstypes.TracingConfiguration {
+func expandTracingConfiguration(tfMap map[string]any) *awstypes.TracingConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -472,14 +524,70 @@ func expandTracingConfiguration(tfMap map[string]interface{}) *awstypes.TracingC
 	return apiObject
 }
 
-func flattenTracingConfiguration(apiObject *awstypes.TracingConfiguration) map[string]interface{} {
+func flattenTracingConfiguration(apiObject *awstypes.TracingConfiguration) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		names.AttrEnabled: apiObject.Enabled,
 	}
 
 	return tfMap
+}
+
+func stateMachineUpdateComputedAttributesOnPublish(_ context.Context, d *schema.ResourceDiff, meta any) error {
+	if publish := d.Get("publish").(bool); publish && stateMachineNeedsConfigUpdate(d) {
+		d.SetNewComputed("revision_id")
+		d.SetNewComputed("state_machine_version_arn")
+	}
+	return nil
+}
+
+func stateMachineNeedsConfigUpdate(d sdkv2.ResourceDiffer) bool {
+	for k, attr := range resourceStateMachine().Schema {
+		if attr.ForceNew {
+			continue
+		}
+		if attr.Computed && !attr.Optional {
+			continue
+		}
+
+		if d.HasChange(k) {
+			return true
+		}
+	}
+	return false
+}
+
+func stateMachineDefinitionValidate(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+	conn := meta.(*conns.AWSClient).SFNClient(ctx)
+
+	if d.HasChange("definition") {
+		definition := d.Get("definition").(string)
+		if definition == "" {
+			return nil
+		}
+
+		input := &sfn.ValidateStateMachineDefinitionInput{
+			Definition: aws.String(definition),
+			Type:       awstypes.StateMachineType(d.Get(names.AttrType).(string)),
+		}
+
+		output, err := conn.ValidateStateMachineDefinition(ctx, input)
+
+		if err != nil {
+			return fmt.Errorf("validating Step Functions State Machine definition: %w", err)
+		}
+
+		if result := output.Result; result != awstypes.ValidateStateMachineDefinitionResultCodeOk {
+			errs := tfslices.ApplyToAll(output.Diagnostics, func(v awstypes.ValidateStateMachineDefinitionDiagnostic) error {
+				return fmt.Errorf("%s (%s): %s", v.Severity, aws.ToString(v.Code), aws.ToString(v.Message))
+			})
+
+			return fmt.Errorf("invalid Step Functions State Machine definition: %w", errors.Join(errs...))
+		}
+	}
+
+	return nil
 }

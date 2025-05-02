@@ -36,7 +36,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Agent Alias")
+// @FrameworkResource("aws_bedrockagent_agent_alias", name="Agent Alias")
 // @Tags(identifierAttribute="agent_alias_arn")
 func newAgentAliasResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &agentAliasResource{}
@@ -52,10 +52,6 @@ type agentAliasResource struct {
 	framework.ResourceWithConfigure
 	framework.WithImportByID
 	framework.WithTimeouts
-}
-
-func (*agentAliasResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_bedrockagent_agent_alias"
 }
 
 func (r *agentAliasResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -137,7 +133,12 @@ func (r *agentAliasResource) Create(ctx context.Context, request resource.Create
 
 	// Set values for unknowns.
 	data.AgentAliasID = fwflex.StringToFramework(ctx, output.AgentAlias.AgentAliasId)
-	data.setID()
+	id, err := data.setID()
+	if err != nil {
+		response.Diagnostics.AddError("creating Bedrock Agent Alias", err.Error())
+		return
+	}
+	data.ID = types.StringValue(id)
 
 	alias, err := waitAgentAliasCreated(ctx, conn, data.AgentAliasID.ValueString(), data.AgentID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
 
@@ -249,10 +250,11 @@ func (r *agentAliasResource) Delete(ctx context.Context, request resource.Delete
 
 	conn := r.Meta().BedrockAgentClient(ctx)
 
-	_, err := conn.DeleteAgentAlias(ctx, &bedrockagent.DeleteAgentAliasInput{
+	input := bedrockagent.DeleteAgentAliasInput{
 		AgentAliasId: fwflex.StringFromFramework(ctx, data.AgentAliasID),
 		AgentId:      fwflex.StringFromFramework(ctx, data.AgentID),
-	})
+	}
+	_, err := conn.DeleteAgentAlias(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
@@ -263,10 +265,6 @@ func (r *agentAliasResource) Delete(ctx context.Context, request resource.Delete
 
 		return
 	}
-}
-
-func (r *agentAliasResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func findAgentAliasByTwoPartKey(ctx context.Context, conn *bedrockagent.Client, agentAliasID, agentID string) (*awstypes.AgentAlias, error) {
@@ -296,7 +294,7 @@ func findAgentAliasByTwoPartKey(ctx context.Context, conn *bedrockagent.Client, 
 }
 
 func statusAgentAlias(ctx context.Context, conn *bedrockagent.Client, agentAliasID, agentID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findAgentAliasByTwoPartKey(ctx, conn, agentAliasID, agentID)
 
 		if tfresource.NotFound(err) {
@@ -353,8 +351,8 @@ type agentAliasResourceModel struct {
 	Description          types.String                                                                 `tfsdk:"description"`
 	ID                   types.String                                                                 `tfsdk:"id"`
 	RoutingConfiguration fwtypes.ListNestedObjectValueOf[agentAliasRoutingConfigurationListItemModel] `tfsdk:"routing_configuration"`
-	Tags                 types.Map                                                                    `tfsdk:"tags"`
-	TagsAll              types.Map                                                                    `tfsdk:"tags_all"`
+	Tags                 tftags.Map                                                                   `tfsdk:"tags"`
+	TagsAll              tftags.Map                                                                   `tfsdk:"tags_all"`
 	Timeouts             timeouts.Value                                                               `tfsdk:"timeouts"`
 }
 
@@ -376,8 +374,13 @@ func (m *agentAliasResourceModel) InitFromID() error {
 	return nil
 }
 
-func (m *agentAliasResourceModel) setID() {
-	m.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{m.AgentAliasID.ValueString(), m.AgentID.ValueString()}, agentAliasResourceIDPartCount, false)))
+func (m *agentAliasResourceModel) setID() (string, error) {
+	parts := []string{
+		m.AgentAliasID.ValueString(),
+		m.AgentID.ValueString(),
+	}
+
+	return flex.FlattenResourceId(parts, agentAliasResourceIDPartCount, false)
 }
 
 type agentAliasRoutingConfigurationListItemModel struct {

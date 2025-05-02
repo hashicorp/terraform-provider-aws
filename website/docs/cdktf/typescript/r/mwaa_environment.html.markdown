@@ -172,14 +172,16 @@ This resource supports the following arguments:
 * `airflowVersion` - (Optional) Airflow version of your environment, will be set by default to the latest version that MWAA supports.
 * `dagS3Path` - (Required) The relative path to the DAG folder on your Amazon S3 storage bucket. For example, dags. For more information, see [Importing DAGs on Amazon MWAA](https://docs.aws.amazon.com/mwaa/latest/userguide/configuring-dag-import.html).
 * `endpointManagement` - (Optional) Defines whether the VPC endpoints configured for the environment are created and managed by the customer or by AWS. If set to `SERVICE`, Amazon MWAA will create and manage the required VPC endpoints in your VPC. If set to `CUSTOMER`, you must create, and manage, the VPC endpoints for your VPC. Defaults to `SERVICE` if not set.
-* `environmentClass` - (Optional) Environment class for the cluster. Possible options are `mw1.small`, `mw1.medium`, `mw1.large`. Will be set by default to `mw1.small`. Please check the [AWS Pricing](https://aws.amazon.com/de/managed-workflows-for-apache-airflow/pricing/) for more information about the environment classes.
+* `environmentClass` - (Optional) Environment class for the cluster. Possible options are `mw1.micro`, `mw1.small`, `mw1.medium`, `mw1.large`. Will be set by default to `mw1.small`. Please check the [AWS Pricing](https://aws.amazon.com/de/managed-workflows-for-apache-airflow/pricing/) for more information about the environment classes.
 * `executionRoleArn` - (Required) The Amazon Resource Name (ARN) of the task execution role that the Amazon MWAA and its environment can assume. Check the [official AWS documentation](https://docs.aws.amazon.com/mwaa/latest/userguide/mwaa-create-role.html) for the detailed role specification.
 * `kmsKey` - (Optional) The Amazon Resource Name (ARN) of your KMS key that you want to use for encryption. Will be set to the ARN of the managed KMS key `aws/airflow` by default. Please check the [Official Documentation](https://docs.aws.amazon.com/mwaa/latest/userguide/custom-keys-certs.html) for more information.
-* `loggingConfiguration` - (Optional) The Apache Airflow logs you want to send to Amazon CloudWatch Logs.
+* `loggingConfiguration` - (Optional) The Apache Airflow logs you want to send to Amazon CloudWatch Logs. See [`loggingConfiguration` Block](#logging_configuration-block) for details.
+* `maxWebservers` - (Optional) The maximum number of web servers that you want to run in your environment. Value need to be between `2` and `5` if `environmentClass` is not `mw1.micro`, `1` otherwise.
 * `maxWorkers` - (Optional) The maximum number of workers that can be automatically scaled up. Value need to be between `1` and `25`. Will be `10` by default.
+* `minWebservers` - (Optional) The minimum number of web servers that you want to run in your environment. Value need to be between `2` and `5` if `environmentClass` is not `mw1.micro`, `1` otherwise.
 * `minWorkers` - (Optional) The minimum number of workers that you want to run in your environment. Will be `1` by default.
 * `name` - (Required) The name of the Apache Airflow Environment
-* `networkConfiguration` - (Required) Specifies the network configuration for your Apache Airflow Environment. This includes two private subnets as well as security groups for the Airflow environment. Each subnet requires internet connection, otherwise the deployment will fail. See [Network configuration](#network-configuration) below for details.
+* `networkConfiguration` - (Required) Specifies the network configuration for your Apache Airflow Environment. This includes two private subnets as well as security groups for the Airflow environment. Each subnet requires internet connection, otherwise the deployment will fail. See [`networkConfiguration` Block](#network_configuration-block) for details.
 * `pluginsS3ObjectVersion` - (Optional) The plugins.zip file version you want to use.
 * `pluginsS3Path` - (Optional) The relative path to the plugins.zip file on your Amazon S3 storage bucket. For example, plugins.zip. If a relative path is provided in the request, then plugins_s3_object_version is required. For more information, see [Importing DAGs on Amazon MWAA](https://docs.aws.amazon.com/mwaa/latest/userguide/configuring-dag-import.html).
 * `requirementsS3ObjectVersion` - (Optional) The requirements.txt file version you want to use.
@@ -192,9 +194,9 @@ This resource supports the following arguments:
 * `weeklyMaintenanceWindowStart` - (Optional) Specifies the start date for the weekly maintenance window.
 * `tags` - (Optional) A map of resource tags to associate with the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### Logging configurations
+### `loggingConfiguration` Block
 
-The `loggingConfiguration` block supports the following arguments.
+The `loggingConfiguration` configuration block supports the following arguments.
 
 * `dagProcessingLogs` - (Optional) (Optional) Log configuration options for processing DAGs. See [Module logging configuration](#module-logging-configuration) for more information. Disabled by default.
 * `schedulerLogs` - (Optional) Log configuration options for the schedulers. See [Module logging configuration](#module-logging-configuration) for more information. Disabled by default.
@@ -209,9 +211,9 @@ A configuration block to use for logging with respect to the various Apache Airf
 * `enabled` - (Required) Enabling or disabling the collection of logs
 * `logLevel` - (Optional) Logging level. Valid values: `CRITICAL`, `ERROR`, `WARNING`, `INFO`, `DEBUG`. Will be `INFO` by default.
 
-### Network configuration
+### `networkConfiguration` Block
 
-The `networkConfiguration` block supports the following arguments. More information about the required subnet and security group settings can be found in the [official AWS documentation](https://docs.aws.amazon.com/mwaa/latest/userguide/vpc-create.html).
+The `networkConfiguration` configuration block supports the following arguments. More information about the required subnet and security group settings can be found in the [official AWS documentation](https://docs.aws.amazon.com/mwaa/latest/userguide/vpc-create.html).
 
 * `securityGroupIds` - (Required) Security groups IDs for the environment. At least one of the security group needs to allow MWAA resources to talk to each other, otherwise MWAA cannot be provisioned.
 * `subnetIds` - (Required)  The private subnet IDs in which the environment should be created. MWAA requires two subnets.
@@ -270,4 +272,4 @@ Using `terraform import`, import MWAA Environment using `Name`. For example:
 % terraform import aws_mwaa_environment.example MyAirflowEnvironment
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-f69431a66584f3b7ce44897f9170d4fef55abb535800b273825f8f8a097d9b8f -->
+<!-- cache-key: cdktf-0.20.8 input-bec17f0bde1bd94efd63272dc2b38446bf5ca107275cab7516e92b71fabe395a -->

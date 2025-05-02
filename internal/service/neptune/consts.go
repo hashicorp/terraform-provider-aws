@@ -55,6 +55,9 @@ const (
 	clusterStatusModifying                  = "modifying"
 	clusterStatusPreparingDataMigration     = "preparing-data-migration"
 	clusterStatusUpgrading                  = "upgrading"
+
+	// Non-standard status values.
+	clusterStatusAvailableWithPendingModifiedValues = "tf-available-with-pending-modified-values"
 )
 
 const (
@@ -104,7 +107,3 @@ func clusterEndpointType_Values() []string {
 		clusterEndpointTypeWriter,
 	}
 }
-
-const (
-	errCodeInvalidParameterValue = "InvalidParameterValue"
-)

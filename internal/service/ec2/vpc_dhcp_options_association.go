@@ -46,7 +46,7 @@ func resourceVPCDHCPOptionsAssociation() *schema.Resource {
 	}
 }
 
-func resourceVPCDHCPOptionsAssociationPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCDHCPOptionsAssociationPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -70,7 +70,7 @@ func resourceVPCDHCPOptionsAssociationPut(ctx context.Context, d *schema.Resourc
 	return append(diags, resourceVPCDHCPOptionsAssociationRead(ctx, d, meta)...)
 }
 
-func resourceVPCDHCPOptionsAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCDHCPOptionsAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -80,7 +80,7 @@ func resourceVPCDHCPOptionsAssociationRead(ctx context.Context, d *schema.Resour
 		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC DHCP Options Set Association (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (any, error) {
 		return nil, findVPCDHCPOptionsAssociation(ctx, conn, vpcID, dhcpOptionsID)
 	}, d.IsNewResource())
 
@@ -100,7 +100,7 @@ func resourceVPCDHCPOptionsAssociationRead(ctx context.Context, d *schema.Resour
 	return diags
 }
 
-func resourceVPCDHCPOptionsAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCDHCPOptionsAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -118,10 +118,11 @@ func resourceVPCDHCPOptionsAssociationDelete(ctx context.Context, d *schema.Reso
 	// So, we do this by setting the VPC to the default DHCP Options Set.
 
 	log.Printf("[DEBUG] Deleting EC2 VPC DHCP Options Set Association: %s", d.Id())
-	_, err = conn.AssociateDhcpOptions(ctx, &ec2.AssociateDhcpOptionsInput{
+	input := ec2.AssociateDhcpOptionsInput{
 		DhcpOptionsId: aws.String(defaultDHCPOptionsID),
 		VpcId:         aws.String(vpcID),
-	})
+	}
+	_, err = conn.AssociateDhcpOptions(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCIDNotFound) {
 		return diags
@@ -134,7 +135,7 @@ func resourceVPCDHCPOptionsAssociationDelete(ctx context.Context, d *schema.Reso
 	return diags
 }
 
-func resourceVPCDHCPOptionsAssociationImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceVPCDHCPOptionsAssociationImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	vpc, err := findVPCByID(ctx, conn, d.Id())

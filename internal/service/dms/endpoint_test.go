@@ -270,7 +270,7 @@ func TestAccDMSEndpoint_S3_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyARN, ""),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "s3_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.external_table_definition", ""),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.csv_row_delimiter", "\\n"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.csv_delimiter", ","),
@@ -283,7 +283,7 @@ func TestAccDMSEndpoint_S3_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.date_partition_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.date_partition_sequence", "yyyymmddhh"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.glue_catalog_generation", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.ignore_header_rows", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.ignore_header_rows", "0"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.parquet_version", "parquet-1-0"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.parquet_timestamp_in_millisecond", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.encryption_mode", "SSE_S3"),
@@ -306,7 +306,7 @@ func TestAccDMSEndpoint_S3_basic(t *testing.T) {
 				Config: testAccEndpointConfig_s3Update(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "s3_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.external_table_definition", "new-external_table_definition"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.csv_row_delimiter", "\\r"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.csv_delimiter", "."),
@@ -340,7 +340,7 @@ func TestAccDMSEndpoint_S3_detachTargetOnLobLookupFailureParquet(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
 					acctest.TestNoMatchResourceAttr(resourceName, "extra_connection_attributes", regexache.MustCompile(`detachTargetOnLobLookupFailureParquet`)),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "s3_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.external_table_definition", "new-external_table_definition"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.csv_row_delimiter", "\\r"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.csv_delimiter", "."),
@@ -361,7 +361,7 @@ func TestAccDMSEndpoint_S3_detachTargetOnLobLookupFailureParquet(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
 					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexache.MustCompile(`detachTargetOnLobLookupFailureParquet=false`)),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "s3_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.external_table_definition", "new-external_table_definition"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.csv_row_delimiter", "\\r"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.csv_delimiter", "."),
@@ -375,7 +375,7 @@ func TestAccDMSEndpoint_S3_detachTargetOnLobLookupFailureParquet(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
 					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexache.MustCompile(`detachTargetOnLobLookupFailureParquet=true`)),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "s3_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.external_table_definition", "new-external_table_definition"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.csv_row_delimiter", "\\r"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.csv_delimiter", "."),
@@ -478,7 +478,7 @@ func TestAccDMSEndpoint_S3_SSEKMSKeyARN(t *testing.T) {
 				Config: testAccEndpointConfig_s3ConnSSEKMSKeyARN(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "s3_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.encryption_mode", "SSE_KMS"),
 					resource.TestCheckResourceAttrPair(resourceName, "s3_settings.0.server_side_encryption_kms_key_id", "aws_kms_key.test", names.AttrARN),
 				),
@@ -507,7 +507,7 @@ func TestAccDMSEndpoint_S3_SSEKMSKeyId(t *testing.T) {
 				Config: testAccEndpointConfig_s3ConnSSEKMSKeyId(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "s3_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.encryption_mode", "SSE_KMS"),
 					resource.TestCheckResourceAttrPair(resourceName, "s3_settings.0.server_side_encryption_kms_key_id", "aws_kms_key.test", names.AttrARN),
 				),
@@ -570,9 +570,9 @@ func TestAccDMSEndpoint_OpenSearch_basic(t *testing.T) {
 				Config: testAccEndpointConfig_openSearch(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.#", "1"),
 					testAccCheckResourceAttrRegionalHostname(resourceName, "elasticsearch_settings.0.endpoint_uri", "es", "search-estest"),
-					resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.0.full_load_error_percentage", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.0.full_load_error_percentage", "10"),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.0.error_retry_duration", "300"),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.0.use_new_mapping_type", acctest.CtFalse),
 				),
@@ -634,7 +634,7 @@ func TestAccDMSEndpoint_OpenSearch_errorRetryDuration(t *testing.T) {
 				Config: testAccEndpointConfig_openSearchErrorRetryDuration(rName, 60),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.0.error_retry_duration", "60"),
 				),
 			},
@@ -673,7 +673,7 @@ func TestAccDMSEndpoint_OpenSearch_UseNewMappingType(t *testing.T) {
 				Config: testAccEndpointConfig_openSearchUseNewMappingType(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.0.use_new_mapping_type", acctest.CtTrue),
 				),
 			},
@@ -702,8 +702,8 @@ func TestAccDMSEndpoint_OpenSearch_fullLoadErrorPercentage(t *testing.T) {
 				Config: testAccEndpointConfig_openSearchFullLoadErrorPercentage(rName, 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.0.full_load_error_percentage", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.0.full_load_error_percentage", "1"),
 				),
 			},
 			{
@@ -742,7 +742,7 @@ func TestAccDMSEndpoint_kafka(t *testing.T) {
 				Config: testAccEndpointConfig_kafka(rName, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "kafka_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "kafka_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.include_control_details", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.include_null_and_empty", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.include_partition_value", acctest.CtFalse),
@@ -772,7 +772,7 @@ func TestAccDMSEndpoint_kafka(t *testing.T) {
 				Config: testAccEndpointConfig_kafkaUpdate(rName, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "kafka_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "kafka_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.include_control_details", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.include_null_and_empty", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.include_partition_value", acctest.CtTrue),
@@ -784,6 +784,7 @@ func TestAccDMSEndpoint_kafka(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.partition_include_schema_table", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.sasl_password", "tftest-new"),
 					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.sasl_username", "tftest-new"),
+					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.sasl_mechanism", "plain"),
 					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.security_protocol", "sasl-ssl"),
 					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.ssl_ca_certificate_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.ssl_client_certificate_arn", ""),
@@ -814,7 +815,7 @@ func TestAccDMSEndpoint_kinesis(t *testing.T) {
 				Config: testAccEndpointConfig_kinesis(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "kinesis_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "kinesis_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "kinesis_settings.0.include_control_details", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "kinesis_settings.0.include_null_and_empty", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "kinesis_settings.0.include_partition_value", acctest.CtFalse),
@@ -822,6 +823,7 @@ func TestAccDMSEndpoint_kinesis(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "kinesis_settings.0.include_transaction_details", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "kinesis_settings.0.message_format", names.AttrJSON),
 					resource.TestCheckResourceAttr(resourceName, "kinesis_settings.0.partition_include_schema_table", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "kinesis_settings.0.use_large_integer_value", acctest.CtFalse),
 					resource.TestCheckResourceAttrPair(resourceName, "kinesis_settings.0.service_access_role_arn", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "kinesis_settings.0.stream_arn", stream1ResourceName, names.AttrARN),
 				),
@@ -836,7 +838,7 @@ func TestAccDMSEndpoint_kinesis(t *testing.T) {
 				Config: testAccEndpointConfig_kinesisUpdate(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "kinesis_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "kinesis_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "kinesis_settings.0.include_control_details", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "kinesis_settings.0.include_null_and_empty", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "kinesis_settings.0.include_partition_value", acctest.CtTrue),
@@ -844,6 +846,7 @@ func TestAccDMSEndpoint_kinesis(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "kinesis_settings.0.include_transaction_details", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "kinesis_settings.0.message_format", names.AttrJSON),
 					resource.TestCheckResourceAttr(resourceName, "kinesis_settings.0.partition_include_schema_table", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "kinesis_settings.0.use_large_integer_value", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, "kinesis_settings.0.service_access_role_arn", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "kinesis_settings.0.stream_arn", stream2ResourceName, names.AttrARN),
 				),
@@ -947,7 +950,7 @@ func TestAccDMSEndpoint_MongoDB_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrPassword, "tftest-new-password"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, "tftest-new-database_name"),
 					resource.TestCheckResourceAttr(resourceName, "ssl_mode", "require"),
-					resource.TestCheckResourceAttr(resourceName, "mongodb_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "mongodb_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "mongodb_settings.0.auth_mechanism", "scram-sha-1"),
 					resource.TestCheckResourceAttr(resourceName, "mongodb_settings.0.nesting_level", "one"),
 					resource.TestCheckResourceAttr(resourceName, "mongodb_settings.0.extract_doc_id", acctest.CtTrue),
@@ -1395,7 +1398,7 @@ func TestAccDMSEndpoint_PostgreSQL_settings_source(t *testing.T) {
 				Config: testAccEndpointConfig_postgreSQLSourceSettings(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "postgres_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "postgres_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.after_connect_script", "SET search_path TO pg_catalog,public;"),
 					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.capture_ddls", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.ddl_artifacts_schema", acctest.CtTrue),
@@ -1431,7 +1434,7 @@ func TestAccDMSEndpoint_PostgreSQL_settings_target(t *testing.T) {
 				Config: testAccEndpointConfig_postgreSQLTargetSettings(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "postgres_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "postgres_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.after_connect_script", "SET search_path TO pg_catalog,public;"),
 					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.babelfish_database_name", "babelfish"),
 					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.database_mode", "babelfish"),
@@ -1964,7 +1967,7 @@ func TestAccDMSEndpoint_redis(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
-					resource.TestCheckResourceAttr(resourceName, "redis_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "redis_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "redis_settings.0.auth_password", ""),
 					resource.TestCheckResourceAttr(resourceName, "redis_settings.0.auth_type", "none"),
 					resource.TestCheckResourceAttr(resourceName, "redis_settings.0.auth_user_name", ""),
@@ -1983,7 +1986,7 @@ func TestAccDMSEndpoint_redis(t *testing.T) {
 				Config: testAccEndpointConfig_redisUpdate(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "redis_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "redis_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "redis_settings.0.auth_password", "avoid-plaintext-passwords"),
 					resource.TestCheckResourceAttr(resourceName, "redis_settings.0.auth_type", "auth-role"),
 					resource.TestCheckResourceAttr(resourceName, "redis_settings.0.auth_user_name", "tfacctest"),
@@ -2014,7 +2017,7 @@ func TestAccDMSEndpoint_Redshift_basic(t *testing.T) {
 					testAccCheckEndpointExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
 					resource.TestCheckResourceAttr(resourceName, "extra_connection_attributes", ""),
-					resource.TestCheckResourceAttr(resourceName, "redshift_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "redshift_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "redshift_settings.0.bucket_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "redshift_settings.0.bucket_folder", ""),
 					resource.TestCheckResourceAttr(resourceName, "redshift_settings.0.encryption_mode", ""),
@@ -2082,7 +2085,7 @@ func TestAccDMSEndpoint_Redshift_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "27017"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrUsername, "tftest"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPassword, "tftest"),
-					resource.TestCheckResourceAttr(resourceName, "redshift_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "redshift_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "redshift_settings.0.bucket_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "redshift_settings.0.bucket_folder", ""),
 					resource.TestCheckResourceAttr(resourceName, "redshift_settings.0.encryption_mode", ""),
@@ -2099,7 +2102,7 @@ func TestAccDMSEndpoint_Redshift_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "27018"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrUsername, "tftest-new-username"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPassword, "tftest-new-password"),
-					resource.TestCheckResourceAttr(resourceName, "redshift_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "redshift_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "redshift_settings.0.bucket_name", names.AttrBucketName),
 					resource.TestCheckResourceAttr(resourceName, "redshift_settings.0.bucket_folder", "bucket_folder"),
 					resource.TestCheckResourceAttr(resourceName, "redshift_settings.0.encryption_mode", "SSE_S3"),
@@ -2161,7 +2164,7 @@ func TestAccDMSEndpoint_Redshift_SSEKMSKeyARN(t *testing.T) {
 				Config: testAccEndpointConfig_redshiftConnSSEKMSKeyARN(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "redshift_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "redshift_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "redshift_settings.0.encryption_mode", "SSE_KMS"),
 					resource.TestCheckResourceAttrPair(resourceName, "redshift_settings.0.server_side_encryption_kms_key_id", "aws_kms_key.test", names.AttrARN),
 				),
@@ -2191,7 +2194,7 @@ func TestAccDMSEndpoint_Redshift_SSEKMSKeyId(t *testing.T) {
 				Config: testAccEndpointConfig_redshiftConnSSEKMSKeyId(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "redshift_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "redshift_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "redshift_settings.0.encryption_mode", "SSE_KMS"),
 					resource.TestCheckResourceAttrPair(resourceName, "redshift_settings.0.server_side_encryption_kms_key_id", "aws_kms_key.test", names.AttrARN),
 				),
@@ -3441,6 +3444,7 @@ resource "aws_dms_endpoint" "test" {
     message_max_bytes              = 500000
     include_null_and_empty         = true
     security_protocol              = "sasl-ssl"
+    sasl_mechanism                 = "plain"
     sasl_username                  = "tftest-new"
     sasl_password                  = "tftest-new"
     no_hex_prefix                  = true
@@ -3513,6 +3517,7 @@ resource "aws_dms_endpoint" "test" {
     include_table_alter_operations = true
     include_transaction_details    = true
     partition_include_schema_table = true
+    use_large_integer_value        = false
 
     service_access_role_arn = aws_iam_role.test.arn
     stream_arn              = aws_kinesis_stream.test1.arn
@@ -3537,6 +3542,7 @@ resource "aws_dms_endpoint" "test" {
     include_table_alter_operations = false
     include_transaction_details    = false
     partition_include_schema_table = false
+    use_large_integer_value        = true
 
     service_access_role_arn = aws_iam_role.test.arn
     stream_arn              = aws_kinesis_stream.test2.arn

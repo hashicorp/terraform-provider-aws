@@ -89,6 +89,7 @@ This data source exports the following attributes in addition to the arguments a
 * `encryption_configuration` - AWS Key Management Service (AWS KMS) encryption settings for the firewall.
     * `key_id` - The ID of the AWS Key Management Service (AWS KMS) customer managed key.
     * `type` - The type of the AWS Key Management Service (AWS KMS) key use by the firewall.
+* `enabled_analysis_types` - Set of types for which to collect analysis metrics.
 * `firewall_policy_arn` - ARN of the VPC Firewall policy.
 * `firewall_policy_change_protection` - A flag indicating whether the firewall is protected against a change to the firewall policy association.
 * `firewall_status` - Nested list of information about the current status of the firewall.
@@ -113,4 +114,4 @@ This data source exports the following attributes in addition to the arguments a
 * `update_token` - String token used when updating a firewall.
 * `vpc_id` - Unique identifier of the VPC where AWS Network Firewall should create the firewall.
 
-<!-- cache-key: cdktf-0.20.1 input-a59cacdd1e7c3ecd8aa16a8357c1506414a68612594db4e02ba5c59b5dc47f6f -->
+<!-- cache-key: cdktf-0.20.8 input-a59cacdd1e7c3ecd8aa16a8357c1506414a68612594db4e02ba5c59b5dc47f6f -->

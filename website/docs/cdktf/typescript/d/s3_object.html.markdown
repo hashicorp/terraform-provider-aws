@@ -13,7 +13,21 @@ description: |-
 The S3 object data source allows access to the metadata and
 _optionally_ (see below) content of an object stored inside S3 bucket.
 
-~> **Note:** The content of an object (`body` field) is available only for objects which have a human-readable `Content-Type` (`text/*` and `application/json`). This is to prevent printing unsafe characters and potentially downloading large amount of data which would be thrown away in favor of metadata.
+~> **Note:** The content of an object (`body` field) is available only for objects which have a human-readable `Content-Type`:
+
+* `text/*`
+* `application/json`
+* `application/ld+json`
+* `application/x-httpd-php`
+* `application/xhtml+xml`
+* `application/x-csh`
+* `application/x-sh`
+* `application/xml`
+* `application/atom+xml`
+* `application/x-sql`
+* `application/yaml`
+
+This is to prevent printing unsafe characters and potentially downloading large amount of data which would be thrown away in favor of metadata.
 
 ## Example Usage
 
@@ -102,6 +116,7 @@ This data source exports the following attributes in addition to the arguments a
 * `cacheControl` - Caching behavior along the request/reply chain.
 * `checksumCrc32` - The base64-encoded, 32-bit CRC32 checksum of the object.
 * `checksumCrc32C` - The base64-encoded, 32-bit CRC32C checksum of the object.
+* `checksumCrc64Nvme` - The base64-encoded, 64-bit CRC64NVME checksum of the object.
 * `checksumSha1` - The base64-encoded, 160-bit SHA-1 digest of the object.
 * `checksumSha256` - The base64-encoded, 256-bit SHA-256 digest of the object.
 * `contentDisposition` - Presentational information for the object.
@@ -126,4 +141,4 @@ This data source exports the following attributes in addition to the arguments a
 
 -> **Note:** Terraform ignores all leading `/`s in the object's `key` and treats multiple `/`s in the rest of the object's `key` as a single `/`, so values of `/index.html` and `index.html` correspond to the same S3 object as do `first//second///third//` and `first/second/third/`.
 
-<!-- cache-key: cdktf-0.20.1 input-20cdf2d787c5d9b2232deb21d96328e17c11201bdd1e002d8decff40efbce76a -->
+<!-- cache-key: cdktf-0.20.8 input-420a2bb9d077886e51a5aa1d3f87297e069b766641d2e3a6388d4688bf1a95cb -->

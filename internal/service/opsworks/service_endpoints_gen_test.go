@@ -4,18 +4,22 @@ package opsworks_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"maps"
 	"net"
 	"net/url"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
-	opsworks_sdkv1 "github.com/aws/aws-sdk-go/service/opsworks"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awsmiddleware "github.com/aws/aws-sdk-go-v2/aws/middleware"
+	"github.com/aws/aws-sdk-go-v2/service/opsworks"
+	"github.com/aws/smithy-go/middleware"
+	smithyhttp "github.com/aws/smithy-go/transport/http"
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/aws-sdk-go-base/v2/servicemocks"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -231,8 +235,6 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 	}
 
 	for name, testcase := range testcases { //nolint:paralleltest // uses t.Setenv
-		testcase := testcase
-
 		t.Run(name, func(t *testing.T) {
 			testEndpointCase(t, providerRegion, testcase, callService)
 		})
@@ -240,54 +242,64 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 }
 
 func defaultEndpoint(region string) (url.URL, error) {
-	r := endpoints.DefaultResolver()
+	r := opsworks.NewDefaultEndpointResolverV2()
 
-	ep, err := r.EndpointFor(opsworks_sdkv1.EndpointsID, region)
-	if err != nil {
-		return url.URL{}, err
-	}
-
-	url, _ := url.Parse(ep.URL)
-
-	if url.Path == "" {
-		url.Path = "/"
-	}
-
-	return *url, nil
-}
-
-func defaultFIPSEndpoint(region string) (url.URL, error) {
-	r := endpoints.DefaultResolver()
-
-	ep, err := r.EndpointFor(opsworks_sdkv1.EndpointsID, region, func(opt *endpoints.Options) {
-		opt.UseFIPSEndpoint = endpoints.FIPSEndpointStateEnabled
+	ep, err := r.ResolveEndpoint(context.Background(), opsworks.EndpointParameters{
+		Region: aws.String(region),
 	})
 	if err != nil {
 		return url.URL{}, err
 	}
 
-	url, _ := url.Parse(ep.URL)
-
-	if url.Path == "" {
-		url.Path = "/"
+	if ep.URI.Path == "" {
+		ep.URI.Path = "/"
 	}
 
-	return *url, nil
+	return ep.URI, nil
+}
+
+func defaultFIPSEndpoint(region string) (url.URL, error) {
+	r := opsworks.NewDefaultEndpointResolverV2()
+
+	ep, err := r.ResolveEndpoint(context.Background(), opsworks.EndpointParameters{
+		Region:  aws.String(region),
+		UseFIPS: aws.Bool(true),
+	})
+	if err != nil {
+		return url.URL{}, err
+	}
+
+	if ep.URI.Path == "" {
+		ep.URI.Path = "/"
+	}
+
+	return ep.URI, nil
 }
 
 func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCallParams {
 	t.Helper()
 
-	client := meta.OpsWorksConn(ctx)
+	client := meta.OpsWorksClient(ctx)
 
-	req, _ := client.DescribeAppsRequest(&opsworks_sdkv1.DescribeAppsInput{})
+	var result apiCallParams
 
-	req.HTTPRequest.URL.Path = "/"
-
-	return apiCallParams{
-		endpoint: req.HTTPRequest.URL.String(),
-		region:   aws_sdkv1.StringValue(client.Config.Region),
+	input := opsworks.DescribeAppsInput{}
+	_, err := client.DescribeApps(ctx, &input,
+		func(opts *opsworks.Options) {
+			opts.APIOptions = append(opts.APIOptions,
+				addRetrieveEndpointURLMiddleware(t, &result.endpoint),
+				addRetrieveRegionMiddleware(&result.region),
+				addCancelRequestMiddleware(),
+			)
+		},
+	)
+	if err == nil {
+		t.Fatal("Expected an error, got none")
+	} else if !errors.Is(err, errCancelOperation) {
+		t.Fatalf("Unexpected error: %s", err)
 	}
+
+	return result
 }
 
 func withNoConfig(_ *caseSetup) {
@@ -435,14 +447,6 @@ func testEndpointCase(t *testing.T, region string, testcase endpointTestCase, ca
 	}
 
 	expectedDiags := testcase.expected.diags
-	expectedDiags = append(
-		expectedDiags,
-		errs.NewWarningDiagnostic(
-			"AWS account ID not found for provider",
-			"See https://registry.terraform.io/providers/hashicorp/aws/latest/docs#skip_requesting_account_id for implications.",
-		),
-	)
-
 	diags := p.Configure(ctx, terraformsdk.NewResourceConfigRaw(config))
 
 	if diff := cmp.Diff(diags, expectedDiags, cmp.Comparer(sdkdiag.Comparer)); diff != "" {
@@ -466,6 +470,89 @@ func testEndpointCase(t *testing.T, region string, testcase endpointTestCase, ca
 	}
 }
 
+func addRetrieveEndpointURLMiddleware(t *testing.T, endpoint *string) func(*middleware.Stack) error {
+	return func(stack *middleware.Stack) error {
+		return stack.Finalize.Add(
+			retrieveEndpointURLMiddleware(t, endpoint),
+			middleware.After,
+		)
+	}
+}
+
+func retrieveEndpointURLMiddleware(t *testing.T, endpoint *string) middleware.FinalizeMiddleware {
+	return middleware.FinalizeMiddlewareFunc(
+		"Test: Retrieve Endpoint",
+		func(ctx context.Context, in middleware.FinalizeInput, next middleware.FinalizeHandler) (middleware.FinalizeOutput, middleware.Metadata, error) {
+			t.Helper()
+
+			request, ok := in.Request.(*smithyhttp.Request)
+			if !ok {
+				t.Fatalf("Expected *github.com/aws/smithy-go/transport/http.Request, got %s", fullTypeName(in.Request))
+			}
+
+			url := request.URL
+			url.RawQuery = ""
+			url.Path = "/"
+
+			*endpoint = url.String()
+
+			return next.HandleFinalize(ctx, in)
+		})
+}
+
+func addRetrieveRegionMiddleware(region *string) func(*middleware.Stack) error {
+	return func(stack *middleware.Stack) error {
+		return stack.Serialize.Add(
+			retrieveRegionMiddleware(region),
+			middleware.After,
+		)
+	}
+}
+
+func retrieveRegionMiddleware(region *string) middleware.SerializeMiddleware {
+	return middleware.SerializeMiddlewareFunc(
+		"Test: Retrieve Region",
+		func(ctx context.Context, in middleware.SerializeInput, next middleware.SerializeHandler) (middleware.SerializeOutput, middleware.Metadata, error) {
+			*region = awsmiddleware.GetRegion(ctx)
+
+			return next.HandleSerialize(ctx, in)
+		},
+	)
+}
+
+var errCancelOperation = fmt.Errorf("Test: Canceling request")
+
+func addCancelRequestMiddleware() func(*middleware.Stack) error {
+	return func(stack *middleware.Stack) error {
+		return stack.Finalize.Add(
+			cancelRequestMiddleware(),
+			middleware.After,
+		)
+	}
+}
+
+// cancelRequestMiddleware creates a Smithy middleware that intercepts the request before sending and cancels it
+func cancelRequestMiddleware() middleware.FinalizeMiddleware {
+	return middleware.FinalizeMiddlewareFunc(
+		"Test: Cancel Requests",
+		func(_ context.Context, in middleware.FinalizeInput, next middleware.FinalizeHandler) (middleware.FinalizeOutput, middleware.Metadata, error) {
+			return middleware.FinalizeOutput{}, middleware.Metadata{}, errCancelOperation
+		})
+}
+
+func fullTypeName(i any) string {
+	return fullValueTypeName(reflect.ValueOf(i))
+}
+
+func fullValueTypeName(v reflect.Value) string {
+	if v.Kind() == reflect.Ptr {
+		return "*" + fullValueTypeName(reflect.Indirect(v))
+	}
+
+	requestType := v.Type()
+	return fmt.Sprintf("%s.%s", requestType.PkgPath(), requestType.Name())
+}
+
 func generateSharedConfigFile(config configFile) string {
 	var buf strings.Builder
 
@@ -475,17 +562,17 @@ aws_access_key_id = DefaultSharedCredentialsAccessKey
 aws_secret_access_key = DefaultSharedCredentialsSecretKey
 `)
 	if config.baseUrl != "" {
-		buf.WriteString(fmt.Sprintf("endpoint_url = %s\n", config.baseUrl))
+		fmt.Fprintf(&buf, "endpoint_url = %s\n", config.baseUrl)
 	}
 
 	if config.serviceUrl != "" {
-		buf.WriteString(fmt.Sprintf(`
+		fmt.Fprintf(&buf, `
 services = endpoint-test
 
 [services endpoint-test]
 %[1]s =
   endpoint_url = %[2]s
-`, configParam, serviceConfigFileEndpoint))
+`, configParam, serviceConfigFileEndpoint)
 	}
 
 	return buf.String()

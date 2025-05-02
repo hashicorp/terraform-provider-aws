@@ -20,12 +20,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_iam_openid_connect_provider", name="OIDC Provider")
-// @Tags(identifierAttribute="id", resourceType="OIDCProvider")
+// @Tags(identifierAttribute="arn", resourceType="OIDCProvider")
 // @Testing(name="OpenIDConnectProvider")
 func resourceOpenIDConnectProvider() *schema.Resource {
 	return &schema.Resource{
@@ -55,7 +54,8 @@ func resourceOpenIDConnectProvider() *schema.Resource {
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"thumbprint_list": {
 				Type:     schema.TypeList,
-				Required: true,
+				Optional: true,
+				Computed: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
 					ValidateFunc: validation.StringLenBetween(40, 40),
@@ -69,26 +69,27 @@ func resourceOpenIDConnectProvider() *schema.Resource {
 				DiffSuppressFunc: suppressOpenIDURL,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceOpenIDConnectProviderCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOpenIDConnectProviderCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	input := &iam.CreateOpenIDConnectProviderInput{
-		ClientIDList:   flex.ExpandStringValueSet(d.Get("client_id_list").(*schema.Set)),
-		Tags:           getTagsIn(ctx),
-		ThumbprintList: flex.ExpandStringValueList(d.Get("thumbprint_list").([]interface{})),
-		Url:            aws.String(d.Get(names.AttrURL).(string)),
+		ClientIDList: flex.ExpandStringValueSet(d.Get("client_id_list").(*schema.Set)),
+		Tags:         getTagsIn(ctx),
+		Url:          aws.String(d.Get(names.AttrURL).(string)),
+	}
+
+	if v, ok := d.GetOk("thumbprint_list"); ok {
+		input.ThumbprintList = flex.ExpandStringValueList(v.([]any))
 	}
 
 	output, err := conn.CreateOpenIDConnectProvider(ctx, input)
 
 	// Some partitions (e.g. ISO) may not support tag-on-create.
-	partition := meta.(*conns.AWSClient).Partition
+	partition := meta.(*conns.AWSClient).Partition(ctx)
 	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(partition, err) {
 		input.Tags = nil
 
@@ -106,7 +107,7 @@ func resourceOpenIDConnectProviderCreate(ctx context.Context, d *schema.Resource
 		err := openIDConnectProviderCreateTags(ctx, conn, d.Id(), tags)
 
 		// If default tags only, continue. Otherwise, error.
-		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err) {
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]any)) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err) {
 			return append(diags, resourceOpenIDConnectProviderRead(ctx, d, meta)...)
 		}
 
@@ -118,7 +119,7 @@ func resourceOpenIDConnectProviderCreate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceOpenIDConnectProviderRead(ctx, d, meta)...)
 }
 
-func resourceOpenIDConnectProviderRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOpenIDConnectProviderRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
@@ -144,20 +145,27 @@ func resourceOpenIDConnectProviderRead(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func resourceOpenIDConnectProviderUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOpenIDConnectProviderUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	if d.HasChange("thumbprint_list") {
-		input := &iam.UpdateOpenIDConnectProviderThumbprintInput{
-			OpenIDConnectProviderArn: aws.String(d.Id()),
-			ThumbprintList:           flex.ExpandStringValueList(d.Get("thumbprint_list").([]interface{})),
-		}
+		if v := d.Get("thumbprint_list").([]any); len(v) > 0 {
+			// Issues with an update to clear the thumbprint_list:
+			// - A cleared thumbprint_list will have a length of 0, and not enter this block.
+			// - Setting it to empty triggers an API error (the API requires either no thumbprints at
+			//   **creation** or at least one thumbprint on update).
+			// - Removing the thumbprint_list attribute entirely doesn’t work because it won’t register as
+			//   a change (no diff is detected).
+			// See https://github.com/hashicorp/terraform-provider-aws/issues/40509
+			input := &iam.UpdateOpenIDConnectProviderThumbprintInput{
+				OpenIDConnectProviderArn: aws.String(d.Id()),
+				ThumbprintList:           flex.ExpandStringValueList(v),
+			}
 
-		_, err := conn.UpdateOpenIDConnectProviderThumbprint(ctx, input)
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating IAM OIDC Provider (%s) thumbprint: %s", d.Id(), err)
+			if _, err := conn.UpdateOpenIDConnectProviderThumbprint(ctx, input); err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating IAM OIDC Provider (%s) thumbprint: %s", d.Id(), err)
+			}
 		}
 	}
 
@@ -197,7 +205,7 @@ func resourceOpenIDConnectProviderUpdate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceOpenIDConnectProviderRead(ctx, d, meta)...)
 }
 
-func resourceOpenIDConnectProviderDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOpenIDConnectProviderDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 

@@ -15,9 +15,9 @@ import (
 	"strings"
 	"testing"
 
-	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	awsmiddleware "github.com/aws/aws-sdk-go-v2/aws/middleware"
-	chatbot_sdkv2 "github.com/aws/aws-sdk-go-v2/service/chatbot"
+	"github.com/aws/aws-sdk-go-v2/service/chatbot"
 	"github.com/aws/smithy-go/middleware"
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 	"github.com/google/go-cmp/cmp"
@@ -237,8 +237,6 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 	}
 
 	for name, testcase := range testcases { //nolint:paralleltest // uses t.Setenv
-		testcase := testcase
-
 		t.Run(name, func(t *testing.T) {
 			testEndpointCase(t, providerRegion, testcase, callService)
 		})
@@ -246,10 +244,10 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 }
 
 func defaultEndpoint(region string) (url.URL, error) {
-	r := chatbot_sdkv2.NewDefaultEndpointResolverV2()
+	r := chatbot.NewDefaultEndpointResolverV2()
 
-	ep, err := r.ResolveEndpoint(context.Background(), chatbot_sdkv2.EndpointParameters{
-		Region: aws_sdkv2.String(region),
+	ep, err := r.ResolveEndpoint(context.Background(), chatbot.EndpointParameters{
+		Region: aws.String(region),
 	})
 	if err != nil {
 		return url.URL{}, err
@@ -263,11 +261,11 @@ func defaultEndpoint(region string) (url.URL, error) {
 }
 
 func defaultFIPSEndpoint(region string) (url.URL, error) {
-	r := chatbot_sdkv2.NewDefaultEndpointResolverV2()
+	r := chatbot.NewDefaultEndpointResolverV2()
 
-	ep, err := r.ResolveEndpoint(context.Background(), chatbot_sdkv2.EndpointParameters{
-		Region:  aws_sdkv2.String(region),
-		UseFIPS: aws_sdkv2.Bool(true),
+	ep, err := r.ResolveEndpoint(context.Background(), chatbot.EndpointParameters{
+		Region:  aws.String(region),
+		UseFIPS: aws.Bool(true),
 	})
 	if err != nil {
 		return url.URL{}, err
@@ -287,8 +285,9 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.GetAccountPreferences(ctx, &chatbot_sdkv2.GetAccountPreferencesInput{},
-		func(opts *chatbot_sdkv2.Options) {
+	input := chatbot.GetAccountPreferencesInput{}
+	_, err := client.GetAccountPreferences(ctx, &input,
+		func(opts *chatbot.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),
 				addRetrieveRegionMiddleware(&result.region),
@@ -450,14 +449,6 @@ func testEndpointCase(t *testing.T, region string, testcase endpointTestCase, ca
 	}
 
 	expectedDiags := testcase.expected.diags
-	expectedDiags = append(
-		expectedDiags,
-		errs.NewWarningDiagnostic(
-			"AWS account ID not found for provider",
-			"See https://registry.terraform.io/providers/hashicorp/aws/latest/docs#skip_requesting_account_id for implications.",
-		),
-	)
-
 	diags := p.Configure(ctx, terraformsdk.NewResourceConfigRaw(config))
 
 	if diff := cmp.Diff(diags, expectedDiags, cmp.Comparer(sdkdiag.Comparer)); diff != "" {
@@ -551,7 +542,7 @@ func cancelRequestMiddleware() middleware.FinalizeMiddleware {
 		})
 }
 
-func fullTypeName(i interface{}) string {
+func fullTypeName(i any) string {
 	return fullValueTypeName(reflect.ValueOf(i))
 }
 
@@ -573,17 +564,17 @@ aws_access_key_id = DefaultSharedCredentialsAccessKey
 aws_secret_access_key = DefaultSharedCredentialsSecretKey
 `)
 	if config.baseUrl != "" {
-		buf.WriteString(fmt.Sprintf("endpoint_url = %s\n", config.baseUrl))
+		fmt.Fprintf(&buf, "endpoint_url = %s\n", config.baseUrl)
 	}
 
 	if config.serviceUrl != "" {
-		buf.WriteString(fmt.Sprintf(`
+		fmt.Fprintf(&buf, `
 services = endpoint-test
 
 [services endpoint-test]
 %[1]s =
   endpoint_url = %[2]s
-`, configParam, serviceConfigFileEndpoint))
+`, configParam, serviceConfigFileEndpoint)
 	}
 
 	return buf.String()

@@ -31,8 +31,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Resource Set")
+// @FrameworkResource("aws_fms_resource_set", name="Resource Set")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/fms;fms.GetResourceSetOutput")
+// @Testing(serialize=true)
 func newResourceResourceSet(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceResourceSet{}
 
@@ -50,10 +52,6 @@ const (
 type resourceResourceSet struct {
 	framework.ResourceWithConfigure
 	framework.WithTimeouts
-}
-
-func (r *resourceResourceSet) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_fms_resource_set"
 }
 
 func (r *resourceResourceSet) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -258,7 +256,7 @@ func (r *resourceResourceSet) Delete(ctx context.Context, req resource.DeleteReq
 	}
 
 	in := &fms.DeleteResourceSetInput{
-		Identifier: aws.String(state.ID.ValueString()),
+		Identifier: state.ID.ValueStringPointer(),
 	}
 
 	_, err := conn.DeleteResourceSet(ctx, in)
@@ -286,10 +284,6 @@ func (r *resourceResourceSet) Delete(ctx context.Context, req resource.DeleteReq
 
 func (r *resourceResourceSet) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-}
-
-func (r *resourceResourceSet) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, req, resp)
 }
 
 func waitResourceSetCreated(ctx context.Context, conn *fms.Client, id string, timeout time.Duration) (*fms.GetResourceSetOutput, error) {
@@ -345,7 +339,7 @@ func waitResourceSetDeleted(ctx context.Context, conn *fms.Client, id string, ti
 }
 
 func statusResourceSet(ctx context.Context, conn *fms.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := findResourceSetByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -388,8 +382,8 @@ type resourceResourceSetData struct {
 	ARN         types.String                                     `tfsdk:"arn"`
 	ID          types.String                                     `tfsdk:"id"`
 	ResourceSet fwtypes.ListNestedObjectValueOf[resourceSetData] `tfsdk:"resource_set"`
-	Tags        types.Map                                        `tfsdk:"tags"`
-	TagsAll     types.Map                                        `tfsdk:"tags_all"`
+	Tags        tftags.Map                                       `tfsdk:"tags"`
+	TagsAll     tftags.Map                                       `tfsdk:"tags_all"`
 	Timeouts    timeouts.Value                                   `tfsdk:"timeouts"`
 }
 

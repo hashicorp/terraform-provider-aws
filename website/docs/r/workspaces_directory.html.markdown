@@ -26,6 +26,16 @@ resource "aws_workspaces_directory" "example" {
     Example = true
   }
 
+  certificate_based_auth_properties {
+    certificate_authority_arn = "arn:aws:acm-pca:us-east-1:123456789012:certificate-authority/12345678-1234-1234-1234-123456789012"
+    status                    = "ENABLED"
+  }
+
+  saml_properties {
+    user_access_url = "https://sso.example.com/"
+    status          = "ENABLED"
+  }
+
   self_service_permissions {
     change_compute_type  = true
     increase_volume_size = true
@@ -149,11 +159,24 @@ This resource supports the following arguments:
 
 * `directory_id` - (Required) The directory identifier for registration in WorkSpaces service.
 * `subnet_ids` - (Optional) The identifiers of the subnets where the directory resides.
-* `ip_group_ids` - The identifiers of the IP access control groups associated with the directory.
+* `ip_group_ids` – (Optional) The identifiers of the IP access control groups associated with the directory.
 * `tags` – (Optional) A map of tags assigned to the WorkSpaces directory. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `certificate_based_auth_properties` - (Optional) Configuration of certificate-based authentication (CBA) integration. Requires SAML authentication to be enabled. Defined below.
+* `saml_properties` – (Optional) Configuration of SAML authentication integration. Defined below.
 * `self_service_permissions` – (Optional) Permissions to enable or disable self-service capabilities. Defined below.
 * `workspace_access_properties` – (Optional) Specifies which devices and operating systems users can use to access their WorkSpaces. Defined below.
 * `workspace_creation_properties` – (Optional) Default properties that are used for creating WorkSpaces. Defined below.
+
+### certificate_based_auth_properties
+
+* `certificate_authority_arn` - (Optional) The Amazon Resource Name (ARN) of the certificate manager private certificate authority (ACM-PCA) that is used for certificate-based authentication.
+* `status` - (Optional) Status of certificate-based authentication. Default `DISABLED`.
+
+### saml_properties
+
+* `relay_state_parameter_name` - (Optional) The relay state parameter name supported by the SAML 2.0 identity provider (IdP). Default `RelayState`.
+* `status` - (Optional) Status of SAML 2.0 authentication. Default `DISABLED`.
+* `user_access_url` - (Optional) The SAML 2.0 identity provider (IdP) user access URL.
 
 ### self_service_permissions
 

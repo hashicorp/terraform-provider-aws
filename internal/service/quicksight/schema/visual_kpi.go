@@ -4,11 +4,9 @@
 package schema
 
 import (
-	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/quicksight"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -51,7 +49,7 @@ func kpiVisualSchema() *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"comparison":                       comparisonConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ComparisonConfiguration.html
-										"primary_value_display_type":       stringSchema(false, validation.StringInSlice(quicksight.PrimaryValueDisplayType_Values(), false)),
+										"primary_value_display_type":       stringEnumSchema[awstypes.PrimaryValueDisplayType](attrOptional),
 										"primary_value_font_configuration": fontConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontConfiguration.html
 										"progress_bar": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ProgressBarOptions.html
 											Type:     schema.TypeList,
@@ -60,7 +58,7 @@ func kpiVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"visibility": stringSchema(false, validation.StringInSlice(quicksight.Visibility_Values(), false)),
+													"visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
 												},
 											},
 										},
@@ -71,7 +69,7 @@ func kpiVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"visibility": stringSchema(false, validation.StringInSlice(quicksight.Visibility_Values(), false)),
+													"visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
 												},
 											},
 										},
@@ -83,10 +81,10 @@ func kpiVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"color":              stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
-													"tooltip_visibility": stringSchema(false, validation.StringInSlice(quicksight.Visibility_Values(), false)),
-													names.AttrType:       stringSchema(true, validation.StringInSlice(quicksight.KPISparklineType_Values(), false)),
-													"visibility":         stringSchema(false, validation.StringInSlice(quicksight.Visibility_Values(), false)),
+													"color":              hexColorSchema(attrOptional),
+													"tooltip_visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
+													names.AttrType:       stringEnumSchema[awstypes.KPISparklineType](attrRequired),
+													"visibility":         stringEnumSchema[awstypes.Visibility](attrOptional),
 												},
 											},
 										},
@@ -97,7 +95,7 @@ func kpiVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"visibility": stringSchema(false, validation.StringInSlice(quicksight.Visibility_Values(), false)),
+													"visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
 												},
 											},
 										},
@@ -115,7 +113,7 @@ func kpiVisualSchema() *schema.Schema {
 														MaxItems: 1,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																names.AttrType: stringSchema(true, validation.StringInSlice(quicksight.KPIVisualStandardLayoutType_Values(), false)),
+																names.AttrType: stringEnumSchema[awstypes.KPIVisualStandardLayoutType](attrRequired),
 															},
 														},
 													},
@@ -133,7 +131,7 @@ func kpiVisualSchema() *schema.Schema {
 								DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"trend_group_sort": fieldSortOptionsSchema(fieldSortOptionsMaxItems100), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSortOptions.html,
+										"trend_group_sort": fieldSortOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSortOptions.html,
 									},
 								},
 							},
@@ -215,435 +213,437 @@ func kpiVisualSchema() *schema.Schema {
 	}
 }
 
-func expandKPIVisual(tfList []interface{}) *quicksight.KPIVisual {
+func expandKPIVisual(tfList []any) *awstypes.KPIVisual {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	visual := &quicksight.KPIVisual{}
+	apiObject := &awstypes.KPIVisual{}
 
 	if v, ok := tfMap["visual_id"].(string); ok && v != "" {
-		visual.VisualId = aws.String(v)
+		apiObject.VisualId = aws.String(v)
 	}
-	if v, ok := tfMap[names.AttrActions].([]interface{}); ok && len(v) > 0 {
-		visual.Actions = expandVisualCustomActions(v)
+	if v, ok := tfMap[names.AttrActions].([]any); ok && len(v) > 0 {
+		apiObject.Actions = expandVisualCustomActions(v)
 	}
-	if v, ok := tfMap["chart_configuration"].([]interface{}); ok && len(v) > 0 {
-		visual.ChartConfiguration = expandKPIConfiguration(v)
+	if v, ok := tfMap["chart_configuration"].([]any); ok && len(v) > 0 {
+		apiObject.ChartConfiguration = expandKPIConfiguration(v)
 	}
-	if v, ok := tfMap["conditional_formatting"].([]interface{}); ok && len(v) > 0 {
-		visual.ConditionalFormatting = expandKPIConditionalFormatting(v)
+	if v, ok := tfMap["conditional_formatting"].([]any); ok && len(v) > 0 {
+		apiObject.ConditionalFormatting = expandKPIConditionalFormatting(v)
 	}
-	if v, ok := tfMap["column_hierarchies"].([]interface{}); ok && len(v) > 0 {
-		visual.ColumnHierarchies = expandColumnHierarchies(v)
+	if v, ok := tfMap["column_hierarchies"].([]any); ok && len(v) > 0 {
+		apiObject.ColumnHierarchies = expandColumnHierarchies(v)
 	}
-	if v, ok := tfMap["subtitle"].([]interface{}); ok && len(v) > 0 {
-		visual.Subtitle = expandVisualSubtitleLabelOptions(v)
+	if v, ok := tfMap["subtitle"].([]any); ok && len(v) > 0 {
+		apiObject.Subtitle = expandVisualSubtitleLabelOptions(v)
 	}
-	if v, ok := tfMap["title"].([]interface{}); ok && len(v) > 0 {
-		visual.Title = expandVisualTitleLabelOptions(v)
+	if v, ok := tfMap["title"].([]any); ok && len(v) > 0 {
+		apiObject.Title = expandVisualTitleLabelOptions(v)
 	}
 
-	return visual
+	return apiObject
 }
 
-func expandKPIConfiguration(tfList []interface{}) *quicksight.KPIConfiguration {
+func expandKPIConfiguration(tfList []any) *awstypes.KPIConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	config := &quicksight.KPIConfiguration{}
+	apiObject := &awstypes.KPIConfiguration{}
 
-	if v, ok := tfMap["field_wells"].([]interface{}); ok && len(v) > 0 {
-		config.FieldWells = expandKPIFieldWells(v)
+	if v, ok := tfMap["field_wells"].([]any); ok && len(v) > 0 {
+		apiObject.FieldWells = expandKPIFieldWells(v)
 	}
-	if v, ok := tfMap["kpi_options"].([]interface{}); ok && len(v) > 0 {
-		config.KPIOptions = expandKPIOptions(v)
+	if v, ok := tfMap["kpi_options"].([]any); ok && len(v) > 0 {
+		apiObject.KPIOptions = expandKPIOptions(v)
 	}
-	if v, ok := tfMap["sort_configuration"].([]interface{}); ok && len(v) > 0 {
-		config.SortConfiguration = expandKPISortConfiguration(v)
+	if v, ok := tfMap["sort_configuration"].([]any); ok && len(v) > 0 {
+		apiObject.SortConfiguration = expandKPISortConfiguration(v)
 	}
 
-	return config
+	return apiObject
 }
 
-func expandKPIFieldWells(tfList []interface{}) *quicksight.KPIFieldWells {
+func expandKPIFieldWells(tfList []any) *awstypes.KPIFieldWells {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	config := &quicksight.KPIFieldWells{}
+	apiObject := &awstypes.KPIFieldWells{}
 
-	if v, ok := tfMap["trend_groups"].([]interface{}); ok && len(v) > 0 {
-		config.TrendGroups = expandDimensionFields(v)
+	if v, ok := tfMap["trend_groups"].([]any); ok && len(v) > 0 {
+		apiObject.TrendGroups = expandDimensionFields(v)
 	}
-	if v, ok := tfMap["target_values"].([]interface{}); ok && len(v) > 0 {
-		config.TargetValues = expandMeasureFields(v)
+	if v, ok := tfMap["target_values"].([]any); ok && len(v) > 0 {
+		apiObject.TargetValues = expandMeasureFields(v)
 	}
-	if v, ok := tfMap[names.AttrValues].([]interface{}); ok && len(v) > 0 {
-		config.Values = expandMeasureFields(v)
+	if v, ok := tfMap[names.AttrValues].([]any); ok && len(v) > 0 {
+		apiObject.Values = expandMeasureFields(v)
 	}
-	return config
+	return apiObject
 }
 
-func expandKPIOptions(tfList []interface{}) *quicksight.KPIOptions {
+func expandKPIOptions(tfList []any) *awstypes.KPIOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	options := &quicksight.KPIOptions{}
+	apiObject := &awstypes.KPIOptions{}
 
 	if v, ok := tfMap["primary_value_display_type"].(string); ok && v != "" {
-		options.PrimaryValueDisplayType = aws.String(v)
+		apiObject.PrimaryValueDisplayType = awstypes.PrimaryValueDisplayType(v)
 	}
-	if v, ok := tfMap["comparison"].([]interface{}); ok && len(v) > 0 {
-		options.Comparison = expandComparisonConfiguration(v)
+	if v, ok := tfMap["comparison"].([]any); ok && len(v) > 0 {
+		apiObject.Comparison = expandComparisonConfiguration(v)
 	}
-	if v, ok := tfMap["primary_value_font_configuration"].([]interface{}); ok && len(v) > 0 {
-		options.PrimaryValueFontConfiguration = expandFontConfiguration(v)
+	if v, ok := tfMap["primary_value_font_configuration"].([]any); ok && len(v) > 0 {
+		apiObject.PrimaryValueFontConfiguration = expandFontConfiguration(v)
 	}
-	if v, ok := tfMap["progress_bar"].([]interface{}); ok && len(v) > 0 {
-		options.ProgressBar = expandProgressBarOptions(v)
+	if v, ok := tfMap["progress_bar"].([]any); ok && len(v) > 0 {
+		apiObject.ProgressBar = expandProgressBarOptions(v)
 	}
-	if v, ok := tfMap["secondary_value"].([]interface{}); ok && len(v) > 0 {
-		options.SecondaryValue = expandSecondaryValueOptions(v)
+	if v, ok := tfMap["secondary_value"].([]any); ok && len(v) > 0 {
+		apiObject.SecondaryValue = expandSecondaryValueOptions(v)
 	}
-	if v, ok := tfMap["secondary_value_font_configuration"].([]interface{}); ok && len(v) > 0 {
-		options.SecondaryValueFontConfiguration = expandFontConfiguration(v)
+	if v, ok := tfMap["secondary_value_font_configuration"].([]any); ok && len(v) > 0 {
+		apiObject.SecondaryValueFontConfiguration = expandFontConfiguration(v)
 	}
-	if v, ok := tfMap["sparkline"].([]interface{}); ok && len(v) > 0 {
-		options.Sparkline = expandKPISparklineOptions(v)
+	if v, ok := tfMap["sparkline"].([]any); ok && len(v) > 0 {
+		apiObject.Sparkline = expandKPISparklineOptions(v)
 	}
-	if v, ok := tfMap["trend_arrows"].([]interface{}); ok && len(v) > 0 {
-		options.TrendArrows = expandTrendArrowOptions(v)
+	if v, ok := tfMap["trend_arrows"].([]any); ok && len(v) > 0 {
+		apiObject.TrendArrows = expandTrendArrowOptions(v)
 	}
-	if v, ok := tfMap["visual_layout_options"].([]interface{}); ok && len(v) > 0 {
-		options.VisualLayoutOptions = expandKPIVisualLayoutOptions(v)
+	if v, ok := tfMap["visual_layout_options"].([]any); ok && len(v) > 0 {
+		apiObject.VisualLayoutOptions = expandKPIVisualLayoutOptions(v)
 	}
 
-	return options
+	return apiObject
 }
 
-func expandProgressBarOptions(tfList []interface{}) *quicksight.ProgressBarOptions {
+func expandProgressBarOptions(tfList []any) *awstypes.ProgressBarOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	options := &quicksight.ProgressBarOptions{}
+	apiObject := &awstypes.ProgressBarOptions{}
 
 	if v, ok := tfMap["visibility"].(string); ok && v != "" {
-		options.Visibility = aws.String(v)
+		apiObject.Visibility = awstypes.Visibility(v)
 	}
 
-	return options
+	return apiObject
 }
 
-func expandSecondaryValueOptions(tfList []interface{}) *quicksight.SecondaryValueOptions {
+func expandSecondaryValueOptions(tfList []any) *awstypes.SecondaryValueOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	options := &quicksight.SecondaryValueOptions{}
+	apiObject := &awstypes.SecondaryValueOptions{}
 
 	if v, ok := tfMap["visibility"].(string); ok && v != "" {
-		options.Visibility = aws.String(v)
+		apiObject.Visibility = awstypes.Visibility(v)
 	}
 
-	return options
+	return apiObject
 }
 
-func expandKPISparklineOptions(tfList []interface{}) *quicksight.KPISparklineOptions {
+func expandKPISparklineOptions(tfList []any) *awstypes.KPISparklineOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	options := &quicksight.KPISparklineOptions{}
+	apiObject := &awstypes.KPISparklineOptions{}
 
 	if v, ok := tfMap["color"].(string); ok && v != "" {
-		options.Color = aws.String(v)
+		apiObject.Color = aws.String(v)
 	}
 	if v, ok := tfMap["tooltip_visibility"].(string); ok && v != "" {
-		options.TooltipVisibility = aws.String(v)
+		apiObject.TooltipVisibility = awstypes.Visibility(v)
 	}
 	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
-		options.Type = aws.String(v)
+		apiObject.Type = awstypes.KPISparklineType(v)
 	}
 	if v, ok := tfMap["visibility"].(string); ok && v != "" {
-		options.Visibility = aws.String(v)
+		apiObject.Visibility = awstypes.Visibility(v)
 	}
 
-	return options
+	return apiObject
 }
 
-func expandTrendArrowOptions(tfList []interface{}) *quicksight.TrendArrowOptions {
+func expandTrendArrowOptions(tfList []any) *awstypes.TrendArrowOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	options := &quicksight.TrendArrowOptions{}
+	apiObject := &awstypes.TrendArrowOptions{}
 
 	if v, ok := tfMap["visibility"].(string); ok && v != "" {
-		options.Visibility = aws.String(v)
+		apiObject.Visibility = awstypes.Visibility(v)
 	}
 
-	return options
+	return apiObject
 }
 
-func expandKPIVisualLayoutOptions(tfList []interface{}) *quicksight.KPIVisualLayoutOptions {
+func expandKPIVisualLayoutOptions(tfList []any) *awstypes.KPIVisualLayoutOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	options := &quicksight.KPIVisualLayoutOptions{}
+	apiObject := &awstypes.KPIVisualLayoutOptions{}
 
-	if v, ok := tfMap["standard_layout"].([]interface{}); ok && len(v) > 0 {
-		options.StandardLayout = expandKPIVisualStandardLayout(v)
+	if v, ok := tfMap["standard_layout"].([]any); ok && len(v) > 0 {
+		apiObject.StandardLayout = expandKPIVisualStandardLayout(v)
 	}
 
-	return options
+	return apiObject
 }
 
-func expandKPIVisualStandardLayout(tfList []interface{}) *quicksight.KPIVisualStandardLayout {
+func expandKPIVisualStandardLayout(tfList []any) *awstypes.KPIVisualStandardLayout {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	options := &quicksight.KPIVisualStandardLayout{}
+	apiObject := &awstypes.KPIVisualStandardLayout{}
 
 	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
-		options.Type = aws.String(v)
+		apiObject.Type = awstypes.KPIVisualStandardLayoutType(v)
 	}
 
-	return options
+	return apiObject
 }
 
-func expandKPISortConfiguration(tfList []interface{}) *quicksight.KPISortConfiguration {
+func expandKPISortConfiguration(tfList []any) *awstypes.KPISortConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	config := &quicksight.KPISortConfiguration{}
+	apiObject := &awstypes.KPISortConfiguration{}
 
-	if v, ok := tfMap["trend_group_sort"].([]interface{}); ok && len(v) > 0 {
-		config.TrendGroupSort = expandFieldSortOptionsList(v)
+	if v, ok := tfMap["trend_group_sort"].([]any); ok && len(v) > 0 {
+		apiObject.TrendGroupSort = expandFieldSortOptionsList(v)
 	}
 
-	return config
+	return apiObject
 }
 
-func expandKPIConditionalFormatting(tfList []interface{}) *quicksight.KPIConditionalFormatting {
+func expandKPIConditionalFormatting(tfList []any) *awstypes.KPIConditionalFormatting {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	config := &quicksight.KPIConditionalFormatting{}
+	apiObject := &awstypes.KPIConditionalFormatting{}
 
-	if v, ok := tfMap["conditional_formatting_options"].([]interface{}); ok && len(v) > 0 {
-		config.ConditionalFormattingOptions = expandKPIConditionalFormattingOptions(v)
+	if v, ok := tfMap["conditional_formatting_options"].([]any); ok && len(v) > 0 {
+		apiObject.ConditionalFormattingOptions = expandKPIConditionalFormattingOptions(v)
 	}
 
-	return config
+	return apiObject
 }
 
-func expandKPIConditionalFormattingOptions(tfList []interface{}) []*quicksight.KPIConditionalFormattingOption {
+func expandKPIConditionalFormattingOptions(tfList []any) []awstypes.KPIConditionalFormattingOption {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var options []*quicksight.KPIConditionalFormattingOption
+	var apiObjects []awstypes.KPIConditionalFormattingOption
+
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
 
-		opts := expandKPIConditionalFormattingOption(tfMap)
-		if opts == nil {
+		apiObject := expandKPIConditionalFormattingOption(tfMap)
+		if apiObject == nil {
 			continue
 		}
 
-		options = append(options, opts)
+		apiObjects = append(apiObjects, *apiObject)
 	}
 
-	return options
+	return apiObjects
 }
 
-func expandKPIConditionalFormattingOption(tfMap map[string]interface{}) *quicksight.KPIConditionalFormattingOption {
+func expandKPIConditionalFormattingOption(tfMap map[string]any) *awstypes.KPIConditionalFormattingOption {
 	if tfMap == nil {
 		return nil
 	}
 
-	options := &quicksight.KPIConditionalFormattingOption{}
+	apiObject := &awstypes.KPIConditionalFormattingOption{}
 
-	if v, ok := tfMap["actual_value"].([]interface{}); ok && len(v) > 0 {
-		options.ActualValue = expandKPIActualValueConditionalFormatting(v)
+	if v, ok := tfMap["actual_value"].([]any); ok && len(v) > 0 {
+		apiObject.ActualValue = expandKPIActualValueConditionalFormatting(v)
 	}
-	if v, ok := tfMap["comparison_value"].([]interface{}); ok && len(v) > 0 {
-		options.ComparisonValue = expandKPIComparisonValueConditionalFormatting(v)
+	if v, ok := tfMap["comparison_value"].([]any); ok && len(v) > 0 {
+		apiObject.ComparisonValue = expandKPIComparisonValueConditionalFormatting(v)
 	}
-	if v, ok := tfMap["primary_value"].([]interface{}); ok && len(v) > 0 {
-		options.PrimaryValue = expandKPIPrimaryValueConditionalFormatting(v)
+	if v, ok := tfMap["primary_value"].([]any); ok && len(v) > 0 {
+		apiObject.PrimaryValue = expandKPIPrimaryValueConditionalFormatting(v)
 	}
-	if v, ok := tfMap["progress_bar"].([]interface{}); ok && len(v) > 0 {
-		options.ProgressBar = expandKPIProgressBarConditionalFormatting(v)
+	if v, ok := tfMap["progress_bar"].([]any); ok && len(v) > 0 {
+		apiObject.ProgressBar = expandKPIProgressBarConditionalFormatting(v)
 	}
 
-	return options
+	return apiObject
 }
 
-func expandKPIActualValueConditionalFormatting(tfList []interface{}) *quicksight.KPIActualValueConditionalFormatting {
+func expandKPIActualValueConditionalFormatting(tfList []any) *awstypes.KPIActualValueConditionalFormatting {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	options := &quicksight.KPIActualValueConditionalFormatting{}
+	apiObject := &awstypes.KPIActualValueConditionalFormatting{}
 
-	if v, ok := tfMap["icon"].([]interface{}); ok && len(v) > 0 {
-		options.Icon = expandConditionalFormattingIcon(v)
+	if v, ok := tfMap["icon"].([]any); ok && len(v) > 0 {
+		apiObject.Icon = expandConditionalFormattingIcon(v)
 	}
-	if v, ok := tfMap["text_color"].([]interface{}); ok && len(v) > 0 {
-		options.TextColor = expandConditionalFormattingColor(v)
+	if v, ok := tfMap["text_color"].([]any); ok && len(v) > 0 {
+		apiObject.TextColor = expandConditionalFormattingColor(v)
 	}
 
-	return options
+	return apiObject
 }
 
-func expandKPIComparisonValueConditionalFormatting(tfList []interface{}) *quicksight.KPIComparisonValueConditionalFormatting {
+func expandKPIComparisonValueConditionalFormatting(tfList []any) *awstypes.KPIComparisonValueConditionalFormatting {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	options := &quicksight.KPIComparisonValueConditionalFormatting{}
+	apiObject := &awstypes.KPIComparisonValueConditionalFormatting{}
 
-	if v, ok := tfMap["icon"].([]interface{}); ok && len(v) > 0 {
-		options.Icon = expandConditionalFormattingIcon(v)
+	if v, ok := tfMap["icon"].([]any); ok && len(v) > 0 {
+		apiObject.Icon = expandConditionalFormattingIcon(v)
 	}
-	if v, ok := tfMap["text_color"].([]interface{}); ok && len(v) > 0 {
-		options.TextColor = expandConditionalFormattingColor(v)
+	if v, ok := tfMap["text_color"].([]any); ok && len(v) > 0 {
+		apiObject.TextColor = expandConditionalFormattingColor(v)
 	}
 
-	return options
+	return apiObject
 }
 
-func expandKPIPrimaryValueConditionalFormatting(tfList []interface{}) *quicksight.KPIPrimaryValueConditionalFormatting {
+func expandKPIPrimaryValueConditionalFormatting(tfList []any) *awstypes.KPIPrimaryValueConditionalFormatting {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	options := &quicksight.KPIPrimaryValueConditionalFormatting{}
+	apiObject := &awstypes.KPIPrimaryValueConditionalFormatting{}
 
-	if v, ok := tfMap["icon"].([]interface{}); ok && len(v) > 0 {
-		options.Icon = expandConditionalFormattingIcon(v)
+	if v, ok := tfMap["icon"].([]any); ok && len(v) > 0 {
+		apiObject.Icon = expandConditionalFormattingIcon(v)
 	}
-	if v, ok := tfMap["text_color"].([]interface{}); ok && len(v) > 0 {
-		options.TextColor = expandConditionalFormattingColor(v)
+	if v, ok := tfMap["text_color"].([]any); ok && len(v) > 0 {
+		apiObject.TextColor = expandConditionalFormattingColor(v)
 	}
 
-	return options
+	return apiObject
 }
 
-func expandKPIProgressBarConditionalFormatting(tfList []interface{}) *quicksight.KPIProgressBarConditionalFormatting {
+func expandKPIProgressBarConditionalFormatting(tfList []any) *awstypes.KPIProgressBarConditionalFormatting {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	options := &quicksight.KPIProgressBarConditionalFormatting{}
+	apiObject := &awstypes.KPIProgressBarConditionalFormatting{}
 
-	if v, ok := tfMap["foreground_color"].([]interface{}); ok && len(v) > 0 {
-		options.ForegroundColor = expandConditionalFormattingColor(v)
+	if v, ok := tfMap["foreground_color"].([]any); ok && len(v) > 0 {
+		apiObject.ForegroundColor = expandConditionalFormattingColor(v)
 	}
 
-	return options
+	return apiObject
 }
 
-func flattenKPIVisual(apiObject *quicksight.KPIVisual) []interface{} {
+func flattenKPIVisual(apiObject *awstypes.KPIVisual) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
-		"visual_id": aws.StringValue(apiObject.VisualId),
+	tfMap := map[string]any{
+		"visual_id": aws.ToString(apiObject.VisualId),
 	}
+
 	if apiObject.Actions != nil {
 		tfMap[names.AttrActions] = flattenVisualCustomAction(apiObject.Actions)
 	}
@@ -663,15 +663,16 @@ func flattenKPIVisual(apiObject *quicksight.KPIVisual) []interface{} {
 		tfMap["title"] = flattenVisualTitleLabelOptions(apiObject.Title)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenKPIConfiguration(apiObject *quicksight.KPIConfiguration) []interface{} {
+func flattenKPIConfiguration(apiObject *awstypes.KPIConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
+
 	if apiObject.FieldWells != nil {
 		tfMap["field_wells"] = flattenKPIFieldWells(apiObject.FieldWells)
 	}
@@ -682,15 +683,16 @@ func flattenKPIConfiguration(apiObject *quicksight.KPIConfiguration) []interface
 		tfMap["sort_configuration"] = flattenKPISortConfiguration(apiObject.SortConfiguration)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenKPIFieldWells(apiObject *quicksight.KPIFieldWells) []interface{} {
+func flattenKPIFieldWells(apiObject *awstypes.KPIFieldWells) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
+
 	if apiObject.TargetValues != nil {
 		tfMap["target_values"] = flattenMeasureFields(apiObject.TargetValues)
 	}
@@ -701,21 +703,20 @@ func flattenKPIFieldWells(apiObject *quicksight.KPIFieldWells) []interface{} {
 		tfMap[names.AttrValues] = flattenMeasureFields(apiObject.Values)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenKPIOptions(apiObject *quicksight.KPIOptions) []interface{} {
+func flattenKPIOptions(apiObject *awstypes.KPIOptions) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
+
 	if apiObject.Comparison != nil {
 		tfMap["comparison"] = flattenComparisonConfiguration(apiObject.Comparison)
 	}
-	if apiObject.PrimaryValueDisplayType != nil {
-		tfMap["primary_value_display_type"] = aws.StringValue(apiObject.PrimaryValueDisplayType)
-	}
+	tfMap["primary_value_display_type"] = apiObject.PrimaryValueDisplayType
 	if apiObject.PrimaryValueFontConfiguration != nil {
 		tfMap["primary_value_font_configuration"] = flattenFontConfiguration(apiObject.PrimaryValueFontConfiguration)
 	}
@@ -738,145 +739,137 @@ func flattenKPIOptions(apiObject *quicksight.KPIOptions) []interface{} {
 		tfMap["visual_layout_options"] = flattenKPIVisualLayoutOptions(apiObject.VisualLayoutOptions)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenProgressBarOptions(apiObject *quicksight.ProgressBarOptions) []interface{} {
+func flattenProgressBarOptions(apiObject *awstypes.ProgressBarOptions) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
-	if apiObject.Visibility != nil {
-		tfMap["visibility"] = aws.StringValue(apiObject.Visibility)
+	tfMap := map[string]any{
+		"visibility": apiObject.Visibility,
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenSecondaryValueOptions(apiObject *quicksight.SecondaryValueOptions) []interface{} {
+func flattenSecondaryValueOptions(apiObject *awstypes.SecondaryValueOptions) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
-	if apiObject.Visibility != nil {
-		tfMap["visibility"] = aws.StringValue(apiObject.Visibility)
+	tfMap := map[string]any{
+		"visibility": apiObject.Visibility,
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenKPISparklineOptions(apiObject *quicksight.KPISparklineOptions) []interface{} {
+func flattenKPISparklineOptions(apiObject *awstypes.KPISparklineOptions) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
+
 	if apiObject.Color != nil {
-		tfMap["color"] = aws.StringValue(apiObject.Color)
+		tfMap["color"] = aws.ToString(apiObject.Color)
 	}
-	if apiObject.TooltipVisibility != nil {
-		tfMap["tooltip_visibility"] = aws.StringValue(apiObject.TooltipVisibility)
-	}
-	if apiObject.Type != nil {
-		tfMap[names.AttrType] = aws.StringValue(apiObject.Type)
-	}
-	if apiObject.Visibility != nil {
-		tfMap["visibility"] = aws.StringValue(apiObject.Visibility)
-	}
+	tfMap["tooltip_visibility"] = apiObject.TooltipVisibility
+	tfMap[names.AttrType] = apiObject.Type
+	tfMap["visibility"] = apiObject.Visibility
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenTrendArrowOptions(apiObject *quicksight.TrendArrowOptions) []interface{} {
+func flattenTrendArrowOptions(apiObject *awstypes.TrendArrowOptions) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
-	if apiObject.Visibility != nil {
-		tfMap["visibility"] = aws.StringValue(apiObject.Visibility)
+	tfMap := map[string]any{
+		"visibility": apiObject.Visibility,
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenKPIVisualLayoutOptions(apiObject *quicksight.KPIVisualLayoutOptions) []interface{} {
+func flattenKPIVisualLayoutOptions(apiObject *awstypes.KPIVisualLayoutOptions) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
+
 	if apiObject.StandardLayout != nil {
 		tfMap["standard_layout"] = flattenKPIVisualStandardLayout(apiObject.StandardLayout)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenKPIVisualStandardLayout(apiObject *quicksight.KPIVisualStandardLayout) []interface{} {
+func flattenKPIVisualStandardLayout(apiObject *awstypes.KPIVisualStandardLayout) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
-	if apiObject.Type != nil {
-		tfMap[names.AttrType] = aws.StringValue(apiObject.Type)
+	tfMap := map[string]any{
+		names.AttrType: apiObject.Type,
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenKPISortConfiguration(apiObject *quicksight.KPISortConfiguration) []interface{} {
+func flattenKPISortConfiguration(apiObject *awstypes.KPISortConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
+
 	if apiObject.TrendGroupSort != nil {
 		tfMap["trend_group_sort"] = flattenFieldSortOptions(apiObject.TrendGroupSort)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenKPIConditionalFormatting(apiObject *quicksight.KPIConditionalFormatting) []interface{} {
+func flattenKPIConditionalFormatting(apiObject *awstypes.KPIConditionalFormatting) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
+
 	if apiObject.ConditionalFormattingOptions != nil {
 		tfMap["conditional_formatting_options"] = flattenKPIConditionalFormattingOption(apiObject.ConditionalFormattingOptions)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenKPIConditionalFormattingOption(apiObject []*quicksight.KPIConditionalFormattingOption) []interface{} {
-	if len(apiObject) == 0 {
+func flattenKPIConditionalFormattingOption(apiObjects []awstypes.KPIConditionalFormattingOption) []any {
+	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
-	for _, config := range apiObject {
-		if config == nil {
-			continue
-		}
+	var tfList []any
 
-		tfMap := map[string]interface{}{}
-		if config.ActualValue != nil {
-			tfMap["actual_value"] = flattenKPIActualValueConditionalFormatting(config.ActualValue)
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{}
+
+		if apiObject.ActualValue != nil {
+			tfMap["actual_value"] = flattenKPIActualValueConditionalFormatting(apiObject.ActualValue)
 		}
-		if config.ComparisonValue != nil {
-			tfMap["comparison_value"] = flattenKPIComparisonValueConditionalFormatting(config.ComparisonValue)
+		if apiObject.ComparisonValue != nil {
+			tfMap["comparison_value"] = flattenKPIComparisonValueConditionalFormatting(apiObject.ComparisonValue)
 		}
-		if config.PrimaryValue != nil {
-			tfMap["primary_value"] = flattenKPIPrimaryValueConditionalFormatting(config.PrimaryValue)
+		if apiObject.PrimaryValue != nil {
+			tfMap["primary_value"] = flattenKPIPrimaryValueConditionalFormatting(apiObject.PrimaryValue)
 		}
-		if config.ProgressBar != nil {
-			tfMap["progress_bar"] = flattenKPIProgressBarConditionalFormatting(config.ProgressBar)
+		if apiObject.ProgressBar != nil {
+			tfMap["progress_bar"] = flattenKPIProgressBarConditionalFormatting(apiObject.ProgressBar)
 		}
 
 		tfList = append(tfList, tfMap)
@@ -885,12 +878,13 @@ func flattenKPIConditionalFormattingOption(apiObject []*quicksight.KPIConditiona
 	return tfList
 }
 
-func flattenKPIActualValueConditionalFormatting(apiObject *quicksight.KPIActualValueConditionalFormatting) []interface{} {
+func flattenKPIActualValueConditionalFormatting(apiObject *awstypes.KPIActualValueConditionalFormatting) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
+
 	if apiObject.Icon != nil {
 		tfMap["icon"] = flattenConditionalFormattingIcon(apiObject.Icon)
 	}
@@ -898,15 +892,16 @@ func flattenKPIActualValueConditionalFormatting(apiObject *quicksight.KPIActualV
 		tfMap["text_color"] = flattenConditionalFormattingColor(apiObject.TextColor)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenKPIComparisonValueConditionalFormatting(apiObject *quicksight.KPIComparisonValueConditionalFormatting) []interface{} {
+func flattenKPIComparisonValueConditionalFormatting(apiObject *awstypes.KPIComparisonValueConditionalFormatting) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
+
 	if apiObject.Icon != nil {
 		tfMap["icon"] = flattenConditionalFormattingIcon(apiObject.Icon)
 	}
@@ -914,15 +909,16 @@ func flattenKPIComparisonValueConditionalFormatting(apiObject *quicksight.KPICom
 		tfMap["text_color"] = flattenConditionalFormattingColor(apiObject.TextColor)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenKPIPrimaryValueConditionalFormatting(apiObject *quicksight.KPIPrimaryValueConditionalFormatting) []interface{} {
+func flattenKPIPrimaryValueConditionalFormatting(apiObject *awstypes.KPIPrimaryValueConditionalFormatting) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
+
 	if apiObject.Icon != nil {
 		tfMap["icon"] = flattenConditionalFormattingIcon(apiObject.Icon)
 	}
@@ -930,18 +926,19 @@ func flattenKPIPrimaryValueConditionalFormatting(apiObject *quicksight.KPIPrimar
 		tfMap["text_color"] = flattenConditionalFormattingColor(apiObject.TextColor)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenKPIProgressBarConditionalFormatting(apiObject *quicksight.KPIProgressBarConditionalFormatting) []interface{} {
+func flattenKPIProgressBarConditionalFormatting(apiObject *awstypes.KPIProgressBarConditionalFormatting) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
+
 	if apiObject.ForegroundColor != nil {
 		tfMap["foreground_color"] = flattenConditionalFormattingColor(apiObject.ForegroundColor)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

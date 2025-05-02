@@ -181,7 +181,6 @@ The following arguments are available:
 * `conditions` (Required) - A block argument. Detailed Below.
 * `description` (Optional) - A user-defined description that further helps identify the rule.
 * `rule_number` (Required) - An integer from `1` to `65535` indicating the rule's order number. Rules are processed in order from the lowest numbered rule to the highest. Rules stop processing when a rule is matched. It's important to make sure that you number your rules in the exact order that you want them processed.
-* `add_to_network_function_group` (Optional) - The name of the network function group to attach to the attachment policy.
 
 ### `action`
 
@@ -254,8 +253,9 @@ The following arguments are available:
 * `via` (Optional) - The network function groups and any edge overrides associated with the action.
     * `network_function_groups` (Optional) - A list of strings. The network function group to use for the service insertion action.
     * `with_edge_override` (Optional) - Any edge overrides and the preferred edge to use.
-        * `edge_sets` (Optional) - A list of strings. The list of edges associated with the network function group.
-        * `use_edge` (Optional) - The preferred edge to use.
+        * `edge_sets` (Optional) - A list of a list of strings. The list of edges associated with the network function group.
+        * `use_edge_location` (Optional) - The preferred edge to use.
+        * `use_edge` (**Deprecated** use `use_edge_location` instead) - The preferred edge to use.
 
 ### `network_function_groups`
 

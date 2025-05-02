@@ -5,16 +5,9 @@ package rds
 
 import (
 	"context"
-	"fmt"
-	"strconv"
-	"strings"
 
-	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -96,11 +89,10 @@ func resourceInstanceResourceV0() *schema.Resource {
 			},
 
 			names.AttrIdentifier: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"identifier_prefix"},
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
 			},
 			"identifier_prefix": {
 				Type:     schema.TypeString,
@@ -178,14 +170,12 @@ func resourceInstanceResourceV0() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
 			},
 
 			"security_group_names": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
 			},
 
 			names.AttrFinalSnapshotIdentifier: {
@@ -197,10 +187,6 @@ func resourceInstanceResourceV0() *schema.Resource {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
-				ConflictsWith: []string{
-					"snapshot_identifier",
-					"replicate_source_db",
-				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						names.AttrBucketName: {
@@ -391,7 +377,7 @@ func resourceInstanceResourceV0() *schema.Resource {
 	}
 }
 
-func InstanceStateUpgradeV0(_ context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+func instanceStateUpgradeV0(_ context.Context, rawState map[string]any, meta any) (map[string]any, error) {
 	if rawState == nil {
 		return nil, nil
 	}
@@ -412,27 +398,6 @@ func resourceInstanceResourceV1() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					mas := d.Get("max_allocated_storage").(int)
-
-					newInt, err := strconv.Atoi(new)
-					if err != nil {
-						return false
-					}
-
-					oldInt, err := strconv.Atoi(old)
-					if err != nil {
-						return false
-					}
-
-					// Allocated is higher than the configuration
-					// and autoscaling is enabled
-					if oldInt > newInt && mas > newInt {
-						return true
-					}
-
-					return false
-				},
 			},
 			names.AttrAllowMajorVersionUpgrade: {
 				Type:     schema.TypeBool,
@@ -462,16 +427,14 @@ func resourceInstanceResourceV1() *schema.Resource {
 				ForceNew: true,
 			},
 			"backup_retention_period": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.IntBetween(0, 35),
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
 			},
 			"backup_window": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: verify.ValidOnceADayWindowFormat,
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
 			},
 			"blue_green_update": {
 				Type:     schema.TypeList,
@@ -503,10 +466,9 @@ func resourceInstanceResourceV1() *schema.Resource {
 				Default:  false,
 			},
 			"custom_iam_instance_profile": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^AWSRDSCustom.*$`), "must begin with AWSRDSCustom"),
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
 			},
 			"customer_owned_ip_enabled": {
 				Type:     schema.TypeBool,
@@ -517,9 +479,6 @@ func resourceInstanceResourceV1() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
-				ConflictsWith: []string{
-					"replicate_source_db",
-				},
 			},
 			"db_subnet_group_name": {
 				Type:     schema.TypeString,
@@ -547,8 +506,7 @@ func resourceInstanceResourceV1() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice(InstanceExportableLogType_Values(), false),
+					Type: schema.TypeString,
 				},
 			},
 			names.AttrEndpoint: {
@@ -560,10 +518,6 @@ func resourceInstanceResourceV1() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
-				StateFunc: func(v interface{}) string {
-					value := v.(string)
-					return strings.ToLower(value)
-				},
 			},
 			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
@@ -577,12 +531,6 @@ func resourceInstanceResourceV1() *schema.Resource {
 			names.AttrFinalSnapshotIdentifier: {
 				Type:     schema.TypeString,
 				Optional: true,
-				ValidateFunc: validation.All(
-					validation.StringMatch(regexache.MustCompile(`^[A-Za-z]`), "must begin with alphabetic character"),
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]+$`), "must only contain alphanumeric characters and hyphens"),
-					validation.StringDoesNotMatch(regexache.MustCompile(`--`), "cannot contain two consecutive hyphens"),
-					validation.StringDoesNotMatch(regexache.MustCompile(`-$`), "cannot end in a hyphen"),
-				),
 			},
 			names.AttrHostedZoneID: {
 				Type:     schema.TypeString,
@@ -593,18 +541,14 @@ func resourceInstanceResourceV1() *schema.Resource {
 				Optional: true,
 			},
 			names.AttrIdentifier: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"identifier_prefix"},
-				ValidateFunc:  validIdentifier,
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
 			},
 			"identifier_prefix": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{names.AttrIdentifier},
-				ValidateFunc:  validIdentifierPrefix,
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
 			},
 			"instance_class": {
 				Type:     schema.TypeString,
@@ -616,11 +560,10 @@ func resourceInstanceResourceV1() *schema.Resource {
 				Computed: true,
 			},
 			names.AttrKMSKeyID: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
 			},
 			"latest_restorable_time": {
 				Type:     schema.TypeString,
@@ -655,19 +598,10 @@ func resourceInstanceResourceV1() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
-				StateFunc: func(v interface{}) string {
-					if v != nil {
-						value := v.(string)
-						return strings.ToLower(value)
-					}
-					return ""
-				},
-				ValidateFunc: verify.ValidOnceAWeekWindowFormat,
 			},
 			"manage_master_user_password": {
-				Type:          schema.TypeBool,
-				Optional:      true,
-				ConflictsWith: []string{names.AttrPassword},
+				Type:     schema.TypeBool,
+				Optional: true,
 			},
 			"master_user_secret": {
 				Type:     schema.TypeList,
@@ -690,32 +624,23 @@ func resourceInstanceResourceV1() *schema.Resource {
 				},
 			},
 			"master_user_secret_kms_key_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: verify.ValidKMSKeyID,
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
 			},
 			"max_allocated_storage": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == "0" && new == fmt.Sprintf("%d", d.Get(names.AttrAllocatedStorage).(int)) {
-						return true
-					}
-					return false
-				},
 			},
 			"monitoring_interval": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      0,
-				ValidateFunc: validation.IntInSlice([]int{0, 1, 5, 10, 15, 30, 60}),
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  0,
 			},
 			"monitoring_role_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: verify.ValidARN,
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
 			},
 			"multi_az": {
 				Type:     schema.TypeBool,
@@ -729,10 +654,9 @@ func resourceInstanceResourceV1() *schema.Resource {
 				ForceNew: true,
 			},
 			"network_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringInSlice(NetworkType_Values(), false),
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
 			},
 			"option_group_name": {
 				Type:     schema.TypeString,
@@ -745,10 +669,9 @@ func resourceInstanceResourceV1() *schema.Resource {
 				Computed: true,
 			},
 			names.AttrPassword: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Sensitive:     true,
-				ConflictsWith: []string{"manage_master_user_password"},
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
 			},
 			"performance_insights_enabled": {
 				Type:     schema.TypeBool,
@@ -756,10 +679,9 @@ func resourceInstanceResourceV1() *schema.Resource {
 				Default:  false,
 			},
 			"performance_insights_kms_key_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: verify.ValidARN,
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
 			},
 			"performance_insights_retention_period": {
 				Type:     schema.TypeInt,
@@ -777,10 +699,9 @@ func resourceInstanceResourceV1() *schema.Resource {
 				Default:  false,
 			},
 			"replica_mode": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringInSlice(rds.ReplicaMode_Values(), false),
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
 			},
 			"replicas": {
 				Type:     schema.TypeList,
@@ -800,18 +721,11 @@ func resourceInstanceResourceV1() *schema.Resource {
 				Optional: true,
 				MaxItems: 1,
 				ForceNew: true,
-				ConflictsWith: []string{
-					"s3_import",
-					"snapshot_identifier",
-					"replicate_source_db",
-				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"restore_time": {
-							Type:          schema.TypeString,
-							Optional:      true,
-							ValidateFunc:  verify.ValidUTCTimestamp,
-							ConflictsWith: []string{"restore_to_point_in_time.0.use_latest_restorable_time"},
+							Type:     schema.TypeString,
+							Optional: true,
 						},
 						"source_db_instance_automated_backups_arn": {
 							Type:     schema.TypeString,
@@ -826,9 +740,8 @@ func resourceInstanceResourceV1() *schema.Resource {
 							Optional: true,
 						},
 						"use_latest_restorable_time": {
-							Type:          schema.TypeBool,
-							Optional:      true,
-							ConflictsWith: []string{"restore_to_point_in_time.0.restore_time"},
+							Type:     schema.TypeBool,
+							Optional: true,
 						},
 					},
 				},
@@ -837,10 +750,6 @@ func resourceInstanceResourceV1() *schema.Resource {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
-				ConflictsWith: []string{
-					"snapshot_identifier",
-					"replicate_source_db",
-				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						names.AttrBucketName: {
@@ -897,10 +806,9 @@ func resourceInstanceResourceV1() *schema.Resource {
 				Computed: true,
 			},
 			names.AttrStorageType: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringInSlice(StorageType_Values(), false),
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -911,11 +819,10 @@ func resourceInstanceResourceV1() *schema.Resource {
 				ForceNew: true,
 			},
 			names.AttrUsername: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"replicate_source_db"},
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
 			},
 			names.AttrVPCSecurityGroupIDs: {
 				Type:     schema.TypeSet,
@@ -927,7 +834,7 @@ func resourceInstanceResourceV1() *schema.Resource {
 	}
 }
 
-func InstanceStateUpgradeV1(_ context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+func instanceStateUpgradeV1(_ context.Context, rawState map[string]any, meta any) (map[string]any, error) {
 	if rawState == nil {
 		return nil, nil
 	}

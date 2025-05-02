@@ -6,10 +6,12 @@ package bedrockagent
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -29,9 +31,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Agent Knowledge Base Association")
+// @FrameworkResource("aws_bedrockagent_agent_knowledge_base_association", name="Agent Knowledge Base Association")
 func newAgentKnowledgeBaseAssociationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &agentKnowledgeBaseAssociationResource{}
+
+	r.SetDefaultCreateTimeout(5 * time.Minute)
+	r.SetDefaultUpdateTimeout(5 * time.Minute)
 
 	return r, nil
 }
@@ -39,10 +44,7 @@ func newAgentKnowledgeBaseAssociationResource(context.Context) (resource.Resourc
 type agentKnowledgeBaseAssociationResource struct {
 	framework.ResourceWithConfigure
 	framework.WithImportByID
-}
-
-func (*agentKnowledgeBaseAssociationResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_bedrockagent_agent_knowledge_base_association"
+	framework.WithTimeouts
 }
 
 func (r *agentKnowledgeBaseAssociationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -83,6 +85,12 @@ func (r *agentKnowledgeBaseAssociationResource) Schema(ctx context.Context, requ
 				CustomType: fwtypes.StringEnumType[awstypes.KnowledgeBaseState](),
 			},
 		},
+		Blocks: map[string]schema.Block{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
+				Create: true,
+				Update: true,
+			}),
+		},
 	}
 }
 
@@ -109,7 +117,19 @@ func (r *agentKnowledgeBaseAssociationResource) Create(ctx context.Context, requ
 	}
 
 	// Set values for unknowns.
-	data.setID()
+	id, err := data.setID()
+	if err != nil {
+		response.Diagnostics.AddError("flattening resource ID Bedrock Agent Knowledge Base Association", err.Error())
+		return
+	}
+	data.ID = types.StringValue(id)
+
+	_, err = prepareAgent(ctx, conn, data.AgentID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
+	if err != nil {
+		response.Diagnostics.AddError("preparing Agent", err.Error())
+
+		return
+	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
@@ -178,6 +198,12 @@ func (r *agentKnowledgeBaseAssociationResource) Update(ctx context.Context, requ
 
 		return
 	}
+	_, err = prepareAgent(ctx, conn, new.AgentID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts))
+	if err != nil {
+		response.Diagnostics.AddError("preparing Agent", err.Error())
+
+		return
+	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
@@ -191,11 +217,12 @@ func (r *agentKnowledgeBaseAssociationResource) Delete(ctx context.Context, requ
 
 	conn := r.Meta().BedrockAgentClient(ctx)
 
-	_, err := conn.DisassociateAgentKnowledgeBase(ctx, &bedrockagent.DisassociateAgentKnowledgeBaseInput{
+	input := bedrockagent.DisassociateAgentKnowledgeBaseInput{
 		AgentId:         fwflex.StringFromFramework(ctx, data.AgentID),
 		AgentVersion:    fwflex.StringFromFramework(ctx, data.AgentVersion),
 		KnowledgeBaseId: fwflex.StringFromFramework(ctx, data.KnowledgeBaseID),
-	})
+	}
+	_, err := conn.DisassociateAgentKnowledgeBase(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
@@ -242,6 +269,7 @@ type agentKnowledgeBaseAssociationResourceModel struct {
 	ID                 types.String                                    `tfsdk:"id"`
 	KnowledgeBaseID    types.String                                    `tfsdk:"knowledge_base_id"`
 	KnowledgeBaseState fwtypes.StringEnum[awstypes.KnowledgeBaseState] `tfsdk:"knowledge_base_state"`
+	Timeouts           timeouts.Value                                  `tfsdk:"timeouts"`
 }
 
 const (
@@ -262,6 +290,12 @@ func (m *agentKnowledgeBaseAssociationResourceModel) InitFromID() error {
 	return nil
 }
 
-func (m *agentKnowledgeBaseAssociationResourceModel) setID() {
-	m.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{m.AgentID.ValueString(), m.AgentVersion.ValueString(), m.KnowledgeBaseID.ValueString()}, agentKnowledgeBaseAssociationResourceIDPartCount, false)))
+func (m *agentKnowledgeBaseAssociationResourceModel) setID() (string, error) {
+	parts := []string{
+		m.AgentID.ValueString(),
+		m.AgentVersion.ValueString(),
+		m.KnowledgeBaseID.ValueString(),
+	}
+
+	return flex.FlattenResourceId(parts, agentKnowledgeBaseAssociationResourceIDPartCount, false)
 }

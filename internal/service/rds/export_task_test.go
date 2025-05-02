@@ -7,15 +7,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
-	rdsv1 "github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -30,13 +31,13 @@ func TestAccRDSExportTask_basic(t *testing.T) {
 	resourceName := "aws_rds_export_task.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, rdsv1.EndpointsID)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckExportTaskDestroy(ctx),
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		CheckDestroy: testAccCheckExportTaskDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccExportTaskConfig_basic(rName),
@@ -67,13 +68,13 @@ func TestAccRDSExportTask_optional(t *testing.T) {
 	s3Prefix := "test_prefix/test-export"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, rdsv1.EndpointsID)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckExportTaskDestroy(ctx),
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		CheckDestroy: testAccCheckExportTaskDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccExportTaskConfig_optional(rName, s3Prefix),
@@ -85,7 +86,7 @@ func TestAccRDSExportTask_optional(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrS3BucketName, "aws_s3_bucket.test", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrIAMRoleARN, "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, "aws_kms_key.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "export_only.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "export_only.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "export_only.0", names.AttrDatabase),
 					resource.TestCheckResourceAttr(resourceName, "s3_prefix", s3Prefix),
 				),
@@ -160,16 +161,13 @@ func isInDestroyedStatus(s string) bool {
 		tfrds.StatusFailed,
 		tfrds.StatusCanceled,
 	}
-	for _, status := range deletedStatuses {
-		if s == status {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(deletedStatuses, s)
 }
 
 func testAccExportTaskConfigBase(rName string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = true
@@ -244,7 +242,8 @@ resource "aws_db_instance" "test" {
   engine              = "mysql"
   instance_class      = "db.t3.micro"
   username            = "foo"
-  password            = "foobarbaz"
+  password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version = 1
   skip_final_snapshot = true
 }
 
@@ -252,7 +251,7 @@ resource "aws_db_snapshot" "test" {
   db_instance_identifier = aws_db_instance.test.identifier
   db_snapshot_identifier = %[1]q
 }
-`, rName)
+`, rName))
 }
 
 func testAccExportTaskConfig_basic(rName string) string {

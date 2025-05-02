@@ -5,7 +5,7 @@ package inspector
 
 import (
 	"context"
-	"sort"
+	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/service/inspector"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_inspector_rules_packages")
+// @SDKDataSource("aws_inspector_rules_packages", name="Rules Packages")
 func DataSourceRulesPackages() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRulesPackagesRead,
@@ -30,7 +30,7 @@ func DataSourceRulesPackages() *schema.Resource {
 	}
 }
 
-func dataSourceRulesPackagesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceRulesPackagesRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).InspectorClient(ctx)
 
@@ -40,9 +40,9 @@ func dataSourceRulesPackagesRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "reading Inspector Classic Rules Packages: %s", err)
 	}
 	arns := output
-	sort.Strings(arns)
+	slices.Sort(arns)
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set(names.AttrARNs, arns)
 
 	return diags

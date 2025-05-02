@@ -9,15 +9,14 @@ import (
 	"os"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/sagemaker"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -44,16 +43,82 @@ func TestAccSageMakerImageVersion_basic(t *testing.T) {
 					testAccCheckImageVersionExists(ctx, resourceName, &image),
 					resource.TestCheckResourceAttr(resourceName, "image_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "base_image", baseImage),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.Ct1),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "image_arn", "sagemaker", fmt.Sprintf("image/%s", rName)),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("image-version/%s/1", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, "image_arn", "sagemaker", fmt.Sprintf("image/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("image-version/%s/1", rName)),
 					resource.TestCheckResourceAttrSet(resourceName, "container_image"),
+					resource.TestCheckResourceAttr(resourceName, "horovod", acctest.CtFalse),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccSageMakerImageVersion_full(t *testing.T) {
+	ctx := acctest.Context(t)
+	if os.Getenv("SAGEMAKER_IMAGE_VERSION_BASE_IMAGE") == "" {
+		t.Skip("Environment variable SAGEMAKER_IMAGE_VERSION_BASE_IMAGE is not set")
+	}
+
+	var image sagemaker.DescribeImageVersionOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rNameUpdate := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_image_version.test"
+	baseImage := os.Getenv("SAGEMAKER_IMAGE_VERSION_BASE_IMAGE")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckImageVersionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccImageVersionConfig_full(rName, baseImage, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckImageVersionExists(ctx, resourceName, &image),
+					resource.TestCheckResourceAttr(resourceName, "image_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "base_image", baseImage),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, "image_arn", "sagemaker", fmt.Sprintf("image/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("image-version/%s/1", rName)),
+					resource.TestCheckResourceAttrSet(resourceName, "container_image"),
+					resource.TestCheckResourceAttr(resourceName, "horovod", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "processor", "CPU"),
+					resource.TestCheckResourceAttr(resourceName, "vendor_guidance", "STABLE"),
+					resource.TestCheckResourceAttr(resourceName, "release_notes", rName),
+					resource.TestCheckResourceAttr(resourceName, "job_type", "TRAINING"),
+					resource.TestCheckResourceAttr(resourceName, "ml_framework", "TensorFlow 1.1"),
+					resource.TestCheckResourceAttr(resourceName, "programming_lang", "Python 3.8"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccImageVersionConfig_full(rName, baseImage, rNameUpdate),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckImageVersionExists(ctx, resourceName, &image),
+					resource.TestCheckResourceAttr(resourceName, "image_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "base_image", baseImage),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, "image_arn", "sagemaker", fmt.Sprintf("image/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("image-version/%s/1", rName)),
+					resource.TestCheckResourceAttrSet(resourceName, "container_image"),
+					resource.TestCheckResourceAttr(resourceName, "horovod", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "processor", "CPU"),
+					resource.TestCheckResourceAttr(resourceName, "vendor_guidance", "STABLE"),
+					resource.TestCheckResourceAttr(resourceName, "release_notes", rNameUpdate),
+					resource.TestCheckResourceAttr(resourceName, "job_type", "TRAINING"),
+					resource.TestCheckResourceAttr(resourceName, "ml_framework", "TensorFlow 1.1"),
+					resource.TestCheckResourceAttr(resourceName, "programming_lang", "Python 3.8"),
+				),
 			},
 		},
 	})
@@ -119,26 +184,24 @@ func TestAccSageMakerImageVersion_Disappears_image(t *testing.T) {
 
 func testAccCheckImageVersionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sagemaker_image_version" {
 				continue
 			}
 
-			imageVersion, err := tfsagemaker.FindImageVersionByName(ctx, conn, rs.Primary.ID)
+			_, err := tfsagemaker.FindImageVersionByName(ctx, conn, rs.Primary.ID)
 
-			if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
 			if err != nil {
-				return fmt.Errorf("reading SageMaker Image Version (%s): %w", rs.Primary.ID, err)
+				return fmt.Errorf("reading SageMaker AI Image Version (%s): %w", rs.Primary.ID, err)
 			}
 
-			if aws.StringValue(imageVersion.ImageVersionArn) == rs.Primary.Attributes[names.AttrARN] {
-				return fmt.Errorf("SageMaker Image Version %q still exists", rs.Primary.ID)
-			}
+			return fmt.Errorf("SageMaker AI Image Version %q still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -156,7 +219,7 @@ func testAccCheckImageVersionExists(ctx context.Context, n string, image *sagema
 			return fmt.Errorf("No sagmaker Image ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
 		resp, err := tfsagemaker.FindImageVersionByName(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
@@ -168,7 +231,7 @@ func testAccCheckImageVersionExists(ctx context.Context, n string, image *sagema
 	}
 }
 
-func testAccImageVersionConfig_basic(rName, baseImage string) string {
+func testAccImageVersionConfigBase(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -199,10 +262,29 @@ resource "aws_sagemaker_image" "test" {
 
   depends_on = [aws_iam_role_policy_attachment.test]
 }
+`, rName)
+}
 
+func testAccImageVersionConfig_basic(rName, baseImage string) string {
+	return testAccImageVersionConfigBase(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_image_version" "test" {
   image_name = aws_sagemaker_image.test.id
-  base_image = %[2]q
+  base_image = %[1]q
 }
-`, rName, baseImage)
+`, baseImage)
+}
+
+func testAccImageVersionConfig_full(rName, baseImage, notes string) string {
+	return testAccImageVersionConfigBase(rName) + fmt.Sprintf(`
+resource "aws_sagemaker_image_version" "test" {
+  image_name       = aws_sagemaker_image.test.id
+  base_image       = %[1]q
+  job_type         = "TRAINING"
+  processor        = "CPU"
+  release_notes    = %[2]q
+  vendor_guidance  = "STABLE"
+  ml_framework     = "TensorFlow 1.1"
+  programming_lang = "Python 3.8"
+}
+`, baseImage, notes)
 }

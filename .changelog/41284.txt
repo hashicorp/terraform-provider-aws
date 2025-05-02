@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_quicksight_data_source: Add `parameters.s3.role_arn` argument to allow override an account-wide role for a specific S3 data source
+```

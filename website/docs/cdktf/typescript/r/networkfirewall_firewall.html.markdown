@@ -89,7 +89,7 @@ This resource supports the following arguments:
 
 The `subnetMapping` block supports the following arguments:
 
-* `ipAddressType` - (Optional) The subnet's IP address type. Valida values: `"DUALSTACK"`, `"IPV4"`.
+* `ipAddressType` - (Optional) The subnet's IP address type. Valid values: `"DUALSTACK"`, `"IPV4"`.
 * `subnetId` - (Required) The unique identifier for the subnet.
 
 ## Attribute Reference
@@ -151,4 +151,4 @@ Using `terraform import`, import Network Firewall Firewalls using their `arn`. F
 % terraform import aws_networkfirewall_firewall.example arn:aws:network-firewall:us-west-1:123456789012:firewall/example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-d895065359f42b9e93c9bc33e9ace68cddf94a70bf435d843a23b560380a98bd -->
+<!-- cache-key: cdktf-0.20.8 input-5609d580391c0f01c8b952a6f2ce60d129bd4679fcb375d05ec2f59b6b90c5ee -->

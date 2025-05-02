@@ -17,12 +17,10 @@ var (
 
 	FindAttachmentByLoadBalancerName          = findAttachmentByLoadBalancerName
 	FindAttachmentByTargetGroupARN            = findAttachmentByTargetGroupARN
-	FindGroupByName                           = findGroupByName
 	FindInstanceRefreshes                     = findInstanceRefreshes
 	FindLaunchConfigurationByName             = findLaunchConfigurationByName
 	FindLifecycleHookByTwoPartKey             = findLifecycleHookByTwoPartKey
 	FindNotificationsByTwoPartKey             = findNotificationsByTwoPartKey
-	FindScalingPolicyByTwoPartKey             = findScalingPolicyByTwoPartKey
 	FindScheduleByTwoPartKey                  = findScheduleByTwoPartKey
 	FindTag                                   = findTag
 	FindTrafficSourceAttachmentByThreePartKey = findTrafficSourceAttachmentByThreePartKey

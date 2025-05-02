@@ -7,7 +7,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/drs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/drs/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -31,8 +30,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Replication Configuration Template")
+// @FrameworkResource("aws_drs_replication_configuration_template", name="Replication Configuration Template")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/drs/types;awstypes;awstypes.ReplicationConfigurationTemplate")
+// @Testing(serialize=true)
 func newReplicationConfigurationTemplateResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &replicationConfigurationTemplateResource{}
 
@@ -49,16 +50,10 @@ type replicationConfigurationTemplateResource struct {
 	framework.WithTimeouts
 }
 
-func (r *replicationConfigurationTemplateResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_drs_replication_configuration_template"
-}
-
 func (r *replicationConfigurationTemplateResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrARN: schema.StringAttribute{
-				Computed: true,
-			},
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"associate_default_security_group": schema.BoolAttribute{
 				Required: true,
 			},
@@ -90,9 +85,7 @@ func (r *replicationConfigurationTemplateResource) Schema(ctx context.Context, r
 			"ebs_encryption_key_arn": schema.StringAttribute{
 				Optional: true,
 			},
-			names.AttrID: schema.StringAttribute{
-				Computed: true,
-			},
+			names.AttrID: framework.IDAttribute(),
 			"replication_server_instance_type": schema.StringAttribute{
 				Required: true,
 			},
@@ -104,7 +97,7 @@ func (r *replicationConfigurationTemplateResource) Schema(ctx context.Context, r
 				Required: true,
 			},
 
-			"staging_area_tags": tftags.TagsAttribute(),
+			"staging_area_tags": tftags.TagsAttributeRequired(),
 			names.AttrTags:      tftags.TagsAttribute(),
 			names.AttrTagsAll:   tftags.TagsAttributeComputedOnly(),
 
@@ -148,6 +141,8 @@ func (r *replicationConfigurationTemplateResource) Schema(ctx context.Context, r
 	}
 }
 
+var flexOpt = flex.WithFieldNamePrefix(ResNameReplicationConfigurationTemplate)
+
 func (r *replicationConfigurationTemplateResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	var data replicationConfigurationTemplateResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
@@ -157,15 +152,15 @@ func (r *replicationConfigurationTemplateResource) Create(ctx context.Context, r
 
 	conn := r.Meta().DRSClient(ctx)
 
-	input := &drs.CreateReplicationConfigurationTemplateInput{}
-	response.Diagnostics.Append(flex.Expand(context.WithValue(ctx, flex.ResourcePrefix, ResPrefixReplicationConfigurationTemplate), data, input)...)
+	var input drs.CreateReplicationConfigurationTemplateInput
+	response.Diagnostics.Append(flex.Expand(ctx, data, &input, flexOpt)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	input.Tags = getTagsIn(ctx)
 
-	_, err := conn.CreateReplicationConfigurationTemplate(ctx, input)
+	_, err := conn.CreateReplicationConfigurationTemplate(ctx, &input)
 	if err != nil {
 		create.AddError(&response.Diagnostics, names.DRS, create.ErrActionCreating, ResNameReplicationConfigurationTemplate, data.ID.ValueString(), err)
 
@@ -180,7 +175,7 @@ func (r *replicationConfigurationTemplateResource) Create(ctx context.Context, r
 		return
 	}
 
-	response.Diagnostics.Append(flex.Flatten(context.WithValue(ctx, flex.ResourcePrefix, ResPrefixReplicationConfigurationTemplate), output, &data)...)
+	response.Diagnostics.Append(flex.Flatten(ctx, output, &data, flexOpt)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -212,7 +207,7 @@ func (r *replicationConfigurationTemplateResource) Read(ctx context.Context, req
 		return
 	}
 
-	response.Diagnostics.Append(flex.Flatten(context.WithValue(ctx, flex.ResourcePrefix, ResPrefixReplicationConfigurationTemplate), output, &data)...)
+	response.Diagnostics.Append(flex.Flatten(ctx, output, &data, flexOpt)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -236,7 +231,7 @@ func (r *replicationConfigurationTemplateResource) Update(ctx context.Context, r
 
 	if replicationConfigurationTemplateHasChanges(ctx, new, old) {
 		input := &drs.UpdateReplicationConfigurationTemplateInput{}
-		response.Diagnostics.Append(flex.Expand(context.WithValue(ctx, flex.ResourcePrefix, ResPrefixReplicationConfigurationTemplate), new, input)...)
+		response.Diagnostics.Append(flex.Expand(ctx, new, input, flexOpt)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -262,7 +257,7 @@ func (r *replicationConfigurationTemplateResource) Update(ctx context.Context, r
 		return
 	}
 
-	response.Diagnostics.Append(flex.Flatten(context.WithValue(ctx, flex.ResourcePrefix, ResPrefixReplicationConfigurationTemplate), output, &new)...)
+	response.Diagnostics.Append(flex.Flatten(ctx, output, &new, flexOpt)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -279,15 +274,15 @@ func (r *replicationConfigurationTemplateResource) Delete(ctx context.Context, r
 
 	conn := r.Meta().DRSClient(ctx)
 
-	tflog.Debug(ctx, "deleting DRS Replication Configuration Template", map[string]interface{}{
+	tflog.Debug(ctx, "deleting DRS Replication Configuration Template", map[string]any{
 		names.AttrID: data.ID.ValueString(),
 	})
 
 	input := &drs.DeleteReplicationConfigurationTemplateInput{
-		ReplicationConfigurationTemplateID: aws.String(data.ID.ValueString()),
+		ReplicationConfigurationTemplateID: data.ID.ValueStringPointer(),
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 5*time.Minute, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 5*time.Minute, func() (any, error) {
 		return conn.DeleteReplicationConfigurationTemplate(ctx, input)
 	}, "DependencyViolation")
 
@@ -306,10 +301,6 @@ func (r *replicationConfigurationTemplateResource) Delete(ctx context.Context, r
 
 		return
 	}
-}
-
-func (r *replicationConfigurationTemplateResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func findReplicationConfigurationTemplate(ctx context.Context, conn *drs.Client, input *drs.DescribeReplicationConfigurationTemplatesInput) (*awstypes.ReplicationConfigurationTemplate, error) {
@@ -359,7 +350,7 @@ const (
 )
 
 func statusReplicationConfigurationTemplate(ctx context.Context, conn *drs.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findReplicationConfigurationTemplateByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
@@ -427,9 +418,9 @@ type replicationConfigurationTemplateResourceModel struct {
 	ReplicationServersSecurityGroupsIDs types.List                                                                       `tfsdk:"replication_servers_security_groups_ids"`
 	StagingAreaSubnetID                 types.String                                                                     `tfsdk:"staging_area_subnet_id"`
 	UseDedicatedReplicationServer       types.Bool                                                                       `tfsdk:"use_dedicated_replication_server"`
-	StagingAreaTags                     types.Map                                                                        `tfsdk:"staging_area_tags"`
-	Tags                                types.Map                                                                        `tfsdk:"tags"`
-	TagsAll                             types.Map                                                                        `tfsdk:"tags_all"`
+	StagingAreaTags                     tftags.Map                                                                       `tfsdk:"staging_area_tags"`
+	Tags                                tftags.Map                                                                       `tfsdk:"tags"`
+	TagsAll                             tftags.Map                                                                       `tfsdk:"tags_all"`
 	Timeouts                            timeouts.Value                                                                   `tfsdk:"timeouts"`
 }
 

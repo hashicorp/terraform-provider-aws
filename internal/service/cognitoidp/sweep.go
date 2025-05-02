@@ -9,6 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
@@ -60,7 +61,6 @@ func sweepUserPoolDomains(region string) error {
 			userPool, err := findUserPoolByID(ctx, conn, userPoolID)
 
 			if err != nil {
-				log.Printf("[ERROR] Reading Cognito User Pool (%s): %s", userPoolID, err)
 				continue
 			}
 
@@ -110,6 +110,18 @@ func sweepUserPools(region string) error {
 		}
 
 		for _, v := range page.UserPools {
+			userPoolID := aws.ToString(v.Id)
+			userPool, err := findUserPoolByID(ctx, conn, userPoolID)
+
+			if err != nil {
+				continue
+			}
+
+			if deletionProtection := userPool.DeletionProtection; deletionProtection == awstypes.DeletionProtectionTypeActive {
+				log.Printf("[INFO] Skipping Cognito User Pool %s: DeletionProtection=%s", userPoolID, deletionProtection)
+				continue
+			}
+
 			r := resourceUserPool()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.Id))

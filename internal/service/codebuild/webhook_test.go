@@ -15,6 +15,7 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -46,9 +47,10 @@ func TestAccCodeBuildWebhook_bitbucket(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWebhookExists(ctx, resourceName, &webhook),
 					resource.TestCheckResourceAttr(resourceName, "branch_filter", ""),
+					resource.TestCheckResourceAttr(resourceName, "manual_creation", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "project_name", rName),
 					resource.TestMatchResourceAttr(resourceName, "payload_url", regexache.MustCompile(`^https://`)),
-					resource.TestCheckResourceAttr(resourceName, "scope_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "scope_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "secret", ""),
 					resource.TestMatchResourceAttr(resourceName, names.AttrURL, regexache.MustCompile(`^https://`)),
 				),
@@ -84,9 +86,10 @@ func TestAccCodeBuildWebhook_gitHub(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWebhookExists(ctx, resourceName, &webhook),
 					resource.TestCheckResourceAttr(resourceName, "branch_filter", ""),
+					resource.TestCheckResourceAttr(resourceName, "manual_creation", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "project_name", rName),
 					resource.TestMatchResourceAttr(resourceName, "payload_url", regexache.MustCompile(`^https://`)),
-					resource.TestCheckResourceAttr(resourceName, "scope_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "scope_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "secret", ""),
 					resource.TestMatchResourceAttr(resourceName, names.AttrURL, regexache.MustCompile(`^https://`)),
 				),
@@ -122,9 +125,10 @@ func TestAccCodeBuildWebhook_gitHubEnterprise(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWebhookExists(ctx, resourceName, &webhook),
 					resource.TestCheckResourceAttr(resourceName, "branch_filter", "dev"),
+					resource.TestCheckResourceAttr(resourceName, "manual_creation", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "project_name", rName),
 					resource.TestMatchResourceAttr(resourceName, "payload_url", regexache.MustCompile(`^https://`)),
-					resource.TestCheckResourceAttr(resourceName, "scope_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "scope_configuration.#", "0"),
 					resource.TestMatchResourceAttr(resourceName, "secret", regexache.MustCompile(`.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrURL, ""),
 				),
@@ -142,7 +146,7 @@ func TestAccCodeBuildWebhook_gitHubEnterprise(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "branch_filter", "master"),
 					resource.TestCheckResourceAttr(resourceName, "project_name", rName),
 					resource.TestMatchResourceAttr(resourceName, "payload_url", regexache.MustCompile(`^https://`)),
-					resource.TestCheckResourceAttr(resourceName, "scope_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "scope_configuration.#", "0"),
 					resource.TestMatchResourceAttr(resourceName, "secret", regexache.MustCompile(`.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrURL, ""),
 				),
@@ -224,7 +228,7 @@ func TestAccCodeBuildWebhook_scopeConfiguration(t *testing.T) {
 				Config: testAccWebhookConfig_scopeConfiguration(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebhookExists(ctx, resourceName, &webhook),
-					resource.TestCheckResourceAttr(resourceName, "scope_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "scope_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scope_configuration.0.name", rName),
 					resource.TestCheckResourceAttr(resourceName, "scope_configuration.0.scope", "GITHUB_GLOBAL"),
 				),
@@ -384,6 +388,88 @@ func TestAccCodeBuildWebhook_Disappears_project(t *testing.T) {
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodebuild.ResourceProject(), projectResourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccCodeBuildWebhook_manualCreation(t *testing.T) {
+	ctx := acctest.Context(t)
+	var webhook types.Webhook
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_codebuild_webhook.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+			testAccPreCheckSourceCredentialsForServerType(ctx, t, types.ServerTypeGithub)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeBuildServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebhookDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebhookConfig_manualCreation(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebhookExists(ctx, resourceName, &webhook),
+					resource.TestCheckResourceAttr(resourceName, "manual_creation", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"manual_creation", "secret"},
+			},
+		},
+	})
+}
+
+func TestAccCodeBuildWebhook_upgradeV5_94_1(t *testing.T) {
+	ctx := acctest.Context(t)
+	var webhook types.Webhook
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_codebuild_webhook.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+			testAccPreCheckSourceCredentialsForServerType(ctx, t, types.ServerTypeGithub)
+		},
+		ErrorCheck:   acctest.ErrorCheck(t, names.CodeBuildServiceID),
+		CheckDestroy: testAccCheckWebhookDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.94.1",
+					},
+				},
+				Config: testAccWebhookConfig_gitHub(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWebhookExists(ctx, resourceName, &webhook),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccWebhookConfig_gitHub(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWebhookExists(ctx, resourceName, &webhook),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 			},
 		},
 	})
@@ -568,4 +654,13 @@ resource "aws_codebuild_webhook" "test" {
   }
 }
 `, rName))
+}
+
+func testAccWebhookConfig_manualCreation(rName string) string {
+	return acctest.ConfigCompose(testAccProjectConfig_basic(rName), `
+resource "aws_codebuild_webhook" "test" {
+  project_name    = aws_codebuild_project.test.name
+  manual_creation = true
+}
+`)
 }

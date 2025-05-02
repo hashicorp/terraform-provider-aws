@@ -94,10 +94,13 @@ func resourceGlobalReplicationGroup() *schema.Resource {
 				Computed: true,
 			},
 			names.AttrEngineVersion: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validRedisVersionString,
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ValidateFunc: validation.Any(
+					validRedisVersionString,
+					validValkeyVersionString,
+				),
 				DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
 					if t, _ := regexp.MatchString(`[6-9]\.x`, new); t && old != "" {
 						oldVersion, err := gversion.NewVersion(old)
@@ -399,7 +402,13 @@ func resourceGlobalReplicationGroupRead(ctx context.Context, d *schema.ResourceD
 	d.Set("global_replication_group_id", globalReplicationGroup.GlobalReplicationGroupId)
 	d.Set("transit_encryption_enabled", globalReplicationGroup.TransitEncryptionEnabled)
 
-	if err := setEngineVersionRedis(d, globalReplicationGroup.EngineVersion); err != nil {
+	switch aws.ToString(globalReplicationGroup.Engine) {
+	case engineValkey:
+		err = setEngineVersionValkey(d, globalReplicationGroup.EngineVersion)
+	default:
+		err = setEngineVersionRedis(d, globalReplicationGroup.EngineVersion)
+	}
+	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading ElastiCache Replication Group (%s): %s", d.Id(), err)
 	}
 
@@ -466,8 +475,8 @@ func resourceGlobalReplicationGroupUpdate(ctx context.Context, d *schema.Resourc
 					return sdkdiag.AppendFromErr(diags, err)
 				}
 			} else if newNodeGroupCount < oldNodeGroupCount {
-				ids := tfslices.ApplyToAll(d.Get("global_node_groups").(*schema.Set).List(), func(tfMapRaw interface{}) string {
-					tfMap := tfMapRaw.(map[string]interface{})
+				ids := tfslices.ApplyToAll(d.Get("global_node_groups").(*schema.Set).List(), func(tfMapRaw any) string {
+					tfMap := tfMapRaw.(map[string]any)
 					return tfMap["global_node_group_id"].(string)
 				})
 				if err := decreaseGlobalReplicationGroupNodeGroupCount(ctx, conn, d.Id(), newNodeGroupCount, ids, d.Timeout(schema.TimeoutUpdate)); err != nil {
@@ -601,7 +610,7 @@ func deleteGlobalReplicationGroup(ctx context.Context, conn *elasticache.Client,
 		RetainPrimaryReplicationGroup: aws.Bool(true),
 	}
 
-	_, err := tfresource.RetryWhenIsA[*awstypes.InvalidGlobalReplicationGroupStateFault](ctx, readyTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsA[*awstypes.InvalidGlobalReplicationGroupStateFault](ctx, readyTimeout, func() (any, error) {
 		return conn.DeleteGlobalReplicationGroup(ctx, input)
 	})
 
@@ -669,7 +678,7 @@ func findGlobalReplicationGroups(ctx context.Context, conn *elasticache.Client, 
 }
 
 func statusGlobalReplicationGroup(ctx context.Context, conn *elasticache.Client, globalReplicationGroupID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findGlobalReplicationGroupByID(ctx, conn, globalReplicationGroupID)
 
 		if tfresource.NotFound(err) {
@@ -765,7 +774,7 @@ func findGlobalReplicationGroupMemberByID(ctx context.Context, conn *elasticache
 }
 
 func statusGlobalReplicationGroupMember(ctx context.Context, conn *elasticache.Client, globalReplicationGroupID, replicationGroupID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findGlobalReplicationGroupMemberByID(ctx, conn, globalReplicationGroupID, replicationGroupID)
 
 		if tfresource.NotFound(err) {
@@ -827,7 +836,7 @@ func flattenGlobalNodeGroups(nodeGroups []awstypes.GlobalNodeGroup) []any {
 }
 
 func flattenGlobalNodeGroup(nodeGroup awstypes.GlobalNodeGroup) map[string]any {
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := nodeGroup.GlobalNodeGroupId; v != nil {
 		m["global_node_group_id"] = aws.ToString(v)
@@ -861,7 +870,7 @@ func globalReplicationGroupNodeNumber(id string) int {
 }
 
 func diffHasChange(key ...string) customdiff.ResourceConditionFunc {
-	return func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+	return func(ctx context.Context, diff *schema.ResourceDiff, meta any) bool {
 		return diff.HasChanges(key...)
 	}
 }

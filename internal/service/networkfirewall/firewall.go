@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -46,10 +47,9 @@ func resourceFirewall() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			customdiff.ComputedIf("firewall_status", func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+			customdiff.ComputedIf("firewall_status", func(ctx context.Context, diff *schema.ResourceDiff, meta any) bool {
 				return diff.HasChange("subnet_mapping")
 			}),
-			verify.SetTagsDiff,
 		),
 
 		SchemaFunc: func() map[string]*schema.Schema {
@@ -66,6 +66,14 @@ func resourceFirewall() *schema.Resource {
 				names.AttrDescription: {
 					Type:     schema.TypeString,
 					Optional: true,
+				},
+				"enabled_analysis_types": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type:             schema.TypeString,
+						ValidateDiagFunc: enum.Validate[awstypes.EnabledAnalysisType](),
+					},
 				},
 				names.AttrEncryptionConfiguration: encryptionConfigurationSchema(),
 				"firewall_policy_arn": {
@@ -156,12 +164,12 @@ func resourceFirewall() *schema.Resource {
 	}
 }
 
-func resourceFirewallCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFirewallCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NetworkFirewallClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	input := &networkfirewall.CreateFirewallInput{
+	input := networkfirewall.CreateFirewallInput{
 		FirewallName:      aws.String(name),
 		FirewallPolicyArn: aws.String(d.Get("firewall_policy_arn").(string)),
 		SubnetMappings:    expandSubnetMappings(d.Get("subnet_mapping").(*schema.Set).List()),
@@ -177,8 +185,12 @@ func resourceFirewallCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.Description = aws.String(v.(string))
 	}
 
+	if v := d.Get("enabled_analysis_types").(*schema.Set); v.Len() > 0 {
+		input.EnabledAnalysisTypes = flex.ExpandStringyValueSet[awstypes.EnabledAnalysisType](v)
+	}
+
 	if v, ok := d.GetOk(names.AttrEncryptionConfiguration); ok {
-		input.EncryptionConfiguration = expandEncryptionConfiguration(v.([]interface{}))
+		input.EncryptionConfiguration = expandEncryptionConfiguration(v.([]any))
 	}
 
 	if v, ok := d.GetOk("firewall_policy_change_protection"); ok {
@@ -189,7 +201,7 @@ func resourceFirewallCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.SubnetChangeProtection = v.(bool)
 	}
 
-	output, err := conn.CreateFirewall(ctx, input)
+	output, err := conn.CreateFirewall(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating NetworkFirewall Firewall (%s): %s", name, err)
@@ -204,7 +216,7 @@ func resourceFirewallCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceFirewallRead(ctx, d, meta)...)
 }
 
-func resourceFirewallRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFirewallRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NetworkFirewallClient(ctx)
 
@@ -224,6 +236,7 @@ func resourceFirewallRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set(names.AttrARN, firewall.FirewallArn)
 	d.Set("delete_protection", firewall.DeleteProtection)
 	d.Set(names.AttrDescription, firewall.Description)
+	d.Set("enabled_analysis_types", firewall.EnabledAnalysisTypes)
 	if err := d.Set(names.AttrEncryptionConfiguration, flattenEncryptionConfiguration(firewall.EncryptionConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting encryption_configuration: %s", err)
 	}
@@ -245,20 +258,20 @@ func resourceFirewallRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func resourceFirewallUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFirewallUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NetworkFirewallClient(ctx)
 
 	updateToken := d.Get("update_token").(string)
 
 	if d.HasChange("delete_protection") {
-		input := &networkfirewall.UpdateFirewallDeleteProtectionInput{
+		input := networkfirewall.UpdateFirewallDeleteProtectionInput{
 			DeleteProtection: d.Get("delete_protection").(bool),
 			FirewallArn:      aws.String(d.Id()),
 			UpdateToken:      aws.String(updateToken),
 		}
 
-		output, err := conn.UpdateFirewallDeleteProtection(ctx, input)
+		output, err := conn.UpdateFirewallDeleteProtection(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating NetworkFirewall Firewall (%s) delete protection: %s", d.Id(), err)
@@ -268,13 +281,13 @@ func resourceFirewallUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if d.HasChange(names.AttrDescription) {
-		input := &networkfirewall.UpdateFirewallDescriptionInput{
+		input := networkfirewall.UpdateFirewallDescriptionInput{
 			Description: aws.String(d.Get(names.AttrDescription).(string)),
 			FirewallArn: aws.String(d.Id()),
 			UpdateToken: aws.String(updateToken),
 		}
 
-		output, err := conn.UpdateFirewallDescription(ctx, input)
+		output, err := conn.UpdateFirewallDescription(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating NetworkFirewall Firewall (%s) description: %s", d.Id(), err)
@@ -283,14 +296,30 @@ func resourceFirewallUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		updateToken = aws.ToString(output.UpdateToken)
 	}
 
+	if d.HasChange("enabled_analysis_types") {
+		input := networkfirewall.UpdateFirewallAnalysisSettingsInput{
+			EnabledAnalysisTypes: flex.ExpandStringyValueSet[awstypes.EnabledAnalysisType](d.Get("enabled_analysis_types").(*schema.Set)),
+			FirewallArn:          aws.String(d.Id()),
+			UpdateToken:          aws.String(updateToken),
+		}
+
+		output, err := conn.UpdateFirewallAnalysisSettings(ctx, &input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating NetworkFirewall Firewall (%s) enabled analysis types: %s", d.Id(), err)
+		}
+
+		updateToken = aws.ToString(output.UpdateToken)
+	}
+
 	if d.HasChange(names.AttrEncryptionConfiguration) {
-		input := &networkfirewall.UpdateFirewallEncryptionConfigurationInput{
-			EncryptionConfiguration: expandEncryptionConfiguration(d.Get(names.AttrEncryptionConfiguration).([]interface{})),
+		input := networkfirewall.UpdateFirewallEncryptionConfigurationInput{
+			EncryptionConfiguration: expandEncryptionConfiguration(d.Get(names.AttrEncryptionConfiguration).([]any)),
 			FirewallArn:             aws.String(d.Id()),
 			UpdateToken:             aws.String(updateToken),
 		}
 
-		output, err := conn.UpdateFirewallEncryptionConfiguration(ctx, input)
+		output, err := conn.UpdateFirewallEncryptionConfiguration(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating NetworkFirewall Firewall (%s) encryption configuration: %s", d.Id(), err)
@@ -303,13 +332,13 @@ func resourceFirewallUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	// to account for disabling and subsequent changes.
 
 	if d.HasChange("firewall_policy_change_protection") {
-		input := &networkfirewall.UpdateFirewallPolicyChangeProtectionInput{
+		input := networkfirewall.UpdateFirewallPolicyChangeProtectionInput{
 			FirewallArn:                    aws.String(d.Id()),
 			FirewallPolicyChangeProtection: d.Get("firewall_policy_change_protection").(bool),
 			UpdateToken:                    aws.String(updateToken),
 		}
 
-		output, err := conn.UpdateFirewallPolicyChangeProtection(ctx, input)
+		output, err := conn.UpdateFirewallPolicyChangeProtection(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating NetworkFirewall Firewall (%s) policy change protection: %s", d.Id(), err)
@@ -319,13 +348,13 @@ func resourceFirewallUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if d.HasChange("firewall_policy_arn") {
-		input := &networkfirewall.AssociateFirewallPolicyInput{
+		input := networkfirewall.AssociateFirewallPolicyInput{
 			FirewallArn:       aws.String(d.Id()),
 			FirewallPolicyArn: aws.String(d.Get("firewall_policy_arn").(string)),
 			UpdateToken:       aws.String(updateToken),
 		}
 
-		output, err := conn.AssociateFirewallPolicy(ctx, input)
+		output, err := conn.AssociateFirewallPolicy(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating NetworkFirewall Firewall (%s) firewall policy ARN: %s", d.Id(), err)
@@ -335,13 +364,13 @@ func resourceFirewallUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if d.HasChange("subnet_change_protection") {
-		input := &networkfirewall.UpdateSubnetChangeProtectionInput{
+		input := networkfirewall.UpdateSubnetChangeProtectionInput{
 			FirewallArn:            aws.String(d.Id()),
 			SubnetChangeProtection: d.Get("subnet_change_protection").(bool),
 			UpdateToken:            aws.String(updateToken),
 		}
 
-		output, err := conn.UpdateSubnetChangeProtection(ctx, input)
+		output, err := conn.UpdateSubnetChangeProtection(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating NetworkFirewall Firewall (%s) subnet change protection: %s", d.Id(), err)
@@ -355,13 +384,13 @@ func resourceFirewallUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		subnetsToRemove, subnetsToAdd := subnetMappingsDiff(o.(*schema.Set), n.(*schema.Set))
 
 		if len(subnetsToAdd) > 0 {
-			input := &networkfirewall.AssociateSubnetsInput{
+			input := networkfirewall.AssociateSubnetsInput{
 				FirewallArn:    aws.String(d.Id()),
 				SubnetMappings: subnetsToAdd,
 				UpdateToken:    aws.String(updateToken),
 			}
 
-			_, err := conn.AssociateSubnets(ctx, input)
+			_, err := conn.AssociateSubnets(ctx, &input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "associating NetworkFirewall Firewall (%s) subnets: %s", d.Id(), err)
@@ -377,13 +406,13 @@ func resourceFirewallUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		if len(subnetsToRemove) > 0 {
-			input := &networkfirewall.DisassociateSubnetsInput{
+			input := networkfirewall.DisassociateSubnetsInput{
 				FirewallArn: aws.String(d.Id()),
 				SubnetIds:   subnetsToRemove,
 				UpdateToken: aws.String(updateToken),
 			}
 
-			_, err := conn.DisassociateSubnets(ctx, input)
+			_, err := conn.DisassociateSubnets(ctx, &input)
 
 			if err == nil {
 				/*output*/ _, err := waitFirewallUpdated(ctx, conn, d.Timeout(schema.TimeoutUpdate), d.Id())
@@ -402,14 +431,15 @@ func resourceFirewallUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceFirewallRead(ctx, d, meta)...)
 }
 
-func resourceFirewallDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFirewallDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NetworkFirewallClient(ctx)
 
 	log.Printf("[DEBUG] Deleting NetworkFirewall Firewall: %s", d.Id())
-	_, err := conn.DeleteFirewall(ctx, &networkfirewall.DeleteFirewallInput{
+	input := networkfirewall.DeleteFirewallInput{
 		FirewallArn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteFirewall(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
@@ -448,15 +478,15 @@ func findFirewall(ctx context.Context, conn *networkfirewall.Client, input *netw
 }
 
 func findFirewallByARN(ctx context.Context, conn *networkfirewall.Client, arn string) (*networkfirewall.DescribeFirewallOutput, error) {
-	input := &networkfirewall.DescribeFirewallInput{
+	input := networkfirewall.DescribeFirewallInput{
 		FirewallArn: aws.String(arn),
 	}
 
-	return findFirewall(ctx, conn, input)
+	return findFirewall(ctx, conn, &input)
 }
 
 func statusFirewall(ctx context.Context, conn *networkfirewall.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findFirewallByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
@@ -526,11 +556,11 @@ func waitFirewallDeleted(ctx context.Context, conn *networkfirewall.Client, time
 	return nil, err
 }
 
-func expandSubnetMappings(tfList []interface{}) []awstypes.SubnetMapping {
+func expandSubnetMappings(tfList []any) []awstypes.SubnetMapping {
 	apiObjects := make([]awstypes.SubnetMapping, 0, len(tfList))
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -549,11 +579,11 @@ func expandSubnetMappings(tfList []interface{}) []awstypes.SubnetMapping {
 	return apiObjects
 }
 
-func expandSubnetMappingIDs(tfList []interface{}) []string {
+func expandSubnetMappingIDs(tfList []any) []string {
 	var ids []string
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -566,27 +596,27 @@ func expandSubnetMappingIDs(tfList []interface{}) []string {
 	return ids
 }
 
-func flattenFirewallStatus(apiObject *awstypes.FirewallStatus) []interface{} {
+func flattenFirewallStatus(apiObject *awstypes.FirewallStatus) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"sync_states": flattenSyncStates(apiObject.SyncStates),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenSyncStates(apiObject map[string]awstypes.SyncState) []interface{} {
+func flattenSyncStates(apiObject map[string]awstypes.SyncState) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfList := make([]interface{}, 0, len(apiObject))
+	tfList := make([]any, 0, len(apiObject))
 
 	for k, v := range apiObject {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			"attachment":               flattenAttachment(v.Attachment),
 			names.AttrAvailabilityZone: k,
 		}
@@ -597,24 +627,24 @@ func flattenSyncStates(apiObject map[string]awstypes.SyncState) []interface{} {
 	return tfList
 }
 
-func flattenAttachment(apiObject *awstypes.Attachment) []interface{} {
+func flattenAttachment(apiObject *awstypes.Attachment) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"endpoint_id":      aws.ToString(apiObject.EndpointId),
 		names.AttrSubnetID: aws.ToString(apiObject.SubnetId),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenSubnetMappings(apiObjects []awstypes.SubnetMapping) []interface{} {
-	tfList := make([]interface{}, 0, len(apiObjects))
+func flattenSubnetMappings(apiObjects []awstypes.SubnetMapping) []any {
+	tfList := make([]any, 0, len(apiObjects))
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			names.AttrIPAddressType: apiObject.IPAddressType,
 			names.AttrSubnetID:      aws.ToString(apiObject.SubnetId),
 		}

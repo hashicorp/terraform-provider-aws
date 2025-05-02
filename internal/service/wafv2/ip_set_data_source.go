@@ -56,19 +56,19 @@ func dataSourceIPSet() *schema.Resource {
 	}
 }
 
-func dataSourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 	name := d.Get(names.AttrName).(string)
 
 	var foundIpSet awstypes.IPSetSummary
-	input := &wafv2.ListIPSetsInput{
+	listInput := wafv2.ListIPSetsInput{
 		Scope: awstypes.Scope(d.Get(names.AttrScope).(string)),
 		Limit: aws.Int32(100),
 	}
 
 	for {
-		resp, err := conn.ListIPSets(ctx, input)
+		resp, err := conn.ListIPSets(ctx, &listInput)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading WAFv2 IPSets: %s", err)
 		}
@@ -87,18 +87,19 @@ func dataSourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta inter
 		if resp.NextMarker == nil {
 			break
 		}
-		input.NextMarker = resp.NextMarker
+		listInput.NextMarker = resp.NextMarker
 	}
 
 	if foundIpSet.Id == nil {
 		return sdkdiag.AppendErrorf(diags, "WAFv2 IPSet not found for name: %s", name)
 	}
 
-	resp, err := conn.GetIPSet(ctx, &wafv2.GetIPSetInput{
+	getInput := wafv2.GetIPSetInput{
 		Id:    foundIpSet.Id,
 		Name:  foundIpSet.Name,
 		Scope: awstypes.Scope(d.Get(names.AttrScope).(string)),
-	})
+	}
+	resp, err := conn.GetIPSet(ctx, &getInput)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading WAFv2 IPSet: %s", err)

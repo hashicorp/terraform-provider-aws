@@ -112,6 +112,7 @@ This resource supports the following arguments:
 
 * `projectName` - (Required) The name of the build project.
 * `buildType` - (Optional) The type of build this webhook will trigger. Valid values for this parameter are: `BUILD`, `BUILD_BATCH`.
+* `manualCreation` - (Optional) If true, CodeBuild doesn't create a webhook in GitHub and instead returns `payloadUrl` and `secret` values for the webhook. The `payloadUrl` and `secret` values in the output can be used to manually create a webhook within GitHub.
 * `branchFilter` - (Optional) A regular expression used to determine which branches get built. Default is all branches are built. We recommend using `filterGroup` over `branchFilter`.
 * `filterGroup` - (Optional) Information about the webhook's trigger. Filter group blocks are documented below.
 * `scopeConfiguration` - (Optional) Scope configuration for global or organization webhooks. Scope configuration blocks are documented below.
@@ -171,4 +172,4 @@ Using `terraform import`, import CodeBuild Webhooks using the CodeBuild Project 
 % terraform import aws_codebuild_webhook.example MyProjectName
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-432d1ea096e6232d42498a811a93eca8108a300142e9529e8a5318d11213e2a4 -->
+<!-- cache-key: cdktf-0.20.8 input-733428854118f5f5a2861fd7ba86016c9890d1d11d5350096356f407de6e36af -->

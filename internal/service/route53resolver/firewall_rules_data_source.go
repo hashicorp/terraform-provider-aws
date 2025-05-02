@@ -6,8 +6,8 @@ package route53resolver
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/route53resolver"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/route53resolver/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_route53_resolver_firewall_rules")
-func DataSourceResolverFirewallRules() *schema.Resource {
+// @SDKDataSource("aws_route53_resolver_firewall_rules", name="Firewall Rules")
+func dataSourceResolverFirewallRules() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceResolverFirewallFirewallRulesRead,
 
@@ -93,17 +93,17 @@ func DataSourceResolverFirewallRules() *schema.Resource {
 	}
 }
 
-func dataSourceResolverFirewallFirewallRulesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceResolverFirewallFirewallRulesRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
+	conn := meta.(*conns.AWSClient).Route53ResolverClient(ctx)
 
 	firewallRuleGroupID := d.Get("firewall_rule_group_id").(string)
-	rules, err := findFirewallRules(ctx, conn, firewallRuleGroupID, func(rule *route53resolver.FirewallRule) bool {
-		if v, ok := d.GetOk(names.AttrAction); ok && aws.StringValue(rule.Action) != v.(string) {
+	rules, err := findFirewallRules(ctx, conn, firewallRuleGroupID, func(rule awstypes.FirewallRule) bool {
+		if v, ok := d.GetOk(names.AttrAction); ok && string(rule.Action) != v.(string) {
 			return false
 		}
 
-		if v, ok := d.GetOk(names.AttrPriority); ok && aws.Int64Value(rule.Priority) != int64(v.(int)) {
+		if v, ok := d.GetOk(names.AttrPriority); ok && aws.ToInt32(rule.Priority) != int32(v.(int)) {
 			return false
 		}
 
@@ -129,65 +129,53 @@ func dataSourceResolverFirewallFirewallRulesRead(ctx context.Context, d *schema.
 	return diags
 }
 
-func flattenFirewallRules(apiObjects []*route53resolver.FirewallRule) []interface{} {
+func flattenFirewallRules(apiObjects []awstypes.FirewallRule) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
 		tfList = append(tfList, flattenFirewallRule(apiObject))
 	}
 
 	return tfList
 }
 
-func flattenFirewallRule(apiObject *route53resolver.FirewallRule) map[string]interface{} {
-	if apiObject == nil {
-		return nil
+func flattenFirewallRule(apiObject awstypes.FirewallRule) map[string]any {
+	tfMap := map[string]any{
+		names.AttrAction:          apiObject.Action,
+		"block_override_dns_type": apiObject.BlockOverrideDnsType,
+		"block_response":          apiObject.BlockResponse,
 	}
 
-	tfMap := map[string]interface{}{}
-
-	if apiObject.Action != nil {
-		tfMap[names.AttrAction] = aws.StringValue(apiObject.Action)
-	}
-	if apiObject.BlockOverrideDnsType != nil {
-		tfMap["block_override_dns_type"] = aws.StringValue(apiObject.BlockOverrideDnsType)
-	}
 	if apiObject.BlockOverrideDomain != nil {
-		tfMap["block_override_domain"] = aws.StringValue(apiObject.BlockOverrideDomain)
+		tfMap["block_override_domain"] = aws.ToString(apiObject.BlockOverrideDomain)
 	}
 	if apiObject.BlockOverrideTtl != nil {
-		tfMap["block_override_ttl"] = aws.Int64Value(apiObject.BlockOverrideTtl)
-	}
-	if apiObject.BlockResponse != nil {
-		tfMap["block_response"] = aws.StringValue(apiObject.BlockResponse)
+		tfMap["block_override_ttl"] = aws.ToInt32(apiObject.BlockOverrideTtl)
 	}
 	if apiObject.CreationTime != nil {
-		tfMap[names.AttrCreationTime] = aws.StringValue(apiObject.CreationTime)
+		tfMap[names.AttrCreationTime] = aws.ToString(apiObject.CreationTime)
 	}
 	if apiObject.CreatorRequestId != nil {
-		tfMap["creator_request_id"] = aws.StringValue(apiObject.CreatorRequestId)
+		tfMap["creator_request_id"] = aws.ToString(apiObject.CreatorRequestId)
 	}
 	if apiObject.FirewallDomainListId != nil {
-		tfMap["firewall_domain_list_id"] = aws.StringValue(apiObject.FirewallDomainListId)
+		tfMap["firewall_domain_list_id"] = aws.ToString(apiObject.FirewallDomainListId)
 	}
 	if apiObject.FirewallRuleGroupId != nil {
-		tfMap["firewall_rule_group_id"] = aws.StringValue(apiObject.FirewallRuleGroupId)
+		tfMap["firewall_rule_group_id"] = aws.ToString(apiObject.FirewallRuleGroupId)
 	}
 	if apiObject.ModificationTime != nil {
-		tfMap["modification_time"] = aws.StringValue(apiObject.ModificationTime)
+		tfMap["modification_time"] = aws.ToString(apiObject.ModificationTime)
 	}
 	if apiObject.Name != nil {
-		tfMap[names.AttrName] = aws.StringValue(apiObject.Name)
+		tfMap[names.AttrName] = aws.ToString(apiObject.Name)
 	}
 	if apiObject.Priority != nil {
-		tfMap[names.AttrPriority] = aws.Int64Value(apiObject.Priority)
+		tfMap[names.AttrPriority] = aws.ToInt32(apiObject.Priority)
 	}
 	return tfMap
 }

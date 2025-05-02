@@ -1,0 +1,3 @@
+```release-note:bug
+data-source/aws_subnet: Set `tags` from the `DescribeSubnets` response, removing the need for the `ec2:DescribeTags` IAM permission
+```

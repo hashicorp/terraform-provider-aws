@@ -11,7 +11,7 @@ var (
 	ResourceBucketCorsConfiguration                 = resourceBucketCorsConfiguration
 	ResourceBucketIntelligentTieringConfiguration   = resourceBucketIntelligentTieringConfiguration
 	ResourceBucketInventory                         = resourceBucketInventory
-	ResourceBucketLifecycleConfiguration            = resourceBucketLifecycleConfiguration
+	ResourceBucketLifecycleConfiguration            = newResourceBucketLifecycleConfiguration
 	ResourceBucketLogging                           = resourceBucketLogging
 	ResourceBucketMetric                            = resourceBucketMetric
 	ResourceBucketNotification                      = resourceBucketNotification
@@ -37,6 +37,7 @@ var (
 	FindBucket                            = findBucket
 	FindBucketACL                         = findBucketACL
 	FindBucketAccelerateConfiguration     = findBucketAccelerateConfiguration
+	FindBucketLifecycleConfiguration      = findBucketLifecycleConfiguration
 	FindBucketNotificationConfiguration   = findBucketNotificationConfiguration
 	FindBucketPolicy                      = findBucketPolicy
 	FindBucketRequestPayment              = findBucketRequestPayment
@@ -45,7 +46,6 @@ var (
 	FindCORSRules                         = findCORSRules
 	FindIntelligentTieringConfiguration   = findIntelligentTieringConfiguration
 	FindInventoryConfiguration            = findInventoryConfiguration
-	FindLifecycleRules                    = findLifecycleRules
 	FindLoggingEnabled                    = findLoggingEnabled
 	FindMetricsConfiguration              = findMetricsConfiguration
 	FindObjectByBucketAndKey              = findObjectByBucketAndKey
@@ -68,4 +68,18 @@ var (
 	ErrCodeNoSuchCORSConfiguration = errCodeNoSuchCORSConfiguration
 	LifecycleRuleStatusDisabled    = lifecycleRuleStatusDisabled
 	LifecycleRuleStatusEnabled     = lifecycleRuleStatusEnabled
+
+	NewObjectARN   = newObjectARN
+	ParseObjectARN = parseObjectARN
+
+	CreateResourceID = createResourceID
+	ParseResourceID  = parseResourceID
+
+	DirectoryBucketNameRegex = directoryBucketNameRegex
+
+	LifecycleConfigEqual = lifecycleConfigEqual
+)
+
+type (
+	ObjectARN = objectARN
 )

@@ -126,11 +126,11 @@ func TestAccRDSClusterRoleAssociation_Disappears_role(t *testing.T) {
 	})
 }
 
-func testAccCheckClusterRoleAssociationExists(ctx context.Context, resourceName string, v *types.DBClusterRole) resource.TestCheckFunc {
+func testAccCheckClusterRoleAssociationExists(ctx context.Context, n string, v *types.DBClusterRole) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
@@ -166,7 +166,7 @@ func testAccCheckClusterRoleAssociationDestroy(ctx context.Context) resource.Tes
 				return err
 			}
 
-			return fmt.Errorf("RDS DB Cluster IAM Role Association %s still exists", rs.Primary.ID)
+			return fmt.Errorf("RDS Cluster IAM Role Association %s still exists", rs.Primary.ID)
 		}
 
 		return nil

@@ -6,79 +6,15 @@ package ec2_test
 import (
 	"fmt"
 	"reflect"
-	"sort"
+	"slices"
 	"strconv"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
-
-func TestAvailabilityZonesSort(t *testing.T) {
-	t.Parallel()
-
-	azs := []*awstypes.AvailabilityZone{
-		{
-			ZoneName: aws.String("name_YYY"),
-			ZoneId:   aws.String("id_YYY"),
-		},
-		{
-			ZoneName: aws.String("name_AAA"),
-			ZoneId:   aws.String("id_AAA"),
-		},
-		{
-			ZoneName: aws.String("name_ZZZ"),
-			ZoneId:   aws.String("id_ZZZ"),
-		},
-		{
-			ZoneName: aws.String("name_BBB"),
-			ZoneId:   aws.String("id_BBB"),
-		},
-	}
-	sort.Slice(azs, func(i, j int) bool {
-		return aws.ToString(azs[i].ZoneName) < aws.ToString(azs[j].ZoneName)
-	})
-
-	cases := []struct {
-		Index    int
-		ZoneName string
-		ZoneId   string
-	}{
-		{
-			Index:    0,
-			ZoneName: "name_AAA",
-			ZoneId:   "id_AAA",
-		},
-		{
-			Index:    1,
-			ZoneName: "name_BBB",
-			ZoneId:   "id_BBB",
-		},
-		{
-			Index:    2,
-			ZoneName: "name_YYY",
-			ZoneId:   "id_YYY",
-		},
-		{
-			Index:    3,
-			ZoneName: "name_ZZZ",
-			ZoneId:   "id_ZZZ",
-		},
-	}
-	for _, tc := range cases {
-		az := azs[tc.Index]
-		if aws.ToString(az.ZoneName) != tc.ZoneName {
-			t.Fatalf("AvailabilityZones index %d got zone name %s, expected %s", tc.Index, aws.ToString(az.ZoneName), tc.ZoneName)
-		}
-		if aws.ToString(az.ZoneId) != tc.ZoneId {
-			t.Fatalf("AvailabilityZones index %d got zone ID %s, expected %s", tc.Index, aws.ToString(az.ZoneId), tc.ZoneId)
-		}
-	}
-}
 
 func TestAccEC2AvailabilityZonesDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -209,7 +145,7 @@ func testAccCheckAvailabilityZonesMeta(n string) resource.TestCheckFunc {
 		}
 
 		expected := actual
-		sort.Strings(expected)
+		slices.Sort(expected)
 		if !reflect.DeepEqual(expected, actual) {
 			return fmt.Errorf("AZs not sorted - expected %v, got %v", expected, actual)
 		}

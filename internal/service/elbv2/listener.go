@@ -4,10 +4,11 @@
 package elbv2
 
 import (
+	"cmp"
 	"context"
 	"fmt"
 	"log"
-	"sort"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -28,6 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -37,7 +39,7 @@ import (
 
 // @SDKResource("aws_alb_listener", name="Listener")
 // @SDKResource("aws_lb_listener", name="Listener")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types;awstypes;awstypes.Listener")
 // @Testing(importIgnore="default_action.0.forward")
 func resourceListener() *schema.Resource {
@@ -350,6 +352,12 @@ func resourceListener() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"advertise_trust_store_ca_names": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.AdvertiseTrustStoreCaNamesEnum](),
+						},
 						"ignore_client_certificate_expiry": {
 							Type:     schema.TypeBool,
 							Optional: true,
@@ -377,10 +385,143 @@ func resourceListener() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					return strings.ToUpper(v.(string))
 				},
 				ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.ProtocolEnum](),
+			},
+			"routing_http_request_x_amzn_mtls_clientcert_header_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				// Attribute only valid for HTTPS (ALB) listeners
+				DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttps),
+			},
+			"routing_http_request_x_amzn_mtls_clientcert_issuer_header_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				// Attribute only valid for HTTPS (ALB) listeners
+				DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttps),
+			},
+			"routing_http_request_x_amzn_mtls_clientcert_leaf_header_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				// Attribute only valid for HTTPS (ALB) listeners
+				DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttps),
+			},
+			"routing_http_request_x_amzn_mtls_clientcert_serial_number_header_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				// Attribute only valid for HTTPS (ALB) listeners
+				DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttps),
+			},
+			"routing_http_request_x_amzn_mtls_clientcert_subject_header_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				// Attribute only valid for HTTPS (ALB) listeners
+				DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttps),
+			},
+			"routing_http_request_x_amzn_mtls_clientcert_validity_header_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				// Attribute only valid for HTTPS (ALB) listeners
+				DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttps),
+			},
+			"routing_http_request_x_amzn_tls_cipher_suite_header_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				// Attribute only valid for HTTPS (ALB) listeners
+				DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttps),
+			},
+			"routing_http_request_x_amzn_tls_version_header_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				// Attribute only valid for HTTPS (ALB) listeners
+				DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttps),
+			},
+			"routing_http_response_access_control_allow_credentials_header_value": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				// Attribute only valid for HTTP and HTTPS (ALB) listeners
+				DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps),
+			},
+			"routing_http_response_access_control_allow_headers_header_value": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				// Attribute only valid for HTTP and HTTPS (ALB) listeners
+				DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps),
+			},
+			"routing_http_response_access_control_allow_methods_header_value": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				// Attribute only valid for HTTP and HTTPS (ALB) listeners
+				DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps),
+			},
+			"routing_http_response_access_control_allow_origin_header_value": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				// Attribute only valid for HTTP and HTTPS (ALB) listeners
+				DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps),
+			},
+			"routing_http_response_access_control_expose_headers_header_value": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				// Attribute only valid for HTTP and HTTPS (ALB) listeners
+				DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps),
+			},
+			"routing_http_response_access_control_max_age_header_value": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				// Attribute only valid for HTTP and HTTPS (ALB) listeners
+				DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps),
+			},
+			"routing_http_response_content_security_policy_header_value": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				// Attribute only valid for HTTP and HTTPS (ALB) listeners
+				DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps),
+			},
+			"routing_http_response_server_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+				// Attribute only valid for HTTP and HTTPS (ALB) listeners
+				DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps),
+			},
+			"routing_http_response_strict_transport_security_header_value": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				// Attribute only valid for HTTP and HTTPS (ALB) listeners
+				DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps),
+			},
+			"routing_http_response_x_content_type_options_header_value": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				// Attribute only valid for HTTP and HTTPS (ALB) listeners
+				DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps),
+			},
+			"routing_http_response_x_frame_options_header_value": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				// Attribute only valid for HTTP and HTTPS (ALB) listeners
+				DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps),
 			},
 			"ssl_policy": {
 				Type:     schema.TypeString,
@@ -389,10 +530,17 @@ func resourceListener() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"tcp_idle_timeout_seconds": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.IntBetween(60, 6000),
+				// Attribute only valid for TCP (NLB) and GENEVE (GWLB) listeners
+				DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumGeneve, awstypes.ProtocolEnumTcp),
+			},
 		},
 
 		CustomizeDiff: customdiff.All(
-			verify.SetTagsDiff,
 			validateListenerActionsCustomDiff(names.AttrDefaultAction),
 		),
 	}
@@ -413,7 +561,13 @@ func suppressIfDefaultActionTypeNot(t awstypes.ActionTypeEnum) schema.SchemaDiff
 	}
 }
 
-func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func suppressIfListenerProtocolNot(protocols ...awstypes.ProtocolEnum) schema.SchemaDiffSuppressFunc {
+	return func(k string, old string, new string, d *schema.ResourceData) bool {
+		return !slices.Contains(protocols, canonicalListenerProtocol(awstypes.ProtocolEnum(d.Get(names.AttrProtocol).(string)), d.Get("load_balancer_arn").(string)))
+	}
+}
+
+func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 
@@ -433,15 +587,15 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}}
 	}
 
-	if v, ok := d.GetOk(names.AttrDefaultAction); ok && len(v.([]interface{})) > 0 {
-		input.DefaultActions = expandLbListenerActions(cty.GetAttrPath(names.AttrDefaultAction), v.([]any), &diags)
+	if v, ok := d.GetOk(names.AttrDefaultAction); ok && len(v.([]any)) > 0 {
+		input.DefaultActions = expandListenerActions(cty.GetAttrPath(names.AttrDefaultAction), v.([]any), &diags)
 		if diags.HasError() {
 			return diags
 		}
 	}
 
 	if v, ok := d.GetOk("mutual_authentication"); ok {
-		input.MutualAuthentication = expandMutualAuthenticationAttributes(v.([]interface{}))
+		input.MutualAuthentication = expandMutualAuthenticationAttributes(v.([]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrPort); ok {
@@ -451,8 +605,13 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta in
 	if v, ok := d.GetOk(names.AttrProtocol); ok {
 		input.Protocol = awstypes.ProtocolEnum(v.(string))
 	} else if strings.Contains(lbARN, "loadbalancer/app/") {
-		// Keep previous default of HTTP for Application Load Balancers.
-		input.Protocol = awstypes.ProtocolEnumHttp
+		// Default to HTTP for Application Load Balancers if no protocol specified
+		// and no certificate ARN is present.
+		if _, ok := d.GetOk(names.AttrCertificateARN); ok {
+			input.Protocol = awstypes.ProtocolEnumHttps
+		} else {
+			input.Protocol = awstypes.ProtocolEnumHttp
+		}
 	}
 
 	if v, ok := d.GetOk("ssl_policy"); ok {
@@ -462,7 +621,7 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta in
 	output, err := retryListenerCreate(ctx, conn, input, d.Timeout(schema.TimeoutCreate))
 
 	// Some partitions (e.g. ISO) may not support tag-on-create.
-	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
+	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
 		input.Tags = nil
 
 		output, err = retryListenerCreate(ctx, conn, input, d.Timeout(schema.TimeoutCreate))
@@ -482,7 +641,7 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.SetId(aws.ToString(output.Listeners[0].ListenerArn))
 
-	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
 		return findListenerByARN(ctx, conn, d.Id())
 	})
 
@@ -495,7 +654,7 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta in
 		err := createTags(ctx, conn, d.Id(), tags)
 
 		// If default tags only, continue. Otherwise, error.
-		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]any)) == 0) && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
 			return append(diags, resourceListenerRead(ctx, d, meta)...)
 		}
 
@@ -504,10 +663,17 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 	}
 
+	// Listener attributes like TCP idle timeout are not supported on create.
+	if attributes := listenerAttributes.expand(d, canonicalListenerProtocol(awstypes.ProtocolEnum(d.Get(names.AttrProtocol).(string)), lbARN), false); len(attributes) > 0 {
+		if err := modifyListenerAttributes(ctx, conn, d.Id(), attributes); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+	}
+
 	return append(diags, resourceListenerRead(ctx, d, meta)...)
 }
 
-func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 
@@ -523,17 +689,17 @@ func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "reading ELBv2 Listener (%s): %s", d.Id(), err)
 	}
 
-	if listener.AlpnPolicy != nil && len(listener.AlpnPolicy) == 1 {
+	if len(listener.AlpnPolicy) == 1 {
 		d.Set("alpn_policy", listener.AlpnPolicy[0])
 	}
 	d.Set(names.AttrARN, listener.ListenerArn)
-	if listener.Certificates != nil && len(listener.Certificates) == 1 {
+	if len(listener.Certificates) == 1 {
 		d.Set(names.AttrCertificateARN, listener.Certificates[0].CertificateArn)
 	}
-	sort.Slice(listener.DefaultActions, func(i, j int) bool {
-		return aws.ToInt32(listener.DefaultActions[i].Order) < aws.ToInt32(listener.DefaultActions[j].Order)
-	})
-	if err := d.Set(names.AttrDefaultAction, flattenLbListenerActions(d, names.AttrDefaultAction, listener.DefaultActions)); err != nil {
+
+	sortListenerActions(listener.DefaultActions)
+
+	if err := d.Set(names.AttrDefaultAction, flattenListenerActions(d, names.AttrDefaultAction, listener.DefaultActions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting default_action: %s", err)
 	}
 	d.Set("load_balancer_arn", listener.LoadBalancerArn)
@@ -544,14 +710,26 @@ func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set(names.AttrProtocol, listener.Protocol)
 	d.Set("ssl_policy", listener.SslPolicy)
 
+	// DescribeListenerAttributes is not supported for 'TLS' protocol listeners.
+	if listener.Protocol != awstypes.ProtocolEnumTls {
+		attributes, err := findListenerAttributesByARN(ctx, conn, d.Id())
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading ELBv2 Listener (%s) attributes: %s", d.Id(), err)
+		}
+
+		listenerAttributes.flatten(d, attributes)
+	}
+
 	return diags
 }
 
-func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	listenerAttributeKeys := tfmaps.Keys(listenerAttributes)
+	if d.HasChangesExcept(append([]string{names.AttrTags, names.AttrTagsAll}, listenerAttributeKeys...)...) {
 		input := &elasticloadbalancingv2.ModifyListenerInput{
 			ListenerArn: aws.String(d.Id()),
 		}
@@ -567,14 +745,14 @@ func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		if d.HasChange(names.AttrDefaultAction) {
-			input.DefaultActions = expandLbListenerActions(cty.GetAttrPath(names.AttrDefaultAction), d.Get(names.AttrDefaultAction).([]any), &diags)
+			input.DefaultActions = expandListenerActions(cty.GetAttrPath(names.AttrDefaultAction), d.Get(names.AttrDefaultAction).([]any), &diags)
 			if diags.HasError() {
 				return diags
 			}
 		}
 
 		if d.HasChange("mutual_authentication") {
-			input.MutualAuthentication = expandMutualAuthenticationAttributes(d.Get("mutual_authentication").([]interface{}))
+			input.MutualAuthentication = expandMutualAuthenticationAttributes(d.Get("mutual_authentication").([]any))
 		}
 
 		if v, ok := d.GetOk(names.AttrPort); ok {
@@ -589,7 +767,7 @@ func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			input.SslPolicy = aws.String(v.(string))
 		}
 
-		_, err := tfresource.RetryWhenIsA[*awstypes.CertificateNotFoundException](ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
+		_, err := tfresource.RetryWhenIsA[*awstypes.CertificateNotFoundException](ctx, d.Timeout(schema.TimeoutUpdate), func() (any, error) {
 			return conn.ModifyListener(ctx, input)
 		})
 
@@ -598,10 +776,18 @@ func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 	}
 
+	if d.HasChanges(listenerAttributeKeys...) {
+		if attributes := listenerAttributes.expand(d, canonicalListenerProtocol(awstypes.ProtocolEnum(d.Get(names.AttrProtocol).(string)), d.Get("load_balancer_arn").(string)), true); len(attributes) > 0 {
+			if err := modifyListenerAttributes(ctx, conn, d.Id(), attributes); err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
+			}
+		}
+	}
+
 	return append(diags, resourceListenerRead(ctx, d, meta)...)
 }
 
-func resourceListenerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceListenerDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 
@@ -617,8 +803,235 @@ func resourceListenerDelete(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
+func canonicalListenerProtocol(protocol awstypes.ProtocolEnum, lbARN string) awstypes.ProtocolEnum {
+	// Protocol does not need to be explicitly set with GWLB listeners, nor is it returned by the API
+	// If protocol is not set, use the load balancer ARN to determine if listener is gateway type and set protocol appropriately
+	if protocol == awstypes.ProtocolEnum("") && strings.Contains(lbARN, "loadbalancer/gwy/") {
+		protocol = awstypes.ProtocolEnumGeneve
+	}
+
+	return protocol
+}
+
+func findListenerAttributesByARN(ctx context.Context, conn *elasticloadbalancingv2.Client, listenerARN string) ([]awstypes.ListenerAttribute, error) {
+	input := &elasticloadbalancingv2.DescribeListenerAttributesInput{
+		ListenerArn: aws.String(listenerARN),
+	}
+
+	output, err := conn.DescribeListenerAttributes(ctx, input)
+
+	if errs.IsA[*awstypes.ListenerNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Attributes, nil
+}
+
+func modifyListenerAttributes(ctx context.Context, conn *elasticloadbalancingv2.Client, arn string, attributes []awstypes.ListenerAttribute) error {
+	input := &elasticloadbalancingv2.ModifyListenerAttributesInput{
+		Attributes:  attributes,
+		ListenerArn: aws.String(arn),
+	}
+
+	_, err := conn.ModifyListenerAttributes(ctx, input)
+
+	if err != nil {
+		return fmt.Errorf("modifying ELBv2 Listener (%s) attributes: %w", arn, err)
+	}
+
+	return nil
+}
+
+type listenerAttributeInfo struct {
+	apiAttributeKey        string
+	listenerTypesSupported []awstypes.ProtocolEnum
+	tfType                 schema.ValueType
+}
+
+type listenerAttributeMap map[string]listenerAttributeInfo
+
+var listenerAttributes = listenerAttributeMap(map[string]listenerAttributeInfo{
+	// Attribute only supported on TCP and GENEVE listeners.
+	"tcp_idle_timeout_seconds": {
+		apiAttributeKey:        "tcp.idle_timeout.seconds",
+		listenerTypesSupported: []awstypes.ProtocolEnum{awstypes.ProtocolEnumTcp, awstypes.ProtocolEnumGeneve},
+		tfType:                 schema.TypeInt,
+	},
+	// Attributes only supported on HTTPS listeners.
+	"routing_http_request_x_amzn_mtls_clientcert_header_name": {
+		apiAttributeKey:        "routing.http.request.x_amzn_mtls_clientcert.header_name",
+		listenerTypesSupported: []awstypes.ProtocolEnum{awstypes.ProtocolEnumHttps},
+		tfType:                 schema.TypeString,
+	},
+	"routing_http_request_x_amzn_mtls_clientcert_issuer_header_name": {
+		apiAttributeKey:        "routing.http.request.x_amzn_mtls_clientcert_issuer.header_name",
+		listenerTypesSupported: []awstypes.ProtocolEnum{awstypes.ProtocolEnumHttps},
+		tfType:                 schema.TypeString,
+	},
+	"routing_http_request_x_amzn_mtls_clientcert_leaf_header_name": {
+		apiAttributeKey:        "routing.http.request.x_amzn_mtls_clientcert_leaf.header_name",
+		listenerTypesSupported: []awstypes.ProtocolEnum{awstypes.ProtocolEnumHttps},
+		tfType:                 schema.TypeString,
+	},
+	"routing_http_request_x_amzn_mtls_clientcert_serial_number_header_name": {
+		apiAttributeKey:        "routing.http.request.x_amzn_mtls_clientcert_serial_number.header_name",
+		listenerTypesSupported: []awstypes.ProtocolEnum{awstypes.ProtocolEnumHttps},
+		tfType:                 schema.TypeString,
+	},
+	"routing_http_request_x_amzn_mtls_clientcert_subject_header_name": {
+		apiAttributeKey:        "routing.http.request.x_amzn_mtls_clientcert_subject.header_name",
+		listenerTypesSupported: []awstypes.ProtocolEnum{awstypes.ProtocolEnumHttps},
+		tfType:                 schema.TypeString,
+	},
+	"routing_http_request_x_amzn_mtls_clientcert_validity_header_name": {
+		apiAttributeKey:        "routing.http.request.x_amzn_mtls_clientcert_validity.header_name",
+		listenerTypesSupported: []awstypes.ProtocolEnum{awstypes.ProtocolEnumHttps},
+		tfType:                 schema.TypeString,
+	},
+	"routing_http_request_x_amzn_tls_cipher_suite_header_name": {
+		apiAttributeKey:        "routing.http.request.x_amzn_tls_cipher_suite.header_name",
+		listenerTypesSupported: []awstypes.ProtocolEnum{awstypes.ProtocolEnumHttps},
+		tfType:                 schema.TypeString,
+	},
+	"routing_http_request_x_amzn_tls_version_header_name": {
+		apiAttributeKey:        "routing.http.request.x_amzn_tls_version.header_name",
+		listenerTypesSupported: []awstypes.ProtocolEnum{awstypes.ProtocolEnumHttps},
+		tfType:                 schema.TypeString,
+	},
+	// Attributes only supported on HTTPS and HTTPS listeners.
+	"routing_http_response_access_control_allow_credentials_header_value": {
+		apiAttributeKey:        "routing.http.response.access_control_allow_credentials.header_value",
+		listenerTypesSupported: []awstypes.ProtocolEnum{awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps},
+		tfType:                 schema.TypeString,
+	},
+	"routing_http_response_access_control_allow_headers_header_value": {
+		apiAttributeKey:        "routing.http.response.access_control_allow_headers.header_value",
+		listenerTypesSupported: []awstypes.ProtocolEnum{awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps},
+		tfType:                 schema.TypeString,
+	},
+	"routing_http_response_access_control_allow_methods_header_value": {
+		apiAttributeKey:        "routing.http.response.access_control_allow_methods.header_value",
+		listenerTypesSupported: []awstypes.ProtocolEnum{awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps},
+		tfType:                 schema.TypeString,
+	},
+	"routing_http_response_access_control_allow_origin_header_value": {
+		apiAttributeKey:        "routing.http.response.access_control_allow_origin.header_value",
+		listenerTypesSupported: []awstypes.ProtocolEnum{awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps},
+		tfType:                 schema.TypeString,
+	},
+	"routing_http_response_access_control_expose_headers_header_value": {
+		apiAttributeKey:        "routing.http.response.access_control_expose_headers.header_value",
+		listenerTypesSupported: []awstypes.ProtocolEnum{awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps},
+		tfType:                 schema.TypeString,
+	},
+	"routing_http_response_access_control_max_age_header_value": {
+		apiAttributeKey:        "routing.http.response.access_control_max_age.header_value",
+		listenerTypesSupported: []awstypes.ProtocolEnum{awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps},
+		tfType:                 schema.TypeString,
+	},
+	"routing_http_response_content_security_policy_header_value": {
+		apiAttributeKey:        "routing.http.response.content_security_policy.header_value",
+		listenerTypesSupported: []awstypes.ProtocolEnum{awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps},
+		tfType:                 schema.TypeString,
+	},
+	"routing_http_response_server_enabled": {
+		apiAttributeKey:        "routing.http.response.server.enabled",
+		listenerTypesSupported: []awstypes.ProtocolEnum{awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps},
+		tfType:                 schema.TypeBool,
+	},
+	"routing_http_response_strict_transport_security_header_value": {
+		apiAttributeKey:        "routing.http.response.strict_transport_security.header_value",
+		listenerTypesSupported: []awstypes.ProtocolEnum{awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps},
+		tfType:                 schema.TypeString,
+	},
+	"routing_http_response_x_content_type_options_header_value": {
+		apiAttributeKey:        "routing.http.response.x_content_type_options.header_value",
+		listenerTypesSupported: []awstypes.ProtocolEnum{awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps},
+		tfType:                 schema.TypeString,
+	},
+	"routing_http_response_x_frame_options_header_value": {
+		apiAttributeKey:        "routing.http.response.x_frame_options.header_value",
+		listenerTypesSupported: []awstypes.ProtocolEnum{awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps},
+		tfType:                 schema.TypeString,
+	},
+})
+
+func (m listenerAttributeMap) expand(d *schema.ResourceData, listenerType awstypes.ProtocolEnum, update bool) []awstypes.ListenerAttribute {
+	var apiObjects []awstypes.ListenerAttribute
+
+	for tfAttributeName, attributeInfo := range m {
+		// Skip if an update and the attribute hasn't changed.
+		if update && !d.HasChange(tfAttributeName) {
+			continue
+		}
+
+		// Not all attributes are supported on all listener types.
+		if !slices.Contains(attributeInfo.listenerTypesSupported, listenerType) {
+			continue
+		}
+
+		switch v, t, k := d.Get(tfAttributeName), attributeInfo.tfType, aws.String(attributeInfo.apiAttributeKey); t {
+		case schema.TypeBool:
+			v := v.(bool)
+			apiObjects = append(apiObjects, awstypes.ListenerAttribute{
+				Key:   k,
+				Value: flex.BoolValueToString(v),
+			})
+		case schema.TypeInt:
+			if v := v.(int); v != 0 {
+				apiObjects = append(apiObjects, awstypes.ListenerAttribute{
+					Key:   k,
+					Value: flex.IntValueToString(v),
+				})
+			}
+		case schema.TypeString:
+			if v := v.(string); v != "" {
+				apiObjects = append(apiObjects, awstypes.ListenerAttribute{
+					Key:   k,
+					Value: aws.String(v),
+				})
+			}
+		}
+	}
+
+	return apiObjects
+}
+
+func (m listenerAttributeMap) flatten(d *schema.ResourceData, apiObjects []awstypes.ListenerAttribute) {
+	for tfAttributeName, attributeInfo := range m {
+		k := attributeInfo.apiAttributeKey
+		i := slices.IndexFunc(apiObjects, func(v awstypes.ListenerAttribute) bool {
+			return aws.ToString(v.Key) == k
+		})
+
+		if i == -1 {
+			continue
+		}
+
+		switch v, t := apiObjects[i].Value, attributeInfo.tfType; t {
+		case schema.TypeBool:
+			d.Set(tfAttributeName, flex.StringToBoolValue(v))
+		case schema.TypeInt:
+			d.Set(tfAttributeName, flex.StringToIntValue(v))
+		case schema.TypeString:
+			d.Set(tfAttributeName, v)
+		}
+	}
+}
+
 func retryListenerCreate(ctx context.Context, conn *elasticloadbalancingv2.Client, input *elasticloadbalancingv2.CreateListenerInput, timeout time.Duration) (*elasticloadbalancingv2.CreateListenerOutput, error) {
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.CertificateNotFoundException](ctx, timeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.CertificateNotFoundException](ctx, timeout, func() (any, error) {
 		return conn.CreateListener(ctx, input)
 	})
 
@@ -687,7 +1100,7 @@ func findListeners(ctx context.Context, conn *elasticloadbalancingv2.Client, inp
 	return output, nil
 }
 
-func expandLbListenerActions(actionsPath cty.Path, l []any, diags *diag.Diagnostics) []awstypes.Action {
+func expandListenerActions(actionsPath cty.Path, l []any, diags *diag.Diagnostics) []awstypes.Action {
 	if len(l) == 0 {
 		return nil
 	}
@@ -695,18 +1108,18 @@ func expandLbListenerActions(actionsPath cty.Path, l []any, diags *diag.Diagnost
 	var actions []awstypes.Action
 
 	for i, tfMapRaw := range l {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
 
-		actions = append(actions, expandLbListenerAction(actionsPath.IndexInt(i), i, tfMap, diags))
+		actions = append(actions, expandListenerAction(actionsPath.IndexInt(i), i, tfMap, diags))
 	}
 
 	return actions
 }
 
-func expandLbListenerAction(actionPath cty.Path, i int, tfMap map[string]any, diags *diag.Diagnostics) awstypes.Action {
+func expandListenerAction(actionPath cty.Path, i int, tfMap map[string]any, diags *diag.Diagnostics) awstypes.Action {
 	action := awstypes.Action{
 		Order: aws.Int32(int32(i + 1)),
 		Type:  awstypes.ActionTypeEnum(tfMap[names.AttrType].(string)),
@@ -718,29 +1131,30 @@ func expandLbListenerAction(actionPath cty.Path, i int, tfMap map[string]any, di
 
 	switch awstypes.ActionTypeEnum(tfMap[names.AttrType].(string)) {
 	case awstypes.ActionTypeEnumForward:
+		if v, ok := tfMap["forward"].([]any); ok && len(v) > 0 {
+			action.ForwardConfig = expandListenerActionForwardConfig(v)
+		}
 		if v, ok := tfMap["target_group_arn"].(string); ok && v != "" {
 			action.TargetGroupArn = aws.String(v)
-		} else if v, ok := tfMap["forward"].([]interface{}); ok {
-			action.ForwardConfig = expandLbListenerActionForwardConfig(v)
 		}
 
 	case awstypes.ActionTypeEnumRedirect:
-		if v, ok := tfMap["redirect"].([]interface{}); ok {
-			action.RedirectConfig = expandLbListenerRedirectActionConfig(v)
+		if v, ok := tfMap["redirect"].([]any); ok {
+			action.RedirectConfig = expandListenerRedirectActionConfig(v)
 		}
 
 	case awstypes.ActionTypeEnumFixedResponse:
-		if v, ok := tfMap["fixed_response"].([]interface{}); ok {
-			action.FixedResponseConfig = expandLbListenerFixedResponseConfig(v)
+		if v, ok := tfMap["fixed_response"].([]any); ok {
+			action.FixedResponseConfig = expandListenerFixedResponseConfig(v)
 		}
 
 	case awstypes.ActionTypeEnumAuthenticateCognito:
-		if v, ok := tfMap["authenticate_cognito"].([]interface{}); ok {
-			action.AuthenticateCognitoConfig = expandLbListenerAuthenticateCognitoConfig(v)
+		if v, ok := tfMap["authenticate_cognito"].([]any); ok {
+			action.AuthenticateCognitoConfig = expandListenerAuthenticateCognitoConfig(v)
 		}
 
 	case awstypes.ActionTypeEnumAuthenticateOidc:
-		if v, ok := tfMap["authenticate_oidc"].([]interface{}); ok {
+		if v, ok := tfMap["authenticate_oidc"].([]any); ok {
 			action.AuthenticateOidcConfig = expandAuthenticateOIDCConfig(v)
 		}
 	}
@@ -750,19 +1164,19 @@ func expandLbListenerAction(actionPath cty.Path, i int, tfMap map[string]any, di
 	return action
 }
 
-func expandLbListenerAuthenticateCognitoConfig(l []interface{}) *awstypes.AuthenticateCognitoActionConfig {
+func expandListenerAuthenticateCognitoConfig(l []any) *awstypes.AuthenticateCognitoActionConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := l[0].(map[string]interface{})
+	tfMap, ok := l[0].(map[string]any)
 
 	if !ok {
 		return nil
 	}
 
 	config := &awstypes.AuthenticateCognitoActionConfig{
-		AuthenticationRequestExtraParams: flex.ExpandStringValueMap(tfMap["authentication_request_extra_params"].(map[string]interface{})),
+		AuthenticationRequestExtraParams: flex.ExpandStringValueMap(tfMap["authentication_request_extra_params"].(map[string]any)),
 		UserPoolArn:                      aws.String(tfMap["user_pool_arn"].(string)),
 		UserPoolClientId:                 aws.String(tfMap["user_pool_client_id"].(string)),
 		UserPoolDomain:                   aws.String(tfMap["user_pool_domain"].(string)),
@@ -787,19 +1201,19 @@ func expandLbListenerAuthenticateCognitoConfig(l []interface{}) *awstypes.Authen
 	return config
 }
 
-func expandAuthenticateOIDCConfig(l []interface{}) *awstypes.AuthenticateOidcActionConfig {
+func expandAuthenticateOIDCConfig(l []any) *awstypes.AuthenticateOidcActionConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := l[0].(map[string]interface{})
+	tfMap, ok := l[0].(map[string]any)
 
 	if !ok {
 		return nil
 	}
 
 	config := &awstypes.AuthenticateOidcActionConfig{
-		AuthenticationRequestExtraParams: flex.ExpandStringValueMap(tfMap["authentication_request_extra_params"].(map[string]interface{})),
+		AuthenticationRequestExtraParams: flex.ExpandStringValueMap(tfMap["authentication_request_extra_params"].(map[string]any)),
 		AuthorizationEndpoint:            aws.String(tfMap["authorization_endpoint"].(string)),
 		ClientId:                         aws.String(tfMap[names.AttrClientID].(string)),
 		ClientSecret:                     aws.String(tfMap[names.AttrClientSecret].(string)),
@@ -827,51 +1241,71 @@ func expandAuthenticateOIDCConfig(l []interface{}) *awstypes.AuthenticateOidcAct
 	return config
 }
 
-func expandLbListenerFixedResponseConfig(l []interface{}) *awstypes.FixedResponseActionConfig {
+func expandListenerFixedResponseConfig(l []any) *awstypes.FixedResponseActionConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := l[0].(map[string]interface{})
+	tfMap, ok := l[0].(map[string]any)
 
 	if !ok {
 		return nil
 	}
 
-	return &awstypes.FixedResponseActionConfig{
-		ContentType: aws.String(tfMap[names.AttrContentType].(string)),
-		MessageBody: aws.String(tfMap["message_body"].(string)),
-		StatusCode:  aws.String(tfMap[names.AttrStatusCode].(string)),
+	fr := &awstypes.FixedResponseActionConfig{
+		StatusCode: aws.String(tfMap[names.AttrStatusCode].(string)),
 	}
+
+	if v, ok := tfMap[names.AttrContentType]; ok {
+		fr.ContentType = aws.String(v.(string))
+	}
+	if v, ok := tfMap["message_body"]; ok {
+		fr.MessageBody = aws.String(v.(string))
+	}
+
+	return fr
 }
 
-func expandLbListenerRedirectActionConfig(l []interface{}) *awstypes.RedirectActionConfig {
+func expandListenerRedirectActionConfig(l []any) *awstypes.RedirectActionConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := l[0].(map[string]interface{})
+	tfMap, ok := l[0].(map[string]any)
 
 	if !ok {
 		return nil
 	}
 
-	return &awstypes.RedirectActionConfig{
-		Host:       aws.String(tfMap["host"].(string)),
-		Path:       aws.String(tfMap[names.AttrPath].(string)),
-		Port:       aws.String(tfMap[names.AttrPort].(string)),
-		Protocol:   aws.String(tfMap[names.AttrProtocol].(string)),
-		Query:      aws.String(tfMap["query"].(string)),
+	rac := &awstypes.RedirectActionConfig{
 		StatusCode: awstypes.RedirectActionStatusCodeEnum(tfMap[names.AttrStatusCode].(string)),
 	}
+
+	if v, ok := tfMap["host"]; ok {
+		rac.Host = aws.String(v.(string))
+	}
+	if v, ok := tfMap[names.AttrPath]; ok {
+		rac.Path = aws.String(v.(string))
+	}
+	if v, ok := tfMap[names.AttrPort]; ok {
+		rac.Port = aws.String(v.(string))
+	}
+	if v, ok := tfMap[names.AttrProtocol]; ok {
+		rac.Protocol = aws.String(v.(string))
+	}
+	if v, ok := tfMap["query"]; ok {
+		rac.Query = aws.String(v.(string))
+	}
+
+	return rac
 }
 
-func expandLbListenerActionForwardConfig(l []interface{}) *awstypes.ForwardActionConfig {
+func expandListenerActionForwardConfig(l []any) *awstypes.ForwardActionConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := l[0].(map[string]interface{})
+	tfMap, ok := l[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -879,22 +1313,22 @@ func expandLbListenerActionForwardConfig(l []interface{}) *awstypes.ForwardActio
 	config := &awstypes.ForwardActionConfig{}
 
 	if v, ok := tfMap["target_group"].(*schema.Set); ok && v.Len() > 0 {
-		config.TargetGroups = expandLbListenerActionForwardConfigTargetGroups(v.List())
+		config.TargetGroups = expandListenerActionForwardConfigTargetGroups(v.List())
 	}
 
-	if v, ok := tfMap["stickiness"].([]interface{}); ok && len(v) > 0 {
-		config.TargetGroupStickinessConfig = expandLbListenerActionForwardConfigTargetGroupStickinessConfig(v)
+	if v, ok := tfMap["stickiness"].([]any); ok && len(v) > 0 {
+		config.TargetGroupStickinessConfig = expandListenerActionForwardConfigTargetGroupStickinessConfig(v)
 	}
 
 	return config
 }
 
-func expandMutualAuthenticationAttributes(l []interface{}) *awstypes.MutualAuthenticationAttributes {
-	if len(l) == 0 || l[0] == nil {
+func expandMutualAuthenticationAttributes(tfList []any) *awstypes.MutualAuthenticationAttributes {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := l[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -910,15 +1344,20 @@ func expandMutualAuthenticationAttributes(l []interface{}) *awstypes.MutualAuthe
 			TrustStoreArn: aws.String(tfMap["trust_store_arn"].(string)),
 		}
 	default:
-		return &awstypes.MutualAuthenticationAttributes{
+		apiObject := &awstypes.MutualAuthenticationAttributes{
+			IgnoreClientCertificateExpiry: aws.Bool(tfMap["ignore_client_certificate_expiry"].(bool)),
 			Mode:                          aws.String(mode),
 			TrustStoreArn:                 aws.String(tfMap["trust_store_arn"].(string)),
-			IgnoreClientCertificateExpiry: aws.Bool(tfMap["ignore_client_certificate_expiry"].(bool)),
 		}
+		if v, ok := tfMap["advertise_trust_store_ca_names"].(string); ok && v != "" {
+			apiObject.AdvertiseTrustStoreCaNames = awstypes.AdvertiseTrustStoreCaNamesEnum(v)
+		}
+
+		return apiObject
 	}
 }
 
-func expandLbListenerActionForwardConfigTargetGroups(l []interface{}) []awstypes.TargetGroupTuple {
+func expandListenerActionForwardConfigTargetGroups(l []any) []awstypes.TargetGroupTuple {
 	if len(l) == 0 {
 		return nil
 	}
@@ -926,14 +1365,17 @@ func expandLbListenerActionForwardConfigTargetGroups(l []interface{}) []awstypes
 	var groups []awstypes.TargetGroupTuple
 
 	for _, tfMapRaw := range l {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
 
-		group := awstypes.TargetGroupTuple{
-			TargetGroupArn: aws.String(tfMap[names.AttrARN].(string)),
-			Weight:         aws.Int32(int32(tfMap[names.AttrWeight].(int))),
+		group := awstypes.TargetGroupTuple{}
+		if v, ok := tfMap[names.AttrARN]; ok && v.(string) != "" {
+			group.TargetGroupArn = aws.String(v.(string))
+		}
+		if v, ok := tfMap[names.AttrWeight]; ok {
+			group.Weight = aws.Int32(int32(v.(int)))
 		}
 
 		groups = append(groups, group)
@@ -942,53 +1384,54 @@ func expandLbListenerActionForwardConfigTargetGroups(l []interface{}) []awstypes
 	return groups
 }
 
-func expandLbListenerActionForwardConfigTargetGroupStickinessConfig(l []interface{}) *awstypes.TargetGroupStickinessConfig {
+func expandListenerActionForwardConfigTargetGroupStickinessConfig(l []any) *awstypes.TargetGroupStickinessConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := l[0].(map[string]interface{})
+	tfMap, ok := l[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	// The Plugin SDK stores a `nil` returned by the API as a `0` in the state. This is a invalid value.
-	var duration *int32
-	if v := tfMap[names.AttrDuration].(int); v > 0 {
-		duration = aws.Int32(int32(v))
+	tgs := &awstypes.TargetGroupStickinessConfig{}
+
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
+		tgs.Enabled = aws.Bool(v)
 	}
 
-	return &awstypes.TargetGroupStickinessConfig{
-		Enabled:         aws.Bool(tfMap[names.AttrEnabled].(bool)),
-		DurationSeconds: duration,
+	if v, ok := tfMap[names.AttrDuration].(int); ok && v > 0 {
+		tgs.DurationSeconds = aws.Int32(int32(v))
 	}
+
+	return tgs
 }
 
-func flattenLbListenerActions(d *schema.ResourceData, attrName string, apiObjects []awstypes.Action) []interface{} {
+func flattenListenerActions(d *schema.ResourceData, attrName string, apiObjects []awstypes.Action) []any {
 	if len(apiObjects) == 0 {
-		return []interface{}{}
+		return []any{}
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for i, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			names.AttrType: apiObject.Type,
 			"order":        aws.ToInt32(apiObject.Order),
 		}
 
 		switch apiObject.Type {
 		case awstypes.ActionTypeEnumForward:
-			flattenLbForwardAction(d, attrName, i, apiObject, tfMap)
+			flattenForwardAction(d, attrName, i, apiObject, tfMap)
 
 		case awstypes.ActionTypeEnumRedirect:
-			tfMap["redirect"] = flattenLbListenerActionRedirectConfig(apiObject.RedirectConfig)
+			tfMap["redirect"] = flattenListenerActionRedirectConfig(apiObject.RedirectConfig)
 
 		case awstypes.ActionTypeEnumFixedResponse:
-			tfMap["fixed_response"] = flattenLbListenerActionFixedResponseConfig(apiObject.FixedResponseConfig)
+			tfMap["fixed_response"] = flattenListenerActionFixedResponseConfig(apiObject.FixedResponseConfig)
 
 		case awstypes.ActionTypeEnumAuthenticateCognito:
-			tfMap["authenticate_cognito"] = flattenLbListenerActionAuthenticateCognitoConfig(apiObject.AuthenticateCognitoConfig)
+			tfMap["authenticate_cognito"] = flattenListenerActionAuthenticateCognitoConfig(apiObject.AuthenticateCognitoConfig)
 
 		case awstypes.ActionTypeEnumAuthenticateOidc:
 			// The LB API currently provides no way to read the ClientSecret
@@ -1007,29 +1450,44 @@ func flattenLbListenerActions(d *schema.ResourceData, attrName string, apiObject
 	return tfList
 }
 
-func flattenLbForwardAction(d *schema.ResourceData, attrName string, i int, awsAction awstypes.Action, actionMap map[string]any) {
+func flattenForwardAction(d *schema.ResourceData, attrName string, i int, awsAction awstypes.Action, actionMap map[string]any) {
 	// On create and update, we have a Config
 	// On refresh, we have a populated State
-	// On import, we have an empty State and empty Config
+	// On import, we have nothing:
+	//  - Config is known but null.
+	//  - State is known, not null, but empty.
+	//  - Plan is known but null.
 
+	// During import, it's impossible to determine from AWS's response, the config, the state, or the plan
+	// whether the target group ARN was defined at the top level or within a forward action. AWS returns
+	// ARNs in both the default action (top-level) and in at least one forward action, regardless of
+	// whether a forward is actually defined.
+
+	// You can specify both a target group list and a top-level target group ARN only if the ARNs match
 	if rawConfig := d.GetRawConfig(); rawConfig.IsKnown() && !rawConfig.IsNull() {
+		if _, ok := d.GetOk("default_action.0.target_group_arn"); ok {
+			actionMap["target_group_arn"] = aws.ToString(awsAction.TargetGroupArn)
+		}
 		if actions := rawConfig.GetAttr(attrName); actions.IsKnown() && !actions.IsNull() {
-			flattenLbForwardActionOneOf(actions, i, awsAction, actionMap)
+			flattenForwardActionOneOf(actions, i, awsAction, actionMap)
 			return
 		}
 	}
 
 	if rawState := d.GetRawState(); rawState.IsKnown() && !rawState.IsNull() {
-		if defaultActions := rawState.GetAttr(attrName); defaultActions.LengthInt() > 0 {
-			flattenLbForwardActionOneOf(defaultActions, i, awsAction, actionMap)
+		if _, ok := d.GetOk("default_action.0.target_group_arn"); ok {
+			actionMap["target_group_arn"] = aws.ToString(awsAction.TargetGroupArn)
+		}
+		if actions := rawState.GetAttr(attrName); actions.IsKnown() && !actions.IsNull() && actions.LengthInt() > 0 {
+			flattenForwardActionOneOf(actions, i, awsAction, actionMap)
 			return
 		}
 	}
 
-	flattenLbForwardActionBoth(awsAction, actionMap)
+	flattenForwardActionBoth(awsAction, actionMap)
 }
 
-func flattenLbForwardActionOneOf(actions cty.Value, i int, awsAction awstypes.Action, actionMap map[string]any) {
+func flattenForwardActionOneOf(actions cty.Value, i int, awsAction awstypes.Action, actionMap map[string]any) {
 	if actions.IsKnown() && !actions.IsNull() {
 		index := cty.NumberIntVal(int64(i))
 		if actions.HasIndex(index).True() {
@@ -1037,7 +1495,7 @@ func flattenLbForwardActionOneOf(actions cty.Value, i int, awsAction awstypes.Ac
 			if action.IsKnown() && !action.IsNull() {
 				forward := action.GetAttr("forward")
 				if forward.IsKnown() && forward.LengthInt() > 0 {
-					actionMap["forward"] = flattenLbListenerActionForwardConfig(awsAction.ForwardConfig)
+					actionMap["forward"] = flattenListenerActionForwardConfig(awsAction.ForwardConfig)
 				} else {
 					actionMap["target_group_arn"] = aws.ToString(awsAction.TargetGroupArn)
 				}
@@ -1046,113 +1504,165 @@ func flattenLbForwardActionOneOf(actions cty.Value, i int, awsAction awstypes.Ac
 	}
 }
 
-func flattenLbForwardActionBoth(awsAction awstypes.Action, actionMap map[string]any) {
+func flattenForwardActionBoth(awsAction awstypes.Action, actionMap map[string]any) {
 	actionMap["target_group_arn"] = aws.ToString(awsAction.TargetGroupArn)
-	actionMap["forward"] = flattenLbListenerActionForwardConfig(awsAction.ForwardConfig)
+	actionMap["forward"] = flattenListenerActionForwardConfig(awsAction.ForwardConfig)
 }
 
-func flattenMutualAuthenticationAttributes(description *awstypes.MutualAuthenticationAttributes) []interface{} {
-	if description == nil {
-		return []interface{}{}
+func flattenMutualAuthenticationAttributes(apiObject *awstypes.MutualAuthenticationAttributes) []any {
+	if apiObject == nil {
+		return []any{}
 	}
 
-	mode := aws.ToString(description.Mode)
-	if mode == mutualAuthenticationOff {
-		return []interface{}{
-			map[string]interface{}{
+	if mode := aws.ToString(apiObject.Mode); mode == mutualAuthenticationOff {
+		return []any{
+			map[string]any{
 				names.AttrMode: mode,
 			},
 		}
 	}
 
-	m := map[string]interface{}{
-		names.AttrMode:                     aws.ToString(description.Mode),
-		"trust_store_arn":                  aws.ToString(description.TrustStoreArn),
-		"ignore_client_certificate_expiry": aws.ToBool(description.IgnoreClientCertificateExpiry),
+	tfMap := map[string]any{
+		"advertise_trust_store_ca_names": apiObject.AdvertiseTrustStoreCaNames,
+	}
+	if apiObject.IgnoreClientCertificateExpiry != nil {
+		tfMap["ignore_client_certificate_expiry"] = aws.ToBool(apiObject.IgnoreClientCertificateExpiry)
+	}
+	if apiObject.Mode != nil {
+		tfMap[names.AttrMode] = aws.ToString(apiObject.Mode)
+	}
+	if apiObject.TrustStoreArn != nil {
+		tfMap["trust_store_arn"] = aws.ToString(apiObject.TrustStoreArn)
 	}
 
-	return []interface{}{m}
+	return []any{tfMap}
 }
 
-func flattenAuthenticateOIDCActionConfig(apiObject *awstypes.AuthenticateOidcActionConfig, clientSecret string) []interface{} {
+func flattenAuthenticateOIDCActionConfig(apiObject *awstypes.AuthenticateOidcActionConfig, clientSecret string) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
-		"authentication_request_extra_params": apiObject.AuthenticationRequestExtraParams,
-		"authorization_endpoint":              aws.ToString(apiObject.AuthorizationEndpoint),
-		names.AttrClientID:                    aws.ToString(apiObject.ClientId),
-		names.AttrClientSecret:                clientSecret,
-		names.AttrIssuer:                      aws.ToString(apiObject.Issuer),
-		"on_unauthenticated_request":          apiObject.OnUnauthenticatedRequest,
-		names.AttrScope:                       aws.ToString(apiObject.Scope),
-		"session_cookie_name":                 aws.ToString(apiObject.SessionCookieName),
-		"session_timeout":                     aws.ToInt64(apiObject.SessionTimeout),
-		"token_endpoint":                      aws.ToString(apiObject.TokenEndpoint),
-		"user_info_endpoint":                  aws.ToString(apiObject.UserInfoEndpoint),
+	tfMap := map[string]any{}
+
+	if apiObject.AuthenticationRequestExtraParams != nil {
+		tfMap["authentication_request_extra_params"] = apiObject.AuthenticationRequestExtraParams
+	}
+	if apiObject.AuthorizationEndpoint != nil {
+		tfMap["authorization_endpoint"] = aws.ToString(apiObject.AuthorizationEndpoint)
+	}
+	if apiObject.ClientId != nil {
+		tfMap[names.AttrClientID] = aws.ToString(apiObject.ClientId)
+	}
+	if clientSecret != "" {
+		tfMap[names.AttrClientSecret] = clientSecret
+	}
+	if apiObject.Issuer != nil {
+		tfMap[names.AttrIssuer] = aws.ToString(apiObject.Issuer)
+	}
+	if string(apiObject.OnUnauthenticatedRequest) != "" {
+		tfMap["on_unauthenticated_request"] = apiObject.OnUnauthenticatedRequest
+	}
+	if apiObject.Scope != nil {
+		tfMap[names.AttrScope] = aws.ToString(apiObject.Scope)
+	}
+	if apiObject.SessionCookieName != nil {
+		tfMap["session_cookie_name"] = aws.ToString(apiObject.SessionCookieName)
+	}
+	if apiObject.SessionTimeout != nil {
+		tfMap["session_timeout"] = aws.ToInt64(apiObject.SessionTimeout)
+	}
+	if apiObject.TokenEndpoint != nil {
+		tfMap["token_endpoint"] = aws.ToString(apiObject.TokenEndpoint)
+	}
+	if apiObject.UserInfoEndpoint != nil {
+		tfMap["user_info_endpoint"] = aws.ToString(apiObject.UserInfoEndpoint)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenLbListenerActionAuthenticateCognitoConfig(apiObject *awstypes.AuthenticateCognitoActionConfig) []interface{} {
+func flattenListenerActionAuthenticateCognitoConfig(apiObject *awstypes.AuthenticateCognitoActionConfig) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
-		"authentication_request_extra_params": apiObject.AuthenticationRequestExtraParams,
-		"on_unauthenticated_request":          apiObject.OnUnauthenticatedRequest,
-		names.AttrScope:                       aws.ToString(apiObject.Scope),
-		"session_cookie_name":                 aws.ToString(apiObject.SessionCookieName),
-		"session_timeout":                     aws.ToInt64(apiObject.SessionTimeout),
-		"user_pool_arn":                       aws.ToString(apiObject.UserPoolArn),
-		"user_pool_client_id":                 aws.ToString(apiObject.UserPoolClientId),
-		"user_pool_domain":                    aws.ToString(apiObject.UserPoolDomain),
+	tfMap := map[string]any{}
+
+	if apiObject.AuthenticationRequestExtraParams != nil {
+		tfMap["authentication_request_extra_params"] = apiObject.AuthenticationRequestExtraParams
+	}
+	if string(apiObject.OnUnauthenticatedRequest) != "" {
+		tfMap["on_unauthenticated_request"] = apiObject.OnUnauthenticatedRequest
+	}
+	if apiObject.Scope != nil {
+		tfMap[names.AttrScope] = aws.ToString(apiObject.Scope)
+	}
+	if apiObject.SessionCookieName != nil {
+		tfMap["session_cookie_name"] = aws.ToString(apiObject.SessionCookieName)
+	}
+	if apiObject.SessionTimeout != nil {
+		tfMap["session_timeout"] = aws.ToInt64(apiObject.SessionTimeout)
+	}
+	if apiObject.UserPoolArn != nil {
+		tfMap["user_pool_arn"] = aws.ToString(apiObject.UserPoolArn)
+	}
+	if apiObject.UserPoolClientId != nil {
+		tfMap["user_pool_client_id"] = aws.ToString(apiObject.UserPoolClientId)
+	}
+	if apiObject.UserPoolDomain != nil {
+		tfMap["user_pool_domain"] = aws.ToString(apiObject.UserPoolDomain)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenLbListenerActionFixedResponseConfig(config *awstypes.FixedResponseActionConfig) []interface{} {
+func flattenListenerActionFixedResponseConfig(config *awstypes.FixedResponseActionConfig) []any {
 	if config == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
-		names.AttrContentType: aws.ToString(config.ContentType),
-		"message_body":        aws.ToString(config.MessageBody),
-		names.AttrStatusCode:  aws.ToString(config.StatusCode),
+	m := map[string]any{}
+	if config.ContentType != nil {
+		m[names.AttrContentType] = aws.ToString(config.ContentType)
+	}
+	if config.MessageBody != nil {
+		m["message_body"] = aws.ToString(config.MessageBody)
+	}
+	if config.StatusCode != nil {
+		m[names.AttrStatusCode] = aws.ToString(config.StatusCode)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenLbListenerActionForwardConfig(config *awstypes.ForwardActionConfig) []interface{} {
+func flattenListenerActionForwardConfig(config *awstypes.ForwardActionConfig) []any {
 	if config == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
-		"target_group": flattenLbListenerActionForwardConfigTargetGroups(config.TargetGroups),
-		"stickiness":   flattenLbListenerActionForwardConfigTargetGroupStickinessConfig(config.TargetGroupStickinessConfig),
+	m := map[string]any{
+		"target_group": flattenListenerActionForwardConfigTargetGroups(config.TargetGroups),
+		"stickiness":   flattenListenerActionForwardConfigTargetGroupStickinessConfig(config.TargetGroupStickinessConfig),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenLbListenerActionForwardConfigTargetGroups(groups []awstypes.TargetGroupTuple) []interface{} {
+func flattenListenerActionForwardConfigTargetGroups(groups []awstypes.TargetGroupTuple) []any {
 	if len(groups) == 0 {
-		return []interface{}{}
+		return []any{}
 	}
 
-	var vGroups []interface{}
+	var vGroups []any
 
 	for _, group := range groups {
-		m := map[string]interface{}{
-			names.AttrARN:    aws.ToString(group.TargetGroupArn),
-			names.AttrWeight: aws.ToInt32(group.Weight),
+		m := map[string]any{}
+		if group.TargetGroupArn != nil {
+			m[names.AttrARN] = aws.ToString(group.TargetGroupArn)
+		}
+		if group.Weight != nil {
+			m[names.AttrWeight] = aws.ToInt32(group.Weight)
 		}
 
 		vGroups = append(vGroups, m)
@@ -1161,34 +1671,48 @@ func flattenLbListenerActionForwardConfigTargetGroups(groups []awstypes.TargetGr
 	return vGroups
 }
 
-func flattenLbListenerActionForwardConfigTargetGroupStickinessConfig(config *awstypes.TargetGroupStickinessConfig) []interface{} {
+func flattenListenerActionForwardConfigTargetGroupStickinessConfig(config *awstypes.TargetGroupStickinessConfig) []any {
 	if config == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
-		names.AttrEnabled:  aws.ToBool(config.Enabled),
-		names.AttrDuration: aws.ToInt32(config.DurationSeconds),
+	m := map[string]any{}
+	if config.Enabled != nil {
+		m[names.AttrEnabled] = aws.ToBool(config.Enabled)
+	}
+	if config.DurationSeconds != nil {
+		m[names.AttrDuration] = aws.ToInt32(config.DurationSeconds)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenLbListenerActionRedirectConfig(apiObject *awstypes.RedirectActionConfig) []interface{} {
+func flattenListenerActionRedirectConfig(apiObject *awstypes.RedirectActionConfig) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
-		"host":               aws.ToString(apiObject.Host),
-		names.AttrPath:       aws.ToString(apiObject.Path),
-		names.AttrPort:       aws.ToString(apiObject.Port),
-		names.AttrProtocol:   aws.ToString(apiObject.Protocol),
-		"query":              aws.ToString(apiObject.Query),
-		names.AttrStatusCode: apiObject.StatusCode,
+	tfMap := map[string]any{}
+	if apiObject.Host != nil {
+		tfMap["host"] = aws.ToString(apiObject.Host)
+	}
+	if apiObject.Path != nil {
+		tfMap[names.AttrPath] = aws.ToString(apiObject.Path)
+	}
+	if apiObject.Port != nil {
+		tfMap[names.AttrPort] = aws.ToString(apiObject.Port)
+	}
+	if apiObject.Protocol != nil {
+		tfMap[names.AttrProtocol] = aws.ToString(apiObject.Protocol)
+	}
+	if apiObject.Query != nil {
+		tfMap["query"] = aws.ToString(apiObject.Query)
+	}
+	if string(apiObject.StatusCode) != "" {
+		tfMap[names.AttrStatusCode] = apiObject.StatusCode
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
 const (
@@ -1266,14 +1790,34 @@ func listenerActionPlantimeValidate(actionPath cty.Path, action cty.Value, diags
 		f := action.GetAttr("forward")
 
 		// If `ignore_changes` is set, even if there is no value in the configuration, the value in RawConfig is "" on refresh.
-		if (tga.IsKnown() && !tga.IsNull() && tga.AsString() != "") && (f.IsKnown() && !f.IsNull() && f.LengthInt() > 0) {
-			*diags = append(*diags, errs.NewAttributeErrorDiagnostic(actionPath,
-				"Invalid Attribute Combination",
-				fmt.Sprintf("Only one of %q or %q can be specified.",
-					errs.PathString(actionPath.GetAttr("target_group_arn")),
-					errs.PathString(actionPath.GetAttr("forward")),
-				),
-			))
+
+		tgKnown := tga.IsKnown() && !tga.IsNull() && tga.AsString() != ""
+		fKnown := f.IsKnown() && !f.IsNull() && f.LengthInt() > 0
+
+		var tgArn string
+		if tgKnown && tga.AsString() != "" {
+			tgArn = tga.AsString()
+		}
+
+		if fKnown && tgArn != "" {
+			firstForward := f.Index(cty.NumberIntVal(0))
+			tgSet := firstForward.GetAttr("target_group")
+			if tgSet.IsKnown() && !tgSet.IsNull() && tgSet.LengthInt() > 0 {
+				tgSetIt := tgSet.ElementIterator()
+				for tgSetIt.Next() {
+					_, ftg := tgSetIt.Element()
+					ftgARN := ftg.GetAttr(names.AttrARN)
+					if ftgARN.IsKnown() && !ftgARN.IsNull() && ftgARN.AsString() != "" && tgArn != ftgARN.AsString() {
+						*diags = append(*diags, errs.NewAttributeErrorDiagnostic(actionPath,
+							"Invalid Attribute Combination",
+							fmt.Sprintf("You can specify both a top-level target group ARN (%q) and, with %q, a target group list with ARNs, only if the ARNs match.",
+								errs.PathString(actionPath.GetAttr("target_group_arn")),
+								errs.PathString(actionPath.GetAttr("forward")),
+							),
+						))
+					}
+				}
+			}
 		}
 
 		switch actionType := awstypes.ActionTypeEnum(actionType.AsString()); actionType {
@@ -1342,7 +1886,7 @@ func listenerActionRuntimeValidate(actionPath cty.Path, action map[string]any, d
 		}
 	}
 
-	if v, ok := action["forward"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := action["forward"].([]any); ok && len(v) > 0 {
 		if actionType != awstypes.ActionTypeEnumForward {
 			*diags = append(*diags, errs.NewAttributeConflictsWhenWillBeError(
 				actionPath.GetAttr("forward"),
@@ -1352,7 +1896,7 @@ func listenerActionRuntimeValidate(actionPath cty.Path, action map[string]any, d
 		}
 	}
 
-	if v, ok := action["authenticate_cognito"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := action["authenticate_cognito"].([]any); ok && len(v) > 0 {
 		if actionType != awstypes.ActionTypeEnumAuthenticateCognito {
 			*diags = append(*diags, errs.NewAttributeConflictsWhenWillBeError(
 				actionPath.GetAttr("authenticate_cognito"),
@@ -1362,7 +1906,7 @@ func listenerActionRuntimeValidate(actionPath cty.Path, action map[string]any, d
 		}
 	}
 
-	if v, ok := action["authenticate_oidc"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := action["authenticate_oidc"].([]any); ok && len(v) > 0 {
 		if actionType != awstypes.ActionTypeEnumAuthenticateOidc {
 			*diags = append(*diags, errs.NewAttributeConflictsWhenWillBeError(
 				actionPath.GetAttr("authenticate_oidc"),
@@ -1372,7 +1916,7 @@ func listenerActionRuntimeValidate(actionPath cty.Path, action map[string]any, d
 		}
 	}
 
-	if v, ok := action["fixed_response"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := action["fixed_response"].([]any); ok && len(v) > 0 {
 		if actionType != awstypes.ActionTypeEnumFixedResponse {
 			*diags = append(*diags, errs.NewAttributeConflictsWhenWillBeError(
 				actionPath.GetAttr("fixed_response"),
@@ -1382,7 +1926,7 @@ func listenerActionRuntimeValidate(actionPath cty.Path, action map[string]any, d
 		}
 	}
 
-	if v, ok := action["redirect"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := action["redirect"].([]any); ok && len(v) > 0 {
 		if actionType != awstypes.ActionTypeEnumRedirect {
 			*diags = append(*diags, errs.NewAttributeConflictsWhenWillBeError(
 				actionPath.GetAttr("redirect"),
@@ -1403,4 +1947,10 @@ func diffSuppressMissingForward(attrName string) schema.SchemaDiffSuppressFunc {
 		}
 		return false
 	}
+}
+
+func sortListenerActions(actions []awstypes.Action) {
+	slices.SortFunc(actions, func(a, b awstypes.Action) int {
+		return cmp.Compare(aws.ToInt32(a.Order), aws.ToInt32(b.Order))
+	})
 }

@@ -144,7 +144,7 @@ func TestAccElastiCacheReplicationGroupDataSource_Engine_Redis_LogDeliveryConfig
 }
 
 func testAccReplicationGroupDataSourceConfig_basic(rName string) string {
-	return acctest.ConfigAvailableAZsNoOptIn() + fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id        = %[1]q
   description                 = "test description"
@@ -159,7 +159,7 @@ resource "aws_elasticache_replication_group" "test" {
 data "aws_elasticache_replication_group" "test" {
   replication_group_id = aws_elasticache_replication_group.test.replication_group_id
 }
-`, rName)
+`, rName))
 }
 
 func testAccReplicationGroupDataSourceConfig_clusterMode(rName string) string {

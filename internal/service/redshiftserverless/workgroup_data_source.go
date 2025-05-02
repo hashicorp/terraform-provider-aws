@@ -117,13 +117,13 @@ func dataSourceWorkgroup() *schema.Resource {
 	}
 }
 
-func dataSourceWorkgroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceWorkgroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn(ctx)
+	conn := meta.(*conns.AWSClient).RedshiftServerlessClient(ctx)
 
 	workgroupName := d.Get("workgroup_name").(string)
 
-	resource, err := FindWorkgroupByName(ctx, conn, workgroupName)
+	resource, err := findWorkgroupByName(ctx, conn, workgroupName)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Redshift Serverless Workgroup (%s): %s", workgroupName, err)
@@ -131,7 +131,7 @@ func dataSourceWorkgroupRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	d.SetId(workgroupName)
 	d.Set(names.AttrARN, resource.WorkgroupArn)
-	if err := d.Set(names.AttrEndpoint, []interface{}{flattenEndpoint(resource.Endpoint)}); err != nil {
+	if err := d.Set(names.AttrEndpoint, []any{flattenEndpoint(resource.Endpoint)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting endpoint: %s", err)
 	}
 	d.Set("enhanced_vpc_routing", resource.EnhancedVpcRouting)

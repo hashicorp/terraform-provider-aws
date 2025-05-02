@@ -11,10 +11,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/docdbelastic"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/docdbelastic/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -28,13 +30,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Cluster")
+// @FrameworkResource("aws_docdbelastic_cluster", name="Cluster")
 // @Tags(identifierAttribute="arn")
 func newResourceCluster(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceCluster{}
@@ -48,15 +51,12 @@ func newResourceCluster(context.Context) (resource.ResourceWithConfigure, error)
 type resourceCluster struct {
 	framework.ResourceWithConfigure
 	framework.WithTimeouts
+	framework.WithImportByID
 }
 
 const (
 	ResNameCluster = "Cluster"
 )
-
-func (r *resourceCluster) Metadata(_ context.Context, _ resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_docdbelastic_cluster"
-}
 
 func (r *resourceCluster) Schema(ctx context.Context, _ resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{
@@ -73,12 +73,20 @@ func (r *resourceCluster) Schema(ctx context.Context, _ resource.SchemaRequest, 
 			},
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"auth_type": schema.StringAttribute{
-				Required: true,
+				CustomType: fwtypes.StringEnumType[awstypes.Auth](),
+				Required:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
-				Validators: []validator.String{
-					enum.FrameworkValidate[awstypes.Auth](),
+			},
+			"backup_retention_period": schema.Int32Attribute{
+				Optional: true,
+				Computed: true,
+				Validators: []validator.Int32{
+					int32validator.Between(1, 35),
+				},
+				PlanModifiers: []planmodifier.Int32{
+					int32planmodifier.UseStateForUnknown(),
 				},
 			},
 			names.AttrEndpoint: schema.StringAttribute{
@@ -102,9 +110,17 @@ func (r *resourceCluster) Schema(ctx context.Context, _ resource.SchemaRequest, 
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			names.AttrPreferredMaintenanceWindow: schema.StringAttribute{
+			"preferred_backup_window": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			names.AttrPreferredMaintenanceWindow: schema.StringAttribute{
+				CustomType: fwtypes.OnceAWeekWindowType,
+				Optional:   true,
+				Computed:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
@@ -119,9 +135,9 @@ func (r *resourceCluster) Schema(ctx context.Context, _ resource.SchemaRequest, 
 				},
 			},
 			names.AttrSubnetIDs: schema.SetAttribute{
-				ElementType: types.StringType,
-				Optional:    true,
-				Computed:    true,
+				CustomType: fwtypes.SetOfStringType,
+				Optional:   true,
+				Computed:   true,
 				PlanModifiers: []planmodifier.Set{
 					setplanmodifier.UseStateForUnknown(),
 				},
@@ -129,9 +145,9 @@ func (r *resourceCluster) Schema(ctx context.Context, _ resource.SchemaRequest, 
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			names.AttrVPCSecurityGroupIDs: schema.SetAttribute{
-				ElementType: types.StringType,
-				Optional:    true,
-				Computed:    true,
+				CustomType: fwtypes.SetOfStringType,
+				Optional:   true,
+				Computed:   true,
 				PlanModifiers: []planmodifier.Set{
 					setplanmodifier.UseStateForUnknown(),
 				},
@@ -161,34 +177,17 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 		return
 	}
 
-	input := &docdbelastic.CreateClusterInput{
-		ClientToken:       aws.String(id.UniqueId()),
-		AdminUserName:     flex.StringFromFramework(ctx, plan.AdminUserName),
-		AdminUserPassword: flex.StringFromFramework(ctx, plan.AdminUserPassword),
-		AuthType:          awstypes.Auth(plan.AuthType.ValueString()),
-		ClusterName:       flex.StringFromFramework(ctx, plan.Name),
-		ShardCapacity:     flex.Int32FromFramework(ctx, plan.ShardCapacity),
-		ShardCount:        flex.Int32FromFramework(ctx, plan.ShardCount),
-		Tags:              getTagsIn(ctx),
-	}
+	optionPrefix := fwflex.WithFieldNamePrefix("Cluster")
+	input := docdbelastic.CreateClusterInput{}
+	response.Diagnostics.Append(fwflex.Expand(ctx, plan, &input, optionPrefix)...)
 
-	if !plan.KmsKeyID.IsNull() || !plan.KmsKeyID.IsUnknown() {
-		input.KmsKeyId = flex.StringFromFramework(ctx, plan.KmsKeyID)
+	if response.Diagnostics.HasError() {
+		return
 	}
+	input.ClientToken = aws.String(id.UniqueId())
+	input.Tags = getTagsIn(ctx)
 
-	if !plan.PreferredMaintenanceWindow.IsNull() || !plan.PreferredMaintenanceWindow.IsUnknown() {
-		input.PreferredMaintenanceWindow = flex.StringFromFramework(ctx, plan.PreferredMaintenanceWindow)
-	}
-
-	if !plan.SubnetIds.IsNull() || !plan.SubnetIds.IsUnknown() {
-		input.SubnetIds = flex.ExpandFrameworkStringValueSet(ctx, plan.SubnetIds)
-	}
-
-	if !plan.VpcSecurityGroupIds.IsNull() || !plan.VpcSecurityGroupIds.IsUnknown() {
-		input.VpcSecurityGroupIds = flex.ExpandFrameworkStringValueSet(ctx, plan.VpcSecurityGroupIds)
-	}
-
-	createOut, err := conn.CreateCluster(ctx, input)
+	createOut, err := conn.CreateCluster(ctx, &input)
 
 	if err != nil {
 		response.Diagnostics.AddError(
@@ -199,7 +198,14 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 	}
 
 	state := plan
-	state.ID = flex.StringToFramework(ctx, createOut.Cluster.ClusterArn)
+	state.ID = fwflex.StringToFramework(ctx, createOut.Cluster.ClusterArn)
+
+	// set partial state
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), createOut.Cluster.ClusterArn)...)
+
+	if response.Diagnostics.HasError() {
+		return
+	}
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
 	out, err := waitClusterCreated(ctx, conn, state.ID.ValueString(), createTimeout)
@@ -212,7 +218,12 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 		return
 	}
 
-	state.refreshFromOutput(ctx, out)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, out, &state, optionPrefix)...)
+
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
 }
 
@@ -242,7 +253,12 @@ func (r *resourceCluster) Read(ctx context.Context, request resource.ReadRequest
 		return
 	}
 
-	state.refreshFromOutput(ctx, out)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, out, &state, fwflex.WithFieldNamePrefix("Cluster"))...)
+
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
 }
 
@@ -262,41 +278,22 @@ func (r *resourceCluster) Update(ctx context.Context, request resource.UpdateReq
 		return
 	}
 
-	if clusterHasChanges(ctx, plan, state) {
-		input := &docdbelastic.UpdateClusterInput{
-			ClientToken: aws.String(id.UniqueId()),
-			ClusterArn:  flex.StringFromFramework(ctx, state.ID),
-		}
+	diff, d := fwflex.Diff(ctx, plan, state)
+	response.Diagnostics.Append(d...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
-		if !plan.AdminUserPassword.Equal(state.AdminUserPassword) {
-			input.AdminUserPassword = flex.StringFromFramework(ctx, plan.AdminUserPassword)
+	if diff.HasChanges() {
+		input := docdbelastic.UpdateClusterInput{}
+		response.Diagnostics.Append(fwflex.Expand(ctx, plan, &input, diff.IgnoredFieldNamesOpts()...)...)
+		if response.Diagnostics.HasError() {
+			return
 		}
+		input.ClientToken = aws.String(id.UniqueId())
+		input.ClusterArn = plan.ID.ValueStringPointer()
 
-		if !plan.AuthType.Equal(state.AuthType) {
-			input.AuthType = awstypes.Auth(plan.AuthType.ValueString())
-		}
-
-		if !plan.PreferredMaintenanceWindow.Equal(state.PreferredMaintenanceWindow) {
-			input.PreferredMaintenanceWindow = flex.StringFromFramework(ctx, plan.PreferredMaintenanceWindow)
-		}
-
-		if !plan.ShardCapacity.Equal(state.ShardCapacity) {
-			input.ShardCapacity = flex.Int32FromFramework(ctx, plan.ShardCapacity)
-		}
-
-		if !plan.ShardCount.Equal(state.ShardCount) {
-			input.ShardCount = flex.Int32FromFramework(ctx, plan.ShardCount)
-		}
-
-		if !plan.SubnetIds.Equal(state.SubnetIds) {
-			input.SubnetIds = flex.ExpandFrameworkStringValueSet(ctx, plan.SubnetIds)
-		}
-
-		if !plan.VpcSecurityGroupIds.Equal(state.VpcSecurityGroupIds) {
-			input.VpcSecurityGroupIds = flex.ExpandFrameworkStringValueSet(ctx, plan.VpcSecurityGroupIds)
-		}
-
-		_, err := conn.UpdateCluster(ctx, input)
+		_, err := conn.UpdateCluster(ctx, &input)
 
 		if err != nil {
 			response.Diagnostics.AddError(
@@ -317,7 +314,12 @@ func (r *resourceCluster) Update(ctx context.Context, request resource.UpdateReq
 			return
 		}
 
-		plan.refreshFromOutput(ctx, out)
+		response.Diagnostics.Append(fwflex.Flatten(ctx, out, &plan, fwflex.WithFieldNamePrefix("Cluster"))...)
+
+		if response.Diagnostics.HasError() {
+			return
+		}
+
 		response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
 	}
 
@@ -334,12 +336,12 @@ func (r *resourceCluster) Delete(ctx context.Context, request resource.DeleteReq
 		return
 	}
 
-	tflog.Debug(ctx, "deleting DocDB Elastic Cluster", map[string]interface{}{
+	tflog.Debug(ctx, "deleting DocDB Elastic Cluster", map[string]any{
 		names.AttrID: state.ID.ValueString(),
 	})
 
 	input := &docdbelastic.DeleteClusterInput{
-		ClusterArn: flex.StringFromFramework(ctx, state.ID),
+		ClusterArn: fwflex.StringFromFramework(ctx, state.ID),
 	}
 
 	_, err := conn.DeleteCluster(ctx, input)
@@ -368,31 +370,25 @@ func (r *resourceCluster) Delete(ctx context.Context, request resource.DeleteReq
 	}
 }
 
-func (r *resourceCluster) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), request, response)
-}
-
-func (r *resourceCluster) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 type resourceClusterData struct {
-	AdminUserName              types.String   `tfsdk:"admin_user_name"`
-	AdminUserPassword          types.String   `tfsdk:"admin_user_password"`
-	ARN                        types.String   `tfsdk:"arn"`
-	AuthType                   types.String   `tfsdk:"auth_type"`
-	Endpoint                   types.String   `tfsdk:"endpoint"`
-	ID                         types.String   `tfsdk:"id"`
-	KmsKeyID                   types.String   `tfsdk:"kms_key_id"`
-	Name                       types.String   `tfsdk:"name"`
-	PreferredMaintenanceWindow types.String   `tfsdk:"preferred_maintenance_window"`
-	ShardCapacity              types.Int64    `tfsdk:"shard_capacity"`
-	ShardCount                 types.Int64    `tfsdk:"shard_count"`
-	SubnetIds                  types.Set      `tfsdk:"subnet_ids"`
-	Tags                       types.Map      `tfsdk:"tags"`
-	TagsAll                    types.Map      `tfsdk:"tags_all"`
-	Timeouts                   timeouts.Value `tfsdk:"timeouts"`
-	VpcSecurityGroupIds        types.Set      `tfsdk:"vpc_security_group_ids"`
+	AdminUserName              types.String                      `tfsdk:"admin_user_name"`
+	AdminUserPassword          types.String                      `tfsdk:"admin_user_password"`
+	ARN                        types.String                      `tfsdk:"arn"`
+	AuthType                   fwtypes.StringEnum[awstypes.Auth] `tfsdk:"auth_type"`
+	BackupRetentionPeriod      types.Int32                       `tfsdk:"backup_retention_period"`
+	Endpoint                   types.String                      `tfsdk:"endpoint"`
+	ID                         types.String                      `tfsdk:"id"`
+	KmsKeyID                   types.String                      `tfsdk:"kms_key_id"`
+	Name                       types.String                      `tfsdk:"name"`
+	PreferredBackupWindow      types.String                      `tfsdk:"preferred_backup_window"`
+	PreferredMaintenanceWindow fwtypes.OnceAWeekWindow           `tfsdk:"preferred_maintenance_window"`
+	ShardCapacity              types.Int64                       `tfsdk:"shard_capacity"`
+	ShardCount                 types.Int64                       `tfsdk:"shard_count"`
+	SubnetIds                  fwtypes.SetValueOf[types.String]  `tfsdk:"subnet_ids"`
+	Tags                       tftags.Map                        `tfsdk:"tags"`
+	TagsAll                    tftags.Map                        `tfsdk:"tags_all"`
+	Timeouts                   timeouts.Value                    `tfsdk:"timeouts"`
+	VpcSecurityGroupIds        fwtypes.SetValueOf[types.String]  `tfsdk:"vpc_security_group_ids"`
 }
 
 func waitClusterCreated(ctx context.Context, conn *docdbelastic.Client, id string, timeout time.Duration) (*awstypes.Cluster, error) {
@@ -448,7 +444,7 @@ func waitClusterDeleted(ctx context.Context, conn *docdbelastic.Client, id strin
 }
 
 func statusCluster(ctx context.Context, conn *docdbelastic.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := findClusterByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -484,29 +480,4 @@ func findClusterByID(ctx context.Context, conn *docdbelastic.Client, id string) 
 	}
 
 	return out.Cluster, nil
-}
-
-func (r *resourceClusterData) refreshFromOutput(ctx context.Context, output *awstypes.Cluster) {
-	r.AdminUserName = flex.StringToFrameworkLegacy(ctx, output.AdminUserName)
-	r.AuthType = flex.StringValueToFramework(ctx, string(output.AuthType))
-	r.ARN = flex.StringToFramework(ctx, output.ClusterArn)
-	r.Endpoint = flex.StringToFramework(ctx, output.ClusterEndpoint)
-	r.KmsKeyID = flex.StringToFramework(ctx, output.KmsKeyId)
-	r.Name = flex.StringToFramework(ctx, output.ClusterName)
-	r.PreferredMaintenanceWindow = flex.StringToFramework(ctx, output.PreferredMaintenanceWindow)
-	r.ShardCapacity = flex.Int32ToFramework(ctx, output.ShardCapacity)
-	r.ShardCount = flex.Int32ToFramework(ctx, output.ShardCount)
-	r.SubnetIds = flex.FlattenFrameworkStringValueSet(ctx, output.SubnetIds)
-	r.VpcSecurityGroupIds = flex.FlattenFrameworkStringValueSet(ctx, output.VpcSecurityGroupIds)
-}
-
-func clusterHasChanges(_ context.Context, plan, state resourceClusterData) bool {
-	return !plan.Name.Equal(state.Name) ||
-		!plan.AdminUserPassword.Equal(state.AdminUserPassword) ||
-		!plan.AuthType.Equal(state.AuthType) ||
-		!plan.PreferredMaintenanceWindow.Equal(state.PreferredMaintenanceWindow) ||
-		!plan.ShardCapacity.Equal(state.ShardCapacity) ||
-		!plan.ShardCount.Equal(state.ShardCount) ||
-		!plan.SubnetIds.Equal(state.SubnetIds) ||
-		!plan.VpcSecurityGroupIds.Equal(state.VpcSecurityGroupIds)
 }

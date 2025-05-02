@@ -10,9 +10,9 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/devicefarm"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/devicefarm/types"
-	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -93,11 +93,10 @@ func resourceDevicePool() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceDevicePoolCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDevicePoolCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
@@ -131,7 +130,7 @@ func resourceDevicePoolCreate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceDevicePoolRead(ctx, d, meta)...)
 }
 
-func resourceDevicePoolRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDevicePoolRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
@@ -153,7 +152,7 @@ func resourceDevicePoolRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set(names.AttrDescription, devicePool.Description)
 	d.Set("max_devices", devicePool.MaxDevices)
 
-	projectArn, err := decodeProjectARN(arn, "devicepool", meta)
+	projectArn, err := decodeProjectARN(ctx, meta.(*conns.AWSClient), arn, "devicepool")
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "decoding project_arn (%s): %s", arn, err)
 	}
@@ -167,7 +166,7 @@ func resourceDevicePoolRead(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourceDevicePoolUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDevicePoolUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
@@ -206,14 +205,15 @@ func resourceDevicePoolUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceDevicePoolRead(ctx, d, meta)...)
 }
 
-func resourceDevicePoolDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDevicePoolDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
 	log.Printf("[DEBUG] Deleting DeviceFarm Device Pool: %s", d.Id())
-	_, err := conn.DeleteDevicePool(ctx, &devicefarm.DeleteDevicePoolInput{
+	input := devicefarm.DeleteDevicePoolInput{
 		Arn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteDevicePool(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags
@@ -255,7 +255,7 @@ func expandDevicePoolRules(s *schema.Set) []awstypes.Rule {
 
 	for _, r := range s.List() {
 		rule := awstypes.Rule{}
-		tfMap := r.(map[string]interface{})
+		tfMap := r.(map[string]any)
 
 		if v, ok := tfMap["attribute"].(string); ok && v != "" {
 			rule.Attribute = awstypes.DeviceAttribute(v)
@@ -274,14 +274,14 @@ func expandDevicePoolRules(s *schema.Set) []awstypes.Rule {
 	return rules
 }
 
-func flattenDevicePoolRules(list []awstypes.Rule) []map[string]interface{} {
+func flattenDevicePoolRules(list []awstypes.Rule) []map[string]any {
 	if len(list) == 0 {
 		return nil
 	}
 
-	result := make([]map[string]interface{}, 0, len(list))
+	result := make([]map[string]any, 0, len(list))
 	for _, setting := range list {
-		l := map[string]interface{}{}
+		l := map[string]any{}
 
 		l["attribute"] = string(setting.Attribute)
 		l["operator"] = string(setting.Operator)
@@ -295,26 +295,20 @@ func flattenDevicePoolRules(list []awstypes.Rule) []map[string]interface{} {
 	return result
 }
 
-func decodeProjectARN(id, typ string, meta interface{}) (string, error) {
-	poolArn, err := arn.Parse(id)
+func decodeProjectARN(ctx context.Context, c *conns.AWSClient, id, typ string) (string, error) {
+	poolARN, err := arn.Parse(id)
 	if err != nil {
 		return "", fmt.Errorf("parsing '%s': %w", id, err)
 	}
 
-	poolArnResouce := poolArn.Resource
-	parts := strings.Split(strings.TrimPrefix(poolArnResouce, typ+":"), "/")
+	poolARNResource := poolARN.Resource
+	parts := strings.Split(strings.TrimPrefix(poolARNResource, typ+":"), "/")
 	if len(parts) != 2 {
-		return "", fmt.Errorf("Unexpected format of ID (%q), expected project-id/%q-id", poolArnResouce, typ)
+		return "", fmt.Errorf("Unexpected format of ID (%q), expected project-id/%q-id", poolARNResource, typ)
 	}
 
-	projectId := parts[0]
-	projectArn := arn.ARN{
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
-		Resource:  "project:" + projectId,
-		Service:   names.DeviceFarmEndpointID,
-	}.String()
+	projectID := parts[0]
+	projectARN := c.RegionalARN(ctx, "devicefarm", "project:"+projectID)
 
-	return projectArn, nil
+	return projectARN, nil
 }

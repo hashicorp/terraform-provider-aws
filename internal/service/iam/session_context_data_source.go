@@ -51,7 +51,7 @@ func dataSourceSessionContext() *schema.Resource {
 	}
 }
 
-func dataSourceSessionContextRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceSessionContextRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
@@ -59,8 +59,7 @@ func dataSourceSessionContextRead(ctx context.Context, d *schema.ResourceData, m
 
 	d.SetId(arn)
 
-	roleName := ""
-	sessionName := ""
+	var roleName, sessionName string
 	var err error
 
 	if roleName, sessionName = RoleNameSessionFromARN(arn); roleName == "" {

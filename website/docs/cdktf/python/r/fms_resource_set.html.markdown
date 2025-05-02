@@ -49,7 +49,7 @@ The following arguments are required:
 * `resource_type_list` - (Required) Determines the resources that can be associated to the resource set. Depending on your setting for max results and the number of resource sets, a single call might not return the full list.
 * `description` - (Optional) Description of the resource set.
 * `last_update_time` - (Optional) Last time that the reosurce set was changed.
-* `resource_set_status` - (Optional) Indicates whether the resource set is in or out of the admin's Region scope. Valid values are `ACTIVE` (Admin can manage and delete the resource set) or `OUT_OF_ADMIN_SCOPE` (Admin can view the resource set, but theyy can't edit or delete the resource set.)
+* `resource_set_status` - (Optional) Indicates whether the resource set is in or out of the admin's Region scope. Valid values are `ACTIVE` (Admin can manage and delete the resource set) or `OUT_OF_ADMIN_SCOPE` (Admin can view the resource set, but they can't edit or delete the resource set.)
 
 ## Attribute Reference
 
@@ -91,4 +91,4 @@ Using `terraform import`, import FMS (Firewall Manager) Resource Set using the `
 % terraform import aws_fms_resource_set.example resource_set-id-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-c25d86bf87b04f982199b73cc7664bc83aa132bdcb1592d4e0d4c94e5d21c0fe -->
+<!-- cache-key: cdktf-0.20.8 input-67e29075285b513789685cc9fcb320ea588a51cfb616661208516c819e15c4b7 -->

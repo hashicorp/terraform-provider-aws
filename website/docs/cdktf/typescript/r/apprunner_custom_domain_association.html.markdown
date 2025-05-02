@@ -12,7 +12,7 @@ description: |-
 
 Manages an App Runner Custom Domain association.
 
-~> **NOTE:** After creation, you must use the information in the `certification_validation_records` attribute to add CNAME records to your Domain Name System (DNS). For each mapped domain name, add a mapping to the target App Runner subdomain (found in the `dnsTarget` attribute) and one or more certificate validation records. App Runner then performs DNS validation to verify that you own or control the domain name you associated. App Runner tracks domain validity in a certificate stored in AWS Certificate Manager (ACM).
+~> **NOTE:** After creation, you must use the information in the `certificateValidationRecords` attribute to add CNAME records to your Domain Name System (DNS). For each mapped domain name, add a mapping to the target App Runner subdomain (found in the `dnsTarget` attribute) and one or more certificate validation records. App Runner then performs DNS validation to verify that you own or control the domain name you associated. App Runner tracks domain validity in a certificate stored in AWS Certificate Manager (ACM).
 
 ## Example Usage
 
@@ -94,4 +94,4 @@ Using `terraform import`, import App Runner Custom Domain Associations using the
 % terraform import aws_apprunner_custom_domain_association.example example.com,arn:aws:apprunner:us-east-1:123456789012:service/example-app/8fe1e10304f84fd2b0df550fe98a71fa
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-7cc3a375febd6cf6963cf65a24caeee55d47321c71cc824d65ac258b80d66ca7 -->
+<!-- cache-key: cdktf-0.20.8 input-f44a1204f60368d3f82244d217eadf1441e2e19fa6ded3141645439b4f000e68 -->

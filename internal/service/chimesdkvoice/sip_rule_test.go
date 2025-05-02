@@ -41,8 +41,8 @@ func TestAccChimeSDKVoiceSipRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "trigger_type", "RequestUriHostname"),
 					resource.TestCheckResourceAttrSet(resourceName, "trigger_value"),
-					resource.TestCheckResourceAttr(resourceName, "target_applications.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "target_applications.0.priority", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "target_applications.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_applications.0.priority", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "target_applications.0.sip_media_application_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "target_applications.0.aws_region"),
 				),
@@ -106,8 +106,8 @@ func TestAccChimeSDKVoiceSipRule_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "trigger_type", "RequestUriHostname"),
 					resource.TestCheckResourceAttrSet(resourceName, "trigger_value"),
-					resource.TestCheckResourceAttr(resourceName, "target_applications.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "target_applications.0.priority", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "target_applications.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_applications.0.priority", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "target_applications.0.sip_media_application_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "target_applications.0.aws_region"),
 				),
@@ -216,7 +216,7 @@ resource "aws_lambda_function" "test" {
   source_code_hash = filebase64sha256("test-fixtures/lambdatest.zip")
   function_name    = %[1]q
   role             = aws_iam_role.test.arn
-  runtime          = "nodejs16.x"
+  runtime          = "nodejs20.x"
   handler          = "index.handler"
 }
 

@@ -40,7 +40,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="TLS Inspection Configuration")
+// @FrameworkResource("aws_networkfirewall_tls_inspection_configuration", name="TLS Inspection Configuration")
 // @Tags(identifierAttribute="arn")
 func newTLSInspectionConfigurationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &tlsInspectionConfigurationResource{}
@@ -56,10 +56,6 @@ type tlsInspectionConfigurationResource struct {
 	framework.ResourceWithConfigure
 	framework.WithImportByID
 	framework.WithTimeouts
-}
-
-func (*tlsInspectionConfigurationResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_networkfirewall_tls_inspection_configuration"
 }
 
 func (r *tlsInspectionConfigurationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -392,7 +388,7 @@ func (r *tlsInspectionConfigurationResource) Update(ctx context.Context, request
 			return
 		}
 
-		input.UpdateToken = aws.String(old.UpdateToken.ValueString())
+		input.UpdateToken = old.UpdateToken.ValueStringPointer()
 
 		output, err := conn.UpdateTLSInspectionConfiguration(ctx, input)
 
@@ -436,7 +432,7 @@ func (r *tlsInspectionConfigurationResource) Delete(ctx context.Context, request
 	conn := r.Meta().NetworkFirewallClient(ctx)
 
 	_, err := conn.DeleteTLSInspectionConfiguration(ctx, &networkfirewall.DeleteTLSInspectionConfigurationInput{
-		TLSInspectionConfigurationArn: aws.String(data.ID.ValueString()),
+		TLSInspectionConfigurationArn: data.ID.ValueStringPointer(),
 	})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
@@ -465,10 +461,6 @@ func (r *tlsInspectionConfigurationResource) ConfigValidators(context.Context) [
 	}
 }
 
-func (r *tlsInspectionConfigurationResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func findTLSInspectionConfigurationByARN(ctx context.Context, conn *networkfirewall.Client, arn string) (*networkfirewall.DescribeTLSInspectionConfigurationOutput, error) {
 	input := &networkfirewall.DescribeTLSInspectionConfigurationInput{
 		TLSInspectionConfigurationArn: aws.String(arn),
@@ -495,7 +487,7 @@ func findTLSInspectionConfigurationByARN(ctx context.Context, conn *networkfirew
 }
 
 func statusTLSInspectionConfiguration(ctx context.Context, conn *networkfirewall.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findTLSInspectionConfigurationByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
@@ -515,7 +507,7 @@ const (
 )
 
 func statusTLSInspectionConfigurationCertificates(ctx context.Context, conn *networkfirewall.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findTLSInspectionConfigurationByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
@@ -616,8 +608,8 @@ type tlsInspectionConfigurationResourceModel struct {
 	EncryptionConfiguration        fwtypes.ListNestedObjectValueOf[encryptionConfigurationModel]    `tfsdk:"encryption_configuration"`
 	ID                             types.String                                                     `tfsdk:"id"`
 	NumberOfAssociations           types.Int64                                                      `tfsdk:"number_of_associations"`
-	Tags                           types.Map                                                        `tfsdk:"tags"`
-	TagsAll                        types.Map                                                        `tfsdk:"tags_all"`
+	Tags                           tftags.Map                                                       `tfsdk:"tags"`
+	TagsAll                        tftags.Map                                                       `tfsdk:"tags_all"`
 	Timeouts                       timeouts.Value                                                   `tfsdk:"timeouts"`
 	TLSInspectionConfiguration     fwtypes.ListNestedObjectValueOf[tlsInspectionConfigurationModel] `tfsdk:"tls_inspection_configuration"`
 	TLSInspectionConfigurationARN  types.String                                                     `tfsdk:"arn"`
@@ -646,10 +638,10 @@ type tlsInspectionConfigurationModel struct {
 }
 
 type serverCertificateConfigurationModel struct {
-	CertificateAuthorityARN           fwtypes.ARN                                                                   `tfsdk:"certificate_authority_arn"`
-	CheckCertificateRevocationsStatus fwtypes.ListNestedObjectValueOf[checkCertificateRevocationStatusActionsModel] `tfsdk:"check_certificate_revocation_status"`
-	Scopes                            fwtypes.ListNestedObjectValueOf[serverCertificateScopeModel]                  `tfsdk:"scope"`
-	ServerCertificates                fwtypes.ListNestedObjectValueOf[serverCertificateModel]                       `tfsdk:"server_certificate"`
+	CertificateAuthorityARN          fwtypes.ARN                                                                   `tfsdk:"certificate_authority_arn"`
+	CheckCertificateRevocationStatus fwtypes.ListNestedObjectValueOf[checkCertificateRevocationStatusActionsModel] `tfsdk:"check_certificate_revocation_status"`
+	Scopes                           fwtypes.ListNestedObjectValueOf[serverCertificateScopeModel]                  `tfsdk:"scope"`
+	ServerCertificates               fwtypes.ListNestedObjectValueOf[serverCertificateModel]                       `tfsdk:"server_certificate"`
 }
 
 type checkCertificateRevocationStatusActionsModel struct {

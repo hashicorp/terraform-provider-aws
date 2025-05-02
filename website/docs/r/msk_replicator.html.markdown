@@ -49,7 +49,13 @@ resource "aws_msk_replicator" "test" {
 
 
     topic_replication {
+      topic_name_configuration {
+        type = "PREFIXED_WITH_SOURCE_CLUSTER_ALIAS"
+      }
       topics_to_replicate = [".*"]
+      starting_position {
+        type = "LATEST"
+      }
     }
 
     consumer_group_replication {
@@ -68,6 +74,7 @@ The following arguments are required:
 * `service_execution_role_arn` - (Required) The ARN of the IAM role used by the replicator to access resources in the customer's account (e.g source and target clusters).
 * `replication_info_list` - (Required) A list of replication configurations, where each configuration targets a given source cluster to target cluster replication flow.
 * `description` - (Optional) A summary description of the replicator.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### kafka_cluster Argument Reference
 
@@ -89,16 +96,17 @@ The following arguments are required:
 * `target_kafka_cluster_arn` - (Required) The ARN of the target Kafka cluster.
 * `target_compression_type` - (Required) The type of compression to use writing records to target Kafka cluster.
 * `topic_replication` - (Required) Configuration relating to topic replication.
-* `starting_position` - (Optional) Configuration for specifying the position in the topics to start replicating from.
 * `consumer_group_replication` - (Required) Configuration relating to consumer group replication.
 
 ### topic_replication Argument Reference
 
+* `topic_name_configuration` - (Optional) Configuration for specifying replicated topic names should be the same as their corresponding upstream topics or prefixed with source cluster alias.
 * `topics_to_replicate` - (Required) List of regular expression patterns indicating the topics to copy.
 * `topics_to_exclude` - (Optional) List of regular expression patterns indicating the topics that should not be replica.
 * `detect_and_copy_new_topics` - (Optional) Whether to periodically check for new topics and partitions.
 * `copy_access_control_lists_for_topics` - (Optional) Whether to periodically configure remote topic ACLs to match their corresponding upstream topics.
 * `copy_topic_configurations` - (Optional) Whether to periodically configure remote topics to match their corresponding upstream topics.
+* `starting_position` - (Optional) Configuration for specifying the position in the topics to start replicating from.
 
 ### consumer_group_replication Argument Reference
 
@@ -106,6 +114,10 @@ The following arguments are required:
 * `consumer_groups_to_exclude` - (Optional) List of regular expression patterns indicating the consumer groups that should not be replicated.
 * `detect_and_copy_new_consumer_groups` - (Optional) Whether to periodically check for new consumer groups.
 * `synchronise_consumer_group_offsets` - (Optional) Whether to periodically write the translated offsets to __consumer_offsets topic in target cluster.
+
+### topic_name_configuration
+
+* `type` - (optional) The type of topic configuration name. Supports `PREFIXED_WITH_SOURCE_CLUSTER_ALIAS` and `IDENTICAL`.
 
 ### starting_position
 
@@ -115,7 +127,8 @@ The following arguments are required:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the Replicator. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `arn` - ARN of the Replicator.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
@@ -127,7 +140,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import MSK relicators using the replicator ARN. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import MSK replicators using the replicator ARN. For example:
 
 ```terraform
 import {

@@ -69,7 +69,6 @@ func ResourceKxUser() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -79,7 +78,7 @@ const (
 	kxUserIDPartCount = 2
 )
 
-func resourceKxUserCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKxUserCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	client := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
@@ -112,7 +111,7 @@ func resourceKxUserCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceKxUserRead(ctx, d, meta)...)
 }
 
-func resourceKxUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKxUserRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
@@ -135,7 +134,7 @@ func resourceKxUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func resourceKxUserUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKxUserUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
@@ -155,7 +154,7 @@ func resourceKxUserUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceKxUserRead(ctx, d, meta)...)
 }
 
-func resourceKxUserDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKxUserDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 

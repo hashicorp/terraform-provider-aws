@@ -12,10 +12,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Application")
+// @FrameworkDataSource("aws_servicecatalogappregistry_application", name="Application")
+// @Tags(identifierAttribute="arn")
 func newDataSourceApplication(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceApplication{}, nil
 }
@@ -26,10 +28,6 @@ const (
 
 type dataSourceApplication struct {
 	framework.DataSourceWithConfigure
-}
-
-func (d *dataSourceApplication) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_servicecatalogappregistry_application"
 }
 
 func (d *dataSourceApplication) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
@@ -49,11 +47,13 @@ func (d *dataSourceApplication) Schema(ctx context.Context, req datasource.Schem
 				ElementType: types.StringType,
 				Computed:    true,
 			},
+			names.AttrTags: tftags.TagsAttributeComputedOnly(),
 		},
 	}
 }
 func (d *dataSourceApplication) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().ServiceCatalogAppRegistryClient(ctx)
+	ignoreTagsConfig := d.Meta().IgnoreTagsConfig(ctx)
 
 	var data dataSourceApplicationData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
@@ -71,6 +71,10 @@ func (d *dataSourceApplication) Read(ctx context.Context, req datasource.ReadReq
 	}
 
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &data)...)
+
+	// Transparent tagging doesn't work for DataSource yet
+	data.Tags = tftags.NewMapFromMapValue(flex.FlattenFrameworkStringValueMapLegacy(ctx, KeyValueTags(ctx, out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()))
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
@@ -80,4 +84,5 @@ type dataSourceApplicationData struct {
 	ID             types.String `tfsdk:"id"`
 	Name           types.String `tfsdk:"name"`
 	ApplicationTag types.Map    `tfsdk:"application_tag"`
+	Tags           tftags.Map   `tfsdk:"tags"`
 }

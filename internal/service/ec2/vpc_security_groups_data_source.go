@@ -50,7 +50,7 @@ func dataSourceSecurityGroups() *schema.Resource {
 	}
 }
 
-func dataSourceSecurityGroupsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceSecurityGroupsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
@@ -58,7 +58,7 @@ func dataSourceSecurityGroupsRead(ctx context.Context, d *schema.ResourceData, m
 	input := &ec2.DescribeSecurityGroupsInput{}
 
 	input.Filters = append(input.Filters, newTagFilterList(
-		Tags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))),
+		svcTags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]any))),
 	)...)
 
 	input.Filters = append(input.Filters, newCustomFilterList(
@@ -79,9 +79,9 @@ func dataSourceSecurityGroupsRead(ctx context.Context, d *schema.ResourceData, m
 
 	for _, v := range output {
 		arn := arn.ARN{
-			Partition: meta.(*conns.AWSClient).Partition,
+			Partition: meta.(*conns.AWSClient).Partition(ctx),
 			Service:   names.EC2,
-			Region:    meta.(*conns.AWSClient).Region,
+			Region:    meta.(*conns.AWSClient).Region(ctx),
 			AccountID: aws.ToString(v.OwnerId),
 			Resource:  fmt.Sprintf("security-group/%s", aws.ToString(v.GroupId)),
 		}.String()
@@ -90,7 +90,7 @@ func dataSourceSecurityGroupsRead(ctx context.Context, d *schema.ResourceData, m
 		vpcIDs = append(vpcIDs, aws.ToString(v.VpcId))
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set(names.AttrARNs, arns)
 	d.Set(names.AttrIDs, securityGroupIDs)
 	d.Set("vpc_ids", vpcIDs)

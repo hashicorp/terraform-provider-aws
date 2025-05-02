@@ -19,10 +19,16 @@ var (
 	AliasNamePrefix           = aliasNamePrefix
 	FindCustomKeyStoreByID    = findCustomKeyStoreByID
 	FindGrantByTwoPartKey     = findGrantByTwoPartKey
+	FindKeyByID               = findKeyByID
 	FindKeyPolicyByTwoPartKey = findKeyPolicyByTwoPartKey
 	GrantParseResourceID      = grantParseResourceID
 	KeyARNOrIDEqual           = keyARNOrIDEqual
 	PropagationTimeout        = propagationTimeout
 	PolicyNameDefault         = policyNameDefault
 	SecretRemovedMessage      = secretRemovedMessage
+
+	ValidNameForResource   = validNameForResource
+	ValidateKeyARN         = validateKeyARN
+	ValidGrantName         = validGrantName
+	ValidNameForDataSource = validNameForDataSource
 )

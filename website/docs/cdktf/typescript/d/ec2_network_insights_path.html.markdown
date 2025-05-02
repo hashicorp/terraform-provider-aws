@@ -61,10 +61,12 @@ This data source exports the following attributes in addition to the arguments a
 * `destinationArn` - ARN of the destination.
 * `destinationIp` - IP address of the AWS resource that is the destination of the path.
 * `destinationPort` - Destination port.
+* `filterAtDestination` - Filters of the network paths at the destination.
+* `filterAtSource` - Filters of the network paths at the source.
 * `protocol` - Protocol.
 * `source` - AWS resource that is the source of the path.
 * `sourceArn` - ARN of the source.
 * `sourceIp` - IP address of the AWS resource that is the source of the path.
 * `tags` - Map of tags assigned to the resource.
 
-<!-- cache-key: cdktf-0.20.1 input-445b5efe4c93146386518473af01d6da2f1f20f20f9a688cc7349f4a0720df0a -->
+<!-- cache-key: cdktf-0.20.8 input-d0e825f8f7364e8eb844ba3b3182f743cfea15f60127fc83f4edc15613641009 -->

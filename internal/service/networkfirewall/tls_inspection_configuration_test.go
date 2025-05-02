@@ -38,29 +38,29 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_basic(t *testing.T) {
 				Config: testAccTLSInspectionConfigurationConfig_basic(rName, commonName.String(), certificateDomainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTLSInspectionConfigurationExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "network-firewall", regexache.MustCompile(`tls-configuration/+.`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "network-firewall", regexache.MustCompile(`tls-configuration/.+$`)),
 					resource.TestCheckNoResourceAttr(resourceName, "certificate_authority"),
-					resource.TestCheckResourceAttr(resourceName, "certificates.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "certificates.#", "1"),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrDescription),
-					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.key_id", "AWS_OWNED_KMS_KEY"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.type", "AWS_OWNED_KMS_KEY"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "number_of_associations"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.#", "1"),
 					resource.TestCheckNoResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.certificate_authority_arn"),
-					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.check_certificate_revocation_status.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.destination.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.check_certificate_revocation_status.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.destination.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.destination.0.address_definition", "0.0.0.0/0"),
-					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.destination_ports.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.protocols.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.destination_ports.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.protocols.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.protocols.*", "6"),
-					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.source.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.source_ports.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.server_certificate.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.source.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.source_ports.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.server_certificate.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.server_certificate.0.resource_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "tls_inspection_configuration_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "update_token"),
@@ -120,7 +120,7 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_tags(t *testing.T) {
 				Config: testAccTLSInspectionConfigurationConfig_tags1(rName, commonName.String(), certificateDomainName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTLSInspectionConfigurationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -134,7 +134,7 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_tags(t *testing.T) {
 				Config: testAccTLSInspectionConfigurationConfig_tags2(rName, commonName.String(), certificateDomainName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTLSInspectionConfigurationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -143,7 +143,7 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_tags(t *testing.T) {
 				Config: testAccTLSInspectionConfigurationConfig_tags1(rName, commonName.String(), certificateDomainName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTLSInspectionConfigurationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -170,34 +170,34 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_encryptionConfiguration(t 
 				Config: testAccTLSInspectionConfigurationConfig_encryptionConfiguration(rName, commonName.String(), certificateDomainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTLSInspectionConfigurationExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "network-firewall", regexache.MustCompile(`tls-configuration/+.`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "network-firewall", regexache.MustCompile(`tls-configuration/.+$`)),
 					resource.TestCheckNoResourceAttr(resourceName, "certificate_authority"),
-					resource.TestCheckResourceAttr(resourceName, "certificates.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "certificates.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
-					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "encryption_configuration.0.key_id", kmsKeyResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.type", "CUSTOMER_KMS"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "number_of_associations"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.#", "1"),
 					resource.TestCheckNoResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.certificate_authority_arn"),
-					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.check_certificate_revocation_status.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.destination.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.check_certificate_revocation_status.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.destination.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.destination.0.address_definition", "0.0.0.0/0"),
-					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.destination_ports.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.destination_ports.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.destination_ports.0.from_port", "443"),
 					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.destination_ports.0.to_port", "8080"),
-					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.protocols.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.protocols.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.protocols.*", "6"),
-					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.source.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.source.0.address_definition", "10.0.0.0/8"),
-					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.source_ports.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.source_ports.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.source_ports.0.from_port", "1024"),
 					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.source_ports.0.to_port", "65534"),
-					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.server_certificate.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.server_certificate.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.server_certificate.0.resource_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "tls_inspection_configuration_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "update_token"),
@@ -220,47 +220,54 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_checkCertificateRevocation
 	commonName := acctest.RandomDomain()
 	certificateDomainName := commonName.RandomSubdomain().String()
 	resourceName := "aws_networkfirewall_tls_inspection_configuration.test"
+	testExternalProviders := map[string]resource.ExternalProvider{
+		"tls": {
+			Source:            "hashicorp/tls",
+			VersionConstraint: "4.0.5",
+		},
+	}
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewall),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ExternalProviders:        testExternalProviders,
 		CheckDestroy:             testAccCheckTLSInspectionConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTLSInspectionConfigurationConfig_checkCertificateRevocationStatus(rName, commonName.String(), certificateDomainName, "REJECT", "PASS"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTLSInspectionConfigurationExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "network-firewall", regexache.MustCompile(`tls-configuration/+.`)),
-					resource.TestCheckNoResourceAttr(resourceName, "certificate_authority"),
-					resource.TestCheckResourceAttr(resourceName, "certificates.#", acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "network-firewall", regexache.MustCompile(`tls-configuration/.+$`)),
+					resource.TestCheckNoResourceAttr(resourceName, "certificates"),
+					resource.TestCheckResourceAttr(resourceName, "certificate_authority.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
-					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.key_id", "AWS_OWNED_KMS_KEY"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.type", "AWS_OWNED_KMS_KEY"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "number_of_associations"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.#", acctest.Ct1),
-					resource.TestCheckNoResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.certificate_authority_arn"),
-					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.check_certificate_revocation_status.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.certificate_authority_arn"),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.check_certificate_revocation_status.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.check_certificate_revocation_status.0.revoked_status_action", "REJECT"),
 					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.check_certificate_revocation_status.0.unknown_status_action", "PASS"),
-					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.destination.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.destination.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.destination.0.address_definition", "0.0.0.0/0"),
-					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.destination_ports.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.destination_ports.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.destination_ports.0.from_port", "443"),
 					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.destination_ports.0.to_port", "8080"),
-					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.protocols.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.protocols.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.protocols.*", "6"),
-					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.source.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.source.0.address_definition", "10.0.0.0/8"),
-					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.source_ports.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.source_ports.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.source_ports.0.from_port", "1024"),
 					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.source_ports.0.to_port", "65534"),
-					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.server_certificate.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.server_certificate.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "tls_inspection_configuration_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "update_token"),
 				),
@@ -275,36 +282,36 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_checkCertificateRevocation
 				Config: testAccTLSInspectionConfigurationConfig_checkCertificateRevocationStatus(rName, commonName.String(), certificateDomainName, "DROP", "PASS"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTLSInspectionConfigurationExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "network-firewall", regexache.MustCompile(`tls-configuration/+.`)),
-					resource.TestCheckNoResourceAttr(resourceName, "certificate_authority"),
-					resource.TestCheckResourceAttr(resourceName, "certificates.#", acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "network-firewall", regexache.MustCompile(`tls-configuration/.+$`)),
+					resource.TestCheckNoResourceAttr(resourceName, "certificates"),
+					resource.TestCheckResourceAttr(resourceName, "certificate_authority.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
-					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.key_id", "AWS_OWNED_KMS_KEY"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.type", "AWS_OWNED_KMS_KEY"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "number_of_associations"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.#", acctest.Ct1),
-					resource.TestCheckNoResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.certificate_authority_arn"),
-					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.check_certificate_revocation_status.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.certificate_authority_arn"),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.check_certificate_revocation_status.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.check_certificate_revocation_status.0.revoked_status_action", "DROP"),
 					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.check_certificate_revocation_status.0.unknown_status_action", "PASS"),
-					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.destination.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.destination.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.destination.0.address_definition", "0.0.0.0/0"),
-					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.destination_ports.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.destination_ports.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.destination_ports.0.from_port", "443"),
 					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.destination_ports.0.to_port", "8080"),
-					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.protocols.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.protocols.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.protocols.*", "6"),
-					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.source.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.source.0.address_definition", "10.0.0.0/8"),
-					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.source_ports.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.source_ports.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.source_ports.0.from_port", "1024"),
 					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.source_ports.0.to_port", "65534"),
-					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.server_certificate.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.server_certificate.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "tls_inspection_configuration_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "update_token"),
 				),
@@ -415,6 +422,39 @@ resource "aws_acm_certificate" "test" {
   ]
 }
 `, rName, commonName, certificateDomainName)
+}
+
+func testAccTLSInspectionConfigurationConfig_certificateCheckCertificateRevocationStatus(commonName, certificateDomainName string) string {
+	return fmt.Sprintf(`
+resource "tls_private_key" "test" {
+  algorithm = "RSA"
+}
+
+resource "tls_self_signed_cert" "test" {
+  private_key_pem = tls_private_key.test.private_key_pem
+
+  subject {
+    common_name = %[1]q
+  }
+
+  is_ca_certificate    = true
+  set_subject_key_id   = true
+  set_authority_key_id = true
+
+  validity_period_hours = 9000
+
+  allowed_uses = [
+    "cert_signing",
+    "crl_signing",
+    "digital_signature"
+  ]
+}
+
+resource "aws_acm_certificate" "test" {
+  private_key      = tls_private_key.test.private_key_pem
+  certificate_body = tls_self_signed_cert.test.cert_pem
+}
+`, commonName, certificateDomainName)
 }
 
 func testAccTLSInspectionConfigurationConfig_basic(rName, commonName, certificateDomainName string) string {
@@ -539,7 +579,7 @@ resource "aws_networkfirewall_tls_inspection_configuration" "test" {
 }
 
 func testAccTLSInspectionConfigurationConfig_checkCertificateRevocationStatus(rName, commonName, certificateDomainName, revokedStatusAction, unknownStatusAction string) string {
-	return acctest.ConfigCompose(testAccTLSInspectionConfigurationConfig_certificateBase(rName, commonName, certificateDomainName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccTLSInspectionConfigurationConfig_certificateCheckCertificateRevocationStatus(commonName, certificateDomainName), fmt.Sprintf(`
 resource "aws_networkfirewall_tls_inspection_configuration" "test" {
   name        = %[1]q
   description = "test"
@@ -551,12 +591,10 @@ resource "aws_networkfirewall_tls_inspection_configuration" "test" {
 
   tls_inspection_configuration {
     server_certificate_configuration {
+      certificate_authority_arn = aws_acm_certificate.test.arn
       check_certificate_revocation_status {
         revoked_status_action = %[2]q
         unknown_status_action = %[3]q
-      }
-      server_certificate {
-        resource_arn = aws_acm_certificate.test.arn
       }
       scope {
         protocols = [6]

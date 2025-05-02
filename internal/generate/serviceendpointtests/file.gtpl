@@ -4,46 +4,33 @@ package {{ .PackageName }}_test
 
 import (
 	"context"
-	{{- if ne .GoV2Package "" }}
 	"errors"
-	"reflect"
-	{{- end }}
 	"fmt"
 	"maps"
 	"net"
 	"net/url"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 
-	{{ if ne .GoV1Package "" }}
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	{{- if eq .GoV2Package "" }}
-	"github.com/aws/aws-sdk-go/aws/endpoints"
-	{{- end }}
-	{{ .GoV1Package }}_sdkv1 "github.com/aws/aws-sdk-go/service/{{ .GoV1Package }}"
-	{{- end }}
-	{{- if ne .V1AlternateInputPackage "" }}
-	{{ .V1AlternateInputPackage }}_sdkv1 "github.com/aws/aws-sdk-go/service/{{ .V1AlternateInputPackage }}"
-	{{- end -}}
-	{{- if ne .GoV2Package "" }}
-	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	awsmiddleware "github.com/aws/aws-sdk-go-v2/aws/middleware"
-	{{ .GoV2Package }}_sdkv2 "github.com/aws/aws-sdk-go-v2/service/{{ .GoV2Package }}"
+	"github.com/aws/aws-sdk-go-v2/service/{{ .GoPackage }}"
 	{{- if .ImportAwsTypes }}
-	awstypes "github.com/aws/aws-sdk-go-v2/service/{{ .GoV2Package }}/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/{{ .GoPackage }}/types"
 	{{- end }}
 	"github.com/aws/smithy-go/middleware"
 	smithyhttp "github.com/aws/smithy-go/transport/http"
-	{{- end }}
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/aws-sdk-go-base/v2/servicemocks"
-	{{- if gt (len .Aliases) 0 }}
+{{- if gt (len .Aliases) 0 }}
     "github.com/hashicorp/go-cty/cty"
-	{{- end }}
+{{- end }}
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	terraformsdk "github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -485,43 +472,18 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 		},
 	}
 
-	{{ if and (ne .GoV1Package "") (ne .GoV2Package "") }}
-	t.Run("v1", func(t *testing.T) {
-		for name, testcase := range testcases { //nolint:paralleltest // uses t.Setenv
-			testcase := testcase
-
-			t.Run(name, func(t *testing.T) {
-				testEndpointCase(t, providerRegion, testcase, callServiceV1)
-			})
-		}
-	})
-
-	t.Run("v2", func(t *testing.T) {
-		for name, testcase := range testcases { //nolint:paralleltest // uses t.Setenv
-			testcase := testcase
-
-			t.Run(name, func(t *testing.T) {
-				testEndpointCase(t, providerRegion, testcase, callServiceV2)
-			})
-		}
-	})
-	{{ else }}
 	for name, testcase := range testcases { //nolint:paralleltest // uses t.Setenv
-		testcase := testcase
-
 		t.Run(name, func(t *testing.T) {
             testEndpointCase(t, providerRegion, testcase, callService)
 		})
 	}
-	{{ end -}}
 }
 
 func defaultEndpoint(region string) (url.URL, error) {
-{{- if ne .GoV2Package "" }}
-	r := {{ .GoV2Package }}_sdkv2.NewDefaultEndpointResolverV2()
+	r := {{ .GoPackage }}.NewDefaultEndpointResolverV2()
 
-	ep, err := r.ResolveEndpoint(context.Background(), {{ .GoV2Package }}_sdkv2.EndpointParameters{
-		Region: aws_sdkv2.String(region),
+	ep, err := r.ResolveEndpoint(context.Background(), {{ .GoPackage }}.EndpointParameters{
+		Region: aws.String(region),
 	})
 	if err != nil {
 		return url.URL{}, err
@@ -532,36 +494,14 @@ func defaultEndpoint(region string) (url.URL, error) {
 	}
 
 	return ep.URI, nil
-{{ else }}
-	r := endpoints.DefaultResolver()
-
-	ep, err := r.EndpointFor({{ .GoV1Package }}_sdkv1.EndpointsID, region
-	{{- if .V1NameResolverNeedsUnknownService }}, func(opt *endpoints.Options) {
-			opt.ResolveUnknownService = true
-		}
-	{{- end -}}
-	)
-	if err != nil {
-		return url.URL{}, err
-	}
-
-	url, _ := url.Parse(ep.URL)
-
-	if url.Path == "" {
-		url.Path = "/"
-	}
-
-	return *url, nil
-{{ end -}}
 }
 
 func defaultFIPSEndpoint(region string) (url.URL, error) {
-{{- if ne .GoV2Package "" }}
-	r := {{ .GoV2Package }}_sdkv2.NewDefaultEndpointResolverV2()
+	r := {{ .GoPackage }}.NewDefaultEndpointResolverV2()
 
-	ep, err := r.ResolveEndpoint(context.Background(), {{ .GoV2Package }}_sdkv2.EndpointParameters{
-		Region:  aws_sdkv2.String(region),
-		UseFIPS: aws_sdkv2.Bool(true),
+	ep, err := r.ResolveEndpoint(context.Background(), {{ .GoPackage }}.EndpointParameters{
+		Region:  aws.String(region),
+		UseFIPS: aws.Bool(true),
 	})
 	if err != nil {
 		return url.URL{}, err
@@ -572,39 +512,20 @@ func defaultFIPSEndpoint(region string) (url.URL, error) {
 	}
 
 	return ep.URI, nil
-{{ else }}
-	r := endpoints.DefaultResolver()
-
-	ep, err := r.EndpointFor({{ .GoV1Package }}_sdkv1.EndpointsID, region, func(opt *endpoints.Options) {
-		{{- if .V1NameResolverNeedsUnknownService }}opt.ResolveUnknownService = true{{ end }}
-		opt.UseFIPSEndpoint = endpoints.FIPSEndpointStateEnabled
-	})
-	if err != nil {
-		return url.URL{}, err
-	}
-
-	url, _ := url.Parse(ep.URL)
-
-	if url.Path == "" {
-		url.Path = "/"
-	}
-
-	return *url, nil
-{{ end -}}
 }
 
-{{ if ne .GoV2Package "" }}
-func callService{{ if ne .GoV1Package "" }}V2{{ end }}(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCallParams {
+func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCallParams {
 	t.Helper()
 
 	client := meta.{{ .ProviderNameUpper }}Client(ctx)
 
 	var result apiCallParams
 
-	_, err := client.{{ .APICall }}(ctx, &{{ .GoV2Package }}_sdkv2.{{ .APICall }}Input{
+	input := {{ .GoPackage }}.{{ .APICall }}Input{
 	{{ if ne .APICallParams "" }}{{ .APICallParams }},{{ end }}
-	},
-		func(opts *{{ .GoV2Package }}_sdkv2.Options) {
+	}
+	_, err := client.{{ .APICall }}(ctx, &input,
+		func(opts *{{ .GoPackage }}.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),
 				addRetrieveRegionMiddleware(&result.region),
@@ -620,29 +541,6 @@ func callService{{ if ne .GoV1Package "" }}V2{{ end }}(ctx context.Context, t *t
 
 	return result
 }
-{{ end }}
-
-{{ if ne .GoV1Package "" }}
-func callService{{ if ne .GoV2Package "" }}V1{{ end }}(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCallParams {
-	t.Helper()
-
-	client := meta.{{ .ProviderNameUpper }}Conn(ctx)
-
-	{{ $inputPkg := .GoV1Package }}
-	{{ if ne .V1AlternateInputPackage "" }}{{ $inputPkg = .V1AlternateInputPackage }}{{ end }}
-
-	req, _ := client.{{ .APICall }}Request( &{{ $inputPkg }}_sdkv1.{{ .APICall }}Input{
-	{{ if ne .APICallParams "" }}{{ .APICallParams }},{{ end }}
-	})
-
-	req.HTTPRequest.URL.Path = "/"
-
-	return apiCallParams{
-		endpoint: req.HTTPRequest.URL.String(),
-		region:   aws_sdkv1.StringValue(client.Config.Region),
-	}
-}
-{{ end }}
 
 func withNoConfig(_ *caseSetup) {
 	// no-op
@@ -859,14 +757,6 @@ func testEndpointCase(t *testing.T, region string, testcase endpointTestCase, ca
 	}
 
 	expectedDiags := testcase.expected.diags
-	expectedDiags = append(
-		expectedDiags,
-		errs.NewWarningDiagnostic(
-			"AWS account ID not found for provider",
-			"See https://registry.terraform.io/providers/hashicorp/aws/latest/docs#skip_requesting_account_id for implications.",
-		),
-	)
-
 	diags := p.Configure(ctx, terraformsdk.NewResourceConfigRaw(config))
 
 	if diff := cmp.Diff(diags, expectedDiags, cmp.Comparer(sdkdiag.Comparer)); diff != "" {
@@ -890,7 +780,6 @@ func testEndpointCase(t *testing.T, region string, testcase endpointTestCase, ca
 	}
 }
 
-{{ if ne .GoV2Package "" }}
 func addRetrieveEndpointURLMiddleware(t *testing.T, endpoint *string) func(*middleware.Stack) error {
 	return func(stack *middleware.Stack) error {
 		return stack.Finalize.Add(
@@ -961,7 +850,7 @@ func cancelRequestMiddleware() middleware.FinalizeMiddleware {
 		})
 }
 
-func fullTypeName(i interface{}) string {
+func fullTypeName(i any) string {
 	return fullValueTypeName(reflect.ValueOf(i))
 }
 
@@ -973,7 +862,6 @@ func fullValueTypeName(v reflect.Value) string {
 	requestType := v.Type()
 	return fmt.Sprintf("%s.%s", requestType.PkgPath(), requestType.Name())
 }
-{{ end }}
 
 func generateSharedConfigFile(config configFile) string {
 	var buf strings.Builder
@@ -984,17 +872,17 @@ aws_access_key_id = DefaultSharedCredentialsAccessKey
 aws_secret_access_key = DefaultSharedCredentialsSecretKey
 `)
 	if config.baseUrl != "" {
-		buf.WriteString(fmt.Sprintf("endpoint_url = %s\n", config.baseUrl))
+		fmt.Fprintf(&buf, "endpoint_url = %s\n", config.baseUrl)
 	}
 
 	if config.serviceUrl != "" {
-		buf.WriteString(fmt.Sprintf(`
+		fmt.Fprintf(&buf, `
 services = endpoint-test
 
 [services endpoint-test]
 %[1]s =
   endpoint_url = %[2]s
-`, configParam, serviceConfigFileEndpoint))
+`, configParam, serviceConfigFileEndpoint)
 	}
 
 	return buf.String()

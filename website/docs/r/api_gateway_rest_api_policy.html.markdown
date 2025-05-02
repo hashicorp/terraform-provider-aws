@@ -31,7 +31,7 @@ data "aws_iam_policy_document" "test" {
     }
 
     actions   = ["execute-api:Invoke"]
-    resources = [aws_api_gateway_rest_api.test.execution_arn]
+    resources = ["${aws_api_gateway_rest_api.test.execution_arn}/*"]
 
     condition {
       test     = "IpAddress"

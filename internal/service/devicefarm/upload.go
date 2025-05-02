@@ -77,7 +77,7 @@ func resourceUpload() *schema.Resource {
 	}
 }
 
-func resourceUploadCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUploadCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
@@ -103,7 +103,7 @@ func resourceUploadCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceUploadRead(ctx, d, meta)...)
 }
 
-func resourceUploadRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUploadRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
@@ -128,7 +128,7 @@ func resourceUploadRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("metadata", upload.Metadata)
 	d.Set(names.AttrARN, arn)
 
-	projectArn, err := decodeProjectARN(arn, "upload", meta)
+	projectArn, err := decodeProjectARN(ctx, meta.(*conns.AWSClient), arn, "upload")
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "decoding project_arn (%s): %s", arn, err)
 	}
@@ -138,7 +138,7 @@ func resourceUploadRead(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func resourceUploadUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUploadUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
@@ -163,7 +163,7 @@ func resourceUploadUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceUploadRead(ctx, d, meta)...)
 }
 
-func resourceUploadDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUploadDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 

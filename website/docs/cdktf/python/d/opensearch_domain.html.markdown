@@ -66,12 +66,18 @@ This data source exports the following attributes in addition to the arguments a
     * `dedicated_master_type` - Instance type of the dedicated master nodes in the cluster.
     * `dedicated_master_count` - Number of dedicated master nodes in the cluster.
     * `multi_az_with_standby_enabled` - Whether a multi-AZ domain is turned on with a standby AZ.
-    * `zone_awareness_enabled` - Indicates whether zone awareness is enabled.
-    * `zone_awareness_config` - Configuration block containing zone awareness settings.
-        * `availability_zone_count` - Number of availability zones used.
+    * `node_options` - List of node options for the domain.
+        * `node_config` - Sizing of a node type.
+            * `count` - Number of nodes of a particular node type in the cluster.
+            * `enabled` - Whether a particular node type is enabled.
+            * `type` - The instance type of a particular node type in the cluster.
+        * `node_type` - Type of node this configuration describes.
     * `warm_enabled` - Warm storage is enabled.
     * `warm_count` - Number of warm nodes in the cluster.
     * `warm_type` - Instance type for the OpenSearch cluster's warm nodes.
+    * `zone_awareness_enabled` - Indicates whether zone awareness is enabled.
+    * `zone_awareness_config` - Configuration block containing zone awareness settings.
+        * `availability_zone_count` - Number of availability zones used.
 * `cognito_options` - Domain Amazon Cognito Authentication options for Dashboard.
     * `enabled` - Whether Amazon Cognito Authentication is enabled.
     * `user_pool_id` - Cognito User pool used by the domain.
@@ -79,7 +85,9 @@ This data source exports the following attributes in addition to the arguments a
     * `role_arn` - IAM Role with the AmazonOpenSearchServiceCognitoAccess policy attached.
 * `created` – Status of the creation of the domain.
 * `dashboard_endpoint` - Domain-specific endpoint used to access the [Dashboard application](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/dashboards.html).
+* `dashboard_endpoint_v2` - V2 domain-specific endpoint used to access the [Dashboard application](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/dashboards.html)
 * `deleted` – Status of the deletion of the domain.
+* `domain_endpoint_v2_hosted_zone_id` -  Dual stack hosted zone ID for the domain.
 * `domain_id` – Unique identifier for the domain.
 * `ebs_options` - EBS Options for the instances in the domain.
     * `ebs_enabled` - Whether EBS volumes are attached to data nodes in the domain.
@@ -92,6 +100,7 @@ This data source exports the following attributes in addition to the arguments a
     * `enabled` - Whether encryption at rest is enabled in the domain.
     * `kms_key_id` - KMS key id used to encrypt data at rest.
 * `endpoint` – Domain-specific endpoint used to submit index, search, and data upload requests.
+* `endpoint_v2` - V2 domain-specific endpoint that works with both IPv4 and IPv6 addresses, used to submit index, search, and data upload requests.
 * `ip_address_type` - Type of IP addresses supported by the endpoint for the domain.
 * `kibana_endpoint` - (**Deprecated**) Domain-specific endpoint for kibana without https scheme. Use the `dashboard_endpoint` attribute instead.
 * `log_publishing_options` - Domain log publishing related options.
@@ -118,4 +127,4 @@ This data source exports the following attributes in addition to the arguments a
     * `subnet_ids` - Subnets used by the domain.
     * `vpc_id` - VPC used by the domain.
 
-<!-- cache-key: cdktf-0.20.1 input-9ad96ddccd055a8801cf41664d1bc56b8cf4e140901a238bc44f8b3314f475e2 -->
+<!-- cache-key: cdktf-0.20.8 input-837de436745fda2e63a3c16e01709893584fc4561159fc72f98d83229cc7d58b -->

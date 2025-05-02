@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/YakDriver/regexache"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -26,10 +25,6 @@ func TestAccRDSParameterGroupDataSource_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccParameterGroupDataSourceConfig_nonExistent,
-				ExpectError: regexache.MustCompile(`not found`),
-			},
-			{
 				Config: testAccParameterGroupDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
@@ -41,12 +36,6 @@ func TestAccRDSParameterGroupDataSource_basic(t *testing.T) {
 		},
 	})
 }
-
-const testAccParameterGroupDataSourceConfig_nonExistent = `
-data "aws_db_parameter_group" "test" {
-  name = "tf-acc-test-does-not-exist"
-}
-`
 
 func testAccParameterGroupDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`

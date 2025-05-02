@@ -9,6 +9,7 @@ import (
 
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -27,6 +28,9 @@ func TestAccRDSInstanceDataSource_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceDataSourceConfig_basic(rName),
@@ -34,6 +38,7 @@ func TestAccRDSInstanceDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrAddress, resourceName, names.AttrAddress),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrAllocatedStorage, resourceName, names.AttrAllocatedStorage),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrAutoMinorVersionUpgrade, resourceName, names.AttrAutoMinorVersionUpgrade),
+					resource.TestCheckResourceAttrPair(dataSourceName, "database_insights_mode", resourceName, "database_insights_mode"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "db_instance_arn", resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "db_instance_class", resourceName, "instance_class"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "db_name", resourceName, "db_name"),
@@ -118,6 +123,9 @@ func TestAccRDSInstanceDataSource_matchTags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceDataSourceConfig_matchTags(rName),
@@ -151,6 +159,7 @@ func TestAccRDSInstanceDataSource_matchTags(t *testing.T) {
 
 func testAccInstanceDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassMariadb(),
 		testAccInstanceConfig_baseVPC(rName),
 		fmt.Sprintf(`
@@ -163,7 +172,8 @@ resource "aws_db_instance" "test" {
   identifier              = %[1]q
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
   db_name                 = "test"
-  password                = "avoid-plaintext-passwords"
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   skip_final_snapshot     = true
   username                = "tfacctest"
   max_allocated_storage   = 100
@@ -215,6 +225,7 @@ data "aws_db_instance" "test" {
 
 func testAccInstanceDataSourceConfig_matchTags(rName string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassMariadb(),
 		testAccInstanceConfig_baseVPC(rName),
 		fmt.Sprintf(`
@@ -227,7 +238,8 @@ resource "aws_db_instance" "test" {
   identifier              = %[1]q
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
   db_name                 = "test"
-  password                = "avoid-plaintext-passwords"
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   skip_final_snapshot     = true
   username                = "tfacctest"
   max_allocated_storage   = 100

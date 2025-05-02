@@ -20,17 +20,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="User Groups")
+// @FrameworkDataSource("aws_cognito_user_groups", name="User Groups")
 func newUserGroupsDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &userGroupsDataSource{}, nil
 }
 
 type userGroupsDataSource struct {
 	framework.DataSourceWithConfigure
-}
-
-func (*userGroupsDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
-	response.TypeName = "aws_cognito_user_groups"
 }
 
 func (d *userGroupsDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {

@@ -36,7 +36,7 @@ func TestAccBatchComputeEnvironmentDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrServiceRole, resourceName, names.AttrServiceRole),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrState, resourceName, names.AttrState),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrType, resourceName, names.AttrType),
-					resource.TestCheckResourceAttr(dataSourceName, "update_policy.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "update_policy.#", "0"),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -61,8 +61,8 @@ func TestAccBatchComputeEnvironmentDataSource_basicUpdatePolicy(t *testing.T) {
 				Config: testAccComputeEnvironmentDataSourceConfig_updatePolicy(rName, 30, false),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(dataSourceName, "update_policy.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(dataSourceName, "update_policy.0.%", acctest.Ct2),
+					resource.TestCheckResourceAttr(dataSourceName, "update_policy.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "update_policy.0.%", "2"),
 					resource.TestCheckResourceAttr(dataSourceName, "update_policy.0.terminate_jobs_on_update", acctest.CtFalse),
 					resource.TestCheckResourceAttr(dataSourceName, "update_policy.0.job_execution_timeout_minutes", "30"),
 				),

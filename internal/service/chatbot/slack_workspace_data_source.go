@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Slack Workspace")
+// @FrameworkDataSource("aws_chatbot_slack_workspace", name="Slack Workspace")
 func newDataSourceSlackWorkspace(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceSlackWorkspace{}, nil
 }
@@ -29,10 +29,6 @@ const (
 
 type dataSourceSlackWorkspace struct {
 	framework.DataSourceWithConfigure
-}
-
-func (d *dataSourceSlackWorkspace) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_chatbot_slack_workspace"
 }
 
 func (d *dataSourceSlackWorkspace) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
@@ -94,7 +90,7 @@ func findSlackWorkspaceByName(ctx context.Context, conn *chatbot.Client, slack_t
 		}
 		input.NextToken = output.NextToken
 	}
-	// If we are here, then we need to return an error that the data source was not found.
+	// If we are here, then we need to return an error that the slack workspace was not found.
 	return nil, create.Error(names.Chatbot, "missing", DSNameSlackWorkspace, slack_team_name, nil)
 }
 

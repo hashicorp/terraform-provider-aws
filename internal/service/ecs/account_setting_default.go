@@ -52,7 +52,7 @@ func resourceAccountSettingDefault() *schema.Resource {
 	}
 }
 
-func resourceAccountSettingDefaultPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccountSettingDefaultPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 
@@ -76,7 +76,7 @@ func resourceAccountSettingDefaultPut(ctx context.Context, d *schema.ResourceDat
 	return append(diags, resourceAccountSettingDefaultRead(ctx, d, meta)...)
 }
 
-func resourceAccountSettingDefaultRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccountSettingDefaultRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 
@@ -102,7 +102,7 @@ func resourceAccountSettingDefaultRead(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func resourceAccountSettingDefaultDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccountSettingDefaultDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 
@@ -136,12 +136,12 @@ func resourceAccountSettingDefaultDelete(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func resourceAccountSettingDefaultImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceAccountSettingDefaultImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	d.Set(names.AttrName, d.Id())
 	d.SetId(arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Service:   names.ECSEndpointID,
 		Resource:  "cluster/" + d.Id(),
 	}.String())

@@ -5,7 +5,7 @@ package ec2
 
 import (
 	"context"
-	"sort"
+	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
@@ -176,8 +176,8 @@ func newCustomFilterList(s *schema.Set) []awstypes.Filter {
 		return []awstypes.Filter{}
 	}
 
-	return tfslices.ApplyToAll(s.List(), func(tfList interface{}) awstypes.Filter {
-		tfMap := tfList.(map[string]interface{})
+	return tfslices.ApplyToAll(s.List(), func(tfList any) awstypes.Filter {
+		tfMap := tfList.(map[string]any)
 		return newFilter(tfMap[names.AttrName].(string), flex.ExpandStringValueEmptySet(tfMap[names.AttrValues].(*schema.Set)))
 	})
 }
@@ -237,7 +237,7 @@ func newAttributeFilterList(m map[string]string) []awstypes.Filter {
 
 	// Sort the filters by name to make the output deterministic.
 	names := tfmaps.Keys(m)
-	sort.Strings(names)
+	slices.Sort(names)
 
 	for _, name := range names {
 		value := m[name]

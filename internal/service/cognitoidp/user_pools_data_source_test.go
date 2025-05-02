@@ -25,10 +25,10 @@ func TestAccCognitoIDPUserPoolsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccUserPoolsDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_cognito_user_pools.test", "arns.#", acctest.Ct2),
-					resource.TestCheckResourceAttr("data.aws_cognito_user_pools.test", "ids.#", acctest.Ct2),
-					resource.TestCheckResourceAttr("data.aws_cognito_user_pools.empty", "arns.#", acctest.Ct0),
-					resource.TestCheckResourceAttr("data.aws_cognito_user_pools.empty", "ids.#", acctest.Ct0),
+					resource.TestCheckResourceAttr("data.aws_cognito_user_pools.test", "arns.#", "2"),
+					resource.TestCheckResourceAttr("data.aws_cognito_user_pools.test", "ids.#", "2"),
+					resource.TestCheckResourceAttr("data.aws_cognito_user_pools.empty", "arns.#", "0"),
+					resource.TestCheckResourceAttr("data.aws_cognito_user_pools.empty", "ids.#", "0"),
 				),
 			},
 		},

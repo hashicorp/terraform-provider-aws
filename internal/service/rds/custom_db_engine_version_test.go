@@ -5,19 +5,18 @@ package rds_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/aws/aws-sdk-go-v2/service/rds"
+	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -36,14 +35,13 @@ func TestAccRDSCustomDBEngineVersion_sqlServer(t *testing.T) {
 	if ami == "" {
 		t.Skipf("Environment variable %s is not set", key)
 	}
-	var customdbengineversion rds.DBEngineVersion
+	var customdbengineversion types.DBEngineVersion
 	rName := fmt.Sprintf("%s%s%d", "15.00.4249.2.", acctest.ResourcePrefix, sdkacctest.RandIntRange(100, 999))
 	resourceName := "aws_rds_custom_db_engine_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, rds.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
@@ -56,7 +54,7 @@ func TestAccRDSCustomDBEngineVersion_sqlServer(t *testing.T) {
 					testAccCheckCustomDBEngineVersionExists(ctx, resourceName, &customdbengineversion),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreateTime),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "rds",
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "rds",
 						regexache.MustCompile(fmt.Sprintf(`cev:custom-sqlserver.+%s.+`, rName))),
 				),
 			},
@@ -82,7 +80,7 @@ func TestAccRDSCustomDBEngineVersion_sqlServerUpdate(t *testing.T) {
 	if ami == "" {
 		t.Skipf("Environment variable %s is not set", key)
 	}
-	var customdbengineversion rds.DBEngineVersion
+	var customdbengineversion types.DBEngineVersion
 	rName := fmt.Sprintf("%s%s%d", "15.00.4249.2.", acctest.ResourcePrefix, sdkacctest.RandIntRange(100, 999))
 	resourceName := "aws_rds_custom_db_engine_version.test"
 	status := "pending-validation"
@@ -91,7 +89,6 @@ func TestAccRDSCustomDBEngineVersion_sqlServerUpdate(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, rds.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
@@ -138,14 +135,13 @@ func TestAccRDSCustomDBEngineVersion_oracle(t *testing.T) {
 	if bucket == "" {
 		t.Skipf("Environment variable %s is not set", key)
 	}
-	var customdbengineversion rds.DBEngineVersion
+	var customdbengineversion types.DBEngineVersion
 	rName := fmt.Sprintf("%s%s%d", "19.19.ee.", acctest.ResourcePrefix, sdkacctest.RandIntRange(100, 999))
 	resourceName := "aws_rds_custom_db_engine_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, rds.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
@@ -158,7 +154,7 @@ func TestAccRDSCustomDBEngineVersion_oracle(t *testing.T) {
 					testAccCheckCustomDBEngineVersionExists(ctx, resourceName, &customdbengineversion),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreateTime),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", regexache.MustCompile(fmt.Sprintf(`cev:custom-oracle.+%s.+`, rName))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "rds", regexache.MustCompile(fmt.Sprintf(`cev:custom-oracle.+%s.+`, rName))),
 				),
 			},
 			{
@@ -184,7 +180,7 @@ func TestAccRDSCustomDBEngineVersion_manifestFile(t *testing.T) {
 	if bucket == "" {
 		t.Skipf("Environment variable %s is not set", key)
 	}
-	var customdbengineversion rds.DBEngineVersion
+	var customdbengineversion types.DBEngineVersion
 	rName := fmt.Sprintf("%s%s%d", "19.19.ee.", acctest.ResourcePrefix, sdkacctest.RandIntRange(100, 999))
 	filename := "test-fixtures/custom-oracle-manifest.json"
 	resourceName := "aws_rds_custom_db_engine_version.test"
@@ -192,7 +188,6 @@ func TestAccRDSCustomDBEngineVersion_manifestFile(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, rds.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
@@ -205,7 +200,7 @@ func TestAccRDSCustomDBEngineVersion_manifestFile(t *testing.T) {
 					testAccCheckCustomDBEngineVersionExists(ctx, resourceName, &customdbengineversion),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreateTime),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", regexache.MustCompile(fmt.Sprintf(`cev:custom-oracle.+%s.+`, rName))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "rds", regexache.MustCompile(fmt.Sprintf(`cev:custom-oracle.+%s.+`, rName))),
 				),
 			},
 			{
@@ -230,14 +225,13 @@ func TestAccRDSCustomDBEngineVersion_tags(t *testing.T) {
 	if ami == "" {
 		t.Skipf("Environment variable %s is not set", key)
 	}
-	var customdbengineversion rds.DBEngineVersion
+	var customdbengineversion types.DBEngineVersion
 	rName := fmt.Sprintf("%s%s%d", "15.00.4249.2.", acctest.ResourcePrefix, sdkacctest.RandIntRange(100, 999))
 	resourceName := "aws_rds_custom_db_engine_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, rds.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
@@ -248,7 +242,7 @@ func TestAccRDSCustomDBEngineVersion_tags(t *testing.T) {
 				Config: testAccCustomDBEngineVersionConfig_tags(rName, ami, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCustomDBEngineVersionExists(ctx, resourceName, &customdbengineversion),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -268,14 +262,13 @@ func TestAccRDSCustomDBEngineVersion_disappears(t *testing.T) {
 	if ami == "" {
 		t.Skipf("Environment variable %s is not set", key)
 	}
-	var customdbengineversion rds.DBEngineVersion
+	var customdbengineversion types.DBEngineVersion
 	rName := fmt.Sprintf("%s%s%d", "15.00.4249.2.", acctest.ResourcePrefix, sdkacctest.RandIntRange(100, 999))
 	resourceName := "aws_rds_custom_db_engine_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, rds.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
@@ -296,14 +289,15 @@ func TestAccRDSCustomDBEngineVersion_disappears(t *testing.T) {
 
 func testAccCheckCustomDBEngineVersionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_rds_custom_db_engine_version" {
 				continue
 			}
 
-			_, err := tfrds.FindCustomDBEngineVersionByID(ctx, conn, rs.Primary.ID)
+			_, err := tfrds.FindCustomDBEngineVersionByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrEngine], rs.Primary.Attributes[names.AttrEngineVersion])
+
 			if tfresource.NotFound(err) {
 				continue
 			}
@@ -312,42 +306,39 @@ func testAccCheckCustomDBEngineVersionDestroy(ctx context.Context) resource.Test
 				return err
 			}
 
-			return create.Error(names.RDS, create.ErrActionCheckingDestroyed, tfrds.ResNameCustomDBEngineVersion, rs.Primary.ID, errors.New("not destroyed"))
+			return fmt.Errorf("RDS Custom DB Engine Version %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckCustomDBEngineVersionExists(ctx context.Context, name string, customdbengineversion *rds.DBEngineVersion) resource.TestCheckFunc {
+func testAccCheckCustomDBEngineVersionExists(ctx context.Context, n string, v *types.DBEngineVersion) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.RDS, create.ErrActionCheckingExistence, tfrds.ResNameCustomDBEngineVersion, name, errors.New("not found"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return create.Error(names.RDS, create.ErrActionCheckingExistence, tfrds.ResNameCustomDBEngineVersion, name, errors.New("not set"))
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
+		output, err := tfrds.FindCustomDBEngineVersionByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrEngine], rs.Primary.Attributes[names.AttrEngineVersion])
 
-		output, err := tfrds.FindCustomDBEngineVersionByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
-			return create.Error(names.RDS, create.ErrActionCheckingExistence, tfrds.ResNameCustomDBEngineVersion, rs.Primary.ID, err)
+			return err
 		}
 
-		*customdbengineversion = *output
+		*v = *output
 
 		return nil
 	}
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
 
 	input := &rds.DescribeDBEngineVersionsInput{}
-	_, err := conn.DescribeDBEngineVersionsWithContext(ctx, input)
+	_, err := conn.DescribeDBEngineVersions(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

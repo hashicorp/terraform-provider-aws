@@ -7,37 +7,37 @@ import (
 	"fmt"
 	"net"
 
-	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
-	costoptimizationhub_sdkv2 "github.com/aws/aws-sdk-go-v2/service/costoptimizationhub"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/costoptimizationhub"
 	smithyendpoints "github.com/aws/smithy-go/endpoints"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 )
 
-var _ costoptimizationhub_sdkv2.EndpointResolverV2 = resolverSDKv2{}
+var _ costoptimizationhub.EndpointResolverV2 = resolverV2{}
 
-type resolverSDKv2 struct {
-	defaultResolver costoptimizationhub_sdkv2.EndpointResolverV2
+type resolverV2 struct {
+	defaultResolver costoptimizationhub.EndpointResolverV2
 }
 
-func newEndpointResolverSDKv2() resolverSDKv2 {
-	return resolverSDKv2{
-		defaultResolver: costoptimizationhub_sdkv2.NewDefaultEndpointResolverV2(),
+func newEndpointResolverV2() resolverV2 {
+	return resolverV2{
+		defaultResolver: costoptimizationhub.NewDefaultEndpointResolverV2(),
 	}
 }
 
-func (r resolverSDKv2) ResolveEndpoint(ctx context.Context, params costoptimizationhub_sdkv2.EndpointParameters) (endpoint smithyendpoints.Endpoint, err error) {
+func (r resolverV2) ResolveEndpoint(ctx context.Context, params costoptimizationhub.EndpointParameters) (endpoint smithyendpoints.Endpoint, err error) {
 	params = params.WithDefaults()
-	useFIPS := aws_sdkv2.ToBool(params.UseFIPS)
+	useFIPS := aws.ToBool(params.UseFIPS)
 
-	if eps := params.Endpoint; aws_sdkv2.ToString(eps) != "" {
+	if eps := params.Endpoint; aws.ToString(eps) != "" {
 		tflog.Debug(ctx, "setting endpoint", map[string]any{
 			"tf_aws.endpoint": endpoint,
 		})
 
 		if useFIPS {
 			tflog.Debug(ctx, "endpoint set, ignoring UseFIPSEndpoint setting")
-			params.UseFIPS = aws_sdkv2.Bool(false)
+			params.UseFIPS = aws.Bool(false)
 		}
 
 		return r.defaultResolver.ResolveEndpoint(ctx, params)
@@ -60,7 +60,7 @@ func (r resolverSDKv2) ResolveEndpoint(ctx context.Context, params costoptimizat
 				tflog.Debug(ctx, "default endpoint host not found, disabling FIPS", map[string]any{
 					"tf_aws.hostname": hostname,
 				})
-				params.UseFIPS = aws_sdkv2.Bool(false)
+				params.UseFIPS = aws.Bool(false)
 			} else {
 				err = fmt.Errorf("looking up costoptimizationhub endpoint %q: %s", hostname, err)
 				return
@@ -73,10 +73,10 @@ func (r resolverSDKv2) ResolveEndpoint(ctx context.Context, params costoptimizat
 	return r.defaultResolver.ResolveEndpoint(ctx, params)
 }
 
-func withBaseEndpoint(endpoint string) func(*costoptimizationhub_sdkv2.Options) {
-	return func(o *costoptimizationhub_sdkv2.Options) {
+func withBaseEndpoint(endpoint string) func(*costoptimizationhub.Options) {
+	return func(o *costoptimizationhub.Options) {
 		if endpoint != "" {
-			o.BaseEndpoint = aws_sdkv2.String(endpoint)
+			o.BaseEndpoint = aws.String(endpoint)
 		}
 	}
 }

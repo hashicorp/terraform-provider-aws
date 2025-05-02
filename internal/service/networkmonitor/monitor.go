@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -32,7 +33,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Monitor")
+// @FrameworkResource("aws_networkmonitor_monitor", name="Monitor")
 // @Tags(identifierAttribute="arn")
 func newMonitorResource(context.Context) (resource.ResourceWithConfigure, error) {
 	return &monitorResource{}, nil
@@ -43,17 +44,17 @@ type monitorResource struct {
 	framework.WithImportByID
 }
 
-func (*monitorResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_networkmonitor_monitor"
-}
-
 func (r *monitorResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"aggregation_period": schema.Int64Attribute{
 				Optional: true,
+				Computed: true,
 				Validators: []validator.Int64{
 					int64validator.OneOf(30, 60),
+				},
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.UseStateForUnknown(),
 				},
 			},
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
@@ -93,7 +94,7 @@ func (r *monitorResource) Create(ctx context.Context, request resource.CreateReq
 	input.ClientToken = aws.String(id.UniqueId())
 	input.Tags = getTagsIn(ctx)
 
-	output, err := conn.CreateMonitor(ctx, input)
+	_, err := conn.CreateMonitor(ctx, input)
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("creating CloudWatch Network Monitor Monitor (%s)", name), err.Error())
@@ -101,15 +102,18 @@ func (r *monitorResource) Create(ctx context.Context, request resource.CreateReq
 		return
 	}
 
-	// Set values for unknowns.
-	data.MonitorARN = fwflex.StringToFramework(ctx, output.MonitorArn)
-	data.setID()
-
-	if _, err := waitMonitorReady(ctx, conn, data.ID.ValueString()); err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("waiting for CloudWatch Network Monitor Monitor (%s) create", data.ID.ValueString()), err.Error())
+	output, err := waitMonitorReady(ctx, conn, data.MonitorName.ValueString())
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for CloudWatch Network Monitor Monitor (%s) create", data.MonitorName.ValueString()), err.Error())
 
 		return
 	}
+
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	data.setID()
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -129,7 +133,7 @@ func (r *monitorResource) Read(ctx context.Context, request resource.ReadRequest
 
 	conn := r.Meta().NetworkMonitorClient(ctx)
 
-	output, err := findMonitorByName(ctx, conn, data.ID.ValueString())
+	output, err := findMonitorByName(ctx, conn, data.MonitorName.ValueString())
 
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -139,12 +143,11 @@ func (r *monitorResource) Read(ctx context.Context, request resource.ReadRequest
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading CloudWatch Network Monitor Monitor (%s)", data.ID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading CloudWatch Network Monitor Monitor (%s)", data.MonitorName.ValueString()), err.Error())
 
 		return
 	}
 
-	// Set attributes for import.
 	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -156,21 +159,21 @@ func (r *monitorResource) Read(ctx context.Context, request resource.ReadRequest
 }
 
 func (r *monitorResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	var old, new monitorResourceModel
-	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	var state, plan monitorResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
-	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
+	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	conn := r.Meta().NetworkMonitorClient(ctx)
 
-	if !new.AggregationPeriod.Equal(old.AggregationPeriod) {
+	if !plan.AggregationPeriod.Equal(state.AggregationPeriod) {
 		input := &networkmonitor.UpdateMonitorInput{}
-		response.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
+		response.Diagnostics.Append(fwflex.Expand(ctx, plan, input)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -178,19 +181,24 @@ func (r *monitorResource) Update(ctx context.Context, request resource.UpdateReq
 		_, err := conn.UpdateMonitor(ctx, input)
 
 		if err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("updating CloudWatch Network Monitor Monitor (%s)", new.ID.ValueString()), err.Error())
+			response.Diagnostics.AddError(fmt.Sprintf("updating CloudWatch Network Monitor Monitor (%s)", plan.ID.ValueString()), err.Error())
 
 			return
 		}
 
-		if _, err := waitMonitorReady(ctx, conn, new.ID.ValueString()); err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("waiting for CloudWatch Network Monitor Monitor (%s) update", new.ID.ValueString()), err.Error())
+		output, err := waitMonitorReady(ctx, conn, plan.ID.ValueString())
+		if err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("waiting for CloudWatch Network Monitor Monitor (%s) update", plan.ID.ValueString()), err.Error())
 
+			return
+		}
+		response.Diagnostics.Append(fwflex.Flatten(ctx, output, &plan)...)
+		if response.Diagnostics.HasError() {
 			return
 		}
 	}
 
-	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
 }
 
 func (r *monitorResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
@@ -203,7 +211,7 @@ func (r *monitorResource) Delete(ctx context.Context, request resource.DeleteReq
 	conn := r.Meta().NetworkMonitorClient(ctx)
 
 	_, err := conn.DeleteMonitor(ctx, &networkmonitor.DeleteMonitorInput{
-		MonitorName: fwflex.StringFromFramework(ctx, data.ID),
+		MonitorName: fwflex.StringFromFramework(ctx, data.MonitorName),
 	})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
@@ -211,20 +219,16 @@ func (r *monitorResource) Delete(ctx context.Context, request resource.DeleteReq
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("deleting CloudWatch Network Monitor Monitor (%s)", data.ID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("deleting CloudWatch Network Monitor Monitor (%s)", data.MonitorName.ValueString()), err.Error())
 
 		return
 	}
 
-	if _, err := waitMonitorDeleted(ctx, conn, data.ID.ValueString()); err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("waiting for CloudWatch Network Monitor Monitor (%s) delete", data.ID.ValueString()), err.Error())
+	if _, err := waitMonitorDeleted(ctx, conn, data.MonitorName.ValueString()); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for CloudWatch Network Monitor Monitor (%s) delete", data.MonitorName.ValueString()), err.Error())
 
 		return
 	}
-}
-
-func (r *monitorResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func findMonitorByName(ctx context.Context, conn *networkmonitor.Client, name string) (*networkmonitor.GetMonitorOutput, error) {
@@ -253,7 +257,7 @@ func findMonitorByName(ctx context.Context, conn *networkmonitor.Client, name st
 }
 
 func statusMonitor(ctx context.Context, conn *networkmonitor.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findMonitorByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
@@ -268,7 +272,7 @@ func statusMonitor(ctx context.Context, conn *networkmonitor.Client, name string
 	}
 }
 
-func waitMonitorReady(ctx context.Context, conn *networkmonitor.Client, name string) (*networkmonitor.GetMonitorOutput, error) { //nolint:unparam
+func waitMonitorReady(ctx context.Context, conn *networkmonitor.Client, name string) (*networkmonitor.GetMonitorOutput, error) {
 	const (
 		timeout = time.Minute * 10
 	)
@@ -315,8 +319,8 @@ type monitorResourceModel struct {
 	ID                types.String `tfsdk:"id"`
 	MonitorARN        types.String `tfsdk:"arn"`
 	MonitorName       types.String `tfsdk:"monitor_name"`
-	Tags              types.Map    `tfsdk:"tags"`
-	TagsAll           types.Map    `tfsdk:"tags_all"`
+	Tags              tftags.Map   `tfsdk:"tags"`
+	TagsAll           tftags.Map   `tfsdk:"tags_all"`
 }
 
 func (model *monitorResourceModel) InitFromID() error {

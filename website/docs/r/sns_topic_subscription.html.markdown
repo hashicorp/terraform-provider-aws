@@ -22,17 +22,7 @@ Provides a resource for subscribing to SNS topics. Requires that an SNS topic ex
 
 ## Example Usage
 
-You can directly supply a topic and ARN by hand in the `topic_arn` property along with the queue ARN:
-
-```terraform
-resource "aws_sns_topic_subscription" "user_updates_sqs_target" {
-  topic_arn = "arn:aws:sns:us-west-2:432981146916:user-updates-topic"
-  protocol  = "sqs"
-  endpoint  = "arn:aws:sqs:us-west-2:432981146916:terraform-queue-too"
-}
-```
-
-Alternatively you can use the ARN properties of a managed SNS topic and SQS queue:
+### Basic usage
 
 ```terraform
 resource "aws_sns_topic" "user_updates" {
@@ -40,7 +30,8 @@ resource "aws_sns_topic" "user_updates" {
 }
 
 resource "aws_sqs_queue" "user_updates_queue" {
-  name = "user-updates-queue"
+  name   = "user-updates-queue"
+  policy = data.aws_iam_policy_document.sqs_queue_policy.json
 }
 
 resource "aws_sns_topic_subscription" "user_updates_sqs_target" {
@@ -48,7 +39,40 @@ resource "aws_sns_topic_subscription" "user_updates_sqs_target" {
   protocol  = "sqs"
   endpoint  = aws_sqs_queue.user_updates_queue.arn
 }
+
+data "aws_iam_policy_document" "sqs_queue_policy" {
+  policy_id = "arn:aws:sqs:us-west-2:123456789012:user_updates_queue/SQSDefaultPolicy"
+
+  statement {
+    sid    = "user_updates_sqs_target"
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["sns.amazonaws.com"]
+    }
+
+    actions = [
+      "SQS:SendMessage",
+    ]
+
+    resources = [
+      "arn:aws:sqs:us-west-2:123456789012:user-updates-queue",
+    ]
+
+    condition {
+      test     = "ArnEquals"
+      variable = "aws:SourceArn"
+
+      values = [
+        aws_sns_topic.user_updates.arn,
+      ]
+    }
+  }
+}
 ```
+
+### Example Cross-account Subscription
 
 You can subscribe SNS topics to SQS queues in different Amazon accounts and regions:
 
@@ -72,7 +96,7 @@ variable "sqs" {
   }
 }
 
-data "aws_iam_policy_document" "sns-topic-policy" {
+data "aws_iam_policy_document" "sns_topic_policy" {
   policy_id = "__default_policy_ID"
 
   statement {
@@ -140,7 +164,7 @@ data "aws_iam_policy_document" "sns-topic-policy" {
   }
 }
 
-data "aws_iam_policy_document" "sqs-queue-policy" {
+data "aws_iam_policy_document" "sqs_queue_policy" {
   policy_id = "arn:aws:sqs:${var.sqs["region"]}:${var.sqs["account-id"]}:${var.sqs["name"]}/SQSDefaultPolicy"
 
   statement {
@@ -204,24 +228,57 @@ provider "aws" {
   }
 }
 
-resource "aws_sns_topic" "sns-topic" {
+resource "aws_sns_topic" "sns_topic" {
   provider     = aws.sns
   name         = var.sns["name"]
   display_name = var.sns["display_name"]
-  policy       = data.aws_iam_policy_document.sns-topic-policy.json
+  policy       = data.aws_iam_policy_document.sns_topic_policy.json
 }
 
-resource "aws_sqs_queue" "sqs-queue" {
+resource "aws_sqs_queue" "sqs_queue" {
   provider = aws.sqs
   name     = var.sqs["name"]
-  policy   = data.aws_iam_policy_document.sqs-queue-policy.json
+  policy   = data.aws_iam_policy_document.sqs_queue_policy.json
 }
 
-resource "aws_sns_topic_subscription" "sns-topic" {
+resource "aws_sns_topic_subscription" "sns_topic" {
   provider  = aws.sns2sqs
-  topic_arn = aws_sns_topic.sns-topic.arn
+  topic_arn = aws_sns_topic.sns_topic.arn
   protocol  = "sqs"
-  endpoint  = aws_sqs_queue.sqs-queue.arn
+  endpoint  = aws_sqs_queue.sqs_queue.arn
+}
+```
+
+### Example with Delivery Policy
+
+This example demonstrates how to define a `delivery_policy` for an HTTPS subscription. Unlike the `aws_sns_topic` resource, the `delivery_policy` for `aws_sns_topic_subscription` should not be wrapped in an `"http"` object.
+
+```hcl
+resource "aws_sns_topic_subscription" "example_with_delivery_policy" {
+  topic_arn            = "arn:aws:sns:us-west-2:123456789012:my-topic"
+  protocol             = "https"
+  endpoint             = "https://example.com/endpoint"
+  raw_message_delivery = true
+
+  delivery_policy = <<EOF
+{
+  "healthyRetryPolicy": {
+    "minDelayTarget": 20,
+    "maxDelayTarget": 20,
+    "numRetries": 3,
+    "numMaxDelayRetries": 0,
+    "numNoDelayRetries": 0,
+    "numMinDelayRetries": 0,
+    "backoffFunction": "linear"
+  },
+  "sicklyRetryPolicy": null,
+  "throttlePolicy": null,
+  "requestPolicy": {
+    "headerContentType": "text/plain; application/json"
+  },
+  "guaranteed": false
+}
+EOF
 }
 ```
 
@@ -282,12 +339,12 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 ```terraform
 import {
   to = aws_sns_topic_subscription.user_updates_sqs_target
-  id = "arn:aws:sns:us-west-2:0123456789012:my-topic:8a21d249-4329-4871-acc6-7be709c6ea7f"
+  id = "arn:aws:sns:us-west-2:123456789012:my-topic:8a21d249-4329-4871-acc6-7be709c6ea7f"
 }
 ```
 
 Using `terraform import`, import SNS Topic Subscriptions using the subscription `arn`. For example:
 
 ```console
-% terraform import aws_sns_topic_subscription.user_updates_sqs_target arn:aws:sns:us-west-2:0123456789012:my-topic:8a21d249-4329-4871-acc6-7be709c6ea7f
+% terraform import aws_sns_topic_subscription.user_updates_sqs_target arn:aws:sns:us-west-2:123456789012:my-topic:8a21d249-4329-4871-acc6-7be709c6ea7f
 ```

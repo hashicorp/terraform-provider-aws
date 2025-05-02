@@ -142,6 +142,30 @@ resource "aws_pipes_pipe" "example" {
 }
 ```
 
+### CloudWatch Logs Logging Configuration Usage
+
+```terraform
+resource "aws_cloudwatch_log_group" "example" {
+  name = "example-pipe-target"
+}
+
+resource "aws_pipes_pipe" "example" {
+  depends_on = [aws_iam_role_policy.source, aws_iam_role_policy.target]
+
+  name     = "example-pipe"
+  role_arn = aws_iam_role.example.arn
+  source   = aws_sqs_queue.source.arn
+  target   = aws_sqs_queue.target.arn
+  log_configuration {
+    include_execution_data = ["ALL"]
+    level                  = "INFO"
+    cloudwatch_logs_log_destination {
+      log_group_arn = aws_cloudwatch_log_group.target.arn
+    }
+  }
+}
+```
+
 ### SQS Source and Target Configuration Usage
 
 ```terraform
@@ -159,7 +183,7 @@ resource "aws_pipes_pipe" "example" {
   }
 
   target_parameters {
-    sqs_queue {
+    sqs_queue_parameters {
       message_deduplication_id = "example-dedupe"
       message_group_id         = "example-group"
     }
@@ -181,6 +205,7 @@ The following arguments are optional:
 * `desired_state` - (Optional) The state the pipe should be in. One of: `RUNNING`, `STOPPED`.
 * `enrichment` - (Optional) Enrichment resource of the pipe (typically an ARN). Read more about enrichment in the [User Guide](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-pipes.html#pipes-enrichment).
 * `enrichment_parameters` - (Optional) Parameters to configure enrichment for your pipe. Detailed below.
+* `kms_key_identifier` - (Optional) Identifier of the AWS KMS customer managed key for EventBridge to use, if you choose to use a customer managed key to encrypt pipe data. The identifier can be the key Amazon Resource Name (ARN), KeyId, key alias, or key alias ARN. If not set, EventBridge uses an AWS owned key to encrypt pipe data.
 * `log_configuration` - (Optional) Logging configuration settings for the pipe. Detailed below.
 * `name` - (Optional) Name of the pipe. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
 * `name_prefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
@@ -205,9 +230,10 @@ You can find out more about EventBridge Pipes Enrichment in the [User Guide](htt
 
 You can find out more about EventBridge Pipes Enrichment in the [User Guide](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-pipes-logs.html).
 
-* `level` - (Required) The level of logging detail to include. Valid values `OFF`, `ERROR`, `INFO` and `TRACE`.
 * `cloudwatch_logs_log_destination` - (Optional) Amazon CloudWatch Logs logging configuration settings for the pipe. Detailed below.
 * `firehose_log_destination` - (Optional) Amazon Kinesis Data Firehose logging configuration settings for the pipe. Detailed below.
+* `include_execution_data` - (Optional) String list that specifies whether the execution data (specifically, the `payload`, `awsRequest`, and `awsResponse` fields) is included in the log messages for this pipe. This applies to all log destinations for the pipe. Valid values `ALL`.
+* `level` - (Required) The level of logging detail to include. Valid values `OFF`, `ERROR`, `INFO` and `TRACE`.
 * `s3_log_destination` - (Optional) Amazon S3 logging configuration settings for the pipe. Detailed below.
 
 #### log_configuration.cloudwatch_logs_log_destination Configuration Block
@@ -356,7 +382,7 @@ You can find out more about EventBridge Pipes Targets in the [User Guide](https:
 * `kinesis_stream_parameters` - (Optional) The parameters for using a Kinesis stream as a source. Detailed below.
 * `lambda_function_parameters` - (Optional) The parameters for using a Lambda function as a target. Detailed below.
 * `redshift_data_parameters` - (Optional) These are custom parameters to be used when the target is a Amazon Redshift cluster to invoke the Amazon Redshift Data API BatchExecuteStatement. Detailed below.
-* `sagemaker_pipeline_parameters` - (Optional) The parameters for using a SageMaker pipeline as a target. Detailed below.
+* `sagemaker_pipeline_parameters` - (Optional) The parameters for using a SageMaker AI pipeline as a target. Detailed below.
 * `sqs_queue_parameters` - (Optional) The parameters for using a Amazon SQS stream as a target. Detailed below.
 * `step_function_state_machine_parameters` - (Optional) The parameters for using a Step Functions state machine as a target. Detailed below.
 
@@ -527,12 +553,12 @@ You can find out more about EventBridge Pipes Targets in the [User Guide](https:
 
 #### target_parameters.sagemaker_pipeline_parameters Configuration Block
 
-* `pipeline_parameter` - (Optional) List of Parameter names and values for SageMaker Model Building Pipeline execution. Detailed below.
+* `pipeline_parameter` - (Optional) List of Parameter names and values for SageMaker AI Model Building Pipeline execution. Detailed below.
 
 ##### target_parameters.sagemaker_pipeline_parameters.parameters Configuration Block
 
-* `name` - (Optional) Name of parameter to start execution of a SageMaker Model Building Pipeline. Maximum length of 256.
-* `value` - (Optional) Value of parameter to start execution of a SageMaker Model Building Pipeline. Maximum length of 1024.
+* `name` - (Optional) Name of parameter to start execution of a SageMaker AI Model Building Pipeline. Maximum length of 256.
+* `value` - (Optional) Value of parameter to start execution of a SageMaker AI Model Building Pipeline. Maximum length of 1024.
 
 #### target_parameters.sqs_queue_parameters Configuration Block
 

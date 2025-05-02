@@ -37,7 +37,7 @@ func resourceControl() *schema.Resource {
 		DeleteWithoutTimeout: resourceControlDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 				conn := meta.(*conns.AWSClient).ControlTowerClient(ctx)
 
 				parts, err := flex.ExpandResourceId(d.Id(), controlResourceIDPartCount, false)
@@ -101,14 +101,18 @@ func resourceControl() *schema.Resource {
 	}
 }
 
-func resourceControlCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceControlCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ControlTowerClient(ctx)
 
 	controlIdentifier := d.Get("control_identifier").(string)
 	targetIdentifier := d.Get("target_identifier").(string)
-	id := errs.Must(flex.FlattenResourceId([]string{targetIdentifier, controlIdentifier}, controlResourceIDPartCount, false))
+	id, err := flex.FlattenResourceId([]string{targetIdentifier, controlIdentifier}, controlResourceIDPartCount, false)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
 	input := &controltower.EnableControlInput{
 		ControlIdentifier: aws.String(controlIdentifier),
 		TargetIdentifier:  aws.String(targetIdentifier),
@@ -139,7 +143,7 @@ func resourceControlCreate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceControlRead(ctx, d, meta)...)
 }
 
-func resourceControlRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceControlRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ControlTowerClient(ctx)
@@ -188,7 +192,7 @@ func resourceControlRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceControlUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceControlUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ControlTowerClient(ctx)
@@ -219,7 +223,7 @@ func resourceControlUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceControlRead(ctx, d, meta)...)
 }
 
-func resourceControlDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceControlDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ControlTowerClient(ctx)
@@ -232,10 +236,11 @@ func resourceControlDelete(ctx context.Context, d *schema.ResourceData, meta int
 	targetIdentifier, controlIdentifier := parts[0], parts[1]
 
 	log.Printf("[DEBUG] Deleting ControlTower Control: %s", d.Id())
-	output, err := conn.DisableControl(ctx, &controltower.DisableControlInput{
+	input := controltower.DisableControlInput{
 		ControlIdentifier: aws.String(controlIdentifier),
 		TargetIdentifier:  aws.String(targetIdentifier),
-	})
+	}
+	output, err := conn.DisableControl(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting ControlTower Control (%s): %s", d.Id(), err)
@@ -340,11 +345,11 @@ func findEnabledControl(ctx context.Context, conn *controltower.Client, input *c
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findEnabledControls(ctx context.Context, conn *controltower.Client, input *controltower.ListEnabledControlsInput, filter tfslices.Predicate[*types.EnabledControlSummary]) ([]*types.EnabledControlSummary, error) {
-	var output []*types.EnabledControlSummary
+func findEnabledControls(ctx context.Context, conn *controltower.Client, input *controltower.ListEnabledControlsInput, filter tfslices.Predicate[*types.EnabledControlSummary]) ([]types.EnabledControlSummary, error) {
+	var output []types.EnabledControlSummary
 
 	pages := controltower.NewListEnabledControlsPaginator(conn, input)
 	for pages.HasMorePages() {
@@ -362,8 +367,7 @@ func findEnabledControls(ctx context.Context, conn *controltower.Client, input *
 		}
 
 		for _, v := range page.EnabledControls {
-			v := v
-			if v := &v; filter(v) {
+			if filter(&v) {
 				output = append(output, v)
 			}
 		}
@@ -422,7 +426,7 @@ func findControlOperationByID(ctx context.Context, conn *controltower.Client, id
 }
 
 func statusControlOperation(ctx context.Context, conn *controltower.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findControlOperationByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

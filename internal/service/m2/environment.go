@@ -61,10 +61,6 @@ type environmentResource struct {
 	framework.WithTimeouts
 }
 
-func (*environmentResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_m2_environment"
-}
-
 func (r *environmentResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -398,7 +394,7 @@ func (r *environmentResource) Update(ctx context.Context, request resource.Updat
 					return
 				}
 
-				input.DesiredCapacity = fwflex.Int32FromFramework(ctx, highAvailabilityConfigData.DesiredCapacity)
+				input.DesiredCapacity = fwflex.Int32FromFrameworkInt64(ctx, highAvailabilityConfigData.DesiredCapacity)
 			}
 			if !new.InstanceType.Equal(old.InstanceType) {
 				input.InstanceType = fwflex.StringFromFramework(ctx, new.InstanceType)
@@ -435,7 +431,7 @@ func (r *environmentResource) Delete(ctx context.Context, request resource.Delet
 	conn := r.Meta().M2Client(ctx)
 
 	_, err := conn.DeleteEnvironment(ctx, &m2.DeleteEnvironmentInput{
-		EnvironmentId: aws.String(data.ID.ValueString()),
+		EnvironmentId: data.ID.ValueStringPointer(),
 	})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
@@ -453,10 +449,6 @@ func (r *environmentResource) Delete(ctx context.Context, request resource.Delet
 
 		return
 	}
-}
-
-func (r *environmentResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func findEnvironmentByID(ctx context.Context, conn *m2.Client, id string) (*m2.GetEnvironmentOutput, error) {
@@ -485,7 +477,7 @@ func findEnvironmentByID(ctx context.Context, conn *m2.Client, id string) (*m2.G
 }
 
 func statusEnvironment(ctx context.Context, conn *m2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findEnvironmentByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
@@ -578,8 +570,8 @@ type environmentResourceModel struct {
 	SecurityGroupIDs             fwtypes.SetValueOf[types.String]                             `tfsdk:"security_group_ids"`
 	StorageConfigurations        fwtypes.ListNestedObjectValueOf[storageConfigurationModel]   `tfsdk:"storage_configuration"`
 	SubnetIDs                    fwtypes.SetValueOf[types.String]                             `tfsdk:"subnet_ids"`
-	Tags                         types.Map                                                    `tfsdk:"tags"`
-	TagsAll                      types.Map                                                    `tfsdk:"tags_all"`
+	Tags                         tftags.Map                                                   `tfsdk:"tags"`
+	TagsAll                      tftags.Map                                                   `tfsdk:"tags_all"`
 	Timeouts                     timeouts.Value                                               `tfsdk:"timeouts"`
 }
 
