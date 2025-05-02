@@ -14,15 +14,15 @@ Upgrade topics:
 
 <!-- TOC depthFrom:2 depthTo:2 -->
 
-- [Provider Version Configuration](#provider-version-configuration)
-- [Provider Arguments](#provider-arguments)
-- [Dropping Support For Amazon SimpleDB](#dropping-support-for-amazon-simpledb)
-- [Dropping Support For Amazon Worklink](#dropping-support-for-amazon-worklink)
-- [AWS OpsWorks Stacks End of Life](#aws-opsworks-stacks-end-of-life)
-- [AWS CloudWatch Evidently Deprecation](#aws-cloudwatch-evidently-deprecation)
+- [Prerequisities to Upgrade to v6.0.0](#prerequisities-to-upgrade-to-v600)
+- [Removed Provider Arguments](#removed-provider-arguments)
 - [Amazon Elastic Transcoder Deprecation](#amazon-elastic-transcoder-deprecation)
-- [S3 Global Endpoint Support Deprecation](#s3-global-endpoint-support-deprecation)
-- [Updated TypeNullableBool Validation](#updated-typenullablebool-validation)
+- [CloudWatch Evidently Deprecation](#cloudwatch-evidently-deprecation)
+- [OpsWorks Stacks Removal](#opsworks-stacks-removal)
+- [SimpleDB Support Removed](#simpledb-support-removed)
+- [Worklink Support Removed](#worklink-support-removed)
+- [S3 Global Endpoint Deprecation](#s3-global-endpoint-deprecation)
+- [`TypeNullableBool` Validation Update](#typenullablebool-validation-update)
 - [data-source/aws_ami](#data-sourceaws_ami)
 - [data-source/aws_batch_compute_environment](#data-sourceaws_batch_compute_environment)
 - [data-source/aws_ecs_task_definition](#data-sourceaws_ecs_task_definition)
@@ -36,6 +36,8 @@ Upgrade topics:
 - [data-source/aws_opensearchserverless_security_config](#data-sourceaws_opensearchserverless_security_config)
 - [data-source/aws_quicksight_data_set](#data-sourceaws_quicksight_data_set)
 - [data-source/aws_service_discovery_service](#data-sourceaws_service_discovery_service)
+- [resource/aws_accessanalyzer_archive_rule](#typenullablebool-validation-update)
+- [resource/aws_alb_target_group](#typenullablebool-validation-update)
 - [resource/aws_api_gateway_account](#resourceaws_api_gateway_account)
 - [resource/aws_api_gateway_deployment](#resourceaws_api_gateway_deployment)
 - [resource/aws_batch_compute_environment](#resourceaws_batch_compute_environment)
@@ -43,23 +45,31 @@ Upgrade topics:
 - [resource/aws_bedrock_model_invocation_logging_configuration](#resourceaws_bedrock_model_invocation_logging_configuration)
 - [resource/aws_cloudfront_key_value_store](#resourceaws_cloudfront_key_value_store)
 - [resource/aws_cloudfront_response_headers_policy](#resourceaws_cloudfront_response_headers_policy)
+- [resource/aws_cloudtrail_event_data_store](#typenullablebool-validation-update)
 - [resource/aws_cognito_user_in_group](#resourceaws_cognito_user_in_group)
 - [resource/aws_db_instance](#resourceaws_db_instance)
 - [resource/aws_dms_endpoint](#resourceaws_dms_endpoint)
 - [resource/aws_dx_gateway_association](#resourceaws_dx_gateway_association)
+- [resource/aws_ec2_spot_instance_fleet](#typenullablebool-validation-update)
 - [resource/aws_ecs_task_definition](#resourceaws_ecs_task_definition)
 - [resource/aws_eip](#resourceaws_eip)
+- [resource/aws_eks_addon](#resourceaws_eks_addon)
+- [resource/aws_elasticache_cluster](#typenullablebool-validation-update)
 - [resource/aws_elasticache_replication_group](#resourceaws_elasticache_replication_group)
 - [resource/aws_elasticache_user](#resourceaws_elasticache_user)
 - [resource/aws_elasticache_user_group](#resourceaws_elasticache_user_group)
-- [resource/aws_eks_addon](#resourceaws_eks_addon)
+- [resource/aws_evidently_feature](#typenullablebool-validation-update)
 - [resource/aws_flow_log](#resourceaws_flow_log)
 - [resource/aws_guardduty_organization_configuration](#resourceaws_guardduty_organization_configuration)
+- [resource/aws_imagebuilder_container_recipe](#typenullablebool-validation-update)
+- [resource/aws_imagebuilder_image_recipe](#typenullablebool-validation-update)
 - [resource/aws_instance](#resourceaws_instance)
 - [resource/aws_kinesis_analytics_application](#resourceaws_kinesis_analytics_application)
 - [resource/aws_launch_template](#resourceaws_launch_template)
+- [resource/aws_lb_target_group](#typenullablebool-validation-update)
 - [resource/aws_media_store_container](#resourceaws_media_store_container)
 - [resource/aws_media_store_container_policy](#resourceaws_media_store_container_policy)
+- [resource/aws_mq_broker](#typenullablebool-validation-update)
 - [resource/aws_networkmanager_core_network](#resourceaws_networkmanager_core_network)
 - [resource/aws_opensearch_domain](#resourceaws_opensearch_domain)
 - [resource/aws_opensearchserverless_security_config](#resourceaws_opensearchserverless_security_config)
@@ -76,15 +86,20 @@ Upgrade topics:
 
 <!-- /TOC -->
 
-## Provider Version Configuration
+## Prerequisities to Upgrade to v6.0.0
 
--> Before upgrading to version 6.0.0, upgrade to the most recent 5.X version of the provider and ensure that your environment successfully runs [`terraform plan`](https://www.terraform.io/docs/commands/plan.html). You should not see changes you don't expect, or deprecation notices for anything mentioned in this guide.
+-> Before upgrading to version `6.0.0`, first upgrade to the latest available `5.x` version of the provider. Run [`terraform plan`](https://developer.hashicorp.com/terraform/cli/commands/plan) and confirm that:
 
-Use [version constraints when configuring Terraform providers](https://www.terraform.io/docs/configuration/providers.html#provider-versions). If you are following that recommendation, update the version constraints in your Terraform configuration and run [`terraform init -upgrade`](https://www.terraform.io/docs/commands/init.html) to download the new version.
+- Your plan completes without errors or unexpected changes.
+- There are no deprecation warnings related to the changes described in this guide.
 
-For example, given this previous configuration:
+If you use [version constraints](https://developer.hashicorp.com/terraform/language/providers/requirements#provider-versions) (recommended), update them to allow the `6.x` series and run [`terraform init -upgrade`](https://developer.hashicorp.com/terraform/cli/commands/init) to download the new version.
 
-```terraform
+### Example
+
+**Before:**
+
+```hcl
 terraform {
   required_providers {
     aws = {
@@ -99,9 +114,9 @@ provider "aws" {
 }
 ```
 
-Update to the latest 6.X version:
+**After:**
 
-```terraform
+```hcl
 terraform {
   required_providers {
     aws = {
@@ -116,114 +131,143 @@ provider "aws" {
 }
 ```
 
-## Provider Arguments
+---
 
-Version 6.0.0 removes these `provider` arguments:
+## Removed Provider Arguments
 
-* `endpoints.opsworks` - Removed following AWS OpsWorks Stacks End of Life
-* `endpoints.simpledb` and `endpoints.sdb` - Removed following dropping support for Amazon SimpleDB
-* `endpoints.worklink` - Removed following dropping support for Amazon Worklink
+The following provider arguments have been removed in `v6.0.0`:
 
-## Dropping Support For Amazon SimpleDB
+- `endpoints.opsworks` – removed following AWS OpsWorks Stacks End of Life.
+- `endpoints.simpledb` and `endpoints.sdb` – removed due to the removal of Amazon SimpleDB support.
+- `endpoints.worklink` – removed due to the removal of Amazon Worklink support.
 
-As the [AWS SDK for Go v2](https://docs.aws.amazon.com/sdk-for-go/v2/developer-guide/welcome.html) does not support Amazon SimpleDB, the `aws_simpledb_domain` resource has been removed.
+Remove these arguments from your provider configuration.
 
-## Dropping Support For Amazon Worklink
-
-As the [AWS SDK for Go v2](https://docs.aws.amazon.com/sdk-for-go/v2/developer-guide/welcome.html) has [dropped support](https://github.com/aws/aws-sdk-go-v2/pull/2814) for Amazon Worklink, the following resources have been removed:
-
-* `aws_worklink_fleet`
-* `aws_worklink_website_certificate_authority_association`
-
-## AWS OpsWorks Stacks End of Life
-
-As the AWS OpsWorks Stacks service has reached [End Of Life](https://docs.aws.amazon.com/opsworks/latest/userguide/stacks-eol-faqs.html), the following resources have been removed:
-
-* `aws_opsworks_application`
-* `aws_opsworks_custom_layer`
-* `aws_opsworks_ecs_cluster_layer`
-* `aws_opsworks_ganglia_layer`
-* `aws_opsworks_haproxy_layer`
-* `aws_opsworks_instance`
-* `aws_opsworks_java_app_layer`
-* `aws_opsworks_memcached_layer`
-* `aws_opsworks_mysql_layer`
-* `aws_opsworks_nodejs_app_layer`
-* `aws_opsworks_permission`
-* `aws_opsworks_php_app_layer`
-* `aws_opsworks_rails_app_layer`
-* `aws_opsworks_rds_db_instance`
-* `aws_opsworks_stack`
-* `aws_opsworks_static_web_layer`
-* `aws_opsworks_user_profile`
-
-## AWS CloudWatch Evidently Deprecation
-
-Effective October 17, 2025, AWS will [no longer support Cloudwatch Evidently](https://aws.amazon.com/blogs/mt/support-for-amazon-cloudwatch-evidently-ending-soon/).
-The following resources have been deprecated and will be removed in a future major version.
-
-* `aws_evidently_feature`
-* `aws_evidently_launch`
-* `aws_evidently_project`
-* `aws_evidently_segment`
-
-Use [AWS AppConfig Feature Flags](https://aws.amazon.com/blogs/mt/using-aws-appconfig-feature-flags/) instead.
+---
 
 ## Amazon Elastic Transcoder Deprecation
 
-AWS has made the decision to [discontinue Amazon Elastic Transcoder](https://aws.amazon.com/blogs/media/support-for-amazon-elastic-transcoder-ending-soon/), effective November 13, 2025.
-The following resources have been deprecated and will be removed in a future major version.
+Amazon Elastic Transcoder will be [discontinued](https://aws.amazon.com/blogs/media/support-for-amazon-elastic-transcoder-ending-soon/) on **November 13, 2025**.
 
-* `aws_elastictranscoder_pipeline`
-* `aws_elastictranscoder_preset`
+The following resources are deprecated and will be removed in a future major release:
+
+- `aws_elastictranscoder_pipeline`
+- `aws_elastictranscoder_preset`
 
 Use [AWS Elemental MediaConvert](https://aws.amazon.com/blogs/media/migrating-workflows-from-amazon-elastic-transcoder-to-aws-elemental-mediaconvert/) instead.
 
-## S3 Global Endpoint Support Deprecation
+---
 
-Support for the global S3 endpoint is deprecated, along with the `s3_us_east_1_regional_endpoint` argument.
-The ability to use the global S3 endpoint will be removed in `v7.0.0`.
-This change only affects S3 resources in `us-east-1` (excluding directory buckets), where `s3_us_east_1_regional_endpoint` is set to `legacy` in the provider configuration.
-Impacted configurations can remove the `s3_us_east_1_regional_endpoint` provider argument, or switch the value to `regional` to verify connectivity with the regional S3 endpoint in `us-east-1` prior to this option being removed.
+## CloudWatch Evidently Deprecation
 
-## Updated `TypeNullableBool` Validation
+AWS will [end support](https://aws.amazon.com/blogs/mt/support-for-amazon-cloudwatch-evidently-ending-soon/) for CloudWatch Evidently on **October 17, 2025**.
 
-`TypeNullableBool` arguments now only accept one of `""` (empty string), `true`, or `false`.
-The ability to provide `0` or `1` to these arguments was previously deprecated and will now result in a plan-time validation error instead.
+The following resources are deprecated and will be removed in a future major release:
 
-The following resource arguments are impacted by this change:
-
-- `aws_accessanalyzer_archive_rule`
-    - `filter.exists`
-- `aws_cloudtrail_event_data_store`
-    - `suspend`
-- `aws_ec2_spot_instance_fleet`
-    - `terminate_instances_on_delete`
-- `aws_elasticache_cluster`
-    - `auto_minor_version_upgrade`
-- `aws_elasticache_replication_group`
-    - `at_rest_encryption_enabled`
-    - `auto_minor_version_upgrade`
 - `aws_evidently_feature`
-    - `variations.value.bool_value`
-- `aws_imagebuilder_container_recipe`
-    - `instance_configuration.block_device_mapping.ebs.delete_on_termination`
-    - `instance_configuration.block_device_mapping.ebs.encrypted`
-- `aws_imagebuilder_image_recipe`
-    - `block_device_mapping.ebs.delete_on_termination`
-    - `block_device_mapping.ebs.encrypted`
-- `aws_launch_template`
-    - `block_device_mappings.ebs.delete_on_termination`
-    - `block_device_mappings.ebs.encrypted`
-    - `ebs_optimized`
-    - `network_interfaces.associate_carrier_ip_address`
-    - `network_interfaces.associate_public_ip_address`
-    - `network_interfaces.delete_on_termination`
-    - `network_interfaces.primary_ipv6`
-- `aws_lb_target_group`, `aws_alb_target_group`
-    - `preserve_client_ip`
-- `aws_mq_broker`
-    - `logs.audit`
+- `aws_evidently_launch`
+- `aws_evidently_project`
+- `aws_evidently_segment`
+
+Migrate to [AWS AppConfig Feature Flags](https://aws.amazon.com/blogs/mt/using-aws-appconfig-feature-flags/).
+
+---
+
+## OpsWorks Stacks Removal
+
+The AWS OpsWorks Stacks service has reached [End of Life](https://docs.aws.amazon.com/opsworks/latest/userguide/stacks-eol-faqs.html). The following resources have been removed:
+
+- `aws_opsworks_application`
+- `aws_opsworks_custom_layer`
+- `aws_opsworks_ecs_cluster_layer`
+- `aws_opsworks_ganglia_layer`
+- `aws_opsworks_haproxy_layer`
+- `aws_opsworks_instance`
+- `aws_opsworks_java_app_layer`
+- `aws_opsworks_memcached_layer`
+- `aws_opsworks_mysql_layer`
+- `aws_opsworks_nodejs_app_layer`
+- `aws_opsworks_permission`
+- `aws_opsworks_php_app_layer`
+- `aws_opsworks_rails_app_layer`
+- `aws_opsworks_rds_db_instance`
+- `aws_opsworks_stack`
+- `aws_opsworks_static_web_layer`
+- `aws_opsworks_user_profile`
+
+---
+
+## SimpleDB Support Removed
+
+The `aws_simpledb_domain` resource has been removed, as the [AWS SDK for Go v2](https://docs.aws.amazon.com/sdk-for-go/v2/developer-guide/welcome.html) no longer supports Amazon SimpleDB.
+
+---
+
+## Worklink Support Removed
+
+The following resources have been removed due to dropped support for Amazon Worklink in the [AWS SDK for Go v2](https://github.com/aws/aws-sdk-go-v2/pull/2814):
+
+- `aws_worklink_fleet`
+- `aws_worklink_website_certificate_authority_association`
+
+---
+
+## S3 Global Endpoint Deprecation
+
+Support for the global S3 endpoint is deprecated. This affects S3 resources in `us-east-1` (excluding directory buckets) when the `s3_us_east_1_regional_endpoint` provider argument is set to `legacy`.
+
+The `s3_us_east_1_regional_endpoint` argument will be removed in `v7.0.0`.
+
+To prepare:
+
+- Remove the `s3_us_east_1_regional_endpoint` argument from your provider configuration, **or**
+- Set its value to `regional` and verify functionality.
+
+---
+
+## `TypeNullableBool` Validation Update
+
+Arguments of type `TypeNullableBool` now only accept:
+
+- `""` (empty string)
+- `true`
+- `false`
+
+Previously accepted values such as `0` and `1` now cause a validation error during `terraform plan`.
+
+### Affected Resources and Arguments
+
+- **`aws_accessanalyzer_archive_rule`**
+  - `filter.exists`
+- **`aws_cloudtrail_event_data_store`**
+  - `suspend`
+- **`aws_ec2_spot_instance_fleet`**
+  - `terminate_instances_on_delete`
+- **`aws_elasticache_cluster`**
+  - `auto_minor_version_upgrade`
+- **`aws_elasticache_replication_group`**
+  - `at_rest_encryption_enabled`
+  - `auto_minor_version_upgrade`
+- **`aws_evidently_feature`**
+  - `variations.value.bool_value`
+- **`aws_imagebuilder_container_recipe`**
+  - `instance_configuration.block_device_mapping.ebs.delete_on_termination`
+  - `instance_configuration.block_device_mapping.ebs.encrypted`
+- **`aws_imagebuilder_image_recipe`**
+  - `block_device_mapping.ebs.delete_on_termination`
+  - `block_device_mapping.ebs.encrypted`
+- **`aws_launch_template`**
+  - `block_device_mappings.ebs.delete_on_termination`
+  - `block_device_mappings.ebs.encrypted`
+  - `ebs_optimized`
+  - `network_interfaces.associate_carrier_ip_address`
+  - `network_interfaces.associate_public_ip_address`
+  - `network_interfaces.delete_on_termination`
+  - `network_interfaces.primary_ipv6`
+- **`aws_lb_target_group`, `aws_alb_target_group`**
+  - `preserve_client_ip`
+- **`aws_mq_broker`**
+  - `logs.audit`
 
 ## data-source/aws_ami
 
@@ -412,11 +456,9 @@ Use `domain` instead.
 
 ## resource/aws_elasticache_replication_group
 
-The `auth_token_update_strategy` argument no longer has a default value.
-If `auth_token` is set, this argument must also be explicitly configured.
-
-The ability to provide an uppercase `engine` value is deprecated.
-In `v7.0.0`, plan-time validation of the `engine` argument will require an entirely lowercase value to match the returned value from the AWS API without diff suppression.
+* The `auth_token_update_strategy` argument no longer has a default value. If `auth_token` is set, this argument must also be explicitly configured.
+* The ability to provide an uppercase `engine` value is deprecated. In `v7.0.0`, plan-time validation of the `engine` argument will require an entirely lowercase value to match the returned value from the AWS API without diff suppression.
+* See also [changes](#typenullablebool-validation-update) to `at_rest_encryption_enabled` and `auto_minor_version_upgrade`.
 
 ## resource/aws_elasticache_user
 
@@ -443,6 +485,8 @@ The `auto_enable` attribute has been removed and the `auto_enable_organization_m
 Remove `elastic_gpu_specifications` from your configuration—it no longer exists. Amazon Elastic Graphics reached end of life in January 2024.
 
 Remove `elastic_inference_accelerator` from your configuration—it no longer exists. Amazon Elastic Inference reached end of life in April 2024.
+
+See also [changes](#typenullablebool-validation-update) to `block_device_mappings.ebs.delete_on_termination`, `block_device_mappings.ebs.encrypted`, `ebs_optimized`, `network_interfaces.associate_carrier_ip_address`, `network_interfaces.associate_public_ip_address`, `network_interfaces.delete_on_termination`, and `network_interfaces.primary_ipv6`.
 
 ## resource/aws_media_store_container
 
