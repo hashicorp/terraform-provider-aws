@@ -15,23 +15,103 @@ To address this, version 6.0.0 of the Terraform AWS Provider adds an additional 
 
 The new top-level `region` argument is [_Optional_ and _Computed_](https://developer.hashicorp.com/terraform/plugin/framework/handling-data/attributes/string#configurability), with a default value of the Region from the provider configuration. The value of the `region` argument is validated as being in the configured [partition](https://docs.aws.amazon.com/whitepapers/latest/aws-fault-isolation-boundaries/partitions.html). A change to the argument's value forces resource replacement. To [import](https://developer.hashicorp.com/terraform/cli/import) a resource in a specific Region append `@<region>` to the [import ID](https://developer.hashicorp.com/terraform/language/import#import-id), for example `terraform import aws_vpc.test_vpc vpc-a01106c2@eu-west-1`.
 
-For example, to use a single provider configuration to create S3 buckets in multiple Regions:
+Some examples will clarify.
+
+### Cross-Region VPC Peering
+
+#### Terraform AWS Provider v5 (and below)
 
 ```terraform
-locals {
-  regions = [
-    "us-east-1",
-    "us-west-2",
-    "ap-northeast-1",
-    "eu-central-1",
-  ]
+provider "aws" {
+  region = "us-east-1"
+
+  # Requester's credentials.
 }
 
-resource "aws_s3_bucket" "example" {
-  count  = length(local.regions)
-  region = local.regions[count.index]
+provider "aws" {
+  alias  = "peer"
+  region = "us-west-2"
 
-  bucket = "yournamehere-${local.regions[count.index]}"
+  # Accepter's credentials.
+}
+
+resource "aws_vpc" "main" {
+  cidr_block = "10.0.0.0/16"
+}
+
+resource "aws_vpc" "peer" {
+  provider   = aws.peer
+  cidr_block = "10.1.0.0/16"
+}
+
+data "aws_caller_identity" "peer" {
+  provider = aws.peer
+}
+
+# Requester's side of the connection.
+resource "aws_vpc_peering_connection" "peer" {
+  vpc_id        = aws_vpc.main.id
+  peer_vpc_id   = aws_vpc.peer.id
+  peer_owner_id = data.aws_caller_identity.peer.account_id
+  peer_region   = "us-west-2"
+  auto_accept   = false
+
+  tags = {
+    Side = "Requester"
+  }
+}
+
+# Accepter's side of the connection.
+resource "aws_vpc_peering_connection_accepter" "peer" {
+  provider                  = aws.peer
+  vpc_peering_connection_id = aws_vpc_peering_connection.peer.id
+  auto_accept               = true
+
+  tags = {
+    Side = "Accepter"
+  }
+}
+```
+
+#### Terraform AWS Provider v6 (and above)
+
+```terraform
+provider "aws" {
+  region = "us-east-1"
+
+  # Requester's credentials.
+}
+
+resource "aws_vpc" "main" {
+  cidr_block = "10.0.0.0/16"
+}
+
+resource "aws_vpc" "peer" {
+  region     = "us-west-2"
+  cidr_block = "10.1.0.0/16"
+}
+
+# Requester's side of the connection.
+resource "aws_vpc_peering_connection" "peer" {
+  vpc_id        = aws_vpc.main.id
+  peer_vpc_id   = aws_vpc.peer.id
+  peer_region   = "us-west-2"
+  auto_accept   = false
+
+  tags = {
+    Side = "Requester"
+  }
+}
+
+# Accepter's side of the connection.
+resource "aws_vpc_peering_connection_accepter" "peer" {
+  region                    = "us-west-2"
+  vpc_peering_connection_id = aws_vpc_peering_connection.peer.id
+  auto_accept               = true
+
+  tags = {
+    Side = "Accepter"
+  }
 }
 ```
 
@@ -359,7 +439,7 @@ Some resources (for example [IAM or STS](https://docs.aws.amazon.com/IAM/latest/
 
 #### Global Services
 
-All resources for the following services will be considered _global_:
+All resources for the following services are considered _global_:
 
 * Account Management (`aws_account_*`)
 * CloudFront (`aws_cloudfront_*` and `aws_cloudfrontkeyvaluestore_*`)

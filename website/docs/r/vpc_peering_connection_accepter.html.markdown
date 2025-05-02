@@ -19,6 +19,8 @@ connection into management.
 
 ## Example Usage
 
+### Cross-Account Peering Or Cross-Region Peering Terraform AWS Provider v5 (and below)
+
 ```terraform
 provider "aws" {
   region = "us-east-1"
@@ -62,6 +64,48 @@ resource "aws_vpc_peering_connection" "peer" {
 # Accepter's side of the connection.
 resource "aws_vpc_peering_connection_accepter" "peer" {
   provider                  = aws.peer
+  vpc_peering_connection_id = aws_vpc_peering_connection.peer.id
+  auto_accept               = true
+
+  tags = {
+    Side = "Accepter"
+  }
+}
+```
+
+### Cross-Region Peering (Same Account) Terraform AWS Provider v6 (and above)
+
+```terraform
+provider "aws" {
+  region = "us-east-1"
+
+  # Requester's credentials.
+}
+
+resource "aws_vpc" "main" {
+  cidr_block = "10.0.0.0/16"
+}
+
+resource "aws_vpc" "peer" {
+  region     = "us-west-2"
+  cidr_block = "10.1.0.0/16"
+}
+
+# Requester's side of the connection.
+resource "aws_vpc_peering_connection" "peer" {
+  vpc_id        = aws_vpc.main.id
+  peer_vpc_id   = aws_vpc.peer.id
+  peer_region   = "us-west-2"
+  auto_accept   = false
+
+  tags = {
+    Side = "Requester"
+  }
+}
+
+# Accepter's side of the connection.
+resource "aws_vpc_peering_connection_accepter" "peer" {
+  region                    = "us-west-2"
   vpc_peering_connection_id = aws_vpc_peering_connection.peer.id
   auto_accept               = true
 
