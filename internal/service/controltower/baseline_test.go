@@ -124,7 +124,7 @@ func TestAccControlTowerBaseline_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.ControlTowerServiceID)
+			acctest.PreCheckPartitionHasService(t, names.ControlTowerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ControlTowerServiceID),
@@ -163,7 +163,7 @@ func TestAccControlTowerBaseline_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.ControlTowerServiceID)
+			acctest.PreCheckPartitionHasService(t, names.ControlTowerEndpointID)
 			testAccEnabledBaselinesPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ControlTowerServiceID),
@@ -259,7 +259,7 @@ resource "aws_organizations_organizational_unit" "test" {
 }
 
 resource "aws_controltower_baseline" "test" {
-  baseline_identifier             = "arn:aws:controltower:us-east-1::baseline/3WPD0NA6TJ9AOMU2"
+  baseline_identifier             = "arn:aws:controltower:us-east-1::baseline/17BSJV3IGJ2QSGA2"
   baseline_version                = "4.0"
   target_identifier               = aws_organizations_organizational_unit.test.arn
   parameters {

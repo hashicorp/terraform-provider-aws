@@ -24,7 +24,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -139,6 +138,17 @@ func (r *resourceBaseline) Create(ctx context.Context, req resource.CreateReques
 	// TIP: -- 5. Using the output from the create function, set the minimum attributes
 	plan.ARN = flex.StringToFramework(ctx, out.Arn)
 	plan.ID = flex.StringToFramework(ctx, out.OperationIdentifier)
+
+	// TIP: -- 6. Use a waiter to wait for create to complete
+	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
+	_, err = waitBaselineCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.ControlTower, create.ErrActionWaitingForCreation, ResNameBaseline, plan.BaselineIdentifier.String(), err),
+			err.Error(),
+		)
+		return
+	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
@@ -298,6 +308,73 @@ func (r *resourceBaseline) ImportState(ctx context.Context, req resource.ImportS
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
+// TIP: ==== STATUS CONSTANTS ====
+// Create constants for states and statuses if the service does not
+// already have suitable constants. We prefer that you use the constants
+// provided in the service if available (e.g., awstypes.StatusInProgress).
+const (
+	statusChangePending = "Pending"
+	statusDeleting      = "Deleting"
+	statusNormal        = "Normal"
+	statusUpdated       = "Updated"
+	statusSucceeded     = "SUCCEEDED"
+	statusFailed        = "FAILED"
+	statusUnderChange   = "UNDER_CHANGE"
+)
+
+// TIP: ==== WAITERS ====
+// Some resources of some services have waiters provided by the AWS API.
+// Unless they do not work properly, use them rather than defining new ones
+// here.
+//
+// Sometimes we define the wait, status, and find functions in separate
+// files, wait.go, status.go, and find.go. Follow the pattern set out in the
+// service and define these where it makes the most sense.
+//
+// If these functions are used in the _test.go file, they will need to be
+// exported (i.e., capitalized).
+//
+// You will need to adjust the parameters and names to fit the service.
+func waitBaselineCreated(ctx context.Context, conn *controltower.Client, id string, timeout time.Duration) (*awstypes.EnabledBaselineDetails, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   []string{},
+		Target:                    []string{statusSucceeded},
+		Refresh:                   statusBaseline(ctx, conn, id),
+		Timeout:                   timeout,
+		NotFoundChecks:            20,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*awstypes.EnabledBaselineDetails); ok {
+		return out, err
+	}
+
+	return nil, err
+}
+
+// TIP: ==== STATUS ====
+// The status function can return an actual status when that field is
+// available from the API (e.g., out.Status). Otherwise, you can use custom
+// statuses to communicate the states of the resource.
+//
+// Waiters consume the values returned by status functions. Design status so
+// that it can be reused by a create, update, and delete waiter, if possible.
+func statusBaseline(ctx context.Context, conn *controltower.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		out, err := findBaselineByID(ctx, conn, id)
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return out, string(out.StatusSummary.Status), nil
+	}
+}
+
 func findBaselineByID(ctx context.Context, conn *controltower.Client, id string) (*awstypes.EnabledBaselineDetails, error) {
 	in := &controltower.GetEnabledBaselineInput{
 		EnabledBaselineIdentifier: aws.String(id),
@@ -335,18 +412,18 @@ func findBaselineByID(ctx context.Context, conn *controltower.Client, id string)
 // See more:
 // https://developer.hashicorp.com/terraform/plugin/framework/handling-data/accessing-values
 type resourceBaselineData struct {
-	ARN                types.String                                `tfsdk:"arn"`
-	BaselineIdentifier types.String                                `tfsdk:"baseline_identifier"`
-	BaselineVersion    types.String                                `tfsdk:"baseline_version"`
-	ID                 types.String                                `tfsdk:"id"`
-	Parameters         fwtypes.ListNestedObjectValueOf[parameters] `tfsdk:"parameters"`
-	Tags               tftags.Map                                  `tfsdk:"tags"`
-	TagsAll            tftags.Map                                  `tfsdk:"tags_all"`
-	TargetIdentifier   types.String                                `tfsdk:"target_identifier"`
-	Timeouts           timeouts.Value                              `tfsdk:"timeouts"`
+	ARN                types.String   `tfsdk:"arn"`
+	BaselineIdentifier types.String   `tfsdk:"baseline_identifier"`
+	BaselineVersion    types.String   `tfsdk:"baseline_version"`
+	ID                 types.String   `tfsdk:"id"`
+	Parameters         []parameters   `tfsdk:"parameters"`
+	Tags               tftags.Map     `tfsdk:"tags"`
+	TagsAll            tftags.Map     `tfsdk:"tags_all"`
+	TargetIdentifier   types.String   `tfsdk:"target_identifier"`
+	Timeouts           timeouts.Value `tfsdk:"timeouts"`
 }
 
 type parameters struct {
-	key   types.String `tfsdk:"key"`
-	value types.String `tfsdk:"value"`
+	Key   types.String `tfsdk:"key"`
+	Value types.String `tfsdk:"value"`
 }
