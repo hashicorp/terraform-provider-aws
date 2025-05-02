@@ -260,7 +260,7 @@ This resource supports the following arguments:
 
 ### active_directory_config
 
--> **Note:** active_directory_config is only valid if `workspaces_type` is set to `POOLS`.
+-> **Note:** `active_directory_config` is only valid if `workspaces_type` is set to `POOLS`.
 
 * `domain_name` – The fully qualified domain name of the AWS Directory Service directory.
 * `service_account_secret_arn` – The ARN of the Secrets Manager secret that contains the credentials for the service account. For more information, see [Service Account Details](https://docs.aws.amazon.com/workspaces/latest/adminguide/pools-service-account-details.html)
