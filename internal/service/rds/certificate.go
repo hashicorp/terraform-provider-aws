@@ -21,6 +21,7 @@ import (
 )
 
 // @SDKResource("aws_rds_certificate", name="Default Certificate")
+// @SingletonIdentity
 func resourceCertificate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCertificatePut,

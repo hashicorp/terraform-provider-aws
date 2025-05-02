@@ -390,6 +390,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
 			}),
+			Identity: inttypes.RegionalSingletonIdentity(),
 		},
 		{
 			Factory:  resourceCluster,
