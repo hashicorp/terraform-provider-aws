@@ -964,10 +964,6 @@ resource "aws_s3_object" "startup_script" {
   key     = "startup.sh"
   content = "airflow db init"
 }
-
-
-
-
 `, rName))
 }
 
