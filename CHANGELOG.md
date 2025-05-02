@@ -122,6 +122,33 @@ BUG FIXES:
 
 * resource/aws_rekognition_stream_processor: Fix `regions_of_interest.bounding_box` and `regions_of_interest.polygon` argument validation ([#41380](https://github.com/hashicorp/terraform-provider-aws/issues/41380))
 
+## 5.97.0 (May  1, 2025)
+
+FEATURES:
+
+* **New Resource:** `aws_ec2_default_credit_specification` ([#42345](https://github.com/hashicorp/terraform-provider-aws/issues/42345))
+
+ENHANCEMENTS:
+
+* data-source/aws_glue_connection: Support `athena_properties` attribute ([#42262](https://github.com/hashicorp/terraform-provider-aws/issues/42262))
+* data-source/aws_imagebuilder_infrastructure_configuration: Add `placement` attribute ([#42347](https://github.com/hashicorp/terraform-provider-aws/issues/42347))
+* data-source/aws_networkfirewall_firewall: Add `enabled_analysis_types` attribute ([#42160](https://github.com/hashicorp/terraform-provider-aws/issues/42160))
+* data-source/aws_workspaces_directory: Add `certificate_based_auth_properties` attribute ([#42269](https://github.com/hashicorp/terraform-provider-aws/issues/42269))
+* resource/aws_accessanalyzer_analyzer: Add `configuration.unused_access.analysis_rule` argument ([#42332](https://github.com/hashicorp/terraform-provider-aws/issues/42332))
+* resource/aws_fis_experiment_template: Add support for `ManagedResources` to `action.*.target` ([#42376](https://github.com/hashicorp/terraform-provider-aws/issues/42376))
+* resource/aws_glue_connection: Add `athena_properties` argument and allow `DYNAMODB` connection type. ([#42262](https://github.com/hashicorp/terraform-provider-aws/issues/42262))
+* resource/aws_glue_connection: Support `DYNAMODB` as a valid value for `connection_type` ([#42262](https://github.com/hashicorp/terraform-provider-aws/issues/42262))
+* resource/aws_imagebuilder_infrastructure_configuration: Add `placement` argument ([#42347](https://github.com/hashicorp/terraform-provider-aws/issues/42347))
+* resource/aws_networkfirewall_firewall: Add `enabled_analysis_types` argument ([#42160](https://github.com/hashicorp/terraform-provider-aws/issues/42160))
+* resource/aws_workspaces_directory: Add `certificate_based_auth_properties` configuration block ([#42269](https://github.com/hashicorp/terraform-provider-aws/issues/42269))
+
+BUG FIXES:
+
+* resource/aws_vpclattice_listener_rule: Prevents error when setting `listener_identifier` to ARN. ([#42215](https://github.com/hashicorp/terraform-provider-aws/issues/42215))
+* resource/aws_vpclattice_listener_rule: Prevents error when setting `service_identifier` to ARN. ([#42215](https://github.com/hashicorp/terraform-provider-aws/issues/42215))
+* resource/aws_vpclattice_listener_rule: Requires `match.http_match`. ([#42215](https://github.com/hashicorp/terraform-provider-aws/issues/42215))
+* resource/aws_vpclattice_listener_rule: Requires exactly one of `action.fixed_response` or `action.forward`. ([#42215](https://github.com/hashicorp/terraform-provider-aws/issues/42215))
+
 ## 5.96.0 (April 24, 2025)
 
 FEATURES:
