@@ -29,8 +29,10 @@ func TestAccRDSCertificate_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:      testAccCertificate_basic,
-		acctest.CtDisappears: testAccCertificate_disappears,
+		acctest.CtBasic:           testAccCertificate_basic,
+		acctest.CtDisappears:      testAccCertificate_disappears,
+		"Identity_Basic":          testAccRDSCertificate_Identity_Basic,
+		"Identity_RegionOverride": testAccRDSCertificate_Identity_RegionOverride,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -70,7 +72,7 @@ func testAccCertificate_basic(t *testing.T) {
 	})
 }
 
-func TestAccCertificate_Identity_Basic(t *testing.T) {
+func testAccRDSCertificate_Identity_Basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.Certificate
 	resourceName := "aws_rds_certificate.test"
@@ -130,7 +132,7 @@ func TestAccCertificate_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccCertificate_Identity_RegionOverride(t *testing.T) {
+func testAccRDSCertificate_Identity_RegionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_rds_certificate.test"
 
