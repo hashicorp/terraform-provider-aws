@@ -403,6 +403,8 @@ Some Regional services have subsets of resources that are global:
 * Macie
     * `aws_macie2_organization_admin_account` is global
     * `aws_macie2_organization_configuration` is global
+* Resource Access Manager
+    * `aws_ram_sharing_with_organization` is global
 * S3
     * `aws_s3_account_public_access_block` is global
 * Security Hub
