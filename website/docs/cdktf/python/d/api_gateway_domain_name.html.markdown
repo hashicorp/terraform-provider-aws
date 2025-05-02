@@ -47,6 +47,7 @@ This data source exports the following attributes in addition to the arguments a
 * `cloudfront_domain_name` - Hostname created by Cloudfront to represent the distribution that implements this domain name mapping.
 * `cloudfront_zone_id` - For convenience, the hosted zone ID (`Z2FDTNDATAQYW2`) that can be used to create a Route53 alias record for the distribution.
 * `endpoint_configuration` - List of objects with the endpoint configuration of this domain name.
+    * `ip_address_type` - The IP address types that can invoke an API (RestApi).
     * `types` - List of endpoint types.
 * `policy` - A stringified JSON policy document that applies to the execute-api service for this DomainName regardless of the caller and Method configuration. Supported only for private custom domain names.
 * `regional_certificate_arn` - ARN for an AWS-managed certificate that is used for validating the regional domain name.
@@ -56,4 +57,4 @@ This data source exports the following attributes in addition to the arguments a
 * `security_policy` - Security policy for the domain name.
 * `tags` - Key-value map of tags for the resource.
 
-<!-- cache-key: cdktf-0.20.8 input-d1bbc749fbaf28bf7bd0285d5c505d36f1e500937869ce42689dba50f9b69962 -->
+<!-- cache-key: cdktf-0.20.8 input-d63635151fd0bbd2eaa5b04842db5559465f6233dacdf1ccd8e41ed738503281 -->

@@ -56,7 +56,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
 	return []*inttypes.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceDetector,
+			Factory:  dataSourceDetector,
 			TypeName: "aws_guardduty_detector",
 			Name:     "Detector",
 			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
@@ -71,7 +71,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePackageSDKResource {
 	return []*inttypes.ServicePackageSDKResource{
 		{
-			Factory:  ResourceDetector,
+			Factory:  resourceDetector,
 			TypeName: "aws_guardduty_detector",
 			Name:     "Detector",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
@@ -83,7 +83,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			}),
 		},
 		{
-			Factory:  ResourceDetectorFeature,
+			Factory:  resourceDetectorFeature,
 			TypeName: "aws_guardduty_detector_feature",
 			Name:     "Detector Feature",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
@@ -92,7 +92,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			}),
 		},
 		{
-			Factory:  ResourceFilter,
+			Factory:  resourceFilter,
 			TypeName: "aws_guardduty_filter",
 			Name:     "Filter",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
@@ -113,7 +113,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			}),
 		},
 		{
-			Factory:  ResourceIPSet,
+			Factory:  resourceIPSet,
 			TypeName: "aws_guardduty_ipset",
 			Name:     "IP Set",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
@@ -125,7 +125,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			}),
 		},
 		{
-			Factory:  ResourceMember,
+			Factory:  resourceMember,
 			TypeName: "aws_guardduty_member",
 			Name:     "Member",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
@@ -134,7 +134,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			}),
 		},
 		{
-			Factory:  ResourceOrganizationAdminAccount,
+			Factory:  resourceOrganizationAdminAccount,
 			TypeName: "aws_guardduty_organization_admin_account",
 			Name:     "Organization Admin Account",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
@@ -142,7 +142,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			}),
 		},
 		{
-			Factory:  ResourceOrganizationConfiguration,
+			Factory:  resourceOrganizationConfiguration,
 			TypeName: "aws_guardduty_organization_configuration",
 			Name:     "Organization Configuration",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
@@ -151,7 +151,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			}),
 		},
 		{
-			Factory:  ResourceOrganizationConfigurationFeature,
+			Factory:  resourceOrganizationConfigurationFeature,
 			TypeName: "aws_guardduty_organization_configuration_feature",
 			Name:     "Organization Configuration Feature",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
@@ -160,7 +160,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			}),
 		},
 		{
-			Factory:  ResourcePublishingDestination,
+			Factory:  resourcePublishingDestination,
 			TypeName: "aws_guardduty_publishing_destination",
 			Name:     "Publishing Destination",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
@@ -169,7 +169,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			}),
 		},
 		{
-			Factory:  ResourceThreatIntelSet,
+			Factory:  resourceThreatIntelSet,
 			TypeName: "aws_guardduty_threatintelset",
 			Name:     "Threat Intel Set",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
