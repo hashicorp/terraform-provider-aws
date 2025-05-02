@@ -135,8 +135,8 @@ The number filter configuration block supports the following arguments:
 
 The date filter configuration block supports the following arguments:
 
-* `start_inclusive` - (Optional) Start of the date range in RFC 3339 format, inclusive.
-* `end_inclusive` - (Optional) End of the date range in RFC 3339 format, inclusive.
+* `start_inclusive` - (Optional) Start of the date range in RFC 3339 format, inclusive. Set the timezone to UTC.
+* `end_inclusive` - (Optional) End of the date range in RFC 3339 format, inclusive. Set the timezone to UTC.
 
 ### Map Filter
 

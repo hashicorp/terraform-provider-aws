@@ -303,13 +303,13 @@ func testAccInspector2Filter_dateFilters(t *testing.T) {
 	ctx := acctest.Context(t)
 	action_1 := string(awstypes.FilterActionNone)
 	description_1 := "TestDescription_1"
-	start_inclusive_value_1 := time.Now().Format(time.RFC3339)
-	end_inclusive_value_1 := time.Now().Add(5 * time.Minute).Format(time.RFC3339)
+	start_inclusive_value_1 := time.Now().In(time.UTC).Format(time.RFC3339)
+	end_inclusive_value_1 := time.Now().In(time.UTC).Add(5 * time.Minute).Format(time.RFC3339)
 	reason_1 := "TestReason_1"
 	action_2 := string(awstypes.FilterActionSuppress)
 	description_2 := "TestDescription_2"
-	start_inclusive_value_2 := time.Now().Add(6 * time.Minute).Format(time.RFC3339)
-	end_inclusive_value_2 := time.Now().Add(10 * time.Minute).Format(time.RFC3339)
+	start_inclusive_value_2 := time.Now().In(time.UTC).Add(6 * time.Minute).Format(time.RFC3339)
+	end_inclusive_value_2 := time.Now().In(time.UTC).Add(10 * time.Minute).Format(time.RFC3339)
 	reason_2 := "TestReason_2"
 	var filter awstypes.Filter
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
