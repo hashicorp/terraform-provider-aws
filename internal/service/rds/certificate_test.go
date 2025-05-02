@@ -113,17 +113,17 @@ func TestAccCertificate_Identity_Basic(t *testing.T) {
 					},
 				},
 			},
-			// {
-			// 	ResourceName:    resourceName,
-			// 	ImportState:     true,
-			// 	ImportStateKind: resource.ImportBlockWithResourceIdentity,
-			// 	ImportPlanChecks: resource.ImportPlanChecks{
-			// 		PreApply: []plancheck.PlanCheck{
-			// 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
-			// 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringExact(acctest.Region())),
-			// 		},
-			// 	},
-			// },
+			{
+				ResourceName:    resourceName,
+				ImportState:     true,
+				ImportStateKind: resource.ImportBlockWithResourceIdentity,
+				ImportPlanChecks: resource.ImportPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringExact(acctest.Region())),
+					},
+				},
+			},
 		},
 	})
 }
