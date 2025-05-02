@@ -17,7 +17,7 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory:  newDataSourceTables,
+			Factory:  newTablesDataSource,
 			TypeName: "aws_dynamodb_tables",
 			Name:     "Tables",
 		},

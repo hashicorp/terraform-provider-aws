@@ -18,7 +18,7 @@ The following example retrieves a list of all DynamoDB table names in a region.
 data "aws_dynamodb_tables" "all" {}
 
 output "table_names" {
-  value = data.aws_dynamodb_tables.all.ids
+  value = data.aws_dynamodb_tables.all.names
 }
 ```
 
@@ -26,4 +26,4 @@ output "table_names" {
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `ids` - A list of all the DynamoDB table names found.
+* `names` - A list of all the DynamoDB table names found.

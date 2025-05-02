@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"testing"
 
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -14,7 +15,7 @@ import (
 
 func TestAccDynamoDBTables_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	tableName := "test-table"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_dynamodb_tables.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -23,9 +24,9 @@ func TestAccDynamoDBTables_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTablesDataSourceConfig_basic(tableName),
+				Config: testAccTablesDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrGreaterThanOrEqualValue(dataSourceName, "ids.#", 1),
+					acctest.CheckResourceAttrGreaterThanOrEqualValue(dataSourceName, "names.#", 1),
 				),
 			},
 		},
@@ -35,7 +36,7 @@ func TestAccDynamoDBTables_basic(t *testing.T) {
 func testAccTablesDataSourceConfig_basic(tableName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
-  name         = "%[1]s."
+  name         = %[1]q
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "TestId"
 

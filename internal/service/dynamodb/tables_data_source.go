@@ -12,27 +12,24 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkDataSource("aws_dynamodb_tables", name="Tables")
-func newDataSourceTables(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceTables{}, nil
+func newTablesDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &tablesDataSource{}, nil
 }
 
-const (
-	DSNameTables = "Tables Data Source"
-)
-
-type dataSourceTables struct {
+type tablesDataSource struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *dataSourceTables) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (d *tablesDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrID: framework.IDAttribute(),
-			names.AttrIDs: schema.ListAttribute{
+			names.AttrNames: schema.ListAttribute{
+				CustomType:  fwtypes.ListOfStringType,
 				ElementType: types.StringType,
 				Computed:    true,
 			},
@@ -40,28 +37,27 @@ func (d *dataSourceTables) Schema(ctx context.Context, req datasource.SchemaRequ
 	}
 }
 
-func (d *dataSourceTables) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *tablesDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+	var data tablesDataSourceModel
+	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
 	conn := d.Meta().DynamoDBClient(ctx)
 
-	var data dataSourceTablesModel
-	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	input := dynamodb.ListTablesInput{}
+	var input dynamodb.ListTablesInput
 	out, err := findTables(ctx, conn, &input)
 
 	if err != nil {
-		resp.Diagnostics.AddError("reading DynamoDB Tables", err.Error())
+		response.Diagnostics.AddError("reading DynamoDB Tables", err.Error())
+
 		return
 	}
 
-	data.ID = types.StringValue(d.Meta().Region(ctx))
-	data.TableIDs = fwflex.FlattenFrameworkStringValueList(ctx, out)
+	data.Names = fwflex.FlattenFrameworkStringValueListOfString(ctx, out)
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
 func findTables(ctx context.Context, conn *dynamodb.Client, input *dynamodb.ListTablesInput) ([]string, error) {
@@ -75,15 +71,12 @@ func findTables(ctx context.Context, conn *dynamodb.Client, input *dynamodb.List
 			return nil, err
 		}
 
-		for _, v := range page.TableNames {
-			output = append(output, v)
-		}
+		output = append(output, page.TableNames...)
 	}
 
 	return output, nil
 }
 
-type dataSourceTablesModel struct {
-	ID       types.String `tfsdk:"id"`
-	TableIDs types.List   `tfsdk:"ids"`
+type tablesDataSourceModel struct {
+	Names fwtypes.ListOfString `tfsdk:"names"`
 }
