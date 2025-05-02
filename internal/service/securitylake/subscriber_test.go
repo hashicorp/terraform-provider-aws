@@ -36,6 +36,7 @@ func testAccSubscriber_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
 			testAccPreCheck(ctx, t)
+			testAccDeleteGlueDatabase(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -94,6 +95,7 @@ func testAccSubscriber_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
 			testAccPreCheck(ctx, t)
+			testAccDeleteGlueDatabase(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -123,6 +125,7 @@ func testAccSubscriber_customLogSource(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
 			testAccPreCheck(ctx, t)
+			testAccDeleteGlueDatabase(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -159,6 +162,7 @@ func testAccSubscriber_accessType(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
 			testAccPreCheck(ctx, t)
+			testAccDeleteGlueDatabase(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -192,6 +196,7 @@ func testAccSubscriber_tags(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
 			testAccPreCheck(ctx, t)
+			testAccDeleteGlueDatabase(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -242,6 +247,7 @@ func testAccSubscriber_update(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
 			testAccPreCheck(ctx, t)
+			testAccDeleteGlueDatabase(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -298,6 +304,7 @@ func testAccSubscriber_multipleSources(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
 			testAccPreCheck(ctx, t)
+			testAccDeleteGlueDatabase(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -424,6 +431,7 @@ func testAccSubscriber_migrate_source(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
 			testAccPreCheck(ctx, t)
+			testAccDeleteGlueDatabase(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.SecurityLakeServiceID),
 		CheckDestroy: testAccCheckSubscriberDestroy(ctx),
@@ -517,8 +525,7 @@ func testAccCheckSubscriberExists(ctx context.Context, n string, v *types.Subscr
 }
 
 func testAccSubscriberConfig_basic(rName string) string {
-	return acctest.ConfigCompose(
-		testAccDataLakeConfig_basic(), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDataLakeConfig_basic(), fmt.Sprintf(`
 resource "aws_securitylake_subscriber" "test" {
   subscriber_name = %[1]q
   source {
@@ -548,8 +555,7 @@ data "aws_region" "current" {}
 }
 
 func testAccSubscriberConfig_customLog(rName, sourceName string) string {
-	return acctest.ConfigCompose(
-		testAccDataLakeConfig_basic(), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDataLakeConfig_basic(), fmt.Sprintf(`
 resource "aws_securitylake_subscriber" "test" {
   subscriber_name        = %[1]q
   subscriber_description = "Example"
@@ -630,8 +636,7 @@ resource "aws_iam_role_policy_attachment" "test" {
 }
 
 func testAccSubscriberConfig_accessType(rName, accessType string) string {
-	return acctest.ConfigCompose(
-		testAccDataLakeConfig_basic(), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDataLakeConfig_basic(), fmt.Sprintf(`
 resource "aws_securitylake_subscriber" "test" {
   subscriber_name = %[1]q
   access_type     = %[2]q
@@ -662,8 +667,7 @@ data "aws_region" "current" {}
 }
 
 func testAccSubscriberConfig_tags1(rName, tag1Key, tag1Value string) string {
-	return acctest.ConfigCompose(
-		testAccDataLakeConfig_basic(), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDataLakeConfig_basic(), fmt.Sprintf(`
 resource "aws_securitylake_subscriber" "test" {
   subscriber_name = %[1]q
   source {
@@ -699,8 +703,7 @@ data "aws_region" "current" {}
 }
 
 func testAccSubscriberConfig_tags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
-	return acctest.ConfigCompose(
-		testAccDataLakeConfig_basic(), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDataLakeConfig_basic(), fmt.Sprintf(`
 resource "aws_securitylake_subscriber" "test" {
   subscriber_name = %[1]q
   source {
@@ -737,8 +740,7 @@ data "aws_region" "current" {}
 }
 
 func testAccSubscriberConfig_update(rName string) string {
-	return acctest.ConfigCompose(
-		testAccDataLakeConfig_basic(), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDataLakeConfig_basic(), fmt.Sprintf(`
 resource "aws_securitylake_subscriber" "test" {
   subscriber_name = %[1]q
   access_type     = "S3"
@@ -769,8 +771,7 @@ data "aws_region" "current" {}
 }
 
 func testAccSubscriberConfig_sources1(rName, source1 string) string {
-	return acctest.ConfigCompose(
-		testAccDataLakeConfig_basic(), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDataLakeConfig_basic(), fmt.Sprintf(`
 resource "aws_securitylake_subscriber" "test" {
   subscriber_name = %[1]q
   source {
@@ -802,8 +803,7 @@ data "aws_region" "current" {}
 }
 
 func testAccSubscriberConfig_sources2(rName, source1, source2 string) string {
-	return acctest.ConfigCompose(
-		testAccDataLakeConfig_basic(), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDataLakeConfig_basic(), fmt.Sprintf(`
 resource "aws_securitylake_subscriber" "test" {
   subscriber_name = %[1]q
   source {
@@ -846,8 +846,7 @@ data "aws_region" "current" {}
 }
 
 func testAccSubscriberConfig_migrate_basic(rName string) string {
-	return acctest.ConfigCompose(
-		testAccDataLakeConfig_basic(), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDataLakeConfig_basic(), fmt.Sprintf(`
 resource "aws_securitylake_subscriber" "test" {
   subscriber_name = %[1]q
   source {

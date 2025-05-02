@@ -21,7 +21,6 @@ import (
 
 func testAccSubscriberNotification_sqs_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	resourceName := "aws_securitylake_subscriber_notification.test"
 	rName := randomCustomLogSourceName()
 	subscriberResourceName := "aws_securitylake_subscriber.test"
@@ -32,6 +31,7 @@ func testAccSubscriberNotification_sqs_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
 			testAccPreCheck(ctx, t)
+			testAccDeleteGlueDatabase(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -63,7 +63,6 @@ func testAccSubscriberNotification_sqs_basic(t *testing.T) {
 
 func testAccSubscriberNotification_https_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	resourceName := "aws_securitylake_subscriber_notification.test"
 	rName := randomCustomLogSourceName()
 
@@ -72,6 +71,7 @@ func testAccSubscriberNotification_https_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
 			testAccPreCheck(ctx, t)
+			testAccDeleteGlueDatabase(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -108,7 +108,6 @@ func testAccSubscriberNotification_https_basic(t *testing.T) {
 
 func testAccSubscriberNotification_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	resourceName := "aws_securitylake_subscriber_notification.test"
 	rName := randomCustomLogSourceName()
 
@@ -117,6 +116,7 @@ func testAccSubscriberNotification_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
 			testAccPreCheck(ctx, t)
+			testAccDeleteGlueDatabase(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -144,6 +144,7 @@ func testAccSubscriberNotification_update(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
 			testAccPreCheck(ctx, t)
+			testAccDeleteGlueDatabase(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -214,7 +215,6 @@ func testAccSubscriberNotification_update(t *testing.T) {
 
 func testAccSubscriberNotification_https_apiKeyNameOnly(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	resourceName := "aws_securitylake_subscriber_notification.test"
 	rName := randomCustomLogSourceName()
 
@@ -223,6 +223,7 @@ func testAccSubscriberNotification_https_apiKeyNameOnly(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
 			testAccPreCheck(ctx, t)
+			testAccDeleteGlueDatabase(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -274,7 +275,6 @@ func testAccSubscriberNotification_https_apiKeyNameOnly(t *testing.T) {
 
 func testAccSubscriberNotification_https_apiKey(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	resourceName := "aws_securitylake_subscriber_notification.test"
 	rName := randomCustomLogSourceName()
 
@@ -283,6 +283,7 @@ func testAccSubscriberNotification_https_apiKey(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
 			testAccPreCheck(ctx, t)
+			testAccDeleteGlueDatabase(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
