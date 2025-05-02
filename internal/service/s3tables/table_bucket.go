@@ -60,9 +60,6 @@ func (r *resourceTableBucket) Schema(ctx context.Context, req resource.SchemaReq
 			names.AttrEncryptionConfiguration: schema.ObjectAttribute{
 				CustomType: fwtypes.NewObjectTypeOf[encryptionConfigurationModel](ctx),
 				Optional:   true,
-				PlanModifiers: []planmodifier.Object{
-					objectplanmodifier.UseStateForUnknown(),
-				},
 			},
 			// TODO: Once Protocol v6 is supported, convert this to a `schema.SingleNestedAttribute` with full schema information
 			// Validations needed:
@@ -203,19 +200,20 @@ func (r *resourceTableBucket) Create(ctx context.Context, req resource.CreateReq
 	plan.MaintenanceConfiguration = maintenanceConfiguration
 
 	awsEncryptionConfig, err := findTableBucketEncryptionConfiguration(ctx, conn, plan.ARN.ValueString())
-	if err != nil {
+	switch {
+	case tfresource.NotFound(err):
+	case err != nil:
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.S3Tables, create.ErrActionReading, resNameTableBucket, plan.Name.String(), err),
 			err.Error(),
 		)
-	}
-	if awsEncryptionConfig != nil {
+	default:
 		var encryptionConfiguration encryptionConfigurationModel
 		resp.Diagnostics.Append(flex.Flatten(ctx, awsEncryptionConfig, &encryptionConfiguration)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
-		plan.EncryptionConfiguration = fwtypes.NewObjectValueOfMust[encryptionConfigurationModel](ctx, &encryptionConfiguration)
+		plan.EncryptionConfiguration = fwtypes.NewObjectValueOfMust(ctx, &encryptionConfiguration)
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
@@ -265,19 +263,20 @@ func (r *resourceTableBucket) Read(ctx context.Context, req resource.ReadRequest
 	state.MaintenanceConfiguration = maintenanceConfiguration
 
 	awsEncryptionConfig, err := findTableBucketEncryptionConfiguration(ctx, conn, state.ARN.ValueString())
-	if err != nil {
+	switch {
+	case tfresource.NotFound(err):
+	case err != nil:
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.S3Tables, create.ErrActionReading, resNameTableBucket, state.Name.String(), err),
 			err.Error(),
 		)
-	}
-	if awsEncryptionConfig != nil {
+	default:
 		var encryptionConfiguration encryptionConfigurationModel
 		resp.Diagnostics.Append(flex.Flatten(ctx, awsEncryptionConfig, &encryptionConfiguration)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
-		state.EncryptionConfiguration = fwtypes.NewObjectValueOfMust[encryptionConfigurationModel](ctx, &encryptionConfiguration)
+		state.EncryptionConfiguration = fwtypes.NewObjectValueOfMust(ctx, &encryptionConfiguration)
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
@@ -432,18 +431,23 @@ func findTableBucket(ctx context.Context, conn *s3tables.Client, arn string) (*s
 }
 
 func findTableBucketEncryptionConfiguration(ctx context.Context, conn *s3tables.Client, arn string) (*awstypes.EncryptionConfiguration, error) {
-	awsEncryptionConfig, err := conn.GetTableBucketEncryption(ctx, &s3tables.GetTableBucketEncryptionInput{
+	in := s3tables.GetTableBucketEncryptionInput{
 		TableBucketARN: aws.String(arn),
-	})
+	}
 
+	out, err := conn.GetTableBucketEncryption(ctx, &in)
 	if err != nil {
 		if errs.IsA[*awstypes.NotFoundException](err) {
-			return nil, nil
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: in,
+			}
 		}
+
 		return nil, err
 	}
 
-	return awsEncryptionConfig.EncryptionConfiguration, nil
+	return out.EncryptionConfiguration, nil
 }
 
 type resourceTableBucketModel struct {
@@ -455,18 +459,18 @@ type resourceTableBucketModel struct {
 	OwnerAccountID           types.String                                                    `tfsdk:"owner_account_id"`
 }
 type encryptionConfigurationModel struct {
-	KmsKeyArn    fwtypes.ARN                               `tfsdk:"kms_key_arn"`
-	SseAlgorithm fwtypes.StringEnum[awstypes.SSEAlgorithm] `tfsdk:"sse_algorithm"`
+	KMSKeyARN    fwtypes.ARN                               `tfsdk:"kms_key_arn"`
+	SSEAlgorithm fwtypes.StringEnum[awstypes.SSEAlgorithm] `tfsdk:"sse_algorithm"`
 }
 
 func (m *encryptionConfigurationModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
 	switch t := v.(type) {
 	case awstypes.EncryptionConfiguration:
-		m.SseAlgorithm = fwtypes.StringEnumValue[awstypes.SSEAlgorithm](t.SseAlgorithm)
+		m.SSEAlgorithm = fwtypes.StringEnumValue(t.SseAlgorithm)
 		if t.SseAlgorithm == awstypes.SSEAlgorithmAes256 {
-			m.KmsKeyArn = fwtypes.ARNNull()
+			m.KMSKeyARN = fwtypes.ARNNull()
 		} else {
-			m.KmsKeyArn = fwtypes.ARNValue(aws.ToString(t.KmsKeyArn))
+			m.KMSKeyARN = fwtypes.ARNValue(aws.ToString(t.KmsKeyArn))
 		}
 	}
 	return diags

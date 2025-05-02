@@ -270,20 +270,20 @@ func (r *resourceTable) Create(ctx context.Context, req resource.CreateRequest, 
 		Namespace:      plan.Namespace.ValueStringPointer(),
 		TableBucketARN: plan.TableBucketARN.ValueStringPointer(),
 	})
-	if err != nil {
-		if !errs.IsA[*awstypes.NotFoundException](err) {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.S3Tables, create.ErrActionReading, resNameTableBucket, plan.Name.String(), err),
-				err.Error(),
-			)
-		}
-	} else {
+	switch {
+	case errs.IsA[*awstypes.NotFoundException](err):
+	case err != nil:
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.S3Tables, create.ErrActionReading, resNameTableBucket, plan.Name.String(), err),
+			err.Error(),
+		)
+	default:
 		var encryptionConfiguration encryptionConfigurationModel
 		resp.Diagnostics.Append(flex.Flatten(ctx, awsEncryptionConfig.EncryptionConfiguration, &encryptionConfiguration)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
-		plan.EncryptionConfiguration, d = fwtypes.NewObjectValueOf[encryptionConfigurationModel](ctx, &encryptionConfiguration)
+		plan.EncryptionConfiguration, d = fwtypes.NewObjectValueOf(ctx, &encryptionConfiguration)
 		resp.Diagnostics.Append(d...)
 		if resp.Diagnostics.HasError() {
 			return
@@ -357,7 +357,7 @@ func (r *resourceTable) Read(ctx context.Context, req resource.ReadRequest, resp
 		if resp.Diagnostics.HasError() {
 			return
 		}
-		state.EncryptionConfiguration, d = fwtypes.NewObjectValueOf[encryptionConfigurationModel](ctx, &encryptionConfiguration)
+		state.EncryptionConfiguration, d = fwtypes.NewObjectValueOf(ctx, &encryptionConfiguration)
 		resp.Diagnostics.Append(d...)
 		if resp.Diagnostics.HasError() {
 			return
