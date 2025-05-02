@@ -5,7 +5,6 @@ package rds
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -19,60 +18,17 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_rds_certificate", name="Default Certificate")
 // @SingletonIdentity
+// @WrappedImport
 func resourceCertificate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCertificatePut,
 		ReadWithoutTimeout:   resourceCertificateRead,
 		UpdateWithoutTimeout: resourceCertificatePut,
 		DeleteWithoutTimeout: resourceCertificateDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				if rd.Id() != "" {
-					rd.Set("region", rd.Id())
-					return []*schema.ResourceData{rd}, nil
-				}
-
-				identity, err := rd.Identity()
-				if err != nil {
-					return nil, err
-				}
-
-				accountIDRaw, ok := identity.GetOk(names.AttrAccountID)
-				var accountID string
-				if ok {
-					accountID, ok = accountIDRaw.(string)
-					if !ok {
-						return nil, fmt.Errorf("identity attribute %q: expected string, got %T", names.AttrAccountID, accountIDRaw)
-					}
-					client := meta.(*conns.AWSClient)
-					if accountID != client.AccountID(ctx) {
-						return nil, fmt.Errorf("Unable to import\n\nidentity attribute %q: Provider configured with Account ID %q, got %q", names.AttrAccountID, client.AccountID(ctx), accountID)
-					}
-				}
-
-				regionRaw, ok := identity.GetOk("region")
-				var region string
-				if ok {
-					region, ok = regionRaw.(string)
-					if !ok {
-						return nil, fmt.Errorf("identity attribute %q: expected string, got %T", "region", regionRaw)
-					}
-				} else {
-					client := meta.(*conns.AWSClient)
-					region = client.Region(ctx)
-				}
-				rd.Set("region", region)
-				rd.SetId(region)
-
-				return []*schema.ResourceData{rd}, nil
-			},
-		},
 
 		Schema: map[string]*schema.Schema{
 			"certificate_identifier": {
