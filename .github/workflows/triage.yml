@@ -11,6 +11,7 @@ on:
       - closed
       - edited
       - opened
+      - synchronize
 
   issues:
     types:
@@ -27,7 +28,7 @@ env:
 jobs:
   labelers:
     name: Labelers
-    if: contains(fromJSON('["opened", "edited"]'), github.event.action)
+    if: contains(fromJSON('["opened", "edited", "synchronize"]'), github.event.action)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -84,7 +85,7 @@ jobs:
           enable-versioned-regex: 0
           include-title: 1
 
-      - uses: actions/create-github-app-token@3ff1caaa28b64c9cc276ce0a02e2ff584f3900c5 # v2.0.2
+      - uses: actions/create-github-app-token@30bf6253fa41bdc8d1501d202ad15287582246b4 # v2.0.3
         id: token
         if: github.event_name == 'issues'
         with:
@@ -196,7 +197,7 @@ jobs:
     name: Warn of Potential Issues
     if: |
       github.event_name == 'pull_request_target'
-      && contains(fromJSON('["opened", "edited"]'), github.event.action)
+      && contains(fromJSON('["opened", "edited", "synchronize"]'), github.event.action)
     runs-on: ubuntu-latest
     env:
       START_TEXT: "### :warning: We've detected the following potential issues with your pull request"
