@@ -5,7 +5,6 @@ package inspector2_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strconv"
 	"testing"
@@ -19,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfinspector2 "github.com/hashicorp/terraform-provider-aws/internal/service/inspector2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -27,15 +25,11 @@ import (
 
 func testAccInspector2Filter_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 	action_1 := string(awstypes.FilterActionNone)
 	description_1 := "TestDescription_1"
 	comparison_1 := string(awstypes.StringComparisonEquals)
 	account_id_1 := "111222333444"
 	reason_1 := "TestReason_1"
-
 	var filter awstypes.Filter
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_inspector2_filter.test"
@@ -79,21 +73,16 @@ func testAccInspector2Filter_basic(t *testing.T) {
 
 func testAccInspector2Filter_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 	action_1 := string(awstypes.FilterActionNone)
 	description_1 := "TestDescription_1"
 	comparison_1 := string(awstypes.StringComparisonEquals)
 	account_id_1 := "111222333444"
 	reason_1 := "TestReason_1"
-
 	action_2 := string(awstypes.FilterActionSuppress)
 	description_2 := "TestDescription_2"
 	comparison_2 := string(awstypes.StringComparisonNotEquals)
 	account_id_2 := "444333222111"
 	reason_2 := "TestReason_2"
-
 	var filter awstypes.Filter
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_inspector2_filter.test"
@@ -160,21 +149,16 @@ func testAccInspector2Filter_update(t *testing.T) {
 
 func testAccInspector2Filter_stringFilters(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 	action_1 := string(awstypes.FilterActionNone)
 	description_1 := "TestDescription_1"
 	comparison_1 := string(awstypes.StringComparisonEquals)
 	value_1 := "TestValue1"
 	reason_1 := "TestReason_1"
-
 	action_2 := string(awstypes.FilterActionSuppress)
 	description_2 := "TestDescription_2"
 	comparison_2 := string(awstypes.StringComparisonNotEquals)
 	value_2 := "TestValue_2"
 	reason_2 := "TestReason_2"
-
 	var filter awstypes.Filter
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_inspector2_filter.test"
@@ -241,21 +225,16 @@ func testAccInspector2Filter_stringFilters(t *testing.T) {
 
 func testAccInspector2Filter_numberFilters(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 	action_1 := string(awstypes.FilterActionNone)
 	description_1 := "TestDescription_1"
 	lower_inclusive_value_1 := "0"
 	upper_inclusive_value_1 := "100"
 	reason_1 := "TestReason_1"
-
 	action_2 := string(awstypes.FilterActionSuppress)
 	description_2 := "TestDescription_2"
 	lower_inclusive_value_2 := "1"
 	upper_inclusive_value_2 := "101"
 	reason_2 := "TestReason_2"
-
 	var filter awstypes.Filter
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_inspector2_filter.test"
@@ -322,21 +301,16 @@ func testAccInspector2Filter_numberFilters(t *testing.T) {
 
 func testAccInspector2Filter_dateFilters(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 	action_1 := string(awstypes.FilterActionNone)
 	description_1 := "TestDescription_1"
 	start_inclusive_value_1 := time.Now().Format(time.RFC3339)
 	end_inclusive_value_1 := time.Now().Add(5 * time.Minute).Format(time.RFC3339)
 	reason_1 := "TestReason_1"
-
 	action_2 := string(awstypes.FilterActionSuppress)
 	description_2 := "TestDescription_2"
 	start_inclusive_value_2 := time.Now().Add(6 * time.Minute).Format(time.RFC3339)
 	end_inclusive_value_2 := time.Now().Add(10 * time.Minute).Format(time.RFC3339)
 	reason_2 := "TestReason_2"
-
 	var filter awstypes.Filter
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_inspector2_filter.test"
@@ -403,23 +377,17 @@ func testAccInspector2Filter_dateFilters(t *testing.T) {
 
 func testAccInspector2Filter_mapFilters(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 	comparison := string(awstypes.MapComparisonEquals)
-
 	action_1 := string(awstypes.FilterActionNone)
 	description_1 := "TestDescription_1"
 	key_1 := "some_key_1"
 	value_1 := "some_value_1"
 	reason_1 := "TestReason_1"
-
 	action_2 := string(awstypes.FilterActionSuppress)
 	description_2 := "TestDescription_2"
 	key_2 := "some_key_2"
 	value_2 := "some_value_2"
 	reason_2 := "TestReason_2"
-
 	var filter awstypes.Filter
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_inspector2_filter.test"
@@ -488,21 +456,16 @@ func testAccInspector2Filter_mapFilters(t *testing.T) {
 
 func testAccInspector2Filter_portRangeFilters(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 	action_1 := string(awstypes.FilterActionNone)
 	description_1 := "TestDescription_1"
 	begin_inclusive_value_1 := 0
 	end_inclusive_value_1 := 100
 	reason_1 := "TestReason_1"
-
 	action_2 := string(awstypes.FilterActionSuppress)
 	description_2 := "TestDescription_2"
 	begin_inclusive_value_2 := 101
 	end_inclusive_value_2 := 200
 	reason_2 := "TestReason_2"
-
 	var filter awstypes.Filter
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_inspector2_filter.test"
@@ -565,19 +528,13 @@ func testAccInspector2Filter_portRangeFilters(t *testing.T) {
 
 func testAccInspector2Filter_packageFilters(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 	comparison := string(awstypes.MapComparisonEquals)
-
 	action_1 := string(awstypes.FilterActionNone)
 	description_1 := "TestDescription_1"
 	reason_1 := "TestReason_1"
-
 	action_2 := string(awstypes.FilterActionSuppress)
 	description_2 := "TestDescription_2"
 	reason_2 := "TestReason_2"
-
 	var filter awstypes.Filter
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_inspector2_filter.test"
@@ -731,29 +688,13 @@ func testAccInspector2Filter_packageFilters(t *testing.T) {
 	})
 }
 
-func testAccFilterImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		return rs.Primary.Attributes[names.AttrARN], nil
-	}
-}
-
 func testAccInspector2Filter_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	action_1 := string(awstypes.FilterActionNone)
 	description_1 := "TestDescription_1"
 	comparison_1 := string(awstypes.StringComparisonEquals)
 	account_id_1 := "111222333444"
 	reason_1 := "TestReason_1"
-
 	var filter awstypes.Filter
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_inspector2_filter.test"
@@ -790,41 +731,51 @@ func testAccCheckFilterDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			_, err := tfinspector2.FindFilterByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
+
 			if tfresource.NotFound(err) {
-				return nil
-			}
-			if err != nil {
-				return create.Error(names.Inspector2, create.ErrActionCheckingDestroyed, tfinspector2.ResNameFilter, rs.Primary.Attributes[names.AttrARN], err)
+				continue
 			}
 
-			return create.Error(names.Inspector2, create.ErrActionCheckingDestroyed, tfinspector2.ResNameFilter, rs.Primary.Attributes[names.AttrARN], errors.New("not destroyed"))
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Inspector2 Filter %s still exists", rs.Primary.Attributes[names.AttrARN])
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckFilterExists(ctx context.Context, name string, filter *awstypes.Filter) resource.TestCheckFunc {
+func testAccCheckFilterExists(ctx context.Context, n string, v *awstypes.Filter) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.Inspector2, create.ErrActionCheckingExistence, tfinspector2.ResNameFilter, name, errors.New("not found"))
-		}
-
-		if rs.Primary.Attributes[names.AttrARN] == "" {
-			return create.Error(names.Inspector2, create.ErrActionCheckingExistence, tfinspector2.ResNameFilter, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Client(ctx)
 
-		resp, err := tfinspector2.FindFilterByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
+		output, err := tfinspector2.FindFilterByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
+
 		if err != nil {
-			return create.Error(names.Inspector2, create.ErrActionCheckingExistence, tfinspector2.ResNameFilter, rs.Primary.Attributes[names.AttrARN], err)
+			return err
 		}
 
-		*filter = *resp
+		*v = *output
 
 		return nil
+	}
+}
+
+func testAccFilterImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		return rs.Primary.Attributes[names.AttrARN], nil
 	}
 }
 

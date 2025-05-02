@@ -5,12 +5,10 @@ package inspector2
 
 import (
 	"context"
-	"errors"
-	"time"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/service/inspector2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/inspector2/types"
-	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
@@ -21,11 +19,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -37,36 +34,25 @@ import (
 // @Testing(tagsTest=true)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/inspector2/types;types.Filter")
 // @Testing(importStateIdAttribute="arn")
-func newResourceFilter(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceFilter{}
-
-	r.SetDefaultCreateTimeout(30 * time.Minute)
-	r.SetDefaultUpdateTimeout(30 * time.Minute)
-	r.SetDefaultDeleteTimeout(30 * time.Minute)
-
-	return r, nil
+func newFilterResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &filterResource{}, nil
 }
 
-const (
-	ResNameFilter = "Filter"
-)
-
-type resourceFilter struct {
+type filterResource struct {
 	framework.ResourceWithConfigure
-	framework.WithTimeouts
 }
 
-func (r *resourceFilter) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *filterResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	const (
 		defaultFilterSchemaMaxSize = 20
 	)
-	resp.Schema = schema.Schema{
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			names.AttrAction: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.FilterAction](),
 				Required:   true,
 			},
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 			},
@@ -136,11 +122,6 @@ func (r *resourceFilter) Schema(ctx context.Context, req resource.SchemaRequest,
 					},
 				},
 			},
-			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
-				Create: true,
-				Update: true,
-				Delete: true,
-			}),
 		},
 	}
 }
@@ -395,204 +376,181 @@ func packageFilterSchemaFramework(ctx context.Context, maxSize int) schema.SetNe
 	}
 }
 
-func (r *resourceFilter) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().Inspector2Client(ctx)
-
-	var plan resourceFilterModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
+func (r *filterResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data filterResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
+	conn := r.Meta().Inspector2Client(ctx)
+
+	name := fwflex.StringValueFromFramework(ctx, data.Name)
 	var input inspector2.CreateFilterInput
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	// Additional fields.
 	input.Tags = getTagsIn(ctx)
 
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	output, err := conn.CreateFilter(ctx, &input)
 
-	out, err := conn.CreateFilter(ctx, &input)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Inspector2, create.ErrActionCreating, ResNameFilter, plan.Name.String(), err),
-			err.Error(),
-		)
-		return
-	}
-	if out == nil || out.Arn == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Inspector2, create.ErrActionCreating, ResNameFilter, plan.Name.String(), nil),
-			errors.New("empty output").Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("creating Inspector2 Filter (%s)", name), err.Error())
+
 		return
 	}
 
-	plan.ARN = flex.StringToFramework(ctx, out.Arn)
+	data.ARN = fwflex.StringToFramework(ctx, output.Arn)
 
-	filter_out, err := findFilterByARN(ctx, conn, plan.ARN.ValueString())
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Inspector2, create.ErrActionSetting, ResNameFilter, plan.ARN.ValueString(), err),
-			err.Error(),
-		)
-		return
-	}
-
-	resp.Diagnostics.Append(flex.Flatten(ctx, filter_out, &plan, flex.WithFieldNamePrefix("filter_"))...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-func (r *resourceFilter) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().Inspector2Client(ctx)
-
-	var state resourceFilterModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *filterResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data filterResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := findFilterByARN(ctx, conn, state.ARN.ValueString())
+	conn := r.Meta().Inspector2Client(ctx)
+
+	output, err := findFilterByARN(ctx, conn, data.ARN.ValueString())
 
 	if tfresource.NotFound(err) {
-		resp.State.RemoveResource(ctx)
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+
 		return
 	}
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Inspector2, create.ErrActionSetting, ResNameFilter, state.ARN.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("reading Inspector2 Filter (%s)", data.ARN.ValueString()), err.Error())
+
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state, flex.WithFieldNamePrefix("Filter"))...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data, fwflex.WithFieldNamePrefix("Filter"))...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	setTagsOut(ctx, out.Tags)
+	setTagsOut(ctx, output.Tags)
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceFilter) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().Inspector2Client(ctx)
-
-	var plan, state resourceFilterModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *filterResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var new, old filterResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	if !plan.Name.Equal(state.Name) ||
-		!plan.Description.Equal(state.Description) ||
-		!plan.Reason.Equal(state.Reason) ||
-		!plan.Action.Equal(state.Action) ||
-		!plan.FilterCriteria.Equal(state.FilterCriteria) {
+	conn := r.Meta().Inspector2Client(ctx)
+
+	if !new.Action.Equal(old.Action) ||
+		!new.Description.Equal(old.Description) ||
+		!new.FilterCriteria.Equal(old.FilterCriteria) ||
+		!new.Name.Equal(old.Name) ||
+		!new.Reason.Equal(old.Reason) {
 		var input inspector2.UpdateFilterInput
-		resp.Diagnostics.Append(flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("Filter"))...)
-		if resp.Diagnostics.HasError() {
+		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input, fwflex.WithFieldNamePrefix("Filter"))...)
+		if response.Diagnostics.HasError() {
 			return
 		}
 
-		out, err := conn.UpdateFilter(ctx, &input)
+		// Additional fields.
+		input.FilterArn = fwflex.StringFromFramework(ctx, new.ARN)
+
+		_, err := conn.UpdateFilter(ctx, &input)
+
 		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.Inspector2, create.ErrActionUpdating, ResNameFilter, plan.ARN.String(), err),
-				err.Error(),
-			)
-			return
-		}
-		if out == nil || out.Arn == nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.Inspector2, create.ErrActionUpdating, ResNameFilter, plan.ARN.String(), nil),
-				errors.New("empty output").Error(),
-			)
-			return
-		}
+			response.Diagnostics.AddError(fmt.Sprintf("updating Inspector2 Filter (%s)", new.ARN.ValueString()), err.Error())
 
-		filter_out, err := findFilterByARN(ctx, conn, state.ARN.ValueString())
-		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.Inspector2, create.ErrActionSetting, ResNameFilter, state.ARN.ValueString(), err),
-				err.Error(),
-			)
-			return
-		}
-
-		resp.Diagnostics.Append(flex.Flatten(ctx, filter_out, &plan)...)
-		if resp.Diagnostics.HasError() {
 			return
 		}
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
-func (r *resourceFilter) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().Inspector2Client(ctx)
-
-	var state resourceFilterModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *filterResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data filterResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
+
+	conn := r.Meta().Inspector2Client(ctx)
 
 	input := inspector2.DeleteFilterInput{
-		Arn: state.ARN.ValueStringPointer(),
+		Arn: fwflex.StringFromFramework(ctx, data.ARN),
+	}
+	_, err := conn.DeleteFilter(ctx, &input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return
 	}
 
-	_, err := conn.DeleteFilter(ctx, &input)
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return
-		}
+		response.Diagnostics.AddError(fmt.Sprintf("deleting Inspector2 Filter (%s)", data.ARN.ValueString()), err.Error())
 
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Inspector2, create.ErrActionDeleting, ResNameFilter, state.ARN.String(), err),
-			err.Error(),
-		)
 		return
 	}
 }
 
-func (r *resourceFilter) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrARN), req, resp)
+func (r *filterResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrARN), request, response)
 }
 
 func findFilterByARN(ctx context.Context, conn *inspector2.Client, arn string) (*awstypes.Filter, error) {
-	in := &inspector2.ListFiltersInput{
+	input := inspector2.ListFiltersInput{
 		Arns: []string{arn},
 	}
 
-	out, err := conn.ListFilters(ctx, in)
+	return findFilter(ctx, conn, &input)
+}
+
+func findFilter(ctx context.Context, conn *inspector2.Client, input *inspector2.ListFiltersInput) (*awstypes.Filter, error) {
+	output, err := findFilters(ctx, conn, input)
+
 	if err != nil {
 		return nil, err
 	}
 
-	if out == nil || out.Filters == nil || len(out.Filters) == 0 {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
-		}
-	}
-
-	return &out.Filters[0], nil
+	return tfresource.AssertSingleValueResult(output)
 }
 
-type resourceFilterModel struct {
-	ARN            types.String                                         `tfsdk:"arn"`
+func findFilters(ctx context.Context, conn *inspector2.Client, input *inspector2.ListFiltersInput) ([]awstypes.Filter, error) {
+	var output []awstypes.Filter
+
+	pages := inspector2.NewListFiltersPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.Filters...)
+	}
+
+	return output, nil
+}
+
+type filterResourceModel struct {
 	Action         fwtypes.StringEnum[awstypes.FilterAction]            `tfsdk:"action"`
+	ARN            types.String                                         `tfsdk:"arn"`
 	Description    types.String                                         `tfsdk:"description"`
 	Name           types.String                                         `tfsdk:"name"`
 	Reason         types.String                                         `tfsdk:"reason"`
-	Timeouts       timeouts.Value                                       `tfsdk:"timeouts"`
 	FilterCriteria fwtypes.ListNestedObjectValueOf[filterCriteriaModel] `tfsdk:"filter_criteria"`
 	Tags           tftags.Map                                           `tfsdk:"tags"`
 	TagsAll        tftags.Map                                           `tfsdk:"tags_all"`
