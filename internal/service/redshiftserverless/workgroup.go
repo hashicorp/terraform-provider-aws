@@ -6,6 +6,7 @@ package redshiftserverless
 import (
 	"context"
 	"fmt"
+	"github.com/YakDriver/regexache"
 	"log"
 	"time"
 
@@ -208,6 +209,15 @@ func resourceWorkgroup() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"track_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 256),
+					validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9_]+$`), "must be alphanumeric or underscore"),
+				),
+			},
 			"workgroup_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -270,6 +280,10 @@ func resourceWorkgroupCreate(ctx context.Context, d *schema.ResourceData, meta a
 		input.SubnetIds = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
+	if v, ok := d.GetOk("track_name"); ok && v.(string) != "" {
+		input.TrackName = aws.String(v.(string))
+	}
+
 	if input.BaseCapacity != nil && input.PricePerformanceTarget != nil && input.PricePerformanceTarget.Status == awstypes.PerformanceTargetStatusEnabled {
 		return sdkdiag.AppendErrorf(diags, "base_capacity cannot be set when price_performance_target.enabled is true")
 	}
@@ -323,6 +337,7 @@ func resourceWorkgroupRead(ctx context.Context, d *schema.ResourceData, meta any
 	d.Set(names.AttrPubliclyAccessible, out.PubliclyAccessible)
 	d.Set(names.AttrSecurityGroupIDs, out.SecurityGroupIds)
 	d.Set(names.AttrSubnetIDs, out.SubnetIds)
+	d.Set("track_name", out.TrackName)
 	d.Set("workgroup_id", out.WorkgroupId)
 	d.Set("workgroup_name", out.WorkgroupName)
 
@@ -475,6 +490,16 @@ func resourceWorkgroupUpdate(ctx context.Context, d *schema.ResourceData, meta a
 			WorkgroupName: aws.String(d.Id()),
 		}
 
+		if err := updateWorkgroup(ctx, conn, input, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+	}
+
+	if d.HasChange("track_name") {
+		input := &redshiftserverless.UpdateWorkgroupInput{
+			TrackName:     aws.String(d.Get("track_name").(string)),
+			WorkgroupName: aws.String(d.Id()),
+		}
 		if err := updateWorkgroup(ctx, conn, input, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
