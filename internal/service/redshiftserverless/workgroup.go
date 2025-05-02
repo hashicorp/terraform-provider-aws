@@ -6,10 +6,10 @@ package redshiftserverless
 import (
 	"context"
 	"fmt"
-	"github.com/YakDriver/regexache"
 	"log"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/redshiftserverless"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshiftserverless/types"
