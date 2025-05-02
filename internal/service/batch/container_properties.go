@@ -183,6 +183,37 @@ func flattenContainerProperties(apiObject *awstypes.ContainerProperties) (string
 }
 
 func containerPropertiesSchema() *schema.Resource {
-	// TODO
-	return &schema.Resource{}
+	return &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"command": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"enable_execute_command": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			// TODO environment
+			// TODO ephemeral_storage
+			"execution_role_arn": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			// TODO fargate_platform_configuration
+			"image": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"instance_type": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"job_role_arn": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			// TODO linux_parameters
+		},
+	}
 }
