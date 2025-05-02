@@ -59,6 +59,7 @@ Upgrade topics:
 - [resource/aws_instance](#resourceaws_instance)
 - [resource/aws_kinesis_analytics_application](#resourceaws_kinesis_analytics_application)
 - [resource/aws_launch_template](#resourceaws_launch_template)
+- [resource/aws_lb_listener](#resourceaws_lb_listener)
 - [resource/aws_media_store_container](#resourceaws_media_store_container)
 - [resource/aws_media_store_container_policy](#resourceaws_media_store_container_policy)
 - [resource/aws_networkmanager_core_network](#resourceaws_networkmanager_core_network)
@@ -449,6 +450,11 @@ The `auto_enable` attribute has been removed and the `auto_enable_organization_m
 Remove `elastic_gpu_specifications` from your configuration—it no longer exists. Amazon Elastic Graphics reached end of life in January 2024.
 
 Remove `elastic_inference_accelerator` from your configuration—it no longer exists. Amazon Elastic Inference reached end of life in April 2024.
+
+## resource/aws_lb_listener
+
+The `mutual_authentication` attributes `advertise_trust_store_ca_names`, `ignore_client_certificate_expiry`, and `trust_store_arn` can now only be set when `mode` is `verify`.
+The attribute `trust_store_arn` is now required  when `mode` is `verify`.
 
 ## resource/aws_media_store_container
 
