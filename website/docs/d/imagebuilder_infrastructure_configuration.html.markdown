@@ -42,6 +42,11 @@ This data source exports the following attributes in addition to the arguments a
         * `s3_bucket_name` - Name of the S3 Bucket for logging.
         * `s3_key_prefix` - Key prefix for S3 Bucket logging.
 * `name` - Name of the infrastructure configuration.
+* `placement` - Placement settings that define where the instances that are launched from your image will run.
+    * `availability_zone` - Availability Zone where your build and test instances will launch.
+    * `host_id` - ID of the Dedicated Host on which build and test instances run.
+    * `host_resource_group_arn` - ARN of the host resource group in which to launch build and test instances.
+    * `tenancy` - Placement tenancy of the instance.
 * `resource_tags` - Key-value map of resource tags for the infrastructure created by the infrastructure configuration.
 * `security_group_ids` - Set of EC2 Security Group identifiers associated with the configuration.
 * `sns_topic_arn` - ARN of the SNS Topic associated with the configuration.
