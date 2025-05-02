@@ -262,6 +262,21 @@ resource "aws_glue_connection" "example" {
 }
 ```
 
+### DynamoDB Connection
+
+```terraform
+resource "aws_glue_connection" "test" {
+  name = "example"
+
+  connection_type = "DYNAMODB"
+  athena_properties = {
+    lambda_function_arn      = "arn:aws:lambda:us-east-1:123456789012:function:athenafederatedcatalog_athena_abcdefgh"
+    disable_spill_encryption = "false"
+    spill_bucket             = "example-bucket"
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -271,10 +286,11 @@ The following arguments are required:
 The following arguments are optional:
 
 * `catalog_id` – (Optional) ID of the Data Catalog in which to create the connection. If none is supplied, the AWS account ID is used by default.
+* `athena_properties` – (Optional) Map of key-value pairs used as connection properties specific to the Athena compute environment.
 * `connection_properties` – (Optional) Map of key-value pairs used as parameters for this connection. For more information, see the [AWS Documentation](https://docs.aws.amazon.com/glue/latest/dg/connection-properties.html).
 
   **Note:** Some connection types require the `SparkProperties` property with a JSON document that contains the actual connection properties. For specific examples, refer to [Example Usage](#example-usage).
-* `connection_type` – (Optional) Type of the connection. Valid values: `AZURECOSMOS`, `AZURESQL`, `BIGQUERY`, `CUSTOM`, `JDBC`, `KAFKA`, `MARKETPLACE`, `MONGODB`, `NETWORK`, `OPENSEARCH`, `SNOWFLAKE`. Defaults to `JDBC`.
+* `connection_type` – (Optional) Type of the connection. Valid values: `AZURECOSMOS`, `AZURESQL`, `BIGQUERY`, `CUSTOM`, `DYNAMODB`, `JDBC`, `KAFKA`, `MARKETPLACE`, `MONGODB`, `NETWORK`, `OPENSEARCH`, `SNOWFLAKE`. Defaults to `JDBC`.
 * `description` – (Optional) Description of the connection.
 * `match_criteria` – (Optional) List of criteria that can be used in selecting this connection.
 * `physical_connection_requirements` - (Optional) Map of physical connection requirements, such as VPC and SecurityGroup. See [`physical_connection_requirements` Block](#physical_connection_requirements-block) for details.
