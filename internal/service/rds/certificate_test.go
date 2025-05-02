@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
+	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -89,7 +90,8 @@ func TestAccCertificate_Identity_Basic(t *testing.T) {
 					testAccCheckCertificateExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringExact(acctest.Region())),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrRegion), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
@@ -144,7 +146,8 @@ func TestAccCertificate_Identity_RegionOverride(t *testing.T) {
 			{
 				Config: testAccCertificateConfig_regionOverride(),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringExact(acctest.AlternateRegion())),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrRegion), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
 					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.AlternateRegion()),
