@@ -157,10 +157,9 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the load balancer (matches `id`).
+* `arn` - ARN of the load balancer.
 * `arn_suffix` - ARN suffix for use with CloudWatch Metrics.
 * `dns_name` - DNS name of the load balancer.
-* `id` - ARN of the load balancer (matches `arn`).
 * `subnet_mapping.*.outpost_id` - ID of the Outpost containing the load balancer.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `zone_id` - Canonical hosted zone ID of the load balancer (to be used in a Route 53 Alias record).
