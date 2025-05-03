@@ -582,6 +582,11 @@ func resourceCluster() *schema.Resource {
 					},
 				},
 			},
+				"auto_minor_version_upgrade": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
 			"serverlessv2_scaling_configuration": {
 				Type:             schema.TypeList,
 				Optional:         true,
@@ -1594,6 +1599,10 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 
 		if v, ok := d.GetOk(names.AttrAllowMajorVersionUpgrade); ok {
 			input.AllowMajorVersionUpgrade = aws.Bool(v.(bool))
+		}
+
+		if d.HasChange("auto_minor_version_upgrade") {
+			input.AutoMinorVersionUpgrade = aws.Bool(d.Get("auto_minor_version_upgrade").(bool))
 		}
 
 		if d.HasChange("backtrack_window") {
