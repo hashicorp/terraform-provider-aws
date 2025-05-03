@@ -605,6 +605,22 @@ func resourceUserPool() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"advanced_security_additional_flows": {
+							Type:             schema.TypeList,
+							Optional:         true,
+							MaxItems:         1,
+							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"custom_auth_mode": {
+										Type:             schema.TypeString,
+										Optional:         true,
+										Default:          awstypes.AdvancedSecurityEnabledModeTypeAudit,
+										ValidateDiagFunc: enum.Validate[awstypes.AdvancedSecurityEnabledModeType](),
+									},
+								},
+							},
+						},
 						"advanced_security_mode": {
 							Type:             schema.TypeString,
 							Required:         true,
@@ -830,14 +846,8 @@ func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta an
 		}
 	}
 
-	if v, ok := d.GetOk("user_pool_add_ons"); ok {
-		if v, ok := v.([]any)[0].(map[string]any); ok && v != nil {
-			input.UserPoolAddOns = &awstypes.UserPoolAddOnsType{}
-
-			if v, ok := v["advanced_security_mode"]; ok && v.(string) != "" {
-				input.UserPoolAddOns.AdvancedSecurityMode = awstypes.AdvancedSecurityModeType(v.(string))
-			}
-		}
+	if v, ok := d.GetOk("user_pool_add_ons"); ok && len(v.([]any)) > 0 {
+		input.UserPoolAddOns = expandUserPoolAddOnsType(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("verification_message_template"); ok {
@@ -1187,14 +1197,8 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta an
 			}
 		}
 
-		if v, ok := d.GetOk("user_pool_add_ons"); ok {
-			if v, ok := v.([]any)[0].(map[string]any); ok && v != nil {
-				input.UserPoolAddOns = &awstypes.UserPoolAddOnsType{}
-
-				if v, ok := v["advanced_security_mode"]; ok && v.(string) != "" {
-					input.UserPoolAddOns.AdvancedSecurityMode = awstypes.AdvancedSecurityModeType(v.(string))
-				}
-			}
+		if v, ok := d.GetOk("user_pool_add_ons"); ok && len(v.([]any)) > 0 {
+			input.UserPoolAddOns = expandUserPoolAddOnsType(v.([]any)[0].(map[string]any))
 		}
 
 		if v, ok := d.GetOk("verification_message_template"); ok {
@@ -1838,6 +1842,36 @@ func expandSignInPolicyType(tfMap map[string]any) *awstypes.SignInPolicyType {
 	return apiObject
 }
 
+func expandUserPoolAddOnsType(tfMap map[string]any) *awstypes.UserPoolAddOnsType {
+	if tfMap == nil {
+		return nil
+	}
+	apiObject := &awstypes.UserPoolAddOnsType{}
+
+	if v, ok := tfMap["advanced_security_mode"].(string); ok {
+		apiObject.AdvancedSecurityMode = awstypes.AdvancedSecurityModeType(v)
+	}
+
+	if v, ok := tfMap["advanced_security_additional_flows"].([]any); ok && len(v) > 0 {
+		apiObject.AdvancedSecurityAdditionalFlows = expandAdvancedSecurityAdditionalFlowType(v[0].(map[string]any))
+	}
+
+	return apiObject
+}
+
+func expandAdvancedSecurityAdditionalFlowType(tfMap map[string]any) *awstypes.AdvancedSecurityAdditionalFlowsType {
+	if tfMap == nil {
+		return nil
+	}
+	apiObject := &awstypes.AdvancedSecurityAdditionalFlowsType{}
+
+	if v, ok := tfMap["custom_auth_mode"].(string); ok {
+		apiObject.CustomAuthMode = awstypes.AdvancedSecurityEnabledModeType(v)
+	}
+
+	return apiObject
+}
+
 func flattenUserPoolAddOnsType(apiObject *awstypes.UserPoolAddOnsType) []any {
 	if apiObject == nil {
 		return []any{}
@@ -1846,6 +1880,21 @@ func flattenUserPoolAddOnsType(apiObject *awstypes.UserPoolAddOnsType) []any {
 	tfMap := make(map[string]any)
 
 	tfMap["advanced_security_mode"] = apiObject.AdvancedSecurityMode
+	tfMap["advanced_security_additional_flows"] = flattenAdvancedSecurityAdditionalFlowType(apiObject.AdvancedSecurityAdditionalFlows)
+
+	return []any{tfMap}
+}
+
+func flattenAdvancedSecurityAdditionalFlowType(apiObject *awstypes.AdvancedSecurityAdditionalFlowsType) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := make(map[string]any)
+
+	if v := apiObject.CustomAuthMode; v != "" {
+		tfMap["custom_auth_mode"] = v
+	}
 
 	return []any{tfMap}
 }
