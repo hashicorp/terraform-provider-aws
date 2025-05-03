@@ -23,6 +23,18 @@ func dataSourceBus() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"dead_letter_config": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -52,6 +64,7 @@ func dataSourceBusRead(ctx context.Context, d *schema.ResourceData, meta any) di
 
 	d.SetId(eventBusName)
 	d.Set(names.AttrARN, output.Arn)
+	d.Set("dead_letter_config", flattenDeadLetterConfig(output.DeadLetterConfig))
 	d.Set(names.AttrDescription, output.Description)
 	d.Set("kms_key_identifier", output.KmsKeyIdentifier)
 	d.Set(names.AttrName, output.Name)
