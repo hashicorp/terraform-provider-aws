@@ -119,6 +119,13 @@ func (d *userPoolDataSource) Schema(ctx context.Context, request datasource.Sche
 				Computed: true,
 			},
 			names.AttrTags: tftags.TagsAttributeComputedOnly(),
+			"user_pool_add_ons": schema.ListAttribute{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[userPoolAddOnTypeModel](ctx),
+				Computed:   true,
+				ElementType: types.ObjectType{
+					AttrTypes: fwtypes.AttributeTypesMust[userPoolAddOnTypeModel](ctx),
+				},
+			},
 			names.AttrUserPoolID: schema.StringAttribute{
 				Required: true,
 			},
@@ -191,6 +198,7 @@ type userPoolDataSourceModel struct {
 	SMSConfigurationFailure  types.String                                                     `tfsdk:"sms_configuration_failure"`
 	SMSVerificationMessage   types.String                                                     `tfsdk:"sms_verification_message"`
 	Tags                     tftags.Map                                                       `tfsdk:"tags"`
+	UserPoolAddOns           fwtypes.ListNestedObjectValueOf[userPoolAddOnTypeModel]          `tfsdk:"user_pool_add_ons"`
 	UserPoolID               types.String                                                     `tfsdk:"user_pool_id"`
 	UserPoolTags             tftags.Map                                                       `tfsdk:"user_pool_tags"`
 	UsernameAttributes       fwtypes.ListValueOf[types.String]                                `tfsdk:"username_attributes"`
@@ -270,6 +278,15 @@ type schemaAttributeTypeModel struct {
 	NumberAttributeConstraints fwtypes.ListNestedObjectValueOf[numberAttributeConstraintsTypeModel] `tfsdk:"number_attribute_constraints"`
 	Required                   types.Bool                                                           `tfsdk:"required"`
 	StringAttributeConstraints fwtypes.ListNestedObjectValueOf[stringAttributeConstraintsTypeModel] `tfsdk:"string_attribute_constraints"`
+}
+
+type userPoolAddOnTypeModel struct {
+	AdvancedSecurityAdditionalFlows fwtypes.ListNestedObjectValueOf[advancedSecurityAdditionalFlowsTypeModel] `tfsdk:"advanced_security_additional_flows"`
+	AdvancedSecurityMode            types.String                                                              `tfsdk:"advanced_security_mode"`
+}
+
+type advancedSecurityAdditionalFlowsTypeModel struct {
+	CustomAuthMode types.String `tfsdk:"custom_auth_mode"`
 }
 
 type numberAttributeConstraintsTypeModel struct {
