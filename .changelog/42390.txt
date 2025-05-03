@@ -1,3 +1,3 @@
 ```release-note:bug
-resource/aws_route53_health_check: The `period` attribute for value 20s is not supported, which differs from AWS API doc. The all configurations using `period` should support 20s to align with AWS doc
+resource/aws_cloudwatch_metric_alarm: Support `20` as a valid value for `metric_query.metric.period`, `metric_query.period`, and `period`
 ```
