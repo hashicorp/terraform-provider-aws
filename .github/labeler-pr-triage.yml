@@ -1588,7 +1588,7 @@ service/notificationscontacts:
       - changed-files:
           - any-glob-to-any-file:
               - 'internal/service/notificationscontacts/**/*'
-              - 'website/**/notifications_*'
+              - 'website/**/notificationscontacts_*'
 service/oam:
   - any:
       - changed-files:
