@@ -47,7 +47,7 @@ func resourceBus() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"arn": {
+						names.AttrARN: {
 							Type:     schema.TypeString,
 							Optional: true,
 							ValidateFunc: validation.All(
@@ -253,7 +253,7 @@ func expandDeadLetterConfig(tfMap map[string]any) *types.DeadLetterConfig {
 		return nil
 	}
 	apiObject := &types.DeadLetterConfig{}
-	if v, ok := tfMap["arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrARN].(string); ok && v != "" {
 		apiObject.Arn = aws.String(v)
 	}
 	return apiObject
@@ -265,7 +265,7 @@ func flattenDeadLetterConfig(apiObject *types.DeadLetterConfig) []map[string]any
 	}
 	tfMap := map[string]any{}
 	if v := apiObject.Arn; v != nil {
-		tfMap["arn"] = aws.ToString(v)
+		tfMap[names.AttrARN] = aws.ToString(v)
 	}
 	return []map[string]any{tfMap}
 }
