@@ -119,10 +119,11 @@ This data source exports the following attributes in addition to the arguments a
 * `max_length` - Maximum allowed length.
 * `min_length` - Minimum allowed length.
 
-
 ### user pool add-ons
+
 * `advanced_security_additional_flows` - A block of the threat protection configuration options for additional authentication types in your user pool, including custom authentication. [Detailed below](#advanced-security-additional-flows).
 * `advanced_security_mode` - Mode for advanced security.
 
 ### advanced security additional flows
+
 * `custom_auth_mode` - Mode of threat protection operation in custom authentication.

@@ -251,6 +251,7 @@ The following arguments are required in the `software_token_mfa_configuration` c
 * `advanced_security_mode` - (Required) Mode for advanced security, must be one of `OFF`, `AUDIT` or `ENFORCED`.
 
 ### advanced_security_additional_flows
+
 * `custom_auth_mode` - (Optional) Mode of threat protection operation in custom authentication. Valid values are `AUDIT` or `ENFORCED`. The default value is `AUDIT`.
 
 ### username_configuration
