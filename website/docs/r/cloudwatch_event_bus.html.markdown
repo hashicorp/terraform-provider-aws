@@ -43,7 +43,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `dead_letter_config` - (Optional) Configuration details of the Amazon SQS queue for EventBridge to use as a dead-letter queue (DLQ). This block supports the following arguments:
-  * `arn` - (Optional) The ARN of the SQS queue specified as the target for the dead-letter queue.
+    * `arn` - (Optional) The ARN of the SQS queue specified as the target for the dead-letter queue.
 * `description` - (Optional) Event bus description.
 * `event_source_name` - (Optional) Partner event source that the new event bus will be matched with. Must match `name`.
 * `kms_key_identifier` - (Optional) Identifier of the AWS KMS customer managed key for EventBridge to use, if you choose to use a customer managed key to encrypt events on this event bus. The identifier can be the key Amazon Resource Name (ARN), KeyId, key alias, or key alias ARN.
