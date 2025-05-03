@@ -5677,43 +5677,39 @@ service "notifications" {
     correct = "aws_notifications_"
   }
 
-  sub_service "notificationscontacts" {
-    go_packages {
-      v2_package = "notificationscontacts"
-    }
+  provider_package_correct = "notifications"
+  doc_prefix               = ["notifications_"]
+  brand                    = "AWS"
+}
 
-    sdk {
-      id             = "notificationscontacts"
-      client_version = 2
-    }
-
-    names {
-      provider_name_upper = "NotificationsContacts"
-      human_friendly      = "User Notifications Contacts"
-    }
-
-    endpoint_info {
-      endpoint_api_call         = "ListEmailContacts"
-      endpoint_region_overrides = {
-        "aws" = "us-east-1"
-      }
-    }
-
-    resource_prefix {
-      correct = "aws_notificationscontacts_"
-    }
-
-    provider_package_correct = "notificationscontacts"
-    #split_package            = "notifications"
-    #file_prefix              = "contacts_"
-    doc_prefix               = ["notifications_"]
-    brand                    = "AWS"
+service "notificationscontacts" {
+  go_packages {
+    v2_package = "notificationscontacts"
   }
 
-  provider_package_correct = "notifications"
-  #split_package            = "notifications"
-  #file_prefix              = "notifications_"
-  doc_prefix               = ["notifications_"]
+  sdk {
+    id             = "notificationscontacts"
+    client_version = 2
+  }
+
+  names {
+    provider_name_upper = "NotificationsContacts"
+    human_friendly      = "User Notifications Contacts"
+  }
+
+  endpoint_info {
+    endpoint_api_call         = "ListEmailContacts"
+    endpoint_region_overrides = {
+      "aws" = "us-east-1"
+    }
+  }
+
+  resource_prefix {
+    correct = "aws_notificationscontacts_"
+  }
+
+  provider_package_correct = "notificationscontacts"
+  doc_prefix               = ["notificationscontacts_"]
   brand                    = "AWS"
 }
 
