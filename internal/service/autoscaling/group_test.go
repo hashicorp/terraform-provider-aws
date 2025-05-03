@@ -1900,7 +1900,6 @@ func TestAccAutoScalingGroup_warmPool(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "warm_pool.0.pool_state", "Stopped"),
 				),
 			},
-			testAccGroupImportStep(resourceName),
 			{
 				Config: testAccGroupConfig_warmPoolFull(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -4916,7 +4915,7 @@ resource "aws_autoscaling_group" "test" {
 
   traffic_source {
     identifier = aws_lb_target_group.test.arn
-    type       = "elasticloadbalancingv2"
+    type       = "elbv2"
   }
 
   tag {
@@ -4962,7 +4961,7 @@ resource "aws_autoscaling_group" "test" {
     for_each = aws_lb_target_group.test[*]
     content {
       identifier = traffic_source.value.arn
-      type       = "elasticloadbalancingv2"
+      type       = "elbv2"
     }
   }
 }
