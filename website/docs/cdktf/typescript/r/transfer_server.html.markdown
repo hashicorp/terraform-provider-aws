@@ -248,8 +248,8 @@ This resource supports the following arguments:
 * `url` - (Optional) - URL of the service endpoint used to authenticate users with an `identityProviderType` of `API_GATEWAY`.
 * `identityProviderType` - (Optional) The mode of authentication enabled for this service. The default value is `SERVICE_MANAGED`, which allows you to store and access SFTP user credentials within the service. `API_GATEWAY` indicates that user authentication requires a call to an API Gateway endpoint URL provided by you to integrate an identity provider of your choice. Using `AWS_DIRECTORY_SERVICE` will allow for authentication against AWS Managed Active Directory or Microsoft Active Directory in your on-premises environment, or in AWS using AD Connectors. Use the `AWS_LAMBDA` value to directly use a Lambda function as your identity provider. If you choose this value, you must specify the ARN for the lambda function in the `function` argument.
 * `directoryId` - (Optional) The directory service ID of the directory service you want to connect to with an `identityProviderType` of `AWS_DIRECTORY_SERVICE`.
-* `function` - (Optional) The ARN for a lambda function to use for the Identity provider.
-* `sftpAuthenticationMethods` - (Optional) For SFTP-enabled servers, and for custom identity providers only. Valid values are `PASSWORD`, `PUBLIC_KEY`, `PUBLIC_KEY_OR_PASSWORD` and `PUBLIC_KEY_AND_PASSWORD`. Default value is: `PUBLIC_KEY_OR_PASSWORD`.
+* `function` - (Optional) The ARN for a lambda function to use for the Identity provider with an `identityProviderType` of `AWS_LAMBDA`.
+* `sftpAuthenticationMethods` - (Optional) For SFTP-enabled servers with an `identityProviderType` of `API_GATEWAY` or `AWS_LAMBDA`. Valid values are `PASSWORD`, `PUBLIC_KEY`, `PUBLIC_KEY_OR_PASSWORD` and `PUBLIC_KEY_AND_PASSWORD`. Default value is: `PUBLIC_KEY_OR_PASSWORD`.
 * `loggingRole` - (Optional) Amazon Resource Name (ARN) of an IAM role that allows the service to write your SFTP users’ activity to your Amazon CloudWatch logs for monitoring and auditing purposes.
 * `forceDestroy` - (Optional) A boolean that indicates all users associated with the server should be deleted so that the Server can be destroyed without error. The default value is `false`. This option only applies to servers configured with a `SERVICE_MANAGED` `identityProviderType`.
 * `postAuthenticationLoginBanner`- (Optional) Specify a string to display when users connect to a server. This string is displayed after the user authenticates. The SFTP protocol does not support post-authentication display banners.
@@ -368,4 +368,4 @@ Using `terraform import`, import Transfer Servers using the server `id`. For exa
 
 Certain resource arguments, such as `hostKey`, cannot be read via the API and imported into Terraform. Terraform will display a difference for these arguments the first run after import if declared in the Terraform configuration for an imported resource.
 
-<!-- cache-key: cdktf-0.20.8 input-9df058d06822773d847752a4476cf10fdb3b7b158f0b79f63bde68a217ef90a6 -->
+<!-- cache-key: cdktf-0.20.8 input-cb8a7090d83ebda8d13dfbff58f30c628ce69aae6cb7fa8df5f82c6839325d18 -->

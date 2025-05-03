@@ -1,0 +1,11 @@
+```release-note:enhancement
+data-source/aws_workspaces_directory: Add `active_directory_config`, `user_identity_type`, `workspace_directory_description`, `workspace_directory_name`, and `workspace_type` attributes
+```
+
+```release-note:enhancement
+resource/aws_workspaces_directory: Add `active_directory_config`, `user_identity_type`, `workspace_directory_description`, `workspace_directory_name`, and `workspace_type` arguments in support of [WorkSpaces Pools](https://docs.aws.amazon.com/workspaces/latest/adminguide/manage-workspaces-pools-directory.html)
+```
+
+```release-note:enhancement
+resource/aws_workspaces_directory: Mark `directory_id` as Optional
+```

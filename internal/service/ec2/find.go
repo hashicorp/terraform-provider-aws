@@ -178,6 +178,28 @@ func findCOIPPools(ctx context.Context, conn *ec2.Client, input *ec2.DescribeCoi
 	return output, nil
 }
 
+func findDefaultCreditSpecification(ctx context.Context, conn *ec2.Client, input *ec2.GetDefaultCreditSpecificationInput) (*awstypes.InstanceFamilyCreditSpecification, error) {
+	output, err := conn.GetDefaultCreditSpecification(ctx, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.InstanceFamilyCreditSpecification == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.InstanceFamilyCreditSpecification, nil
+}
+
+func findDefaultCreditSpecificationByInstanceFamily(ctx context.Context, conn *ec2.Client, instanceFamily awstypes.UnlimitedSupportedInstanceFamily) (*awstypes.InstanceFamilyCreditSpecification, error) {
+	input := ec2.GetDefaultCreditSpecificationInput{
+		InstanceFamily: instanceFamily,
+	}
+
+	return findDefaultCreditSpecification(ctx, conn, &input)
+}
+
 func findDHCPOptions(ctx context.Context, conn *ec2.Client, input *ec2.DescribeDhcpOptionsInput) (*awstypes.DhcpOptions, error) {
 	output, err := findDHCPOptionses(ctx, conn, input)
 
@@ -2440,6 +2462,26 @@ func findVPCEndpoints(ctx context.Context, conn *ec2.Client, input *ec2.Describe
 		}
 
 		output = append(output, page.VpcEndpoints...)
+	}
+
+	return output, nil
+}
+
+func findVPCEndpointAssociations(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcEndpointAssociationsInput) ([]awstypes.VpcEndpointAssociation, error) {
+	var output []awstypes.VpcEndpointAssociation
+
+	err := describeVPCEndpointAssociationsPages(ctx, conn, input, func(page *ec2.DescribeVpcEndpointAssociationsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		output = append(output, page.VpcEndpointAssociations...)
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
 	}
 
 	return output, nil
