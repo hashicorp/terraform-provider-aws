@@ -1778,6 +1778,7 @@ func expandDataProtectionConfig(tfList []any) *awstypes.DataProtectionConfig {
 	}
 
 	tfMap := tfList[0].(map[string]any)
+
 	return &awstypes.DataProtectionConfig{
 		DataProtections: expandDataProtections(tfMap["data_protection"].([]any)),
 	}
@@ -1794,10 +1795,11 @@ func expandDataProtections(tfList []any) []awstypes.DataProtection {
 		if tfMapRaw == nil {
 			continue
 		}
+
 		tfMap := tfMapRaw.(map[string]any)
 		apiObject := &awstypes.DataProtection{
 			Action: awstypes.DataProtectionAction(tfMap[names.AttrAction].(string)),
-			Field:  expandField(tfMap[names.AttrField].([]any)),
+			Field:  expandFieldToProtect(tfMap[names.AttrField].([]any)),
 		}
 
 		if v, ok := tfMap["exclude_rate_based_details"].(bool); ok {
@@ -1810,10 +1812,11 @@ func expandDataProtections(tfList []any) []awstypes.DataProtection {
 
 		apiObjects = append(apiObjects, *apiObject)
 	}
+
 	return apiObjects
 }
 
-func expandField(tfList []any) *awstypes.FieldToProtect {
+func expandFieldToProtect(tfList []any) *awstypes.FieldToProtect {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -1823,10 +1826,9 @@ func expandField(tfList []any) *awstypes.FieldToProtect {
 	apiObject := &awstypes.FieldToProtect{
 		FieldType: awstypes.FieldToProtectType(tfMap["field_type"].(string)),
 	}
+
 	if v, ok := tfMap["field_keys"].([]any); ok && len(v) > 0 {
-		for _, key := range v {
-			apiObject.FieldKeys = append(apiObject.FieldKeys, key.(string))
-		}
+		apiObject.FieldKeys = flex.ExpandStringValueList(v)
 	}
 
 	return apiObject
@@ -3287,9 +3289,9 @@ func flattenDataProtections(apiObjects []awstypes.DataProtection) any {
 	for _, apiObject := range apiObjects {
 		tfMap := map[string]any{
 			names.AttrAction:             apiObject.Action,
-			names.AttrField:              flattenField(apiObject.Field),
 			"exclude_rate_based_details": apiObject.ExcludeRateBasedDetails,
 			"exclude_rule_match_details": apiObject.ExcludeRuleMatchDetails,
+			names.AttrField:              flattenFieldToProtect(apiObject.Field),
 		}
 		tfList = append(tfList, tfMap)
 	}
@@ -3297,7 +3299,7 @@ func flattenDataProtections(apiObjects []awstypes.DataProtection) any {
 	return tfList
 }
 
-func flattenField(apiObject *awstypes.FieldToProtect) any {
+func flattenFieldToProtect(apiObject *awstypes.FieldToProtect) any {
 	if apiObject == nil {
 		return nil
 	}
@@ -3305,8 +3307,10 @@ func flattenField(apiObject *awstypes.FieldToProtect) any {
 	tfMap := map[string]any{
 		"field_type": apiObject.FieldType,
 	}
+
 	if v := apiObject.FieldKeys; len(v) > 0 {
 		tfMap["field_keys"] = v
 	}
+
 	return []any{tfMap}
 }

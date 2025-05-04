@@ -92,17 +92,20 @@ func resourceWebACL() *schema.Resource {
 											Required:         true,
 											ValidateDiagFunc: enum.Validate[awstypes.DataProtectionAction](),
 										},
+										"exclude_rate_based_details": {
+											Type:     schema.TypeBool,
+											Optional: true,
+										},
+										"exclude_rule_match_details": {
+											Type:     schema.TypeBool,
+											Optional: true,
+										},
 										names.AttrField: {
 											Type:     schema.TypeList,
 											Required: true,
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"field_type": {
-														Type:             schema.TypeString,
-														Required:         true,
-														ValidateDiagFunc: enum.Validate[awstypes.FieldToProtectType](),
-													},
 													"field_keys": {
 														Type:     schema.TypeList,
 														Optional: true,
@@ -115,16 +118,13 @@ func resourceWebACL() *schema.Resource {
 															),
 														},
 													},
+													"field_type": {
+														Type:             schema.TypeString,
+														Required:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.FieldToProtectType](),
+													},
 												},
 											},
-										},
-										"exclude_rate_based_details": {
-											Type:     schema.TypeBool,
-											Optional: true,
-										},
-										"exclude_rule_match_details": {
-											Type:     schema.TypeBool,
-											Optional: true,
 										},
 									},
 								},
