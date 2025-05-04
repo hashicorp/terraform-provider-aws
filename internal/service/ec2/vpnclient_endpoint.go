@@ -112,21 +112,6 @@ func resourceClientVPNEndpoint() *schema.Resource {
 					},
 				},
 			},
-			"client_route_enforcement_options": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"enforced": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
-						},
-					},
-				},
-			},
 			"client_login_banner_options": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -141,6 +126,21 @@ func resourceClientVPNEndpoint() *schema.Resource {
 							ValidateFunc: validation.StringLenBetween(0, 1400),
 						},
 						names.AttrEnabled: {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"client_route_enforcement_options": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enforced": {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Computed: true,
