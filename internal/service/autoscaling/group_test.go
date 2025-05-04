@@ -4192,7 +4192,7 @@ func TestAccAutoScalingGroup_capacityReservationSpecificationWithTarget(t *testi
 		CheckDestroy:             testAccCheckGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig_capacityReservationSpecificationWithCrId(rName, "capacity-reservations-only"),
+				Config: testAccGroupConfig_capacityReservationSpecificationWithCapacityReservationID(rName, "capacity-reservations-only"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.#", "1"),
@@ -4205,7 +4205,7 @@ func TestAccAutoScalingGroup_capacityReservationSpecificationWithTarget(t *testi
 			testAccGroupImportStep(resourceName),
 			// changing the target type
 			{
-				Config: testAccGroupConfig_capacityReservationSpecificationWithRgArn(rName, "capacity-reservations-only"),
+				Config: testAccGroupConfig_capacityReservationSpecificationWithResourceGroupARN(rName, "capacity-reservations-only"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.#", "1"),
@@ -4217,7 +4217,7 @@ func TestAccAutoScalingGroup_capacityReservationSpecificationWithTarget(t *testi
 			},
 			// Just changing the preference
 			{
-				Config: testAccGroupConfig_capacityReservationSpecificationWithRgArn(rName, "capacity-reservations-first"),
+				Config: testAccGroupConfig_capacityReservationSpecificationWithResourceGroupARN(rName, "capacity-reservations-first"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.#", "1"),
@@ -5382,7 +5382,6 @@ func testAccGroupConfig_capacityReservationSpecificationBasic(rName, capacityRes
 		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		fmt.Sprintf(`
-
 resource "aws_launch_template" "test" {
   image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = "t3.micro"
@@ -5390,10 +5389,11 @@ resource "aws_launch_template" "test" {
 }
 
 resource "aws_autoscaling_group" "test" {
-  availability_zones   = [data.aws_availability_zones.available.names[0]]
-  max_size             = 0
-  min_size             = 0
-  name                 = %[1]q
+  availability_zones = [data.aws_availability_zones.available.names[0]]
+  max_size           = 0
+  min_size           = 0
+  name               = %[1]q
+
   launch_template {
     id = aws_launch_template.test.id
   }
@@ -5405,12 +5405,11 @@ resource "aws_autoscaling_group" "test" {
 `, rName, capacityReservationPreference))
 }
 
-func testAccGroupConfig_capacityReservationSpecificationWithCrId(rName, capacityReservationPreference string) string {
+func testAccGroupConfig_capacityReservationSpecificationWithCapacityReservationID(rName, capacityReservationPreference string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		fmt.Sprintf(`
-
 resource "aws_launch_template" "test" {
   image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = "t3.micro"
@@ -5425,30 +5424,31 @@ resource "aws_ec2_capacity_reservation" "test" {
 }
 
 resource "aws_autoscaling_group" "test" {
-  availability_zones   = [data.aws_availability_zones.available.names[0]]
-  max_size             = 0
-  min_size             = 0
-  name                 = %[1]q
+  availability_zones = [data.aws_availability_zones.available.names[0]]
+  max_size           = 0
+  min_size           = 0
+  name               = %[1]q
+
   launch_template {
     id = aws_launch_template.test.id
   }
 
   capacity_reservation_specification {
     capacity_reservation_preference = %[2]q
-	capacity_reservation_target {
-	  capacity_reservation_ids = [aws_ec2_capacity_reservation.test.id]
-	}
+
+    capacity_reservation_target {
+      capacity_reservation_ids = [aws_ec2_capacity_reservation.test.id]
+    }
   }
 }
 `, rName, capacityReservationPreference))
 }
 
-func testAccGroupConfig_capacityReservationSpecificationWithRgArn(rName, capacityReservationPreference string) string {
+func testAccGroupConfig_capacityReservationSpecificationWithResourceGroupARN(rName, capacityReservationPreference string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		fmt.Sprintf(`
-
 resource "aws_launch_template" "test" {
   image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = "t3.micro"
@@ -5464,14 +5464,15 @@ resource "aws_ec2_capacity_reservation" "test" {
 
 resource "aws_resourcegroups_group" "test" {
   name = %[1]q
- 
+
   configuration {
     type = "AWS::EC2::CapacityReservationPool"
   }
-  
+
   configuration {
     type = "AWS::ResourceGroups::Generic"
-	parameters {
+
+    parameters {
       name = "allowed-resource-types"
       values = [
         "AWS::EC2::CapacityReservation"
@@ -5481,26 +5482,26 @@ resource "aws_resourcegroups_group" "test" {
 }
 
 resource "aws_resourcegroups_resource" "test" {
-  group_arn = aws_resourcegroups_group.test.arn
+  group_arn    = aws_resourcegroups_group.test.arn
   resource_arn = aws_ec2_capacity_reservation.test.arn
-
-  depends_on = [aws_ec2_capacity_reservation.test]
 }
 
 resource "aws_autoscaling_group" "test" {
-  availability_zones   = [data.aws_availability_zones.available.names[0]]
-  max_size             = 0
-  min_size             = 0
-  name                 = %[1]q
+  availability_zones = [data.aws_availability_zones.available.names[0]]
+  max_size           = 0
+  min_size           = 0
+  name               = %[1]q
+
   launch_template {
     id = aws_launch_template.test.id
   }
 
   capacity_reservation_specification {
     capacity_reservation_preference = %[2]q
-	capacity_reservation_target {
-	  capacity_reservation_resource_group_arns = [aws_resourcegroups_group.test.arn]
-	}
+
+    capacity_reservation_target {
+      capacity_reservation_resource_group_arns = [aws_resourcegroups_group.test.arn]
+    }
   }
 }
 `, rName, capacityReservationPreference))
