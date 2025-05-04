@@ -3104,13 +3104,15 @@ func TestAccRDSCluster_autoMinorVersionUpgrade_disabled(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
-			Config: testAccClusterConfig_autoMinorVersionUpgrade_disabled(rName),
-			Check: resource.ComposeAggregateTestCheckFunc(
-				testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-				acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "rds", fmt.Sprintf("cluster:%s", rName)),
-				resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", acctest.CtFalse),
-			),
-		}
+			{
+				Config: testAccClusterConfig_autoMinorVersionUpgrade_disabled(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "rds", fmt.Sprintf("cluster:%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", acctest.CtFalse),
+				),
+			},
+		},
 	})
 }
 

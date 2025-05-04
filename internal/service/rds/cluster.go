@@ -1367,6 +1367,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 		if v, ok := d.GetOk("auto_minor_version_upgrade"); ok {
 			input.AutoMinorVersionUpgrade = aws.Bool(v.(bool))
+			log.Printf("フォーマット付きメッセージ: %v", input)
 		}
 
 		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
