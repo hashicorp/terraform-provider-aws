@@ -431,7 +431,7 @@ var fieldToMatchBaseSchema = sync.OnceValue(func() *schema.Resource {
 						"fallback_behavior": {
 							Type:             schema.TypeString,
 							Optional:         true,
-							Default:          awstypes.FallbackBehaviorMatch,
+							Computed:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.FallbackBehavior](),
 						},
 					},
