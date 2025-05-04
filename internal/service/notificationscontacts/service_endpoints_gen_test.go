@@ -83,7 +83,9 @@ const (
 
 func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.Setenv
 	const providerRegion = "us-west-2" //lintignore:AWSAT003
-	const expectedEndpointRegion = providerRegion
+	// User Notifications Contacts uses a regional endpoint but is only available in one region or a limited number of regions.
+	// The provider overrides the region for User Notifications Contacts, but the AWS SDK's endpoint resolution returns one for the current region.
+	const expectedEndpointRegion = "us-east-1" //lintignore:AWSAT003
 
 	testcases := map[string]endpointTestCase{
 		"no config": {
