@@ -36,7 +36,7 @@ func resourceFleet() *schema.Resource {
 		DeleteWithoutTimeout: resourceFleetDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: resourceFleetImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -444,6 +444,25 @@ func resourceFleetDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	return diags
+}
+
+func resourceFleetImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	client := meta.(*conns.AWSClient).CodeBuildClient(ctx)
+
+	name := d.Id()
+	input := &codebuild.BatchGetFleetsInput{
+		Names: []string{name},
+	}
+
+	fleet, err := findFleet(ctx, client, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	d.SetId(aws.ToString(fleet.Arn))
+
+	return []*schema.ResourceData{d}, nil
 }
 
 func findFleetByARN(ctx context.Context, conn *codebuild.Client, arn string) (*types.Fleet, error) {
