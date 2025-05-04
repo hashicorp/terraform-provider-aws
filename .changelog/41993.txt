@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_elasticache_replication_group: Fixed indefinite wait when destroying secondary members of a global datastore that have the same name as the primary member
+```
