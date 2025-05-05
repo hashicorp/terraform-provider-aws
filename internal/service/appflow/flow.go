@@ -475,6 +475,11 @@ func resourceFlow() *schema.Resource {
 													Optional:         true,
 													ValidateDiagFunc: enum.Validate[types.WriteOperationType](),
 												},
+												"data_transfer_api": {
+													Type:             schema.TypeString,
+													Optional:         true,
+													ValidateDiagFunc: enum.Validate[types.SalesforceDataTransferApi](),
+												},
 											},
 										},
 									},
@@ -1952,6 +1957,10 @@ func expandSalesforceDestinationProperties(tfMap map[string]any) *types.Salesfor
 		a.WriteOperationType = types.WriteOperationType(v)
 	}
 
+	if v, ok := tfMap["data_transfer_api"].(string); ok && v != "" {
+		a.DataTransferApi = types.SalesforceDataTransferApi(v)
+	}
+
 	return a
 }
 
@@ -3143,6 +3152,7 @@ func flattenSalesforceDestinationProperties(salesforceDestinationProperties *typ
 	}
 
 	m["write_operation_type"] = salesforceDestinationProperties.WriteOperationType
+	m["data_transfer_api"] = salesforceDestinationProperties.DataTransferApi
 
 	return m
 }
