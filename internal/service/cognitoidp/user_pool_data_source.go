@@ -32,20 +32,8 @@ type userPoolDataSource struct {
 func (d *userPoolDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"account_recovery_setting": schema.ListAttribute{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[accountRecoverySettingTypeModel](ctx),
-				Computed:   true,
-				ElementType: types.ObjectType{
-					AttrTypes: fwtypes.AttributeTypesMust[accountRecoverySettingTypeModel](ctx),
-				},
-			},
-			"admin_create_user_config": schema.ListAttribute{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[adminCreateUserConfigTypeModel](ctx),
-				Computed:   true,
-				ElementType: types.ObjectType{
-					AttrTypes: fwtypes.AttributeTypesMust[adminCreateUserConfigTypeModel](ctx),
-				},
-			},
+			"account_recovery_setting": framework.DataSourceComputedListOfObjectAttribute[accountRecoverySettingTypeModel](ctx),
+			"admin_create_user_config": framework.DataSourceComputedListOfObjectAttribute[adminCreateUserConfigTypeModel](ctx),
 			names.AttrARN: schema.StringAttribute{
 				Computed: true,
 			},
@@ -64,34 +52,16 @@ func (d *userPoolDataSource) Schema(ctx context.Context, request datasource.Sche
 			names.AttrDeletionProtection: schema.StringAttribute{
 				Computed: true,
 			},
-			"device_configuration": schema.ListAttribute{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[deviceConfigurationTypeModel](ctx),
-				Computed:   true,
-				ElementType: types.ObjectType{
-					AttrTypes: fwtypes.AttributeTypesMust[deviceConfigurationTypeModel](ctx),
-				},
-			},
+			"device_configuration": framework.DataSourceComputedListOfObjectAttribute[deviceConfigurationTypeModel](ctx),
 			names.AttrDomain: schema.StringAttribute{
 				Computed: true,
 			},
-			"email_configuration": schema.ListAttribute{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[emailConfigurationTypeModel](ctx),
-				Computed:   true,
-				ElementType: types.ObjectType{
-					AttrTypes: fwtypes.AttributeTypesMust[emailConfigurationTypeModel](ctx),
-				},
-			},
+			"email_configuration": framework.DataSourceComputedListOfObjectAttribute[emailConfigurationTypeModel](ctx),
 			"estimated_number_of_users": schema.Int64Attribute{
 				Computed: true,
 			},
-			names.AttrID: framework.IDAttribute(),
-			"lambda_config": schema.ListAttribute{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[lambdaConfigTypeModel](ctx),
-				Computed:   true,
-				ElementType: types.ObjectType{
-					AttrTypes: fwtypes.AttributeTypesMust[lambdaConfigTypeModel](ctx),
-				},
-			},
+			names.AttrID:    framework.IDAttribute(),
+			"lambda_config": framework.DataSourceComputedListOfObjectAttribute[lambdaConfigTypeModel](ctx),
 			"last_modified_date": schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
@@ -102,13 +72,7 @@ func (d *userPoolDataSource) Schema(ctx context.Context, request datasource.Sche
 			names.AttrName: schema.StringAttribute{
 				Computed: true,
 			},
-			"schema_attributes": schema.ListAttribute{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[schemaAttributeTypeModel](ctx),
-				Computed:   true,
-				ElementType: types.ObjectType{
-					AttrTypes: fwtypes.AttributeTypesMust[schemaAttributeTypeModel](ctx),
-				},
-			},
+			"schema_attributes": framework.DataSourceComputedListOfObjectAttribute[schemaAttributeTypeModel](ctx),
 			"sms_authentication_message": schema.StringAttribute{
 				Computed: true,
 			},
@@ -118,14 +82,8 @@ func (d *userPoolDataSource) Schema(ctx context.Context, request datasource.Sche
 			"sms_verification_message": schema.StringAttribute{
 				Computed: true,
 			},
-			names.AttrTags: tftags.TagsAttributeComputedOnly(),
-			"user_pool_add_ons": schema.ListAttribute{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[userPoolAddOnTypeModel](ctx),
-				Computed:   true,
-				ElementType: types.ObjectType{
-					AttrTypes: fwtypes.AttributeTypesMust[userPoolAddOnTypeModel](ctx),
-				},
-			},
+			names.AttrTags:      tftags.TagsAttributeComputedOnly(),
+			"user_pool_add_ons": framework.DataSourceComputedListOfObjectAttribute[userPoolAddOnTypeModel](ctx),
 			names.AttrUserPoolID: schema.StringAttribute{
 				Required: true,
 			},
