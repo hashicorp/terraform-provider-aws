@@ -71,7 +71,7 @@ linters:
         - name: var-declaration
         # - name: var-naming
     staticcheck:
-      checks: ["all", "-ST1000", "-ST1003", "-ST1005", "-ST1020", "-ST1021", "-ST1022"]
+      checks: ["all", "-ST1000", "-ST1003", "-ST1005", "-ST1020", "-ST1021", "-ST1022", "-QF1001", "-QF1004"]
       initialisms: ["ACL", "ACM", "ACMPCA", "ACMPCA", "AMI", "API", "APIGateway", "AppConfig", "AppMesh", "AppSync", "ARN", "ASG", "ASN", "AutoScaling", "BGP", "BYOIP", "CIDR", "CloudFormation", "CloudFront", "CloudWatch", "CMK", "CNAME", "CoIP", "CPU", "CSS", "CSV", "DAX", "DB", "DHCP", "DKIM", "DLM", "DMS", "DNS", "DNSSEC", "DocDB", "DocDB", "DynamoDB", "DynamoDB", "EBS", "EC2", "ECMP", "ECR", "ECS", "EFS", "EIP", "EKS", "ElastiCache", "Elasticsearch", "ELB", "EMR", "FIFO", "FMS", "FQDNS", "FSx", "FSx", "GameLift", "GCM", "GP2", "GP3", "GraphQL", "GRPC", "GuardDuty", "HAProxy", "HSM", "HTTP", "HTTPS", "HVM", "IAM", "IoT", "IP", "IPAM", "IPSet", "iSCSI", "JDBC", "JSON", "KMS", "MFA", "MSK", "MWAA", "MySQL", "NFS", "OAuth", "OIDC", "OpsWorks", "PHP", "PITR", "POSIX", "PreCheck", "QLDB", "RabbitMQ", "RDS", "RFC", "SageMaker", "SASL", "SFN", "SMB", "SMS", "SMTP", "SNS", "SQL", "SQS", "SSH", "SSL", "SSM", "SSO", "STS", "SWF", "TCP", "TLS", "TTL", "URI", "URL", "VGW", "VoIP", "VPC", "VPN", "WAF", "WAFV2", "WorkGroup", "WorkLink", "WorkSpaces", "XRay", "XSS", "YAML"]
   exclusions:
     generated: strict
@@ -175,7 +175,7 @@ linters:
         path: internal/service/worklink/
         text: 'SA1019: \w+.(\w+) is deprecated: Amazon WorkLink is no longer supported. This will be removed in a future version of the SDK.'
 issues:
-  max-issues-per-linter: 10
-  max-same-issues: 3
+  max-issues-per-linter: 20
+  max-same-issues: 10
 run:
   timeout: 75m
