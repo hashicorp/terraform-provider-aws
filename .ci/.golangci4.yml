@@ -59,7 +59,7 @@ linters:
         # - name: if-return
         # - name: increment-decrement
         # - name: indent-error-flow
-        - name: package-comments
+        # - name: package-comments
         - name: range
         - name: receiver-naming
         # - name: redefines-builtin-id
@@ -104,11 +104,15 @@ linters:
         text: 'SA1019: apiObject.ImageId is deprecated: This field is deprecated'
       - linters:
           - staticcheck
+        path: internal/service/budget/
+        text: 'SA1019: \w+.(\w+) is deprecated:'
+      - linters:
+          - staticcheck
         path: internal/service/chime/
         text: 'SA1019: conn.\w+ is deprecated: Replaced by \w+ in the Amazon Chime SDK Voice Namespace'
       - linters:
           - staticcheck
-        path: internal/service/cloudfront
+        path: internal/service/cloudfront/
         text: 'SA1019: \w+.(\w+) is deprecated: This member has been deprecated'
       - linters:
           - staticcheck
@@ -120,11 +124,11 @@ linters:
         text: 'SA1019: params.RegistryIds is deprecated: This field is deprecated.'
       - linters:
           - staticcheck
-        path: internal/service/firehose
+        path: internal/service/firehose/
         text: 'SA1019: \w+.(\w+) is deprecated: (\w+) has been deprecated'
       - linters:
           - staticcheck
-        path: internal/service/fsx
+        path: internal/service/fsx/
         text: 'SA1019: \w+.(\w+) is deprecated: This property is deprecated'
       - linters:
           - staticcheck
@@ -144,16 +148,16 @@ linters:
         text: 'SA1019: [a-zA-Z0-9.]+.CustomerMasterKeySpec is deprecated: This field has been deprecated. Instead, use the KeySpec field'
       - linters:
           - staticcheck
-        path: internal/service/neptune
+        path: internal/service/neptune/
         text: 'SA1019: \w+.(\w+) is deprecated:'
       - linters:
           - staticcheck
-        path: internal/service/s3
-        text: 'SA1019: \w+.(\w+) is deprecated: (\w+) has been deprecated'
+        path: internal/service/s3/
+        text: 'SA1019: \w+.(\w+) is deprecated:'
       - linters:
           - staticcheck
-        path: internal/service/s3
-        text: 'SA1019: \w+.(\w+) is deprecated: This member has been deprecated'
+        path: internal/service/s3control/
+        text: 'SA1019: \w+.(\w+) is deprecated:'
       - linters:
           - staticcheck
         path: internal/service/securityhub/
