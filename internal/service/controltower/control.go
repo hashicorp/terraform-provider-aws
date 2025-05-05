@@ -258,11 +258,7 @@ const (
 )
 
 func expandControlParameters(input []any) ([]types.EnabledControlParameter, error) {
-	if len(input) == 0 {
-		return nil, nil
-	}
-
-	var output []types.EnabledControlParameter
+	output := []types.EnabledControlParameter{}
 
 	for _, v := range input {
 		val := v.(map[string]any)
