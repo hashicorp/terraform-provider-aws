@@ -225,7 +225,7 @@ For a list of parameters supported by each action, see [AWS FIS actions referenc
 
 #### `target` (`action.*.target`)
 
-* `key` - (Required) Target type. Valid values are `AutoScalingGroups` (EC2 Auto Scaling groups), `Buckets` (S3 Buckets), `Cluster` (EKS Cluster), `Clusters` (ECS Clusters), `DBInstances` (RDS DB Instances), `Instances` (EC2 Instances), `Nodegroups` (EKS Node groups), `Pods` (EKS Pods), `ReplicationGroups`(ElastiCache Redis Replication Groups), `Roles` (IAM Roles), `SpotInstances` (EC2 Spot Instances), `Subnets` (VPC Subnets), `Tables` (DynamoDB encrypted global tables), `Tasks` (ECS Tasks), `TransitGateways` (Transit gateways), `Volumes` (EBS Volumes). See the [documentation](https://docs.aws.amazon.com/fis/latest/userguide/actions.html#action-targets) for more details.
+* `key` - (Required) Target type. Valid values are `AutoScalingGroups` (EC2 Auto Scaling groups), `Buckets` (S3 Buckets), `Cluster` (EKS Cluster), `Clusters` (ECS Clusters), `DBInstances` (RDS DB Instances), `Instances` (EC2 Instances), `ManagedResources` (EKS clusters, Application and Network Load Balancers, and EC2 Auto Scaling groups that are enabled for ARC zonal shift), `Nodegroups` (EKS Node groups), `Pods` (EKS Pods), `ReplicationGroups`(ElastiCache Redis Replication Groups), `Roles` (IAM Roles), `SpotInstances` (EC2 Spot Instances), `Subnets` (VPC Subnets), `Tables` (DynamoDB encrypted global tables), `Tasks` (ECS Tasks), `TransitGateways` (Transit gateways), `Volumes` (EBS Volumes). See the [documentation](https://docs.aws.amazon.com/fis/latest/userguide/actions.html#action-targets) for more details.
 * `value` - (Required) Target name, referencing a corresponding target.
 
 ### `stop_condition`
@@ -327,4 +327,4 @@ Using `terraform import`, import FIS Experiment Templates using the `id`. For ex
 % terraform import aws_fis_experiment_template.template EXT123AbCdEfGhIjK
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-3249ab7f681a6290b56df096c6617cadd566aadf284eae1cf9b82fb972f8bfc2 -->
+<!-- cache-key: cdktf-0.20.8 input-7ecf15f19d4c03e9f85f51a67106ad1fe0a61fb63c4b30789235fa6c6c9de680 -->
