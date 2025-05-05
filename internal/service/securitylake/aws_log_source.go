@@ -11,6 +11,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/securitylake"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/securitylake/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
@@ -46,11 +48,46 @@ type awsLogSourceResource struct {
 func (r *awsLogSourceResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"accounts": schema.SetAttribute{
+				CustomType:  fwtypes.SetOfStringType,
+				ElementType: types.StringType,
+				Optional:    true,
+				Computed:    true,
+				PlanModifiers: []planmodifier.Set{
+					setplanmodifier.RequiresReplace(),
+				},
+			},
 			names.AttrID: framework.IDAttribute(),
+			"regions": schema.SetAttribute{
+				CustomType:  fwtypes.SetOfStringType,
+				ElementType: types.StringType,
+				// Will become required once source block is removed
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Set{
+					setplanmodifier.RequiresReplace(),
+				},
+			},
+			"source_name": schema.StringAttribute{
+				// Will become required once source block is removed
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			"source_version": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
 		},
 		Blocks: map[string]schema.Block{
 			names.AttrSource: schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[awsLogSourceSourceModel](ctx),
+				DeprecationMessage: "source is deprecated. Use the corresponding arguments at the root level instead.",
+				CustomType:         fwtypes.NewListNestedObjectTypeOf[awsLogSourceSourceModel](ctx),
 				PlanModifiers: []planmodifier.List{
 					listplanmodifier.RequiresReplace(),
 				},
@@ -98,6 +135,28 @@ func (r *awsLogSourceResource) Schema(ctx context.Context, request resource.Sche
 	}
 }
 
+func (r *awsLogSourceResource) ConfigValidators(ctx context.Context) []resource.ConfigValidator {
+	// TODO - can this be simplified?
+	return []resource.ConfigValidator{
+		resourcevalidator.Conflicting(
+			path.MatchRoot("source"),
+			path.MatchRoot("accounts"),
+		),
+		resourcevalidator.Conflicting(
+			path.MatchRoot("source"),
+			path.MatchRoot("regions"),
+		),
+		resourcevalidator.Conflicting(
+			path.MatchRoot("source"),
+			path.MatchRoot("source_name"),
+		),
+		resourcevalidator.Conflicting(
+			path.MatchRoot("source"),
+			path.MatchRoot("source_version"),
+		),
+	}
+}
+
 func (r *awsLogSourceResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	var data awsLogSourceResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
@@ -107,14 +166,21 @@ func (r *awsLogSourceResource) Create(ctx context.Context, request resource.Crea
 
 	conn := r.Meta().SecurityLakeClient(ctx)
 
-	input := &securitylake.CreateAwsLogSourceInput{}
-	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
-	if response.Diagnostics.HasError() {
-		return
+	input := securitylake.CreateAwsLogSourceInput{}
+	if !data.Source.IsNull() {
+		response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+	} else {
+		response.Diagnostics.Append(fwflex.Expand(ctx, data, &input.Sources)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
 	}
 
 	_, err := retryDataLakeConflictWithMutex(ctx, func() (*securitylake.CreateAwsLogSourceOutput, error) {
-		return conn.CreateAwsLogSource(ctx, input)
+		return conn.CreateAwsLogSource(ctx, &input)
 	})
 
 	if err != nil {
@@ -171,6 +237,8 @@ func (r *awsLogSourceResource) Read(ctx context.Context, request resource.ReadRe
 		return
 	}
 
+	// TODO - response needs to be written to root level or source block, depending on which is configured
+
 	// We can't use AutoFlEx with the top-level resource model because the API structure uses Go interfaces.
 	var sourceData awsLogSourceSourceModel
 	response.Diagnostics.Append(fwflex.Flatten(ctx, logSource, &sourceData)...)
@@ -192,10 +260,17 @@ func (r *awsLogSourceResource) Delete(ctx context.Context, request resource.Dele
 
 	conn := r.Meta().SecurityLakeClient(ctx)
 
-	input := &securitylake.DeleteAwsLogSourceInput{}
-	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
-	if response.Diagnostics.HasError() {
-		return
+	input := securitylake.DeleteAwsLogSourceInput{}
+	if !data.Source.IsNull() {
+		response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+	} else {
+		response.Diagnostics.Append(fwflex.Expand(ctx, data, &input.Sources)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
 	}
 
 	// Workaround for acceptance tests deletion.
@@ -212,7 +287,7 @@ func (r *awsLogSourceResource) Delete(ctx context.Context, request resource.Dele
 	}
 
 	_, err := retryDataLakeConflictWithMutex(ctx, func() (*securitylake.DeleteAwsLogSourceOutput, error) {
-		return conn.DeleteAwsLogSource(ctx, input)
+		return conn.DeleteAwsLogSource(ctx, &input)
 	})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
