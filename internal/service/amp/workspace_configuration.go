@@ -13,9 +13,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/amp/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	"github.com/hashicorp/terraform-plugin-framework-validators/mapvalidator"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -35,6 +32,7 @@ import (
 )
 
 // @FrameworkResource("aws_prometheus_workspace_configuration", name="WorkspaceConfiguration")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/amp/types;types.WorkspaceConfigurationDescription")
 func newWorkspaceConfigurationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &workspaceConfigurationResource{}
 
@@ -46,14 +44,18 @@ func newWorkspaceConfigurationResource(_ context.Context) (resource.ResourceWith
 type workspaceConfigurationResourceModel struct {
 	ID                    types.String                                            `tfsdk:"id"`
 	WorkspaceID           types.String                                            `tfsdk:"workspace_id"`
-	RetentionPeriodInDays types.Number                                            `tfsdk:"retention_period_in_days"`
+	RetentionPeriodInDays types.Int32                                             `tfsdk:"retention_period_in_days"`
 	LimitsPerLabelSet     fwtypes.ListNestedObjectValueOf[limitsPerLabelSetModel] `tfsdk:"limits_per_label_set"`
 	Timeouts              timeouts.Value                                          `tfsdk:"timeouts"`
 }
 
 type limitsPerLabelSetModel struct {
-	LabelSet types.Map    `tfsdk:"label_set"`
-	Limits   types.String `tfsdk:"limits"`
+	LabelSet fwtypes.MapValueOf[types.String]                             `tfsdk:"label_set"`
+	Limits   fwtypes.ListNestedObjectValueOf[limitsPerLabelSetEntryModel] `tfsdk:"limits"`
+}
+
+type limitsPerLabelSetEntryModel struct {
+	MaxSeries types.Int64 `tfsdk:"max_series"`
 }
 
 type workspaceConfigurationResource struct {
@@ -73,8 +75,8 @@ func (r *workspaceConfigurationResource) Schema(ctx context.Context, req resourc
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"retention_period_in_days": schema.NumberAttribute{
-				Required: false,
+			"retention_period_in_days": schema.Int32Attribute{
+				Optional: true,
 			},
 		},
 		Blocks: map[string]schema.Block{
@@ -86,21 +88,24 @@ func (r *workspaceConfigurationResource) Schema(ctx context.Context, req resourc
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"label_set": schema.MapAttribute{
+							CustomType:  fwtypes.MapOfStringType,
 							ElementType: types.StringType,
 							Required:    true,
-							Validators: []validator.Map{
-								mapvalidator.SizeAtLeast(1),
-							},
 						},
-						"limits": schema.StringAttribute{
-							Computed: true,
-							PlanModifiers: []planmodifier.String{
-								stringplanmodifier.UseStateForUnknown(),
+					},
+					Blocks: map[string]schema.Block{
+						"limits": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[limitsPerLabelSetEntryModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtLeast(1),
+								listvalidator.SizeAtMost(1),
 							},
-							Validators: []validator.String{
-								stringvalidator.AlsoRequires(
-									path.MatchRelative().AtParent().AtName("label_set"),
-								),
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"max_series": schema.Int64Attribute{
+										Required: true,
+									},
+								},
 							},
 						},
 					},
@@ -134,50 +139,6 @@ func (r *workspaceConfigurationResource) Create(ctx context.Context, req resourc
 	input.ClientToken = aws.String(sdkid.UniqueId())
 	input.WorkspaceId = &workspaceID
 
-	// if !data.RetentionPeriodInDays.IsNull() && !data.RetentionPeriodInDays.IsUnknown() {
-	// 	var retentionPeriod int64
-	// 	// resp.Diagnostics.Append(data.RetentionPeriodInDays.As(&retentionPeriod)...)
-	// 	// if resp.Diagnostics.HasError() {
-	// 	// 	return
-	// 	// }
-	// 	input.RetentionPeriodInDays = data.RetentionPeriodInDays
-	// }
-
-	// // Add limits per label set if provided
-	// if !plan.LimitsPerLabelSet.IsNull() && !plan.LimitsPerLabelSet.IsUnknown() {
-	// 	var limitsPerLabelSetModels []limitsPerLabelSetModel
-	// 	resp.Diagnostics.Append(plan.LimitsPerLabelSet.ElementsAs(ctx, &limitsPerLabelSetModels, false)...)
-	// 	if resp.Diagnostics.HasError() {
-	// 		return
-	// 	}
-
-	// 	limitsPerLabelSet := make([]awstypes.LimitsPerLabelSet, 0, len(limitsPerLabelSetModels))
-	// 	for _, model := range limitsPerLabelSetModels {
-	// 		if model.LabelSet.IsNull() || model.LabelSet.IsUnknown() {
-	// 			continue
-	// 		}
-
-	// 		labelMap := make(map[string]string)
-	// 		resp.Diagnostics.Append(model.LabelSet.ElementsAs(ctx, &labelMap, false)...)
-	// 		if resp.Diagnostics.HasError() {
-	// 			return
-	// 		}
-
-	// 		labelSet := make(map[string]string)
-	// 		for k, v := range labelMap {
-	// 			labelSet[k] = v
-	// 		}
-
-	// 		limitsPerLabelSet = append(limitsPerLabelSet, awstypes.LimitsPerLabelSet{
-	// 			LabelSet: labelSet,
-	// 		})
-	// 	}
-
-	// 	if len(limitsPerLabelSet) > 0 {
-	// 		input.LimitsPerLabelSet = limitsPerLabelSet
-	// 	}
-	// }
-
 	_, err := conn.UpdateWorkspaceConfiguration(ctx, &input)
 	if err != nil {
 		resp.Diagnostics.AddError("updating Workspace configuration", err.Error())
@@ -202,7 +163,7 @@ func (r *workspaceConfigurationResource) Read(ctx context.Context, req resource.
 
 	conn := r.Meta().AMPClient(ctx)
 
-	out, err := FindWorkspaceConfigurationByID(ctx, conn, data.ID.ValueString())
+	out, err := findWorkspaceConfigurationByID(ctx, conn, data.ID.ValueString())
 
 	if tfresource.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -244,6 +205,50 @@ func (r *workspaceConfigurationResource) Update(ctx context.Context, req resourc
 	input.ClientToken = aws.String(sdkid.UniqueId())
 	input.WorkspaceId = &workspaceID
 
+	if !data.RetentionPeriodInDays.IsNull() && !data.RetentionPeriodInDays.IsUnknown() {
+		// var retentionPeriod int64
+		// resp.Diagnostics.Append(data.RetentionPeriodInDays.As(&retentionPeriod)...)
+		// if resp.Diagnostics.HasError() {
+		// 	return
+		// }
+		input.RetentionPeriodInDays = data.RetentionPeriodInDays.ValueInt32Pointer()
+	}
+
+	// Add limits per label set if provided
+	if !data.LimitsPerLabelSet.IsNull() && !data.LimitsPerLabelSet.IsUnknown() {
+		var limitsPerLabelSetModels []limitsPerLabelSetModel
+		resp.Diagnostics.Append(data.LimitsPerLabelSet.ElementsAs(ctx, &limitsPerLabelSetModels, false)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		limitsPerLabelSet := make([]awstypes.LimitsPerLabelSet, 0, len(limitsPerLabelSetModels))
+		for _, model := range limitsPerLabelSetModels {
+			if model.LabelSet.IsNull() || model.LabelSet.IsUnknown() {
+				continue
+			}
+
+			labelMap := make(map[string]string)
+			resp.Diagnostics.Append(model.LabelSet.ElementsAs(ctx, &labelMap, false)...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+
+			labelSet := make(map[string]string)
+			for k, v := range labelMap {
+				labelSet[k] = v
+			}
+
+			limitsPerLabelSet = append(limitsPerLabelSet, awstypes.LimitsPerLabelSet{
+				LabelSet: labelSet,
+			})
+		}
+
+		if len(limitsPerLabelSet) > 0 {
+			input.LimitsPerLabelSet = limitsPerLabelSet
+		}
+	}
+
 	_, err := conn.UpdateWorkspaceConfiguration(ctx, &input)
 	if err != nil {
 		resp.Diagnostics.AddError("updating Workspace configuration", err.Error())
@@ -263,7 +268,7 @@ func (r *workspaceConfigurationResource) Update(ctx context.Context, req resourc
 
 // FindWorkspaceConfigurationByID retrieves a workspace configuration by its ID.
 // This function is exported for testing purposes.
-func FindWorkspaceConfigurationByID(ctx context.Context, conn *amp.Client, id string) (*amp.DescribeWorkspaceConfigurationOutput, error) {
+func findWorkspaceConfigurationByID(ctx context.Context, conn *amp.Client, id string) (*amp.DescribeWorkspaceConfigurationOutput, error) {
 	input := &amp.DescribeWorkspaceConfigurationInput{
 		WorkspaceId: aws.String(id),
 	}
@@ -306,7 +311,7 @@ func waitWorkspaceConfigurationUpdated(ctx context.Context, conn *amp.Client, id
 
 func statusWorkspaceConfiguration(ctx context.Context, conn *amp.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindWorkspaceConfigurationByID(ctx, conn, id)
+		output, err := findWorkspaceConfigurationByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
