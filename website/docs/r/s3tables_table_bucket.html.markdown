@@ -29,30 +29,39 @@ The following argument is required:
   Can consist of lowercase letters, numbers, and hyphens, and must begin and end with a lowercase letter or number.
   A full list of bucket naming rules can be found in the [S3 Tables documentation](https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-tables-buckets-naming.html#table-buckets-naming-rules).
 
-The following argument is optional:
+The following arguments are optional:
 
-* `maintenance_configuration` - (Optional) A single table bucket maintenance configuration block.
+* `encryption_configuration` - (Optional) A single table bucket encryption configuration object.
+  [See `encryption_configuration` below](#encryption_configuration).
+* `maintenance_configuration` - (Optional) A single table bucket maintenance configuration object.
   [See `maintenance_configuration` below](#maintenance_configuration).
+
+### `encryption_configuration`
+
+The `encryption_configuration` object supports the following arguments:
+
+* `kms_key_arn` - (Optional) The ARN of a KMS Key to be used with `aws:kms` `sse_algorithm`
+* `sse_algorithm` - (Required) One of `aws:kms` or `AES256`
 
 ### `maintenance_configuration`
 
-The `maintenance_configuration` configuration block supports the following argument:
+The `maintenance_configuration` object supports the following argument:
 
-* `iceberg_unreferenced_file_removal` - (Required) A single Iceberg unreferenced file removal settings block.
+* `iceberg_unreferenced_file_removal` - (Required) A single Iceberg unreferenced file removal settings object.
   [See `iceberg_unreferenced_file_removal` below](#iceberg_unreferenced_file_removal).
 
 ### `iceberg_unreferenced_file_removal`
 
-The `iceberg_unreferenced_file_removal` configuration block supports the following arguments:
+The `iceberg_unreferenced_file_removal` object supports the following arguments:
 
-* `settings` - (Required) Settings for unreferenced file removal.
+* `settings` - (Required) Settings object for unreferenced file removal.
   [See `iceberg_unreferenced_file_removal.settings` below](#iceberg_unreferenced_file_removalsettings).
 * `status` - (Required) Whether the configuration is enabled.
   Valid values are `enabled` and `disabled`.
 
 ### `iceberg_unreferenced_file_removal.settings`
 
-The `iceberg_unreferenced_file_removal.settings` configuration block supports the following arguments:
+The `iceberg_unreferenced_file_removal.settings` object supports the following arguments:
 
 * `non_current_days` - (Required) Data objects marked for deletion are deleted after this many days.
   Must be at least `1`.

@@ -629,7 +629,10 @@ func TestAccRDSCluster_storageTypeGeneralPurposeToProvisionedIOPS(t *testing.T) 
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		CheckDestroy: testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_storageChange(rName, "gp3"),
@@ -1121,7 +1124,10 @@ func TestAccRDSCluster_domain(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		CheckDestroy: testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_domain(rName, domain),
@@ -2137,7 +2143,6 @@ func TestAccRDSCluster_scaling(t *testing.T) {
 	}
 
 	var dbCluster types.DBCluster
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 
@@ -2184,7 +2189,6 @@ func TestAccRDSCluster_serverlessV2ScalingConfiguration(t *testing.T) {
 	}
 
 	var dbCluster types.DBCluster
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 
@@ -2215,13 +2219,24 @@ func TestAccRDSCluster_serverlessV2ScalingConfiguration(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccClusterConfig_serverlessV2ScalingConfigurationWithSecondsUntilAutoPause(rName, 256.0, 0, 21600),
+				Config: testAccClusterConfig_serverlessV2ScalingConfigurationWithSecondsUntilAutoPause(rName, 256.0, 0, "21600"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.0.max_capacity", "256"),
 					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.0.min_capacity", "0"),
 					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.0.seconds_until_auto_pause", "21600"),
+				),
+			},
+			// https://github.com/hashicorp/terraform-provider-aws/issues/40637.
+			{
+				Config: testAccClusterConfig_serverlessV2ScalingConfiguration(rName, 64.0, 2.5),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.0.max_capacity", "64"),
+					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.0.min_capacity", "2.5"),
+					resource.TestCheckResourceAttrSet(resourceName, "serverlessv2_scaling_configuration.0.seconds_until_auto_pause"),
 				),
 			},
 		},
@@ -2235,7 +2250,6 @@ func TestAccRDSCluster_serverlessV2ScalingRemoved(t *testing.T) {
 	}
 
 	var dbCluster types.DBCluster
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 
@@ -2269,7 +2283,6 @@ func TestAccRDSCluster_serverlessV2ScalingRemoved(t *testing.T) {
 func TestAccRDSCluster_Scaling_defaultMinCapacity(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dbCluster types.DBCluster
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 
@@ -3707,7 +3720,7 @@ resource "aws_rds_cluster" "test" {
 
 func testAccClusterConfig_securityGroup(rName, sgName string, sgCt int) string {
 	return acctest.ConfigCompose(
-		testAccConfig_ClusterSubnetGroup(rName),
+		testAccClusterConfig_clusterSubnetGroup(rName),
 		fmt.Sprintf(`
 resource "aws_security_group" "test" {
   count       = %[4]d
@@ -4009,7 +4022,7 @@ resource "aws_rds_cluster" "test" {
 }
 
 func testAccClusterConfig_availabilityZones_caCertificateIdentifier(rName string) string {
-	return acctest.ConfigCompose(testAccConfig_ClusterSubnetGroup(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterConfig_clusterSubnetGroup(rName), fmt.Sprintf(`
 data "aws_rds_orderable_db_instance" "test" {
   engine                     = %[2]q
   engine_latest_version      = true
@@ -4042,7 +4055,7 @@ resource "aws_rds_cluster" "test" {
 
 func testAccClusterConfig_storageType(rName string, sType string) string {
 	return acctest.ConfigCompose(
-		testAccConfig_ClusterSubnetGroup(rName),
+		testAccClusterConfig_clusterSubnetGroup(rName),
 		fmt.Sprintf(`
 data "aws_rds_orderable_db_instance" "test" {
   engine                     = %[1]q
@@ -4072,7 +4085,8 @@ resource "aws_rds_cluster" "test" {
 
 func testAccClusterConfig_storageChange(rName string, sType string) string {
 	return acctest.ConfigCompose(
-		testAccConfig_ClusterSubnetGroup(rName),
+		acctest.ConfigRandomPassword(),
+		testAccClusterConfig_clusterSubnetGroup(rName),
 		fmt.Sprintf(`
 data "aws_rds_orderable_db_instance" "test" {
   engine                     = %[1]q
@@ -4092,7 +4106,8 @@ resource "aws_db_instance" "test" {
   storage_type         = data.aws_rds_orderable_db_instance.test.storage_type
   allocated_storage    = 400
   iops                 = 12000
-  password             = "mustbeeightcharaters"
+  password_wo          = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version  = 1
   username             = "test"
   skip_final_snapshot  = true
 }
@@ -4101,7 +4116,7 @@ resource "aws_db_instance" "test" {
 
 func testAccClusterConfig_allocatedStorage(rName, storageType string, allocatedStorage, iops int) string {
 	return acctest.ConfigCompose(
-		testAccConfig_ClusterSubnetGroup(rName),
+		testAccClusterConfig_clusterSubnetGroup(rName),
 		fmt.Sprintf(`
 data "aws_rds_orderable_db_instance" "test" {
   engine                     = %[1]q
@@ -4131,7 +4146,7 @@ resource "aws_rds_cluster" "test" {
 
 func testAccClusterConfig_iops(rName string) string {
 	return acctest.ConfigCompose(
-		testAccConfig_ClusterSubnetGroup(rName),
+		testAccClusterConfig_clusterSubnetGroup(rName),
 		fmt.Sprintf(`
 data "aws_rds_orderable_db_instance" "test" {
   engine                     = %[1]q
@@ -4170,7 +4185,7 @@ func testAccClusterConfig_dbClusterInstanceClass(rName string, oddClasses bool) 
 	}
 	halfPreferredClasses := strings.Join(halfClasses, ", ")
 	return acctest.ConfigCompose(
-		testAccConfig_ClusterSubnetGroup(rName),
+		testAccClusterConfig_clusterSubnetGroup(rName),
 		fmt.Sprintf(`
 data "aws_rds_orderable_db_instance" "test" {
   engine                     = %[1]q
@@ -4214,7 +4229,7 @@ resource "aws_rds_cluster" "test" {
 
 func testAccClusterConfig_subnetGroupName(rName string) string {
 	return acctest.ConfigCompose(
-		testAccConfig_ClusterSubnetGroup(rName),
+		testAccClusterConfig_clusterSubnetGroup(rName),
 		fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
   cluster_identifier   = %[1]q
@@ -4275,7 +4290,7 @@ resource "aws_rds_cluster" "default" {
 
 func testAccClusterConfig_baseForPITR(rName string) string {
 	return acctest.ConfigCompose(
-		testAccConfig_ClusterSubnetGroup(rName),
+		testAccClusterConfig_clusterSubnetGroup(rName),
 		fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
   cluster_identifier   = %[1]q
@@ -4339,9 +4354,9 @@ resource "aws_rds_cluster" "restore" {
 
 func testAccClusterConfig_domain(rName, domain string) string {
 	return acctest.ConfigCompose(
-		testAccConfig_ClusterSubnetGroup(rName),
-		testAccConfig_ServiceRole(rName),
-		testAccConfig_DirectoryService(rName, domain),
+		testAccClusterConfig_clusterSubnetGroup(rName),
+		testAccClusterConfig_serviceRole(rName),
+		testAccClusterConfig_directoryService(rName, domain),
 		fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
   cluster_identifier     = %[1]q
@@ -4386,7 +4401,7 @@ resource "aws_rds_cluster" "test" {
 
 func testAccClusterConfig_enabledCloudWatchLogsExportsPostgreSQL1(rName, enabledCloudwatchLogExports1 string) string {
 	return acctest.ConfigCompose(
-		testAccConfig_ClusterSubnetGroup(rName),
+		testAccClusterConfig_clusterSubnetGroup(rName),
 		fmt.Sprintf(`
 data "aws_rds_orderable_db_instance" "test" {
   engine                     = %[1]q
@@ -4417,9 +4432,8 @@ resource "aws_rds_cluster" "test" {
 
 func testAccClusterConfig_enabledCloudWatchLogsExportsAuroraPostgreSQL(rName, enabledCloudwatchLogExports1, enabledCloudwatchLogExports2 string) string {
 	return acctest.ConfigCompose(
-		testAccConfig_ClusterSubnetGroup(rName),
+		testAccClusterConfig_clusterSubnetGroup(rName),
 		fmt.Sprintf(`
-
 data "aws_rds_engine_version" "test" {
   engine = "aurora-postgresql"
   latest = true
@@ -4441,7 +4455,7 @@ resource "aws_rds_cluster" "test" {
 
 func testAccClusterConfig_enabledCloudWatchLogsExportsPostgreSQL2(rName, enabledCloudwatchLogExports1, enabledCloudwatchLogExports2 string) string {
 	return acctest.ConfigCompose(
-		testAccConfig_ClusterSubnetGroup(rName),
+		testAccClusterConfig_clusterSubnetGroup(rName),
 		fmt.Sprintf(`
 data "aws_rds_orderable_db_instance" "test" {
   engine                     = %[1]q
@@ -5754,7 +5768,7 @@ resource "aws_rds_cluster" "test" {
 `, tfrds.ClusterEngineAuroraPostgreSQL, rName)
 }
 
-func testAccClusterConfig_serverlessV2ScalingConfigurationWithSecondsUntilAutoPause(rName string, maxCapacity, minCapacity float64, secondsUntilAutoPause int) string {
+func testAccClusterConfig_serverlessV2ScalingConfigurationWithSecondsUntilAutoPause(rName string, maxCapacity, minCapacity float64, secondsUntilAutoPause string) string {
 	return fmt.Sprintf(`
 data "aws_rds_orderable_db_instance" "test" {
   engine                     = %[1]q
@@ -5774,7 +5788,7 @@ resource "aws_rds_cluster" "test" {
     max_capacity = %[3]f
     min_capacity = %[4]f
 
-    seconds_until_auto_pause = %[5]d
+    seconds_until_auto_pause = %[5]s
   }
 }
 `, tfrds.ClusterEngineAuroraPostgreSQL, rName, maxCapacity, minCapacity, secondsUntilAutoPause)
@@ -6356,7 +6370,7 @@ resource "aws_rds_cluster" "test" {
 `, rName, password, tfrds.ClusterEngineAuroraMySQL, passwordVersion)
 }
 
-func testAccConfig_ClusterSubnetGroup(rName string) string {
+func testAccClusterConfig_clusterSubnetGroup(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigVPCWithSubnets(rName, 3),
 		fmt.Sprintf(`
@@ -6368,7 +6382,7 @@ resource "aws_db_subnet_group" "test" {
 	)
 }
 
-func testAccConfig_ServiceRole(rName string) string {
+func testAccClusterConfig_serviceRole(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "role" {
   name = %[1]q
@@ -6400,7 +6414,7 @@ resource "aws_iam_role_policy_attachment" "attatch-policy" {
 `, rName)
 }
 
-func testAccConfig_DirectoryService(rName, domain string) string {
+func testAccClusterConfig_directoryService(rName, domain string) string {
 	return fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name   = %[1]q
@@ -6421,9 +6435,14 @@ resource "aws_security_group_rule" "test" {
   security_group_id = aws_security_group.test.id
 }
 
+data "aws_secretsmanager_random_password" "test" {
+  password_length     = 20
+  exclude_punctuation = true
+}
+
 resource "aws_directory_service_directory" "directory" {
   name     = %[2]q
-  password = "SuperSecretPassw0rd"
+  password = data.aws_secretsmanager_random_password.test.random_password
   size     = "Small"
   type     = "MicrosoftAD"
   edition  = "Standard"
@@ -6431,6 +6450,10 @@ resource "aws_directory_service_directory" "directory" {
   vpc_settings {
     vpc_id     = aws_vpc.test.id
     subnet_ids = [aws_subnet.test[0].id, aws_subnet.test[1].id]
+  }
+
+  lifecycle {
+    ignore_changes = [password]
   }
 }
 

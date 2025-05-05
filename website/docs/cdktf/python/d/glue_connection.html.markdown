@@ -42,6 +42,8 @@ This data source exports the following attributes in addition to the arguments a
 
 * `arn` - ARN of the Glue Connection.
 * `catalog_id` - Catalog ID of the Glue Connection.
+* `athena_properties` - A map of connection properties specific to the Athena compute environment.
+* `connection_properties` - A map of connection properties.
 * `connection_type` - Type of Glue Connection.
 * `description` – Description of the connection.
 * `match_criteria` – A list of criteria that can be used in selecting this connection.
@@ -49,4 +51,4 @@ This data source exports the following attributes in addition to the arguments a
 * `physical_connection_requirements` - A map of physical connection requirements, such as VPC and SecurityGroup.
 * `tags` - Tags assigned to the resource
 
-<!-- cache-key: cdktf-0.20.8 input-c3a54c13f6d1584c4b355be148ce4f3063077b22c8de52485229079b8245ad9c -->
+<!-- cache-key: cdktf-0.20.8 input-a6eb1794558192738dcc44efa8f0407d2e444e8bca872cff8ad1588b9239c752 -->
