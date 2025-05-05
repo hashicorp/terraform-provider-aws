@@ -166,6 +166,8 @@ val services = mapOf(
     "networkfirewall" to ServiceSpec("Network Firewall", vpcLock = true),
     "networkmanager" to ServiceSpec("Network Manager", vpcLock = true),
     "networkmonitor" to ServiceSpec("CloudWatch Network Monitor"),
+    "notifications" to ServiceSpec("User Notifications"),
+    "notificationscontacts" to ServiceSpec("User Notifications Contacts"),
     "oam" to ServiceSpec("CloudWatch Observability Access Manager"),
     "opensearch" to ServiceSpec("OpenSearch", vpcLock = true),
     "opensearchserverless" to ServiceSpec("OpenSearch Serverless"),
