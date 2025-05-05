@@ -16,7 +16,7 @@ Upgrade topics:
 
 - [Provider Version Configuration](#provider-version-configuration)
 - [Provider Arguments](#provider-arguments)
-- [Enhanced Multi-Region Support](#enhanced-multi-region-support)
+- [Enhanced Region Support](#enhanced-region-support)
 - [Dropping Support For Amazon SimpleDB](#dropping-support-for-amazon-simpledb)
 - [Dropping Support For Amazon Worklink](#dropping-support-for-amazon-worklink)
 - [AWS OpsWorks Stacks End of Life](#aws-opsworks-stacks-end-of-life)
@@ -138,9 +138,9 @@ Version 6.0.0 removes these `provider` arguments:
 * `endpoints.simpledb` and `endpoints.sdb` - Removed following dropping support for Amazon SimpleDB
 * `endpoints.worklink` - Removed following dropping support for Amazon Worklink
 
-## Enhanced Multi-Region Support
+## Enhanced Region Support
 
-See the [Multi-Region Support guide](./multi-region).
+See the [Enhanced Region Support guide](./enhanced-region-support).
 
 The following Regional resources and data sources with an existing top-level `region` attribute have had that attribute deprecated.
 
@@ -155,7 +155,7 @@ The following Regional resources and data sources with an existing top-level `re
 * `aws_vpc_endpoint_service` data source
 * `aws_vpc_peering_connection` data source
 
-See each individual sections of this guide for details.
+See individual sections of this guide for details.
 
 ## Dropping Support For Amazon SimpleDB
 
@@ -340,7 +340,7 @@ The `name` attribute has been deprecated. All configurations using `name` should
 
 ## data-source/aws_s3_bucket
 
-The `bucket_region` attribute has been added. We encourage use of the `bucket_region` attribute instead of the `region` attribute (which is now used for [Enhanced Multi-Region Support](#enhanced-multi-region-support)).
+The `bucket_region` attribute has been added. We encourage use of the `bucket_region` attribute instead of the `region` attribute (which is now used for [Enhanced Region Support](#enhanced-region-support)).
 
 ## data-source/aws_service_discovery_service
 
@@ -594,7 +594,7 @@ For example, `policy.az.rpo` would now be referenced as `policy[0].az[0].rpo`.
 
 ## resource/aws_s3_bucket
 
-The `bucket_region` attribute has been added. We encourage use of the `bucket_region` attribute instead of the `region` attribute (which is now used for [Enhanced Multi-Region Support](#enhanced-multi-region-support)).
+The `bucket_region` attribute has been added. We encourage use of the `bucket_region` attribute instead of the `region` attribute (which is now used for [Enhanced Region Support](#enhanced-region-support)).
 
 ## resource/aws_sagemaker_notebook_instance
 
