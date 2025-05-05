@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_s3tables_table_bucket: Add `encryption_configuration` argument. This functionality requires the `s3tables:GetTableBucketEncryption` IAM permission
+```
+
+```release-note:enhancement
+resource/aws_s3tables_table: Add `encryption_configuration` argument. This functionality requires the `s3tables:GetTableEncryption` IAM permission
+```

@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_ec2_network_insights_path: Fix failure when `filter_at_source.source_address` is unspecified.
+```

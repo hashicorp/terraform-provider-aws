@@ -43,6 +43,39 @@ func dataSourceFirewallPolicy() *schema.Resource {
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
+							"policy_variables": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"rule_variables": {
+											Type:     schema.TypeSet,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"ip_set": {
+														Type:     schema.TypeList,
+														Computed: true,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"definition": {
+																	Type:     schema.TypeSet,
+																	Computed: true,
+																	Elem:     &schema.Schema{Type: schema.TypeString},
+																},
+															},
+														},
+													},
+													names.AttrKey: {
+														Type:     schema.TypeString,
+														Computed: true,
+													},
+												},
+											},
+										},
+									},
+								},
+							},
 							"stateful_default_actions": {
 								Type:     schema.TypeSet,
 								Computed: true,
