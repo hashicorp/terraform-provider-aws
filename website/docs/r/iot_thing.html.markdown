@@ -24,6 +24,8 @@ resource "aws_iot_thing" "example" {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `name` - (Required) The name of the thing.
 * `attributes` - (Optional) Map of attributes of the thing.
 * `thing_type_name` - (Optional) The thing type name.

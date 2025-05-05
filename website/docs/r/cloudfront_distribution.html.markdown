@@ -294,9 +294,7 @@ resource "aws_cloudwatch_log_delivery" "example" {
 
 ## Argument Reference
 
-The CloudFront distribution argument layout is a complex structure composed of several sub-resources - these resources are laid out below.
-
-### Top-Level Arguments
+This resource supports the following arguments:
 
 * `aliases` (Optional) - Extra CNAMEs (alternate domain names), if any, for this distribution.
 * `comment` (Optional) - Any comments you want to include about the distribution.
