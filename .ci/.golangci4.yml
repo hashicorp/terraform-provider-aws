@@ -104,7 +104,7 @@ linters:
         text: 'SA1019: apiObject.ImageId is deprecated: This field is deprecated'
       - linters:
           - staticcheck
-        path: internal/service/budget/
+        path: internal/service/budgets/
         text: 'SA1019: \w+.(\w+) is deprecated:'
       - linters:
           - staticcheck
