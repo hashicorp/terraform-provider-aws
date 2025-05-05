@@ -1,4 +1,25 @@
-## 5.97.0 (Unreleased)
+## 5.98.0 (Unreleased)
+
+FEATURES:
+
+* **New Data Source:** `aws_dynamodb_tables` ([#42339](https://github.com/hashicorp/terraform-provider-aws/issues/42339))
+* **New Resource:** `aws_inspector2_filter` ([#42374](https://github.com/hashicorp/terraform-provider-aws/issues/42374))
+
+ENHANCEMENTS:
+
+* data-source/aws_workspaces_directory: Add `active_directory_config`, `user_identity_type`, `workspace_directory_description`, `workspace_directory_name`, and `workspace_type` attributes ([#42330](https://github.com/hashicorp/terraform-provider-aws/issues/42330))
+* resource/aws_ecs_account_setting_default: Add support for `defaultLogDriverMode` value in `Name` argument ([#42418](https://github.com/hashicorp/terraform-provider-aws/issues/42418))
+* resource/aws_s3tables_table: Add `encryption_configuration` argument. This functionality requires the `s3tables:GetTableEncryption` IAM permission ([#42356](https://github.com/hashicorp/terraform-provider-aws/issues/42356))
+* resource/aws_s3tables_table_bucket: Add `encryption_configuration` argument. This functionality requires the `s3tables:GetTableBucketEncryption` IAM permission ([#42356](https://github.com/hashicorp/terraform-provider-aws/issues/42356))
+* resource/aws_workspaces_directory: Add `active_directory_config`, `user_identity_type`, `workspace_directory_description`, `workspace_directory_name`, and `workspace_type` arguments in support of [WorkSpaces Pools](https://docs.aws.amazon.com/workspaces/latest/adminguide/manage-workspaces-pools-directory.html) ([#42330](https://github.com/hashicorp/terraform-provider-aws/issues/42330))
+* resource/aws_workspaces_directory: Mark `directory_id` as Optional ([#42330](https://github.com/hashicorp/terraform-provider-aws/issues/42330))
+
+BUG FIXES:
+
+* data-source/aws_networkfirewall_firewall_policy: Add `firewall_policy.policy_variables` configuration block ([#42473](https://github.com/hashicorp/terraform-provider-aws/issues/42473))
+* resource/aws_ec2_network_insights_path: Fix failure when `filter_at_source.source_address` is unspecified. ([#42369](https://github.com/hashicorp/terraform-provider-aws/issues/42369))
+
+## 5.97.0 (May  1, 2025)
 
 FEATURES:
 
@@ -6,10 +27,17 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_glue_connection: Support `athena_properties` attribute ([#42262](https://github.com/hashicorp/terraform-provider-aws/issues/42262))
 * data-source/aws_imagebuilder_infrastructure_configuration: Add `placement` attribute ([#42347](https://github.com/hashicorp/terraform-provider-aws/issues/42347))
+* data-source/aws_networkfirewall_firewall: Add `enabled_analysis_types` attribute ([#42160](https://github.com/hashicorp/terraform-provider-aws/issues/42160))
+* data-source/aws_workspaces_directory: Add `certificate_based_auth_properties` attribute ([#42269](https://github.com/hashicorp/terraform-provider-aws/issues/42269))
 * resource/aws_accessanalyzer_analyzer: Add `configuration.unused_access.analysis_rule` argument ([#42332](https://github.com/hashicorp/terraform-provider-aws/issues/42332))
 * resource/aws_fis_experiment_template: Add support for `ManagedResources` to `action.*.target` ([#42376](https://github.com/hashicorp/terraform-provider-aws/issues/42376))
+* resource/aws_glue_connection: Add `athena_properties` argument and allow `DYNAMODB` connection type. ([#42262](https://github.com/hashicorp/terraform-provider-aws/issues/42262))
+* resource/aws_glue_connection: Support `DYNAMODB` as a valid value for `connection_type` ([#42262](https://github.com/hashicorp/terraform-provider-aws/issues/42262))
 * resource/aws_imagebuilder_infrastructure_configuration: Add `placement` argument ([#42347](https://github.com/hashicorp/terraform-provider-aws/issues/42347))
+* resource/aws_networkfirewall_firewall: Add `enabled_analysis_types` argument ([#42160](https://github.com/hashicorp/terraform-provider-aws/issues/42160))
+* resource/aws_workspaces_directory: Add `certificate_based_auth_properties` configuration block ([#42269](https://github.com/hashicorp/terraform-provider-aws/issues/42269))
 
 BUG FIXES:
 
