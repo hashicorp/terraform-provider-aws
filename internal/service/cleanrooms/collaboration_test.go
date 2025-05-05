@@ -220,12 +220,10 @@ func TestAccCleanRoomsCollaboration_dataEncryptionSettings(t *testing.T) {
 				Config: testAccCollaborationConfig_updatedDataEncryptionSettings(TEST_NAME, TEST_DESCRIPTION, TEST_TAG),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCollaborationRecreated(resourceName, &collaboration),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "data_encryption_metadata.*", map[string]string{
-						"allow_clear_text": acctest.CtTrue,
-						"allow_duplicates": acctest.CtTrue,
-						"allow_joins_on_columns_with_different_names": acctest.CtTrue,
-						"preserve_nulls": acctest.CtTrue,
-					}),
+					resource.TestCheckResourceAttr(resourceName, "data_encryption_metadata.0.allow_clear_text", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "data_encryption_metadata.0.allow_duplicates", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "data_encryption_metadata.0.allow_joins_on_columns_with_different_names", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "data_encryption_metadata.0.preserve_nulls", acctest.CtTrue),
 				),
 			},
 			{
@@ -294,10 +292,9 @@ func testAccCheckCollaborationDestroy(ctx context.Context) resource.TestCheckFun
 				continue
 			}
 
-			input := cleanrooms.GetCollaborationInput{
+			_, err := conn.GetCollaboration(ctx, &cleanrooms.GetCollaborationInput{
 				CollaborationIdentifier: aws.String(rs.Primary.ID),
-			}
-			_, err := conn.GetCollaboration(ctx, &input)
+			})
 			if err != nil {
 				// We throw access denied exceptions for Not Found Collaboration since they are cross account resources
 				var nfe *types.AccessDeniedException
@@ -326,10 +323,9 @@ func testAccCheckCollaborationExists(ctx context.Context, name string, collabora
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CleanRoomsClient(ctx)
-		input := cleanrooms.GetCollaborationInput{
+		resp, err := conn.GetCollaboration(ctx, &cleanrooms.GetCollaborationInput{
 			CollaborationIdentifier: aws.String(rs.Primary.ID),
-		}
-		resp, err := conn.GetCollaboration(ctx, &input)
+		})
 
 		if err != nil {
 			return create.Error(names.CleanRooms, create.ErrActionCheckingExistence, tfcleanrooms.ResNameCollaboration, rs.Primary.ID, err)
@@ -394,10 +390,9 @@ func testCheckCreatorMember(ctx context.Context, name string) resource.TestCheck
 		if !ok {
 			return fmt.Errorf("Collaboration: %s not found in resources", name)
 		}
-		input := cleanrooms.ListMembersInput{
+		membersOut, err := conn.ListMembers(ctx, &cleanrooms.ListMembersInput{
 			CollaborationIdentifier: &collaboration.Primary.ID,
-		}
-		membersOut, err := conn.ListMembers(ctx, &input)
+		})
 		if err != nil {
 			return err
 		}
@@ -430,10 +425,9 @@ func testAccCollaborationTags(ctx context.Context, name string, expectedTags map
 		if !ok {
 			return fmt.Errorf("Collaboration: %s not found in resources", name)
 		}
-		input := cleanrooms.ListTagsForResourceInput{
+		tagsOut, err := conn.ListTagsForResource(ctx, &cleanrooms.ListTagsForResourceInput{
 			ResourceArn: aws.String(collaboration.Primary.Attributes[names.AttrARN]),
-		}
-		tagsOut, err := conn.ListTagsForResource(ctx, &input)
+		})
 		if err != nil {
 			return err
 		}
