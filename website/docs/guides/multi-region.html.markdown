@@ -93,10 +93,10 @@ resource "aws_vpc" "peer" {
 
 # Requester's side of the connection.
 resource "aws_vpc_peering_connection" "peer" {
-  vpc_id        = aws_vpc.main.id
-  peer_vpc_id   = aws_vpc.peer.id
-  peer_region   = "us-west-2"
-  auto_accept   = false
+  vpc_id      = aws_vpc.main.id
+  peer_vpc_id = aws_vpc.peer.id
+  peer_region = "us-west-2"
+  auto_accept = false
 
   tags = {
     Side = "Requester"
