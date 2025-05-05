@@ -235,7 +235,7 @@ func resourceAppMonitorRead(ctx context.Context, d *schema.ResourceData, meta an
 	d.Set("cw_log_enabled", appMon.DataStorage.CwLog.CwLogEnabled)
 	d.Set("cw_log_group", appMon.DataStorage.CwLog.CwLogGroup)
 	d.Set(names.AttrDomain, appMon.Domain)
-	d.Set("domain_list", flex.FlattenStringValueList(appMon.DomainList))
+	d.Set("domain_list", appMon.DomainList)
 	d.Set(names.AttrName, name)
 
 	setTagsOut(ctx, appMon.Tags)
