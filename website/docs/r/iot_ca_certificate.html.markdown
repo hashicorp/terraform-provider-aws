@@ -67,6 +67,8 @@ data "aws_iot_registration_code" "example" {}
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `active` - (Required)  Boolean flag to indicate if the certificate should be active for device authentication.
 * `allow_auto_registration` - (Required)  Boolean flag to indicate if the certificate should be active for device regisration.
 * `ca_certificate_pem` - (Required)  PEM encoded CA certificate.
