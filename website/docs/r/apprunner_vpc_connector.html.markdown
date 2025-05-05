@@ -22,7 +22,7 @@ resource "aws_apprunner_vpc_connector" "connector" {
 
 ## Argument Reference
 
-The following arguments supported:
+This resource supports the following arguments:
 
 * `vpc_connector_name` - (Required) Name for the VPC connector.
 * `subnets` (Required) List of IDs of subnets that App Runner should use when it associates your service with a custom Amazon VPC. Specify IDs of subnets of a single Amazon VPC. App Runner determines the Amazon VPC from the subnets you specify.

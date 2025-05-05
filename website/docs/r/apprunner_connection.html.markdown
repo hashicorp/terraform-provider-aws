@@ -27,7 +27,7 @@ resource "aws_apprunner_connection" "example" {
 
 ## Argument Reference
 
-The following arguments supported:
+This resource supports the following arguments:
 
 * `connection_name` - (Required) Name of the connection.
 * `provider_type` - (Required) Source repository provider. Valid values: `GITHUB`.
