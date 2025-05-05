@@ -34,6 +34,11 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
+		{
+			Factory:  newWorkspaceConfigurationResource,
+			TypeName: "aws_prometheus_workspace_configuration",
+			Name:     "WorkspaceConfiguration",
+		},
 	}
 }
 
