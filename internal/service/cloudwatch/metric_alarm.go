@@ -181,7 +181,7 @@ func resourceMetricAlarm() *schema.Resource {
 										Type:     schema.TypeInt,
 										Required: true,
 										ValidateFunc: validation.Any(
-											validation.IntInSlice([]int{1, 5, 10, 30}),
+											validation.IntInSlice([]int{1, 5, 10, 20, 30}),
 											validation.IntDivisibleBy(60),
 										),
 									},
@@ -215,7 +215,7 @@ func resourceMetricAlarm() *schema.Resource {
 							Type:     schema.TypeInt,
 							Optional: true,
 							ValidateFunc: validation.Any(
-								validation.IntInSlice([]int{1, 5, 10, 30}),
+								validation.IntInSlice([]int{1, 5, 10, 20, 30}),
 								validation.IntDivisibleBy(60),
 							),
 						},
@@ -253,7 +253,7 @@ func resourceMetricAlarm() *schema.Resource {
 				Optional:      true,
 				ConflictsWith: []string{"metric_query"},
 				ValidateFunc: validation.Any(
-					validation.IntInSlice([]int{10, 30}),
+					validation.IntInSlice([]int{10, 20, 30}),
 					validation.IntDivisibleBy(60),
 				),
 			},
