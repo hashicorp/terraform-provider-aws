@@ -5064,7 +5064,6 @@ resource "aws_kinesisanalyticsv2_application_snapshot" "test" {
 }
 
 func testAccApplicationConfig_startRestorableSnapshotFlink(rName string) string {
-
 	return acctest.ConfigCompose(
 		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
 		testAccApplicationConfig_baseFlinkApplication(rName),
@@ -5111,7 +5110,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
       }
     }
 
-	flink_application_configuration {
+    flink_application_configuration {
       checkpoint_configuration {
         configuration_type = "DEFAULT"
       }
@@ -5146,7 +5145,6 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 }
 
 func testAccApplicationConfig_startUpdatedRestorableSnapshotFlink(rName string) string {
-
 	return acctest.ConfigCompose(
 		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
 		testAccApplicationConfig_baseFlinkApplication(rName),
@@ -5193,7 +5191,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
       }
     }
 
-	flink_application_configuration {
+    flink_application_configuration {
       checkpoint_configuration {
         configuration_type = "DEFAULT"
       }
