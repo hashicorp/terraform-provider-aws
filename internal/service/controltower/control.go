@@ -241,6 +241,9 @@ func resourceControlDelete(ctx context.Context, d *schema.ResourceData, meta any
 		TargetIdentifier:  aws.String(targetIdentifier),
 	}
 	output, err := conn.DisableControl(ctx, &input)
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return diags
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting ControlTower Control (%s): %s", d.Id(), err)
