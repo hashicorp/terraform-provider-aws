@@ -898,7 +898,7 @@ The part of a web request that you want AWS WAF to inspect. Include the single `
 
 The `field_to_match` block supports the following arguments:
 
-~> **Note** Only one of `all_query_arguments`, `body`, `cookies`, `header_order`, `headers`, `ja3_fingerprint`, `json_body`, `method`, `query_string`, `single_header`, `single_query_argument`, or `uri_path` can be specified. An empty configuration block `{}` should be used when specifying `all_query_arguments`, `method`, or `query_string` attributes.
+~> **Note** Only one of `all_query_arguments`, `body`, `cookies`, `header_order`, `headers`, `ja3_fingerprint`, `json_body`, `method`, `query_string`, `single_header`, `single_query_argument`, `uri_fragment` or `uri_path` can be specified. An empty configuration block `{}` should be used when specifying `all_query_arguments`, `method`, or `query_string` attributes.
 
 * `all_query_arguments` - (Optional) Inspect all query arguments.
 * `body` - (Optional) Inspect the request body, which immediately follows the request headers. See [`body`](#body-block) below for details.
@@ -912,6 +912,7 @@ The `field_to_match` block supports the following arguments:
 * `query_string` - (Optional) Inspect the query string. This is the part of a URL that appears after a `?` character, if any.
 * `single_header` - (Optional) Inspect a single header. See [`single_header`](#single_header-block) below for details.
 * `single_query_argument` - (Optional) Inspect a single query argument. See [`single_query_argument`](#single_query_argument-block) below for details.
+* `uri_fragment` - (Optional) Inspect the part of a URL that follows the "#" symbol, providing additional information about the resource. See [`uri_fragment`](#uri_fragment-block) below for details.
 * `uri_path` - (Optional) Inspect the request URI path. This is the part of a web request that identifies a resource, for example, `/images/daily-ad.jpg`.
 
 ### `forwarded_ip_config` Block
@@ -990,6 +991,14 @@ Inspect a single query argument. Provide the name of the query argument to inspe
 The `single_query_argument` block supports the following arguments:
 
 * `name` - (Required) Name of the query header to inspect. This setting must be provided as lower case characters.
+
+### `uri_fragment` Block
+
+Inspect the part of a URL that follows the "#" symbol, providing additional information about the resource.
+
+The `uri_fragment` block supports the following arguments:
+
+* `fallback_behavior` - (Optional) What AWS WAF should do if it fails to completely parse the JSON body. Valid values are `MATCH` (default) and `NO_MATCH`.
 
 ### `body` Block
 
