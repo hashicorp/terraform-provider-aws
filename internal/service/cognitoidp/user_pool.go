@@ -1846,14 +1846,15 @@ func expandUserPoolAddOnsType(tfMap map[string]any) *awstypes.UserPoolAddOnsType
 	if tfMap == nil {
 		return nil
 	}
-	apiObject := &awstypes.UserPoolAddOnsType{}
 
-	if v, ok := tfMap["advanced_security_mode"].(string); ok {
-		apiObject.AdvancedSecurityMode = awstypes.AdvancedSecurityModeType(v)
-	}
+	apiObject := &awstypes.UserPoolAddOnsType{}
 
 	if v, ok := tfMap["advanced_security_additional_flows"].([]any); ok && len(v) > 0 {
 		apiObject.AdvancedSecurityAdditionalFlows = expandAdvancedSecurityAdditionalFlowType(v[0].(map[string]any))
+	}
+
+	if v, ok := tfMap["advanced_security_mode"].(string); ok {
+		apiObject.AdvancedSecurityMode = awstypes.AdvancedSecurityModeType(v)
 	}
 
 	return apiObject
@@ -1863,6 +1864,7 @@ func expandAdvancedSecurityAdditionalFlowType(tfMap map[string]any) *awstypes.Ad
 	if tfMap == nil {
 		return nil
 	}
+
 	apiObject := &awstypes.AdvancedSecurityAdditionalFlowsType{}
 
 	if v, ok := tfMap["custom_auth_mode"].(string); ok {
@@ -1879,8 +1881,8 @@ func flattenUserPoolAddOnsType(apiObject *awstypes.UserPoolAddOnsType) []any {
 
 	tfMap := make(map[string]any)
 
-	tfMap["advanced_security_mode"] = apiObject.AdvancedSecurityMode
 	tfMap["advanced_security_additional_flows"] = flattenAdvancedSecurityAdditionalFlowType(apiObject.AdvancedSecurityAdditionalFlows)
+	tfMap["advanced_security_mode"] = apiObject.AdvancedSecurityMode
 
 	return []any{tfMap}
 }
