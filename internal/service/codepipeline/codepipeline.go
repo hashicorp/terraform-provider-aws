@@ -519,6 +519,15 @@ func resourcePipeline() *schema.Resource {
 												},
 											},
 										},
+										"output_variables": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 15,
+											Elem: &schema.Schema{
+												Type:         schema.TypeString,
+												ValidateFunc: validation.StringLenBetween(1, 128),
+											},
+										},
 										names.AttrOwner: {
 											Type:             schema.TypeString,
 											Required:         true,
@@ -1104,6 +1113,14 @@ func expandActionDeclaration(tfMap map[string]any) *types.ActionDeclaration {
 		}
 		if len(outputArtifactsForComputeAction) > 0 {
 			log.Printf("[WARN] CodePipeline Pipeline Action %s: output_artifacts_for_compute_action is ignored for non-compute action", aws.ToString(apiObject.Name))
+		}
+	}
+
+	if v, ok := tfMap["output_variables"].([]any); ok && len(v) > 0 {
+		for _, v := range v {
+			if v, ok := v.(string); ok && v != "" {
+				apiObject.OutputVariables = append(apiObject.OutputVariables, v)
+			}
 		}
 	}
 
@@ -2034,6 +2051,14 @@ func flattenActionDeclaration(d *schema.ResourceData, i, j int, apiObject types.
 		} else {
 			tfMap["output_artifacts"] = flattenOutputArtifacts(v)
 		}
+	}
+
+	if v := apiObject.OutputVariables; len(v) > 0 {
+		var tfList []any
+		for _, outputVariable := range v {
+			tfList = append(tfList, outputVariable)
+		}
+		tfMap["output_variables"] = tfList
 	}
 
 	if v := apiObject.Region; v != nil {
