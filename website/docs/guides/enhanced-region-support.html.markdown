@@ -456,39 +456,27 @@ All resources for the following services are considered _global_:
 
 Some Regional services have a subset of resources that are global:
 
-* Audit Manager
-    * `aws_auditmanager_organization_admin_account_registration` is global
-* Backup
-    * `aws_backup_global_settings` is global
-* Billing
-    * `aws_billing_service_account` data source is global
-* Chime SDK Voice
-    * `aws_chimesdkvoice_global_settings` is global
-* CloudTrail
-    * `aws_cloudtrail_organization_delegated_admin_account` is global
-* Detective
-    * `aws_detective_organization_admin_account` is global
-* Direct Connect
-    * `aws_dx_gateway` is global
-* EC2
-    * `aws_ec2_image_block_public_access` is global
-* Firewall Manager
-    * `aws_fms_admin_account` is global
-* Guard Duty
-    * `aws_guardduty_organization_admin_account` is global
-* Inspector
-    * `aws_inspector2_delegated_admin_account` is global
-* IPAM
-    * `aws_vpc_ipam_organization_admin_account` is global
-* Macie
-    * `aws_macie2_organization_admin_account` is global
-    * `aws_macie2_organization_configuration` is global
-* Resource Access Manager
-    * `aws_ram_sharing_with_organization` is global
-* S3
-    * `aws_s3_account_public_access_block` is global
-* Security Hub
-    * `aws_securityhub_organization_admin_account` is global
+| Service | Type | Name |
+|---|---|---|
+| Audit Manager | Resource | `aws_auditmanager_organization_admin_account_registration` |
+| Backup | Resource | `aws_backup_global_settings` |
+| Billing | Data Source | `aws_billing_service_account` |
+| Chime SDK Voice | Resource | `aws_chimesdkvoice_global_settings` |
+| CloudTrail | Resource | `aws_cloudtrail_organization_delegated_admin_account` |
+| Detective | Resource | `aws_detective_organization_admin_account` |
+| Direct Connect | Resource | `aws_dx_gateway` |
+| Direct Connect | Data Source | `aws_dx_gateway` |
+| EC2 | Resource | `aws_ec2_image_block_public_access` |
+| Firewall Manager | Resource | `aws_fms_admin_account` |
+| Guard Duty | Resource | `aws_guardduty_organization_admin_account` |
+| Inspector | Resource | `aws_inspector2_delegated_admin_account` |
+| IPAM | Resource | `aws_vpc_ipam_organization_admin_account` |
+| Macie | Resource | `aws_macie2_organization_admin_account` |
+| Macie | Resource | `aws_macie2_organization_configuration` |
+| Resource Access Manager | Resource | `aws_ram_sharing_with_organization` |
+| S3 | Resource | `aws_s3_account_public_access_block` |
+| S3 | Data Source | `aws_s3_account_public_access_block` |
+| Security Hub | Resource | `aws_securityhub_organization_admin_account` |
 
 #### Meta Data Sources
 
