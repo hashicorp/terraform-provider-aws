@@ -204,7 +204,7 @@ resource "aws_prometheus_workspace_configuration" "test" {
   limits_per_label_set {
     label_set = {
       "__name__" = "rest_client_request_duration_seconds_bucket"
-      "region"   = "us-east-1" //lintignore:AWSAT003
+      "cluster"   = "services"
     }
     limits {
       max_series = 1000
