@@ -36,7 +36,7 @@ func TestAccAMPWorkspaceConfiguration_basic(t *testing.T) {
 				Config: testAccWorkspaceConfigurationConfig_basic(retentionPeriod),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceConfigurationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "workspace_id", workspaceResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "workspace_id", workspaceResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "retention_period_in_days", strconv.Itoa(retentionPeriod)),
 				),
 			},
@@ -50,7 +50,7 @@ func TestAccAMPWorkspaceConfiguration_basic(t *testing.T) {
 				Config: testAccWorkspaceConfigurationConfig_basic(retentionPeriodUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceConfigurationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "workspace_id", workspaceResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "workspace_id", workspaceResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "retention_period_in_days", strconv.Itoa(retentionPeriodUpdated)),
 				),
 			},
@@ -74,7 +74,7 @@ func TestAccAMPWorkspaceConfiguration_defaultBucket(t *testing.T) {
 				Config: testAccWorkspaceConfigurationConfig_defaultBucket(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceConfigurationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "workspace_id", workspaceResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "workspace_id", workspaceResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "limits_per_label_set.#", "1"),
 				),
 			},
@@ -103,7 +103,7 @@ func TestAccAMPWorkspaceConfiguration_limitPerLabelSet(t *testing.T) {
 				Config: testAccWorkspaceConfigurationConfig_limitPerLabelSet(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceConfigurationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "workspace_id", workspaceResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "workspace_id", workspaceResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "limits_per_label_set.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "limits_per_label_set.0.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "limits_per_label_set.0.label_set.__name__", "rest_client_request_duration_seconds_bucket"),
@@ -204,7 +204,7 @@ resource "aws_prometheus_workspace_configuration" "test" {
   limits_per_label_set {
     label_set = {
       "__name__" = "rest_client_request_duration_seconds_bucket"
-      "region"   = "us-east-1"
+      "region"   = "us-east-1" //lintignore:AWSAT003
     }
     limits {
       max_series = 1000

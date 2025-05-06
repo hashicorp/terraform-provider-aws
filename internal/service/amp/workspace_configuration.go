@@ -188,13 +188,11 @@ func (r *workspaceConfigurationResource) Read(ctx context.Context, req resource.
 func (r *workspaceConfigurationResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	workspaceID := req.ID
 
-	// Set both ID and workspace_id to the imported ID
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), workspaceID)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), workspaceID)...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("workspace_id"), workspaceID)...)
 }
 
 func (r *workspaceConfigurationResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-
 	var data workspaceConfigurationResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -230,11 +228,11 @@ func (r *workspaceConfigurationResource) Update(ctx context.Context, req resourc
 }
 
 func findWorkspaceConfigurationByID(ctx context.Context, conn *amp.Client, id string) (*amp.DescribeWorkspaceConfigurationOutput, error) {
-	input := &amp.DescribeWorkspaceConfigurationInput{
+	input := amp.DescribeWorkspaceConfigurationInput{
 		WorkspaceId: aws.String(id),
 	}
 
-	output, err := conn.DescribeWorkspaceConfiguration(ctx, input)
+	output, err := conn.DescribeWorkspaceConfiguration(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
@@ -271,7 +269,7 @@ func waitWorkspaceConfigurationUpdated(ctx context.Context, conn *amp.Client, id
 }
 
 func statusWorkspaceConfiguration(ctx context.Context, conn *amp.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findWorkspaceConfigurationByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
