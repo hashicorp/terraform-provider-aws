@@ -304,9 +304,9 @@ resource "aws_api_gateway_rest_api_put" "test" {
     }
   })
 
-  fail_on_warnings = true
+  fail_on_warnings  = true
   put_rest_api_mode = %[2]q
-  rest_api_id      = aws_api_gateway_rest_api.test.id
+  rest_api_id       = aws_api_gateway_rest_api.test.id
 }
 `, rName, mode)
 }
