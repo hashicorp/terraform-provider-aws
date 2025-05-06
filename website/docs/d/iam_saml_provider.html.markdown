@@ -14,7 +14,7 @@ document of an existing SAML provider.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_iam_saml_provider" "example" {
   arn = "arn:aws:iam::123456789:saml-provider/myprovider"
 }

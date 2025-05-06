@@ -12,7 +12,7 @@ Retrieves information about a Service Discovery private or public DNS namespace.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_service_discovery_dns_namespace" "test" {
   name = "example.terraform.local"
   type = "DNS_PRIVATE"

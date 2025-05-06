@@ -14,7 +14,7 @@ Retrieve information about a firewall.
 
 ### Find firewall policy by ARN
 
-```hcl
+```terraform
 data "aws_networkfirewall_firewall" "example" {
   arn = aws_networkfirewall_firewall.arn
 }
@@ -22,7 +22,7 @@ data "aws_networkfirewall_firewall" "example" {
 
 ### Find firewall policy by Name
 
-```hcl
+```terraform
 data "aws_networkfirewall_firewall" "example" {
   name = "Test"
 }
@@ -30,7 +30,7 @@ data "aws_networkfirewall_firewall" "example" {
 
 ### Find firewall policy by ARN and Name
 
-```hcl
+```terraform
 data "aws_networkfirewall_firewall" "example" {
   arn  = aws_networkfirewall_firewall.arn
   name = "Test"
