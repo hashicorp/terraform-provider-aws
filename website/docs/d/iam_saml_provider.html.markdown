@@ -1,12 +1,12 @@
 ---
 subcategory: "IAM (Identity & Access Management)"
 layout: "aws"
-page_title: "AWS: aws_saml_provider"
+page_title: "AWS: aws_iam_saml_provider"
 description: |-
   Get information on an IAM SAML provider.
 ---
 
-# Data Source: aws_saml_provider
+# Data Source: aws_iam_saml_provider
 
 This data source can be used to fetch information about a specific
 IAM SAML provider. This will allow you to easily retrieve the metadata
@@ -21,6 +21,8 @@ data "aws_iam_saml_provider" "example" {
 ```
 
 ## Argument Reference
+
+This data source supports the following arguments:
 
 * `arn` - (Required) ARN assigned by AWS for the provider.
 
