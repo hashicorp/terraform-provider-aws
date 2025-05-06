@@ -19,7 +19,9 @@ Some examples will clarify.
 
 ### Cross-Region VPC Peering
 
-#### Terraform AWS Provider v5 (and below)
+<details>
+<summary>Terraform AWS Provider v5 (and below)</summary>
+<p>
 
 ```terraform
 provider "aws" {
@@ -73,7 +75,12 @@ resource "aws_vpc_peering_connection_accepter" "peer" {
 }
 ```
 
-#### Terraform AWS Provider v6 (and above)
+</p>
+</details>
+
+<details>
+<summary>Terraform AWS Provider v6 (and above)</summary>
+<p>
 
 ```terraform
 provider "aws" {
@@ -115,9 +122,14 @@ resource "aws_vpc_peering_connection_accepter" "peer" {
 }
 ```
 
+</p>
+</details>
+
 ### KMS Replica Key
 
-#### Terraform AWS Provider v5 (and below)
+<details>
+<summary>Terraform AWS Provider v5 (and below)</summary>
+<p>
 
 ```terraform
 provider "aws" {
@@ -143,8 +155,12 @@ resource "aws_kms_replica_key" "replica" {
   primary_key_arn         = aws_kms_key.primary.arn
 }
 ```
+</p>
+</details>
 
-#### Terraform AWS Provider v6 (and above)
+<details>
+<summary>Terraform AWS Provider v6 (and above)</summary>
+<p>
 
 ```terraform
 provider "aws" {
@@ -165,10 +181,14 @@ resource "aws_kms_replica_key" "replica" {
   primary_key_arn         = aws_kms_key.primary.arn
 }
 ```
+</p>
+</details>
 
 ### S3 Bucket Replication Configuration
 
-#### Terraform AWS Provider v5 (and below)
+<details>
+<summary>Terraform AWS Provider v5 (and below)</summary>
+<p>
 
 ```terraform
 provider "aws" {
@@ -301,8 +321,12 @@ resource "aws_s3_bucket_replication_configuration" "replication" {
   }
 }
 ```
+</p>
+</details>
 
-#### Terraform AWS Provider v6 (and above)
+<details>
+<summary>Terraform AWS Provider v6 (and above)</summary>
+<p>
 
 ```terraform
 provider "aws" {
@@ -432,6 +456,9 @@ resource "aws_s3_bucket_replication_configuration" "replication" {
   }
 }
 ```
+
+</p>
+</details>
 
 ### Global Resources
 
