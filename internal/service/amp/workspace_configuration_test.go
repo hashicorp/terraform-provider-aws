@@ -6,6 +6,7 @@ package amp_test
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/amp"
@@ -22,6 +23,8 @@ func TestAccAMPWorkspaceConfiguration_basic(t *testing.T) {
 	var v amp.DescribeWorkspaceConfigurationOutput
 	resourceName := "aws_prometheus_workspace_configuration.test"
 	workspaceResourceName := "aws_prometheus_workspace.test"
+	retentionPeriod := 30
+	retentionPeriodUpdated := 15
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -30,31 +33,32 @@ func TestAccAMPWorkspaceConfiguration_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckWorkspaceConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkspaceConfigurationConfig_basic(),
+				Config: testAccWorkspaceConfigurationConfig_basic(retentionPeriod),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceConfigurationExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "workspace_id", workspaceResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "retention_period_in_days", "8"),
+					resource.TestCheckResourceAttr(resourceName, "retention_period_in_days", strconv.Itoa(retentionPeriod)),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"limits_per_label_set"},
 			},
 			{
-				Config: testAccWorkspaceConfigurationConfig_updated(),
+				Config: testAccWorkspaceConfigurationConfig_basic(retentionPeriodUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceConfigurationExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "workspace_id", workspaceResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "retention_period_in_days", "15"),
+					resource.TestCheckResourceAttr(resourceName, "retention_period_in_days", strconv.Itoa(retentionPeriodUpdated)),
 				),
 			},
 		},
 	})
 }
 
-func TestAccAMPWorkspaceConfiguration_configuration(t *testing.T) {
+func TestAccAMPWorkspaceConfiguration_defaultBucket(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v amp.DescribeWorkspaceConfigurationOutput
 	resourceName := "aws_prometheus_workspace_configuration.test"
@@ -67,49 +71,54 @@ func TestAccAMPWorkspaceConfiguration_configuration(t *testing.T) {
 		CheckDestroy:             testAccCheckWorkspaceConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkspaceConfigurationConfig_configuration(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkspaceConfigurationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "workspace_id", workspaceResourceName, "id"),
-					resource.TestCheckResourceAttrSet(resourceName, "configuration"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccAMPWorkspaceConfiguration_limitsPerLabelSet(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v amp.DescribeWorkspaceConfigurationOutput
-	resourceName := "aws_prometheus_workspace_configuration.test"
-	workspaceResourceName := "aws_prometheus_workspace.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkspaceConfigurationDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccWorkspaceConfigurationConfig_limitsPerLabelSet(),
+				Config: testAccWorkspaceConfigurationConfig_defaultBucket(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceConfigurationExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "workspace_id", workspaceResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "limits_per_label_set.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "limits_per_label_set.0.label_set.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "limits_per_label_set.0.label_set.name", "test"),
-					resource.TestCheckResourceAttr(resourceName, "limits_per_label_set.0.label_set.env", "dev"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"limits_per_label_set"},
+			},
+		},
+	})
+}
+func TestAccAMPWorkspaceConfiguration_limitPerLabelSet(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v amp.DescribeWorkspaceConfigurationOutput
+	resourceName := "aws_prometheus_workspace_configuration.test"
+	workspaceResourceName := "aws_prometheus_workspace.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWorkspaceConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWorkspaceConfigurationConfig_limitPerLabelSet(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkspaceConfigurationExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, "workspace_id", workspaceResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "limits_per_label_set.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "limits_per_label_set.0.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "limits_per_label_set.0.label_set.__name__", "rest_client_request_duration_seconds_bucket"),
+					resource.TestCheckResourceAttr(resourceName, "limits_per_label_set.1.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "limits_per_label_set.1.label_set.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "limits_per_label_set.1.limits.0.max_series", "10000"),
+					resource.TestCheckResourceAttr(resourceName, "limits_per_label_set.2.limits.0.max_series", "60000"),
+					resource.TestCheckResourceAttr(resourceName, "retention_period_in_days", "30"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"limits_per_label_set"},
 			},
 		},
 	})
@@ -156,67 +165,68 @@ func testAccCheckWorkspaceConfigurationExists(ctx context.Context, n string, v *
 	}
 }
 
-func testAccWorkspaceConfigurationConfig_basic() string {
-	return `
-resource "aws_prometheus_workspace" "test" {
-  alias = "test"
-}
+func testAccWorkspaceConfigurationConfig_basic(retentionPeriod int) string {
+	return fmt.Sprintf(`
+resource "aws_prometheus_workspace" "test" {}
 
 resource "aws_prometheus_workspace_configuration" "test" {
   workspace_id             = aws_prometheus_workspace.test.id
-  retention_period_in_days = 8
+  retention_period_in_days = %[1]d
+}
+`, retentionPeriod)
+}
+
+func testAccWorkspaceConfigurationConfig_defaultBucket() string {
+	return `
+resource "aws_prometheus_workspace" "test" {}
+
+resource "aws_prometheus_workspace_configuration" "test" {
+  workspace_id             = aws_prometheus_workspace.test.id
+
+  limits_per_label_set {
+    label_set = {}
+	limits {
+	  max_series = 100000
+	}
+  }
 }
 `
 }
 
-func testAccWorkspaceConfigurationConfig_updated() string {
+func testAccWorkspaceConfigurationConfig_limitPerLabelSet() string {
 	return `
-resource "aws_prometheus_workspace" "test" {
-  alias = "test"
-}
+resource "aws_prometheus_workspace" "test" {}
 
 resource "aws_prometheus_workspace_configuration" "test" {
   workspace_id             = aws_prometheus_workspace.test.id
-  retention_period_in_days = 15
-}
-`
-}
-
-func testAccWorkspaceConfigurationConfig_configuration() string {
-	return `
-resource "aws_prometheus_workspace" "test" {
-  alias = "test"
-}
-
-resource "aws_prometheus_workspace_configuration" "test" {
-  workspace_id             = aws_prometheus_workspace.test.id
-  retention_period_in_days = 8
-  configuration            = <<EOF
-alertmanager_config: |
-  route:
-    receiver: 'default'
-  receivers:
-    - name: 'default'
-EOF
-}
-`
-}
-
-func testAccWorkspaceConfigurationConfig_limitsPerLabelSet() string {
-	return `
-resource "aws_prometheus_workspace" "test" {
-  alias = "test"
-}
-
-resource "aws_prometheus_workspace_configuration" "test" {
-  workspace_id             = aws_prometheus_workspace.test.id
-  retention_period_in_days = 8
+  retention_period_in_days = 30
 
   limits_per_label_set {
     label_set = {
-      name = "test"
-      env  = "dev"
-    }
+		"__name__" = "rest_client_request_duration_seconds_bucket"
+		"region" = "us-east-1"
+	}
+	limits {
+	  max_series = 1000
+	}
+  }
+
+  limits_per_label_set {
+    label_set = {
+		"env" = "dev"
+	}
+	limits {
+	  max_series = 10000
+	}
+  }
+
+  limits_per_label_set {
+    label_set = {
+		"env" = "prod"
+	}
+	limits {
+	  max_series = 60000
+	}
   }
 }
 `

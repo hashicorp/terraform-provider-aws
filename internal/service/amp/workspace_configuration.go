@@ -36,8 +36,8 @@ import (
 func newWorkspaceConfigurationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &workspaceConfigurationResource{}
 
-	r.SetDefaultCreateTimeout(2 * time.Minute)
-	r.SetDefaultUpdateTimeout(2 * time.Minute)
+	r.SetDefaultCreateTimeout(5 * time.Minute)
+	r.SetDefaultUpdateTimeout(5 * time.Minute)
 	return r, nil
 }
 
@@ -205,50 +205,6 @@ func (r *workspaceConfigurationResource) Update(ctx context.Context, req resourc
 	input.ClientToken = aws.String(sdkid.UniqueId())
 	input.WorkspaceId = &workspaceID
 
-	if !data.RetentionPeriodInDays.IsNull() && !data.RetentionPeriodInDays.IsUnknown() {
-		// var retentionPeriod int64
-		// resp.Diagnostics.Append(data.RetentionPeriodInDays.As(&retentionPeriod)...)
-		// if resp.Diagnostics.HasError() {
-		// 	return
-		// }
-		input.RetentionPeriodInDays = data.RetentionPeriodInDays.ValueInt32Pointer()
-	}
-
-	// Add limits per label set if provided
-	if !data.LimitsPerLabelSet.IsNull() && !data.LimitsPerLabelSet.IsUnknown() {
-		var limitsPerLabelSetModels []limitsPerLabelSetModel
-		resp.Diagnostics.Append(data.LimitsPerLabelSet.ElementsAs(ctx, &limitsPerLabelSetModels, false)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-
-		limitsPerLabelSet := make([]awstypes.LimitsPerLabelSet, 0, len(limitsPerLabelSetModels))
-		for _, model := range limitsPerLabelSetModels {
-			if model.LabelSet.IsNull() || model.LabelSet.IsUnknown() {
-				continue
-			}
-
-			labelMap := make(map[string]string)
-			resp.Diagnostics.Append(model.LabelSet.ElementsAs(ctx, &labelMap, false)...)
-			if resp.Diagnostics.HasError() {
-				return
-			}
-
-			labelSet := make(map[string]string)
-			for k, v := range labelMap {
-				labelSet[k] = v
-			}
-
-			limitsPerLabelSet = append(limitsPerLabelSet, awstypes.LimitsPerLabelSet{
-				LabelSet: labelSet,
-			})
-		}
-
-		if len(limitsPerLabelSet) > 0 {
-			input.LimitsPerLabelSet = limitsPerLabelSet
-		}
-	}
-
 	_, err := conn.UpdateWorkspaceConfiguration(ctx, &input)
 	if err != nil {
 		resp.Diagnostics.AddError("updating Workspace configuration", err.Error())
@@ -264,10 +220,6 @@ func (r *workspaceConfigurationResource) Update(ctx context.Context, req resourc
 	resp.Diagnostics.Append(resp.State.Set(ctx, data)...)
 }
 
-// Helper functions for WorkspaceConfiguration resource
-
-// FindWorkspaceConfigurationByID retrieves a workspace configuration by its ID.
-// This function is exported for testing purposes.
 func findWorkspaceConfigurationByID(ctx context.Context, conn *amp.Client, id string) (*amp.DescribeWorkspaceConfigurationOutput, error) {
 	input := &amp.DescribeWorkspaceConfigurationInput{
 		WorkspaceId: aws.String(id),
@@ -324,50 +276,3 @@ func statusWorkspaceConfiguration(ctx context.Context, conn *amp.Client, id stri
 		return output, string(output.WorkspaceConfiguration.Status.StatusCode), nil
 	}
 }
-
-// func updateWorkspaceConfigurationModel(ctx context.Context, output *amp.DescribeWorkspaceConfigurationOutput, model *resourceWorkspaceConfigurationModel) path.Diagnostics {
-// 	if output == nil {
-// 		return path.Diagnostics{}
-// 	}
-
-// 	// Update configuration
-// 	if output.Configuration != nil {
-// 		model.Configuration = types.StringValue(*output.Configuration)
-// 	}
-
-// 	// Update retention period
-// 	if output.RetentionPeriodInDays != nil {
-// 		model.RetentionPeriodInDays = types.NumberValue(
-// 			flex.Int64ToFloat64(output.RetentionPeriodInDays),
-// 		)
-// 	}
-
-// 	// Update limits per label set
-// 	if len(output.LimitsPerLabelSet) > 0 {
-// 		limitsPerLabelSetModels := make([]limitsPerLabelSetModel, 0, len(output.LimitsPerLabelSet))
-
-// 		for _, limitPerLabelSet := range output.LimitsPerLabelSet {
-// 			labelSetMap := make(map[string]attr.Value)
-
-// 			for k, v := range limitPerLabelSet.LabelSet {
-// 				labelSetMap[k] = types.StringValue(v)
-// 			}
-
-// 			model := limitsPerLabelSetModel{
-// 				LabelSet: types.MapValueMust(types.StringType, labelSetMap),
-// 			}
-
-// 			if limitPerLabelSet.Limits != nil {
-// 				model.Limits = types.StringValue(*limitPerLabelSet.Limits)
-// 			}
-
-// 			limitsPerLabelSetModels = append(limitsPerLabelSetModels, model)
-// 		}
-
-// 		var diags path.Diagnostics
-// 		model.LimitsPerLabelSet, diags = fwtypes.NewListNestedObjectValueOfPtr(ctx, limitsPerLabelSetModels)
-// 		return diags
-// 	}
-
-// 	return path.Diagnostics{}
-// }
