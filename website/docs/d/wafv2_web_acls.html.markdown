@@ -23,7 +23,7 @@ output "example" {
   value = data.aws_wafv2_web_acls.example.names
 }
 
-// Retrieve Web ACL names that start with "FMManagedWebACLv2"
+# Retrieve Web ACL names that start with "FMManagedWebACLv2"
 output "example_managed_by_fm" {
   value = [for acl_name in data.aws_wafv2_web_acls.example.names : acl_name if startswith(acl_name, "FMManagedWebACLv2")]
 }
