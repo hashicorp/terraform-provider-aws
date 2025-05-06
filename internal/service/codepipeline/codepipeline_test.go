@@ -58,6 +58,7 @@ func TestAccCodePipeline_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.output_artifacts.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.output_artifacts.0", "test"),
 					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.output_artifacts_for_compute_action.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.output_variables.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.commands.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.configuration.%", "3"),
 					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.configuration.FullRepositoryId", "lifesum-terraform/test"),
@@ -77,6 +78,7 @@ func TestAccCodePipeline_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.input_artifacts.0", "test"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.output_artifacts.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.output_artifacts_for_compute_action.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.output_variables.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.commands.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.configuration.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.configuration.ProjectName", "test"),
@@ -102,6 +104,7 @@ func TestAccCodePipeline_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.output_artifacts.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.output_artifacts.0", "artifacts"),
 					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.output_artifacts_for_compute_action.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.output_variables.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.commands.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.configuration.%", "3"),
 					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.configuration.FullRepositoryId", "test-terraform/test-repo"),
@@ -113,6 +116,7 @@ func TestAccCodePipeline_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.input_artifacts.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.input_artifacts.0", "artifacts"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.output_artifacts_for_compute_action.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.output_variables.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.commands.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.configuration.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.configuration.ProjectName", "test"),
@@ -1285,6 +1289,8 @@ func TestAccCodePipeline_computeAction(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.output_artifacts_for_compute_action.0.files.0", "hello1.txt"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.output_artifacts_for_compute_action.0.files.1", "hello2.txt"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.output_artifacts_for_compute_action.0.files.2", "hello3.txt"),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.output_variables.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.output_variables.0", "AWS_DEFAULT_REGION"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.role_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.run_order", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.region", ""),
@@ -3701,7 +3707,7 @@ resource "aws_codepipeline" "test" {
         name  = "ComputeArtifact"
         files = ["hello1.txt", "hello2.txt", "hello3.txt"]
       }
-
+      output_variables = ["AWS_DEFAULT_REGION"]
     }
   }
 }
