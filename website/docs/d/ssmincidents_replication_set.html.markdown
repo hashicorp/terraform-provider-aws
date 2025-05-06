@@ -23,7 +23,7 @@ data "aws_ssmincidents_replication_set" "example" {}
 
 ## Argument Reference
 
-No arguments are required.
+This data source does not support any arguments.
 
 ## Attribute Reference
 

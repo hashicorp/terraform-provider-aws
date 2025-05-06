@@ -24,6 +24,8 @@ data "aws_sqs_queue" "example" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `name` - (Required) Name of the queue to match.
 
 ## Attribute Reference

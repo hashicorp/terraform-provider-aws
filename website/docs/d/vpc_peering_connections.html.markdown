@@ -34,15 +34,17 @@ data "aws_vpc_peering_connection" "pc" {
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available VPC peering connections.
+This data source supports the following arguments:
 
 * `filter` - (Optional) Custom filter block as described below.
-
 * `tags` - (Optional) Mapping of tags, each pair of which must exactly match
   a pair on the desired VPC Peering Connection.
 
-More complex filters can be expressed using one or more `filter` sub-blocks,
-which take the following arguments:
+  The arguments of this data source act as filters for querying the available VPC peering connections.
+
+  ### `filter`
+
+More complex filters can be expressed using one or more `filter` sub-blocks, which take the following arguments:
 
 * `name` - (Required) Name of the field to filter by, as defined by
   [the underlying AWS API](http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeVpcPeeringConnections.html).
@@ -52,7 +54,7 @@ which take the following arguments:
 
 ## Attribute Reference
 
-All of the argument attributes except `filter` are also exported as result attributes.
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - AWS Region.
 * `ids` - IDs of the VPC Peering Connections.
