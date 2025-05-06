@@ -240,7 +240,7 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
 
 The example below creates a CloudFront distribution with [standard logging V2 to S3](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/standard-logging.html#enable-access-logging-api).
 
-```hcl
+```terraform
 provider "aws" {
   region = var.region
 }

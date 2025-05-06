@@ -20,7 +20,7 @@ resource "aws_sns_topic" "user_updates" {
 
 ## Example with Delivery Policy
 
-```hcl
+```terraform
 resource "aws_sns_topic" "user_updates" {
   name            = "user-updates-topic"
   delivery_policy = <<EOF
@@ -56,7 +56,7 @@ resource "aws_sns_topic" "user_updates" {
 
 ## Example with First-In-First-Out (FIFO)
 
-```hcl
+```terraform
 resource "aws_sns_topic" "user_updates" {
   name                        = "user-updates-topic.fifo"
   fifo_topic                  = true
