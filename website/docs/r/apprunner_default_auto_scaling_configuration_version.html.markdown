@@ -31,7 +31,7 @@ resource "aws_apprunner_default_auto_scaling_configuration_version" "example" {
 
 ## Argument Reference
 
-The following arguments supported:
+This resource supports the following arguments:
 
 * `auto_scaling_configuration_arn` - (Required) The ARN of the App Runner auto scaling configuration that you want to set as the default.
 
