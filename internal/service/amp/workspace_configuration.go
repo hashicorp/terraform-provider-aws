@@ -13,6 +13,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/amp/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -61,8 +62,8 @@ type limitsPerLabelSetEntryModel struct {
 type workspaceConfigurationResource struct {
 	framework.ResourceWithConfigure
 	framework.WithTimeouts
-	framework.WithImportByID
 	framework.WithNoOpDelete
+	framework.WithImportByID
 }
 
 func (r *workspaceConfigurationResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -145,7 +146,7 @@ func (r *workspaceConfigurationResource) Create(ctx context.Context, req resourc
 		return
 	}
 
-	if _, err := waitWorkspaceConfigurationUpdated(ctx, conn, workspaceID, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+	if err := waitWorkspaceConfigurationUpdated(ctx, conn, workspaceID, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("waiting for workspace configuration (%s) update", data.ID.ValueString()), err.Error())
 		return
 	}
@@ -184,6 +185,14 @@ func (r *workspaceConfigurationResource) Read(ctx context.Context, req resource.
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
+func (r *workspaceConfigurationResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	workspaceID := req.ID
+
+	// Set both ID and workspace_id to the imported ID
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), workspaceID)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("workspace_id"), workspaceID)...)
+}
+
 func (r *workspaceConfigurationResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 
 	var data workspaceConfigurationResourceModel
@@ -211,7 +220,7 @@ func (r *workspaceConfigurationResource) Update(ctx context.Context, req resourc
 		return
 	}
 
-	if _, err := waitWorkspaceConfigurationUpdated(ctx, conn, workspaceID, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+	if err := waitWorkspaceConfigurationUpdated(ctx, conn, workspaceID, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("waiting for workspace configuration (%s) update", data.ID.ValueString()), err.Error())
 		return
 	}
@@ -245,7 +254,7 @@ func findWorkspaceConfigurationByID(ctx context.Context, conn *amp.Client, id st
 	return output, nil
 }
 
-func waitWorkspaceConfigurationUpdated(ctx context.Context, conn *amp.Client, id string, timeout time.Duration) (*amp.DescribeWorkspaceConfigurationOutput, error) {
+func waitWorkspaceConfigurationUpdated(ctx context.Context, conn *amp.Client, id string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.WorkspaceConfigurationStatusCodeUpdating),
 		Target:  enum.Slice(awstypes.WorkspaceConfigurationStatusCodeActive),
@@ -254,11 +263,11 @@ func waitWorkspaceConfigurationUpdated(ctx context.Context, conn *amp.Client, id
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*amp.DescribeWorkspaceConfigurationOutput); ok {
-		return out, err
+	if _, ok := outputRaw.(*amp.DescribeWorkspaceConfigurationOutput); ok {
+		return err
 	}
 
-	return nil, err
+	return nil
 }
 
 func statusWorkspaceConfiguration(ctx context.Context, conn *amp.Client, id string) retry.StateRefreshFunc {

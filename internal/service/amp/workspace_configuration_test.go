@@ -44,7 +44,7 @@ func TestAccAMPWorkspaceConfiguration_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"limits_per_label_set"},
+				ImportStateVerifyIgnore: []string{"limits_per_label_set", "retention_period_in_days"},
 			},
 			{
 				Config: testAccWorkspaceConfigurationConfig_basic(retentionPeriodUpdated),
@@ -82,7 +82,7 @@ func TestAccAMPWorkspaceConfiguration_defaultBucket(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"limits_per_label_set"},
+				ImportStateVerifyIgnore: []string{"limits_per_label_set", "retention_period_in_days"},
 			},
 		},
 	})
@@ -118,7 +118,7 @@ func TestAccAMPWorkspaceConfiguration_limitPerLabelSet(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"limits_per_label_set"},
+				ImportStateVerifyIgnore: []string{"limits_per_label_set", "retention_period_in_days"},
 			},
 		},
 	})
