@@ -615,7 +615,7 @@ func resourceUserPool() *schema.Resource {
 									"custom_auth_mode": {
 										Type:             schema.TypeString,
 										Optional:         true,
-										Default:          awstypes.AdvancedSecurityEnabledModeTypeAudit,
+										Computed:         true,
 										ValidateDiagFunc: enum.Validate[awstypes.AdvancedSecurityEnabledModeType](),
 									},
 								},
