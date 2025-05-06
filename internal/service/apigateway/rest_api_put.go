@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/mapplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -74,6 +75,14 @@ func (r *resourceRestAPIPut) Schema(ctx context.Context, req resource.SchemaRequ
 					mapplanmodifier.RequiresReplace(),
 				},
 			},
+			"put_rest_api_mode": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				Default:  stringdefault.StaticString(string(awstypes.PutModeOverwrite)),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
 			"rest_api_id": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -107,7 +116,7 @@ func (r *resourceRestAPIPut) Create(ctx context.Context, req resource.CreateRequ
 	}
 
 	input := apigateway.PutRestApiInput{
-		Mode: awstypes.PutModeOverwrite,
+		Mode: awstypes.PutMode(plan.PutRestAPIMode.ValueString()),
 	}
 
 	resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
@@ -227,6 +236,7 @@ type resourceRestAPIPutModel struct {
 	Body           types.String        `tfsdk:"body"`
 	FailOnWarnings types.Bool          `tfsdk:"fail_on_warnings"`
 	Parameters     fwtypes.MapOfString `tfsdk:"parameters"`
+	PutRestAPIMode types.String        `tfsdk:"put_rest_api_mode"`
 	RestAPIID      types.String        `tfsdk:"rest_api_id"`
 	Timeouts       timeouts.Value      `tfsdk:"timeouts"`
 	Triggers       fwtypes.MapOfString `tfsdk:"triggers"`

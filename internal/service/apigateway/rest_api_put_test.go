@@ -40,6 +40,7 @@ func TestAccAPIGatewayRestAPIPut_basic(t *testing.T) {
 					testAccCheckRESTAPIPutExists(ctx, resourceName, &restAPI),
 					resource.TestCheckResourceAttr(resourceName, "fail_on_warnings", acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, "rest_api_id"),
+					resource.TestCheckResourceAttr(resourceName, "put_rest_api_mode", "overwrite"),
 				),
 			},
 			{
@@ -49,6 +50,47 @@ func TestAccAPIGatewayRestAPIPut_basic(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "rest_api_id",
 				ImportStateVerifyIgnore:              []string{"body", names.AttrTriggers, "fail_on_warnings"},
+			},
+		},
+	})
+}
+
+func TestAccAPIGatewayRestAPIPut_mode(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var restAPI apigateway.GetRestApiOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_api_gateway_rest_api_put.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRESTAPIDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRestAPIPutConfig_mode(rName, "merge"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRESTAPIPutExists(ctx, resourceName, &restAPI),
+					resource.TestCheckResourceAttr(resourceName, "put_rest_api_mode", "merge"),
+				),
+			},
+			{
+				Config: testAccRestAPIPutConfig_mode(rName, "overwrite"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRESTAPIPutExists(ctx, resourceName, &restAPI),
+					resource.TestCheckResourceAttr(resourceName, "put_rest_api_mode", "overwrite"),
+				),
+			},
+			{
+				Config: testAccRestAPIPutConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRESTAPIPutExists(ctx, resourceName, &restAPI),
+					resource.TestCheckResourceAttr(resourceName, "put_rest_api_mode", "overwrite"),
+				),
 			},
 		},
 	})
@@ -223,4 +265,48 @@ resource "aws_api_gateway_stage" "testv2" {
   deployment_id = aws_api_gateway_deployment.testv2.id
 }
 `
+}
+
+func testAccRestAPIPutConfig_mode(rName, mode string) string {
+	return fmt.Sprintf(`
+resource "aws_api_gateway_rest_api" "test" {
+  name = %[1]q
+}
+
+resource "aws_api_gateway_rest_api_put" "test" {
+  body = jsonencode({
+    swagger = "2.0"
+    info = {
+      title   = %[1]q
+      version = "2017-04-20T04:08:08Z"
+    }
+    schemes = ["https"]
+    paths = {
+      "/test" = {
+        get = {
+          responses = {
+            "200" = {
+              description = "OK"
+            }
+          }
+          x-amazon-apigateway-integration = {
+            httpMethod = "GET"
+            type       = "HTTP"
+            responses = {
+              default = {
+                statusCode = 200
+              }
+            }
+            uri = "https://api.example.com/"
+          }
+        }
+      }
+    }
+  })
+
+  fail_on_warnings = true
+  put_rest_api_mode = %[2]q
+  rest_api_id      = aws_api_gateway_rest_api.test.id
+}
+`, rName, mode)
 }
