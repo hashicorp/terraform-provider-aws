@@ -119,9 +119,10 @@ resource "aws_cloudwatch_metric_alarm" "xx_anomaly_detection" {
   insufficient_data_actions = []
 
   metric_query {
-    id         = "e1"
-    expression = "ANOMALY_DETECTION_BAND(m1)"
-    label      = "CPUUtilization (Expected)"
+    id          = "e1"
+    return_data = true
+    expression  = "ANOMALY_DETECTION_BAND(m1)"
+    label       = "CPUUtilization (Expected)"
   }
 
   metric_query {
