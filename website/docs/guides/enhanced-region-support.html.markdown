@@ -8,33 +8,75 @@ description: |-
 
 # Enhanced Region Support
 
-Most AWS resources are Regional – they are created and exist in a single AWS Region, and to manage these resources the Terraform AWS Provider directs API calls to endpoints in the Region. The Region used to provision a resource with the provider is defined in the [provider configuration](https://developer.hashicorp.com/terraform/language/providers/configuration) used by the resource, either implicitly via [environment variables](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#environment-variables) or [shared configuration files](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#shared-configuration-and-credentials-files), or explicitly via the [`region` argument](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#region).
-Prior to version 6.0.0 of the Terraform AWS Provider in order to manage resources in multiple Regions with a single set of Terraform modules, resources had to use the [`provider` meta-argument](https://developer.hashicorp.com/terraform/language/meta-arguments/resource-provider) along with a separate provider configuration for each Region. For large configurations this adds considerable complexity – today AWS operates in [36 Regions](https://aws.amazon.com/about-aws/global-infrastructure/), with 4 further Regions announced.
+Version 6.0.0 of the Terraform AWS Provider introduces a new `region` argument making it significantly easier to manage infrastructure across AWS Regions without requiring multiple provider configurations.
 
-To address this, version 6.0.0 of the Terraform AWS Provider adds an additional top-level `region` argument in the [schema](https://developer.hashicorp.com/terraform/plugin/framework/handling-data/schemas) of most Regional resources, data sources, and ephemeral resources, which allows that resource to be managed in a Region other than the one defined in the provider configuration. For those resources that had a pre-existing top-level `region` argument, that argument is now deprecated and in a future version of the provider the `region` argument will be used to implement enhanced Region support. Each such deprecation is noted in a separate section below.
+<!-- TOC depthFrom:2 depthTo:2 -->
 
-The new top-level `region` argument is [_Optional_ and _Computed_](https://developer.hashicorp.com/terraform/plugin/framework/handling-data/attributes/string#configurability), with a default value of the Region from the provider configuration. The value of the `region` argument is validated as being in the configured [partition](https://docs.aws.amazon.com/whitepapers/latest/aws-fault-isolation-boundaries/partitions.html). A change to the argument's value forces resource replacement. To [import](https://developer.hashicorp.com/terraform/cli/import) a resource in a specific Region append `@<region>` to the [import ID](https://developer.hashicorp.com/terraform/language/import#import-id), for example `terraform import aws_vpc.test_vpc vpc-a01106c2@eu-west-1`.
+- [What's new](#whats-new)
+- [What's not changing](#whats-not-changing)
+- [Can I use `region` in every resource?](#can-i-use-region-in-every-resource)
+- [Why make this change](#why-make-this-change)
+- [How `region` works](#how-region-works)
+- [Before and after examples using `region`](#before-and-after-examples-using-region)
+- [Non–region-aware resources](#nonregion-aware-resources)
 
-Some examples will clarify.
+<!-- /TOC -->
 
-### Cross-Region VPC Peering
+## What's new
+
+As of v6.0.0, most existing resources, data sources, and ephemeral resources are now [Region-aware](#nonregion-aware-resources), meaning they support a new top-level `region` argument. This allows you to manage a resource in a Region different from the one specified in the provider configuration—without requiring multiple provider blocks. See [How `region` works](#how-region-works) for details.
+
+For example, if your provider is configured for `us-east-1`, you can now manage a VPC in `us-west-2` without defining an additional provider block:
+
+```terraform
+resource "aws_vpc" "peer" {
+  region     = "us-west-2"
+  cidr_block = "10.1.0.0/16"
+}
+```
+
+## What's _not_ changing
+
+_Pre-v6.0.0 configurations that use provider blocks per Region remain valid in v6.0.0 and are not deprecated._
+
+You can still define the Region at the provider level using any of the existing methods—for example, through the AWS [config file](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html), [provider configuration](https://developer.hashicorp.com/terraform/language/providers/configuration), [environment variables](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#environment-variables), [shared configuration files](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#shared-configuration-and-credentials-files), or explicitly using the `provider`’s [`region` argument](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#region).
+
+## Can I use `region` in every resource?
+
+No. While most resources are now Region-aware, there are exceptions. These include a few resources that already had a `region` argument and resources that are inherently global. See [Non–region-aware resources](#nonregion-aware-resources).
+
+## Why make this change
+
+Before version 6.0.0, managing infrastructure across multiple Regions required a separate provider configuration for each Region. This approach led to complex and repetitive configurations, especially for large infrastructures—AWS currently operates in [36 Regions](https://aws.amazon.com/about-aws/global-infrastructure/), with more announced. Additionally, each provider configuration adds overhead in terms of memory and compute resources.
+
+See the [examples](#before-and-after-examples-using-region) below for a comparison of configurations before and after introducing the `region` argument.
+
+## How `region` works
+
+The new top-level `region` argument is [_Optional_ and _Computed_](https://developer.hashicorp.com/terraform/plugin/framework/handling-data/attributes/string#configurability), and defaults to the Region specified in the provider configuration. Its value is validated to ensure it belongs to the configured [partition](https://docs.aws.amazon.com/whitepapers/latest/aws-fault-isolation-boundaries/partitions.html). **Changing the value of the `region` argument will force resource replacement.**
+
+To [import](https://developer.hashicorp.com/terraform/cli/import) a resource in a specific Region, append `@<region>` to the [import ID](https://developer.hashicorp.com/terraform/language/import#import-id)—for example:
+
+```sh
+terraform import aws_vpc.test_vpc vpc-a01106c2@eu-west-1
+```
+
+## Before and after examples using `region`
+
+### Cross-region VPC peering
 
 <details>
-<summary>Terraform AWS Provider v5 (and below)</summary>
+<summary>Before, Pre-v6.0.0</summary>
 <p>
 
 ```terraform
 provider "aws" {
   region = "us-east-1"
-
-  # Requester's credentials.
 }
 
 provider "aws" {
   alias  = "peer"
   region = "us-west-2"
-
-  # Accepter's credentials.
 }
 
 resource "aws_vpc" "main" {
@@ -57,10 +99,6 @@ resource "aws_vpc_peering_connection" "peer" {
   peer_owner_id = data.aws_caller_identity.peer.account_id
   peer_region   = "us-west-2"
   auto_accept   = false
-
-  tags = {
-    Side = "Requester"
-  }
 }
 
 # Accepter's side of the connection.
@@ -68,10 +106,6 @@ resource "aws_vpc_peering_connection_accepter" "peer" {
   provider                  = aws.peer
   vpc_peering_connection_id = aws_vpc_peering_connection.peer.id
   auto_accept               = true
-
-  tags = {
-    Side = "Accepter"
-  }
 }
 ```
 
@@ -79,14 +113,12 @@ resource "aws_vpc_peering_connection_accepter" "peer" {
 </details>
 
 <details>
-<summary>Terraform AWS Provider v6 (and above)</summary>
+<summary>After, v6.0.0+</summary>
 <p>
 
 ```terraform
 provider "aws" {
   region = "us-east-1"
-
-  # Requester's credentials.
 }
 
 resource "aws_vpc" "main" {
@@ -104,10 +136,6 @@ resource "aws_vpc_peering_connection" "peer" {
   peer_vpc_id = aws_vpc.peer.id
   peer_region = "us-west-2"
   auto_accept = false
-
-  tags = {
-    Side = "Requester"
-  }
 }
 
 # Accepter's side of the connection.
@@ -115,20 +143,16 @@ resource "aws_vpc_peering_connection_accepter" "peer" {
   region                    = "us-west-2"
   vpc_peering_connection_id = aws_vpc_peering_connection.peer.id
   auto_accept               = true
-
-  tags = {
-    Side = "Accepter"
-  }
 }
 ```
 
 </p>
 </details>
 
-### KMS Replica Key
+### KMS replica key
 
 <details>
-<summary>Terraform AWS Provider v5 (and below)</summary>
+<summary>Before, Pre-v6.0.0</summary>
 <p>
 
 ```terraform
@@ -159,7 +183,7 @@ resource "aws_kms_replica_key" "replica" {
 </details>
 
 <details>
-<summary>Terraform AWS Provider v6 (and above)</summary>
+<summary>After, v6.0.0</summary>
 <p>
 
 ```terraform
@@ -184,10 +208,10 @@ resource "aws_kms_replica_key" "replica" {
 </p>
 </details>
 
-### S3 Bucket Replication Configuration
+### S3 bucket replication configuration
 
 <details>
-<summary>Terraform AWS Provider v5 (and below)</summary>
+<summary>Before, Pre-v6.0.0</summary>
 <p>
 
 ```terraform
@@ -325,7 +349,7 @@ resource "aws_s3_bucket_replication_configuration" "replication" {
 </details>
 
 <details>
-<summary>Terraform AWS Provider v6 (and above)</summary>
+<summary>After, v6.0.0</summary>
 <p>
 
 ```terraform
@@ -460,11 +484,30 @@ resource "aws_s3_bucket_replication_configuration" "replication" {
 </p>
 </details>
 
-### Global Resources
+## Non–region-aware resources
 
-Some resources (for example [IAM or STS](https://docs.aws.amazon.com/IAM/latest/UserGuide/programming.html#IAMEndpoints) resources) are [global](https://docs.aws.amazon.com/whitepapers/latest/aws-fault-isolation-boundaries/global-services.html), they exist in all of a partition’s Regions. For such resources no `region` attribute has been added.
+This section lists resources that are not Region-aware—meaning no `region` argument has been added to them.
 
-#### Global Services
+Some resources, such as [IAM and STS](https://docs.aws.amazon.com/IAM/latest/UserGuide/programming.html#IAMEndpoints), are [global](https://docs.aws.amazon.com/whitepapers/latest/aws-fault-isolation-boundaries/global-services.html) and exist in all Regions within a partition.
+
+Other resources are not Region-aware because they already had a top-level `region` argument, are inherently global, or because adding a `region` argument would not be appropriate for other reasons.
+
+### Resources with a deprecated `region` argument
+
+The following regional resources and data sources had a top-level `region` argument prior to version 6.0.0. That argument is now deprecated and will be replaced in a future version to support the new Region-aware behavior.
+
+* `aws_cloudformation_stack_set_instance` resource
+* `aws_config_aggregate_authorization` resource
+* `aws_dx_hosted_connection` resource
+* `aws_region` data source
+* `aws_s3_bucket` data source
+* `aws_servicequotas_template` resource
+* `aws_servicequotas_templates` data source
+* `aws_ssmincidents_replication_set` resource and data source
+* `aws_vpc_endpoint_service` data source
+* `aws_vpc_peering_connection` data source
+
+### Global services
 
 All resources for the following services are considered _global_:
 
@@ -479,9 +522,9 @@ All resources for the following services are considered _global_:
 * Shield Advanced (`aws_shield_*`)
 * WAF Classic (`aws_waf_*`)
 
-#### Global Resources In Regional Services
+### Global resources in regional services
 
-Some Regional services have a subset of resources that are global:
+Some regional services have a subset of resources that are global:
 
 | Service | Type | Name |
 |---|---|---|
@@ -505,13 +548,13 @@ Some Regional services have a subset of resources that are global:
 | S3 | Data Source | `aws_s3_account_public_access_block` |
 | Security Hub | Resource | `aws_securityhub_organization_admin_account` |
 
-#### Meta Data Sources
+### Meta data sources
 
 The `aws_default_tags`, `aws_partition`, and `aws_regions` data sources are effectively global.
 
 The `region` attribute of the `aws_arn` data source stays as-is.
 
-#### Policy Document Data Sources
+### Policy Document Data Sources
 
 Some data sources convert HCL into JSON policy documents and are effectively global:
 
