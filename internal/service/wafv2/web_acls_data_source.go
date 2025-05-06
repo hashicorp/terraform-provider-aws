@@ -5,6 +5,7 @@ package wafv2
 
 import (
 	"context"
+
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -84,7 +85,6 @@ func (d *dataSourceWebACLs) Read(ctx context.Context, req datasource.ReadRequest
 }
 
 func ListWebACLs(ctx context.Context, conn *wafv2.Client, scope string) ([]awstypes.WebACLSummary, error) {
-
 	input := &wafv2.ListWebACLsInput{
 		Scope: awstypes.Scope(scope),
 	}

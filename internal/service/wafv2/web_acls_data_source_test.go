@@ -10,7 +10,6 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -29,7 +28,7 @@ func TestAccWAFV2WebACLsDataSource_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebAclsDataSourceConfig_basic(rName),
+				Config: testAccWebACLsDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "names.#", 1),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "names.*", "aws_wafv2_web_acl.test1", names.AttrName),
@@ -40,7 +39,7 @@ func TestAccWAFV2WebACLsDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccWebAclsDataSourceConfig_basic(rName string) string {
+func testAccWebACLsDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test1" {
   name  = "%[1]s-test1"
@@ -72,7 +71,7 @@ resource "aws_wafv2_web_acl" "test2" {
 }
 
 data "aws_wafv2_web_acls" "test" {
-  scope = "REGIONAL"
+  scope      = "REGIONAL"
   depends_on = [aws_wafv2_web_acl.test1, aws_wafv2_web_acl.test2]
 }
 `, rName)
