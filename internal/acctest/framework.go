@@ -93,8 +93,8 @@ func deleteFrameworkResource(
 		resource.Delete(ctx, fwresource.DeleteRequest{State: state}, &response)
 
 		if response.Diagnostics.HasError() {
-			var err error
-			if err = fwdiag.DiagnosticsError(response.Diagnostics); errs.Contains(err, "Value Conversion Error") {
+			err := fwdiag.DiagnosticsError(response.Diagnostics)
+			if errs.Contains(err, "Value Conversion Error") {
 				// Hack for per-resource Region override.
 				// Inject a top-level region attribute into the schema and retry.
 				schemaResp.Schema.Attributes[names.AttrRegion] = rschema.StringAttribute{
