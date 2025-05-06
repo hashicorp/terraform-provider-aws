@@ -12,7 +12,7 @@ Retrieve information about a Direct Connect Connection.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_dx_connection" "example" {
   name = "tf-dx-connection"
 }

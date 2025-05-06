@@ -12,7 +12,7 @@ description: |-
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_wafregional_subscribed_rule_group" "by_name" {
   name = "F5 Bot Detection Signatures For AWS WAF"
 }

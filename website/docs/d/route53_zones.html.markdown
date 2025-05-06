@@ -14,7 +14,7 @@ This resource can be useful for getting back a list of Route53 Hosted Zone IDs f
 
 The following example retrieves a list of all Hosted Zone IDs.
 
-```hcl
+```terraform
 data "aws_route53_zones" "all" {}
 
 output "example" {

@@ -12,7 +12,7 @@ Use this data source to get information about an ElastiCache User.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_elasticache_user" "bar" {
   user_id = "example"
 }
