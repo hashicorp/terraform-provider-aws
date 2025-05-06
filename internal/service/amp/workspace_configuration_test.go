@@ -181,13 +181,13 @@ func testAccWorkspaceConfigurationConfig_defaultBucket() string {
 resource "aws_prometheus_workspace" "test" {}
 
 resource "aws_prometheus_workspace_configuration" "test" {
-  workspace_id             = aws_prometheus_workspace.test.id
+  workspace_id = aws_prometheus_workspace.test.id
 
   limits_per_label_set {
     label_set = {}
-	limits {
-	  max_series = 100000
-	}
+    limits {
+      max_series = 100000
+    }
   }
 }
 `
@@ -203,30 +203,30 @@ resource "aws_prometheus_workspace_configuration" "test" {
 
   limits_per_label_set {
     label_set = {
-		"__name__" = "rest_client_request_duration_seconds_bucket"
-		"region" = "us-east-1"
-	}
-	limits {
-	  max_series = 1000
-	}
+      "__name__" = "rest_client_request_duration_seconds_bucket"
+      "region"   = "us-east-1"
+    }
+    limits {
+      max_series = 1000
+    }
   }
 
   limits_per_label_set {
     label_set = {
-		"env" = "dev"
-	}
-	limits {
-	  max_series = 10000
-	}
+      "env" = "dev"
+    }
+    limits {
+      max_series = 10000
+    }
   }
 
   limits_per_label_set {
     label_set = {
-		"env" = "prod"
-	}
-	limits {
-	  max_series = 60000
-	}
+      "env" = "prod"
+    }
+    limits {
+      max_series = 60000
+    }
   }
 }
 `

@@ -1,11 +1,11 @@
 ---
 subcategory: "AMP (Managed Prometheus)"
 layout: "aws"
-page_title: "AWS: aws_amp_workspace_configuration"
+page_title: "AWS: aws_prometheus_workspace_configuration"
 description: |-
   Terraform resource for managing an AWS Managed Service for Prometheus Workspace Configuration.
 ---
-# Resource: aws_amp_workspace_configuration
+# Resource: aws_prometheus_workspace_configuration
 
 Manages an AWS Managed Service for Prometheus Workspace Configuration.
 
@@ -38,7 +38,6 @@ resource "aws_prometheus_workspace_configuration" "example" {
     }
   }
 }
-}
 ```
 
 ### Setting up default bucket
@@ -51,7 +50,7 @@ label set.
 resource "aws_prometheus_workspace" "example" {}
 
 resource "aws_prometheus_workspace_configuration" "example" {
-  workspace_id             = aws_prometheus_workspace.example.id
+  workspace_id = aws_prometheus_workspace.example.id
 
   limits_per_label_set {
     label_set = {}
@@ -59,7 +58,6 @@ resource "aws_prometheus_workspace_configuration" "example" {
       max_series = 50000
     }
   }
-}
 }
 ```
 
