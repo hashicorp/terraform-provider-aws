@@ -248,10 +248,9 @@ func testAccAppBundle_regionCreateNull(t *testing.T) {
 			},
 			{
 				Config: testAccAppBundleConfig_region(endpoints.ApNortheast1RegionID),
-				// Can't call 'testAccCheckAppBundleExists' as the app bundle's in the alternate Region.
-				// Check: resource.ComposeAggregateTestCheckFunc(
-				// 	testAccCheckAppBundleExists(ctx, resourceName, &appbundle),
-				// ),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAppBundleExistsInRegion(ctx, resourceName, &appbundle, endpoints.ApNortheast1RegionID),
+				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
@@ -292,10 +291,9 @@ func testAccAppBundle_regionCreateNonNull(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppBundleConfig_region(endpoints.EuWest1RegionID),
-				// Can't call 'testAccCheckAppBundleExists' as the app bundle's in the alternate Region.
-				// Check: resource.ComposeAggregateTestCheckFunc(
-				// 	testAccCheckAppBundleExists(ctx, resourceName, &appbundle),
-				// ),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAppBundleExistsInRegion(ctx, resourceName, &appbundle, endpoints.EuWest1RegionID),
+				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
@@ -392,6 +390,12 @@ func testAccCheckAppBundleExists(ctx context.Context, n string, v *awstypes.AppB
 
 		return nil
 	}
+}
+
+func testAccCheckAppBundleExistsInRegion(ctx context.Context, n string, v *awstypes.AppBundle, region string) resource.TestCheckFunc {
+	// Push region into Context.
+	ctx = conns.NewResourceContext(ctx, "AppFabric", "aws_appfabric_app_bundle", region)
+	return testAccCheckAppBundleExists(ctx, n, v)
 }
 
 func testAccAppBundleRegionImportStateIDFunc(n, region string) resource.ImportStateIdFunc {
