@@ -20,15 +20,15 @@ import (
 )
 
 // @FrameworkDataSource("aws_elasticache_reserved_cache_node_offering", name="Reserved Cache Node Offering")
-func newDataSourceReservedCacheNodeOffering(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceReservedCacheNodeOffering{}, nil
+func newReservedCacheNodeOfferingDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &reservedCacheNodeOfferingDataSource{}, nil
 }
 
-type dataSourceReservedCacheNodeOffering struct {
-	framework.DataSourceWithConfigure
+type reservedCacheNodeOfferingDataSource struct {
+	framework.DataSourceWithModel[reservedCacheNodeOfferingDataSourceModel]
 }
 
-func (d *dataSourceReservedCacheNodeOffering) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
+func (d *reservedCacheNodeOfferingDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"cache_node_type": schema.StringAttribute{
@@ -72,8 +72,8 @@ func (d *dataSourceReservedCacheNodeOffering) Schema(ctx context.Context, reques
 
 // Read is called when the provider must read data source values in order to update state.
 // Config values should be read from the ReadRequest and new state values set on the ReadResponse.
-func (d *dataSourceReservedCacheNodeOffering) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
-	var data dataSourceReservedCacheNodeOfferingModel
+func (d *reservedCacheNodeOfferingDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+	var data reservedCacheNodeOfferingDataSourceModel
 
 	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
@@ -110,7 +110,8 @@ func (d *dataSourceReservedCacheNodeOffering) Read(ctx context.Context, request 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-type dataSourceReservedCacheNodeOfferingModel struct {
+type reservedCacheNodeOfferingDataSourceModel struct {
+	framework.WithRegionModel
 	CacheNodeType      types.String            `tfsdk:"cache_node_type"`
 	Duration           fwtypes.RFC3339Duration `tfsdk:"duration" autoflex:",noflatten"`
 	FixedPrice         types.Float64           `tfsdk:"fixed_price"`

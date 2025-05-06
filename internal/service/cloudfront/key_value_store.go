@@ -42,7 +42,7 @@ func newKeyValueStoreResource(context.Context) (resource.ResourceWithConfigure, 
 }
 
 type keyValueStoreResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[keyValueStoreResourceModel]
 	framework.WithTimeouts
 }
 

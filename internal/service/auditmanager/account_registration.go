@@ -18,20 +18,20 @@ import (
 )
 
 // @FrameworkResource("aws_auditmanager_account_registration", name="Account Registration")
-func newResourceAccountRegistration(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceAccountRegistration{}, nil
+func newAccountRegistrationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &accountRegistrationResource{}, nil
 }
 
 const (
 	ResNameAccountRegistration = "AccountRegistration"
 )
 
-type resourceAccountRegistration struct {
-	framework.ResourceWithConfigure
+type accountRegistrationResource struct {
+	framework.ResourceWithModel[accountRegistrationResourceModel]
 	framework.WithImportByID
 }
 
-func (r *resourceAccountRegistration) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *accountRegistrationResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"delegated_admin_account": schema.StringAttribute{
@@ -51,12 +51,12 @@ func (r *resourceAccountRegistration) Schema(ctx context.Context, req resource.S
 	}
 }
 
-func (r *resourceAccountRegistration) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *accountRegistrationResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().AuditManagerClient(ctx)
 	// Registration is applied per region, so use this as the ID
 	id := r.Meta().Region(ctx)
 
-	var plan resourceAccountRegistrationData
+	var plan accountRegistrationResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -84,10 +84,10 @@ func (r *resourceAccountRegistration) Create(ctx context.Context, req resource.C
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
 }
 
-func (r *resourceAccountRegistration) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *accountRegistrationResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().AuditManagerClient(ctx)
 
-	var state resourceAccountRegistrationData
+	var state accountRegistrationResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -113,10 +113,10 @@ func (r *resourceAccountRegistration) Read(ctx context.Context, req resource.Rea
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceAccountRegistration) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *accountRegistrationResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().AuditManagerClient(ctx)
 
-	var plan, state resourceAccountRegistrationData
+	var plan, state accountRegistrationResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -153,10 +153,10 @@ func (r *resourceAccountRegistration) Update(ctx context.Context, req resource.U
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceAccountRegistration) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *accountRegistrationResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().AuditManagerClient(ctx)
 
-	var state resourceAccountRegistrationData
+	var state accountRegistrationResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -173,7 +173,8 @@ func (r *resourceAccountRegistration) Delete(ctx context.Context, req resource.D
 	}
 }
 
-type resourceAccountRegistrationData struct {
+type accountRegistrationResourceModel struct {
+	framework.WithRegionModel
 	DelegatedAdminAccount types.String `tfsdk:"delegated_admin_account"`
 	DeregisterOnDestroy   types.Bool   `tfsdk:"deregister_on_destroy"`
 	KmsKey                types.String `tfsdk:"kms_key"`

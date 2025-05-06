@@ -25,19 +25,19 @@ import (
 
 // @FrameworkDataSource("aws_lb_listener_rule", name="Listener Rule")
 // @Tags(identifierAttribute="arn")
-func newDataSourceListenerRule(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceListenerRule{}, nil
+func newListenerRuleDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &listenerRuleDataSource{}, nil
 }
 
 const (
 	dsNameListenerRule = "Listener Rule Data Source"
 )
 
-type dataSourceListenerRule struct {
-	framework.DataSourceWithConfigure
+type listenerRuleDataSource struct {
+	framework.DataSourceWithModel[listenerRuleDataSourceModel]
 }
 
-func (d *dataSourceListenerRule) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *listenerRuleDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: schema.StringAttribute{
@@ -305,7 +305,7 @@ func (d *dataSourceListenerRule) Schema(ctx context.Context, req datasource.Sche
 	}
 }
 
-func (d *dataSourceListenerRule) ConfigValidators(_ context.Context) []datasource.ConfigValidator {
+func (d *listenerRuleDataSource) ConfigValidators(_ context.Context) []datasource.ConfigValidator {
 	return []datasource.ConfigValidator{
 		datasourcevalidator.ExactlyOneOf(
 			path.MatchRoot(names.AttrARN),
@@ -322,10 +322,10 @@ func (d *dataSourceListenerRule) ConfigValidators(_ context.Context) []datasourc
 	}
 }
 
-func (d *dataSourceListenerRule) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *listenerRuleDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().ELBV2Client(ctx)
 
-	var data dataSourceListenerRuleModel
+	var data listenerRuleDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -377,7 +377,8 @@ func (d *dataSourceListenerRule) Read(ctx context.Context, req datasource.ReadRe
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-type dataSourceListenerRuleModel struct {
+type listenerRuleDataSourceModel struct {
+	framework.WithRegionModel
 	Action      fwtypes.ListNestedObjectValueOf[actionModel]       `tfsdk:"action"`
 	ARN         fwtypes.ARN                                        `tfsdk:"arn"`
 	Condition   fwtypes.SetNestedObjectValueOf[ruleConditionModel] `tfsdk:"condition"`

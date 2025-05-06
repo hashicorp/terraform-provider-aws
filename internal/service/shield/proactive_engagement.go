@@ -33,7 +33,7 @@ func newProactiveEngagementResource(context.Context) (resource.ResourceWithConfi
 }
 
 type proactiveEngagementResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[proactiveEngagementResourceModel]
 	framework.WithImportByID
 }
 

@@ -42,7 +42,7 @@ func newVPCOriginResource(context.Context) (resource.ResourceWithConfigure, erro
 }
 
 type vpcOriginResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[vpcOriginResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }

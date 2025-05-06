@@ -27,19 +27,19 @@ import (
 )
 
 // @FrameworkDataSource("aws_synthetics_runtime_version", name="Runtime Version")
-func newDataSourceRuntimeVersion(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceRuntimeVersion{}, nil
+func newRuntimeVersionDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &runtimeVersionDataSource{}, nil
 }
 
 const (
 	DSNameRuntimeVersion = "Runtime Version Data Source"
 )
 
-type dataSourceRuntimeVersion struct {
-	framework.DataSourceWithConfigure
+type runtimeVersionDataSource struct {
+	framework.DataSourceWithModel[runtimeVersionDataSourceModel]
 }
 
-func (d *dataSourceRuntimeVersion) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *runtimeVersionDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"deprecation_date": schema.StringAttribute{
@@ -87,10 +87,10 @@ func (d *dataSourceRuntimeVersion) Schema(ctx context.Context, req datasource.Sc
 	}
 }
 
-func (d *dataSourceRuntimeVersion) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *runtimeVersionDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().SyntheticsClient(ctx)
 
-	var data dataSourceRuntimeVersionModel
+	var data runtimeVersionDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -145,7 +145,8 @@ func (d *dataSourceRuntimeVersion) Read(ctx context.Context, req datasource.Read
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-type dataSourceRuntimeVersionModel struct {
+type runtimeVersionDataSourceModel struct {
+	framework.WithRegionModel
 	DeprecationDate timetypes.RFC3339 `tfsdk:"deprecation_date"`
 	Description     types.String      `tfsdk:"description"`
 	ID              types.String      `tfsdk:"id"`

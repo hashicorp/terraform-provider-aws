@@ -19,22 +19,23 @@ import (
 )
 
 // @FrameworkDataSource("aws_redshift_producer_data_shares", name="Producer Data Shares")
-func newDataSourceProducerDataShares(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceProducerDataShares{}, nil
+func newProducerDataSharesDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &producerDataSharesDataSource{}, nil
 }
 
 const (
 	DSNameProducerDataShares = "Producer Data Shares Data Source"
 )
 
-type dataSourceProducerDataShares struct {
-	framework.DataSourceWithConfigure
+type producerDataSharesDataSource struct {
+	framework.DataSourceWithModel[producerDataSharesDataSourceModel]
 }
 
-func (d *dataSourceProducerDataShares) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *producerDataSharesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrID: framework.IDAttribute(),
+			"data_shares": framework.DataSourceComputedListOfObjectAttribute[dataSharesData](ctx),
+			names.AttrID:  framework.IDAttribute(),
 			"producer_arn": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
@@ -44,30 +45,12 @@ func (d *dataSourceProducerDataShares) Schema(ctx context.Context, req datasourc
 				Optional:   true,
 			},
 		},
-		Blocks: map[string]schema.Block{
-			"data_shares": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[dataSharesData](ctx),
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"data_share_arn": schema.StringAttribute{
-							Computed: true,
-						},
-						"managed_by": schema.StringAttribute{
-							Computed: true,
-						},
-						"producer_arn": schema.StringAttribute{
-							Computed: true,
-						},
-					},
-				},
-			},
-		},
 	}
 }
-func (d *dataSourceProducerDataShares) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *producerDataSharesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().RedshiftClient(ctx)
 
-	var data dataSourceProducerDataSharesData
+	var data producerDataSharesDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -107,7 +90,8 @@ func (d *dataSourceProducerDataShares) Read(ctx context.Context, req datasource.
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-type dataSourceProducerDataSharesData struct {
+type producerDataSharesDataSourceModel struct {
+	framework.WithRegionModel
 	DataShares  fwtypes.ListNestedObjectValueOf[dataSharesData]         `tfsdk:"data_shares"`
 	ID          types.String                                            `tfsdk:"id"`
 	Status      fwtypes.StringEnum[awstypes.DataShareStatusForProducer] `tfsdk:"status"`

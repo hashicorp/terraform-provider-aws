@@ -30,25 +30,26 @@ import (
 )
 
 // @FrameworkResource("aws_verifiedpermissions_schema", name="Schema")
-func newResourceSchema(context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceSchema{}, nil
+func newSchemaResource(context.Context) (resource.ResourceWithConfigure, error) {
+	return &schemaResource{}, nil
 }
 
 const (
 	ResNamePolicyStoreSchema = "Schema"
 )
 
-type resourceSchema struct {
-	framework.ResourceWithConfigure
+type schemaResource struct {
+	framework.ResourceWithModel[schemaResourceModel]
 	framework.WithImportByID
 }
 
-func (r *resourceSchema) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+func (r *schemaResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Version: 1,
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: framework.IDAttribute(),
 			"namespaces": schema.SetAttribute{
+				CustomType:  fwtypes.SetOfStringType,
 				ElementType: types.StringType,
 				Computed:    true,
 			},
@@ -79,7 +80,7 @@ func (r *resourceSchema) Schema(ctx context.Context, request resource.SchemaRequ
 	}
 }
 
-func (r *resourceSchema) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
+func (r *schemaResource) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
 	schemaV0 := schemaSchemaV0()
 
 	return map[int64]resource.StateUpgrader{
@@ -90,9 +91,9 @@ func (r *resourceSchema) UpgradeState(ctx context.Context) map[int64]resource.St
 	}
 }
 
-func (r *resourceSchema) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+func (r *schemaResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	conn := r.Meta().VerifiedPermissionsClient(ctx)
-	var plan resourceSchemaData
+	var plan schemaResourceModel
 
 	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
 	if response.Diagnostics.HasError() {
@@ -123,9 +124,9 @@ func (r *resourceSchema) Create(ctx context.Context, request resource.CreateRequ
 	response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceSchema) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+func (r *schemaResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	conn := r.Meta().VerifiedPermissionsClient(ctx)
-	var state resourceSchemaData
+	var state schemaResourceModel
 
 	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
 	if response.Diagnostics.HasError() {
@@ -163,9 +164,9 @@ func (r *resourceSchema) Read(ctx context.Context, request resource.ReadRequest,
 	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
 }
 
-func (r *resourceSchema) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+func (r *schemaResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	conn := r.Meta().VerifiedPermissionsClient(ctx)
-	var state, plan resourceSchemaData
+	var state, plan schemaResourceModel
 
 	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
 	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
@@ -216,9 +217,9 @@ func (r *resourceSchema) Update(ctx context.Context, request resource.UpdateRequ
 	response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceSchema) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+func (r *schemaResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	conn := r.Meta().VerifiedPermissionsClient(ctx)
-	var state resourceSchemaData
+	var state schemaResourceModel
 
 	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
 	if response.Diagnostics.HasError() {
@@ -246,10 +247,11 @@ func (r *resourceSchema) Delete(ctx context.Context, request resource.DeleteRequ
 	}
 }
 
-type resourceSchemaData struct {
+type schemaResourceModel struct {
+	framework.WithRegionModel
 	ID            types.String                                    `tfsdk:"id"`
 	Definition    fwtypes.ListNestedObjectValueOf[definitionData] `tfsdk:"definition"`
-	Namespaces    types.Set                                       `tfsdk:"namespaces"`
+	Namespaces    fwtypes.SetOfString                             `tfsdk:"namespaces"`
 	PolicyStoreID types.String                                    `tfsdk:"policy_store_id"`
 }
 

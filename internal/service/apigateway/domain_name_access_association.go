@@ -40,7 +40,7 @@ func newDomainNameAccessAssociationResource(context.Context) (resource.ResourceW
 }
 
 type domainNameAccessAssociationResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[domainNameAccessAssociationResourceModel]
 	framework.WithNoOpUpdate[domainNameAccessAssociationResourceModel]
 	framework.WithImportByID
 }
@@ -219,6 +219,7 @@ func findDomainNameAccessAssociations(ctx context.Context, conn *apigateway.Clie
 }
 
 type domainNameAccessAssociationResourceModel struct {
+	framework.WithRegionModel
 	AccessAssociationSource        types.String                                             `tfsdk:"access_association_source"`
 	AccessAssociationSourceType    fwtypes.StringEnum[awstypes.AccessAssociationSourceType] `tfsdk:"access_association_source_type"`
 	DomainNameAccessAssociationARN types.String                                             `tfsdk:"arn"`

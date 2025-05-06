@@ -7,7 +7,7 @@ package guardduty
 var (
 	ResourceFilter                = resourceFilter
 	ResourceInviteAccepter        = resourceInviteAccepter
-	ResourceMalwareProtectionPlan = newResourceMalwareProtectionPlan
+	ResourceMalwareProtectionPlan = newMalwareProtectionPlanResource
 	ResourcePublishingDestination = resourcePublishingDestination
 
 	FindDetectorByID                        = findDetectorByID

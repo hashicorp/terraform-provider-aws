@@ -22,19 +22,19 @@ import (
 )
 
 // @FrameworkDataSource("aws_opensearchserverless_lifecycle_policy", name="Lifecycle Policy")
-func newDataSourceLifecyclePolicy(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceLifecyclePolicy{}, nil
+func newLifecyclePolicyDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &lifecyclePolicyDataSource{}, nil
 }
 
 const (
 	DSNameLifecyclePolicy = "Lifecycle Policy Data Source"
 )
 
-type dataSourceLifecyclePolicy struct {
-	framework.DataSourceWithConfigure
+type lifecyclePolicyDataSource struct {
+	framework.DataSourceWithModel[lifecyclePolicyDataSourceModel]
 }
 
-func (d *dataSourceLifecyclePolicy) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *lifecyclePolicyDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrCreatedDate: schema.StringAttribute{
@@ -69,10 +69,10 @@ func (d *dataSourceLifecyclePolicy) Schema(_ context.Context, _ datasource.Schem
 	}
 }
 
-func (d *dataSourceLifecyclePolicy) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *lifecyclePolicyDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().OpenSearchServerlessClient(ctx)
 
-	var data dataSourceLifecyclePolicyData
+	var data lifecyclePolicyDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -102,7 +102,8 @@ func (d *dataSourceLifecyclePolicy) Read(ctx context.Context, req datasource.Rea
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-type dataSourceLifecyclePolicyData struct {
+type lifecyclePolicyDataSourceModel struct {
+	framework.WithRegionModel
 	CreatedDate      types.String `tfsdk:"created_date"`
 	Description      types.String `tfsdk:"description"`
 	ID               types.String `tfsdk:"id"`

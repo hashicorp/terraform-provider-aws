@@ -39,7 +39,7 @@ func newDefaultCreditSpecificationResource(_ context.Context) (resource.Resource
 }
 
 type defaultCreditSpecificationResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[defaultCreditSpecificationResourceModel]
 	framework.WithNoOpDelete
 	framework.WithTimeouts
 }
@@ -193,6 +193,7 @@ func (r *defaultCreditSpecificationResource) ImportState(ctx context.Context, re
 }
 
 type defaultCreditSpecificationResourceModel struct {
+	framework.WithRegionModel
 	CPUCredits     types.String                                                  `tfsdk:"cpu_credits"`
 	InstanceFamily fwtypes.StringEnum[awstypes.UnlimitedSupportedInstanceFamily] `tfsdk:"instance_family"`
 	Timeouts       timeouts.Value                                                `tfsdk:"timeouts"`

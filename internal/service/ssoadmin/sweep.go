@@ -53,7 +53,7 @@ func sweepAccountAssignments(region string) error {
 
 	// Need to Read the SSO Instance first; assumes the first instance returned
 	// is where the permission sets exist as AWS SSO currently supports only 1 instance
-	ds := DataSourceInstances()
+	ds := dataSourceInstances()
 	dsData := ds.Data(nil)
 
 	if err := sdk.ReadResource(ctx, ds, dsData, client); err != nil {
@@ -114,7 +114,7 @@ func sweepAccountAssignments(region string) error {
 					targetID := aws.ToString(a.AccountId)
 					targetType := awstypes.TargetTypeAwsAccount // only valid value currently accepted by API
 
-					r := ResourceAccountAssignment()
+					r := resourceAccountAssignment()
 					d := r.Data(nil)
 					d.SetId(fmt.Sprintf("%s,%s,%s,%s,%s,%s", principalID, principalType, targetID, targetType, permissionSetArn, instanceArn))
 
@@ -146,7 +146,7 @@ func sweepApplications(region string) error {
 
 	// Need to Read the SSO Instance first; assumes the first instance returned
 	// is where the permission sets exist as AWS SSO currently supports only 1 instance
-	ds := DataSourceInstances()
+	ds := dataSourceInstances()
 	dsData := ds.Data(nil)
 
 	if err := sdk.ReadResource(ctx, ds, dsData, client); err != nil {
@@ -179,7 +179,7 @@ func sweepApplications(region string) error {
 				applicationARN := aws.ToString(application.ApplicationArn)
 				log.Printf("[INFO] Deleting SSO Application: %s", applicationARN)
 
-				sweepResources = append(sweepResources, framework.NewSweepResource(newResourceApplication, client, framework.NewAttribute("application_arn", applicationARN)))
+				sweepResources = append(sweepResources, framework.NewSweepResource(newApplicationResource, client, framework.NewAttribute("application_arn", applicationARN)))
 			}
 		}
 	}
@@ -206,7 +206,7 @@ func sweepPermissionSets(region string) error {
 
 	// Need to Read the SSO Instance first; assumes the first instance returned
 	// is where the permission sets exist as AWS SSO currently supports only 1 instance
-	ds := DataSourceInstances()
+	ds := dataSourceInstances()
 	dsData := ds.Data(nil)
 
 	if err := sdk.ReadResource(ctx, ds, dsData, client); err != nil {
@@ -238,7 +238,7 @@ func sweepPermissionSets(region string) error {
 			for _, permissionSetArn := range page.PermissionSets {
 				log.Printf("[INFO] Deleting SSO Permission Set: %s", permissionSetArn)
 
-				r := ResourcePermissionSet()
+				r := resourcePermissionSet()
 				d := r.Data(nil)
 				d.SetId(fmt.Sprintf("%s,%s", permissionSetArn, instanceArn))
 

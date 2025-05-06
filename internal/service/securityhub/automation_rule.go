@@ -39,7 +39,7 @@ func newAutomationRuleResource(_ context.Context) (resource.ResourceWithConfigur
 }
 
 type automationRuleResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[automationRuleResourceModel]
 	framework.WithImportByID
 }
 
@@ -542,6 +542,7 @@ func findAutomationRules(ctx context.Context, conn *securityhub.Client, input *s
 }
 
 type automationRuleResourceModel struct {
+	framework.WithRegionModel
 	Actions     fwtypes.SetNestedObjectValueOf[automationRulesActionModel]          `tfsdk:"actions"`
 	Criteria    fwtypes.ListNestedObjectValueOf[automationRulesFindingFiltersModel] `tfsdk:"criteria"`
 	Description types.String                                                        `tfsdk:"description"`

@@ -26,9 +26,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
 	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
@@ -73,6 +77,7 @@ func TestAccS3Bucket_Basic_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrBucket, rName),
 					testAccCheckBucketDomainName(ctx, resourceName, "bucket_domain_name", rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrBucketPrefix, ""),
+					resource.TestCheckResourceAttr(resourceName, "bucket_region", region),
 					resource.TestCheckResourceAttr(resourceName, "bucket_regional_domain_name", testAccBucketRegionalDomainName(rName, region)),
 					resource.TestCheckResourceAttr(resourceName, "cors_rule.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, acctest.CtFalse),
@@ -88,7 +93,6 @@ func TestAccS3Bucket_Basic_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "object_lock_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPolicy, ""),
-					resource.TestCheckResourceAttr(resourceName, names.AttrRegion, region),
 					resource.TestCheckResourceAttr(resourceName, "replication_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "request_payer", "BucketOwner"),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.#", "1"),
@@ -445,6 +449,61 @@ func TestAccS3Bucket_Basic_requestPayer(t *testing.T) {
 					testAccCheckBucketExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "request_payer", string(types.PayerRequester)),
 				),
+			},
+		},
+	})
+}
+
+func TestAccS3Bucket_Basic_upgradeFromV5(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix("tf-test-bucket")
+	region := acctest.Region()
+	resourceName := "aws_s3_bucket.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
+		CheckDestroy: testAccCheckBucketDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.92.0",
+					},
+				},
+				Config: testAccBucketConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketExists(ctx, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoValue(resourceName, tfjsonpath.New("bucket_region")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(region)),
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccBucketConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketExists(ctx, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("bucket_region"), knownvalue.StringExact(region)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(region)),
+				},
 			},
 		},
 	})

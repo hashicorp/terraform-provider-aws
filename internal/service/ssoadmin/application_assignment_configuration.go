@@ -25,19 +25,19 @@ import (
 )
 
 // @FrameworkResource("aws_ssoadmin_application_assignment_configuration", name="Application Assignment Configuration")
-func newResourceApplicationAssignmentConfiguration(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceApplicationAssignmentConfiguration{}, nil
+func newApplicationAssignmentConfigurationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &applicationAssignmentConfigurationResource{}, nil
 }
 
 const (
 	ResNameApplicationAssignmentConfiguration = "Application Assignment Configuration"
 )
 
-type resourceApplicationAssignmentConfiguration struct {
-	framework.ResourceWithConfigure
+type applicationAssignmentConfigurationResource struct {
+	framework.ResourceWithModel[applicationAssignmentConfigurationResourceModel]
 }
 
-func (r *resourceApplicationAssignmentConfiguration) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *applicationAssignmentConfigurationResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"application_arn": schema.StringAttribute{
@@ -54,10 +54,10 @@ func (r *resourceApplicationAssignmentConfiguration) Schema(ctx context.Context,
 	}
 }
 
-func (r *resourceApplicationAssignmentConfiguration) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *applicationAssignmentConfigurationResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().SSOAdminClient(ctx)
 
-	var plan resourceApplicationAssignmentConfigurationData
+	var plan applicationAssignmentConfigurationResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -81,10 +81,10 @@ func (r *resourceApplicationAssignmentConfiguration) Create(ctx context.Context,
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceApplicationAssignmentConfiguration) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *applicationAssignmentConfigurationResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().SSOAdminClient(ctx)
 
-	var state resourceApplicationAssignmentConfigurationData
+	var state applicationAssignmentConfigurationResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -108,10 +108,10 @@ func (r *resourceApplicationAssignmentConfiguration) Read(ctx context.Context, r
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceApplicationAssignmentConfiguration) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *applicationAssignmentConfigurationResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().SSOAdminClient(ctx)
 
-	var plan, state resourceApplicationAssignmentConfigurationData
+	var plan, state applicationAssignmentConfigurationResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -139,10 +139,10 @@ func (r *resourceApplicationAssignmentConfiguration) Update(ctx context.Context,
 
 // Delete will place the application assignment configuration back into the default
 // state of requiring assignment.
-func (r *resourceApplicationAssignmentConfiguration) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *applicationAssignmentConfigurationResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().SSOAdminClient(ctx)
 
-	var state resourceApplicationAssignmentConfigurationData
+	var state applicationAssignmentConfigurationResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -166,7 +166,7 @@ func (r *resourceApplicationAssignmentConfiguration) Delete(ctx context.Context,
 	}
 }
 
-func (r *resourceApplicationAssignmentConfiguration) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *applicationAssignmentConfigurationResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	// Set both id and application_arn on import to avoid immediate diff and planned replacement
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 	resource.ImportStatePassthroughID(ctx, path.Root("application_arn"), req, resp)
@@ -192,7 +192,8 @@ func findApplicationAssignmentConfigurationByID(ctx context.Context, conn *ssoad
 	return out, nil
 }
 
-type resourceApplicationAssignmentConfigurationData struct {
+type applicationAssignmentConfigurationResourceModel struct {
+	framework.WithRegionModel
 	ApplicationARN     types.String `tfsdk:"application_arn"`
 	AssignmentRequired types.Bool   `tfsdk:"assignment_required"`
 	ID                 types.String `tfsdk:"id"`

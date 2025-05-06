@@ -25,19 +25,19 @@ import (
 )
 
 // @FrameworkResource("aws_s3tables_table_bucket_policy", name="Table Bucket Policy")
-func newResourceTableBucketPolicy(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceTableBucketPolicy{}, nil
+func newTableBucketPolicyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &tableBucketPolicyResource{}, nil
 }
 
 const (
 	ResNameTableBucketPolicy = "Table Bucket Policy"
 )
 
-type resourceTableBucketPolicy struct {
-	framework.ResourceWithConfigure
+type tableBucketPolicyResource struct {
+	framework.ResourceWithModel[tableBucketPolicyResourceModel]
 }
 
-func (r *resourceTableBucketPolicy) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *tableBucketPolicyResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"resource_policy": schema.StringAttribute{
@@ -55,10 +55,10 @@ func (r *resourceTableBucketPolicy) Schema(ctx context.Context, req resource.Sch
 	}
 }
 
-func (r *resourceTableBucketPolicy) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *tableBucketPolicyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().S3TablesClient(ctx)
 
-	var plan resourceTableBucketPolicyModel
+	var plan tableBucketPolicyResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -96,10 +96,10 @@ func (r *resourceTableBucketPolicy) Create(ctx context.Context, req resource.Cre
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceTableBucketPolicy) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *tableBucketPolicyResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().S3TablesClient(ctx)
 
-	var state resourceTableBucketPolicyModel
+	var state tableBucketPolicyResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -126,10 +126,10 @@ func (r *resourceTableBucketPolicy) Read(ctx context.Context, req resource.ReadR
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceTableBucketPolicy) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *tableBucketPolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().S3TablesClient(ctx)
 
-	var plan resourceTableBucketPolicyModel
+	var plan tableBucketPolicyResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -167,10 +167,10 @@ func (r *resourceTableBucketPolicy) Update(ctx context.Context, req resource.Upd
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceTableBucketPolicy) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *tableBucketPolicyResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().S3TablesClient(ctx)
 
-	var state resourceTableBucketPolicyModel
+	var state tableBucketPolicyResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -194,7 +194,7 @@ func (r *resourceTableBucketPolicy) Delete(ctx context.Context, req resource.Del
 	}
 }
 
-func (r *resourceTableBucketPolicy) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *tableBucketPolicyResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("table_bucket_arn"), req, resp)
 }
 
@@ -218,7 +218,8 @@ func findTableBucketPolicy(ctx context.Context, conn *s3tables.Client, tableBuck
 	return out, nil
 }
 
-type resourceTableBucketPolicyModel struct {
+type tableBucketPolicyResourceModel struct {
+	framework.WithRegionModel
 	ResourcePolicy fwtypes.IAMPolicy `tfsdk:"resource_policy"`
 	TableBucketARN fwtypes.ARN       `tfsdk:"table_bucket_arn"`
 }

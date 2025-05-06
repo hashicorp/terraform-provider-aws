@@ -19,19 +19,19 @@ import (
 )
 
 // @FrameworkDataSource("aws_ssoadmin_principal_application_assignments", name="Principal Application Assignments")
-func newDataSourcePrincipalApplicationAssignments(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourcePrincipalApplicationAssignments{}, nil
+func newPrincipalApplicationAssignmentsDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &principalApplicationAssignmentsDataSource{}, nil
 }
 
 const (
 	DSNamePrincipalApplicationAssignments = "Principal Application Assignments Data Source"
 )
 
-type dataSourcePrincipalApplicationAssignments struct {
-	framework.DataSourceWithConfigure
+type principalApplicationAssignmentsDataSource struct {
+	framework.DataSourceWithModel[principalApplicationAssignmentsDataSourceModel]
 }
 
-func (d *dataSourcePrincipalApplicationAssignments) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *principalApplicationAssignmentsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: framework.IDAttribute(),
@@ -49,7 +49,7 @@ func (d *dataSourcePrincipalApplicationAssignments) Schema(ctx context.Context, 
 		},
 		Blocks: map[string]schema.Block{
 			"application_assignments": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[applicationAssignmentData](ctx),
+				CustomType: fwtypes.NewListNestedObjectTypeOf[applicationAssignmentModel](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"application_arn": schema.StringAttribute{
@@ -68,10 +68,10 @@ func (d *dataSourcePrincipalApplicationAssignments) Schema(ctx context.Context, 
 		},
 	}
 }
-func (d *dataSourcePrincipalApplicationAssignments) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *principalApplicationAssignmentsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().SSOAdminClient(ctx)
 
-	var data dataSourcePrincipalApplicationAssignmentsData
+	var data principalApplicationAssignmentsDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -107,10 +107,11 @@ func (d *dataSourcePrincipalApplicationAssignments) Read(ctx context.Context, re
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-type dataSourcePrincipalApplicationAssignmentsData struct {
-	InstanceARN            fwtypes.ARN                                                `tfsdk:"instance_arn"`
-	ApplicationAssignments fwtypes.ListNestedObjectValueOf[applicationAssignmentData] `tfsdk:"application_assignments"`
-	ID                     types.String                                               `tfsdk:"id"`
-	PrincipalID            types.String                                               `tfsdk:"principal_id"`
-	PrincipalType          fwtypes.StringEnum[awstypes.PrincipalType]                 `tfsdk:"principal_type"`
+type principalApplicationAssignmentsDataSourceModel struct {
+	framework.WithRegionModel
+	InstanceARN            fwtypes.ARN                                                 `tfsdk:"instance_arn"`
+	ApplicationAssignments fwtypes.ListNestedObjectValueOf[applicationAssignmentModel] `tfsdk:"application_assignments"`
+	ID                     types.String                                                `tfsdk:"id"`
+	PrincipalID            types.String                                                `tfsdk:"principal_id"`
+	PrincipalType          fwtypes.StringEnum[awstypes.PrincipalType]                  `tfsdk:"principal_type"`
 }

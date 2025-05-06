@@ -8,118 +8,185 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3control"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
-	return []*types.ServicePackageFrameworkDataSource{}
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
+	return []*inttypes.ServicePackageFrameworkDataSource{}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
+	return []*inttypes.ServicePackageFrameworkResource{
 		{
 			Factory:  newAccessGrantResource,
 			TypeName: "aws_s3control_access_grant",
 			Name:     "Access Grant",
-			Tags:     unique.Make(types.ServicePackageResourceTags{}),
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
+			}),
 		},
 		{
 			Factory:  newAccessGrantsInstanceResource,
 			TypeName: "aws_s3control_access_grants_instance",
 			Name:     "Access Grants Instance",
-			Tags:     unique.Make(types.ServicePackageResourceTags{}),
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
+			}),
 		},
 		{
 			Factory:  newAccessGrantsInstanceResourcePolicyResource,
 			TypeName: "aws_s3control_access_grants_instance_resource_policy",
 			Name:     "Access Grants Instance Resource Policy",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
+			}),
 		},
 		{
 			Factory:  newAccessGrantsLocationResource,
 			TypeName: "aws_s3control_access_grants_location",
 			Name:     "Access Grants Location",
-			Tags:     unique.Make(types.ServicePackageResourceTags{}),
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
+			}),
 		},
 	}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
-	return []*types.ServicePackageSDKDataSource{
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
+	return []*inttypes.ServicePackageSDKDataSource{
 		{
 			Factory:  dataSourceAccountPublicAccessBlock,
 			TypeName: "aws_s3_account_public_access_block",
 			Name:     "Account Public Access Block",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			}),
 		},
 		{
 			Factory:  dataSourceMultiRegionAccessPoint,
 			TypeName: "aws_s3control_multi_region_access_point",
 			Name:     "Multi-Region Access Point",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
+			}),
 		},
 	}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
-	return []*types.ServicePackageSDKResource{
+func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePackageSDKResource {
+	return []*inttypes.ServicePackageSDKResource{
 		{
 			Factory:  resourceAccessPoint,
 			TypeName: "aws_s3_access_point",
 			Name:     "Access Point",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
+			}),
 		},
 		{
 			Factory:  resourceAccountPublicAccessBlock,
 			TypeName: "aws_s3_account_public_access_block",
 			Name:     "Account Public Access Block",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled: false,
+			}),
 		},
 		{
 			Factory:  resourceAccessPointPolicy,
 			TypeName: "aws_s3control_access_point_policy",
 			Name:     "Access Point Policy",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
+			}),
 		},
 		{
 			Factory:  resourceBucket,
 			TypeName: "aws_s3control_bucket",
 			Name:     "Bucket",
-			Tags:     unique.Make(types.ServicePackageResourceTags{}),
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
+			}),
 		},
 		{
 			Factory:  resourceBucketLifecycleConfiguration,
 			TypeName: "aws_s3control_bucket_lifecycle_configuration",
 			Name:     "Bucket Lifecycle Configuration",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
+			}),
 		},
 		{
 			Factory:  resourceBucketPolicy,
 			TypeName: "aws_s3control_bucket_policy",
 			Name:     "Bucket Policy",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
+			}),
 		},
 		{
 			Factory:  resourceMultiRegionAccessPoint,
 			TypeName: "aws_s3control_multi_region_access_point",
 			Name:     "Multi-Region Access Point",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
+			}),
 		},
 		{
 			Factory:  resourceMultiRegionAccessPointPolicy,
 			TypeName: "aws_s3control_multi_region_access_point_policy",
 			Name:     "Multi-Region Access Point Policy",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
+			}),
 		},
 		{
 			Factory:  resourceObjectLambdaAccessPoint,
 			TypeName: "aws_s3control_object_lambda_access_point",
 			Name:     "Object Lambda Access Point",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
+			}),
 		},
 		{
 			Factory:  resourceObjectLambdaAccessPointPolicy,
 			TypeName: "aws_s3control_object_lambda_access_point_policy",
 			Name:     "Object Lambda Access Point Policy",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
+			}),
 		},
 		{
 			Factory:  resourceStorageLensConfiguration,
 			TypeName: "aws_s3control_storage_lens_configuration",
 			Name:     "Storage Lens Configuration",
-			Tags:     unique.Make(types.ServicePackageResourceTags{}),
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
+			}),
 		},
 	}
 }
@@ -134,6 +201,16 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 	optFns := []func(*s3control.Options){
 		s3control.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+		func(o *s3control.Options) {
+			if region := config[names.AttrRegion].(string); o.Region != region {
+				tflog.Info(ctx, "overriding provider-configured AWS API region", map[string]any{
+					"service":         p.ServicePackageName(),
+					"original_region": o.Region,
+					"override_region": region,
+				})
+				o.Region = region
+			}
+		},
 		withExtraOptions(ctx, p, config),
 	}
 

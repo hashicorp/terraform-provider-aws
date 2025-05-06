@@ -5,32 +5,28 @@ package ssoadmin
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkDataSource("aws_ssoadmin_application", name="Application")
-func newDataSourceApplication(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceApplication{}, nil
+func newApplicationDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &applicationDataSource{}, nil
 }
 
-const (
-	DSNameApplication = "Application Data Source"
-)
-
-type dataSourceApplication struct {
-	framework.DataSourceWithConfigure
+type applicationDataSource struct {
+	framework.DataSourceWithModel[applicationDataSourceModel]
 }
 
-func (d *dataSourceApplication) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (d *applicationDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"application_account": schema.StringAttribute{
 				Computed: true,
@@ -54,80 +50,54 @@ func (d *dataSourceApplication) Schema(ctx context.Context, req datasource.Schem
 			names.AttrName: schema.StringAttribute{
 				Computed: true,
 			},
+			"portal_options": framework.DataSourceComputedListOfObjectAttribute[portalOptionsModel](ctx),
 			names.AttrStatus: schema.StringAttribute{
 				Computed: true,
 			},
 		},
-		Blocks: map[string]schema.Block{
-			"portal_options": schema.ListNestedBlock{
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"visibility": schema.StringAttribute{
-							Computed: true,
-						},
-					},
-					Blocks: map[string]schema.Block{
-						"sign_in_options": schema.ListNestedBlock{
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									"origin": schema.StringAttribute{
-										Computed: true,
-									},
-									"application_url": schema.StringAttribute{
-										Computed: true,
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		},
 	}
 }
 
-func (d *dataSourceApplication) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *applicationDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+	var data applicationDataSourceModel
+	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := d.Meta().SSOAdminClient(ctx)
 
-	var data dataSourceApplicationData
-	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	output, err := findApplicationByID(ctx, conn, data.ApplicationARN.ValueString())
 
-	out, err := findApplicationByID(ctx, conn, data.ApplicationARN.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.SSOAdmin, create.ErrActionReading, DSNameApplication, data.Name.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("reading SSO Application (%s)", data.ApplicationARN.ValueString()), err.Error())
+
 		return
 	}
 
-	data.ApplicationAccount = flex.StringToFramework(ctx, out.ApplicationAccount)
-	data.ApplicationARN = flex.StringToFrameworkARN(ctx, out.ApplicationArn)
-	data.ApplicationProviderARN = flex.StringToFrameworkARN(ctx, out.ApplicationProviderArn)
-	data.Description = flex.StringToFramework(ctx, out.Description)
-	data.ID = flex.StringToFramework(ctx, out.ApplicationArn)
-	data.InstanceARN = flex.StringToFrameworkARN(ctx, out.InstanceArn)
-	data.Name = flex.StringToFramework(ctx, out.Name)
-	data.Status = flex.StringValueToFramework(ctx, out.Status)
+	// Skip writing to state if only the visibilty attribute is returned
+	// to avoid a nested computed attribute causing a diff.
+	if output.PortalOptions != nil && output.PortalOptions.SignInOptions == nil {
+		output.PortalOptions = nil
+	}
 
-	portalOptions, diags := flattenPortalOptions(ctx, out.PortalOptions)
-	resp.Diagnostics.Append(diags...)
-	data.PortalOptions = portalOptions
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-type dataSourceApplicationData struct {
-	ApplicationAccount     types.String `tfsdk:"application_account"`
-	ApplicationARN         fwtypes.ARN  `tfsdk:"application_arn"`
-	ApplicationProviderARN fwtypes.ARN  `tfsdk:"application_provider_arn"`
-	Description            types.String `tfsdk:"description"`
-	ID                     types.String `tfsdk:"id"`
-	InstanceARN            fwtypes.ARN  `tfsdk:"instance_arn"`
-	Name                   types.String `tfsdk:"name"`
-	PortalOptions          types.List   `tfsdk:"portal_options"`
-	Status                 types.String `tfsdk:"status"`
+type applicationDataSourceModel struct {
+	framework.WithRegionModel
+	ApplicationAccount     types.String                                        `tfsdk:"application_account"`
+	ApplicationARN         fwtypes.ARN                                         `tfsdk:"application_arn"`
+	ApplicationProviderARN fwtypes.ARN                                         `tfsdk:"application_provider_arn"`
+	Description            types.String                                        `tfsdk:"description"`
+	ID                     types.String                                        `tfsdk:"id"`
+	InstanceARN            fwtypes.ARN                                         `tfsdk:"instance_arn"`
+	Name                   types.String                                        `tfsdk:"name"`
+	PortalOptions          fwtypes.ListNestedObjectValueOf[portalOptionsModel] `tfsdk:"portal_options"`
+	Status                 types.String                                        `tfsdk:"status"`
 }

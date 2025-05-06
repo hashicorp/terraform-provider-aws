@@ -225,7 +225,7 @@ func upgradeStreamProcessorStateV0toV1(ctx context.Context, request resource.Upg
 		return
 	}
 
-	streamProcessorDataV1 := resourceStreamProcessorDataModel{
+	streamProcessorDataV1 := streamProcessorResourceModel{
 		ARN:                   streamProcessorDataV0.ARN,
 		DataSharingPreference: streamProcessorDataV0.DataSharingPreference,
 		Input:                 streamProcessorDataV0.Input,

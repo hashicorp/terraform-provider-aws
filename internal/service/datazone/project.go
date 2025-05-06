@@ -38,10 +38,12 @@ import (
 )
 
 // @FrameworkResource("aws_datazone_project", name="Project")
-func newResourceProject(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceProject{}
+func newProjectResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &projectResource{}
+
 	r.SetDefaultCreateTimeout(10 * time.Minute)
 	r.SetDefaultDeleteTimeout(10 * time.Minute)
+
 	return r, nil
 }
 
@@ -49,12 +51,12 @@ const (
 	ResNameProject = "Project"
 )
 
-type resourceProject struct {
-	framework.ResourceWithConfigure
+type projectResource struct {
+	framework.ResourceWithModel[projectResourceModel]
 	framework.WithTimeouts
 }
 
-func (r *resourceProject) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *projectResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrDescription: schema.StringAttribute{
@@ -136,8 +138,8 @@ func (r *resourceProject) Schema(ctx context.Context, req resource.SchemaRequest
 	}
 }
 
-func (r *resourceProject) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan resourceProjectData
+func (r *projectResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var plan projectResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -197,9 +199,9 @@ func (r *resourceProject) Create(ctx context.Context, req resource.CreateRequest
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceProject) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *projectResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
-	var state resourceProjectData
+	var state projectResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -226,10 +228,10 @@ func (r *resourceProject) Read(ctx context.Context, req resource.ReadRequest, re
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceProject) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *projectResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
 
-	var plan, state resourceProjectData
+	var plan, state projectResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -268,10 +270,10 @@ func (r *resourceProject) Update(ctx context.Context, req resource.UpdateRequest
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceProject) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *projectResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
 
-	var state resourceProjectData
+	var state projectResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -309,7 +311,7 @@ func (r *resourceProject) Delete(ctx context.Context, req resource.DeleteRequest
 	}
 }
 
-func (r *resourceProject) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *projectResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	parts := strings.Split(req.ID, ":")
 
 	if len(parts) != 2 {
@@ -393,7 +395,8 @@ func findProjectByID(ctx context.Context, conn *datazone.Client, domain string, 
 	return out, nil
 }
 
-type resourceProjectData struct {
+type projectResourceModel struct {
+	framework.WithRegionModel
 	Description       types.String                                            `tfsdk:"description"`
 	DomainIdentifier  types.String                                            `tfsdk:"domain_identifier"`
 	Name              types.String                                            `tfsdk:"name"`

@@ -33,19 +33,19 @@ import (
 )
 
 // @FrameworkResource("aws_opensearchserverless_security_config", name="Security Config")
-func newResourceSecurityConfig(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceSecurityConfig{}, nil
+func newSecurityConfigResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &securityConfigResource{}, nil
 }
 
 const (
 	ResNameSecurityConfig = "Security Config"
 )
 
-type resourceSecurityConfig struct {
-	framework.ResourceWithConfigure
+type securityConfigResource struct {
+	framework.ResourceWithModel[securityConfigResourceModel]
 }
 
-func (r *resourceSecurityConfig) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *securityConfigResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Version: 1,
 		Attributes: map[string]schema.Attribute{
@@ -116,7 +116,7 @@ func (r *resourceSecurityConfig) Schema(ctx context.Context, req resource.Schema
 	}
 }
 
-func (r *resourceSecurityConfig) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
+func (r *securityConfigResource) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
 	schemaV0 := securityConfigSchemaV0()
 
 	return map[int64]resource.StateUpgrader{
@@ -127,9 +127,9 @@ func (r *resourceSecurityConfig) UpgradeState(ctx context.Context) map[int64]res
 	}
 }
 
-func (r *resourceSecurityConfig) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *securityConfigResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().OpenSearchServerlessClient(ctx)
-	var plan resourceSecurityConfigData
+	var plan securityConfigResourceModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
@@ -168,10 +168,10 @@ func (r *resourceSecurityConfig) Create(ctx context.Context, req resource.Create
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceSecurityConfig) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *securityConfigResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().OpenSearchServerlessClient(ctx)
 
-	var state resourceSecurityConfigData
+	var state securityConfigResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -200,10 +200,10 @@ func (r *resourceSecurityConfig) Read(ctx context.Context, req resource.ReadRequ
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceSecurityConfig) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *securityConfigResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().OpenSearchServerlessClient(ctx)
 
-	var plan, state resourceSecurityConfigData
+	var plan, state securityConfigResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
@@ -240,10 +240,10 @@ func (r *resourceSecurityConfig) Update(ctx context.Context, req resource.Update
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceSecurityConfig) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *securityConfigResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().OpenSearchServerlessClient(ctx)
 
-	var state resourceSecurityConfigData
+	var state securityConfigResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -265,7 +265,7 @@ func (r *resourceSecurityConfig) Delete(ctx context.Context, req resource.Delete
 	}
 }
 
-func (r *resourceSecurityConfig) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *securityConfigResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	parts := strings.Split(req.ID, idSeparator)
 	if len(parts) != 3 || parts[0] == "" || parts[1] == "" || parts[2] == "" {
 		err := fmt.Errorf("unexpected format for ID (%[1]s), expected saml/account-id/name", req.ID)
@@ -277,7 +277,8 @@ func (r *resourceSecurityConfig) ImportState(ctx context.Context, req resource.I
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrName), parts[2])...)
 }
 
-type resourceSecurityConfigData struct {
+type securityConfigResourceModel struct {
+	framework.WithRegionModel
 	ID            types.String                                     `tfsdk:"id"`
 	ConfigVersion types.String                                     `tfsdk:"config_version"`
 	Description   types.String                                     `tfsdk:"description"`

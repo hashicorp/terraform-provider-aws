@@ -50,7 +50,7 @@ func sweepNamespaces(ctx context.Context, client *conns.AWSClient) ([]sweep.Swee
 				}
 
 				for _, namespace := range page.Namespaces {
-					sweepResources = append(sweepResources, framework.NewSweepResource(newResourceNamespace, client,
+					sweepResources = append(sweepResources, framework.NewSweepResource(newNamespaceResource, client,
 						framework.NewAttribute("table_bucket_arn", aws.ToString(bucket.Arn)),
 						framework.NewAttribute(names.AttrNamespace, namespace.Namespace[0]),
 					))
@@ -96,7 +96,7 @@ func sweepTables(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepabl
 						}
 
 						for _, table := range page.Tables {
-							sweepResources = append(sweepResources, framework.NewSweepResource(newResourceTable, client,
+							sweepResources = append(sweepResources, framework.NewSweepResource(newTableResource, client,
 								framework.NewAttribute("table_bucket_arn", aws.ToString(bucket.Arn)),
 								framework.NewAttribute(names.AttrNamespace, namespace.Namespace[0]),
 								framework.NewAttribute(names.AttrName, aws.ToString(table.Name)),
@@ -124,7 +124,7 @@ func sweepTableBuckets(ctx context.Context, client *conns.AWSClient) ([]sweep.Sw
 		}
 
 		for _, bucket := range page.TableBuckets {
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceTableBucket, client,
+			sweepResources = append(sweepResources, framework.NewSweepResource(newTableBucketResource, client,
 				framework.NewAttribute(names.AttrARN, aws.ToString(bucket.Arn)),
 			))
 		}

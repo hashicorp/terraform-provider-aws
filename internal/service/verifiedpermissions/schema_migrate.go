@@ -44,10 +44,10 @@ func schemaSchemaV0() schema.Schema {
 }
 
 type resourceSchemaDataV0 struct {
-	ID            types.String `tfsdk:"id"`
-	Definition    types.Object `tfsdk:"definition"`
-	Namespaces    types.Set    `tfsdk:"namespaces"`
-	PolicyStoreID types.String `tfsdk:"policy_store_id"`
+	ID            types.String        `tfsdk:"id"`
+	Definition    types.Object        `tfsdk:"definition"`
+	Namespaces    fwtypes.SetOfString `tfsdk:"namespaces"`
+	PolicyStoreID types.String        `tfsdk:"policy_store_id"`
 }
 
 func upgradeSchemaStateFromV0(ctx context.Context, request resource.UpgradeStateRequest, response *resource.UpgradeStateResponse) {
@@ -57,7 +57,7 @@ func upgradeSchemaStateFromV0(ctx context.Context, request resource.UpgradeState
 		return
 	}
 
-	schemaDataV1 := resourceSchemaData{
+	schemaDataV1 := schemaResourceModel{
 		ID:            schemaDataV0.ID,
 		Definition:    upgradeDefinitionStateFromV0(ctx, schemaDataV0.Definition, &response.Diagnostics),
 		Namespaces:    schemaDataV0.Namespaces,

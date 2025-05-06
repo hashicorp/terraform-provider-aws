@@ -18,53 +18,31 @@ import (
 )
 
 // @FrameworkDataSource("aws_synthetics_runtime_versions", name="Runtime Versions")
-func newDataSourceRuntimeVersions(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceRuntimeVersions{}, nil
+func newRuntimeVersionsDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &runtimeVersionsDataSource{}, nil
 }
 
 const (
 	DSNameRuntimeVersions = "Runtime Versions Data Source"
 )
 
-type dataSourceRuntimeVersions struct {
-	framework.DataSourceWithConfigure
+type runtimeVersionsDataSource struct {
+	framework.DataSourceWithModel[runtimeVersionsDataSourceModel]
 }
 
-func (d *dataSourceRuntimeVersions) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *runtimeVersionsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrID: framework.IDAttribute(),
-		},
-		Blocks: map[string]schema.Block{
-			"runtime_versions": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[runtimeVersionModel](ctx),
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"deprecation_date": schema.StringAttribute{
-							CustomType: timetypes.RFC3339Type{},
-							Computed:   true,
-						},
-						names.AttrDescription: schema.StringAttribute{
-							Computed: true,
-						},
-						"release_date": schema.StringAttribute{
-							CustomType: timetypes.RFC3339Type{},
-							Computed:   true,
-						},
-						"version_name": schema.StringAttribute{
-							Computed: true,
-						},
-					},
-				},
-			},
+			names.AttrID:       framework.IDAttribute(),
+			"runtime_versions": framework.DataSourceComputedListOfObjectAttribute[runtimeVersionModel](ctx),
 		},
 	}
 }
 
-func (d *dataSourceRuntimeVersions) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *runtimeVersionsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().SyntheticsClient(ctx)
 
-	var data dataSourceRuntimeVersionsModel
+	var data runtimeVersionsDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -84,7 +62,8 @@ func (d *dataSourceRuntimeVersions) Read(ctx context.Context, req datasource.Rea
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-type dataSourceRuntimeVersionsModel struct {
+type runtimeVersionsDataSourceModel struct {
+	framework.WithRegionModel
 	ID              types.String                                         `tfsdk:"id"`
 	RuntimeVersions fwtypes.ListNestedObjectValueOf[runtimeVersionModel] `tfsdk:"runtime_versions"`
 }

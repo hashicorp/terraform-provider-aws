@@ -43,7 +43,7 @@ func newRecommendationPreferencesResource(context.Context) (resource.ResourceWit
 }
 
 type recommendationPreferencesResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[recommendationPreferencesResourceModel]
 	framework.WithImportByID
 }
 
@@ -408,6 +408,7 @@ func findRecommendationPreferenceses(ctx context.Context, conn *computeoptimizer
 }
 
 type recommendationPreferencesResourceModel struct {
+	framework.WithRegionModel
 	EnhancedInfrastructureMetrics fwtypes.StringEnum[awstypes.EnhancedInfrastructureMetrics]      `tfsdk:"enhanced_infrastructure_metrics"`
 	ExternalMetricsPreference     fwtypes.ListNestedObjectValueOf[externalMetricsPreferenceModel] `tfsdk:"external_metrics_preference"`
 	ID                            types.String                                                    `tfsdk:"id"`

@@ -7,7 +7,7 @@ package fms
 var (
 	ResourceAdminAccount = resourceAdminAccount
 	ResourcePolicy       = resourcePolicy
-	ResourceSet          = newResourceResourceSet
+	ResourceSet          = newResourceSetResource
 
 	FindAdminAccount          = findAdminAccount
 	FindPolicyByID            = findPolicyByID

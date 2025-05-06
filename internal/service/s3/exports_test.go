@@ -11,7 +11,7 @@ var (
 	ResourceBucketCorsConfiguration                 = resourceBucketCorsConfiguration
 	ResourceBucketIntelligentTieringConfiguration   = resourceBucketIntelligentTieringConfiguration
 	ResourceBucketInventory                         = resourceBucketInventory
-	ResourceBucketLifecycleConfiguration            = newResourceBucketLifecycleConfiguration
+	ResourceBucketLifecycleConfiguration            = newBucketLifecycleConfigurationResource
 	ResourceBucketLogging                           = resourceBucketLogging
 	ResourceBucketMetric                            = resourceBucketMetric
 	ResourceBucketNotification                      = resourceBucketNotification

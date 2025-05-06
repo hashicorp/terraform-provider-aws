@@ -54,7 +54,7 @@ func sweepClusters(region string) error {
 			arn := aws.ToString(cluster.ClusterArn)
 
 			log.Printf("[INFO] Deleting DocDB Elastic Cluster: %s", aws.ToString(cluster.ClusterName))
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceCluster, client,
+			sweepResources = append(sweepResources, framework.NewSweepResource(newClusterResource, client,
 				framework.NewAttribute(names.AttrID, arn),
 			))
 		}

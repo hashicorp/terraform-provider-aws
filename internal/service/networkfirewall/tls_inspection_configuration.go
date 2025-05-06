@@ -53,7 +53,7 @@ func newTLSInspectionConfigurationResource(_ context.Context) (resource.Resource
 }
 
 type tlsInspectionConfigurationResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[tlsInspectionConfigurationResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }
@@ -602,6 +602,7 @@ func flattenDescribeTLSInspectionConfigurationOutput(ctx context.Context, data *
 }
 
 type tlsInspectionConfigurationResourceModel struct {
+	framework.WithRegionModel
 	CertificateAuthority           fwtypes.ListNestedObjectValueOf[tlsCertificateDataModel]         `tfsdk:"certificate_authority"`
 	Certificates                   fwtypes.ListNestedObjectValueOf[tlsCertificateDataModel]         `tfsdk:"certificates"`
 	Description                    types.String                                                     `tfsdk:"description"`

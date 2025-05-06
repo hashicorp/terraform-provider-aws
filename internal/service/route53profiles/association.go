@@ -35,8 +35,8 @@ import (
 
 // @FrameworkResource("aws_route53profiles_association", name="Association")
 // @Tags(identifierAttribute="arn")
-func newResourceAssociation(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceAssociation{}
+func newAssociationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &associationResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(5 * time.Minute) // tags only
@@ -54,14 +54,14 @@ var (
 	resourceAssociationNameRegex = regexache.MustCompile("(^[^0-9][a-zA-Z0-9\\-_' ']+$)")
 )
 
-type resourceAssociation struct {
-	framework.ResourceWithConfigure
+type associationResource struct {
+	framework.ResourceWithModel[associationResourceModel]
 	framework.WithNoOpUpdate[associationResourceModel]
 	framework.WithTimeouts
 	framework.WithImportByID
 }
 
-func (r *resourceAssociation) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *associationResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
@@ -120,7 +120,7 @@ func (r *resourceAssociation) Schema(ctx context.Context, req resource.SchemaReq
 	}
 }
 
-func (r *resourceAssociation) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *associationResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().Route53ProfilesClient(ctx)
 
 	var data associationResourceModel
@@ -173,7 +173,7 @@ func (r *resourceAssociation) Create(ctx context.Context, req resource.CreateReq
 	resp.Diagnostics.Append(resp.State.Set(ctx, data)...)
 }
 
-func (r *resourceAssociation) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *associationResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().Route53ProfilesClient(ctx)
 
 	var state associationResourceModel
@@ -206,7 +206,7 @@ func (r *resourceAssociation) Read(ctx context.Context, req resource.ReadRequest
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceAssociation) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *associationResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().Route53ProfilesClient(ctx)
 
 	var state associationResourceModel
@@ -317,6 +317,7 @@ func findAssociationByID(ctx context.Context, conn *route53profiles.Client, id s
 }
 
 type associationResourceModel struct {
+	framework.WithRegionModel
 	ARN           types.String                               `tfsdk:"arn"`
 	ID            types.String                               `tfsdk:"id"`
 	ResourceID    types.String                               `tfsdk:"resource_id"`

@@ -53,7 +53,7 @@ func newScraperResource(_ context.Context) (resource.ResourceWithConfigure, erro
 }
 
 type scraperResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[scraperResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }
@@ -374,6 +374,7 @@ func (r *scraperResource) Delete(ctx context.Context, request resource.DeleteReq
 }
 
 type scraperResourceModel struct {
+	framework.WithRegionModel
 	Alias               types.String                                            `tfsdk:"alias"`
 	ARN                 types.String                                            `tfsdk:"arn"`
 	Destination         fwtypes.ListNestedObjectValueOf[destinationModel]       `tfsdk:"destination"`

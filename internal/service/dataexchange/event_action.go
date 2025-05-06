@@ -32,20 +32,20 @@ import (
 
 // @FrameworkResource("aws_dataexchange_event_action", name="Event Action")
 func newEventActionResource(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceEventAction{}, nil
+	return &eventActionResource{}, nil
 }
 
 const (
 	ResNameEventAction = "Event Action"
 )
 
-type resourceEventAction struct {
-	framework.ResourceWithConfigure
+type eventActionResource struct {
+	framework.ResourceWithModel[eventActionResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }
 
-func (r *resourceEventAction) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *eventActionResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
@@ -157,10 +157,10 @@ func (r *resourceEventAction) Schema(ctx context.Context, req resource.SchemaReq
 	}
 }
 
-func (r *resourceEventAction) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *eventActionResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().DataExchangeClient(ctx)
 
-	var plan resourceEventActionModel
+	var plan eventActionResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -196,10 +196,10 @@ func (r *resourceEventAction) Create(ctx context.Context, req resource.CreateReq
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceEventAction) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *eventActionResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().DataExchangeClient(ctx)
 
-	var state resourceEventActionModel
+	var state eventActionResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -226,10 +226,10 @@ func (r *resourceEventAction) Read(ctx context.Context, req resource.ReadRequest
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceEventAction) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *eventActionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().DataExchangeClient(ctx)
 
-	var plan, state resourceEventActionModel
+	var plan, state eventActionResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -266,10 +266,10 @@ func (r *resourceEventAction) Update(ctx context.Context, req resource.UpdateReq
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceEventAction) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *eventActionResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().DataExchangeClient(ctx)
 
-	var state resourceEventActionModel
+	var state eventActionResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -316,7 +316,8 @@ func findEventActionByID(ctx context.Context, conn *dataexchange.Client, id stri
 	return out, nil
 }
 
-type resourceEventActionModel struct {
+type eventActionResourceModel struct {
+	framework.WithRegionModel
 	Action    fwtypes.ListNestedObjectValueOf[actionModel] `tfsdk:"action"`
 	ARN       types.String                                 `tfsdk:"arn"`
 	CreatedAt timetypes.RFC3339                            `tfsdk:"created_at"`

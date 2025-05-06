@@ -173,6 +173,10 @@ func (sr ServiceRecord) Exclude() bool {
 	return sr.service.Exclude
 }
 
+func (sr ServiceRecord) IsGlobal() bool {
+	return sr.service.IsGlobal
+}
+
 func (sr ServiceRecord) NotImplemented() bool {
 	return sr.service.NotImplemented
 }
@@ -344,6 +348,7 @@ type Service struct {
 	NotImplemented                bool     `hcl:"not_implemented,optional"`
 	AllowedSubcategory            bool     `hcl:"allowed_subcategory,optional"`
 	Note                          string   `hcl:"note,optional"`
+	IsGlobal                      bool     `hcl:"is_global,optional"`
 }
 
 type Services struct {

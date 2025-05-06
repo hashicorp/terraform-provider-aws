@@ -31,7 +31,7 @@ import (
 
 // @SDKResource("aws_ssoadmin_permission_set", name="Permission Set")
 // @Tags
-func ResourcePermissionSet() *schema.Resource {
+func resourcePermissionSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePermissionSetCreate,
 		ReadWithoutTimeout:   resourcePermissionSetRead,
@@ -142,7 +142,7 @@ func resourcePermissionSetRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	permissionSet, err := FindPermissionSet(ctx, conn, permissionSetARN, instanceARN)
+	permissionSet, err := findPermissionSetByTwoPartKey(ctx, conn, permissionSetARN, instanceARN)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SSO Permission Set (%s) not found, removing from state", d.Id())
@@ -261,7 +261,7 @@ func ParseResourceID(id string) (string, string, error) {
 	return idParts[0], idParts[1], nil
 }
 
-func FindPermissionSet(ctx context.Context, conn *ssoadmin.Client, permissionSetARN, instanceARN string) (*awstypes.PermissionSet, error) {
+func findPermissionSetByTwoPartKey(ctx context.Context, conn *ssoadmin.Client, permissionSetARN, instanceARN string) (*awstypes.PermissionSet, error) {
 	input := &ssoadmin.DescribePermissionSetInput{
 		InstanceArn:      aws.String(instanceARN),
 		PermissionSetArn: aws.String(permissionSetARN),

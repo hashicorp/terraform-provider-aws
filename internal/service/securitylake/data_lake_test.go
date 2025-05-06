@@ -29,6 +29,7 @@ func testAccDataLake_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
 			testAccPreCheck(ctx, t)
+			testAccDeleteGlueDatabase(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -69,6 +70,7 @@ func testAccDataLake_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
 			testAccPreCheck(ctx, t)
+			testAccDeleteGlueDatabase(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -96,6 +98,7 @@ func testAccDataLake_tags(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
 			testAccPreCheck(ctx, t)
+			testAccDeleteGlueDatabase(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -147,6 +150,7 @@ func testAccDataLake_lifeCycle(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
 			testAccPreCheck(ctx, t)
+			testAccDeleteGlueDatabase(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -191,6 +195,7 @@ func testAccDataLake_lifeCycleUpdate(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
 			testAccPreCheck(ctx, t)
+			testAccDeleteGlueDatabase(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -258,6 +263,7 @@ func testAccDataLake_replication(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
 			testAccPreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
+			testAccDeleteGlueDatabase(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -472,7 +478,7 @@ resource "aws_securitylake_data_lake" "test" {
     region = %[1]q
   }
 
-  depends_on = [aws_iam_role.meta_store_manager]
+  depends_on = [aws_iam_role_policy_attachment.datalake]
 }
 `, acctest.Region()))
 }
@@ -490,7 +496,7 @@ resource "aws_securitylake_data_lake" "test" {
     %[1]q = %[2]q
   }
 
-  depends_on = [aws_iam_role.meta_store_manager]
+  depends_on = [aws_iam_role_policy_attachment.datalake]
 }
 `, tag1Key, tag1Value, acctest.Region()))
 }
@@ -509,7 +515,7 @@ resource "aws_securitylake_data_lake" "test" {
     %[3]q = %[4]q
   }
 
-  depends_on = [aws_iam_role.meta_store_manager]
+  depends_on = [aws_iam_role_policy_attachment.datalake]
 }
 `, tag1Key, tag1Value, tag2Key, tag2Value, acctest.Region()))
 }
@@ -545,7 +551,7 @@ resource "aws_securitylake_data_lake" "test" {
     Name = %[1]q
   }
 
-  depends_on = [aws_iam_role.meta_store_manager]
+  depends_on = [aws_iam_role_policy_attachment.datalake]
 }
 `, rName, acctest.Region()))
 }
@@ -577,7 +583,7 @@ resource "aws_securitylake_data_lake" "test" {
     Name = %[1]q
   }
 
-  depends_on = [aws_iam_role.meta_store_manager]
+  depends_on = [aws_iam_role_policy_attachment.datalake]
 }
 `, rName, acctest.Region()))
 }
@@ -610,7 +616,7 @@ resource "aws_securitylake_data_lake" "region_2" {
     Name = %[1]q
   }
 
-  depends_on = [aws_iam_role.meta_store_manager, aws_iam_role.datalake_s3_replication, aws_securitylake_data_lake.test]
+  depends_on = [[aws_iam_role_policy_attachment.datalake], aws_iam_role_policy.datalake_s3_replication, aws_securitylake_data_lake.test]
 }
 `, rName, acctest.Region(), acctest.AlternateRegion()))
 }

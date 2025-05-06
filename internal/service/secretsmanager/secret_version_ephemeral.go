@@ -19,15 +19,15 @@ import (
 )
 
 // @EphemeralResource(aws_secretsmanager_secret_version, name="Secret Version")
-func newEphemeralSecretVersion(_ context.Context) (ephemeral.EphemeralResourceWithConfigure, error) {
-	return &ephemeralSecrets{}, nil
+func newSecretVersionEphemeralResource(_ context.Context) (ephemeral.EphemeralResourceWithConfigure, error) {
+	return &secretVersionEphemeralResource{}, nil
 }
 
-type ephemeralSecrets struct {
-	framework.EphemeralResourceWithConfigure
+type secretVersionEphemeralResource struct {
+	framework.EphemeralResourceWithModel[secretVersionEphemeralResourceModel]
 }
 
-func (e *ephemeralSecrets) Schema(ctx context.Context, _ ephemeral.SchemaRequest, response *ephemeral.SchemaResponse) {
+func (e *secretVersionEphemeralResource) Schema(ctx context.Context, _ ephemeral.SchemaRequest, response *ephemeral.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
@@ -62,8 +62,8 @@ func (e *ephemeralSecrets) Schema(ctx context.Context, _ ephemeral.SchemaRequest
 	}
 }
 
-func (e *ephemeralSecrets) Open(ctx context.Context, request ephemeral.OpenRequest, response *ephemeral.OpenResponse) {
-	var data epSecretVersionData
+func (e *secretVersionEphemeralResource) Open(ctx context.Context, request ephemeral.OpenRequest, response *ephemeral.OpenResponse) {
+	var data secretVersionEphemeralResourceModel
 	conn := e.Meta().SecretsManagerClient(ctx)
 
 	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
@@ -96,13 +96,14 @@ func (e *ephemeralSecrets) Open(ctx context.Context, request ephemeral.OpenReque
 	response.Diagnostics.Append(response.Result.Set(ctx, &data)...)
 }
 
-type epSecretVersionData struct {
-	ARN           types.String                      `tfsdk:"arn"`
-	CreatedDate   timetypes.RFC3339                 `tfsdk:"created_date"`
-	SecretID      types.String                      `tfsdk:"secret_id"`
-	SecretBinary  types.String                      `tfsdk:"secret_binary"`
-	SecretString  types.String                      `tfsdk:"secret_string"`
-	VersionID     types.String                      `tfsdk:"version_id"`
-	VersionStage  types.String                      `tfsdk:"version_stage"`
-	VersionStages fwtypes.ListValueOf[types.String] `tfsdk:"version_stages"`
+type secretVersionEphemeralResourceModel struct {
+	framework.WithRegionModel
+	ARN           types.String         `tfsdk:"arn"`
+	CreatedDate   timetypes.RFC3339    `tfsdk:"created_date"`
+	SecretID      types.String         `tfsdk:"secret_id"`
+	SecretBinary  types.String         `tfsdk:"secret_binary"`
+	SecretString  types.String         `tfsdk:"secret_string"`
+	VersionID     types.String         `tfsdk:"version_id"`
+	VersionStage  types.String         `tfsdk:"version_stage"`
+	VersionStages fwtypes.ListOfString `tfsdk:"version_stages"`
 }

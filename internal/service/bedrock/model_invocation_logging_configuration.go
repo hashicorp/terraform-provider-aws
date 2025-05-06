@@ -26,15 +26,15 @@ import (
 
 // @FrameworkResource("aws_bedrock_model_invocation_logging_configuration", name="Model Invocation Logging Configuration")
 func newModelInvocationLoggingConfigurationResource(context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceModelInvocationLoggingConfiguration{}, nil
+	return &modelInvocationLoggingConfigurationResource{}, nil
 }
 
-type resourceModelInvocationLoggingConfiguration struct {
-	framework.ResourceWithConfigure
+type modelInvocationLoggingConfigurationResource struct {
+	framework.ResourceWithModel[modelInvocationLoggingConfigurationResourceModel]
 	framework.WithImportByID
 }
 
-func (r *resourceModelInvocationLoggingConfiguration) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+func (r *modelInvocationLoggingConfigurationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Version: 1,
 		Attributes: map[string]schema.Attribute{
@@ -131,7 +131,7 @@ func (r *resourceModelInvocationLoggingConfiguration) Schema(ctx context.Context
 	}
 }
 
-func (r *resourceModelInvocationLoggingConfiguration) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
+func (r *modelInvocationLoggingConfigurationResource) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
 	schemaV0 := modelInvocationLoggingConfigurationSchemaV0(ctx)
 
 	return map[int64]resource.StateUpgrader{
@@ -142,7 +142,7 @@ func (r *resourceModelInvocationLoggingConfiguration) UpgradeState(ctx context.C
 	}
 }
 
-func (r *resourceModelInvocationLoggingConfiguration) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+func (r *modelInvocationLoggingConfigurationResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	var data modelInvocationLoggingConfigurationResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
@@ -160,7 +160,7 @@ func (r *resourceModelInvocationLoggingConfiguration) Create(ctx context.Context
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceModelInvocationLoggingConfiguration) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+func (r *modelInvocationLoggingConfigurationResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	var data modelInvocationLoggingConfigurationResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
@@ -190,7 +190,7 @@ func (r *resourceModelInvocationLoggingConfiguration) Read(ctx context.Context, 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceModelInvocationLoggingConfiguration) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+func (r *modelInvocationLoggingConfigurationResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	var data modelInvocationLoggingConfigurationResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
@@ -205,7 +205,7 @@ func (r *resourceModelInvocationLoggingConfiguration) Update(ctx context.Context
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceModelInvocationLoggingConfiguration) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+func (r *modelInvocationLoggingConfigurationResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	var data modelInvocationLoggingConfigurationResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
@@ -222,7 +222,7 @@ func (r *resourceModelInvocationLoggingConfiguration) Delete(ctx context.Context
 	}
 }
 
-func (r *resourceModelInvocationLoggingConfiguration) putModelInvocationLoggingConfiguration(ctx context.Context, data *modelInvocationLoggingConfigurationResourceModel) diag.Diagnostics {
+func (r *modelInvocationLoggingConfigurationResource) putModelInvocationLoggingConfiguration(ctx context.Context, data *modelInvocationLoggingConfigurationResourceModel) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := r.Meta().BedrockClient(ctx)
 
@@ -268,6 +268,7 @@ func findModelInvocationLoggingConfiguration(ctx context.Context, conn *bedrock.
 }
 
 type modelInvocationLoggingConfigurationResourceModel struct {
+	framework.WithRegionModel
 	ID            types.String                                        `tfsdk:"id"`
 	LoggingConfig fwtypes.ListNestedObjectValueOf[loggingConfigModel] `tfsdk:"logging_config"`
 }

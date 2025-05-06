@@ -43,7 +43,7 @@ func newAnomalyDetectorResource(context.Context) (resource.ResourceWithConfigure
 }
 
 type anomalyDetectorResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[anomalyDetectorResourceModel]
 }
 
 func (r *anomalyDetectorResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -262,6 +262,7 @@ func findLogAnomalyDetector(ctx context.Context, conn *cloudwatchlogs.Client, in
 }
 
 type anomalyDetectorResourceModel struct {
+	framework.WithRegionModel
 	AnomalyDetectorARN    types.String                                     `tfsdk:"arn"`
 	AnomalyVisibilityTime types.Int64                                      `tfsdk:"anomaly_visibility_time"`
 	DetectorName          types.String                                     `tfsdk:"detector_name"`

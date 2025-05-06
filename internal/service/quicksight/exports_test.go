@@ -18,7 +18,7 @@ var (
 	ResourceIngestion           = newIngestionResource
 	ResourceNamespace           = newNamespaceResource
 	ResourceRefreshSchedule     = newRefreshScheduleResource
-	ResourceRoleMembership      = newResourceRoleMembership
+	ResourceRoleMembership      = newRoleMembershipResource
 	ResourceTemplate            = resourceTemplate
 	ResourceTemplateAlias       = newTemplateAliasResource
 	ResourceTheme               = resourceTheme
@@ -27,7 +27,6 @@ var (
 
 	DashboardLatestVersion                = dashboardLatestVersion
 	DefaultGroupNamespace                 = defaultGroupNamespace
-	DefaultIAMPolicyAssignmentNamespace   = defaultIAMPolicyAssignmentNamespace
 	DefaultUserNamespace                  = defaultUserNamespace
 	FindAccountSubscriptionByID           = findAccountSubscriptionByID
 	FindAnalysisByTwoPartKey              = findAnalysisByTwoPartKey

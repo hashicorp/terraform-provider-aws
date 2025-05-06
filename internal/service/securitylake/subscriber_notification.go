@@ -42,7 +42,7 @@ const (
 )
 
 type subscriberNotificationResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[subscriberNotificationResourceModel]
 	framework.WithImportByID
 }
 
@@ -346,6 +346,7 @@ func expandSQSNotificationConfigurationModel(SQSNotifications []sqsNotificationC
 }
 
 type subscriberNotificationResourceModel struct {
+	framework.WithRegionModel
 	Configuration      fwtypes.ListNestedObjectValueOf[subscriberNotificationResourceConfigurationModel] `tfsdk:"configuration"`
 	EndpointID         types.String                                                                      `tfsdk:"endpoint_id"`
 	ID                 types.String                                                                      `tfsdk:"id"`

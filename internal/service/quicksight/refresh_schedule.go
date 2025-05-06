@@ -53,7 +53,7 @@ const (
 )
 
 type refreshScheduleResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[refreshScheduleResourceModel]
 	framework.WithImportByID
 }
 
@@ -175,7 +175,8 @@ func (r *refreshScheduleResource) Schema(ctx context.Context, req resource.Schem
 	}
 }
 
-type resourceRefreshScheduleModel struct {
+type refreshScheduleResourceModel struct {
+	framework.WithRegionModel
 	ARN          types.String                                   `tfsdk:"arn"`
 	AWSAccountID types.String                                   `tfsdk:"aws_account_id"`
 	DataSetID    types.String                                   `tfsdk:"data_set_id"`
@@ -205,7 +206,7 @@ type refreshOnDayModel struct {
 func (r *refreshScheduleResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().QuickSightClient(ctx)
 
-	var plan resourceRefreshScheduleModel
+	var plan refreshScheduleResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -270,7 +271,7 @@ func (r *refreshScheduleResource) Create(ctx context.Context, req resource.Creat
 func (r *refreshScheduleResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().QuickSightClient(ctx)
 
-	var state resourceRefreshScheduleModel
+	var state refreshScheduleResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -310,7 +311,7 @@ func (r *refreshScheduleResource) Read(ctx context.Context, req resource.ReadReq
 func (r *refreshScheduleResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().QuickSightClient(ctx)
 
-	var config, plan, state resourceRefreshScheduleModel
+	var config, plan, state refreshScheduleResourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -382,7 +383,7 @@ func (r *refreshScheduleResource) Update(ctx context.Context, req resource.Updat
 func (r *refreshScheduleResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().QuickSightClient(ctx)
 
-	var state resourceRefreshScheduleModel
+	var state refreshScheduleResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -498,7 +499,7 @@ func findRefreshSchedule(ctx context.Context, conn *quicksight.Client, input *qu
 	return output.Arn, output.RefreshSchedule, nil
 }
 
-func (rd *resourceRefreshScheduleModel) refreshFromRead(ctx context.Context, arn *string, out *awstypes.RefreshSchedule) diag.Diagnostics {
+func (rd *refreshScheduleResourceModel) refreshFromRead(ctx context.Context, arn *string, out *awstypes.RefreshSchedule) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	if out == nil {
