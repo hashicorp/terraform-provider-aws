@@ -21,6 +21,8 @@ data "aws_service_discovery_dns_namespace" "test" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `name` - (Required) Name of the namespace.
 * `type` - (Required) Type of the namespace. Allowed values are `DNS_PUBLIC` or `DNS_PRIVATE`.
 
