@@ -20,9 +20,13 @@ data "aws_qldb_ledger" "example" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `name` - (Required) Friendly name of the ledger to match.
 
 ## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 See the [QLDB Ledger Resource](/docs/providers/aws/r/qldb_ledger.html) for details on the
 returned attributes - they are identical.

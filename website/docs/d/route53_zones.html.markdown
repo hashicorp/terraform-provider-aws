@@ -22,7 +22,11 @@ output "example" {
 }
 ```
 
-## Attributes Reference
+## Argument Reference
+
+This data source does not support any arguments.
+
+## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
