@@ -13,6 +13,7 @@ ENHANCEMENTS:
 * data-source/aws_ec2_client_vpn_endpoint: Add `client_route_enforcement_options` attribute ([#42424](https://github.com/hashicorp/terraform-provider-aws/issues/42424))
 * data-source/aws_redshiftserverless_workgroup: Add `track_name` attribute. ([#42451](https://github.com/hashicorp/terraform-provider-aws/issues/42451))
 * data-source/aws_workspaces_directory: Add `active_directory_config`, `user_identity_type`, `workspace_directory_description`, `workspace_directory_name`, and `workspace_type` attributes ([#42330](https://github.com/hashicorp/terraform-provider-aws/issues/42330))
+* resource/aws_autoscaling_group: Add `capacity_reservation_specification` argument ([#42380](https://github.com/hashicorp/terraform-provider-aws/issues/42380))
 * resource/aws_cloudwatch_event_bus: Add `dead_letter_config` block. ([#42471](https://github.com/hashicorp/terraform-provider-aws/issues/42471))
 * resource/aws_cloudwatch_event_connection: Add `kms_key_identifier` argument ([#42385](https://github.com/hashicorp/terraform-provider-aws/issues/42385))
 * resource/aws_cognito_managed_user_pool_client: Add `refresh_token_rotation` argument ([#42430](https://github.com/hashicorp/terraform-provider-aws/issues/42430))
