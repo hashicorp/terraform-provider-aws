@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_neptunegraph_graph
 
-The AWS::NeptuneGraph::Graph resource creates an Amazon Analytics Graph.
+The `aws_neptunegraph_graph` resource creates an Amazon Analytics Graph.
 
 ## Example Usage
 
@@ -39,11 +39,11 @@ resource "aws_neptunegraph_graph" "example" {
 
 ## Argument Reference
 
-### Required
+The following arguments are required:
 
 - `provisioned_memory` (Number, Forces new reource) The provisioned memory-optimized Neptune Capacity Units (m-NCUs) to use for the graph.
 
-### Optional
+The following arguments are optional:
 
 - `deletion_protection` (Boolean, Default: `true`) Value that indicates whether the Graph has deletion protection enabled. The graph can't be deleted when deletion protection is enabled.
 

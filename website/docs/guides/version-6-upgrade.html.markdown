@@ -16,7 +16,7 @@ Upgrade topics:
 
 - [Prerequisites to Upgrade to v6.0.0](#prerequisites-to-upgrade-to-v600)
 - [Removed Provider Arguments](#removed-provider-arguments)
-- [Enhanced Multi-Region Support](#enhanced-multi-region-support)
+- [Enhanced Region Support](#enhanced-region-support)
 - [Amazon Elastic Transcoder Deprecation](#amazon-elastic-transcoder-deprecation)
 - [CloudWatch Evidently Deprecation](#cloudwatch-evidently-deprecation)
 - [Nullable Boolean Validation Update](#nullable-boolean-validation-update)
@@ -759,7 +759,7 @@ The resource configuration itself does not change. However, now, include an inde
 
 ## Resource `aws_s3_bucket`
 
-`bucket_region` has been added and should be used instead of `region`, which is now used for [Enhanced Multi-Region Support](enhanced-region-support.html).
+`bucket_region` has been added and should be used instead of `region`, which is now used for [Enhanced Region Support](enhanced-region-support.html).
 
 ---
 

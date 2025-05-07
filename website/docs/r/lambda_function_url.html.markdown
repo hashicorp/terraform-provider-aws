@@ -38,6 +38,8 @@ resource "aws_lambda_function_url" "test_live" {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `authorization_type` - (Required) The type of authentication that the function URL uses. Set to `"AWS_IAM"` to restrict access to authenticated IAM users only. Set to `"NONE"` to bypass IAM authentication and create a public endpoint. See the [AWS documentation](https://docs.aws.amazon.com/lambda/latest/dg/urls-auth.html) for more details.
 * `cors` - (Optional) The [cross-origin resource sharing (CORS)](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) settings for the function URL. Documented below.
 * `function_name` - (Required) The name (or ARN) of the Lambda function.

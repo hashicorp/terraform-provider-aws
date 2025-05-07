@@ -20,11 +20,13 @@ data "aws_media_convert_queue" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `id` - (Required) Unique identifier of the queue. The same as `name`.
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - The Arn of the queue.
 * `name` - The same as `id`.

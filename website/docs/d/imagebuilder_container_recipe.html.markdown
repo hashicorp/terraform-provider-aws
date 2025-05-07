@@ -20,7 +20,7 @@ data "aws_imagebuilder_container_recipe" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
 * `arn` - (Required) ARN of the container recipe.
 

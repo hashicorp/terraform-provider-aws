@@ -21,7 +21,7 @@ See [example](#with-external-content) below which uses `jq` to extract the `Cont
 
 ### Basic
 
-```hcl
+```terraform
 resource "aws_connect_contact_flow_module" "example" {
   instance_id = "aaaaaaaa-bbbb-cccc-dddd-111111111111"
   name        = "Example"
@@ -89,7 +89,7 @@ Use the AWS CLI to extract Contact Flow Content:
 
 Use the generated file as input:
 
-```hcl
+```terraform
 resource "aws_connect_contact_flow_module" "example" {
   instance_id  = "aaaaaaaa-bbbb-cccc-dddd-111111111111"
   name         = "Example"

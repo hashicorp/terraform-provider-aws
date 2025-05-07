@@ -359,6 +359,7 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
   Can also be set with either the `AWS_REGION` or `AWS_DEFAULT_REGION` environment variables,
   or via a shared config file parameter `region` if `profile` is used.
   If credentials are retrieved from the EC2 Instance Metadata Service, the Region can also be retrieved from the metadata.
+  Most Regional resources, data sources and ephemeral resources support an optional top-level `region` argument which can be used to override the provider configuration value. See the individual resource's documentation for details.
 * `retry_mode` - (Optional) Specifies how retries are attempted.
   Valid values are `standard` and `adaptive`.
   Can also be configured using the `AWS_RETRY_MODE` environment variable or the shared config file parameter `retry_mode`.

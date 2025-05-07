@@ -20,6 +20,8 @@ data "aws_imagebuilder_distribution_configuration" "example" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `arn` - (Required) ARN of the distribution configuration.
 
 ## Attribute Reference

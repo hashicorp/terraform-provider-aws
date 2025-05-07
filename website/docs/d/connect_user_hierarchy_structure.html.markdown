@@ -12,7 +12,7 @@ Provides details about a specific Amazon Connect User Hierarchy Structure
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_connect_user_hierarchy_structure" "test" {
   instance_id = aws_connect_instance.test.id
 }
