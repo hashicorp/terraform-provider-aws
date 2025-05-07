@@ -59,7 +59,7 @@ data "aws_prefix_list" "test" {
 
 ## Argument Reference
 
-This data source supports the following arguments: 
+This data source supports the following arguments:
 
 * `prefix_list_id` - (Optional) ID of the prefix list to select.
 * `name` - (Optional) Name of the prefix list to select.
