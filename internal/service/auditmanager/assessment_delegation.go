@@ -27,20 +27,20 @@ import (
 )
 
 // @FrameworkResource("aws_auditmanager_assessment_delegation", name="Assessment Delegation")
-func newResourceAssessmentDelegation(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceAssessmentDelegation{}, nil
+func newAssessmentDelegationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &assessmentDelegationResource{}, nil
 }
 
 const (
 	ResNameAssessmentDelegation = "AssessmentDelegation"
 )
 
-type resourceAssessmentDelegation struct {
-	framework.ResourceWithConfigure
+type assessmentDelegationResource struct {
+	framework.ResourceWithModel[assessmentDelegationResourceModel]
 	framework.WithImportByID
 }
 
-func (r *resourceAssessmentDelegation) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *assessmentDelegationResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"assessment_id": schema.StringAttribute{
@@ -97,10 +97,10 @@ func (r *resourceAssessmentDelegation) Schema(ctx context.Context, req resource.
 	}
 }
 
-func (r *resourceAssessmentDelegation) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *assessmentDelegationResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().AuditManagerClient(ctx)
 
-	var plan resourceAssessmentDelegationData
+	var plan assessmentDelegationResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -180,10 +180,10 @@ func (r *resourceAssessmentDelegation) Create(ctx context.Context, req resource.
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
 }
 
-func (r *resourceAssessmentDelegation) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *assessmentDelegationResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().AuditManagerClient(ctx)
 
-	var state resourceAssessmentDelegationData
+	var state assessmentDelegationResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -207,13 +207,13 @@ func (r *resourceAssessmentDelegation) Read(ctx context.Context, req resource.Re
 }
 
 // There is no update API, so this method is a no-op
-func (r *resourceAssessmentDelegation) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *assessmentDelegationResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 }
 
-func (r *resourceAssessmentDelegation) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *assessmentDelegationResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().AuditManagerClient(ctx)
 
-	var state resourceAssessmentDelegationData
+	var state assessmentDelegationResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -287,7 +287,8 @@ func toID(assessmentID, roleARN, controlSetID string) string {
 	return strings.Join([]string{assessmentID, roleARN, controlSetID}, ",")
 }
 
-type resourceAssessmentDelegationData struct {
+type assessmentDelegationResourceModel struct {
+	framework.WithRegionModel
 	AssessmentID types.String `tfsdk:"assessment_id"`
 	Comment      types.String `tfsdk:"comment"`
 	ControlSetID types.String `tfsdk:"control_set_id"`
@@ -302,7 +303,7 @@ type resourceAssessmentDelegationData struct {
 //
 // This variant of the refresh method is for use with the create operation
 // response type (Delegation).
-func (rd *resourceAssessmentDelegationData) refreshFromOutput(ctx context.Context, out *awstypes.Delegation) {
+func (rd *assessmentDelegationResourceModel) refreshFromOutput(ctx context.Context, out *awstypes.Delegation) {
 	if out == nil {
 		return
 	}
@@ -326,7 +327,7 @@ func (rd *resourceAssessmentDelegationData) refreshFromOutput(ctx context.Contex
 // response type (DelegationMetadata). Notably, this response omits certain
 // attributes such as comment, control_set_id, and role_type which means
 // drift cannot be detected after the initial create action.
-func (rd *resourceAssessmentDelegationData) refreshFromOutputMetadata(ctx context.Context, out *awstypes.DelegationMetadata) {
+func (rd *assessmentDelegationResourceModel) refreshFromOutputMetadata(ctx context.Context, out *awstypes.DelegationMetadata) {
 	if out == nil {
 		return
 	}

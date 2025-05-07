@@ -36,21 +36,21 @@ import (
 // @Tags(identifierAttribute="provisioned_model_arn")
 // @Testing(tagsTest=false)
 func newProvisionedModelThroughputResource(context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceProvisionedModelThroughput{}
+	r := &provisionedModelThroughputResource{}
 
 	r.SetDefaultCreateTimeout(10 * time.Minute)
 
 	return r, nil
 }
 
-type resourceProvisionedModelThroughput struct {
-	framework.ResourceWithConfigure
+type provisionedModelThroughputResource struct {
+	framework.ResourceWithModel[provisionedModelThroughputResourceModel]
 	framework.WithNoOpUpdate[provisionedModelThroughputResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }
 
-func (r *resourceProvisionedModelThroughput) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+func (r *provisionedModelThroughputResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"commitment_duration": schema.StringAttribute{
@@ -92,7 +92,7 @@ func (r *resourceProvisionedModelThroughput) Schema(ctx context.Context, request
 	}
 }
 
-func (r *resourceProvisionedModelThroughput) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+func (r *provisionedModelThroughputResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	var data provisionedModelThroughputResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
@@ -134,7 +134,7 @@ func (r *resourceProvisionedModelThroughput) Create(ctx context.Context, request
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceProvisionedModelThroughput) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+func (r *provisionedModelThroughputResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	var data provisionedModelThroughputResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
@@ -172,7 +172,7 @@ func (r *resourceProvisionedModelThroughput) Read(ctx context.Context, request r
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceProvisionedModelThroughput) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+func (r *provisionedModelThroughputResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	var data provisionedModelThroughputResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
@@ -258,6 +258,7 @@ func waitProvisionedModelThroughputCreated(ctx context.Context, conn *bedrock.Cl
 }
 
 type provisionedModelThroughputResourceModel struct {
+	framework.WithRegionModel
 	CommitmentDuration   fwtypes.StringEnum[awstypes.CommitmentDuration] `tfsdk:"commitment_duration"`
 	ID                   types.String                                    `tfsdk:"id"`
 	ModelARN             fwtypes.ARN                                     `tfsdk:"model_arn"`

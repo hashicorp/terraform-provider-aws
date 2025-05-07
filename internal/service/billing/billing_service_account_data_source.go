@@ -16,6 +16,7 @@ import (
 )
 
 // @FrameworkDataSource("aws_billing_service_account", name="Service Account")
+// @Region(overrideEnabled=false)
 func newServiceAccountDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &billingServiceAccountDataSource{}
 
@@ -23,7 +24,7 @@ func newServiceAccountDataSource(context.Context) (datasource.DataSourceWithConf
 }
 
 type billingServiceAccountDataSource struct {
-	framework.DataSourceWithConfigure
+	framework.DataSourceWithModel[billingServiceAccountDataSourceModel]
 }
 
 func (d *billingServiceAccountDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {

@@ -33,10 +33,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+var (
+	resourceSchemasValidated bool
+)
+
 // New returns a new, initialized Terraform Plugin SDK v2-style provider instance.
 // The provider instance is fully configured once the `ConfigureContextFunc` has been called.
 func New(ctx context.Context) (*schema.Provider, error) {
-	log.Printf("Initializing Terraform AWS Provider...")
+	log.Printf("Creating Terraform AWS Provider (SDKv2-style)...")
 
 	provider := &schema.Provider{
 		// This schema must match exactly the Terraform Protocol v6 (Terraform Plugin Framework) provider's schema.
@@ -270,6 +274,49 @@ func New(ctx context.Context) (*schema.Provider, error) {
 		return configure(ctx, provider, d)
 	}
 
+	// Acceptance tests call this function multiple times, potentially in parallel.
+	// To avoid "fatal error: concurrent map writes", take a lock.
+	const (
+		mutexKVKey = "provider.New"
+	)
+	conns.GlobalMutexKV.Lock(mutexKVKey)
+	defer conns.GlobalMutexKV.Unlock(mutexKVKey)
+
+	// Because we try and share resource schemas as much as possible,
+	// we need to ensure that we only validate the resource schemas once.
+	if !resourceSchemasValidated {
+		if err := validateResourceSchemas(ctx); err != nil {
+			return nil, err
+		}
+
+		resourceSchemasValidated = true
+	}
+
+	servicePackageMap, err := initialize(ctx, provider)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Set the provider Meta (instance data) here.
+	// It will be overwritten by the result of the call to ConfigureContextFunc,
+	// but can be used pre-configuration by other (non-primary) provider servers.
+	var c *conns.AWSClient
+	if v, ok := provider.Meta().(*conns.AWSClient); ok {
+		c = v
+	} else {
+		c = new(conns.AWSClient)
+	}
+	c.SetServicePackages(ctx, servicePackageMap)
+	provider.SetMeta(c)
+
+	return provider, nil
+}
+
+// initialize is called from `provider.New` to perform any Terraform Plugin SDK v2-style initialization.
+func initialize(ctx context.Context, provider *schema.Provider) (map[string]conns.ServicePackage, error) {
+	log.Printf("Initializing Terraform AWS Provider (SDKv2-style)...")
+
 	var errs []error
 	servicePackageMap := make(map[string]conns.ServicePackage)
 
@@ -289,44 +336,80 @@ func New(ctx context.Context) (*schema.Provider, error) {
 
 			// Ensure that the correct CRUD handler variants are used.
 			if r.Read != nil || r.ReadContext != nil {
-				errs = append(errs, fmt.Errorf("incorrect Read handler variant: %s", typeName))
+				errs = append(errs, fmt.Errorf("incorrect Read handler variant: %s data source", typeName))
 				continue
 			}
 
-			interceptors := interceptorItems{}
-			if !tfunique.IsHandleNil(v.Tags) {
-				schema := r.SchemaMap()
+			var isRegionOverrideEnabled bool
+			if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
+				isRegionOverrideEnabled = true
+			}
 
-				// The data source has opted in to transparent tagging.
-				// Ensure that the schema look OK.
-				if v, ok := schema[names.AttrTags]; ok {
-					if !v.Computed {
-						errs = append(errs, fmt.Errorf("`%s` attribute must be Computed: %s", names.AttrTags, typeName))
-						continue
+			var interceptors interceptorInvocations
+
+			if isRegionOverrideEnabled {
+				v := v.Region.Value()
+				s := r.SchemaMap()
+
+				if _, ok := s[names.AttrRegion]; !ok {
+					// Inject a top-level "region" attribute.
+					regionSchema := &schema.Schema{
+						Type:        schema.TypeString,
+						Optional:    true,
+						Computed:    true,
+						Description: `The AWS Region to use for API operations. Overrides the Region set in the provider configuration.`,
 					}
-				} else {
-					errs = append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s", names.AttrTags, typeName))
-					continue
+
+					if f := r.SchemaFunc; f != nil {
+						r.SchemaFunc = func() map[string]*schema.Schema {
+							s := f()
+							s[names.AttrRegion] = regionSchema
+							return s
+						}
+					} else {
+						r.Schema[names.AttrRegion] = regionSchema
+					}
 				}
 
-				interceptors = append(interceptors, interceptorItem{
+				if v.IsValidateOverrideInPartition {
+					interceptors = append(interceptors, interceptorInvocation{
+						when:        Before,
+						why:         Read,
+						interceptor: dataSourceValidateRegion(),
+					})
+				}
+				interceptors = append(interceptors, interceptorInvocation{
+					when:        After,
+					why:         Read,
+					interceptor: setRegionInState(),
+				})
+			}
+
+			if !tfunique.IsHandleNil(v.Tags) {
+				interceptors = append(interceptors, interceptorInvocation{
 					when:        Before | After,
 					why:         Read,
-					interceptor: newTagsDataSourceInterceptor(v.Tags),
+					interceptor: dataSourceTransparentTagging(v.Tags),
 				})
 			}
 
 			opts := wrappedDataSourceOptions{
-				bootstrapContext: func(ctx context.Context, _ getAttributeFunc, meta any) (context.Context, diag.Diagnostics) {
-					var diags diag.Diagnostics
+				bootstrapContext: func(ctx context.Context, getAttribute getAttributeFunc, meta any) (context.Context, error) {
+					var overrideRegion string
 
-					ctx = conns.NewDataSourceContext(ctx, servicePackageName, v.Name)
-					if v, ok := meta.(*conns.AWSClient); ok {
-						ctx = tftags.NewContext(ctx, v.DefaultTagsConfig(ctx), v.IgnoreTagsConfig(ctx))
-						ctx = v.RegisterLogger(ctx)
+					if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled && getAttribute != nil {
+						if region, ok := getAttribute(names.AttrRegion); ok {
+							overrideRegion = region.(string)
+						}
 					}
 
-					return ctx, diags
+					ctx = conns.NewResourceContext(ctx, servicePackageName, v.Name, overrideRegion)
+					if c, ok := meta.(*conns.AWSClient); ok {
+						ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx))
+						ctx = c.RegisterLogger(ctx)
+					}
+
+					return ctx, nil
 				},
 				interceptors: interceptors,
 				typeName:     typeName,
@@ -347,95 +430,202 @@ func New(ctx context.Context) (*schema.Provider, error) {
 
 			// Ensure that the correct CRUD handler variants are used.
 			if r.Create != nil || r.CreateContext != nil {
-				errs = append(errs, fmt.Errorf("incorrect Create handler variant: %s", typeName))
+				errs = append(errs, fmt.Errorf("incorrect Create handler variant: %s resource", typeName))
 				continue
 			}
 			if r.Read != nil || r.ReadContext != nil {
-				errs = append(errs, fmt.Errorf("incorrect Read handler variant: %s", typeName))
+				errs = append(errs, fmt.Errorf("incorrect Read handler variant: %s resource", typeName))
 				continue
 			}
 			if r.Update != nil || r.UpdateContext != nil {
-				errs = append(errs, fmt.Errorf("incorrect Update handler variant: %s", typeName))
+				errs = append(errs, fmt.Errorf("incorrect Update handler variant: %s resource", typeName))
 				continue
 			}
 			if r.Delete != nil || r.DeleteContext != nil {
-				errs = append(errs, fmt.Errorf("incorrect Delete handler variant: %s", typeName))
+				errs = append(errs, fmt.Errorf("incorrect Delete handler variant: %s resource", typeName))
 				continue
 			}
 
-			var customizeDiffFuncs []schema.CustomizeDiffFunc
-			interceptors := interceptorItems{}
+			var isRegionOverrideEnabled bool
+			if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
+				isRegionOverrideEnabled = true
+			}
+
+			var interceptors interceptorInvocations
+
+			if isRegionOverrideEnabled {
+				v := v.Region.Value()
+				s := r.SchemaMap()
+
+				if _, ok := s[names.AttrRegion]; !ok {
+					// Inject a top-level "region" attribute.
+					regionSchema := &schema.Schema{
+						Type:        schema.TypeString,
+						Optional:    true,
+						Computed:    true,
+						Description: `The AWS Region to use for API operations. Overrides the Region set in the provider configuration.`,
+					}
+					// If the resource defines no Update handler then add a stub to fake out 'Provider.Validate'.
+					if r.UpdateWithoutTimeout == nil {
+						r.UpdateWithoutTimeout = schema.NoopContext
+					}
+
+					if f := r.SchemaFunc; f != nil {
+						r.SchemaFunc = func() map[string]*schema.Schema {
+							s := f()
+							s[names.AttrRegion] = regionSchema
+							return s
+						}
+					} else {
+						r.Schema[names.AttrRegion] = regionSchema
+					}
+				}
+
+				if v.IsValidateOverrideInPartition {
+					interceptors = append(interceptors, interceptorInvocation{
+						when:        Before,
+						why:         CustomizeDiff,
+						interceptor: resourceValidateRegion(),
+					})
+				}
+				interceptors = append(interceptors, interceptorInvocation{
+					when:        Before,
+					why:         CustomizeDiff,
+					interceptor: defaultRegion(),
+				})
+				interceptors = append(interceptors, interceptorInvocation{
+					when:        After,
+					why:         Read,
+					interceptor: setRegionInState(),
+				})
+				// We can't just set the injected "region" attribute to ForceNew because if
+				// a plan is run with '-refresh=false', then after provider v5 to v6 upgrade
+				// the region attribute is not set in state and its value shows a change.
+				interceptors = append(interceptors, interceptorInvocation{
+					when:        Before,
+					why:         CustomizeDiff,
+					interceptor: forceNewIfRegionChanges(),
+				})
+				interceptors = append(interceptors, interceptorInvocation{
+					when:        Before,
+					why:         Import,
+					interceptor: importRegion(),
+				})
+			}
+
 			if !tfunique.IsHandleNil(v.Tags) {
-				schema := r.SchemaMap()
-
-				// The resource has opted in to transparent tagging.
-				// Ensure that the schema look OK.
-				if v, ok := schema[names.AttrTags]; ok {
-					if v.Computed {
-						errs = append(errs, fmt.Errorf("`%s` attribute cannot be Computed: %s", names.AttrTags, typeName))
-						continue
-					}
-				} else {
-					errs = append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s", names.AttrTags, typeName))
-					continue
-				}
-				if v, ok := schema[names.AttrTagsAll]; ok {
-					if !v.Computed {
-						errs = append(errs, fmt.Errorf("`%s` attribute must be Computed: %s", names.AttrTags, typeName))
-						continue
-					}
-				} else {
-					errs = append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s", names.AttrTagsAll, typeName))
-					continue
-				}
-
-				customizeDiffFuncs = append(customizeDiffFuncs, setTagsAll)
-				interceptors = append(interceptors, interceptorItem{
+				interceptors = append(interceptors, interceptorInvocation{
 					when:        Before | After | Finally,
 					why:         Create | Read | Update,
-					interceptor: newTagsResourceInterceptor(v.Tags),
+					interceptor: resourceTransparentTagging(v.Tags),
+				})
+				interceptors = append(interceptors, interceptorInvocation{
+					when:        Before,
+					why:         CustomizeDiff,
+					interceptor: setTagsAll(),
 				})
 			}
 
 			opts := wrappedResourceOptions{
 				// bootstrapContext is run on all wrapped methods before any interceptors.
-				bootstrapContext: func(ctx context.Context, _ getAttributeFunc, meta any) (context.Context, diag.Diagnostics) {
-					var diags diag.Diagnostics
+				bootstrapContext: func(ctx context.Context, getAttribute getAttributeFunc, meta any) (context.Context, error) {
+					var overrideRegion string
 
-					ctx = conns.NewResourceContext(ctx, servicePackageName, v.Name)
-					if v, ok := meta.(*conns.AWSClient); ok {
-						ctx = tftags.NewContext(ctx, v.DefaultTagsConfig(ctx), v.IgnoreTagsConfig(ctx))
-						ctx = v.RegisterLogger(ctx)
+					if isRegionOverrideEnabled && getAttribute != nil {
+						if region, ok := getAttribute(names.AttrRegion); ok {
+							overrideRegion = region.(string)
+						}
 					}
 
-					return ctx, diags
+					ctx = conns.NewResourceContext(ctx, servicePackageName, v.Name, overrideRegion)
+					if c, ok := meta.(*conns.AWSClient); ok {
+						ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx))
+						ctx = c.RegisterLogger(ctx)
+					}
+
+					return ctx, nil
 				},
-				customizeDiffFuncs: customizeDiffFuncs,
-				interceptors:       interceptors,
-				typeName:           typeName,
+				interceptors: interceptors,
+				typeName:     typeName,
 			}
 			wrapResource(r, opts)
 			provider.ResourcesMap[typeName] = r
 		}
 	}
 
-	if err := errors.Join(errs...); err != nil {
-		return nil, err
+	return servicePackageMap, errors.Join(errs...)
+}
+
+// validateResourceSchemas is called from `provider.New` to validate Terraform Plugin SDK v2-style resource schemas.
+func validateResourceSchemas(ctx context.Context) error {
+	var errs []error
+
+	for _, sp := range servicePackages(ctx) {
+		for _, v := range sp.SDKDataSources(ctx) {
+			typeName := v.TypeName
+			r := v.Factory()
+			s := r.SchemaMap()
+
+			if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
+				if _, ok := s[names.AttrRegion]; ok {
+					errs = append(errs, fmt.Errorf("`%s` attribute is defined: %s data source", names.AttrRegion, typeName))
+					continue
+				}
+			}
+
+			if !tfunique.IsHandleNil(v.Tags) {
+				// The data source has opted in to transparent tagging.
+				// Ensure that the schema look OK.
+				if v, ok := s[names.AttrTags]; ok {
+					if !v.Computed {
+						errs = append(errs, fmt.Errorf("`%s` attribute must be Computed: %s data source", names.AttrTags, typeName))
+						continue
+					}
+				} else {
+					errs = append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s data source", names.AttrTags, typeName))
+					continue
+				}
+			}
+		}
+
+		for _, v := range sp.SDKResources(ctx) {
+			typeName := v.TypeName
+			r := v.Factory()
+			s := r.SchemaMap()
+
+			if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
+				if _, ok := s[names.AttrRegion]; ok {
+					errs = append(errs, fmt.Errorf("`%s` attribute is defined: %s resource", names.AttrRegion, typeName))
+					continue
+				}
+			}
+
+			if !tfunique.IsHandleNil(v.Tags) {
+				// The resource has opted in to transparent tagging.
+				// Ensure that the schema look OK.
+				if v, ok := s[names.AttrTags]; ok {
+					if v.Computed {
+						errs = append(errs, fmt.Errorf("`%s` attribute cannot be Computed: %s resource", names.AttrTags, typeName))
+						continue
+					}
+				} else {
+					errs = append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s resource", names.AttrTags, typeName))
+					continue
+				}
+				if v, ok := s[names.AttrTagsAll]; ok {
+					if !v.Computed {
+						errs = append(errs, fmt.Errorf("`%s` attribute must be Computed: %s resource", names.AttrTags, typeName))
+						continue
+					}
+				} else {
+					errs = append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s resource", names.AttrTagsAll, typeName))
+					continue
+				}
+			}
+		}
 	}
 
-	// Set the provider Meta (instance data) here.
-	// It will be overwritten by the result of the call to ConfigureContextFunc,
-	// but can be used pre-configuration by other (non-primary) provider servers.
-	var c *conns.AWSClient
-	if v, ok := provider.Meta().(*conns.AWSClient); ok {
-		c = v
-	} else {
-		c = new(conns.AWSClient)
-	}
-	c.SetServicePackages(ctx, servicePackageMap)
-	provider.SetMeta(c)
-
-	return provider, nil
+	return errors.Join(errs...)
 }
 
 // configure ensures that the provider is fully configured.
@@ -931,26 +1121,4 @@ func expandIgnoreTags(ctx context.Context, tfMap map[string]any) *tftags.IgnoreC
 	}
 
 	return ignoreConfig
-}
-
-func DeprecatedEnvVarDiag(envvar, replacement string) diag.Diagnostic {
-	return errs.NewWarningDiagnostic(
-		"Deprecated Environment Variable",
-		fmt.Sprintf(`The environment variable "%s" is deprecated. Use environment variable "%s" instead.`, envvar, replacement),
-	)
-}
-
-func ConflictingEndpointsWarningDiag(elementPath cty.Path, attrs ...string) diag.Diagnostic {
-	attrPaths := make([]string, len(attrs))
-	for i, attr := range attrs {
-		path := elementPath.GetAttr(attr)
-		attrPaths[i] = `"` + errs.PathString(path) + `"`
-	}
-	return errs.NewAttributeWarningDiagnostic(
-		elementPath,
-		"Invalid Attribute Combination",
-		fmt.Sprintf("Only one of the following attributes should be set: %s"+
-			"\n\nThis will be an error in a future release.",
-			strings.Join(attrPaths, ", ")),
-	)
 }

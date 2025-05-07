@@ -40,8 +40,8 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/resiliencehub;resiliencehub.DescribeResiliencyPolicyOutput")
 // @Testing(importStateIdAttribute="arn")
-func newResourceResiliencyPolicy(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceResiliencyPolicy{}
+func newResiliencyPolicyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &resiliencyPolicyResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
@@ -54,12 +54,12 @@ const (
 	ResNameResiliencyPolicy = "Resiliency Policy"
 )
 
-type resourceResiliencyPolicy struct {
-	framework.ResourceWithConfigure
+type resiliencyPolicyResource struct {
+	framework.ResourceWithModel[resiliencyPolicyResourceModel]
 	framework.WithTimeouts
 }
 
-func (r *resourceResiliencyPolicy) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *resiliencyPolicyResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	requiredObjAttrs := map[string]schema.Attribute{
 		"rto": schema.StringAttribute{
 			Description: "Recovery Time Objective (RTO) as a Go duration.",
@@ -186,7 +186,7 @@ func (r *resourceResiliencyPolicy) Schema(ctx context.Context, req resource.Sche
 	}
 }
 
-func (r *resourceResiliencyPolicy) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
+func (r *resiliencyPolicyResource) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
 	schemaV0 := resiliencePolicySchemaV0(ctx)
 
 	return map[int64]resource.StateUpgrader{
@@ -197,8 +197,8 @@ func (r *resourceResiliencyPolicy) UpgradeState(ctx context.Context) map[int64]r
 	}
 }
 
-func (r *resourceResiliencyPolicy) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan resourceResiliencyPolicyData
+func (r *resiliencyPolicyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var plan resiliencyPolicyResourceModel
 
 	conn := r.Meta().ResilienceHubClient(ctx)
 
@@ -267,8 +267,8 @@ func (r *resourceResiliencyPolicy) Create(ctx context.Context, req resource.Crea
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceResiliencyPolicy) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state resourceResiliencyPolicyData
+func (r *resiliencyPolicyResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var state resiliencyPolicyResourceModel
 
 	conn := r.Meta().ResilienceHubClient(ctx)
 
@@ -300,8 +300,8 @@ func (r *resourceResiliencyPolicy) Read(ctx context.Context, req resource.ReadRe
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceResiliencyPolicy) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan, state resourceResiliencyPolicyData
+func (r *resiliencyPolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var plan, state resiliencyPolicyResourceModel
 
 	conn := r.Meta().ResilienceHubClient(ctx)
 
@@ -386,8 +386,8 @@ func (r *resourceResiliencyPolicy) Update(ctx context.Context, req resource.Upda
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceResiliencyPolicy) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state resourceResiliencyPolicyData
+func (r *resiliencyPolicyResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var state resiliencyPolicyResourceModel
 
 	conn := r.Meta().ResilienceHubClient(ctx)
 
@@ -420,7 +420,7 @@ func (r *resourceResiliencyPolicy) Delete(ctx context.Context, req resource.Dele
 	}
 }
 
-func (r *resourceResiliencyPolicy) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *resiliencyPolicyResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrARN), req, resp)
 }
 
@@ -561,7 +561,7 @@ func (m *policyData) expandPolicy(ctx context.Context) (result map[string]awstyp
 	return result, diags
 }
 
-func (m *resourceResiliencyPolicyData) flattenPolicy(ctx context.Context, failurePolicy map[string]awstypes.FailurePolicy) {
+func (m *resiliencyPolicyResourceModel) flattenPolicy(ctx context.Context, failurePolicy map[string]awstypes.FailurePolicy) {
 	if len(failurePolicy) == 0 {
 		m.Policy = fwtypes.NewListNestedObjectValueOfNull[policyData](ctx)
 	}
@@ -589,7 +589,8 @@ func (m *resourceResiliencyPolicyData) flattenPolicy(ctx context.Context, failur
 	})
 }
 
-type resourceResiliencyPolicyData struct {
+type resiliencyPolicyResourceModel struct {
+	framework.WithRegionModel
 	DataLocationConstraint fwtypes.StringEnum[awstypes.DataLocationConstraint] `tfsdk:"data_location_constraint"`
 	EstimatedCostTier      fwtypes.StringEnum[awstypes.EstimatedCostTier]      `tfsdk:"estimated_cost_tier"`
 	Policy                 fwtypes.ListNestedObjectValueOf[policyData]         `tfsdk:"policy"`

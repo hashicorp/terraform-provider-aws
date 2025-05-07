@@ -5,13 +5,18 @@ package securitylake_test
 
 import (
 	"context"
+	"strings"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/glue"
+	gluetypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	"github.com/aws/aws-sdk-go-v2/service/securitylake"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/securitylake/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfsecuritylake "github.com/hashicorp/terraform-provider-aws/internal/service/securitylake"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 )
@@ -84,5 +89,24 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 
 	if err != nil {
 		t.Fatalf("finding data lakes: %s", err)
+	}
+}
+
+func testAccDeleteGlueDatabase(ctx context.Context, t *testing.T) {
+	t.Helper()
+
+	// e.g. "amazon_security_lake_glue_db_us-east-1"
+	databaseName := "amazon_security_lake_glue_db_" + strings.ReplaceAll(acctest.Region(), "-", "_")
+	input := glue.DeleteDatabaseInput{
+		Name: aws.String(databaseName),
+	}
+	_, err := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx).DeleteDatabase(ctx, &input)
+
+	if errs.IsA[*gluetypes.EntityNotFoundException](err) {
+		return
+	}
+
+	if err != nil {
+		t.Errorf("deleting Glue Database (%s): %s", databaseName, err)
 	}
 }

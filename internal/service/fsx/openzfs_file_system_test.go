@@ -1379,6 +1379,7 @@ func testAccOpenZFSFileSystemConfig_kmsKeyID(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_fsx_openzfs_file_system" "test" {

@@ -36,7 +36,7 @@ func newKeyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 }
 
 type keyResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[keyResourceModel]
 	framework.WithImportByID
 }
 

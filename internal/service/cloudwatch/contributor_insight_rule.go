@@ -33,8 +33,8 @@ import (
 // @Testing(importStateIdAttribute="rule_name")
 // @Testing(importIgnore="rule_definition;rule_state")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudwatch/types;types.InsightRule")
-func newResourceContributorInsightRule(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceContributorInsightRule{}
+func newContributorInsightRuleResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &contributorInsightRuleResource{}
 
 	return r, nil
 }
@@ -43,11 +43,11 @@ const (
 	ResNameContributorInsightRule = "Contributor Insight Rule"
 )
 
-type resourceContributorInsightRule struct {
-	framework.ResourceWithConfigure
+type contributorInsightRuleResource struct {
+	framework.ResourceWithModel[contributorInsightRuleResourceModel]
 }
 
-func (r *resourceContributorInsightRule) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *contributorInsightRuleResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrResourceARN: framework.ARNAttributeComputedOnly(),
@@ -67,10 +67,10 @@ func (r *resourceContributorInsightRule) Schema(ctx context.Context, req resourc
 	}
 }
 
-func (r *resourceContributorInsightRule) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *contributorInsightRuleResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().CloudWatchClient(ctx)
 
-	var plan resourceContributorInsightRuleData
+	var plan contributorInsightRuleResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -126,10 +126,10 @@ func (r *resourceContributorInsightRule) Create(ctx context.Context, req resourc
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceContributorInsightRule) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *contributorInsightRuleResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().CloudWatchClient(ctx)
 
-	var state resourceContributorInsightRuleData
+	var state contributorInsightRuleResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -155,8 +155,8 @@ func (r *resourceContributorInsightRule) Read(ctx context.Context, req resource.
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceContributorInsightRule) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var old, new resourceContributorInsightRuleData
+func (r *contributorInsightRuleResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var old, new contributorInsightRuleResourceModel
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &old)...)
 	if resp.Diagnostics.HasError() {
@@ -197,10 +197,10 @@ func (r *resourceContributorInsightRule) Update(ctx context.Context, req resourc
 	resp.Diagnostics.Append(resp.State.Set(ctx, &new)...)
 }
 
-func (r *resourceContributorInsightRule) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *contributorInsightRuleResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().CloudWatchClient(ctx)
 
-	var state resourceContributorInsightRuleData
+	var state contributorInsightRuleResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -223,7 +223,7 @@ func (r *resourceContributorInsightRule) Delete(ctx context.Context, req resourc
 	}
 }
 
-func (r *resourceContributorInsightRule) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *contributorInsightRuleResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("rule_name"), req, resp)
 }
 
@@ -271,7 +271,8 @@ func findContributorInsightRules(ctx context.Context, conn *cloudwatch.Client, i
 	return output, nil
 }
 
-type resourceContributorInsightRuleData struct {
+type contributorInsightRuleResourceModel struct {
+	framework.WithRegionModel
 	ResourceARN    types.String                   `tfsdk:"resource_arn"`
 	RuleDefinition types.String                   `tfsdk:"rule_definition"`
 	RuleName       types.String                   `tfsdk:"rule_name"`

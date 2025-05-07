@@ -63,6 +63,7 @@ resource/aws_batch_compute_environment: Rename `compute_environment_name_prefix`
 * resource/aws_evidently_feature: `variations.value.bool_value` now only accepts one of `""` (empty string), `true`, or `false` ([#42434](https://github.com/hashicorp/terraform-provider-aws/issues/42434))
 * resource/aws_flow_log: `log_group_name` has been removed. Use `log_destination` instead. ([#42333](https://github.com/hashicorp/terraform-provider-aws/issues/42333))
 * resource/aws_globalaccelerator_accelerator: The `id` attribute is now computed only ([#42097](https://github.com/hashicorp/terraform-provider-aws/issues/42097))
+* resource/aws_guardduty_detector: Deprecates `datasources`. Use `aws_guardduty_detector_feature` resources instead. ([#42436](https://github.com/hashicorp/terraform-provider-aws/issues/42436))
 * resource/aws_guardduty_organization_configuration: The `auto_enable` attribute has been removed ([#42251](https://github.com/hashicorp/terraform-provider-aws/issues/42251))
 * resource/aws_identitystore_group: `filter` has been removed ([#42325](https://github.com/hashicorp/terraform-provider-aws/issues/42325))
 * resource/aws_imagebuilder_container_recipe: `instance_configuration.block_device_mapping.ebs.delete_on_termination` and `instance_configuration.block_device_mapping.ebs.encrypted` now only accept one of `""` (empty string), `true`, or `false` ([#42434](https://github.com/hashicorp/terraform-provider-aws/issues/42434))
@@ -72,6 +73,7 @@ resource/aws_batch_compute_environment: Rename `compute_environment_name_prefix`
 * resource/aws_launch_template:  `block_device_mappings.ebs.delete_on_termination`, `block_device_mappings.ebs.encrypted`, `ebs_optimized`, `network_interfaces.associate_carrier_ip_address`, `network_interfaces.associate_public_ip_address`, `network_interfaces.delete_on_termination`, and `network_interfaces.primary_ipv6` now only accept one of `""` (empty string), `true`, or `false` ([#42434](https://github.com/hashicorp/terraform-provider-aws/issues/42434))
 * resource/aws_launch_template: Remove `elastic_inference_accelerator` attribute. Amazon Elastic Inference reached end of life on April, 2024. ([#42137](https://github.com/hashicorp/terraform-provider-aws/issues/42137))
 * resource/aws_launch_template: `elastic_gpu_specifications` has been removed ([#42312](https://github.com/hashicorp/terraform-provider-aws/issues/42312))
+* resource/aws_lb_listener: `mutual_authentication` attributes `advertise_trust_store_ca_names`, `ignore_client_certificate_expiry`, and `trust_store_arn` are only valid if `mode` is `verify` ([#42326](https://github.com/hashicorp/terraform-provider-aws/issues/42326))
 * resource/aws_lb_target_group: `preserve_client_ip` now only accepts one of `""` (empty string), `true`, or `false` ([#42434](https://github.com/hashicorp/terraform-provider-aws/issues/42434))
 * resource/aws_mq_broker: `logs.audit` now only accepts one of `""` (empty string), `true`, or `false` ([#42434](https://github.com/hashicorp/terraform-provider-aws/issues/42434))
 * resource/aws_networkmanager_core_network: The `base_policy_region` argument has been removed. Use `base_policy_regions` instead. ([#38398](https://github.com/hashicorp/terraform-provider-aws/issues/38398))
@@ -93,9 +95,18 @@ resource/aws_batch_compute_environment: Rename `compute_environment_name_prefix`
 NOTES:
 
 * data-source/aws_cloudtrail_service_account: This data source is deprecated. AWS recommends using a service principal name instead of an AWS account ID in any relevant IAM policy. ([#42320](https://github.com/hashicorp/terraform-provider-aws/issues/42320))
+* data-source/aws_region: The `name` attribute has been deprecated. All configurations using `name` should be updated to use the `region` attribute instead ([#42131](https://github.com/hashicorp/terraform-provider-aws/issues/42131))
+* data-source/aws_s3_bucket: Add `bucket_region` attribute. Use of the `bucket_region` attribute instead of the `region` attribute is encouraged ([#42014](https://github.com/hashicorp/terraform-provider-aws/issues/42014))
+* data-source/aws_servicequotas_templates: The `region` attribute has been deprecated. All configurations using `region` should be updated to use the `aws_region` attribute instead ([#42131](https://github.com/hashicorp/terraform-provider-aws/issues/42131))
+* data-source/aws_ssmincidents_replication_set: The `region` attribute has been deprecated. All configurations using `region` should be updated to use the `regions` attribute instead ([#42014](https://github.com/hashicorp/terraform-provider-aws/issues/42014))
+* data-source/aws_vpc_endpoint_service: The `region` attribute has been deprecated. All configurations using `region` should be updated to use the `service_region` attribute instead ([#42014](https://github.com/hashicorp/terraform-provider-aws/issues/42014))
+* data-source/aws_vpc_peering_connection: The `region` attribute has been deprecated. All configurations using `region` should be updated to use the `requester_region` attribute instead ([#42014](https://github.com/hashicorp/terraform-provider-aws/issues/42014))
 * provider: Practitioners using Terraform 0.12 must [pin the version](https://developer.hashicorp.com/terraform/language/providers/requirements#v0-12-compatible-provider-requirements) of the AWS Provider to an exact version so as not to install a pre-release ([#41722](https://github.com/hashicorp/terraform-provider-aws/issues/41722))
 * provider: Support for the global S3 endpoint is deprecated, along with the `s3_us_east_1_regional_endpoint` argument. The ability to use the global S3 endpoint will be removed in `v7.0.0`. ([#42375](https://github.com/hashicorp/terraform-provider-aws/issues/42375))
+* resource/aws_cloudformation_stack_set_instance: The `region` attribute has been deprecated. All configurations using `region` should be updated to use the `stack_set_instance_region` attribute instead ([#42014](https://github.com/hashicorp/terraform-provider-aws/issues/42014))
 * resource/aws_codeconnections_host: Deprecates `id` in favor of `arn` ([#42232](https://github.com/hashicorp/terraform-provider-aws/issues/42232))
+* resource/aws_config_aggregate_authorization: The `region` attribute has been deprecated. All configurations using `region` should be updated to use the `authorized_aws_region` attribute instead ([#42014](https://github.com/hashicorp/terraform-provider-aws/issues/42014))
+* resource/aws_dx_hosted_connection: The `region` attribute has been deprecated. All configurations using `region` should be updated to use the `connection_region` attribute instead ([#42014](https://github.com/hashicorp/terraform-provider-aws/issues/42014))
 * resource/aws_elasticache_replication_group: The ability to provide an uppercase `engine` value is deprecated ([#42419](https://github.com/hashicorp/terraform-provider-aws/issues/42419))
 * resource/aws_elasticache_user: The ability to provide an uppercase `engine` value is deprecated ([#42419](https://github.com/hashicorp/terraform-provider-aws/issues/42419))
 * resource/aws_elasticache_user_group: The ability to provide an uppercase `engine` value is deprecated ([#42419](https://github.com/hashicorp/terraform-provider-aws/issues/42419))
@@ -109,16 +120,56 @@ NOTES:
 * resource/aws_kinesis_analytics_application: Effective January 27, 2026, AWS will no longer support Kinesis Data Analytics for SQL. This resource is deprecated and will be removed in a future version. Use the `aws_kinesisanalyticsv2_application` resource instead ([#42102](https://github.com/hashicorp/terraform-provider-aws/issues/42102))
 * resource/aws_media_store_container: This resource is deprecated. It will be removed in a future version. Use S3, AWS MediaPackage, or other storage solution instead. ([#42265](https://github.com/hashicorp/terraform-provider-aws/issues/42265))
 * resource/aws_media_store_container_policy: This resource is deprecated. It will be removed in a future version. Use S3, AWS MediaPackage, or other storage solution instead. ([#42265](https://github.com/hashicorp/terraform-provider-aws/issues/42265))
+* resource/aws_s3_bucket: Add `bucket_region` attribute. Use of the `bucket_region` attribute instead of the `region` attribute is encouraged ([#42014](https://github.com/hashicorp/terraform-provider-aws/issues/42014))
 * resource/aws_service_discovery_service: `health_check_custom_config.failure_threshold` is deprecated. The argument is no longer supported by AWS and is always set to 1 ([#40777](https://github.com/hashicorp/terraform-provider-aws/issues/40777))
+* resource/aws_servicequotas_template: The `region` attribute has been deprecated. All configurations using `region` should be updated to use the `aws_region` attribute instead ([#42131](https://github.com/hashicorp/terraform-provider-aws/issues/42131))
+* resource/aws_ssmincidents_replication_set: The `region` attribute has been deprecated. All configurations using `region` should be updated to use the `regions` attribute instead ([#42014](https://github.com/hashicorp/terraform-provider-aws/issues/42014))
 
 ENHANCEMENTS:
 
 * data-source/aws_ami: Add `allow_unsafe_filter` argument ([#42114](https://github.com/hashicorp/terraform-provider-aws/issues/42114))
+* data-source/aws_availability_zone: Add `group_long_name` attribute ([#42014](https://github.com/hashicorp/terraform-provider-aws/issues/42014))
+* data-source/aws_availability_zone: Mark `region` as Optional, allowing a value to be configured ([#42014](https://github.com/hashicorp/terraform-provider-aws/issues/42014))
+* resource/aws_auditmanager_assessment: Add plan-time validation of `roles.role_arn` and `roles.role_type` ([#42131](https://github.com/hashicorp/terraform-provider-aws/issues/42131))
+* resource/aws_auditmanager_control: Add plan-time validation of `control_mapping_sources.source_frequency`, `control_mapping_sources.source_set_up_option`, and `control_mapping_sources.source_type` ([#42131](https://github.com/hashicorp/terraform-provider-aws/issues/42131))
 * resource/aws_cognito_user_in_group: Add import support ([#34082](https://github.com/hashicorp/terraform-provider-aws/issues/34082))
+* resource/aws_guardduty_detector: Adds validation to `finding_publishing_frequency`. ([#42436](https://github.com/hashicorp/terraform-provider-aws/issues/42436))
+* resource/aws_lb_listener: `mutual_authentication` attribute `trust_store_arn` is required if `mode` is `verify` ([#42326](https://github.com/hashicorp/terraform-provider-aws/issues/42326))
+* resource/aws_quicksight_iam_policy_assignment: Add plan-time validation of `policy_arn` ([#42131](https://github.com/hashicorp/terraform-provider-aws/issues/42131))
+* resource/aws_securitylake_subscriber: Add plan-time validation of `access_type` `source.aws_log_source_resource.source_name`, and `subscriber_identity.external_id` ([#42131](https://github.com/hashicorp/terraform-provider-aws/issues/42131))
 
 BUG FIXES:
 
+* resource/aws_auditmanager_control: Fix `Provider produced inconsistent result after apply` errors ([#42131](https://github.com/hashicorp/terraform-provider-aws/issues/42131))
 * resource/aws_rekognition_stream_processor: Fix `regions_of_interest.bounding_box` and `regions_of_interest.polygon` argument validation ([#41380](https://github.com/hashicorp/terraform-provider-aws/issues/41380))
+* resource/aws_securitylake_subscriber: Change `access_type` to [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew) ([#42131](https://github.com/hashicorp/terraform-provider-aws/issues/42131))
+
+## 5.97.0 (May  1, 2025)
+
+FEATURES:
+
+* **New Resource:** `aws_ec2_default_credit_specification` ([#42345](https://github.com/hashicorp/terraform-provider-aws/issues/42345))
+
+ENHANCEMENTS:
+
+* data-source/aws_glue_connection: Support `athena_properties` attribute ([#42262](https://github.com/hashicorp/terraform-provider-aws/issues/42262))
+* data-source/aws_imagebuilder_infrastructure_configuration: Add `placement` attribute ([#42347](https://github.com/hashicorp/terraform-provider-aws/issues/42347))
+* data-source/aws_networkfirewall_firewall: Add `enabled_analysis_types` attribute ([#42160](https://github.com/hashicorp/terraform-provider-aws/issues/42160))
+* data-source/aws_workspaces_directory: Add `certificate_based_auth_properties` attribute ([#42269](https://github.com/hashicorp/terraform-provider-aws/issues/42269))
+* resource/aws_accessanalyzer_analyzer: Add `configuration.unused_access.analysis_rule` argument ([#42332](https://github.com/hashicorp/terraform-provider-aws/issues/42332))
+* resource/aws_fis_experiment_template: Add support for `ManagedResources` to `action.*.target` ([#42376](https://github.com/hashicorp/terraform-provider-aws/issues/42376))
+* resource/aws_glue_connection: Add `athena_properties` argument and allow `DYNAMODB` connection type. ([#42262](https://github.com/hashicorp/terraform-provider-aws/issues/42262))
+* resource/aws_glue_connection: Support `DYNAMODB` as a valid value for `connection_type` ([#42262](https://github.com/hashicorp/terraform-provider-aws/issues/42262))
+* resource/aws_imagebuilder_infrastructure_configuration: Add `placement` argument ([#42347](https://github.com/hashicorp/terraform-provider-aws/issues/42347))
+* resource/aws_networkfirewall_firewall: Add `enabled_analysis_types` argument ([#42160](https://github.com/hashicorp/terraform-provider-aws/issues/42160))
+* resource/aws_workspaces_directory: Add `certificate_based_auth_properties` configuration block ([#42269](https://github.com/hashicorp/terraform-provider-aws/issues/42269))
+
+BUG FIXES:
+
+* resource/aws_vpclattice_listener_rule: Prevents error when setting `listener_identifier` to ARN. ([#42215](https://github.com/hashicorp/terraform-provider-aws/issues/42215))
+* resource/aws_vpclattice_listener_rule: Prevents error when setting `service_identifier` to ARN. ([#42215](https://github.com/hashicorp/terraform-provider-aws/issues/42215))
+* resource/aws_vpclattice_listener_rule: Requires `match.http_match`. ([#42215](https://github.com/hashicorp/terraform-provider-aws/issues/42215))
+* resource/aws_vpclattice_listener_rule: Requires exactly one of `action.fixed_response` or `action.forward`. ([#42215](https://github.com/hashicorp/terraform-provider-aws/issues/42215))
 
 ## 5.96.0 (April 24, 2025)
 

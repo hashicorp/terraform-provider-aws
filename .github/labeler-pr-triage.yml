@@ -779,6 +779,7 @@ service/ec2:
               - 'website/**/availability_zone*'
               - 'website/**/ec2_availability_*'
               - 'website/**/ec2_capacity_*'
+              - 'website/**/ec2_default_credit_specification*'
               - 'website/**/ec2_fleet*'
               - 'website/**/ec2_host*'
               - 'website/**/ec2_image_*'

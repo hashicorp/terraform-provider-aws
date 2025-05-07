@@ -2531,7 +2531,10 @@ resource "aws_s3_object" "test" {
 
 func testAccObjectConfig_kmsID(rName string, source string) string {
 	return fmt.Sprintf(`
-resource "aws_kms_key" "kms_key_1" {}
+resource "aws_kms_key" "kms_key_1" {
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+}
 
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
@@ -2993,6 +2996,7 @@ func testAccObjectConfig_bucketKeyEnabled(rName string, content string) string {
 resource "aws_kms_key" "test" {
   description             = "Encrypts test objects"
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_s3_bucket" "test" {
@@ -3014,6 +3018,7 @@ func testAccObjectConfig_bucketBucketKeyEnabled(rName string, content string) st
 resource "aws_kms_key" "test" {
   description             = "Encrypts test objects"
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_s3_bucket" "test" {
@@ -3048,6 +3053,7 @@ func testAccObjectConfig_defaultBucketSSE(rName string, content string) string {
 resource "aws_kms_key" "test" {
   description             = "Encrypts test objects"
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_s3_bucket" "test" {

@@ -51,7 +51,7 @@ func newApplicationResource(context.Context) (resource.ResourceWithConfigure, er
 }
 
 type applicationResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[applicationResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }
@@ -573,6 +573,7 @@ func waitApplicationRunning(ctx context.Context, conn *m2.Client, id string, tim
 }
 
 type applicationResourceModel struct {
+	framework.WithRegionModel
 	ApplicationID  types.String                                     `tfsdk:"application_id"`
 	ApplicationARN types.String                                     `tfsdk:"arn"`
 	CurrentVersion types.Int64                                      `tfsdk:"current_version"`

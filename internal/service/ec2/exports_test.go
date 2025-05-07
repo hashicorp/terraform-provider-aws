@@ -71,7 +71,7 @@ var (
 	ResourceSecurityGroupEgressRule                       = newSecurityGroupEgressRuleResource
 	ResourceSecurityGroupIngressRule                      = newSecurityGroupIngressRuleResource
 	ResourceSecurityGroupRule                             = resourceSecurityGroupRule
-	ResourceSecurityGroupVPCAssociation                   = newResourceSecurityGroupVPCAssociation
+	ResourceSecurityGroupVPCAssociation                   = newSecurityGroupVPCAssociationResource
 	ResourceSnapshotCreateVolumePermission                = resourceSnapshotCreateVolumePermission
 	ResourceSpotDataFeedSubscription                      = resourceSpotDataFeedSubscription
 	ResourceSpotFleetRequest                              = resourceSpotFleetRequest
@@ -142,6 +142,7 @@ var (
 	FindClientVPNRouteByThreePartKey                           = findClientVPNRouteByThreePartKey
 	FindCreateSnapshotCreateVolumePermissionByTwoPartKey       = findCreateSnapshotCreateVolumePermissionByTwoPartKey
 	FindCustomerGatewayByID                                    = findCustomerGatewayByID
+	FindDefaultCreditSpecificationByInstanceFamily             = findDefaultCreditSpecificationByInstanceFamily
 	FindDHCPOptionsByID                                        = findDHCPOptionsByID
 	FindEBSVolumeAttachment                                    = findVolumeAttachment
 	FindEBSVolumeByID                                          = findEBSVolumeByID
@@ -195,6 +196,7 @@ var (
 	FindSecurityGroupByID                                      = findSecurityGroupByID
 	FindSecurityGroupEgressRuleByID                            = findSecurityGroupEgressRuleByID
 	FindSecurityGroupIngressRuleByID                           = findSecurityGroupIngressRuleByID
+	FindSecurityGroupVPCAssociationByTwoPartKey                = findSecurityGroupVPCAssociationByTwoPartKey
 	FindSnapshot                                               = findSnapshot
 	FindSnapshotByID                                           = findSnapshotByID
 	FindSpotDatafeedSubscription                               = findSpotDatafeedSubscription

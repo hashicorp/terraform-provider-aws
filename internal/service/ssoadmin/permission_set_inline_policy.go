@@ -24,7 +24,7 @@ import (
 )
 
 // @SDKResource("aws_ssoadmin_permission_set_inline_policy", name="Permission Set Inline Policy")
-func ResourcePermissionSetInlinePolicy() *schema.Resource {
+func resourcePermissionSetInlinePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePermissionSetInlinePolicyPut,
 		ReadWithoutTimeout:   resourcePermissionSetInlinePolicyRead,
@@ -110,7 +110,7 @@ func resourcePermissionSetInlinePolicyRead(ctx context.Context, d *schema.Resour
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	policy, err := FindPermissionSetInlinePolicy(ctx, conn, permissionSetARN, instanceARN)
+	policy, err := findPermissionSetInlinePolicyByTwoPartKey(ctx, conn, permissionSetARN, instanceARN)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SSO Permission Set Inline Policy (%s) not found, removing from state", d.Id())
@@ -166,7 +166,7 @@ func resourcePermissionSetInlinePolicyDelete(ctx context.Context, d *schema.Reso
 	return diags
 }
 
-func FindPermissionSetInlinePolicy(ctx context.Context, conn *ssoadmin.Client, permissionSetARN, instanceARN string) (string, error) {
+func findPermissionSetInlinePolicyByTwoPartKey(ctx context.Context, conn *ssoadmin.Client, permissionSetARN, instanceARN string) (string, error) {
 	input := &ssoadmin.GetInlinePolicyForPermissionSetInput{
 		InstanceArn:      aws.String(instanceARN),
 		PermissionSetArn: aws.String(permissionSetARN),

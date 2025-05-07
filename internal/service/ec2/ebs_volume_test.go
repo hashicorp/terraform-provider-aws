@@ -1179,8 +1179,10 @@ func testAccEBSVolumeConfig_kmsKey(rName string) string {
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description = %[1]q
-  policy      = <<POLICY
+  description             = %[1]q
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+  policy                  = <<POLICY
 {
   "Version": "2012-10-17",
   "Id": "kms-tf-1",

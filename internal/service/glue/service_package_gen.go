@@ -8,186 +8,290 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/glue"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
-	return []*types.ServicePackageFrameworkDataSource{
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
+	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:  newDataSourceRegistry,
+			Factory:  newRegistryDataSource,
 			TypeName: "aws_glue_registry",
 			Name:     "Registry",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
+			}),
 		},
 	}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
+	return []*inttypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newResourceCatalogTableOptimizer,
+			Factory:  newCatalogTableOptimizerResource,
 			TypeName: "aws_glue_catalog_table_optimizer",
 			Name:     "Catalog Table Optimizer",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
+			}),
 		},
 	}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
-	return []*types.ServicePackageSDKDataSource{
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
+	return []*inttypes.ServicePackageSDKDataSource{
 		{
 			Factory:  dataSourceCatalogTable,
 			TypeName: "aws_glue_catalog_table",
 			Name:     "Catalog Table",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
+			}),
 		},
 		{
 			Factory:  dataSourceConnection,
 			TypeName: "aws_glue_connection",
 			Name:     "Connection",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
+			}),
 		},
 		{
 			Factory:  dataSourceDataCatalogEncryptionSettings,
 			TypeName: "aws_glue_data_catalog_encryption_settings",
 			Name:     "Data Catalog Encryption Settings",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
+			}),
 		},
 		{
 			Factory:  dataSourceScript,
 			TypeName: "aws_glue_script",
 			Name:     "Script",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
+			}),
 		},
 	}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
-	return []*types.ServicePackageSDKResource{
+func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePackageSDKResource {
+	return []*inttypes.ServicePackageSDKResource{
 		{
 			Factory:  resourceCatalogDatabase,
 			TypeName: "aws_glue_catalog_database",
 			Name:     "Database",
-			Tags: unique.Make(types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			}),
 		},
 		{
 			Factory:  resourceCatalogTable,
 			TypeName: "aws_glue_catalog_table",
 			Name:     "Catalog Table",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
+			}),
 		},
 		{
 			Factory:  resourceClassifier,
 			TypeName: "aws_glue_classifier",
 			Name:     "Classifier",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
+			}),
 		},
 		{
 			Factory:  resourceConnection,
 			TypeName: "aws_glue_connection",
 			Name:     "Connection",
-			Tags: unique.Make(types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			}),
 		},
 		{
 			Factory:  resourceCrawler,
 			TypeName: "aws_glue_crawler",
 			Name:     "Crawler",
-			Tags: unique.Make(types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			}),
 		},
 		{
 			Factory:  resourceDataCatalogEncryptionSettings,
 			TypeName: "aws_glue_data_catalog_encryption_settings",
 			Name:     "Data Catalog Encryption Settings",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
+			}),
 		},
 		{
 			Factory:  resourceDataQualityRuleset,
 			TypeName: "aws_glue_data_quality_ruleset",
 			Name:     "Data Quality Ruleset",
-			Tags: unique.Make(types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			}),
 		},
 		{
 			Factory:  resourceDevEndpoint,
 			TypeName: "aws_glue_dev_endpoint",
 			Name:     "Dev Endpoint",
-			Tags: unique.Make(types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			}),
 		},
 		{
 			Factory:  resourceJob,
 			TypeName: "aws_glue_job",
 			Name:     "Job",
-			Tags: unique.Make(types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			}),
 		},
 		{
 			Factory:  resourceMLTransform,
 			TypeName: "aws_glue_ml_transform",
 			Name:     "ML Transform",
-			Tags: unique.Make(types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			}),
 		},
 		{
 			Factory:  resourcePartition,
 			TypeName: "aws_glue_partition",
 			Name:     "Partition",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
+			}),
 		},
 		{
 			Factory:  resourcePartitionIndex,
 			TypeName: "aws_glue_partition_index",
 			Name:     "Partition Index",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
+			}),
 		},
 		{
 			Factory:  resourceRegistry,
 			TypeName: "aws_glue_registry",
 			Name:     "Registry",
-			Tags: unique.Make(types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			}),
 		},
 		{
 			Factory:  resourceResourcePolicy,
 			TypeName: "aws_glue_resource_policy",
 			Name:     "Resource Policy",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
+			}),
 		},
 		{
 			Factory:  resourceSchema,
 			TypeName: "aws_glue_schema",
 			Name:     "Schema",
-			Tags: unique.Make(types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			}),
 		},
 		{
 			Factory:  resourceSecurityConfiguration,
 			TypeName: "aws_glue_security_configuration",
 			Name:     "Security Configuration",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
+			}),
 		},
 		{
 			Factory:  resourceTrigger,
 			TypeName: "aws_glue_trigger",
 			Name:     "Trigger",
-			Tags: unique.Make(types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			}),
 		},
 		{
 			Factory:  resourceUserDefinedFunction,
 			TypeName: "aws_glue_user_defined_function",
 			Name:     "User Defined Function",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
+			}),
 		},
 		{
 			Factory:  resourceWorkflow,
 			TypeName: "aws_glue_workflow",
 			Name:     "Workflow",
-			Tags: unique.Make(types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			}),
 		},
 	}
@@ -203,6 +307,16 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 	optFns := []func(*glue.Options){
 		glue.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+		func(o *glue.Options) {
+			if region := config[names.AttrRegion].(string); o.Region != region {
+				tflog.Info(ctx, "overriding provider-configured AWS API region", map[string]any{
+					"service":         p.ServicePackageName(),
+					"original_region": o.Region,
+					"override_region": region,
+				})
+				o.Region = region
+			}
+		},
 		withExtraOptions(ctx, p, config),
 	}
 

@@ -49,7 +49,7 @@ func newJobQueueResource(_ context.Context) (resource.ResourceWithConfigure, err
 }
 
 type jobQueueResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[jobQueueResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }
@@ -499,6 +499,7 @@ func waitJobQueueDeleted(ctx context.Context, conn *batch.Client, id string, tim
 }
 
 type jobQueueResourceModel struct {
+	framework.WithRegionModel
 	ComputeEnvironmentOrder  fwtypes.ListNestedObjectValueOf[computeEnvironmentOrderModel] `tfsdk:"compute_environment_order"`
 	ID                       types.String                                                  `tfsdk:"id"`
 	JobQueueARN              types.String                                                  `tfsdk:"arn"`

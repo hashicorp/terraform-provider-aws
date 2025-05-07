@@ -56,7 +56,7 @@ func newAgentResource(context.Context) (resource.ResourceWithConfigure, error) {
 }
 
 type agentResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[agentResourceModel]
 	framework.WithTimeouts
 }
 
@@ -664,6 +664,7 @@ func removeDefaultPrompts(agent *awstypes.Agent) {
 }
 
 type agentResourceModel struct {
+	framework.WithRegionModel
 	AgentARN                    types.String                                                      `tfsdk:"agent_arn"`
 	AgentID                     types.String                                                      `tfsdk:"agent_id"`
 	AgentCollaboration          fwtypes.StringEnum[awstypes.AgentCollaboration]                   `tfsdk:"agent_collaboration"`

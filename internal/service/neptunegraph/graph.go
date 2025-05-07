@@ -52,7 +52,7 @@ func newGraphResource(_ context.Context) (resource.ResourceWithConfigure, error)
 }
 
 type graphResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[graphResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }
@@ -455,6 +455,7 @@ func waitGraphDeleted(ctx context.Context, conn *neptunegraph.Client, id string,
 }
 
 type graphResourceModel struct {
+	framework.WithRegionModel
 	ARN                       types.String                                                    `tfsdk:"arn"`
 	DeletionProtection        types.Bool                                                      `tfsdk:"deletion_protection"`
 	Endpoint                  types.String                                                    `tfsdk:"endpoint"`

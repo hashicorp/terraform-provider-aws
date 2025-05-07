@@ -42,7 +42,7 @@ func newCustomDomainAssociationResource(context.Context) (resource.ResourceWithC
 }
 
 type customDomainAssociationResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[customDomainAssociationResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }
@@ -236,6 +236,7 @@ func findCustomDomainAssociationByTwoPartKey(ctx context.Context, conn *redshift
 }
 
 type customDomainAssociationResourceModel struct {
+	framework.WithRegionModel
 	CustomDomainCertificateARN        fwtypes.ARN       `tfsdk:"custom_domain_certificate_arn"`
 	CustomDomainCertificateExpiryTime timetypes.RFC3339 `tfsdk:"custom_domain_certificate_expiry_time"`
 	CustomDomainName                  types.String      `tfsdk:"custom_domain_name"`

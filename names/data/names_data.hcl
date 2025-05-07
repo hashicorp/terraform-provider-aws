@@ -45,6 +45,8 @@ service "account" {
   provider_package_correct = "account"
   doc_prefix               = ["account_"]
   brand                    = "AWS"
+
+  is_global = true
 }
 
 service "acm" {
@@ -1303,6 +1305,8 @@ service "cloudfront" {
   provider_package_correct = "cloudfront"
   doc_prefix               = ["cloudfront_"]
   brand                    = "AWS"
+
+  is_global = true
 }
 
 service "cloudfrontkeyvaluestore" {
@@ -1337,6 +1341,8 @@ service "cloudfrontkeyvaluestore" {
   provider_package_correct = "cloudfrontkeyvaluestore"
   doc_prefix               = ["cloudfrontkeyvaluestore_"]
   brand                    = "AWS"
+
+  is_global = true
 }
 
 service "cloudhsmv2" {
@@ -3733,6 +3739,8 @@ service "globalaccelerator" {
   provider_package_correct = "globalaccelerator"
   doc_prefix               = ["globalaccelerator_"]
   brand                    = "AWS"
+
+  is_global = true
 }
 
 service "glue" {
@@ -3916,6 +3924,8 @@ service "iam" {
   provider_package_correct = "iam"
   doc_prefix               = ["iam_"]
   brand                    = "AWS"
+
+  is_global = true
 }
 
 service "inspector" {
@@ -5623,6 +5633,8 @@ service "networkmanager" {
   provider_package_correct = "networkmanager"
   doc_prefix               = ["networkmanager_"]
   brand                    = "AWS"
+
+  is_global = true
 }
 
 service "nimble" {
@@ -5821,6 +5833,8 @@ service "organizations" {
   provider_package_correct = "organizations"
   doc_prefix               = ["organizations_"]
   brand                    = "AWS"
+
+  is_global = true
 }
 
 service "outposts" {
@@ -6683,6 +6697,8 @@ service "rolesanywhere" {
   provider_package_correct = "rolesanywhere"
   doc_prefix               = ["rolesanywhere_"]
   brand                    = "AWS"
+
+  is_global = true
 }
 
 service "route53" {
@@ -6712,6 +6728,8 @@ service "route53" {
   provider_package_correct = "route53"
   doc_prefix               = ["route53_cidr_", "route53_delegation_", "route53_health_", "route53_hosted_", "route53_key_", "route53_query_", "route53_record", "route53_traffic_", "route53_vpc_", "route53_zone"]
   brand                    = "AWS"
+
+  is_global = true
 }
 
 service "route53domains" {
@@ -6738,6 +6756,8 @@ service "route53domains" {
   provider_package_correct = "route53domains"
   doc_prefix               = ["route53domains_"]
   brand                    = "AWS"
+
+  is_global = true
 }
 
 service "route53profiles" {
@@ -6817,6 +6837,8 @@ service "route53recoverycontrolconfig" {
   provider_package_correct = "route53recoverycontrolconfig"
   doc_prefix               = ["route53recoverycontrolconfig_"]
   brand                    = "AWS"
+
+  is_global = true
 }
 
 service "route53recoveryreadiness" {
@@ -6848,6 +6870,8 @@ service "route53recoveryreadiness" {
   provider_package_correct = "route53recoveryreadiness"
   doc_prefix               = ["route53recoveryreadiness_"]
   brand                    = "AWS"
+
+  is_global = true
 }
 
 service "route53resolver" {
@@ -7502,6 +7526,8 @@ service "shield" {
   provider_package_correct = "shield"
   doc_prefix               = ["shield_"]
   brand                    = "AWS"
+
+  is_global = true
 }
 
 service "signer" {
@@ -7926,6 +7952,8 @@ service "sts" {
   provider_package_correct = "sts"
   doc_prefix               = ["caller_identity"]
   brand                    = "AWS"
+
+  is_global = true
 }
 
 service "support" {
@@ -8271,6 +8299,8 @@ service "waf" {
   provider_package_correct = "waf"
   doc_prefix               = ["waf_"]
   brand                    = "AWS"
+
+  is_global = true
 }
 
 service "wafregional" {
@@ -8642,7 +8672,7 @@ service "ec2" {
   }
 
   resource_prefix {
-    actual  = "aws_(ami|availability_zone|ec2_(availability|capacity|fleet|host|instance|public_ipv4_pool|serial|spot|tag)|eip|instance|key_pair|launch_template|placement_group|spot)"
+    actual  = "aws_(ami|availability_zone|ec2_(availability|capacity|default_credit_specification|fleet|host|instance|public_ipv4_pool|serial|spot|tag)|eip|instance|key_pair|launch_template|placement_group|spot)"
     correct = "aws_ec2_"
   }
 
@@ -8952,6 +8982,6 @@ service "ec2" {
   provider_package_correct = "ec2"
   split_package            = "ec2"
   file_prefix              = "ec2_"
-  doc_prefix               = ["ami", "availability_zone", "ec2_availability_", "ec2_capacity_", "ec2_fleet", "ec2_host", "ec2_image_", "ec2_instance_", "ec2_public_ipv4_pool", "ec2_serial_", "ec2_spot_", "ec2_tag", "eip", "instance", "key_pair", "launch_template", "placement_group", "spot_"]
+  doc_prefix               = ["ami", "availability_zone", "ec2_availability_", "ec2_capacity_", "ec2_default_credit_specification", "ec2_fleet", "ec2_host", "ec2_image_", "ec2_instance_", "ec2_public_ipv4_pool", "ec2_serial_", "ec2_spot_", "ec2_tag", "eip", "instance", "key_pair", "launch_template", "placement_group", "spot_"]
   brand                    = "Amazon"
 }

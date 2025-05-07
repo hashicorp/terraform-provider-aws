@@ -21,7 +21,7 @@ func newGroupsDataSource(context.Context) (datasource.DataSourceWithConfigure, e
 }
 
 type groupsDataSource struct {
-	framework.DataSourceWithConfigure
+	framework.DataSourceWithModel[groupsDataSourceModel]
 }
 
 func (d *groupsDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -80,6 +80,7 @@ func (d *groupsDataSource) Read(ctx context.Context, request datasource.ReadRequ
 }
 
 type groupsDataSourceModel struct {
+	framework.WithRegionModel
 	IdentityStoreID types.String                                `tfsdk:"identity_store_id"`
 	Groups          fwtypes.ListNestedObjectValueOf[groupModel] `tfsdk:"groups"`
 }

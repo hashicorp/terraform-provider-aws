@@ -22,19 +22,19 @@ import (
 
 // @FrameworkDataSource("aws_servicecatalogappregistry_attribute_group", name="Attribute Group")
 // @Tags(identifierAttribute="arn")
-func newDataSourceAttributeGroup(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceAttributeGroup{}, nil
+func newAttributeGroupDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &attributeGroupDataSource{}, nil
 }
 
 const (
 	DSNameAttributeGroup = "Attribute Group Data Source"
 )
 
-type dataSourceAttributeGroup struct {
-	framework.DataSourceWithConfigure
+type attributeGroupDataSource struct {
+	framework.DataSourceWithModel[attributeGroupDataSourceModel]
 }
 
-func (d *dataSourceAttributeGroup) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *attributeGroupDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: schema.StringAttribute{
@@ -62,7 +62,7 @@ func (d *dataSourceAttributeGroup) Schema(ctx context.Context, req datasource.Sc
 	}
 }
 
-func (d *dataSourceAttributeGroup) ConfigValidators(_ context.Context) []datasource.ConfigValidator {
+func (d *attributeGroupDataSource) ConfigValidators(_ context.Context) []datasource.ConfigValidator {
 	return []datasource.ConfigValidator{
 		datasourcevalidator.ExactlyOneOf(
 			path.MatchRoot(names.AttrARN),
@@ -72,10 +72,10 @@ func (d *dataSourceAttributeGroup) ConfigValidators(_ context.Context) []datasou
 	}
 }
 
-func (d *dataSourceAttributeGroup) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *attributeGroupDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().ServiceCatalogAppRegistryClient(ctx)
 
-	var data dataSourceAttributeGroupData
+	var data attributeGroupDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -108,7 +108,8 @@ func (d *dataSourceAttributeGroup) Read(ctx context.Context, req datasource.Read
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-type dataSourceAttributeGroupData struct {
+type attributeGroupDataSourceModel struct {
+	framework.WithRegionModel
 	ARN         fwtypes.ARN          `tfsdk:"arn"`
 	Attributes  jsontypes.Normalized `tfsdk:"attributes"`
 	Description types.String         `tfsdk:"description"`

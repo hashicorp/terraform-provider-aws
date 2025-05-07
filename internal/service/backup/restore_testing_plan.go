@@ -47,7 +47,7 @@ func newRestoreTestingPlanResource(_ context.Context) (resource.ResourceWithConf
 }
 
 type restoreTestingPlanResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[restoreTestingPlanResourceModel]
 }
 
 func (r *restoreTestingPlanResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -331,6 +331,7 @@ func findRestoreTestingPlan(ctx context.Context, conn *backup.Client, input *bac
 }
 
 type restoreTestingPlanResourceModel struct {
+	framework.WithRegionModel
 	RecoveryPointSelection     fwtypes.ListNestedObjectValueOf[restoreRecoveryPointSelectionModel] `tfsdk:"recovery_point_selection"`
 	RestoreTestingPlanARN      types.String                                                        `tfsdk:"arn"`
 	RestoreTestingPlanName     types.String                                                        `tfsdk:"name"`

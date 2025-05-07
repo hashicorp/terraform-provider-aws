@@ -20,13 +20,14 @@ import (
 )
 
 // @FrameworkResource("aws_macie2_organization_configuration", name="Organization Configuration")
+// @Region(overrideEnabled=false)
 func newOrganizationConfigurationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &organizationConfigurationResource{}
 	return r, nil
 }
 
 type organizationConfigurationResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[organizationConfigurationResourceModel]
 	framework.WithNoOpDelete
 }
 

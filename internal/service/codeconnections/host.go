@@ -50,7 +50,7 @@ const (
 )
 
 type hostResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[hostResourceModel]
 	framework.WithTimeouts
 }
 
@@ -402,6 +402,7 @@ func findHostByARN(ctx context.Context, conn *codeconnections.Client, arn string
 }
 
 type hostResourceModel struct {
+	framework.WithRegionModel
 	HostArn          types.String                                                      `tfsdk:"arn"`
 	ID               types.String                                                      `tfsdk:"id"`
 	Name             types.String                                                      `tfsdk:"name"`

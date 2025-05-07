@@ -5,25 +5,22 @@ package datazone_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/datazone"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfdatazone "github.com/hashicorp/terraform-provider-aws/internal/service/datazone"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccDataZoneDomain_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var domain datazone.GetDomainOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_datazone_domain.test"
@@ -59,7 +56,6 @@ func TestAccDataZoneDomain_basic(t *testing.T) {
 
 func TestAccDataZoneDomain_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var domain datazone.GetDomainOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_datazone_domain.test"
@@ -87,7 +83,6 @@ func TestAccDataZoneDomain_disappears(t *testing.T) {
 
 func TestAccDataZoneDomain_kms_key_identifier(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var domain datazone.GetDomainOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_datazone_domain.test"
@@ -121,7 +116,6 @@ func TestAccDataZoneDomain_kms_key_identifier(t *testing.T) {
 
 func TestAccDataZoneDomain_description(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var domain datazone.GetDomainOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_datazone_domain.test"
@@ -156,7 +150,6 @@ func TestAccDataZoneDomain_description(t *testing.T) {
 
 func TestAccDataZoneDomain_single_sign_on(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var domain datazone.GetDomainOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_datazone_domain.test"
@@ -190,7 +183,6 @@ func TestAccDataZoneDomain_single_sign_on(t *testing.T) {
 
 func TestAccDataZoneDomain_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var domain datazone.GetDomainOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_datazone_domain.test"
@@ -247,48 +239,39 @@ func testAccCheckDomainDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			input := datazone.GetDomainInput{
-				Identifier: aws.String(rs.Primary.ID),
-			}
-			_, err := conn.GetDomain(ctx, &input)
+			_, err := tfdatazone.FindDomainByID(ctx, conn, rs.Primary.ID)
 
-			if tfdatazone.IsResourceMissing(err) {
-				return nil
+			if tfresource.NotFound(err) {
+				continue
 			}
 
 			if err != nil {
-				return create.Error(names.DataZone, create.ErrActionCheckingDestroyed, tfdatazone.ResNameDomain, rs.Primary.ID, err)
+				return err
 			}
 
-			return create.Error(names.DataZone, create.ErrActionCheckingDestroyed, tfdatazone.ResNameDomain, rs.Primary.ID, errors.New("not destroyed"))
+			return fmt.Errorf("DataZone Domain (%s) still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckDomainExists(ctx context.Context, name string, domain *datazone.GetDomainOutput) resource.TestCheckFunc {
+func testAccCheckDomainExists(ctx context.Context, n string, v *datazone.GetDomainOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.DataZone, create.ErrActionCheckingExistence, tfdatazone.ResNameDomain, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.DataZone, create.ErrActionCheckingExistence, tfdatazone.ResNameDomain, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DataZoneClient(ctx)
-		input := datazone.GetDomainInput{
-			Identifier: aws.String(rs.Primary.ID),
-		}
-		resp, err := conn.GetDomain(ctx, &input)
+
+		output, err := tfdatazone.FindDomainByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
-			return create.Error(names.DataZone, create.ErrActionCheckingExistence, tfdatazone.ResNameDomain, rs.Primary.ID, err)
+			return err
 		}
 
-		*domain = *resp
+		*v = *output
 
 		return nil
 	}
@@ -372,6 +355,7 @@ func testAccDomainConfig_kms_key_identifier(rName string) string {
 		fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_datazone_domain" "test" {

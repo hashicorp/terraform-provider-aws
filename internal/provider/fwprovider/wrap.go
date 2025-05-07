@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 )
 
 // Implemented by (Config|Plan|State).GetAttribute().
@@ -25,7 +26,7 @@ type contextFunc func(context.Context, getAttributeFunc, *conns.AWSClient) (cont
 type wrappedDataSourceOptions struct {
 	// bootstrapContext is run on all wrapped methods before any interceptors.
 	bootstrapContext contextFunc
-	interceptors     dataSourceInterceptors
+	interceptors     interceptorInvocations
 	typeName         string
 }
 
@@ -55,7 +56,25 @@ func (w *wrappedDataSource) Schema(ctx context.Context, request datasource.Schem
 		return
 	}
 
-	w.inner.Schema(ctx, request, response)
+	f := func(ctx context.Context, request *datasource.SchemaRequest, response *datasource.SchemaResponse) diag.Diagnostics {
+		w.inner.Schema(ctx, *request, response)
+		return response.Diagnostics
+	}
+	response.Diagnostics.Append(interceptedHandler(w.opts.interceptors.dataSourceSchema(), f, w.meta)(ctx, &request, response)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	// Validate the data source's model against the schema.
+	if v, ok := w.inner.(framework.DataSourceValidateModel); ok {
+		response.Diagnostics.Append(v.ValidateModel(ctx, &response.Schema)...)
+		if response.Diagnostics.HasError() {
+			response.Diagnostics.AddError("data source model validation error", w.opts.typeName)
+			return
+		}
+	} else {
+		response.Diagnostics.AddError("missing framework.DataSourceValidateModel", w.opts.typeName)
+	}
 }
 
 func (w *wrappedDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
@@ -65,11 +84,11 @@ func (w *wrappedDataSource) Read(ctx context.Context, request datasource.ReadReq
 		return
 	}
 
-	f := func(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) diag.Diagnostics {
-		w.inner.Read(ctx, request, response)
+	f := func(ctx context.Context, request *datasource.ReadRequest, response *datasource.ReadResponse) diag.Diagnostics {
+		w.inner.Read(ctx, *request, response)
 		return response.Diagnostics
 	}
-	response.Diagnostics.Append(interceptedHandler(w.opts.interceptors.read(), f, w.meta)(ctx, request, response)...)
+	response.Diagnostics.Append(interceptedHandler(w.opts.interceptors.dataSourceRead(), f, w.meta)(ctx, &request, response)...)
 }
 
 func (w *wrappedDataSource) Configure(ctx context.Context, request datasource.ConfigureRequest, response *datasource.ConfigureResponse) {
@@ -119,7 +138,7 @@ func (w *wrappedDataSource) ValidateConfig(ctx context.Context, request datasour
 type wrappedEphemeralResourceOptions struct {
 	// bootstrapContext is run on all wrapped methods before any interceptors.
 	bootstrapContext contextFunc
-	interceptors     ephemeralResourceInterceptors
+	interceptors     interceptorInvocations
 	typeName         string
 }
 
@@ -149,7 +168,22 @@ func (w *wrappedEphemeralResource) Schema(ctx context.Context, request ephemeral
 		return
 	}
 
-	w.inner.Schema(ctx, request, response)
+	f := func(ctx context.Context, request *ephemeral.SchemaRequest, response *ephemeral.SchemaResponse) diag.Diagnostics {
+		w.inner.Schema(ctx, *request, response)
+		return response.Diagnostics
+	}
+	response.Diagnostics.Append(interceptedHandler(w.opts.interceptors.ephemeralResourceSchema(), f, w.meta)(ctx, &request, response)...)
+
+	// Validate the ephemeral resource's model against the schema.
+	if v, ok := w.inner.(framework.EphemeralResourceValidateModel); ok {
+		response.Diagnostics.Append(v.ValidateModel(ctx, &response.Schema)...)
+		if response.Diagnostics.HasError() {
+			response.Diagnostics.AddError("ephemeral resource model validation error", w.opts.typeName)
+			return
+		}
+	} else {
+		response.Diagnostics.AddError("missing framework.EphemeralResourceValidateModel", w.opts.typeName)
+	}
 }
 
 func (w *wrappedEphemeralResource) Open(ctx context.Context, request ephemeral.OpenRequest, response *ephemeral.OpenResponse) {
@@ -159,11 +193,11 @@ func (w *wrappedEphemeralResource) Open(ctx context.Context, request ephemeral.O
 		return
 	}
 
-	f := func(ctx context.Context, request ephemeral.OpenRequest, response *ephemeral.OpenResponse) diag.Diagnostics {
-		w.inner.Open(ctx, request, response)
+	f := func(ctx context.Context, request *ephemeral.OpenRequest, response *ephemeral.OpenResponse) diag.Diagnostics {
+		w.inner.Open(ctx, *request, response)
 		return response.Diagnostics
 	}
-	response.Diagnostics.Append(interceptedHandler(w.opts.interceptors.open(), f, w.meta)(ctx, request, response)...)
+	response.Diagnostics.Append(interceptedHandler(w.opts.interceptors.ephemeralResourceOpen(), f, w.meta)(ctx, &request, response)...)
 }
 
 func (w *wrappedEphemeralResource) Configure(ctx context.Context, request ephemeral.ConfigureRequest, response *ephemeral.ConfigureResponse) {
@@ -188,11 +222,11 @@ func (w *wrappedEphemeralResource) Renew(ctx context.Context, request ephemeral.
 			return
 		}
 
-		f := func(ctx context.Context, request ephemeral.RenewRequest, response *ephemeral.RenewResponse) diag.Diagnostics {
-			v.Renew(ctx, request, response)
+		f := func(ctx context.Context, request *ephemeral.RenewRequest, response *ephemeral.RenewResponse) diag.Diagnostics {
+			v.Renew(ctx, *request, response)
 			return response.Diagnostics
 		}
-		response.Diagnostics.Append(interceptedHandler(w.opts.interceptors.renew(), f, w.meta)(ctx, request, response)...)
+		response.Diagnostics.Append(interceptedHandler(w.opts.interceptors.ephemeralResourceRenew(), f, w.meta)(ctx, &request, response)...)
 	}
 }
 
@@ -204,11 +238,11 @@ func (w *wrappedEphemeralResource) Close(ctx context.Context, request ephemeral.
 			return
 		}
 
-		f := func(ctx context.Context, request ephemeral.CloseRequest, response *ephemeral.CloseResponse) diag.Diagnostics {
-			v.Close(ctx, request, response)
+		f := func(ctx context.Context, request *ephemeral.CloseRequest, response *ephemeral.CloseResponse) diag.Diagnostics {
+			v.Close(ctx, *request, response)
 			return response.Diagnostics
 		}
-		response.Diagnostics.Append(interceptedHandler(w.opts.interceptors.close(), f, w.meta)(ctx, request, response)...)
+		response.Diagnostics.Append(interceptedHandler(w.opts.interceptors.ephemeralResourceClose(), f, w.meta)(ctx, &request, response)...)
 	}
 }
 
@@ -242,14 +276,10 @@ func (w *wrappedEphemeralResource) ValidateConfig(ctx context.Context, request e
 	}
 }
 
-// modifyPlanFunc modifies a Terraform plan.
-type modifyPlanFunc func(context.Context, *conns.AWSClient, resource.ModifyPlanRequest, *resource.ModifyPlanResponse)
-
 type wrappedResourceOptions struct {
 	// bootstrapContext is run on all wrapped methods before any interceptors.
 	bootstrapContext contextFunc
-	interceptors     resourceInterceptors
-	modifyPlanFuncs  []modifyPlanFunc
+	interceptors     interceptorInvocations
 	typeName         string
 }
 
@@ -279,7 +309,22 @@ func (w *wrappedResource) Schema(ctx context.Context, request resource.SchemaReq
 		return
 	}
 
-	w.inner.Schema(ctx, request, response)
+	f := func(ctx context.Context, request *resource.SchemaRequest, response *resource.SchemaResponse) diag.Diagnostics {
+		w.inner.Schema(ctx, *request, response)
+		return response.Diagnostics
+	}
+	response.Diagnostics.Append(interceptedHandler(w.opts.interceptors.resourceSchema(), f, w.meta)(ctx, &request, response)...)
+
+	// Validate the resource's model against the schema.
+	if v, ok := w.inner.(framework.ResourceValidateModel); ok {
+		response.Diagnostics.Append(v.ValidateModel(ctx, &response.Schema)...)
+		if response.Diagnostics.HasError() {
+			response.Diagnostics.AddError("resource model validation error", w.opts.typeName)
+			return
+		}
+	} else if w.opts.typeName != "aws_lexv2models_bot_version" { // Hacky yukkery caused by attribute of type map[string]Object.
+		response.Diagnostics.AddError("missing framework.ResourceValidateModel", w.opts.typeName)
+	}
 }
 
 func (w *wrappedResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
@@ -289,11 +334,11 @@ func (w *wrappedResource) Create(ctx context.Context, request resource.CreateReq
 		return
 	}
 
-	f := func(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) diag.Diagnostics {
-		w.inner.Create(ctx, request, response)
+	f := func(ctx context.Context, request *resource.CreateRequest, response *resource.CreateResponse) diag.Diagnostics {
+		w.inner.Create(ctx, *request, response)
 		return response.Diagnostics
 	}
-	response.Diagnostics.Append(interceptedHandler(w.opts.interceptors.create(), f, w.meta)(ctx, request, response)...)
+	response.Diagnostics.Append(interceptedHandler(w.opts.interceptors.resourceCreate(), f, w.meta)(ctx, &request, response)...)
 }
 
 func (w *wrappedResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
@@ -303,11 +348,11 @@ func (w *wrappedResource) Read(ctx context.Context, request resource.ReadRequest
 		return
 	}
 
-	f := func(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) diag.Diagnostics {
-		w.inner.Read(ctx, request, response)
+	f := func(ctx context.Context, request *resource.ReadRequest, response *resource.ReadResponse) diag.Diagnostics {
+		w.inner.Read(ctx, *request, response)
 		return response.Diagnostics
 	}
-	response.Diagnostics.Append(interceptedHandler(w.opts.interceptors.read(), f, w.meta)(ctx, request, response)...)
+	response.Diagnostics.Append(interceptedHandler(w.opts.interceptors.resourceRead(), f, w.meta)(ctx, &request, response)...)
 }
 
 func (w *wrappedResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
@@ -317,11 +362,11 @@ func (w *wrappedResource) Update(ctx context.Context, request resource.UpdateReq
 		return
 	}
 
-	f := func(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) diag.Diagnostics {
-		w.inner.Update(ctx, request, response)
+	f := func(ctx context.Context, request *resource.UpdateRequest, response *resource.UpdateResponse) diag.Diagnostics {
+		w.inner.Update(ctx, *request, response)
 		return response.Diagnostics
 	}
-	response.Diagnostics.Append(interceptedHandler(w.opts.interceptors.update(), f, w.meta)(ctx, request, response)...)
+	response.Diagnostics.Append(interceptedHandler(w.opts.interceptors.resourceUpdate(), f, w.meta)(ctx, &request, response)...)
 }
 
 func (w *wrappedResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
@@ -331,11 +376,11 @@ func (w *wrappedResource) Delete(ctx context.Context, request resource.DeleteReq
 		return
 	}
 
-	f := func(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) diag.Diagnostics {
-		w.inner.Delete(ctx, request, response)
+	f := func(ctx context.Context, request *resource.DeleteRequest, response *resource.DeleteResponse) diag.Diagnostics {
+		w.inner.Delete(ctx, *request, response)
 		return response.Diagnostics
 	}
-	response.Diagnostics.Append(interceptedHandler(w.opts.interceptors.delete(), f, w.meta)(ctx, request, response)...)
+	response.Diagnostics.Append(interceptedHandler(w.opts.interceptors.resourceDelete(), f, w.meta)(ctx, &request, response)...)
 }
 
 func (w *wrappedResource) Configure(ctx context.Context, request resource.ConfigureRequest, response *resource.ConfigureResponse) {
@@ -360,7 +405,11 @@ func (w *wrappedResource) ImportState(ctx context.Context, request resource.Impo
 			return
 		}
 
-		v.ImportState(ctx, request, response)
+		f := func(ctx context.Context, request *resource.ImportStateRequest, response *resource.ImportStateResponse) diag.Diagnostics {
+			v.ImportState(ctx, *request, response)
+			return response.Diagnostics
+		}
+		response.Diagnostics.Append(interceptedHandler(w.opts.interceptors.resourceImportState(), f, w.meta)(ctx, &request, response)...)
 
 		return
 	}
@@ -378,16 +427,17 @@ func (w *wrappedResource) ModifyPlan(ctx context.Context, request resource.Modif
 		return
 	}
 
-	for _, f := range w.opts.modifyPlanFuncs {
-		f(ctx, w.meta, request, response)
-		if response.Diagnostics.HasError() {
-			return
+	// We run ModifyPlan interceptors even if the resource has not defined a ModifyPlan method.
+	f := func(ctx context.Context, request *resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) diag.Diagnostics {
+		return response.Diagnostics
+	}
+	if v, ok := w.inner.(resource.ResourceWithModifyPlan); ok {
+		f = func(ctx context.Context, request *resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) diag.Diagnostics {
+			v.ModifyPlan(ctx, *request, response)
+			return response.Diagnostics
 		}
 	}
-
-	if v, ok := w.inner.(resource.ResourceWithModifyPlan); ok {
-		v.ModifyPlan(ctx, request, response)
-	}
+	response.Diagnostics.Append(interceptedHandler(w.opts.interceptors.resourceModifyPlan(), f, w.meta)(ctx, &request, response)...)
 }
 
 func (w *wrappedResource) ConfigValidators(ctx context.Context) []resource.ConfigValidator {
@@ -409,13 +459,13 @@ func (w *wrappedResource) ConfigValidators(ctx context.Context) []resource.Confi
 }
 
 func (w *wrappedResource) ValidateConfig(ctx context.Context, request resource.ValidateConfigRequest, response *resource.ValidateConfigResponse) {
-	if v, ok := w.inner.(resource.ResourceWithValidateConfig); ok {
-		ctx, diags := w.opts.bootstrapContext(ctx, request.Config.GetAttribute, w.meta)
-		response.Diagnostics.Append(diags...)
-		if response.Diagnostics.HasError() {
-			return
-		}
+	ctx, diags := w.opts.bootstrapContext(ctx, request.Config.GetAttribute, w.meta)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
+	if v, ok := w.inner.(resource.ResourceWithValidateConfig); ok {
 		v.ValidateConfig(ctx, request, response)
 	}
 }

@@ -5,15 +5,29 @@ package ssoadmin
 
 // Exports for use in tests only.
 var (
-	ResourceApplication                        = newResourceApplication
-	ResourceApplicationAssignment              = newResourceApplicationAssignment
-	ResourceApplicationAssignmentConfiguration = newResourceApplicationAssignmentConfiguration
-	ResourceApplicationAccessScope             = newResourceApplicationAccessScope
-	ResourceTrustedTokenIssuer                 = newResourceTrustedTokenIssuer
+	ResourceAccountAssignment                  = resourceAccountAssignment
+	ResourceApplication                        = newApplicationResource
+	ResourceApplicationAssignment              = newApplicationAssignmentResource
+	ResourceApplicationAssignmentConfiguration = newApplicationAssignmentConfigurationResource
+	ResourceApplicationAccessScope             = newApplicationAccessScopeResource
+	ResourceCustomerManagedPolicyAttachment    = resourceCustomerManagedPolicyAttachment
+	ResourceInstanceAccessControlAttributes    = resourceInstanceAccessControlAttributes
+	ResourceManagedPolicyAttachment            = resourceManagedPolicyAttachment
+	ResourcePermissionsBoundaryAttachment      = resourcePermissionsBoundaryAttachment
+	ResourcePermissionSet                      = resourcePermissionSet
+	ResourcePermissionSetInlinePolicy          = resourcePermissionSetInlinePolicy
+	ResourceTrustedTokenIssuer                 = newTrustedTokenIssuerResource
 
-	FindApplicationByID                        = findApplicationByID
-	FindApplicationAssignmentByID              = findApplicationAssignmentByID
-	FindApplicationAssignmentConfigurationByID = findApplicationAssignmentConfigurationByID
-	FindApplicationAccessScopeByID             = findApplicationAccessScopeByID
-	FindTrustedTokenIssuerByARN                = findTrustedTokenIssuerByARN
+	FindAccountAssignmentByFivePartKey          = findAccountAssignmentByFivePartKey
+	FindApplicationByID                         = findApplicationByID
+	FindApplicationAssignmentByID               = findApplicationAssignmentByID
+	FindApplicationAssignmentConfigurationByID  = findApplicationAssignmentConfigurationByID
+	FindApplicationAccessScopeByID              = findApplicationAccessScopeByID
+	FindCustomerManagedPolicyByFourPartKey      = findCustomerManagedPolicyByFourPartKey
+	FindInstanceAttributeControlAttributesByARN = findInstanceAttributeControlAttributesByARN
+	FindManagedPolicyByThreePartKey             = findManagedPolicyByThreePartKey
+	FindPermissionsBoundaryByTwoPartKey         = findPermissionsBoundaryByTwoPartKey
+	FindPermissionSetByTwoPartKey               = findPermissionSetByTwoPartKey
+	FindPermissionSetInlinePolicyByTwoPartKey   = findPermissionSetInlinePolicyByTwoPartKey
+	FindTrustedTokenIssuerByARN                 = findTrustedTokenIssuerByARN
 )

@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -192,6 +193,49 @@ func TestAccNetworkFirewallFirewall_deleteProtection(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "delete_protection", acctest.CtFalse),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccNetworkFirewallFirewall_enabledAnalysisTypes(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_networkfirewall_firewall.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFirewallDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFirewallConfig_enabledAnalysisTypes(rName, []string{"HTTP_HOST"}),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFirewallExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "enabled_analysis_types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_analysis_types.0", "HTTP_HOST"),
+				),
+			},
+			{
+				Config: testAccFirewallConfig_enabledAnalysisTypes(rName, []string{"TLS_SNI"}),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFirewallExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "enabled_analysis_types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_analysis_types.0", "TLS_SNI"),
+				),
+			},
+			{
+				Config: testAccFirewallConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFirewallExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "enabled_analysis_types.#", "0"),
 				),
 			},
 			{
@@ -578,6 +622,21 @@ resource "aws_networkfirewall_firewall" "test" {
 `, rName, description))
 }
 
+func testAccFirewallConfig_enabledAnalysisTypes(rName string, enabledAnalysisTypes []string) string {
+	return acctest.ConfigCompose(testAccFirewallConfig_base(rName), fmt.Sprintf(`
+resource "aws_networkfirewall_firewall" "test" {
+  name                   = %[1]q
+  enabled_analysis_types = ["%[2]s"]
+  firewall_policy_arn    = aws_networkfirewall_firewall_policy.test.arn
+  vpc_id                 = aws_vpc.test.id
+
+  subnet_mapping {
+    subnet_id = aws_subnet.test[0].id
+  }
+}
+`, rName, strings.Join(enabledAnalysisTypes, "\", \"")))
+}
+
 func testAccFirewallConfig_updateSubnet(rName string) string {
 	return acctest.ConfigCompose(testAccFirewallConfig_base(rName), fmt.Sprintf(`
 resource "aws_subnet" "example" {
@@ -644,7 +703,10 @@ resource "aws_networkfirewall_firewall" "test" {
 
 func testAccFirewallConfig_encryptionConfiguration(rName, description string) string {
 	return acctest.ConfigCompose(testAccFirewallConfig_base(rName), fmt.Sprintf(`
-resource "aws_kms_key" "test" {}
+resource "aws_kms_key" "test" {
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+}
 
 resource "aws_networkfirewall_firewall" "test" {
   name                = %[1]q

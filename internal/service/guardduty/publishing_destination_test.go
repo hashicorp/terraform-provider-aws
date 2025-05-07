@@ -176,6 +176,7 @@ resource "aws_s3_bucket_policy" "gd_bucket_policy" {
 resource "aws_kms_key" "gd_key" {
   description             = "Temporary key for AccTest of TF"
   deletion_window_in_days = 7
+  enable_key_rotation     = true
   policy                  = data.aws_iam_policy_document.kms_pol.json
 }
 

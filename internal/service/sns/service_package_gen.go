@@ -8,68 +8,97 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sns"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
-	return []*types.ServicePackageFrameworkDataSource{}
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
+	return []*inttypes.ServicePackageFrameworkDataSource{}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{}
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
+	return []*inttypes.ServicePackageFrameworkResource{}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
-	return []*types.ServicePackageSDKDataSource{
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
+	return []*inttypes.ServicePackageSDKDataSource{
 		{
 			Factory:  dataSourceTopic,
 			TypeName: "aws_sns_topic",
 			Name:     "Topic",
-			Tags: unique.Make(types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			}),
 		},
 	}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
-	return []*types.ServicePackageSDKResource{
+func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePackageSDKResource {
+	return []*inttypes.ServicePackageSDKResource{
 		{
 			Factory:  resourcePlatformApplication,
 			TypeName: "aws_sns_platform_application",
 			Name:     "Platform Application",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
+			}),
 		},
 		{
 			Factory:  resourceSMSPreferences,
 			TypeName: "aws_sns_sms_preferences",
 			Name:     "SMS Preferences",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
+			}),
 		},
 		{
 			Factory:  resourceTopic,
 			TypeName: "aws_sns_topic",
 			Name:     "Topic",
-			Tags: unique.Make(types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			}),
 		},
 		{
 			Factory:  resourceTopicDataProtectionPolicy,
 			TypeName: "aws_sns_topic_data_protection_policy",
 			Name:     "Topic Data Protection Policy",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
+			}),
 		},
 		{
 			Factory:  resourceTopicPolicy,
 			TypeName: "aws_sns_topic_policy",
 			Name:     "Topic Policy",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
+			}),
 		},
 		{
 			Factory:  resourceTopicSubscription,
 			TypeName: "aws_sns_topic_subscription",
 			Name:     "Topic Subscription",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
+			}),
 		},
 	}
 }
@@ -84,6 +113,16 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 	optFns := []func(*sns.Options){
 		sns.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+		func(o *sns.Options) {
+			if region := config[names.AttrRegion].(string); o.Region != region {
+				tflog.Info(ctx, "overriding provider-configured AWS API region", map[string]any{
+					"service":         p.ServicePackageName(),
+					"original_region": o.Region,
+					"override_region": region,
+				})
+				o.Region = region
+			}
+		},
 		withExtraOptions(ctx, p, config),
 	}
 

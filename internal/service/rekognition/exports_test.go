@@ -6,9 +6,9 @@ package rekognition
 // Exports for use in tests only.
 
 var (
-	ResourceProject         = newResourceProject
-	ResourceCollection      = newResourceCollection
-	ResourceStreamProcessor = newResourceStreamProcessor
+	ResourceProject         = newProjectResource
+	ResourceCollection      = newCollectionResource
+	ResourceStreamProcessor = newStreamProcessorResource
 )
 
 var (

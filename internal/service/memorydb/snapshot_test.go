@@ -329,7 +329,10 @@ func testAccSnapshotConfig_kms(rName string) string {
 	return acctest.ConfigCompose(
 		testAccSnapshotConfigBase(rName),
 		fmt.Sprintf(`
-resource "aws_kms_key" "test" {}
+resource "aws_kms_key" "test" {
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+}
 
 resource "aws_memorydb_snapshot" "test" {
   cluster_name = aws_memorydb_cluster.test.name

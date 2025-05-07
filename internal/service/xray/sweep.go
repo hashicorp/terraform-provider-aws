@@ -102,7 +102,7 @@ func sweepResourcePolicy(ctx context.Context, client *conns.AWSClient) ([]sweep.
 		for _, v := range page.ResourcePolicies {
 			name := aws.ToString(v.PolicyName)
 
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceResourcePolicy, client, framework.NewAttribute("policy_name", name)))
+			sweepResources = append(sweepResources, framework.NewSweepResource(newResourcePolicyResource, client, framework.NewAttribute("policy_name", name)))
 		}
 	}
 

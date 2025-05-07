@@ -88,7 +88,7 @@ func sweepAssessments(region string) error {
 			id := aws.ToString(assessment.Id)
 
 			log.Printf("[INFO] Deleting AuditManager Assessment: %s", id)
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceAssessment, client,
+			sweepResources = append(sweepResources, framework.NewSweepResource(newAssessmentResource, client,
 				framework.NewAttribute(names.AttrID, id),
 			))
 		}
@@ -126,7 +126,7 @@ func sweepAssessmentDelegations(region string) error {
 
 		for _, d := range page.Delegations {
 			log.Printf("[INFO] Deleting AuditManager Assessment Delegation: %s", aws.ToString(d.Id))
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceAssessmentDelegation, client,
+			sweepResources = append(sweepResources, framework.NewSweepResource(newAssessmentDelegationResource, client,
 				framework.NewAttribute("assessment_id", aws.ToString(d.AssessmentId)),
 				framework.NewAttribute("delegation_id", aws.ToString(d.Id)),
 			))
@@ -167,7 +167,7 @@ func sweepAssessmentReports(region string) error {
 			id := aws.ToString(report.Id)
 
 			log.Printf("[INFO] Deleting AuditManager Assessment Report: %s", id)
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceAssessmentReport, client,
+			sweepResources = append(sweepResources, framework.NewSweepResource(newAssessmentReportResource, client,
 				framework.NewAttribute(names.AttrID, id),
 				framework.NewAttribute("assessment_id", aws.ToString(report.AssessmentId)),
 			))
@@ -208,7 +208,7 @@ func sweepControls(region string) error {
 			id := aws.ToString(control.Id)
 
 			log.Printf("[INFO] Deleting AuditManager Control: %s", id)
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceControl, client,
+			sweepResources = append(sweepResources, framework.NewSweepResource(newControlResource, client,
 				framework.NewAttribute(names.AttrID, id),
 			))
 		}
@@ -248,7 +248,7 @@ func sweepFrameworks(region string) error {
 			id := aws.ToString(f.Id)
 
 			log.Printf("[INFO] Deleting AuditManager Framework: %s", id)
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceFramework, client,
+			sweepResources = append(sweepResources, framework.NewSweepResource(newFrameworkResource, client,
 				framework.NewAttribute(names.AttrID, id),
 			))
 		}
@@ -288,7 +288,7 @@ func sweepFrameworkShares(region string) error {
 			id := aws.ToString(share.Id)
 
 			log.Printf("[INFO] Deleting AuditManager Framework Share: %s", id)
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceFrameworkShare, client,
+			sweepResources = append(sweepResources, framework.NewSweepResource(newFrameworkShareResource, client,
 				framework.NewAttribute(names.AttrID, id),
 			))
 		}

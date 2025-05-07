@@ -26,7 +26,7 @@ import (
 
 // @FrameworkResource("aws_shield_drt_access_role_arn_association", name="DRT Role ARN Association")
 func newDRTAccessRoleARNAssociationResource(context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceDRTAccessRoleARNAssociation{}
+	r := &drtAccessRoleARNAssociationResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
@@ -35,13 +35,13 @@ func newDRTAccessRoleARNAssociationResource(context.Context) (resource.ResourceW
 	return r, nil
 }
 
-type resourceDRTAccessRoleARNAssociation struct {
-	framework.ResourceWithConfigure
+type drtAccessRoleARNAssociationResource struct {
+	framework.ResourceWithModel[drtAccessRoleARNAssociationResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }
 
-func (r *resourceDRTAccessRoleARNAssociation) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+func (r *drtAccessRoleARNAssociationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: framework.IDAttribute(),
@@ -60,7 +60,7 @@ func (r *resourceDRTAccessRoleARNAssociation) Schema(ctx context.Context, reques
 	}
 }
 
-func (r *resourceDRTAccessRoleARNAssociation) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+func (r *drtAccessRoleARNAssociationResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	var data drtAccessRoleARNAssociationResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
@@ -100,7 +100,7 @@ func (r *resourceDRTAccessRoleARNAssociation) Create(ctx context.Context, reques
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-func (r *resourceDRTAccessRoleARNAssociation) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+func (r *drtAccessRoleARNAssociationResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	var data drtAccessRoleARNAssociationResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
@@ -129,7 +129,7 @@ func (r *resourceDRTAccessRoleARNAssociation) Read(ctx context.Context, request 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceDRTAccessRoleARNAssociation) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+func (r *drtAccessRoleARNAssociationResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	var old, new drtAccessRoleARNAssociationResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
 	if response.Diagnostics.HasError() {
@@ -171,7 +171,7 @@ func (r *resourceDRTAccessRoleARNAssociation) Update(ctx context.Context, reques
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
-func (r *resourceDRTAccessRoleARNAssociation) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+func (r *drtAccessRoleARNAssociationResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	var data drtAccessRoleARNAssociationResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {

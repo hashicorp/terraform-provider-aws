@@ -6,7 +6,7 @@ package ssmcontacts
 // Exports for use in tests only.
 
 var (
-	ResourceRotation = newResourceRotation
+	ResourceRotation = newRotationResource
 )
 
 var (

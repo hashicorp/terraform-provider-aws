@@ -74,8 +74,9 @@ var (
 
 // @FrameworkResource("aws_rekognition_stream_processor", name="Stream Processor")
 // @Tags(identifierAttribute="arn")
-func newResourceStreamProcessor(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceStreamProcessor{}
+func newStreamProcessorResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &streamProcessorResource{}
+
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
 	r.SetDefaultDeleteTimeout(30 * time.Minute)
@@ -87,12 +88,12 @@ const (
 	ResNameStreamProcessor = "Stream Processor"
 )
 
-type resourceStreamProcessor struct {
-	framework.ResourceWithConfigure
+type streamProcessorResource struct {
+	framework.ResourceWithModel[streamProcessorResourceModel]
 	framework.WithTimeouts
 }
 
-func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *streamProcessorResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Version: 1,
 		Attributes: map[string]schema.Attribute{
@@ -440,7 +441,7 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 	}
 }
 
-func (r *resourceStreamProcessor) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
+func (r *streamProcessorResource) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
 	schemaV0 := streamProcessorSchema0(ctx)
 
 	return map[int64]resource.StateUpgrader{
@@ -451,10 +452,10 @@ func (r *resourceStreamProcessor) UpgradeState(ctx context.Context) map[int64]re
 	}
 }
 
-func (r *resourceStreamProcessor) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *streamProcessorResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().RekognitionClient(ctx)
 
-	var plan resourceStreamProcessorDataModel
+	var plan streamProcessorResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -510,10 +511,10 @@ func (r *resourceStreamProcessor) Create(ctx context.Context, req resource.Creat
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceStreamProcessor) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *streamProcessorResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().RekognitionClient(ctx)
 
-	var state resourceStreamProcessorDataModel
+	var state streamProcessorResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -542,10 +543,10 @@ func (r *resourceStreamProcessor) Read(ctx context.Context, req resource.ReadReq
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceStreamProcessor) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *streamProcessorResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().RekognitionClient(ctx)
 
-	var plan, state resourceStreamProcessorDataModel
+	var plan, state streamProcessorResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -677,10 +678,10 @@ func (r *resourceStreamProcessor) Update(ctx context.Context, req resource.Updat
 	}
 }
 
-func (r *resourceStreamProcessor) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *streamProcessorResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().RekognitionClient(ctx)
 
-	var state resourceStreamProcessorDataModel
+	var state streamProcessorResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -714,7 +715,7 @@ func (r *resourceStreamProcessor) Delete(ctx context.Context, req resource.Delet
 	}
 }
 
-func (r *resourceStreamProcessor) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *streamProcessorResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrName), req, resp)
 }
 
@@ -826,7 +827,8 @@ func unwrapListNestedObjectValueOf[T any](ctx context.Context, diagnostics diag.
 	return ptrPlan, ptrState
 }
 
-type resourceStreamProcessorDataModel struct {
+type streamProcessorResourceModel struct {
+	framework.WithRegionModel
 	ARN                   types.String                                                `tfsdk:"arn"`
 	DataSharingPreference fwtypes.ListNestedObjectValueOf[dataSharingPreferenceModel] `tfsdk:"data_sharing_preference"`
 	Input                 fwtypes.ListNestedObjectValueOf[inputModel]                 `tfsdk:"input"`

@@ -8,63 +8,84 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentity"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) EphemeralResources(ctx context.Context) []*types.ServicePackageEphemeralResource {
-	return []*types.ServicePackageEphemeralResource{
+func (p *servicePackage) EphemeralResources(ctx context.Context) []*inttypes.ServicePackageEphemeralResource {
+	return []*inttypes.ServicePackageEphemeralResource{
 		{
 			Factory:  newOpenIDTokenForDeveloperIdentityEphemeralResource,
 			TypeName: "aws_cognito_identity_openid_token_for_developer_identity",
 			Name:     "Open ID Connect Token For Developer Identity",
-		},
-	}
-}
-
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
-	return []*types.ServicePackageFrameworkDataSource{}
-}
-
-func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{}
-}
-
-func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
-	return []*types.ServicePackageSDKDataSource{
-		{
-			Factory:  dataSourcePool,
-			TypeName: "aws_cognito_identity_pool",
-			Name:     "Pool",
-			Tags: unique.Make(types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			}),
 		},
 	}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
-	return []*types.ServicePackageSDKResource{
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
+	return []*inttypes.ServicePackageFrameworkDataSource{}
+}
+
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
+	return []*inttypes.ServicePackageFrameworkResource{}
+}
+
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
+	return []*inttypes.ServicePackageSDKDataSource{
+		{
+			Factory:  dataSourcePool,
+			TypeName: "aws_cognito_identity_pool",
+			Name:     "Pool",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
+			}),
+		},
+	}
+}
+
+func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePackageSDKResource {
+	return []*inttypes.ServicePackageSDKResource{
 		{
 			Factory:  resourcePool,
 			TypeName: "aws_cognito_identity_pool",
 			Name:     "Pool",
-			Tags: unique.Make(types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			}),
 		},
 		{
 			Factory:  resourcePoolProviderPrincipalTag,
 			TypeName: "aws_cognito_identity_pool_provider_principal_tag",
 			Name:     "Provider Principal Tags",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
+			}),
 		},
 		{
 			Factory:  resourcePoolRolesAttachment,
 			TypeName: "aws_cognito_identity_pool_roles_attachment",
 			Name:     "Pool Roles Association",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
+			}),
 		},
 	}
 }
@@ -79,6 +100,16 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 	optFns := []func(*cognitoidentity.Options){
 		cognitoidentity.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+		func(o *cognitoidentity.Options) {
+			if region := config[names.AttrRegion].(string); o.Region != region {
+				tflog.Info(ctx, "overriding provider-configured AWS API region", map[string]any{
+					"service":         p.ServicePackageName(),
+					"original_region": o.Region,
+					"override_region": region,
+				})
+				o.Region = region
+			}
+		},
 		withExtraOptions(ctx, p, config),
 	}
 

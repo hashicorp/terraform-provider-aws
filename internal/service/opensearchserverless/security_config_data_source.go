@@ -19,19 +19,19 @@ import (
 )
 
 // @FrameworkDataSource("aws_opensearchserverless_security_config", name="Security Config")
-func newDataSourceSecurityConfig(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceSecurityConfig{}, nil
+func newSecurityConfigDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &securityConfigDataSource{}, nil
 }
 
 const (
 	DSNameSecurityConfig = "Security Config Data Source"
 )
 
-type dataSourceSecurityConfig struct {
-	framework.DataSourceWithConfigure
+type securityConfigDataSource struct {
+	framework.DataSourceWithModel[securityConfigDataSourceModel]
 }
 
-func (d *dataSourceSecurityConfig) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *securityConfigDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"config_version": schema.StringAttribute{
@@ -77,10 +77,10 @@ func (d *dataSourceSecurityConfig) Schema(ctx context.Context, req datasource.Sc
 	}
 }
 
-func (d *dataSourceSecurityConfig) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *securityConfigDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().OpenSearchServerlessClient(ctx)
 
-	var data dataSourceSecurityConfigData
+	var data securityConfigDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -107,7 +107,8 @@ func (d *dataSourceSecurityConfig) Read(ctx context.Context, req datasource.Read
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-type dataSourceSecurityConfigData struct {
+type securityConfigDataSourceModel struct {
+	framework.WithRegionModel
 	ConfigVersion    types.String                                     `tfsdk:"config_version"`
 	CreatedDate      types.String                                     `tfsdk:"created_date"`
 	Description      types.String                                     `tfsdk:"description"`

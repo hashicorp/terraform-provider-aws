@@ -34,7 +34,7 @@ func newResourcePolicyResource(context.Context) (resource.ResourceWithConfigure,
 }
 
 type resourcePolicyResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[resourcePolicyResourceModel]
 	framework.WithImportByID
 }
 
@@ -209,6 +209,7 @@ func findResourcePolicyByARN(ctx context.Context, conn *kinesis.Client, resource
 }
 
 type resourcePolicyResourceModel struct {
+	framework.WithRegionModel
 	ID          types.String      `tfsdk:"id"`
 	Policy      fwtypes.IAMPolicy `tfsdk:"policy"`
 	ResourceARN fwtypes.ARN       `tfsdk:"resource_arn"`

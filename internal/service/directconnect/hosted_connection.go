@@ -26,6 +26,7 @@ import (
 )
 
 // @SDKResource("aws_dx_hosted_connection", name="Hosted Connection")
+// @Region(overrideEnabled=false)
 func resourceHostedConnection() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceHostedConnectionCreate,
@@ -47,6 +48,10 @@ func resourceHostedConnection() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+			},
+			"connection_region": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"has_logical_redundancy": {
 				Type:     schema.TypeString,
@@ -88,8 +93,9 @@ func resourceHostedConnection() *schema.Resource {
 				Computed: true,
 			},
 			names.AttrRegion: {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:       schema.TypeString,
+				Computed:   true,
+				Deprecated: "region is deprecated. Use connection_region instead.",
 			},
 			names.AttrState: {
 				Type:     schema.TypeString,
@@ -149,6 +155,7 @@ func resourceHostedConnectionRead(ctx context.Context, d *schema.ResourceData, m
 	// - connection_id: conn.ConnectionId is this resource's ID, not the ID of the interconnect or LAG
 	// - tags: conn.Tags seems to always come back empty and DescribeTags needs to be called from the owner account
 	d.Set("aws_device", connection.AwsDeviceV2)
+	d.Set("connection_region", connection.Region)
 	d.Set("has_logical_redundancy", connection.HasLogicalRedundancy)
 	d.Set("jumbo_frame_capable", connection.JumboFrameCapable)
 	d.Set("lag_id", connection.LagId)

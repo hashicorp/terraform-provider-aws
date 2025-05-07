@@ -39,12 +39,8 @@ func newDeliverySourceResource(context.Context) (resource.ResourceWithConfigure,
 }
 
 type deliverySourceResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[deliverySourceResourceModel]
 	framework.WithNoOpUpdate[deliverySourceResourceModel]
-}
-
-func (*deliverySourceResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_cloudwatch_log_delivery_source"
 }
 
 func (r *deliverySourceResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -219,6 +215,7 @@ func findDeliverySource(ctx context.Context, conn *cloudwatchlogs.Client, input 
 }
 
 type deliverySourceResourceModel struct {
+	framework.WithRegionModel
 	ARN         types.String `tfsdk:"arn"`
 	LogType     types.String `tfsdk:"log_type"`
 	Name        types.String `tfsdk:"name"`

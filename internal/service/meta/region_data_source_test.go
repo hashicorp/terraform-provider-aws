@@ -7,8 +7,11 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/YakDriver/regexache"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfmeta "github.com/hashicorp/terraform-provider-aws/internal/service/meta"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -100,10 +103,14 @@ func TestAccMetaRegionDataSource_basic(t *testing.T) {
 			{
 				Config: testAccRegionDataSourceConfig_empty,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(dataSourceName, names.AttrDescription, regexache.MustCompile(`^.+$`)),
 					acctest.CheckResourceAttrRegionalHostnameService(dataSourceName, names.AttrEndpoint, names.EC2),
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, acctest.Region()),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrDescription), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrEndpoint), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(acctest.Region())),
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+				},
 			},
 		},
 	})
@@ -114,17 +121,18 @@ func TestAccMetaRegionDataSource_endpoint(t *testing.T) {
 	dataSourceName := "data.aws_region.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartition(t, endpoints.AwsPartitionID) },
 		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRegionDataSourceConfig_endpoint(),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(dataSourceName, names.AttrDescription, regexache.MustCompile(`^.+$`)),
-					resource.TestMatchResourceAttr(dataSourceName, names.AttrEndpoint, regexache.MustCompile(fmt.Sprintf("^%s\\.[^.]+\\.%s$", names.EC2, acctest.PartitionDNSSuffix()))),
-					resource.TestMatchResourceAttr(dataSourceName, names.AttrName, regexache.MustCompile(`^.+$`)),
-				),
+				Config: testAccRegionDataSourceConfig_endpoint(endpoints.EuWest1RegionID),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrDescription), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrEndpoint), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(endpoints.EuWest1RegionID)),
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(endpoints.EuWest1RegionID)),
+				},
 			},
 		},
 	})
@@ -135,17 +143,18 @@ func TestAccMetaRegionDataSource_endpointAndName(t *testing.T) {
 	dataSourceName := "data.aws_region.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartition(t, endpoints.AwsPartitionID) },
 		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRegionDataSourceConfig_endpointAndName(),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(dataSourceName, names.AttrDescription, regexache.MustCompile(`^.+$`)),
-					resource.TestMatchResourceAttr(dataSourceName, names.AttrEndpoint, regexache.MustCompile(fmt.Sprintf("^ec2\\.[^.]+\\.%s$", acctest.PartitionDNSSuffix()))),
-					resource.TestMatchResourceAttr(dataSourceName, names.AttrName, regexache.MustCompile(`^.+$`)),
-				),
+				Config: testAccRegionDataSourceConfig_endpointAndName(endpoints.ApNortheast1RegionID),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrDescription), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrEndpoint), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(endpoints.ApNortheast1RegionID)),
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(endpoints.ApNortheast1RegionID)),
+				},
 			},
 		},
 	})
@@ -161,12 +170,57 @@ func TestAccMetaRegionDataSource_name(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRegionDataSourceConfig_name(),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(dataSourceName, names.AttrDescription, regexache.MustCompile(`^.+$`)),
-					resource.TestMatchResourceAttr(dataSourceName, names.AttrEndpoint, regexache.MustCompile(fmt.Sprintf("^ec2\\.[^.]+\\.%s$", acctest.PartitionDNSSuffix()))),
-					resource.TestMatchResourceAttr(dataSourceName, names.AttrName, regexache.MustCompile(`^.+$`)),
-				),
+				Config: testAccRegionDataSourceConfig_name(endpoints.UsWest1RegionID),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrDescription), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrEndpoint), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(endpoints.UsWest1RegionID)),
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(endpoints.UsWest1RegionID)),
+				},
+			},
+		},
+	})
+}
+
+func TestAccMetaRegionDataSource_endpointAndRegion(t *testing.T) {
+	ctx := acctest.Context(t)
+	dataSourceName := "data.aws_region.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartition(t, endpoints.AwsPartitionID) },
+		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRegionDataSourceConfig_endpointAndRegion(endpoints.ApSoutheast2RegionID),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrDescription), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrEndpoint), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(endpoints.ApSoutheast2RegionID)),
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(endpoints.ApSoutheast2RegionID)),
+				},
+			},
+		},
+	})
+}
+
+func TestAccMetaRegionDataSource_region(t *testing.T) {
+	ctx := acctest.Context(t)
+	dataSourceName := "data.aws_region.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRegionDataSourceConfig_region(endpoints.UsGovEast1RegionID),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrDescription), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrEndpoint), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(endpoints.UsGovEast1RegionID)),
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(endpoints.UsGovEast1RegionID)),
+				},
 			},
 		},
 	})
@@ -176,37 +230,50 @@ const testAccRegionDataSourceConfig_empty = `
 data "aws_region" "test" {}
 `
 
-func testAccRegionDataSourceConfig_endpoint() string {
-	return `
+func testAccRegionDataSourceConfig_endpoint(region string) string {
+	return fmt.Sprintf(`
 data "aws_partition" "test" {}
 
-data "aws_regions" "test" {}
-
 data "aws_region" "test" {
-  endpoint = "ec2.${tolist(data.aws_regions.test.names)[0]}.${data.aws_partition.test.dns_suffix}"
+  endpoint = "ec2.%[1]s.${data.aws_partition.test.dns_suffix}"
 }
-`
+`, region)
 }
 
-func testAccRegionDataSourceConfig_endpointAndName() string {
-	return `
+func testAccRegionDataSourceConfig_endpointAndName(region string) string {
+	return fmt.Sprintf(`
 data "aws_partition" "test" {}
 
-data "aws_regions" "test" {}
+data "aws_region" "test" {
+  endpoint = "ec2.%[1]s.${data.aws_partition.test.dns_suffix}"
+  name     = %[1]q
+}
+`, region)
+}
+
+func testAccRegionDataSourceConfig_name(region string) string {
+	return fmt.Sprintf(`
+data "aws_region" "test" {
+  name = %[1]q
+}
+`, region)
+}
+
+func testAccRegionDataSourceConfig_endpointAndRegion(region string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "test" {}
 
 data "aws_region" "test" {
-  endpoint = "ec2.${tolist(data.aws_regions.test.names)[0]}.${data.aws_partition.test.dns_suffix}"
-  name     = tolist(data.aws_regions.test.names)[0]
+  endpoint = "ec2.%[1]s.${data.aws_partition.test.dns_suffix}"
+  region   = %[1]q
 }
-`
+`, region)
 }
 
-func testAccRegionDataSourceConfig_name() string {
-	return `
-data "aws_regions" "test" {}
-
+func testAccRegionDataSourceConfig_region(region string) string {
+	return fmt.Sprintf(`
 data "aws_region" "test" {
-  name = tolist(data.aws_regions.test.names)[0]
+  region = %[1]q
 }
-`
+`, region)
 }

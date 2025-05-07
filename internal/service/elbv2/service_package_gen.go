@@ -8,196 +8,293 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
-	return []*types.ServicePackageFrameworkDataSource{
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
+	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:  newDataSourceListenerRule,
+			Factory:  newListenerRuleDataSource,
 			TypeName: "aws_lb_listener_rule",
 			Name:     "Listener Rule",
-			Tags: unique.Make(types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			}),
 		},
 	}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{}
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
+	return []*inttypes.ServicePackageFrameworkResource{}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
-	return []*types.ServicePackageSDKDataSource{
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
+	return []*inttypes.ServicePackageSDKDataSource{
 		{
 			Factory:  dataSourceLoadBalancer,
 			TypeName: "aws_alb",
 			Name:     "Load Balancer",
-			Tags: unique.Make(types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			}),
 		},
 		{
 			Factory:  dataSourceListener,
 			TypeName: "aws_alb_listener",
 			Name:     "Listener",
-			Tags: unique.Make(types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			}),
 		},
 		{
 			Factory:  dataSourceTargetGroup,
 			TypeName: "aws_alb_target_group",
 			Name:     "Target Group",
-			Tags: unique.Make(types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			}),
 		},
 		{
 			Factory:  dataSourceLoadBalancer,
 			TypeName: "aws_lb",
 			Name:     "Load Balancer",
-			Tags: unique.Make(types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			}),
 		},
 		{
 			Factory:  dataSourceHostedZoneID,
 			TypeName: "aws_lb_hosted_zone_id",
 			Name:     "Hosted Zone ID",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: false,
+			}),
 		},
 		{
 			Factory:  dataSourceListener,
 			TypeName: "aws_lb_listener",
 			Name:     "Listener",
-			Tags: unique.Make(types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			}),
 		},
 		{
 			Factory:  dataSourceTargetGroup,
 			TypeName: "aws_lb_target_group",
 			Name:     "Target Group",
-			Tags: unique.Make(types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			}),
 		},
 		{
 			Factory:  dataSourceTrustStore,
 			TypeName: "aws_lb_trust_store",
 			Name:     "Trust Store",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
+			}),
 		},
 		{
 			Factory:  dataSourceLoadBalancers,
 			TypeName: "aws_lbs",
 			Name:     "Load Balancers",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
+			}),
 		},
 	}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
-	return []*types.ServicePackageSDKResource{
+func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePackageSDKResource {
+	return []*inttypes.ServicePackageSDKResource{
 		{
 			Factory:  resourceLoadBalancer,
 			TypeName: "aws_alb",
 			Name:     "Load Balancer",
-			Tags: unique.Make(types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			}),
 		},
 		{
 			Factory:  resourceListener,
 			TypeName: "aws_alb_listener",
 			Name:     "Listener",
-			Tags: unique.Make(types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			}),
 		},
 		{
 			Factory:  resourceListenerCertificate,
 			TypeName: "aws_alb_listener_certificate",
 			Name:     "Listener Certificate",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
+			}),
 		},
 		{
 			Factory:  resourceListenerRule,
 			TypeName: "aws_alb_listener_rule",
 			Name:     "Listener Rule",
-			Tags: unique.Make(types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			}),
 		},
 		{
 			Factory:  resourceTargetGroup,
 			TypeName: "aws_alb_target_group",
 			Name:     "Target Group",
-			Tags: unique.Make(types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			}),
 		},
 		{
 			Factory:  resourceTargetGroupAttachment,
 			TypeName: "aws_alb_target_group_attachment",
 			Name:     "Target Group Attachment",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
+			}),
 		},
 		{
 			Factory:  resourceLoadBalancer,
 			TypeName: "aws_lb",
 			Name:     "Load Balancer",
-			Tags: unique.Make(types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			}),
 		},
 		{
 			Factory:  resourceListener,
 			TypeName: "aws_lb_listener",
 			Name:     "Listener",
-			Tags: unique.Make(types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			}),
 		},
 		{
 			Factory:  resourceListenerCertificate,
 			TypeName: "aws_lb_listener_certificate",
 			Name:     "Listener Certificate",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
+			}),
 		},
 		{
 			Factory:  resourceListenerRule,
 			TypeName: "aws_lb_listener_rule",
 			Name:     "Listener Rule",
-			Tags: unique.Make(types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			}),
 		},
 		{
 			Factory:  resourceTargetGroup,
 			TypeName: "aws_lb_target_group",
 			Name:     "Target Group",
-			Tags: unique.Make(types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			}),
 		},
 		{
 			Factory:  resourceTargetGroupAttachment,
 			TypeName: "aws_lb_target_group_attachment",
 			Name:     "Target Group Attachment",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
+			}),
 		},
 		{
 			Factory:  resourceTrustStore,
 			TypeName: "aws_lb_trust_store",
 			Name:     "Trust Store",
-			Tags: unique.Make(types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			}),
 		},
 		{
 			Factory:  resourceTrustStoreRevocation,
 			TypeName: "aws_lb_trust_store_revocation",
 			Name:     "Trust Store Revocation",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
+			}),
 		},
 	}
 }
@@ -212,6 +309,16 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 	optFns := []func(*elasticloadbalancingv2.Options){
 		elasticloadbalancingv2.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+		func(o *elasticloadbalancingv2.Options) {
+			if region := config[names.AttrRegion].(string); o.Region != region {
+				tflog.Info(ctx, "overriding provider-configured AWS API region", map[string]any{
+					"service":         p.ServicePackageName(),
+					"original_region": o.Region,
+					"override_region": region,
+				})
+				o.Region = region
+			}
+		},
 		withExtraOptions(ctx, p, config),
 	}
 

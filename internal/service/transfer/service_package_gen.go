@@ -8,111 +8,160 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/transfer"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
-	return []*types.ServicePackageFrameworkDataSource{
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
+	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:  newDataSourceConnector,
+			Factory:  newConnectorDataSource,
 			TypeName: "aws_transfer_connector",
 			Name:     "Connector",
-		},
-	}
-}
-
-func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{}
-}
-
-func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
-	return []*types.ServicePackageSDKDataSource{
-		{
-			Factory:  dataSourceServer,
-			TypeName: "aws_transfer_server",
-			Name:     "Server",
-			Tags: unique.Make(types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			}),
 		},
 	}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
-	return []*types.ServicePackageSDKResource{
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
+	return []*inttypes.ServicePackageFrameworkResource{}
+}
+
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
+	return []*inttypes.ServicePackageSDKDataSource{
+		{
+			Factory:  dataSourceServer,
+			TypeName: "aws_transfer_server",
+			Name:     "Server",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
+			}),
+		},
+	}
+}
+
+func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePackageSDKResource {
+	return []*inttypes.ServicePackageSDKResource{
 		{
 			Factory:  resourceAccess,
 			TypeName: "aws_transfer_access",
 			Name:     "Access",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
+			}),
 		},
 		{
 			Factory:  resourceAgreement,
 			TypeName: "aws_transfer_agreement",
 			Name:     "Agreement",
-			Tags: unique.Make(types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			}),
 		},
 		{
 			Factory:  resourceCertificate,
 			TypeName: "aws_transfer_certificate",
 			Name:     "Certificate",
-			Tags: unique.Make(types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			}),
 		},
 		{
 			Factory:  resourceConnector,
 			TypeName: "aws_transfer_connector",
 			Name:     "Connector",
-			Tags: unique.Make(types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			}),
 		},
 		{
 			Factory:  resourceProfile,
 			TypeName: "aws_transfer_profile",
 			Name:     "Profile",
-			Tags: unique.Make(types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			}),
 		},
 		{
 			Factory:  resourceServer,
 			TypeName: "aws_transfer_server",
 			Name:     "Server",
-			Tags: unique.Make(types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			}),
 		},
 		{
 			Factory:  resourceSSHKey,
 			TypeName: "aws_transfer_ssh_key",
 			Name:     "SSH Key",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
+			}),
 		},
 		{
 			Factory:  resourceTag,
 			TypeName: "aws_transfer_tag",
 			Name:     "Transfer Resource Tag",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
+			}),
 		},
 		{
 			Factory:  resourceUser,
 			TypeName: "aws_transfer_user",
 			Name:     "User",
-			Tags: unique.Make(types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			}),
 		},
 		{
 			Factory:  resourceWorkflow,
 			TypeName: "aws_transfer_workflow",
 			Name:     "Workflow",
-			Tags: unique.Make(types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
 			}),
 		},
 	}
@@ -128,6 +177,16 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 	optFns := []func(*transfer.Options){
 		transfer.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+		func(o *transfer.Options) {
+			if region := config[names.AttrRegion].(string); o.Region != region {
+				tflog.Info(ctx, "overriding provider-configured AWS API region", map[string]any{
+					"service":         p.ServicePackageName(),
+					"original_region": o.Region,
+					"override_region": region,
+				})
+				o.Region = region
+			}
+		},
 		withExtraOptions(ctx, p, config),
 	}
 

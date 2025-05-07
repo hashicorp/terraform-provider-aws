@@ -35,8 +35,8 @@ import (
 
 // @FrameworkResource("aws_paymentcryptography_key", name="Key")
 // @Tags(identifierAttribute="arn")
-func newResourceKey(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceKey{}
+func newKeyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &keyResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
@@ -50,13 +50,13 @@ const (
 	defaultDeletionWindowInDays = 7
 )
 
-type resourceKey struct {
-	framework.ResourceWithConfigure
+type keyResource struct {
+	framework.ResourceWithModel[keyResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }
 
-func (r *resourceKey) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+func (r *keyResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Version: 1,
 		Attributes: map[string]schema.Attribute{
@@ -234,7 +234,7 @@ func (r *resourceKey) Schema(ctx context.Context, request resource.SchemaRequest
 	}
 }
 
-func (r *resourceKey) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
+func (r *keyResource) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
 	schemaV0 := keySchemaV0(ctx)
 
 	return map[int64]resource.StateUpgrader{
@@ -245,10 +245,10 @@ func (r *resourceKey) UpgradeState(ctx context.Context) map[int64]resource.State
 	}
 }
 
-func (r *resourceKey) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+func (r *keyResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	conn := r.Meta().PaymentCryptographyClient(ctx)
 
-	var plan resourceKeyModel
+	var plan keyResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -279,14 +279,14 @@ func (r *resourceKey) Create(ctx context.Context, request resource.CreateRequest
 		return
 	}
 
-	plan.KeyArn = flex.StringToFramework(ctx, out.Key.KeyArn)
+	plan.KeyARN = flex.StringToFramework(ctx, out.Key.KeyArn)
 	plan.setId()
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
 	created, err := waitKeyCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
 	if err != nil {
 		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.PaymentCryptography, create.ErrActionWaitingForCreation, ResNameKey, plan.KeyArn.String(), err),
+			create.ProblemStandardMessage(names.PaymentCryptography, create.ErrActionWaitingForCreation, ResNameKey, plan.KeyARN.String(), err),
 			err.Error(),
 		)
 		return
@@ -300,10 +300,10 @@ func (r *resourceKey) Create(ctx context.Context, request resource.CreateRequest
 	response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceKey) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+func (r *keyResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	conn := r.Meta().PaymentCryptographyClient(ctx)
 
-	var state resourceKeyModel
+	var state keyResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -330,8 +330,8 @@ func (r *resourceKey) Read(ctx context.Context, request resource.ReadRequest, re
 	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
 }
 
-func (r *resourceKey) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	var old, new resourceKeyModel
+func (r *keyResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var old, new keyResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -351,7 +351,7 @@ func (r *resourceKey) Update(ctx context.Context, request resource.UpdateRequest
 			_, err := conn.StartKeyUsage(ctx, in)
 			if err != nil {
 				response.Diagnostics.AddError(
-					create.ProblemStandardMessage(names.PaymentCryptography, create.ErrActionUpdating, ResNameKey, new.KeyArn.String(), err),
+					create.ProblemStandardMessage(names.PaymentCryptography, create.ErrActionUpdating, ResNameKey, new.KeyARN.String(), err),
 					err.Error(),
 				)
 				return
@@ -363,7 +363,7 @@ func (r *resourceKey) Update(ctx context.Context, request resource.UpdateRequest
 			_, err := conn.StopKeyUsage(ctx, in)
 			if err != nil {
 				response.Diagnostics.AddError(
-					create.ProblemStandardMessage(names.PaymentCryptography, create.ErrActionUpdating, ResNameKey, new.KeyArn.String(), err),
+					create.ProblemStandardMessage(names.PaymentCryptography, create.ErrActionUpdating, ResNameKey, new.KeyARN.String(), err),
 					err.Error(),
 				)
 				return
@@ -386,10 +386,10 @@ func (r *resourceKey) Update(ctx context.Context, request resource.UpdateRequest
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
-func (r *resourceKey) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+func (r *keyResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	conn := r.Meta().PaymentCryptographyClient(ctx)
 
-	var state resourceKeyModel
+	var state keyResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -507,8 +507,9 @@ func findKeyByID(ctx context.Context, conn *paymentcryptography.Client, id strin
 	return out.Key, nil
 }
 
-type resourceKeyModel struct {
-	KeyArn                 types.String                                        `tfsdk:"arn"`
+type keyResourceModel struct {
+	framework.WithRegionModel
+	KeyARN                 types.String                                        `tfsdk:"arn"`
 	DeletionWindowInDays   types.Int64                                         `tfsdk:"deletion_window_in_days"`
 	Enabled                types.Bool                                          `tfsdk:"enabled"`
 	Exportable             types.Bool                                          `tfsdk:"exportable"`
@@ -523,8 +524,8 @@ type resourceKeyModel struct {
 	Timeouts               timeouts.Value                                      `tfsdk:"timeouts"`
 }
 
-func (k *resourceKeyModel) setId() {
-	k.ID = k.KeyArn
+func (k *keyResourceModel) setId() {
+	k.ID = k.KeyARN
 }
 
 type keyAttributesModel struct {

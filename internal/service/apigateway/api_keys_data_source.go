@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -24,12 +23,8 @@ func newDataSourceAPIKeys(context.Context) (datasource.DataSourceWithConfigure, 
 	return &dataSourceAPIKeys{}, nil
 }
 
-const (
-	DSNameAPIKeys = "API Keys"
-)
-
 type dataSourceAPIKeys struct {
-	framework.DataSourceWithConfigure
+	framework.DataSourceWithModel[dataSourceAPIKeysModel]
 }
 
 func (d *dataSourceAPIKeys) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -63,11 +58,10 @@ func (d *dataSourceAPIKeys) Read(ctx context.Context, request datasource.ReadReq
 	}
 
 	items, err := findAPIKeys(ctx, conn, &input)
+
 	if err != nil {
-		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.APIGateway, create.ErrActionReading, DSNameAPIKeys, data.ID.ValueString(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError("reading API Gateway API Keys", err.Error())
+
 		return
 	}
 
@@ -96,6 +90,7 @@ func findAPIKeys(ctx context.Context, conn *apigateway.Client, input *apigateway
 }
 
 type dataSourceAPIKeysModel struct {
+	framework.WithRegionModel
 	CustomerID    types.String                                 `tfsdk:"customer_id"`
 	ID            types.String                                 `tfsdk:"id"`
 	IncludeValues types.Bool                                   `tfsdk:"include_values"`

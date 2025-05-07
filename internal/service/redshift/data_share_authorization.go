@@ -28,8 +28,8 @@ import (
 )
 
 // @FrameworkResource("aws_redshift_data_share_authorization", name="Data Share Authorization")
-func newResourceDataShareAuthorization(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceDataShareAuthorization{}, nil
+func newDataShareAuthorizationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &dataShareAuthorizationResource{}, nil
 }
 
 const (
@@ -38,12 +38,12 @@ const (
 	dataShareAuthorizationIDPartCount = 2
 )
 
-type resourceDataShareAuthorization struct {
-	framework.ResourceWithConfigure
+type dataShareAuthorizationResource struct {
+	framework.ResourceWithModel[dataShareAuthorizationResourceModel]
 	framework.WithImportByID
 }
 
-func (r *resourceDataShareAuthorization) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *dataShareAuthorizationResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"allow_writes": schema.BoolAttribute{
@@ -83,10 +83,10 @@ func (r *resourceDataShareAuthorization) Schema(ctx context.Context, req resourc
 	}
 }
 
-func (r *resourceDataShareAuthorization) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *dataShareAuthorizationResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().RedshiftClient(ctx)
 
-	var plan resourceDataShareAuthorizationData
+	var plan dataShareAuthorizationResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -140,10 +140,10 @@ func (r *resourceDataShareAuthorization) Create(ctx context.Context, req resourc
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceDataShareAuthorization) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *dataShareAuthorizationResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().RedshiftClient(ctx)
 
-	var state resourceDataShareAuthorizationData
+	var state dataShareAuthorizationResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -180,14 +180,14 @@ func (r *resourceDataShareAuthorization) Read(ctx context.Context, req resource.
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceDataShareAuthorization) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *dataShareAuthorizationResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	// Update is a no-op
 }
 
-func (r *resourceDataShareAuthorization) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *dataShareAuthorizationResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().RedshiftClient(ctx)
 
-	var state resourceDataShareAuthorizationData
+	var state dataShareAuthorizationResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -260,7 +260,8 @@ func findDataShareAuthorizationByID(ctx context.Context, conn *redshift.Client, 
 	}
 }
 
-type resourceDataShareAuthorizationData struct {
+type dataShareAuthorizationResourceModel struct {
+	framework.WithRegionModel
 	AllowWrites        types.Bool   `tfsdk:"allow_writes"`
 	ConsumerIdentifier types.String `tfsdk:"consumer_identifier"`
 	DataShareARN       fwtypes.ARN  `tfsdk:"data_share_arn"`

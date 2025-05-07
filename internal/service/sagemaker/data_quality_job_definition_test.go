@@ -1129,6 +1129,7 @@ func testAccDataQualityJobDefinitionConfig_outputConfigKMSKeyID(rName string) st
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 10
+  enable_key_rotation     = true
 }
 
 resource "aws_sagemaker_data_quality_job_definition" "test" {
@@ -1205,6 +1206,7 @@ func testAccDataQualityJobDefinitionConfig_jobResourcesVolumeKMSKeyID(rName stri
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 10
+  enable_key_rotation     = true
 }
 
 resource "aws_sagemaker_data_quality_job_definition" "test" {
