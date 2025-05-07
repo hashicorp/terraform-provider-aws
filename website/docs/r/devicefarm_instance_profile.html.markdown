@@ -22,6 +22,8 @@ resource "aws_devicefarm_instance_profile" "example" {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `description` - (Optional) The description of the instance profile.
 * `exclude_app_packages_from_cleanup` - (Optional) An array of strings that specifies the list of app packages that should not be cleaned up from the device after a test run.
 * `name` - (Required) The name for the instance profile.

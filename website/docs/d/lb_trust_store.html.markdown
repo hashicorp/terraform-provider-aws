@@ -46,6 +46,8 @@ This data source supports the following arguments:
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 See the [LB Trust Store Resource](/docs/providers/aws/r/lb_trust_store.html) for details
 on the returned attributes - they are identical.
 

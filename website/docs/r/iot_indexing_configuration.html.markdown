@@ -46,6 +46,8 @@ resource "aws_iot_indexing_configuration" "example" {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `thing_group_indexing_configuration` - (Optional) Thing group indexing configuration. See below.
 * `thing_indexing_configuration` - (Optional) Thing indexing configuration. See below.
 

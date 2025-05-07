@@ -20,6 +20,8 @@ data "aws_imagebuilder_component" "example" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `arn` - (Required) ARN of the component.
 
 ## Attribute Reference

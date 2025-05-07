@@ -38,7 +38,7 @@ resource "aws_dataexchange_event_action" "example" {
 
 ## Argument Reference
 
-The following blocks are supported:
+This resource supports the following arguments:
 
 * `action` - (Required) Describes the action to take.
   Described in [`action` Configuration Block](#action-configuration-block) below.

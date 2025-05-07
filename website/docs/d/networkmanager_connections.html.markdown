@@ -24,6 +24,8 @@ data "aws_networkmanager_connections" "example" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `device_id` - (Optional) ID of the device of the connections to retrieve.
 * `global_network_id` - (Required) ID of the Global Network of the connections to retrieve.
 * `tags` - (Optional) Restricts the list to the connections with these tags.

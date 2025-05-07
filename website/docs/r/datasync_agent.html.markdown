@@ -23,7 +23,7 @@ resource "aws_datasync_agent" "example" {
 
 ## Example Usage with VPC Endpoints
 
-```hcl
+```terraform
 resource "aws_datasync_agent" "example" {
   ip_address            = "1.2.3.4"
   security_group_arns   = [aws_security_group.example.arn]

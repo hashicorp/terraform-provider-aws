@@ -18,7 +18,7 @@ data "aws_bedrock_custom_models" "test" {}
 
 ## Argument Reference
 
-None.
+This data source does not support any arguments.
 
 ## Attribute Reference
 

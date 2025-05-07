@@ -18,6 +18,8 @@ data "aws_guardduty_detector" "example" {}
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `id` - (Optional) ID of the detector.
 
 ## Attribute Reference

@@ -43,6 +43,8 @@ output "example" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `secret_id` - (Required) Specifies the secret containing the version that you want to retrieve. You can specify either the ARN or the friendly name of the secret.
 * `include_deprecated` - (Optional) If true, all deprecated secret versions are included in the response.
 If false, no deprecated secret versions are included in the response. If no value is specified, the default value is `false`.

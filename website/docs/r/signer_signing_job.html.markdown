@@ -41,6 +41,8 @@ resource "aws_signer_signing_job" "build_signing_job" {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `profile_name` - (Required) The name of the profile to initiate the signing operation.
 * `source` - (Required) The S3 bucket that contains the object to sign. See [Source](#source) below for details.
 * `destination` - (Required) The S3 bucket in which to save your signed object. See [Destination](#destination) below for details.

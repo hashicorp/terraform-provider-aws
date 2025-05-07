@@ -96,7 +96,7 @@ resource "aws_cognito_identity_pool_roles_attachment" "main" {
 
 ## Argument Reference
 
-The Cognito Identity Pool Roles Attachment argument layout is a structure composed of several sub-resources - these resources are laid out below.
+This resource supports the following arguments:
 
 * `identity_pool_id` (Required) - An identity pool ID in the format `REGION_GUID`.
 * `role_mapping` (Optional) - A List of [Role Mapping](#role-mappings).
