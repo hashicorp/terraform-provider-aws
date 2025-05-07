@@ -263,6 +263,7 @@ type ResourceDatum struct {
 	OverrideResourceType        string
 	ARNService                  string
 	ARNFormat                   string
+	ArnIdentity                 bool
 	MutableIdentity             bool
 }
 
@@ -429,6 +430,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				}
 
 			case "ArnIdentity":
+				d.ArnIdentity = true
 				hasIdentity = true
 
 			case "ArnFormat":
