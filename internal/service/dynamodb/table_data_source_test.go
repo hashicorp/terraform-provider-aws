@@ -228,7 +228,7 @@ data "aws_dynamodb_table" "test" {
 func testAccTableDataSourceConfig_pointInTimeRecovery(tableName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
-  name           = %[1]q
+  name         = %[1]q
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "UserId"
   range_key    = "GameTitle"
