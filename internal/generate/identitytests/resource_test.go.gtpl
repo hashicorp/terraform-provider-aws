@@ -164,13 +164,20 @@ func {{ template "testname" . }}_Identity_Basic(t *testing.T) {
 					{{- template "ExistsCheck" . -}}
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
+					{{ if ne .ARNFormat "" -}}
+						{{ if .IsGlobal -}}
+							tfstatecheck.ExpectGlobalARNFormat(resourceName, tfjsonpath.New(names.AttrARN), "{{ .ARNService }}", "{{ .ARNFormat }}"),
+						{{ else -}}
+							tfstatecheck.ExpectRegionalARNFormat(resourceName, tfjsonpath.New(names.AttrARN), "{{ .ARNService }}", "{{ .ARNFormat }}"),
+						{{ end -}}
+					{{ end -}}
 					{{ if .HasIDAttrDuplicates -}}
 						statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New({{ .IDAttrDuplicates }}), compare.ValuesSame()),
 					{{ end -}}
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 					{{ if not .MutableIdentity -}}
 						{{ if .ArnIdentity -}}
-							tfstatecheck.ExpectIdentityRegionalARNFormat(ctx, resourceName, "{{ .ARNService }}", "{{ .ARNFormat }}"),
+							tfstatecheck.ExpectIdentityRegionalARNFormat(resourceName, "{{ .ARNService }}", "{{ .ARNFormat }}"),
 						{{ end -}}
 					{{ end -}}
 				},
@@ -240,13 +247,20 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 					names.AttrRegion: config.StringVariable(acctest.AlternateRegion()),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
+					{{ if ne .ARNFormat "" -}}
+						{{ if .IsGlobal -}}
+							tfstatecheck.ExpectGlobalARNFormat(resourceName, tfjsonpath.New(names.AttrARN), "{{ .ARNService }}", "{{ .ARNFormat }}"),
+						{{ else -}}
+							tfstatecheck.ExpectRegionalARNAlternateRegionFormat(resourceName, tfjsonpath.New(names.AttrARN), "{{ .ARNService }}", "{{ .ARNFormat }}"),
+						{{ end -}}
+					{{ end -}}
 					{{ if .HasIDAttrDuplicates -}}
 						statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New({{ .IDAttrDuplicates }}), compare.ValuesSame()),
 					{{ end -}}
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
 					{{ if not .MutableIdentity -}}
 						{{ if .ArnIdentity -}}
-							tfstatecheck.ExpectIdentityRegionalARNAlternateRegionFormat(ctx, resourceName, "{{ .ARNService }}", "{{ .ARNFormat }}"),
+							tfstatecheck.ExpectIdentityRegionalARNAlternateRegionFormat(resourceName, "{{ .ARNService }}", "{{ .ARNFormat }}"),
 						{{ end -}}
 					{{ end -}}
 				},
