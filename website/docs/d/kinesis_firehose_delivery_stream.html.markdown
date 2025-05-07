@@ -22,9 +22,7 @@ data "aws_kinesis_firehose_delivery_stream" "stream" {
 
 ## Argument Reference
 
-
 This data source supports the following arguments:
-
 
 * `name` - (Required) Name of the Kinesis Firehose Delivery Stream.
 
