@@ -158,6 +158,12 @@ Remove the following from your provider configuration—they are no longer suppo
 
 ---
 
+## Enhanced Region Support
+
+Version 6.0.0 introduces a new `region` argument making it significantly easier to manage infrastructure across AWS Regions without requiring multiple provider configurations. See [Enhanced Region Support](enhanced-region-support.html).
+
+---
+
 ## Amazon Elastic Transcoder Deprecation
 
 Amazon Elastic Transcoder will be [discontinued](https://aws.amazon.com/blogs/media/support-for-amazon-elastic-transcoder-ending-soon/) on **November 13, 2025**.
@@ -399,7 +405,7 @@ Remove `tags_all`—it is no longer supported.
 
 ## Data Source `aws_s3_bucket`
 
-`bucket_region` has been added and should be used instead of `region`, which is now used for [Enhanced Multi-Region Support]().
+`bucket_region` has been added and should be used instead of `region`, which is now used for [Enhanced Region Support](enhanced-region-support.html).
 
 ---
 
@@ -753,7 +759,7 @@ The resource configuration itself does not change. However, now, include an inde
 
 ## Resource `aws_s3_bucket`
 
-`bucket_region` has been added and should be used instead of `region`, which is now used for [Enhanced Multi-Region Support]().
+`bucket_region` has been added and should be used instead of `region`, which is now used for [Enhanced Multi-Region Support](enhanced-region-support.html).
 
 ---
 
