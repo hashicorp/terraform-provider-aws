@@ -123,7 +123,7 @@ jobs:
         if: |
           steps.community_check.outputs.maintainer == 'true'
           && github.actor != 'dependabot[bot]'
-        uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d # v2.0.0
+        uses: slackapi/slack-github-action@b0fa283ad8fea605de13dc3f449259339835fc52 # v2.1.0
         with:
           webhook: ${{ secrets.FEED_SLACK_WEBHOOK_URL }}
           webhook-type: incoming-webhook
@@ -142,7 +142,7 @@ jobs:
 
       - name: New Partner Pull Request
         if: steps.community_check.outputs.partner == 'true'
-        uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d # v2.0.0
+        uses: slackapi/slack-github-action@b0fa283ad8fea605de13dc3f449259339835fc52 # v2.1.0
         with:
           webhook: ${{ secrets.FEED_SLACK_WEBHOOK_URL }}
           webhook-type: incoming-webhook
@@ -161,7 +161,7 @@ jobs:
 
       - name: Crashes and Regressions
         if: github.event.label.name == 'regression' || github.event.label.name == 'crash'
-        uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d # v2.0.0
+        uses: slackapi/slack-github-action@b0fa283ad8fea605de13dc3f449259339835fc52 # v2.1.0
         with:
           method: chat.postMessage
           token: ${{ secrets.SLACK_BOT_TOKEN }}
@@ -200,7 +200,7 @@ jobs:
 
       - name: Pull Request Merged
         if: github.event.pull_request.merged
-        uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d # v2.0.0
+        uses: slackapi/slack-github-action@b0fa283ad8fea605de13dc3f449259339835fc52 # v2.1.0
         env:
           MERGED_BY_URL: ${{ github.event.pull_request.merged_by.html_url }}
           MERGED_BY_LOGIN: ${{ github.event.pull_request.merged_by.login }}
@@ -238,7 +238,7 @@ jobs:
 
       - name: Release Tag
         if: github.event_name == 'push'
-        uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d # v2.0.0
+        uses: slackapi/slack-github-action@b0fa283ad8fea605de13dc3f449259339835fc52 # v2.1.0
         with:
           webhook: ${{ secrets.FEED_SLACK_WEBHOOK_URL }}
           webhook-type: incoming-webhook
