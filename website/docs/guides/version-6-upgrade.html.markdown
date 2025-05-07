@@ -365,7 +365,7 @@ Remove `filter`—it is no longer supported. To locate a group, update your conf
 ## Data Source `aws_identitystore_user`
 
 Remove `filter`—it is no longer supported.
-To locate a group, update your configuration to use `alternate_identifier` instead.
+To locate a user, update your configuration to use `alternate_identifier` instead.
 
 ---
 
