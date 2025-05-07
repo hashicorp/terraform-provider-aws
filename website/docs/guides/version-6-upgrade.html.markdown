@@ -18,71 +18,71 @@ Upgrade topics:
 - [Removed Provider Arguments](#removed-provider-arguments)
 - [Amazon Elastic Transcoder Deprecation](#amazon-elastic-transcoder-deprecation)
 - [CloudWatch Evidently Deprecation](#cloudwatch-evidently-deprecation)
+- [Nullable Boolean Validation Update](#nullable-boolean-validation-update)
 - [OpsWorks Stacks Removal](#opsworks-stacks-removal)
+- [S3 Global Endpoint Deprecation](#s3-global-endpoint-deprecation)
 - [SimpleDB Support Removed](#simpledb-support-removed)
 - [Worklink Support Removed](#worklink-support-removed)
-- [S3 Global Endpoint Deprecation](#s3-global-endpoint-deprecation)
-- [`TypeNullableBool` Validation Update](#typenullablebool-validation-update)
-- [data-source/aws_ami](#data-sourceaws_ami)
-- [data-source/aws_batch_compute_environment](#data-sourceaws_batch_compute_environment)
-- [data-source/aws_ecs_task_definition](#data-sourceaws_ecs_task_definition)
-- [data-source/aws_ecs_task_execution](#data-sourceaws_ecs_task_execution)
-- [data-source/aws_elbv2_listener_rule](#data-sourceaws_elbv2_listener_rule)
-- [data-source/aws_globalaccelerator_accelerator](#data-sourceaws_globalaccelerator_accelerator)
-- [data-source/aws_identitystore_user](#data-sourceaws_identitystore_group)
-- [data-source/aws_identitystore_user](#data-sourceaws_identitystore_user)
-- [data-source/aws_launch_template](#data-sourceaws_launch_template)
-- [data-source/aws_opensearch_domain](#data-sourceaws_opensearch_domain)
-- [data-source/aws_opensearchserverless_security_config](#data-sourceaws_opensearchserverless_security_config)
-- [data-source/aws_quicksight_data_set](#data-sourceaws_quicksight_data_set)
-- [data-source/aws_service_discovery_service](#data-sourceaws_service_discovery_service)
-- [resource/aws_accessanalyzer_archive_rule](#typenullablebool-validation-update)
-- [resource/aws_alb_target_group](#typenullablebool-validation-update)
-- [resource/aws_api_gateway_account](#resourceaws_api_gateway_account)
-- [resource/aws_api_gateway_deployment](#resourceaws_api_gateway_deployment)
-- [resource/aws_batch_compute_environment](#resourceaws_batch_compute_environment)
-- [resource/aws_batch_job_queue](#resourceaws_batch_job_queue)
-- [resource/aws_bedrock_model_invocation_logging_configuration](#resourceaws_bedrock_model_invocation_logging_configuration)
-- [resource/aws_cloudfront_key_value_store](#resourceaws_cloudfront_key_value_store)
-- [resource/aws_cloudfront_response_headers_policy](#resourceaws_cloudfront_response_headers_policy)
-- [resource/aws_cloudtrail_event_data_store](#typenullablebool-validation-update)
-- [resource/aws_cognito_user_in_group](#resourceaws_cognito_user_in_group)
-- [resource/aws_db_instance](#resourceaws_db_instance)
-- [resource/aws_dms_endpoint](#resourceaws_dms_endpoint)
-- [resource/aws_dx_gateway_association](#resourceaws_dx_gateway_association)
-- [resource/aws_ec2_spot_instance_fleet](#typenullablebool-validation-update)
-- [resource/aws_ecs_task_definition](#resourceaws_ecs_task_definition)
-- [resource/aws_eip](#resourceaws_eip)
-- [resource/aws_eks_addon](#resourceaws_eks_addon)
-- [resource/aws_elasticache_cluster](#typenullablebool-validation-update)
-- [resource/aws_elasticache_replication_group](#resourceaws_elasticache_replication_group)
-- [resource/aws_elasticache_user](#resourceaws_elasticache_user)
-- [resource/aws_elasticache_user_group](#resourceaws_elasticache_user_group)
-- [resource/aws_evidently_feature](#typenullablebool-validation-update)
-- [resource/aws_flow_log](#resourceaws_flow_log)
-- [resource/aws_guardduty_organization_configuration](#resourceaws_guardduty_organization_configuration)
-- [resource/aws_imagebuilder_container_recipe](#typenullablebool-validation-update)
-- [resource/aws_imagebuilder_image_recipe](#typenullablebool-validation-update)
-- [resource/aws_instance](#resourceaws_instance)
-- [resource/aws_kinesis_analytics_application](#resourceaws_kinesis_analytics_application)
-- [resource/aws_launch_template](#resourceaws_launch_template)
-- [resource/aws_lb_target_group](#typenullablebool-validation-update)
-- [resource/aws_media_store_container](#resourceaws_media_store_container)
-- [resource/aws_media_store_container_policy](#resourceaws_media_store_container_policy)
-- [resource/aws_mq_broker](#typenullablebool-validation-update)
-- [resource/aws_networkmanager_core_network](#resourceaws_networkmanager_core_network)
-- [resource/aws_opensearch_domain](#resourceaws_opensearch_domain)
-- [resource/aws_opensearchserverless_security_config](#resourceaws_opensearchserverless_security_config)
-- [resource/aws_paymentcryptography_key](#resourceaws_paymentcryptography_key)
-- [resource/aws_redshift_cluster](#resourceaws_redshift_cluster)
-- [resource/aws_redshift_service_account](#resourceaws_redshift_service_account)
-- [resource/aws_rekognition_stream_processor](#resourceaws_rekognition_stream_processor)
-- [resource/aws_resiliencehub_resiliency_policy](#resourceaws_resiliencehub_resiliency_policy)
-- [resource/aws_sagemaker_notebook_instance](#resourceaws_sagemaker_notebook_instance)
-- [resource/aws_spot_instance_request](#resourceaws_spot_instance_request)
-- [resource/aws_ssm_association](#resourceaws_ssm_association)
-- [resource/aws_verifiedpermissions_schema](#resourceaws_verifiedpermissions_schema)
-- [resource/aws_wafv2_web_acl](#resourceaws_wafv2_web_acl)
+- [Data Source `aws_ami`](#data-source-aws_ami)
+- [Data Source `aws_batch_compute_environment`](#data-source-aws_batch_compute_environment)
+- [Data Source `aws_ecs_task_definition`](#data-source-aws_ecs_task_definition)
+- [Data Source `aws_ecs_task_execution`](#data-source-aws_ecs_task_execution)
+- [Data Source `aws_elbv2_listener_rule`](#data-source-aws_elbv2_listener_rule)
+- [Data Source `aws_globalaccelerator_accelerator`](#data-source-aws_globalaccelerator_accelerator)
+- [Data Source `aws_identitystore_group`](#data-source-aws_identitystore_group)
+- [Data Source `aws_identitystore_user`](#data-source-aws_identitystore_user)
+- [Data Source `aws_launch_template`](#data-source-aws_launch_template)
+- [Data Source `aws_opensearch_domain`](#data-source-aws_opensearch_domain)
+- [Data Source `aws_opensearchserverless_security_config`](#data-source-aws_opensearchserverless_security_config)
+- [Data Source `aws_quicksight_data_set`](#data-source-aws_quicksight_data_set)
+- [Data Source `aws_service_discovery_service`](#data-source-aws_service_discovery_service)
+- [Resource `aws_accessanalyzer_archive_rule`](#typenullablebool-validation-update)
+- [Resource `aws_alb_target_group`](#typenullablebool-validation-update)
+- [Resource `aws_api_gateway_account`](#resource-aws_api_gateway_account)
+- [Resource `aws_api_gateway_deployment`](#resource-aws_api_gateway_deployment)
+- [Resource `aws_batch_compute_environment`](#resource-aws_batch_compute_environment)
+- [Resource `aws_batch_job_queue`](#resource-aws_batch_job_queue)
+- [Resource `aws_bedrock_model_invocation_logging_configuration`](#resource-aws_bedrock_model_invocation_logging_configuration)
+- [Resource `aws_cloudfront_key_value_store`](#resource-aws_cloudfront_key_value_store)
+- [Resource `aws_cloudfront_response_headers_policy`](#resource-aws_cloudfront_response_headers_policy)
+- [Resource `aws_cloudtrail_event_data_store`](#typenullablebool-validation-update)
+- [Resource `aws_cognito_user_in_group`](#resource-aws_cognito_user_in_group)
+- [Resource `aws_db_instance`](#resource-aws_db_instance)
+- [Resource `aws_dms_endpoint`](#resource-aws_dms_endpoint)
+- [Resource `aws_dx_gateway_association`](#resource-aws_dx_gateway_association)
+- [Resource `aws_ec2_spot_instance_fleet`](#typenullablebool-validation-update)
+- [Resource `aws_ecs_task_definition`](#resource-aws_ecs_task_definition)
+- [Resource `aws_eip`](#resource-aws_eip)
+- [Resource `aws_eks_addon`](#resource-aws_eks_addon)
+- [Resource `aws_elasticache_cluster`](#typenullablebool-validation-update)
+- [Resource `aws_elasticache_replication_group`](#resource-aws_elasticache_replication_group)
+- [Resource `aws_elasticache_user`](#resource-aws_elasticache_user)
+- [Resource `aws_elasticache_user_group`](#resource-aws_elasticache_user_group)
+- [Resource `aws_evidently_feature`](#typenullablebool-validation-update)
+- [Resource `aws_flow_log`](#resource-aws_flow_log)
+- [Resource `aws_guardduty_organization_configuration`](#resource-aws_guardduty_organization_configuration)
+- [Resource `aws_imagebuilder_container_recipe`](#typenullablebool-validation-update)
+- [Resource `aws_imagebuilder_image_recipe`](#typenullablebool-validation-update)
+- [Resource `aws_instance`](#resource-aws_instance)
+- [Resource `aws_kinesis_analytics_application`](#resource-aws_kinesis_analytics_application)
+- [Resource `aws_launch_template`](#resource-aws_launch_template)
+- [Resource `aws_lb_target_group`](#typenullablebool-validation-update)
+- [Resource `aws_media_store_container`](#resource-aws_media_store_container)
+- [Resource `aws_media_store_container_policy`](#resource-aws_media_store_container_policy)
+- [Resource `aws_mq_broker`](#typenullablebool-validation-update)
+- [Resource `aws_networkmanager_core_network`](#resource-aws_networkmanager_core_network)
+- [Resource `aws_opensearch_domain`](#resource-aws_opensearch_domain)
+- [Resource `aws_opensearchserverless_security_config`](#resource-aws_opensearchserverless_security_config)
+- [Resource `aws_paymentcryptography_key`](#resource-aws_paymentcryptography_key)
+- [Resource `aws_redshift_cluster`](#resource-aws_redshift_cluster)
+- [Resource `aws_redshift_service_account`](#resource-aws_redshift_service_account)
+- [Resource `aws_rekognition_stream_processor`](#resource-aws_rekognition_stream_processor)
+- [Resource `aws_resiliencehub_resiliency_policy`](#resource-aws_resiliencehub_resiliency_policy)
+- [Resource `aws_sagemaker_notebook_instance`](#resource-aws_sagemaker_notebook_instance)
+- [Resource `aws_spot_instance_request`](#resource-aws_spot_instance_request)
+- [Resource `aws_ssm_association`](#resource-aws_ssm_association)
+- [Resource `aws_verifiedpermissions_schema`](#resource-aws_verifiedpermissions_schema)
+- [Resource `aws_wafv2_web_acl`](#resource-aws_wafv2_web_acl)
 
 <!-- /TOC -->
 
@@ -99,7 +99,7 @@ If you use [version constraints](https://developer.hashicorp.com/terraform/langu
 
 **Before:**
 
-```hcl
+```terraform
 terraform {
   required_providers {
     aws = {
@@ -116,7 +116,7 @@ provider "aws" {
 
 **After:**
 
-```hcl
+```terraform
 terraform {
   required_providers {
     aws = {
@@ -173,6 +173,46 @@ Migrate to [AWS AppConfig Feature Flags](https://aws.amazon.com/blogs/mt/using-a
 
 ---
 
+## Nullable Boolean Validation Update
+
+Update your configuration to _only_ use `""`, `true`, or `false` if you use the nullable boolean arguments below _and_ you are using `0` or `1` to represent boolean values:
+
+- **`aws_accessanalyzer_archive_rule`**
+  - `filter.exists`
+- **`aws_cloudtrail_event_data_store`**
+  - `suspend`
+- **`aws_ec2_spot_instance_fleet`**
+  - `terminate_instances_on_delete`
+- **`aws_elasticache_cluster`**
+  - `auto_minor_version_upgrade`
+- **`aws_elasticache_replication_group`**
+  - `at_rest_encryption_enabled`
+  - `auto_minor_version_upgrade`
+- **`aws_evidently_feature`**
+  - `variations.value.bool_value`
+- **`aws_imagebuilder_container_recipe`**
+  - `instance_configuration.block_device_mapping.ebs.delete_on_termination`
+  - `instance_configuration.block_device_mapping.ebs.encrypted`
+- **`aws_imagebuilder_image_recipe`**
+  - `block_device_mapping.ebs.delete_on_termination`
+  - `block_device_mapping.ebs.encrypted`
+- **`aws_launch_template`**
+  - `block_device_mappings.ebs.delete_on_termination`
+  - `block_device_mappings.ebs.encrypted`
+  - `ebs_optimized`
+  - `network_interfaces.associate_carrier_ip_address`
+  - `network_interfaces.associate_public_ip_address`
+  - `network_interfaces.delete_on_termination`
+  - `network_interfaces.primary_ipv6`
+- **`aws_lb_target_group`, `aws_alb_target_group`**
+  - `preserve_client_ip`
+- **`aws_mq_broker`**
+  - `logs.audit`
+
+This is due to changes to `TypeNullableBool`.
+
+--
+
 ## OpsWorks Stacks Removal
 
 The AWS OpsWorks Stacks service has reached [End of Life](https://docs.aws.amazon.com/opsworks/latest/userguide/stacks-eol-faqs.html). The following resources have been removed:
@@ -220,106 +260,75 @@ The `s3_us_east_1_regional_endpoint` argument will be removed in `v7.0.0`.
 
 To prepare:
 
-- Remove the `s3_us_east_1_regional_endpoint` argument from your provider configuration, **or**
+- Remove `s3_us_east_1_regional_endpoint` from your provider configuration, **or**
 - Set its value to `regional` and verify functionality.
 
 ---
 
-## `TypeNullableBool` Validation Update
+## Data Source `aws_ami`
 
-Arguments of type `TypeNullableBool` now only accept:
+When using `most_recent = true`, your configuration **must now include** an `owner` or a `filter` that identifies the image by `image-id` or `owner-id`.
 
-- `""` (empty string)
-- `true`
-- `false`
+- **Before (v5 and earlier):**
+  Terraform allowed this setup and showed only a warning.
 
-Previously accepted values such as `0` and `1` now cause a validation error during `terraform plan`.
+- **Now (v6+):**
+  Terraform will stop with an **error** to prevent unsafe or ambiguous AMI lookups.
 
-### Affected Resources and Arguments
+### How to fix it
 
-- **`aws_accessanalyzer_archive_rule`**
-  - `filter.exists`
-- **`aws_cloudtrail_event_data_store`**
-  - `suspend`
-- **`aws_ec2_spot_instance_fleet`**
-  - `terminate_instances_on_delete`
-- **`aws_elasticache_cluster`**
-  - `auto_minor_version_upgrade`
-- **`aws_elasticache_replication_group`**
-  - `at_rest_encryption_enabled`
-  - `auto_minor_version_upgrade`
-- **`aws_evidently_feature`**
-  - `variations.value.bool_value`
-- **`aws_imagebuilder_container_recipe`**
-  - `instance_configuration.block_device_mapping.ebs.delete_on_termination`
-  - `instance_configuration.block_device_mapping.ebs.encrypted`
-- **`aws_imagebuilder_image_recipe`**
-  - `block_device_mapping.ebs.delete_on_termination`
-  - `block_device_mapping.ebs.encrypted`
-- **`aws_launch_template`**
-  - `block_device_mappings.ebs.delete_on_termination`
-  - `block_device_mappings.ebs.encrypted`
-  - `ebs_optimized`
-  - `network_interfaces.associate_carrier_ip_address`
-  - `network_interfaces.associate_public_ip_address`
-  - `network_interfaces.delete_on_termination`
-  - `network_interfaces.primary_ipv6`
-- **`aws_lb_target_group`, `aws_alb_target_group`**
-  - `preserve_client_ip`
-- **`aws_mq_broker`**
-  - `logs.audit`
+Do one of the following:
 
-## data-source/aws_ami
+- Add the `owner` argument:
 
-Configurations with `most_recent` set to `true` and no owner or image ID filters will now trigger an error diagnostic.
-Previously, these configurations would result in only a [warning diagnostic](https://github.com/hashicorp/terraform-provider-aws/pull/40211).
-To prevent this error, set the `owner` argument or include a `filter` block with an `image-id` or `owner-id` name/value pair.
-To continue using unsafe filter values with `most_recent` set to `true`, set the new `allow_unsafe_filter` argument to `true`.
-This is not recommended.
+```terraform
+owner = "amazon"
+```
 
-## data-source/aws_batch_compute_environment
+- Or add a `filter` block that includes either `image-id` or `owner-id`:
 
-`compute_environment_name` has been renamed to `name`.
+```terraform
+filter {
+  name   = "owner-id"
+  values = ["123456789012"]
+}
+```
 
-## data-source/aws_globalaccelerator_accelerator
+### Unsafe option (not recommended)
 
-`id` is now computed only.
+To override this check, you can set:
 
-## data-source/aws_identitystore_group
+```terraform
+allow_unsafe_filter = true
+```
 
-`filter` has been removed.
-Use `alternate_identifier` instead.
+However, this may lead to unreliable results and should be avoided unless absolutely necessary.
 
-## data-source/aws_identitystore_user
+---
 
-`filter` has been removed.
-Use `alternate_identifier` instead.
+## Data Source `aws_batch_compute_environment`
 
-## data-source/aws_opensearchserverless_security_config
+The `compute_environment_name` argument has been renamed to `name`.
 
-The `saml_options` attribute is now a list nested block instead of a single nested block.
-When referencing this attribute, the index must now be included in the attribute address.
-For example, `saml_options.session_timeout` would now be referenced as `saml_options[0].session_timeout`.
+Update your configurations to replace any usage of `compute_environment_name` with `name` to use this version.
 
-## data-source/aws_quicksight_data_set
+---
 
-`tags_all` has been removed.
+## Data Source `aws_ecs_task_definition`
 
-## data-source/aws_service_discovery_service
+Remove `inference_accelerator`—it is no longer supported. Amazon Elastic Inference reached end of life in April 2024.
 
-`tags_all` has been removed.
+---
 
-## data-source/aws_ecs_task_definition
+## Data Source `aws_ecs_task_execution`
 
-Remove `inference_accelerator` from your configuration—it no longer exists. Amazon Elastic Inference reached end of life in April 2024.
+Remove `inference_accelerator_overrides`—it is no longer supported. Amazon Elastic Inference reached end of life in April 2024.
 
-## data-source/aws_ecs_task_execution
+---
 
-Remove `inference_accelerator_overrides` from your configuration—it no longer exists. Amazon Elastic Inference reached end of life in April 2024.
+## Data Source `aws_elbv2_listener_rule`
 
-## data-source/aws_elbv2_listener_rule
-
-The following attributes are now list nested blocks instead of single nested blocks.
+Treat the following attributes as lists of nested blocks instead of single-nested blocks:
 
 - `action.authenticate_cognito`
 - `action.authenticate_oidc`
@@ -334,36 +343,82 @@ The following attributes are now list nested blocks instead of single nested blo
 - `condition.query_string`
 - `condition.source_ip`
 
-When referencing these attributes, the indices must now be included in the attribute address.
-For example, `action[0].authenticate_cognito.scope` would now be referenced as `action[0].authenticate_cognito[0].scope`.
+The data source configuration itself does not change. However, now, include an index when referencing its attributes. For example, update `action[0].authenticate_cognito.scope` to `action[0].authenticate_cognito[0].scope`.
 
-## data-source/aws_launch_template
+---
 
-Remove `elastic_gpu_specifications` from your configuration—it no longer exists. Amazon Elastic Graphics reached end of life in January 2024.
+## Data Source `aws_globalaccelerator_accelerator`
 
-Remove `elastic_inference_accelerator` from your configuration—it no longer exists. Amazon Elastic Inference reached end of life in April 2024.
+The `id` attribute is now **computed only** and can no longer be set manually.
+If your configuration explicitly attempts to set a value for `id`, you must remove it to avoid an error.
 
-## data-source/aws_opensearch_domain
+---
 
-Remove `kibana_endpoint` from your configuration—it no longer exists. AWS OpenSearch Service does **not** use Kibana endpoints (i.e., `_plugin/kibana`). Instead, OpenSearch uses **Dashboards**, accessible at the path `/_dashboards/` on the domain endpoint. The terminology has shifted from “Kibana” to “Dashboards.”
+## Data Source `aws_identitystore_group`
 
-For more information, see the [AWS OpenSearch Dashboards documentation](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/dashboards.html).
+Remove `filter`—it is no longer supported. To locate a group, update your configuration to use the `alternate_identifier` argument instead.
 
-## resource/aws_api_gateway_account
+---
 
-`reset_on_delete` has been removed.
-The destroy operation will now always reset the API Gateway account settings.
-Use a [removed](https://developer.hashicorp.com/terraform/language/resources/syntax#removing-resources) block to retain the previous behavior which left the account settings unchanged upon destruction.
+## Data Source `aws_identitystore_user`
 
-## resource/aws_api_gateway_deployment
+Remove `filter`—it is no longer supported.
+To locate a group, update your configuration to use the `alternate_identifier` argument instead.
 
-The following arguments have been **removed** from the `aws_api_gateway_deployment` resource:
+---
+
+## Data Source `aws_launch_template`
+
+Update your configuration to remove the following arguments, which are no longer supported:
+
+- `elastic_gpu_specifications`: Amazon Elastic Graphics reached end of life in January 2024.
+- `elastic_inference_accelerator`: Amazon Elastic Inference reached end of life in April 2024.
+
+---
+
+## Data Source `aws_opensearch_domain`
+
+Update your configuration to remove the `kibana_endpoint` attribute. This attribute is no longer available because AWS OpenSearch Service no longer uses Kibana endpoints. The service now uses **Dashboards**, accessible at the `/_dashboards/` path on the domain endpoint.
+
+For more details, refer to the [AWS OpenSearch Dashboards documentation](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/dashboards.html).
+
+---
+
+## Data Source `aws_opensearchserverless_security_config`
+
+Treat the `saml_options` attribute as a list of nested blocks instead of a single-nested block. The data source configuration itself does not change. However, now, include an index when referencing its attributes. For example, update `saml_options.session_timeout` to `saml_options[0].session_timeout`.
+
+---
+
+## Data Source `aws_quicksight_data_set`
+
+Remove `tags_all`—it is no longer supported.
+
+---
+
+## Data Source `aws_service_discovery_service`
+
+Remove `tags_all`—it is no longer supported.
+
+---
+
+## Resource `aws_api_gateway_account`
+
+Remove `reset_on_delete`—it is no longer supported. The destroy operation will now always reset the API Gateway account settings by default.
+
+If you want to retain the previous behavior (where the account settings were not changed upon destruction), use a `removed` block in your configuration. For more details, see the [removing resources documentation](https://developer.hashicorp.com/terraform/language/resources/syntax#removing-resources).
+
+---
+
+## Resource `aws_api_gateway_deployment`
+
+Use the `aws_api_gateway_stage` resource if your configuration uses any of the following arguments, which have been removed from the `aws_api_gateway_deployment` resource:
 
 - `stage_name`
 - `stage_description`
 - `canary_settings`
 
-Additionally, the computed attributes `invoke_url` and `execution_arn` have been removed from `aws_api_gateway_deployment`. These are now only available via the `aws_api_gateway_stage` resource.
+Remove `invoke_url` and `execution_arn`—they are no longer supported. Use the `aws_api_gateway_stage` resource.
 
 ### Migration Example
 
@@ -378,6 +433,8 @@ resource "aws_api_gateway_deployment" "example" {
 
 **After (v6+, using explicit stage):**
 
+If your previous configuration relied on an implicitly created stage, you must now define and manage that stage explicitly using the `aws_api_gateway_stage` resource. To do this, create a corresponding resource and import the existing stage into your configuration.
+
 ```terraform
 resource "aws_api_gateway_deployment" "example" {
   rest_api_id = aws_api_gateway_rest_api.example.id
@@ -390,168 +447,238 @@ resource "aws_api_gateway_stage" "prod" {
 }
 ```
 
-### Importing an Implicit Stage into Terraform
-
-If your previous configuration relied on an implicitly created stage, you can import it into a managed `aws_api_gateway_stage` resource like so:
+Import the existing stage, replacing `rest_api_id` and `stage_name` with your values:
 
 ```sh
-terraform import aws_api_gateway_stage.prod <rest_api_id>/<stage_name>
+terraform import aws_api_gateway_stage.prod rest_api_id/stage_name
 ```
 
-## resource/aws_batch_compute_environment
+---
 
-* `compute_environment_name` has been renamed to `name`.
-* `compute_environment_name_prefix` has been renamed to `name_prefix`.
+## Resource `aws_batch_compute_environment`
 
-## resource/aws_batch_job_queue
+Replace any usage of `compute_environment_name` with `name` and `compute_environment_name_prefix` with `name_prefix` as these arguments have been renamed.
 
-`compute_environments` has been removed. Instead, use `compute_environment_order`.
+---
 
-## resource/aws_bedrock_model_invocation_logging_configuration
+## Resource `aws_batch_job_queue`
 
-The following arguments are now list nested blocks instead of single nested blocks.
+Remove `compute_environments`—it is no longer supported.
+Use `compute_environment_order` configuration blocks instead. While you must update your configuration, Terraform will upgrade states with `compute_environments` to `compute_environment_order`.
+
+**Before (v5 and earlier):**
+
+```terraform
+resource "aws_batch_job_queue" "example" {
+  compute_environments = [aws_batch_compute_environment.example.arn]
+  name                 = "patagonia"
+  priority             = 1
+  state                = "ENABLED"
+}
+```
+
+**After (v6+):**
+
+```terraform
+resource "aws_batch_job_queue" "example" {
+  compute_environment_order {
+    compute_environment = aws_batch_compute_environment.example.arn
+    order               = 0
+  }
+  name     = "patagonia"
+  priority = 1
+  state    = "ENABLED"
+}
+```
+
+---
+
+## Resource `aws_bedrock_model_invocation_logging_configuration`
+
+Treat the following arguments as lists of nested blocks instead of single-nested blocks:
 
 - `logging_config`
 - `logging_config.cloudwatch_config`
 - `logging_config.cloudwatch_config.large_data_delivery_s3_config`
 - `logging_config.s3_config`
 
-When referencing these arguments, the indices must now be included in the attribute address.
-For example, `logging_config.cloudwatch_config.log_group_name` would now be referenced as `logging_config[0].cloudwatch_config[0].log_group_name`.
+The resource configuration itself does not change, but you must now include an index when referencing these arguments. For example, update `logging_config.cloudwatch_config.log_group_name` to `logging_config[0].cloudwatch_config[0].log_group_name`.
 
-## resource/aws_cloudfront_key_value_store
+---
 
-The `id` attribute is now set the to ID value returned by the AWS API.
-For the name, use the `name` attribute.
+## Resource `aws_cloudfront_key_value_store`
 
-## resource/aws_cloudfront_response_headers_policy
+Use the `name` attribute to reference the resource name. The `id` attribute now reflects the ID value returned by the AWS API.
 
-The `etag` argument is now computed only.
+---
 
-## resource/aws_cognito_user_in_group
+## Resource `aws_cloudfront_response_headers_policy`
 
-The `id` attribute is now a comma-delimited string concatenating the `user_pool_id`, `group_name`, and `username` arguments.
+Do not set a value for the `etag` attribute as it is now computed only.
 
-## resource/aws_db_instance
+---
 
-The `character_set_name` now cannot be set with `replicate_source_db`, `restore_to_point_in_time`, `s3_import`, or `snapshot_identifier`.
+## Resource `aws_cognito_user_in_group`
 
-## resource/aws_dms_endpoint
+For the `id`, use a comma-delimited string concatenating the `user_pool_id`, `group_name`, and `username` arguments. For example, in an import command, use comma-delimiting for the composite `id`.
 
-`s3_settings` has been removed. Use `aws_dms_s3_endpoint` instead.
+---
 
-## resource/aws_dx_gateway_association
+## Resource `aws_db_instance`
 
-The `vpn_gateway_id` attribute has been removed.
-Use the `associated_gateway_id` attribute instead.
+Do not use `character_set_name` with `replicate_source_db`, `restore_to_point_in_time`, `s3_import`, or `snapshot_identifier`. The combination is no longer valid.
 
-## resource/aws_ecs_task_definition
+---
 
-Remove `inference_accelerator` from your configuration—it no longer exists. Amazon Elastic Inference reached end of life in April 2024.
+## Resource `aws_dms_endpoint`
 
-## resource/aws_eip
+Use the `aws_dms_s3_endpoint` resource rather than `s3_settings` of `aws_dms_endpoint`. The `s3_settings` argument has been removed. 
 
-The `vpc` argument has been removed.
-Use `domain` instead.
+---
 
-## resource/aws_elasticache_replication_group
+## Resource `aws_dx_gateway_association`
+
+Remove `vpn_gateway_id`—it is no longer supported. Use the `associated_gateway_id` attribute instead.
+
+---
+
+## Resource `aws_ecs_task_definition`
+
+Remove `inference_accelerator`—it is no longer supported. Amazon Elastic Inference reached end of life in April 2024.
+
+---
+
+## Resource `aws_eip`
+
+Remove `vpc`—it is no longer supported. Use `domain` instead.
+
+---
+
+## Resource `aws_eks_addon`
+
+Remove `resolve_conflicts`—it is no longer supported. Use `resolve_conflicts_on_create` and `resolve_conflicts_on_update` instead.
+
+---
+
+## Resource `aws_elasticache_replication_group`
 
 * The `auth_token_update_strategy` argument no longer has a default value. If `auth_token` is set, this argument must also be explicitly configured.
 * The ability to provide an uppercase `engine` value is deprecated. In `v7.0.0`, plan-time validation of the `engine` argument will require an entirely lowercase value to match the returned value from the AWS API without diff suppression.
 * See also [changes](#typenullablebool-validation-update) to `at_rest_encryption_enabled` and `auto_minor_version_upgrade`.
 
-## resource/aws_elasticache_user
+---
+
+## Resource `aws_elasticache_user`
 
 The ability to provide an uppercase `engine` value is deprecated.
 In `v7.0.0`, plan-time validation of the `engine` argument will require an entirely lowercase value to match the returned value from the AWS API without diff suppression.
 
-## resource/aws_elasticache_user_group
+---
+
+## Resource `aws_elasticache_user_group`
 
 The ability to provide an uppercase `engine` value is deprecated.
 In `v7.0.0`, plan-time validation of the `engine` argument will require an entirely lowercase value to match the returned value from the AWS API without diff suppression.
 
-## resource/aws_eks_addon
+---
 
-The `resolve_conflicts` argument has been removed. Use `resolve_conflicts_on_create` and `resolve_conflicts_on_update` instead.
+## Resource `aws_flow_log`
 
-## resource/aws_guardduty_organization_configuration
+Remove `log_group_name`—it is no longer supported. Use `log_destination` instead.
 
-The `auto_enable` attribute has been removed and the `auto_enable_organization_members` attribute is now required.
+---
 
-`datasources` now returns a deprecation warning.
+## Resource `aws_guardduty_organization_configuration`
 
-## resource/aws_launch_template
+* Remove `auto_enable`—it is no longer supported.
+* The `auto_enable_organization_members` attribute is now required.
+* `datasources` is deprecated.
 
-Remove `elastic_gpu_specifications` from your configuration—it no longer exists. Amazon Elastic Graphics reached end of life in January 2024.
+---
 
-Remove `elastic_inference_accelerator` from your configuration—it no longer exists. Amazon Elastic Inference reached end of life in April 2024.
-
-See also [changes](#typenullablebool-validation-update) to `block_device_mappings.ebs.delete_on_termination`, `block_device_mappings.ebs.encrypted`, `ebs_optimized`, `network_interfaces.associate_carrier_ip_address`, `network_interfaces.associate_public_ip_address`, `network_interfaces.delete_on_termination`, and `network_interfaces.primary_ipv6`.
-
-## resource/aws_media_store_container
-
-This resource is deprecated and will be removed in a future version. AWS has [announced](https://aws.amazon.com/blogs/media/support-for-aws-elemental-mediastore-ending-soon/) the discontinuation of AWS Elemental MediaStore, effective November 13, 2025. Users should begin transitioning to alternative solutions as soon as possible. For simple live streaming workflows, AWS recommends migrating to Amazon S3. For advanced use cases that require features such as packaging, DRM, or cross-region redundancy, consider using AWS Elemental MediaPackage.
-
-## resource/aws_media_store_container_policy
-
-This resource is deprecated and will be removed in a future version. AWS has [announced](https://aws.amazon.com/blogs/media/support-for-aws-elemental-mediastore-ending-soon/) the discontinuation of AWS Elemental MediaStore, effective November 13, 2025. Users should begin transitioning to alternative solutions as soon as possible. For simple live streaming workflows, AWS recommends migrating to Amazon S3. For advanced use cases that require features such as packaging, DRM, or cross-region redundancy, consider using AWS Elemental MediaPackage.
-
-## resource/aws_flow_log
-
-Remove `log_group_name` from your configuration—it no longer exists.
-Use `log_destination` instead.
-
-## resource/aws_instance
+## Resource `aws_instance`
 
 * The `user_data` attribute no longer applies hashing and is now stored in clear text. **Do not include passwords or sensitive information** in `user_data`, as it will be visible in plaintext. Follow [AWS Best Practices](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-metadata.html) to secure your instance metadata. If you need to provide base64-encoded user data, use the `user_data_base64` attribute instead.
-* Remove `cpu_core_count` and `cpu_threads_per_core` from your configuration—they no longer exist. Instead, use the `cpu_options` configuration block with `core_count` and `threads_per_core`.
+* Remove `cpu_core_count` and `cpu_threads_per_core`—they are no longer supported. Instead, use the `cpu_options` configuration block with `core_count` and `threads_per_core`.
 
-## resource/aws_kinesis_analytics_application
+---
+
+## Resource `aws_kinesis_analytics_application`
 
 This resource is deprecated and will be removed in a future version. [Effective January 27, 2026](https://aws.amazon.com/blogs/big-data/migrate-from-amazon-kinesis-data-analytics-for-sql-to-amazon-managed-service-for-apache-flink-and-amazon-managed-service-for-apache-flink-studio/), AWS will [no longer support](https://docs.aws.amazon.com/kinesisanalytics/latest/dev/discontinuation.html) Amazon Kinesis Data Analytics for SQL. Use the `aws_kinesisanalyticsv2_application` resource instead to manage Amazon Kinesis Data Analytics for Apache Flink applications. AWS provides guidance for migrating from [Amazon Kinesis Data Analytics for SQL Applications to Amazon Managed Service for Apache Flink Studio](https://aws.amazon.com/blogs/big-data/migrate-from-amazon-kinesis-data-analytics-for-sql-applications-to-amazon-managed-service-for-apache-flink-studio/) including [examples](https://docs.aws.amazon.com/kinesisanalytics/latest/dev/migrating-to-kda-studio-overview.html).
 
-## resource/aws_networkmanager_core_network
+---
 
-The `base_policy_region` argument has been removed. Use `base_policy_regions` instead.
+## Resource `aws_launch_template`
 
-## resource/aws_opensearch_domain
+* Remove `elastic_gpu_specifications`—it is no longer supported. Amazon Elastic Graphics reached end of life in January 2024.
+* Remove `elastic_inference_accelerator`—it is no longer supported. Amazon Elastic Inference reached end of life in April 2024.
+* See also [changes](#typenullablebool-validation-update) to `block_device_mappings.ebs.delete_on_termination`, `block_device_mappings.ebs.encrypted`, `ebs_optimized`, `network_interfaces.associate_carrier_ip_address`, `network_interfaces.associate_public_ip_address`, `network_interfaces.delete_on_termination`, and `network_interfaces.primary_ipv6`.
 
-Remove `kibana_endpoint` from your configuration—it no longer exists. AWS OpenSearch Service does **not** use Kibana endpoints (i.e., `_plugin/kibana`). Instead, OpenSearch uses **Dashboards**, accessible at the path `/_dashboards/` on the domain endpoint. The terminology has shifted from “Kibana” to “Dashboards.”
+---
+
+## Resource `aws_media_store_container`
+
+This resource is deprecated and will be removed in a future version. AWS has [announced](https://aws.amazon.com/blogs/media/support-for-aws-elemental-mediastore-ending-soon/) the discontinuation of AWS Elemental MediaStore, effective November 13, 2025. Users should begin transitioning to alternative solutions as soon as possible. For simple live streaming workflows, AWS recommends migrating to Amazon S3. For advanced use cases that require features such as packaging, DRM, or cross-region redundancy, consider using AWS Elemental MediaPackage.
+
+---
+
+## Resource `aws_media_store_container_policy`
+
+This resource is deprecated and will be removed in a future version. AWS has [announced](https://aws.amazon.com/blogs/media/support-for-aws-elemental-mediastore-ending-soon/) the discontinuation of AWS Elemental MediaStore, effective November 13, 2025. Users should begin transitioning to alternative solutions as soon as possible. For simple live streaming workflows, AWS recommends migrating to Amazon S3. For advanced use cases that require features such as packaging, DRM, or cross-region redundancy, consider using AWS Elemental MediaPackage.
+
+---
+
+## Resource `aws_networkmanager_core_network`
+
+Remove `base_policy_region`—it is no longer supported. Use `base_policy_regions` instead.
+
+---
+
+## Resource `aws_opensearch_domain`
+
+Remove `kibana_endpoint`—it is no longer supported. AWS OpenSearch Service does not use Kibana endpoints (i.e., `_plugin/kibana`). Instead, OpenSearch uses Dashboards, accessible at the path `/_dashboards/` on the domain endpoint. The terminology has shifted from “Kibana” to “Dashboards.”
 
 For more information, see the [AWS OpenSearch Dashboards documentation](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/dashboards.html).
 
-## resource/aws_opensearchserverless_security_config
+---
 
-The `saml_options` argument is now a list nested block instead of a single nested block.
-When referencing this argument, the index must now be included in the attribute address.
-For example, `saml_options.session_timeout` would now be referenced as `saml_options[0].session_timeout`.
+## Resource `aws_opensearchserverless_security_config`
 
-## resource/aws_paymentcryptography_key
+Treat the `saml_options` argument as a list of nested blocks instead of a single-nested block. The resource configuration itself does not change. However, now, include an index when referencing it. For example, update `saml_options.session_timeout` to `saml_options[0].session_timeout`.
 
-The `key_attributes` and `key_attributes.key_modes_of_use` arguments are now list nested blocks instead of single nested blocks.
-When referencing these arguments, the indices must now be included in the attribute address.
-For example, `key_attributes.key_modes_of_use.decrypt` would now be referenced as `key_attributes[0].key_modes_of_use[0].decrypt`.
+---
 
-## resource/aws_redshift_cluster
+## Resource `aws_paymentcryptography_key`
+
+Treat the `key_attributes` and `key_attributes.key_modes_of_use` arguments as lists of nested blocks instead of single-nested blocks. The resource configuration itself does not change. However, now, include an index when referencing these arguments. For example, update `key_attributes.key_modes_of_use.decrypt` to `key_attributes[0].key_modes_of_use[0].decrypt`.
+
+---
+
+## Resource `aws_redshift_cluster`
 
 * The `publicly_accessible` attribute now defaults to `false`.
-* Remove `snapshot_copy` from your configuration—it no longer exists. Use the `aws_redshift_snapshot_copy` resource instead.
-* Remove `logging` from your configuration—it no longer exists. Use the `aws_redshift_logging` resource instead.
+* Remove `snapshot_copy`—it is no longer supported. Use the `aws_redshift_snapshot_copy` resource instead.
+* Remove `logging`—it is no longer supported. Use the `aws_redshift_logging` resource instead.
 * Attributes `cluster_public_key`, `cluster_revision_number`, and `endpoint` are now read only and should not be set.
 
-## resource/aws_redshift_service_account
+---
+
+## Resource `aws_redshift_service_account`
 
 The `aws_redshift_service_account` resource has been removed. AWS [recommends](https://docs.aws.amazon.com/redshift/latest/mgmt/db-auditing.html#db-auditing-bucket-permissions) that a [service principal name](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_principal.html#principal-services) should be used instead of an AWS account ID in any relevant IAM policy.
 
-## resource/aws_rekognition_stream_processor
+---
 
-The `regions_of_interest.bounding_box` argument is now a list nested block instead of a single nested block.
-When referencing this argument, the index must now be included in the attribute address.
-For example, `regions_of_interest[0].bounding_box.height` would now be referenced as `regions_of_interest[0].bounding_box[0].height`.
+## Resource `aws_rekognition_stream_processor`
 
-## resource/aws_resiliencehub_resiliency_policy
+Treat the `regions_of_interest.bounding_box` argument as a list of nested blocks instead of a single-nested block. The resource configuration itself does not change. However, now, include an index when referencing its attributes. For example, update `regions_of_interest[0].bounding_box.height` to `regions_of_interest[0].bounding_box[0].height`.
 
-The following arguments are now list nested blocks instead of single nested blocks.
+---
+
+## Resource `aws_resiliencehub_resiliency_policy`
+
+Treat the following arguments as lists of nested blocks instead of single-nested blocks:
 
 - `policy`
 - `policy.az`
@@ -559,28 +686,35 @@ The following arguments are now list nested blocks instead of single nested bloc
 - `policy.software`
 - `policy.region`
 
-When referencing these arguments, the indices must now be included in the attribute address.
-For example, `policy.az.rpo` would now be referenced as `policy[0].az[0].rpo`.
+The resource configuration itself does not change. However, now, include an index when referencing the arguments. For example, update `policy.az.rpo` to `policy[0].az[0].rpo`.
 
-## resource/aws_sagemaker_notebook_instance
+---
 
-Remove `accelerator_types` from your configuration—it no longer exists. Instead, use `instance_type` to use [Inferentia](https://docs.aws.amazon.com/sagemaker/latest/dg/neo-supported-cloud.html).
+## Resource `aws_sagemaker_notebook_instance`
 
-## resource/aws_spot_instance_request
+Remove `accelerator_types`—it is no longer supported. Instead, use `instance_type` to use [Inferentia](https://docs.aws.amazon.com/sagemaker/latest/dg/neo-supported-cloud.html).
 
-Remove `block_duration_minutes` from your configuration—it no longer exists.
+---
 
-## resource/aws_ssm_association
+## Resource `aws_spot_instance_request`
 
-Remove `instance_id` from configuration—it no longer exists. Use `targets` instead.
+Remove `block_duration_minutes`—it is no longer supported.
 
-## resource/aws_verifiedpermissions_schema
+---
 
-The `definition` argument is now a list nested block instead of a single nested block.
-When referencing this argument, the index must now be included in the attribute address.
-For example, `definition.value` would now be referenced as `definition[0].value`.
+## Resource `aws_ssm_association`
 
-## resource/aws_wafv2_web_acl
+Remove `instance_id`—it is no longer supported. Use `targets` instead.
 
-The default value for `rule.statement.managed_rule_group_statement.managed_rule_group_configs.aws_managed_rules_bot_control_rule_set.enable_machine_learning` is now `false`.
-To retain the previous behavior in configurations which omit this argument, explicitly set the value to `true`.
+---
+
+## Resource `aws_verifiedpermissions_schema`
+
+Treat the `definition` argument as a list of nested blocks instead of a single-nested block. The resource configuration itself does not change. However, now, include an index when referencing it. For example, update `definition.value` to `definition[0].value`.
+
+---
+
+## Resource `aws_wafv2_web_acl`
+
+The default value for `rule.statement.managed_rule_group_statement.managed_rule_group_configs.aws_managed_rules_bot_control_rule_set.enable_machine_learning` is now `false`.  
+To retain the previous behavior in configurations that omit this argument, explicitly set the value to `true`.
