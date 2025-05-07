@@ -2,9 +2,21 @@
 
 {{ define "Init" }}
 	ctx := acctest.Context(t)
-	{{ if .ExistsTypeName -}}
+	{{ if .ExistsTypeName }}
 	var v {{ .ExistsTypeName }}
 	{{ end -}}
+	resourceName := "{{ .TypeName}}.test"{{ if .Generator }}
+	rName := {{ .Generator }}
+{{- end }}
+{{ range .InitCodeBlocks -}}
+{{ .Code }}
+{{- end }}
+{{ end }}
+
+{{/* This can be removed when the Exists check supports enhanced region support */}}
+{{ define "InitRegionOverride" }}
+	ctx := acctest.Context(t)
+
 	resourceName := "{{ .TypeName}}.test"{{ if .Generator }}
 	rName := {{ .Generator }}
 {{- end }}
@@ -212,3 +224,85 @@ func {{ template "testname" . }}_Identity_Basic(t *testing.T) {
 		},
 	})
 }
+
+{{ if not .IsGlobal }}
+func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
+	{{- template "InitRegionOverride" . }}
+
+	{{ template "Test" . }}(t, resource.TestCase{
+		{{ template "TestCaseSetup" . }}
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/region_override/"),
+				ConfigVariables: config.Variables{ {{ if .Generator }}
+					acctest.CtRName: config.StringVariable(rName),{{ end }}
+					{{ template "AdditionalTfVars" . }}
+					names.AttrRegion: config.StringVariable(acctest.AlternateRegion()),
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					{{ if .HasIDAttrDuplicates -}}
+						statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New({{ .IDAttrDuplicates }}), compare.ValuesSame()),
+					{{ end -}}
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
+					{{ if not .MutableIdentity -}}
+						{{ if .ArnIdentity -}}
+							tfstatecheck.ExpectIdentityRegionalARNAlternateRegionFormat(ctx, resourceName, "{{ .ARNService }}", "{{ .ARNFormat }}"),
+						{{ end -}}
+					{{ end -}}
+				},
+			},
+			{{ if not .NoImport -}}
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/region_override/"),
+				ConfigVariables: config.Variables{ {{ if .Generator }}
+					acctest.CtRName: config.StringVariable(rName),{{ end }}
+					{{ template "AdditionalTfVars" . }}
+					names.AttrRegion: config.StringVariable(acctest.AlternateRegion()),
+				},
+				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
+				{{- template "ImportCommandWithIDBody" . -}}
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/region_override/"),
+				ConfigVariables: config.Variables{ {{ if .Generator }}
+					acctest.CtRName: config.StringVariable(rName),{{ end }}
+					{{ template "AdditionalTfVars" . }}
+					names.AttrRegion: config.StringVariable(acctest.AlternateRegion()),
+				},
+				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
+				{{- template "ImportBlockWithIDBody" . -}}
+				ImportPlanChecks: resource.ImportPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						{{ if .ArnIdentity -}}
+							plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
+							plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+						{{ end -}}
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
+					},
+				},
+			},
+			{{ if not .MutableIdentity -}}
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/region_override/"),
+				ConfigVariables: config.Variables{ {{ if .Generator }}
+					acctest.CtRName: config.StringVariable(rName),{{ end }}
+					{{ template "AdditionalTfVars" . }}
+					names.AttrRegion: config.StringVariable(acctest.AlternateRegion()),
+				},
+				{{- template "ImportBlockWithResourceIdentityBody" . -}}
+				ImportPlanChecks: resource.ImportPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						{{ if .ArnIdentity -}}
+							plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
+							plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+						{{ end -}}
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
+					},
+				},
+			},
+			{{ end }}
+			{{- end }}
+		},
+	})
+}
+{{ end }}
