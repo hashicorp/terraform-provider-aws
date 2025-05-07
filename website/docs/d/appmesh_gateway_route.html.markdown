@@ -12,7 +12,7 @@ The App Mesh Gateway Route data source allows details of an App Mesh Gateway Rou
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_appmesh_gateway_route" "test" {
   name                 = "test-route"
   mesh_name            = "test-mesh"

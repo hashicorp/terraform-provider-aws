@@ -484,7 +484,7 @@ data "aws_iam_policy_document" "combined" {
 
 ## Argument Reference
 
-The following arguments are optional:
+This data source supports the following arguments:
 
 ~> **NOTE:** Statements without a `sid` cannot be overridden. In other words, a statement without a `sid` from `source_policy_documents` cannot be overridden by statements from `override_policy_documents`.
 

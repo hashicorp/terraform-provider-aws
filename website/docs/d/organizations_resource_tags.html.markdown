@@ -20,6 +20,8 @@ data "aws_organizations_resource_tags" "account" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `resource_id` - (Required) ID of the resource with the tags to list. See details below.
 
 ### resource_id

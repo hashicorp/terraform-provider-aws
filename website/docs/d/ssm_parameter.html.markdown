@@ -30,7 +30,9 @@ This data source supports the following arguments:
 * `name` - (Required) Name of the parameter.
 * `with_decryption` - (Optional) Whether to return decrypted `SecureString` value. Defaults to `true`.
 
-In addition to all arguments above, the following attributes are exported:
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the parameter.
 * `name` - Name of the parameter.

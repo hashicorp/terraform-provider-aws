@@ -14,13 +14,17 @@ Returns a list of all AWS DynamoDB table names in a region.
 
 The following example retrieves a list of all DynamoDB table names in a region.
 
-```hcl
+```terraform
 data "aws_dynamodb_tables" "all" {}
 
 output "table_names" {
   value = data.aws_dynamodb_tables.all.names
 }
 ```
+
+## Argument Reference
+
+This data source does not support any arguments.
 
 ## Attribute Reference
 

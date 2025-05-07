@@ -20,6 +20,8 @@ data "aws_workspaces_directory" "example" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `directory_id` - (Required) Directory identifier for registration in WorkSpaces service.
 
 ## Attribute Reference

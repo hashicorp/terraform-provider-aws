@@ -14,7 +14,7 @@ Get information on an EC2 Client VPN endpoint.
 
 ### By Filter
 
-```hcl
+```terraform
 data "aws_ec2_client_vpn_endpoint" "example" {
   filter {
     name   = "tag:Name"
@@ -25,7 +25,7 @@ data "aws_ec2_client_vpn_endpoint" "example" {
 
 ### By Identifier
 
-```hcl
+```terraform
 data "aws_ec2_client_vpn_endpoint" "example" {
   client_vpn_endpoint_id = "cvpn-endpoint-083cf50d6eb314f21"
 }

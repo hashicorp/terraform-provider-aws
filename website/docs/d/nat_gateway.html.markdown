@@ -32,9 +32,7 @@ data "aws_nat_gateway" "default" {
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available
-NAT Gateways in the current Region. The given filters must match exactly one
-NAT Gateway whose data will be exported as attributes.
+This data source supports the following arguments:
 
 * `id` - (Optional) ID of the specific NAT Gateway to retrieve.
 * `subnet_id` - (Optional) ID of subnet that the NAT Gateway resides in.
@@ -44,8 +42,13 @@ NAT Gateway whose data will be exported as attributes.
   a pair on the desired NAT Gateway.
 * `filter` - (Optional) Custom filter block as described below.
 
-More complex filters can be expressed using one or more `filter` sub-blocks,
-which take the following arguments:
+The arguments of this data source act as filters for querying the available
+NAT Gateways in the current Region. The given filters must match exactly one
+NAT Gateway whose data will be exported as attributes.
+
+### `filter`
+
+More complex filters can be expressed using one or more `filter` sub-blocks, which take the following arguments:
 
 * `name` - (Required) Name of the field to filter by, as defined by
   [the underlying AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeNatGateways.html).
@@ -54,10 +57,7 @@ which take the following arguments:
 
 ## Attribute Reference
 
-All of the argument attributes except `filter` block are also exported as
-result attributes. This data source will complete the data by populating
-any fields that are not included in the configuration with the data for
-the selected Nat Gateway.
+This data source exports the following attributes in addition to the arguments above:
 
 * `allocation_id` - ID of the EIP allocated to the selected NAT Gateway.
 * `association_id` - The association ID of the Elastic IP address that's associated with the NAT Gateway. Only available when `connectivity_type` is `public`.

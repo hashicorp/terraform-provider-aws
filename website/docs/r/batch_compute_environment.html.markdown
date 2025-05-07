@@ -131,7 +131,7 @@ resource "aws_batch_compute_environment" "sample" {
 
 ### Fargate Type
 
-```hcl
+```terraform
 resource "aws_batch_compute_environment" "sample" {
   compute_environment_name = "sample"
 
@@ -157,7 +157,7 @@ resource "aws_batch_compute_environment" "sample" {
 
 ### Setting Update Policy
 
-```hcl
+```terraform
 resource "aws_batch_compute_environment" "sample" {
   compute_environment_name = "sample"
 
