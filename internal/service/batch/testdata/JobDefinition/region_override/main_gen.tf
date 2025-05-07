@@ -1,30 +1,27 @@
 # Copyright (c) HashiCorp, Inc.
 # SPDX-License-Identifier: MPL-2.0
 
-{{ define "tags" -}}
-{{ end }}
+resource "aws_batch_job_definition" "test" {
+  region = var.region
 
-{{- block "body" . }}
-Missing block "body" in template
-{{- end }}
-{{ if .WithRName -}}
+  name = var.rName
+  type = "container"
+  container_properties = jsonencode({
+    command = ["echo", "test"]
+    image   = "busybox"
+    memory  = 128
+    vcpus   = 1
+  })
+}
+
 variable "rName" {
   description = "Name for resource"
   type        = string
   nullable    = false
 }
-{{ end -}}
-{{ range .AdditionalTfVars -}}
-variable "{{ . }}" {
-  type     = string
-  nullable = false
-}
 
-{{ end -}}
-{{ if .WithRegion }}
 variable "region" {
   description = "Region to deploy resource in"
   type        = string
   nullable    = false
 }
-{{ end -}}
