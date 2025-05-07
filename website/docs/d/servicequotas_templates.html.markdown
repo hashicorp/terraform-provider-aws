@@ -22,6 +22,8 @@ data "aws_servicequotas_templates" "example" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `aws_region` - (Optional) AWS Region to which the quota increases apply.
 * `region` - (Optional, **Deprecated**) AWS Region to which the quota increases apply. Use `aws_region` instead.
 
