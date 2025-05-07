@@ -182,7 +182,7 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/region_override/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
 					names.AttrRegion: config.StringVariable(acctest.AlternateRegion()),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -202,7 +202,7 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/region_override/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
 					names.AttrRegion: config.StringVariable(acctest.AlternateRegion()),
 				},
 				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
@@ -214,7 +214,7 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/region_override/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
 					names.AttrRegion: config.StringVariable(acctest.AlternateRegion()),
 				},
 				{{- template "ImportCommandWithIDBody" . -}}
