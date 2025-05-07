@@ -14,7 +14,7 @@ Upgrade topics:
 
 <!-- TOC depthFrom:2 depthTo:2 -->
 
-- [Prerequisities to Upgrade to v6.0.0](#prerequisities-to-upgrade-to-v600)
+- [Prerequisites to Upgrade to v6.0.0](#prerequisites-to-upgrade-to-v600)
 - [Removed Provider Arguments](#removed-provider-arguments)
 - [Enhanced Multi-Region Support](#enhanced-multi-region-support)
 - [Amazon Elastic Transcoder Deprecation](#amazon-elastic-transcoder-deprecation)
@@ -101,7 +101,7 @@ Upgrade topics:
 
 <!-- /TOC -->
 
-## Prerequisities to Upgrade to v6.0.0
+## Prerequisites to Upgrade to v6.0.0
 
 -> Before upgrading to version `6.0.0`, first upgrade to the latest available `5.x` version of the provider. Run [`terraform plan`](https://developer.hashicorp.com/terraform/cli/commands/plan) and confirm that:
 

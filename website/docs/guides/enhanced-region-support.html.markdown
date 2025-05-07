@@ -8,7 +8,7 @@ description: |-
 
 # Enhanced Region Support
 
-Version 6.0.0 of the Terraform AWS Provider introduces a new `region` argument making it significantly easier to manage infrastructure across AWS Regions without requiring multiple provider configurations.
+Version 6.0.0 of the Terraform AWS Provider adds `region` to most resources making it significantly easier to manage infrastructure across AWS Regions without requiring multiple provider configurations.
 
 <!-- TOC depthFrom:2 depthTo:2 -->
 
@@ -24,7 +24,7 @@ Version 6.0.0 of the Terraform AWS Provider introduces a new `region` argument m
 
 ## What's new
 
-As of v6.0.0, most existing resources, data sources, and ephemeral resources are now [Region-aware](#nonregion-aware-resources), meaning they support a new top-level `region` argument. This allows you to manage a resource in a Region different from the one specified in the provider configuration—without requiring multiple provider blocks. See [How `region` works](#how-region-works) for details.
+As of v6.0.0, most existing resources, data sources, and ephemeral resources are now [Region-aware](#nonregion-aware-resources), meaning they support a new top-level `region`. This allows you to manage a resource in a Region different from the one specified in the provider configuration—without requiring multiple provider blocks. See [How `region` works](#how-region-works) for details.
 
 For example, if your provider is configured for `us-east-1`, you can now manage a VPC in `us-west-2` without defining an additional provider block:
 
@@ -39,21 +39,21 @@ resource "aws_vpc" "peer" {
 
 _Pre-v6.0.0 configurations that use provider blocks per Region remain valid in v6.0.0 and are not deprecated._
 
-You can still define the Region at the provider level using any of the existing methods—for example, through the AWS [config file](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html), [provider configuration](https://developer.hashicorp.com/terraform/language/providers/configuration), [environment variables](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#environment-variables), [shared configuration files](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#shared-configuration-and-credentials-files), or explicitly using the `provider`’s [`region` argument](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#region).
+You can still define the Region at the provider level using any of the existing methods—for example, through the AWS [config file](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html), [provider configuration](https://developer.hashicorp.com/terraform/language/providers/configuration), [environment variables](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#environment-variables), [shared configuration files](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#shared-configuration-and-credentials-files), or explicitly using the `provider`’s [`region`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#region).
 
 ## Can I use `region` in every resource?
 
-No. While most resources are now Region-aware, there are exceptions. These include a few resources that already had a `region` argument and resources that are inherently global. See [Non–region-aware resources](#nonregion-aware-resources).
+No. While most resources are now Region-aware, there are exceptions. These include a few resources that already had a `region` and resources that are inherently global. See [Non–region-aware resources](#nonregion-aware-resources).
 
 ## Why make this change
 
 Before version 6.0.0, managing infrastructure across multiple Regions required a separate provider configuration for each Region. This approach led to complex and repetitive configurations, especially for large infrastructures—AWS currently operates in [36 Regions](https://aws.amazon.com/about-aws/global-infrastructure/), with more announced. Additionally, each provider configuration adds overhead in terms of memory and compute resources.
 
-See the [examples](#before-and-after-examples-using-region) below for a comparison of configurations before and after introducing the `region` argument.
+See the [examples](#before-and-after-examples-using-region) below for a comparison of configurations before and after introducing `region`.
 
 ## How `region` works
 
-The new top-level `region` argument is [_Optional_ and _Computed_](https://developer.hashicorp.com/terraform/plugin/framework/handling-data/attributes/string#configurability), and defaults to the Region specified in the provider configuration. Its value is validated to ensure it belongs to the configured [partition](https://docs.aws.amazon.com/whitepapers/latest/aws-fault-isolation-boundaries/partitions.html). **Changing the value of the `region` argument will force resource replacement.**
+The new top-level `region` is [_Optional_ and _Computed_](https://developer.hashicorp.com/terraform/plugin/framework/handling-data/attributes/string#configurability), and defaults to the Region specified in the provider configuration. Its value is validated to ensure it belongs to the configured [partition](https://docs.aws.amazon.com/whitepapers/latest/aws-fault-isolation-boundaries/partitions.html). **Changing the value of `region` will force resource replacement.**
 
 To [import](https://developer.hashicorp.com/terraform/cli/import) a resource in a specific Region, append `@<region>` to the [import ID](https://developer.hashicorp.com/terraform/language/import#import-id)—for example:
 
@@ -179,6 +179,7 @@ resource "aws_kms_replica_key" "replica" {
   primary_key_arn         = aws_kms_key.primary.arn
 }
 ```
+
 </p>
 </details>
 
@@ -205,6 +206,7 @@ resource "aws_kms_replica_key" "replica" {
   primary_key_arn         = aws_kms_key.primary.arn
 }
 ```
+
 </p>
 </details>
 
@@ -345,6 +347,7 @@ resource "aws_s3_bucket_replication_configuration" "replication" {
   }
 }
 ```
+
 </p>
 </details>
 
@@ -486,15 +489,15 @@ resource "aws_s3_bucket_replication_configuration" "replication" {
 
 ## Non–region-aware resources
 
-This section lists resources that are not Region-aware—meaning no `region` argument has been added to them.
+This section lists resources that are not Region-aware—meaning `region` has not been added to them.
 
 Some resources, such as [IAM and STS](https://docs.aws.amazon.com/IAM/latest/UserGuide/programming.html#IAMEndpoints), are [global](https://docs.aws.amazon.com/whitepapers/latest/aws-fault-isolation-boundaries/global-services.html) and exist in all Regions within a partition.
 
-Other resources are not Region-aware because they already had a top-level `region` argument, are inherently global, or because adding a `region` argument would not be appropriate for other reasons.
+Other resources are not Region-aware because they already had a top-level `region`, are inherently global, or because adding `region` would not be appropriate for other reasons.
 
-### Resources with a deprecated `region` argument
+### Resources deprecating `region`
 
-The following regional resources and data sources had a top-level `region` argument prior to version 6.0.0. That argument is now deprecated and will be replaced in a future version to support the new Region-aware behavior.
+The following regional resources and data sources had a top-level `region` prior to version 6.0.0. It is now deprecated and will be replaced in a future version to support the new Region-aware behavior.
 
 * `aws_cloudformation_stack_set_instance` resource
 * `aws_config_aggregate_authorization` resource
@@ -552,7 +555,7 @@ Some regional services have a subset of resources that are global:
 
 The `aws_default_tags`, `aws_partition`, and `aws_regions` data sources are effectively global.
 
-The `region` attribute of the `aws_arn` data source stays as-is.
+`region` of the `aws_arn` data source stays as-is.
 
 ### Policy Document Data Sources
 
