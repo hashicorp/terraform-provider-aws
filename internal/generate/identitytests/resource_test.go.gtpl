@@ -172,6 +172,15 @@ func {{ template "testname" . }}_Identity_Basic(t *testing.T) {
 					{{ template "AdditionalTfVars" . }}
 				},
 				{{- template "ImportBlockWithIDBody" . -}}
+				ImportPlanChecks: resource.ImportPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						{{ if .ArnIdentity -}}
+							plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
+							plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+						{{ end -}}
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+					},
+				},
 			},
 			{{- end }}
 		},
