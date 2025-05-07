@@ -86,12 +86,26 @@ plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), know
 	ResourceName:    resourceName,
 	ImportState:     true,
 	ImportStateKind: resource.ImportBlockWithID,
+	{{ template "ImportBlockValidate" . }}
 {{ end }}
 
 {{ define "ImportBlockWithResourceIdentityBody" }}
 	ResourceName:    resourceName,
 	ImportState:     true,
 	ImportStateKind: resource.ImportBlockWithResourceIdentity,
+	{{ template "ImportBlockValidate" . }}
+{{ end }}
+
+{{ define "ImportBlockValidate" -}}
+ImportPlanChecks: resource.ImportPlanChecks{
+	PreApply: []plancheck.PlanCheck{
+		{{ if .ArnIdentity -}}
+			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
+			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+		{{ end -}}
+		plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+	},
+},
 {{ end }}
 
 {{ define "testname" -}}
@@ -178,15 +192,6 @@ func {{ template "testname" . }}_Identity_Basic(t *testing.T) {
 					{{ template "AdditionalTfVars" . }}
 				},
 				{{- template "ImportBlockWithIDBody" . -}}
-				ImportPlanChecks: resource.ImportPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						{{ if .ArnIdentity -}}
-							plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
-							plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
-						{{ end -}}
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
-					},
-				},
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/basic/"),
@@ -195,15 +200,6 @@ func {{ template "testname" . }}_Identity_Basic(t *testing.T) {
 					{{ template "AdditionalTfVars" . }}
 				},
 				{{- template "ImportBlockWithResourceIdentityBody" . -}}
-				ImportPlanChecks: resource.ImportPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						{{ if .ArnIdentity -}}
-							plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
-							plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
-						{{ end -}}
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
-					},
-				},
 			},
 			{{- end }}
 		},
