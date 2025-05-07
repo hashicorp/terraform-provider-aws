@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_neptunegraph_graph
 
-The aws_neptunegraph_graph resource creates an Amazon Analytics Graph.
+The `aws_neptunegraph_graph` resource creates an Amazon Analytics Graph.
 
 ## Example Usage
 
