@@ -88,6 +88,12 @@ plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), know
 	ImportStateKind: resource.ImportBlockWithID,
 {{ end }}
 
+{{ define "ImportBlockWithResourceIdentityBody" }}
+	ResourceName:    resourceName,
+	ImportState:     true,
+	ImportStateKind: resource.ImportBlockWithResourceIdentity,
+{{ end }}
+
 {{ define "testname" -}}
 {{ if .Serialize }}testAcc{{ else }}TestAcc{{ end }}{{ .ResourceProviderNameUpper }}{{ .Name }}
 {{- end }}
@@ -172,6 +178,23 @@ func {{ template "testname" . }}_Identity_Basic(t *testing.T) {
 					{{ template "AdditionalTfVars" . }}
 				},
 				{{- template "ImportBlockWithIDBody" . -}}
+				ImportPlanChecks: resource.ImportPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						{{ if .ArnIdentity -}}
+							plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
+							plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+						{{ end -}}
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+					},
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/basic/"),
+				ConfigVariables: config.Variables{ {{ if .Generator }}
+					acctest.CtRName: config.StringVariable(rName),{{ end }}
+					{{ template "AdditionalTfVars" . }}
+				},
+				{{- template "ImportBlockWithResourceIdentityBody" . -}}
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						{{ if .ArnIdentity -}}
