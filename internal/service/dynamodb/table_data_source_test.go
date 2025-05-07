@@ -244,7 +244,7 @@ resource "aws_dynamodb_table" "test" {
   }
 
   point_in_time_recovery {
-    enabled = true
+    enabled                 = true
     recovery_period_in_days = 10
   }
 }
