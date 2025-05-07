@@ -20,6 +20,8 @@ data "aws_directory_service_directory" "example" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `directory_id` - (Required) ID of the directory.
 
 ## Attribute Reference

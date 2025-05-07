@@ -20,6 +20,8 @@ data "aws_dx_connection" "example" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `name` - (Required) Name of the connection to retrieve.
 
 ## Attribute Reference
