@@ -59,6 +59,7 @@ func TestAccSNSTopic_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "content_based_deduplication", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "delivery_policy", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, ""),
+					resource.TestCheckResourceAttr(resourceName, "fifo_throughput_scope", ""),
 					resource.TestCheckResourceAttr(resourceName, "fifo_topic", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "firehose_failure_feedback_role_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "firehose_success_feedback_role_arn", ""),
@@ -546,6 +547,43 @@ func TestAccSNSTopic_fifoExpectArchivePolicyError(t *testing.T) {
 	})
 }
 
+func TestAccSNSTopic_fifoWithHighThroughput(t *testing.T) {
+	ctx := acctest.Context(t)
+	var attributes map[string]string
+	resourceName := "aws_sns_topic.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SNSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTopicDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSNSTopic_fifoThroughputScope(rName, "Topic"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTopicExists(ctx, resourceName, &attributes),
+					resource.TestCheckResourceAttr(resourceName, "fifo_topic", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "fifo_throughput_scope", "Topic"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccSNSTopic_fifoThroughputScope(rName, "MessageGroup"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTopicExists(ctx, resourceName, &attributes),
+					resource.TestCheckResourceAttr(resourceName, "fifo_topic", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "fifo_throughput_scope", "MessageGroup"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccSNSTopic_encryption(t *testing.T) {
 	ctx := acctest.Context(t)
 	var attributes map[string]string
@@ -985,6 +1023,16 @@ resource "aws_sns_topic" "test" {
   content_based_deduplication = %[2]t
 }
 `, rName, cbd)
+}
+
+func testAccSNSTopic_fifoThroughputScope(rName string, throughputScope string) string {
+	return fmt.Sprintf(`
+resource "aws_sns_topic" "test" {
+  name                  = "%[1]s.fifo"
+  fifo_topic            = true
+  fifo_throughput_scope = "%[2]s"
+}
+`, rName, throughputScope)
 }
 
 func testAccTopicConfig_expectContentBasedDeduplicationError(rName string) string {
