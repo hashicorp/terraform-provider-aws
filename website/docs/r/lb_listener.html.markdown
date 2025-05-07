@@ -403,17 +403,17 @@ The following arguments are optional:
 
 ### mutual_authentication
 
-* `advertise_trust_store_ca_names` - (Optional) Valid values are `off` and `on`.
-* `ignore_client_certificate_expiry` - (Optional) Whether client certificate expiry is ignored. Default is `false`.
-* `mode` - (Required) Valid values are `off`, `verify` and `passthrough`.
-* `trust_store_arn` - (Required) ARN of the elbv2 Trust Store.
+* `advertise_trust_store_ca_names` - (Optional when `mode` is `verify`, invalid otherwise) Valid values are `off` and `on`.
+* `ignore_client_certificate_expiry` - (Optional when `mode` is `verify`, invalid otherwise) Whether client certificate expiry is ignored.
+  Default is `false`.
+* `mode` - (Required) Valid values are `off`, `passthrough`, and `verify`.
+* `trust_store_arn` - (Required when `mode` is `verify`, invalid otherwise) ARN of the elbv2 Trust Store.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the listener (matches `id`).
-* `id` - ARN of the listener (matches `arn`).
+* `arn` - ARN of the listener.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ~> **Note:** When importing a listener with a forward-type default action, you must include both a top-level target group ARN and a `forward` block with a `target_group` and `arn` to avoid import differences.

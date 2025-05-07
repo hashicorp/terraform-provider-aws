@@ -2114,8 +2114,15 @@ func testAccPipeConfig_kmsKeyIdentifier(rName, kmsKeyID string) string {
 		testAccPipeConfig_baseSQSSource(rName),
 		testAccPipeConfig_baseSQSTarget(rName),
 		fmt.Sprintf(`
-resource "aws_kms_key" "test_1" {}
-resource "aws_kms_key" "test_2" {}
+resource "aws_kms_key" "test_1" {
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+}
+
+resource "aws_kms_key" "test_2" {
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+}
 
 resource "aws_pipes_pipe" "test" {
   depends_on = [aws_iam_role_policy.source, aws_iam_role_policy.target]

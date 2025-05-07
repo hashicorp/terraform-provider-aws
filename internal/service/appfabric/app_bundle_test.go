@@ -55,6 +55,7 @@ func testAccAppBundle_basic(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("customer_managed_key_arn"), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
 				},
 			},
 			{
@@ -247,10 +248,9 @@ func testAccAppBundle_regionCreateNull(t *testing.T) {
 			},
 			{
 				Config: testAccAppBundleConfig_region(endpoints.ApNortheast1RegionID),
-				// Can't call 'testAccCheckAppBundleExists' as the app bundle's in the alternate Region.
-				// Check: resource.ComposeAggregateTestCheckFunc(
-				// 	testAccCheckAppBundleExists(ctx, resourceName, &appbundle),
-				// ),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAppBundleExistsInRegion(ctx, resourceName, &appbundle, endpoints.ApNortheast1RegionID),
+				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
@@ -291,10 +291,9 @@ func testAccAppBundle_regionCreateNonNull(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppBundleConfig_region(endpoints.EuWest1RegionID),
-				// Can't call 'testAccCheckAppBundleExists' as the app bundle's in the alternate Region.
-				// Check: resource.ComposeAggregateTestCheckFunc(
-				// 	testAccCheckAppBundleExists(ctx, resourceName, &appbundle),
-				// ),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAppBundleExistsInRegion(ctx, resourceName, &appbundle, endpoints.EuWest1RegionID),
+				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
@@ -393,6 +392,12 @@ func testAccCheckAppBundleExists(ctx context.Context, n string, v *awstypes.AppB
 	}
 }
 
+func testAccCheckAppBundleExistsInRegion(ctx context.Context, n string, v *awstypes.AppBundle, region string) resource.TestCheckFunc {
+	// Push region into Context.
+	ctx = conns.NewResourceContext(ctx, "AppFabric", "aws_appfabric_app_bundle", region)
+	return testAccCheckAppBundleExists(ctx, n, v)
+}
+
 func testAccAppBundleRegionImportStateIDFunc(n, region string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[n]
@@ -411,7 +416,9 @@ resource "aws_appfabric_app_bundle" "test" {}
 func testAccAppBundleConfig_cmk(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description = %[1]q
+  description             = %[1]q
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_appfabric_app_bundle" "test" {

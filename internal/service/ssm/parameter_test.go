@@ -1541,6 +1541,7 @@ resource "aws_ssm_parameter" "test" {
 resource "aws_kms_key" "test_key" {
   description             = "KMS key 1"
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_alias" "test_alias" {

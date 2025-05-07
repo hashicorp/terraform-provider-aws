@@ -1757,6 +1757,7 @@ resource "aws_kms_key" "test" {
 
   description             = "TF Acceptance Test S3 repl KMS key"
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_s3_bucket_replication_configuration" "test" {
@@ -1859,6 +1860,7 @@ resource "aws_kms_key" "test" {
 
   description             = "TF Acceptance Test S3 repl KMS key"
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_s3_bucket_replication_configuration" "test" {
