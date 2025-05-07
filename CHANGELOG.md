@@ -1,4 +1,5 @@
-## 6.0.0-beta1 (Unreleased)
+## 6.0.0-beta2 (Unreleased)
+## 6.0.0-beta1 (May  7, 2025)
 
 BREAKING CHANGES:
 
