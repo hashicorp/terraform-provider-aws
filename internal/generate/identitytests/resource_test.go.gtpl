@@ -189,6 +189,7 @@ func {{ template "testname" . }}_Identity_Basic(t *testing.T) {
 					},
 				},
 			},
+			{{ if not .MutableIdentity -}}
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/basic/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -206,6 +207,7 @@ func {{ template "testname" . }}_Identity_Basic(t *testing.T) {
 					},
 				},
 			},
+			{{ end }}
 			{{- end }}
 		},
 	})
