@@ -149,7 +149,9 @@ func {{ template "testname" . }}_Identity_Basic(t *testing.T) {
 					{{ if .HasIDAttrDuplicates -}}
 						statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New({{ .IDAttrDuplicates }}), compare.ValuesSame()),
 					{{ end -}}
-					tfstatecheck.ExpectIdentityRegionalARNFormat(ctx, resourceName, "{{ .ARNService }}", "{{ .ARNFormat }}"),
+					{{ if not .MutableIdentity -}}
+						tfstatecheck.ExpectIdentityRegionalARNFormat(ctx, resourceName, "{{ .ARNService }}", "{{ .ARNFormat }}"),
+					{{ end -}}
 				},
 			},
 			{{ if not .NoImport -}}
