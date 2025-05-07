@@ -273,6 +273,8 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `auto_retry_limit` - (Optional) Specify a maximum number of additional automatic retries after a failed build.
+  The default is 0.
 * `badge_enabled` - (Optional) Generates a publicly-accessible URL for the projects build badge. Available as
   `badge_url` attribute when enabled.
 * `build_batch_config` - (Optional) Defines the batch build options for the project.
