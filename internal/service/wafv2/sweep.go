@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -47,6 +48,11 @@ func RegisterSweepers() {
 	resource.AddTestSweepers("aws_wafv2_web_acl", &resource.Sweeper{
 		Name: "aws_wafv2_web_acl",
 		F:    sweepWebACLs,
+	})
+
+	resource.AddTestSweepers("aws_wafv2_api_key", &resource.Sweeper{
+		Name: "aws_wafv2_api_key",
+		F:    sweepAPIKeys,
 	})
 }
 
@@ -251,6 +257,51 @@ func sweepWebACLs(region string) error {
 
 	if err != nil {
 		return fmt.Errorf("error sweeping WAFv2 WebACLs (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepAPIKeys(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+	conn := client.WAFV2Client(ctx)
+
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	input := &wafv2.ListAPIKeysInput{
+		Scope: awstypes.ScopeRegional,
+	}
+
+	err = listAPIKeysPages(ctx, conn, input, func(page *wafv2.ListAPIKeysOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.APIKeySummaries {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceAPIKey, client,
+				framework.NewAttribute("api_key", aws.ToString(v.APIKey)),
+				framework.NewAttribute("token_domains", v.TokenDomains),
+				framework.NewAttribute(names.AttrScope, awstypes.ScopeRegional),
+			))
+		}
+		return !lastPage
+	})
+
+	if awsv2.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping WAFv2 API Key sweep for %s scope in %s: %s", awstypes.ScopeRegional, region, err)
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("error listing WAFv2 API Keys in (%s) for scope %s: %w", region, awstypes.ScopeRegional, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+	if err != nil {
+		return fmt.Errorf("error sweeping WAFv2 API Keys (%s): %w", region, err)
 	}
 
 	return nil
