@@ -560,7 +560,7 @@ func TestAccSNSTopic_fifoWithHighThroughput(t *testing.T) {
 		CheckDestroy:             testAccCheckTopicDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSNSTopic_fifoThroughputScope(rName, "Topic"),
+				Config: testAccTopicConfig_fifoThroughputScope(rName, "Topic"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists(ctx, resourceName, &attributes),
 					resource.TestCheckResourceAttr(resourceName, "fifo_topic", acctest.CtTrue),
@@ -573,7 +573,7 @@ func TestAccSNSTopic_fifoWithHighThroughput(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccSNSTopic_fifoThroughputScope(rName, "MessageGroup"),
+				Config: testAccTopicConfig_fifoThroughputScope(rName, "MessageGroup"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists(ctx, resourceName, &attributes),
 					resource.TestCheckResourceAttr(resourceName, "fifo_topic", acctest.CtTrue),
@@ -1025,7 +1025,7 @@ resource "aws_sns_topic" "test" {
 `, rName, cbd)
 }
 
-func testAccSNSTopic_fifoThroughputScope(rName string, throughputScope string) string {
+func testAccTopicConfig_fifoThroughputScope(rName string, throughputScope string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name                  = "%[1]s.fifo"
