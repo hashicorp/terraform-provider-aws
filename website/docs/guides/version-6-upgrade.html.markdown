@@ -160,7 +160,7 @@ Remove the following from your provider configuration—they are no longer suppo
 
 ## Enhanced Region Support
 
-Version 6.0.0 introduces a new `region` argument making it significantly easier to manage infrastructure across AWS Regions without requiring multiple provider configurations. See [Enhanced Region Support](enhanced-region-support.html).
+Version 6.0.0 adds `region` to most resources making it significantly easier to manage infrastructure across AWS Regions without requiring multiple provider configurations. See [Enhanced Region Support](enhanced-region-support.html).
 
 ---
 
