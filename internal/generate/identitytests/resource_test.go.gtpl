@@ -142,6 +142,7 @@ func {{ template "testname" . }}_Identity_Basic(t *testing.T) {
 					{{ if .HasIDAttrDuplicates -}}
 						statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New({{ .IDAttrDuplicates }}), compare.ValuesSame()),
 					{{ end -}}
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 				},
 			},
 			{{ if not .NoImport -}}
