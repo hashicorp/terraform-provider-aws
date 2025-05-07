@@ -21,7 +21,7 @@ data "aws_dx_locations" "available" {}
 
 ## Argument Reference
 
-There are no arguments available for this data source.
+This data source does not support any arguments.
 
 ## Attribute Reference
 

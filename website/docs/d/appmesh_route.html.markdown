@@ -13,7 +13,7 @@ The App Mesh Route data source allows details of an App Mesh Route to be retriev
 ## Example Usage
 
 ```terraform
-data "aws_appmesh_virtual_service" "test" {
+data "aws_appmesh_route" "test" {
   name                = "test-route"
   mesh_name           = "test-mesh"
   virtual_router_name = "test-router"

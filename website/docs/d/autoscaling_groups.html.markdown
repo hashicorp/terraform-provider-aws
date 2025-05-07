@@ -42,6 +42,8 @@ resource "aws_autoscaling_notification" "slack_notifications" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `names` - (Optional) List of autoscaling group names
 * `filter` - (Optional) Filter used to scope the list e.g., by tags. See [related docs](http://docs.aws.amazon.com/AutoScaling/latest/APIReference/API_Filter.html).
     * `name` - (Required) Name of the DescribeAutoScalingGroup filter. The recommended values are: `tag-key`, `tag-value`, and `tag:<tag name>`

@@ -22,7 +22,7 @@ data "aws_cognito_identity_pool" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
 * `identity_pool_name` - (Required)  The Cognito Identity Pool name.
 
