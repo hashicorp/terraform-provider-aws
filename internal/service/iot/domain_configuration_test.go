@@ -37,6 +37,7 @@ func TestAccIoTDomainConfiguration_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDomainConfigurationExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "iot", regexache.MustCompile(`domainconfiguration/`+rName+`/[a-z0-9]+$`)),
+					resource.TestCheckResourceAttr(resourceName, "authentication_type", "DEFAULT"),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domain),
 					resource.TestCheckResourceAttr(resourceName, "domain_type", "CUSTOMER_MANAGED"),
@@ -147,9 +148,10 @@ func TestAccIoTDomainConfiguration_update(t *testing.T) {
 		CheckDestroy:             testAccCheckDomainConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfigurationConfig_securityPolicy(rName, rootDomain, domain, "IoTSecurityPolicy_TLS13_1_3_2022_10", true),
+				Config: testAccDomainConfigurationConfig_securityPolicy(rName, rootDomain, domain, "IoTSecurityPolicy_TLS13_1_3_2022_10", true, "DEFAULT"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "authentication_type", "DEFAULT"),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_config.0.allow_authorizer_override", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "tls_config.#", "1"),
@@ -162,9 +164,10 @@ func TestAccIoTDomainConfiguration_update(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDomainConfigurationConfig_securityPolicy(rName, rootDomain, domain, "IoTSecurityPolicy_TLS13_1_2_2022_10", false),
+				Config: testAccDomainConfigurationConfig_securityPolicy(rName, rootDomain, domain, "IoTSecurityPolicy_TLS13_1_2_2022_10", false, "AWS_X509"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "authentication_type", "AWS_X509"),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_config.0.allow_authorizer_override", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "tls_config.#", "1"),
@@ -325,10 +328,12 @@ resource "aws_iot_domain_configuration" "test" {
 `, rName, domain, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
-func testAccDomainConfigurationConfig_securityPolicy(rName, rootDomain, domain, securityPolicy string, allowAuthorizerOverride bool) string {
+func testAccDomainConfigurationConfig_securityPolicy(rName, rootDomain, domain, securityPolicy string, allowAuthorizerOverride bool, authenticationType string) string {
 	return acctest.ConfigCompose(testAccAuthorizerConfig_basic(rName), testAccDomainConfigurationConfig_base(rootDomain, domain), fmt.Sprintf(`
 resource "aws_iot_domain_configuration" "test" {
   depends_on = [aws_acm_certificate_validation.test]
+
+	authentication_type = %[5]q
 
   authorizer_config {
     allow_authorizer_override = %[4]t
@@ -343,7 +348,7 @@ resource "aws_iot_domain_configuration" "test" {
     security_policy = %[3]q
   }
 }
-`, rName, domain, securityPolicy, allowAuthorizerOverride))
+`, rName, domain, securityPolicy, allowAuthorizerOverride, authenticationType))
 }
 
 func testAccDomainConfigurationConfig_awsManaged(rName string) string { // nosemgrep:ci.aws-in-func-name
