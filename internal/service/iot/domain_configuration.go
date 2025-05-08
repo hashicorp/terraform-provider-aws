@@ -43,6 +43,11 @@ func resourceDomainConfiguration() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"application_protocol": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.ApplicationProtocol](),
+			},
 			"authentication_type": {
 				Type:             schema.TypeString,
 				Optional:         true,
@@ -167,6 +172,10 @@ func resourceDomainConfigurationCreate(ctx context.Context, d *schema.ResourceDa
 		input.AuthenticationType = awstypes.AuthenticationType(v.(string))
 	}
 
+	if v, ok := d.GetOk("application_protocol"); ok {
+		input.ApplicationProtocol = awstypes.ApplicationProtocol(v.(string))
+	}
+
 	output, err := conn.CreateDomainConfiguration(ctx, input)
 
 	if err != nil {
@@ -219,6 +228,7 @@ func resourceDomainConfigurationRead(ctx context.Context, d *schema.ResourceData
 	}
 	d.Set("validation_certificate_arn", d.Get("validation_certificate_arn"))
 	d.Set("authentication_type", output.AuthenticationType)
+	d.Set("application_protocol", output.ApplicationProtocol)
 
 	return diags
 }
@@ -252,6 +262,10 @@ func resourceDomainConfigurationUpdate(ctx context.Context, d *schema.ResourceDa
 
 		if d.HasChange("authentication_type") {
 			input.AuthenticationType = awstypes.AuthenticationType(d.Get("authentication_type").(string))
+		}
+
+		if d.HasChange("application_protocol") {
+			input.ApplicationProtocol = awstypes.ApplicationProtocol(d.Get("application_protocol").(string))
 		}
 
 		_, err := conn.UpdateDomainConfiguration(ctx, input)
