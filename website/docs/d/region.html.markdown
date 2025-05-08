@@ -26,9 +26,7 @@ data "aws_region" "current" {}
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available
-regions. The given filters must match exactly one region whose data will be
-exported as attributes.
+This data source supports the following arguments:
 
 * `endpoint` - (Optional) EC2 endpoint of the region to select.
 * `name` - (Optional, **Deprecated**) Full name of the region to select. Use `region` instead.

@@ -22,7 +22,7 @@ data "aws_cognito_user_pool" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
 * `user_pool_id` - (Required) The cognito pool ID
 

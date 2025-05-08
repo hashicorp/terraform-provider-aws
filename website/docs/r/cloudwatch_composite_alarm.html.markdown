@@ -37,6 +37,8 @@ EOF
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `actions_enabled` - (Optional, Forces new resource) Indicates whether actions should be executed during any changes to the alarm state of the composite alarm. Defaults to `true`.
 * `actions_suppressor` - (Optional) Actions will be suppressed if the suppressor alarm is in the ALARM state.
     * `alarm` - (Required) Can be an AlarmName or an Amazon Resource Name (ARN) from an existing alarm.

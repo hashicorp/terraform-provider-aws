@@ -22,6 +22,8 @@ data "aws_cloudwatch_event_bus" "example" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `name` - (Required) Name of the event bus.
 
 ## Attribute Reference

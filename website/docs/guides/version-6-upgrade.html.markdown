@@ -16,7 +16,7 @@ Upgrade topics:
 
 - [Prerequisites to Upgrade to v6.0.0](#prerequisites-to-upgrade-to-v600)
 - [Removed Provider Arguments](#removed-provider-arguments)
-- [Enhanced Multi-Region Support](#enhanced-multi-region-support)
+- [Enhanced Region Support](#enhanced-region-support)
 - [Amazon Elastic Transcoder Deprecation](#amazon-elastic-transcoder-deprecation)
 - [CloudWatch Evidently Deprecation](#cloudwatch-evidently-deprecation)
 - [Nullable Boolean Validation Update](#nullable-boolean-validation-update)
@@ -32,6 +32,7 @@ Upgrade topics:
 - [Data Source `aws_globalaccelerator_accelerator`](#data-source-aws_globalaccelerator_accelerator)
 - [Data Source `aws_identitystore_group`](#data-source-aws_identitystore_group)
 - [Data Source `aws_identitystore_user`](#data-source-aws_identitystore_user)
+- [Data Source `aws_kms_secret`](#data-source-aws_kms_secret)
 - [Data Source `aws_launch_template`](#data-source-aws_launch_template)
 - [Data Source `aws_opensearch_domain`](#data-source-aws_opensearch_domain)
 - [Data Source `aws_opensearchserverless_security_config`](#data-source-aws_opensearchserverless_security_config)
@@ -333,6 +334,10 @@ Remove `filter`—it is no longer supported. To locate a group, update your conf
 Remove `filter`—it is no longer supported.
 To locate a user, update your configuration to use `alternate_identifier` instead.
 
+## Data Source `aws_kms_secret`
+
+The functionality for this data source was removed in **v2.0.0** and the data source will be removed in a future version.
+
 ## Data Source `aws_launch_template`
 
 Remove the following—they are no longer supported:
@@ -627,7 +632,7 @@ The resource configuration itself does not change. However, now, include an inde
 
 ## Resource `aws_s3_bucket`
 
-`bucket_region` has been added and should be used instead of `region`, which is now used for [Enhanced Multi-Region Support](enhanced-region-support.html).
+`bucket_region` has been added and should be used instead of `region`, which is now used for [Enhanced Region Support](enhanced-region-support.html).
 
 ## Resource `aws_sagemaker_notebook_instance`
 

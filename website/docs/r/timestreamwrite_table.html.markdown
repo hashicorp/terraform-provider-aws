@@ -14,7 +14,7 @@ Provides a Timestream table resource.
 
 ### Basic usage
 
-```hcl
+```terraform
 resource "aws_timestreamwrite_table" "example" {
   database_name = aws_timestreamwrite_database.example.database_name
   table_name    = "example"
@@ -23,7 +23,7 @@ resource "aws_timestreamwrite_table" "example" {
 
 ### Full usage
 
-```hcl
+```terraform
 resource "aws_timestreamwrite_table" "example" {
   database_name = aws_timestreamwrite_database.example.database_name
   table_name    = "example"
@@ -41,7 +41,7 @@ resource "aws_timestreamwrite_table" "example" {
 
 ### Customer-defined Partition Key
 
-```hcl
+```terraform
 resource "aws_timestreamwrite_table" "example" {
   database_name = aws_timestreamwrite_database.example.database_name
   table_name    = "example"

@@ -23,14 +23,16 @@ data "aws_kinesis_stream" "stream" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `name` - (Required) Name of the Kinesis Stream.
 
 ## Attribute Reference
 
-`id` is set to the ARN of the Kinesis Stream. In addition, the following attributes
-are exported:
+This data source exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the Kinesis Stream (same as id).
+* `id` - ARN of the Kinesis Stream.
+* `arn` - ARN of the Kinesis Stream (same as `id`).
 * `closed_shards` - List of shard ids in the CLOSED state. See [Shard State][2] for more.
 * `creation_timestamp` - Approximate UNIX timestamp that the stream was created.
 * `encryption_type` - Encryption type used.
