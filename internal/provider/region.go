@@ -156,3 +156,24 @@ func importRegion() importInterceptor {
 		return []*schema.ResourceData{d}, nil
 	})
 }
+
+// importRegionNoDefault does not provide a default value for `region`. This should be used when the import ID is or contains a region.
+func importRegionNoDefault() importInterceptor {
+	return interceptorFunc2[*schema.ResourceData, []*schema.ResourceData, error](func(ctx context.Context, opts importInterceptorOptions) ([]*schema.ResourceData, error) {
+		d := opts.d
+
+		switch when, why := opts.when, opts.why; when {
+		case Before:
+			switch why {
+			case Import:
+				// Import ID optionally ends with "@<region>".
+				if matches := regexache.MustCompile(`^(.+)@([a-z]{2}(?:-[a-z]+)+-\d{1,2})$`).FindStringSubmatch(d.Id()); len(matches) == 3 {
+					d.SetId(matches[1])
+					d.Set(names.AttrRegion, matches[2])
+				}
+			}
+		}
+
+		return []*schema.ResourceData{d}, nil
+	})
+}
