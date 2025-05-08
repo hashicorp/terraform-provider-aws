@@ -1,5 +1,5 @@
 ---
-subcategory: "WAF V2"
+subcategory: "WAF"
 layout: "aws"
 page_title: "AWS: aws_wafv2_api_key"
 description: |-
