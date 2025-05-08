@@ -27,7 +27,16 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
-	return []*types.ServicePackageSDKResource{}
+	return []*types.ServicePackageSDKResource{
+		{
+			Factory:  resourceInvoiceUnit,
+			TypeName: "aws_invoicing_invoice_unit",
+			Name:     "Invoice Unit",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			},
+		},
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {
