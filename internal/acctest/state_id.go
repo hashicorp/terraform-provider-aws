@@ -21,3 +21,21 @@ func AttrImportStateIdFunc(resourceName, attrName string) resource.ImportStateId
 		return rs.Primary.Attributes[attrName], nil
 	}
 }
+
+// CrossRegionImportStateIdFunc is a resource.ImportStateIdFunc that appends the region
+func CrossRegionImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		id := rs.Primary.ID
+		region, ok := rs.Primary.Attributes["region"]
+		if !ok {
+			return "", fmt.Errorf("Attribute \"region\" not found in %s", resourceName)
+		}
+
+		return id + "@" + region, nil
+	}
+}
