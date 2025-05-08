@@ -2143,7 +2143,6 @@ func TestAccRDSCluster_scaling(t *testing.T) {
 	}
 
 	var dbCluster types.DBCluster
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 
@@ -2190,7 +2189,6 @@ func TestAccRDSCluster_serverlessV2ScalingConfiguration(t *testing.T) {
 	}
 
 	var dbCluster types.DBCluster
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 
@@ -2221,13 +2219,24 @@ func TestAccRDSCluster_serverlessV2ScalingConfiguration(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccClusterConfig_serverlessV2ScalingConfigurationWithSecondsUntilAutoPause(rName, 256.0, 0, 21600),
+				Config: testAccClusterConfig_serverlessV2ScalingConfigurationWithSecondsUntilAutoPause(rName, 256.0, 0, "21600"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.0.max_capacity", "256"),
 					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.0.min_capacity", "0"),
 					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.0.seconds_until_auto_pause", "21600"),
+				),
+			},
+			// https://github.com/hashicorp/terraform-provider-aws/issues/40637.
+			{
+				Config: testAccClusterConfig_serverlessV2ScalingConfiguration(rName, 64.0, 2.5),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.0.max_capacity", "64"),
+					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.0.min_capacity", "2.5"),
+					resource.TestCheckResourceAttrSet(resourceName, "serverlessv2_scaling_configuration.0.seconds_until_auto_pause"),
 				),
 			},
 		},
@@ -2241,7 +2250,6 @@ func TestAccRDSCluster_serverlessV2ScalingRemoved(t *testing.T) {
 	}
 
 	var dbCluster types.DBCluster
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 
@@ -2275,7 +2283,6 @@ func TestAccRDSCluster_serverlessV2ScalingRemoved(t *testing.T) {
 func TestAccRDSCluster_Scaling_defaultMinCapacity(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dbCluster types.DBCluster
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 
@@ -5761,7 +5768,7 @@ resource "aws_rds_cluster" "test" {
 `, tfrds.ClusterEngineAuroraPostgreSQL, rName)
 }
 
-func testAccClusterConfig_serverlessV2ScalingConfigurationWithSecondsUntilAutoPause(rName string, maxCapacity, minCapacity float64, secondsUntilAutoPause int) string {
+func testAccClusterConfig_serverlessV2ScalingConfigurationWithSecondsUntilAutoPause(rName string, maxCapacity, minCapacity float64, secondsUntilAutoPause string) string {
 	return fmt.Sprintf(`
 data "aws_rds_orderable_db_instance" "test" {
   engine                     = %[1]q
@@ -5781,7 +5788,7 @@ resource "aws_rds_cluster" "test" {
     max_capacity = %[3]f
     min_capacity = %[4]f
 
-    seconds_until_auto_pause = %[5]d
+    seconds_until_auto_pause = %[5]s
   }
 }
 `, tfrds.ClusterEngineAuroraPostgreSQL, rName, maxCapacity, minCapacity, secondsUntilAutoPause)

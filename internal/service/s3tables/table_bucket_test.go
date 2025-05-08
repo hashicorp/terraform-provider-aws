@@ -74,6 +74,81 @@ func TestAccS3TablesTableBucket_basic(t *testing.T) {
 	})
 }
 
+func TestAccS3TablesTableBucket_encryptionConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var tablebucket s3tables.GetTableBucketOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3tables_table_bucket.test"
+	resourceKeyOne := "aws_kms_key.test"
+	resourceKeyTwo := "aws_kms_key.test2"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3TablesServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableBucketDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableBucketConfig_encryptionConfiguration(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableBucketExists(ctx, resourceName, &tablebucket),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "s3tables", "bucket/"+rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrPair(resourceName, "encryption_configuration.kms_key_arn", resourceKeyOne, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.sse_algorithm", "aws:kms"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerAccountID),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("maintenance_configuration"), knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"iceberg_unreferenced_file_removal": knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"settings": knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"non_current_days":  knownvalue.Int32Exact(10),
+								"unreferenced_days": knownvalue.Int32Exact(3),
+							}),
+							names.AttrStatus: tfknownvalue.StringExact(awstypes.MaintenanceStatusEnabled),
+						}),
+					})),
+				},
+			},
+			{
+				Config: testAccTableBucketConfig_encryptionConfigurationUpdate(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableBucketExists(ctx, resourceName, &tablebucket),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "s3tables", "bucket/"+rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrPair(resourceName, "encryption_configuration.kms_key_arn", resourceKeyTwo, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.sse_algorithm", "aws:kms"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerAccountID),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("maintenance_configuration"), knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"iceberg_unreferenced_file_removal": knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"settings": knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"non_current_days":  knownvalue.Int32Exact(10),
+								"unreferenced_days": knownvalue.Int32Exact(3),
+							}),
+							names.AttrStatus: tfknownvalue.StringExact(awstypes.MaintenanceStatusEnabled),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+		},
+	})
+}
+
 func TestAccS3TablesTableBucket_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -246,6 +321,40 @@ func testAccTableBucketConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3tables_table_bucket" "test" {
   name = %[1]q
+}
+`, rName)
+}
+
+func testAccTableBucketConfig_encryptionConfiguration(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3tables_table_bucket" "test" {
+  name = %[1]q
+
+  encryption_configuration = {
+    kms_key_arn   = aws_kms_key.test.arn
+    sse_algorithm = "aws:kms"
+  }
+}
+
+resource "aws_kms_key" "test" {
+  deletion_window_in_days = 7
+}
+`, rName)
+}
+
+func testAccTableBucketConfig_encryptionConfigurationUpdate(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3tables_table_bucket" "test" {
+  name = %[1]q
+
+  encryption_configuration = {
+    kms_key_arn   = aws_kms_key.test2.arn
+    sse_algorithm = "aws:kms"
+  }
+}
+
+resource "aws_kms_key" "test2" {
+  deletion_window_in_days = 7
 }
 `, rName)
 }

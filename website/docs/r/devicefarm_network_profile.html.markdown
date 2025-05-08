@@ -27,6 +27,8 @@ resource "aws_devicefarm_network_profile" "example" {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `description` - (Optional) The description of the network profile.
 * `downlink_bandwidth_bits` - (Optional) The data throughput rate in bits per second, as an integer from `0` to `104857600`. Default value is `104857600`.
 * `downlink_delay_ms` - (Optional) Delay time for all packets to destination in milliseconds as an integer from `0` to `2000`.

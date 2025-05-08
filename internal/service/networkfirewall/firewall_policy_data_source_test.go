@@ -134,6 +134,34 @@ func TestAccNetworkFirewallFirewallPolicyDataSource_withOverriddenManagedRuleGro
 	})
 }
 
+func TestAccNetworkFirewallFirewallPolicyDataSource_withPolicyVariables(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	resourceName := "aws_networkfirewall_firewall_policy.test"
+	datasourceName := "data.aws_networkfirewall_firewall_policy.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFirewallPolicyDataSourceConfig_withPolicyVariables(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDescription, resourceName, names.AttrDescription),
+					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.#", resourceName, "firewall_policy.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.rule_variables.#", resourceName, "firewall_policy.rule_variables.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.rule_variables.ip_set.#", resourceName, "firewall_policy.rule_variables.ip_set.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.rule_variables.ip_set.0.definition.#", resourceName, "firewall_policy.rule_variables.ip_set.0.definition.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
+				),
+			},
+		},
+	})
+}
+
 func testAccFirewallPolicyDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_networkfirewall_firewall_policy" "test" {
@@ -192,6 +220,29 @@ resource "aws_networkfirewall_firewall_policy" "test" {
 
       override {
         action = "DROP_TO_ALERT"
+      }
+    }
+  }
+}
+
+data "aws_networkfirewall_firewall_policy" "test" {
+  arn = aws_networkfirewall_firewall_policy.test.arn
+}`, rName)
+}
+
+func testAccFirewallPolicyDataSourceConfig_withPolicyVariables(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_networkfirewall_firewall_policy" "test" {
+  name = %[1]q
+  firewall_policy {
+    stateless_fragment_default_actions = ["aws:drop"]
+    stateless_default_actions          = ["aws:pass"]
+    policy_variables {
+      rule_variables {
+        key = "HOME_NET"
+        ip_set {
+          definition = ["10.0.0.0/16", "10.1.0.0/24"]
+        }
       }
     }
   }

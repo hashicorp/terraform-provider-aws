@@ -26,6 +26,8 @@ resource "aws_iot_domain_configuration" "iot" {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `authorizer_config` - (Optional) An object that specifies the authorization service for a domain. See the [`authorizer_config` Block](#authorizer_config-block) below for details.
 * `domain_name` - (Optional) Fully-qualified domain name.
 * `name` - (Required) The name of the domain configuration. This value must be unique to a region.

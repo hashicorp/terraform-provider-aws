@@ -12,7 +12,7 @@ Terraform data source for managing an AWS App Mesh Virtual Node.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_appmesh_virtual_node" "test" {
   name      = "serviceBv1"
   mesh_name = "example-mesh"

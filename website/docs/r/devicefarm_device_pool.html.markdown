@@ -26,6 +26,8 @@ resource "aws_devicefarm_device_pool" "example" {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `name` - (Required) The name of the Device Pool
 * `project_arn` - (Required) The ARN of the project for the device pool.
 * `rule` - (Required) The device pool's rules. See [Rule](#rule).

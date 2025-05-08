@@ -20,12 +20,13 @@ data "aws_autoscaling_group" "foo" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `name` - Specify the exact name of the desired autoscaling group.
 
 ## Attribute Reference
 
-~> **NOTE:** Some values are not always set and may not be available for
-interpolation.
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Auto Scaling group.
 * `availability_zones` - One or more Availability Zones for the group.
@@ -131,3 +132,6 @@ interpolation.
     * `min_size` - Minimum number of instances to maintain in the warm pool.
     * `pool_state` - Instance state to transition to after the lifecycle actions are complete.
 * `warm_pool_size` - Current size of the warm pool.
+
+~> **NOTE:** Some values are not always set and may not be available for
+interpolation.

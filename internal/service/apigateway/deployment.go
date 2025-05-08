@@ -73,12 +73,14 @@ func resourceDeployment() *schema.Resource {
 				Deprecated: "canary_settings is deprecated. Use the aws_api_gateway_stage resource instead.",
 			},
 			"execution_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:       schema.TypeString,
+				Computed:   true,
+				Deprecated: "execution_arn is deprecated. Use the aws_api_gateway_stage resource instead.",
 			},
 			"invoke_url": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:       schema.TypeString,
+				Computed:   true,
+				Deprecated: "invoke_url is deprecated. Use the aws_api_gateway_stage resource instead.",
 			},
 			"rest_api_id": {
 				Type:     schema.TypeString,

@@ -28,7 +28,7 @@ resource "aws_apprunner_observability_configuration" "example" {
 
 ## Argument Reference
 
-The following arguments supported:
+This resource supports the following arguments:
 
 * `observability_configuration_name` - (Required, Forces new resource) Name of the observability configuration.
 * `trace_configuration` - (Optional) Configuration of the tracing feature within this observability configuration. If you don't specify it, App Runner doesn't enable tracing. See [Trace Configuration](#trace-configuration) below for more details.

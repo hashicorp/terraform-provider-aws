@@ -41,7 +41,7 @@ resource "aws_lb_listener" "front_end" {
 
 To a NLB:
 
-```hcl
+```terraform
 resource "aws_lb_listener" "front_end" {
   load_balancer_arn = aws_lb.front_end.arn
   port              = "443"
