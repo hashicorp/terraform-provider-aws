@@ -35,7 +35,7 @@ var (
 	DirectoryBucketNameRegex = regexache.MustCompile(`^(?:[0-9a-z.-]+)--(?:[0-9a-za-z]+(?:-[0-9a-za-z]+)+)--x-s3$`)
 
 	// e.g. arn:aws:s3express:us-west-2:1234567890:accesspoint/ap-name--usw2-az2--xa-s3
-	AccessPointArnRegex = regexache.MustCompile(`^arn:aws(-[a-z]+)?:s3express:[a-z0-9-]+:\d{12}:accesspoint/[a-zA-Z0-9\-]+--[a-z0-9-]+--xa-s3/*$`)
+	AccessPointARNRegex = regexache.MustCompile(`^arn:aws(-[a-z]+)?:s3express:[a-z0-9-]+:\d{12}:accesspoint/[a-zA-Z0-9\-]+--[a-z0-9-]+--xa-s3/*$`)
 )
 
 // @SDKResource("aws_s3_directory_access_point", name="Directory Access Point")
