@@ -157,7 +157,7 @@ func testAccBackupRegionSettings_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccBackupRegionSettings_Identity_RegionOverride(t *testing.T) {
+func testAccBackupRegionSettings_Identity_RegionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_backup_region_settings.test"
 
