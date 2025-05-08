@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_rds_cluster: Fixes the behavior when enabling database_insights_mode="advanced" without changing performance insights retention window
+```
