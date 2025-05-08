@@ -5,6 +5,8 @@ package qbusiness
 
 var (
 	ResourceApplication = newResourceApplication
+	ResourceIndex       = newResourceIndex
 
 	FindApplicationByID = findApplicationByID
+	FindIndexByID       = findIndexByID
 )
