@@ -28,6 +28,8 @@ resource "aws_spot_datafeed_subscription" "default" {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `bucket` - (Required) The Amazon S3 bucket in which to store the Spot instance data feed.
 * `prefix` - (Optional) Path of folder inside bucket to place spot pricing data.
 

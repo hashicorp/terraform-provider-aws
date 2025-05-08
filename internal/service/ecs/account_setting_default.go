@@ -52,7 +52,7 @@ func resourceAccountSettingDefault() *schema.Resource {
 	}
 }
 
-func resourceAccountSettingDefaultPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccountSettingDefaultPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 
@@ -76,7 +76,7 @@ func resourceAccountSettingDefaultPut(ctx context.Context, d *schema.ResourceDat
 	return append(diags, resourceAccountSettingDefaultRead(ctx, d, meta)...)
 }
 
-func resourceAccountSettingDefaultRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccountSettingDefaultRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 
@@ -102,7 +102,7 @@ func resourceAccountSettingDefaultRead(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func resourceAccountSettingDefaultDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccountSettingDefaultDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 
@@ -115,6 +115,13 @@ func resourceAccountSettingDefaultDelete(ctx context.Context, d *schema.Resource
 			fargateTaskRetirementWaitPeriodValue = "7"
 		)
 		settingValue = fargateTaskRetirementWaitPeriodValue
+	}
+
+	if settingName == awstypes.SettingNameDefaultLogDriverMode {
+		const (
+			defaultLogDriverModeValue = "non-blocking"
+		)
+		settingValue = defaultLogDriverModeValue
 	}
 
 	log.Printf("[WARN] Deleting ECS Account Setting Default: %s", settingName)
@@ -136,7 +143,7 @@ func resourceAccountSettingDefaultDelete(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func resourceAccountSettingDefaultImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceAccountSettingDefaultImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	d.Set(names.AttrName, d.Id())
 	d.SetId(arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition(ctx),

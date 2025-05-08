@@ -178,6 +178,28 @@ func findCOIPPools(ctx context.Context, conn *ec2.Client, input *ec2.DescribeCoi
 	return output, nil
 }
 
+func findDefaultCreditSpecification(ctx context.Context, conn *ec2.Client, input *ec2.GetDefaultCreditSpecificationInput) (*awstypes.InstanceFamilyCreditSpecification, error) {
+	output, err := conn.GetDefaultCreditSpecification(ctx, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.InstanceFamilyCreditSpecification == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.InstanceFamilyCreditSpecification, nil
+}
+
+func findDefaultCreditSpecificationByInstanceFamily(ctx context.Context, conn *ec2.Client, instanceFamily awstypes.UnlimitedSupportedInstanceFamily) (*awstypes.InstanceFamilyCreditSpecification, error) {
+	input := ec2.GetDefaultCreditSpecificationInput{
+		InstanceFamily: instanceFamily,
+	}
+
+	return findDefaultCreditSpecification(ctx, conn, &input)
+}
+
 func findDHCPOptions(ctx context.Context, conn *ec2.Client, input *ec2.DescribeDhcpOptionsInput) (*awstypes.DhcpOptions, error) {
 	output, err := findDHCPOptionses(ctx, conn, input)
 
@@ -2445,6 +2467,26 @@ func findVPCEndpoints(ctx context.Context, conn *ec2.Client, input *ec2.Describe
 	return output, nil
 }
 
+func findVPCEndpointAssociations(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcEndpointAssociationsInput) ([]awstypes.VpcEndpointAssociation, error) {
+	var output []awstypes.VpcEndpointAssociation
+
+	err := describeVPCEndpointAssociationsPages(ctx, conn, input, func(page *ec2.DescribeVpcEndpointAssociationsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		output = append(output, page.VpcEndpointAssociations...)
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
 func findPrefixListByName(ctx context.Context, conn *ec2.Client, name string) (*awstypes.PrefixList, error) {
 	input := ec2.DescribePrefixListsInput{
 		Filters: newAttributeFilterList(map[string]string{
@@ -3936,6 +3978,22 @@ func findIPAMPoolAllocationByTwoPartKey(ctx context.Context, conn *ec2.Client, a
 	}
 
 	return output, nil
+}
+
+func findIPAMPoolAllocationsByIPAMPoolIDAndResourceID(ctx context.Context, conn *ec2.Client, ipamPoolID, resourceID string) ([]awstypes.IpamPoolAllocation, error) {
+	input := ec2.GetIpamPoolAllocationsInput{
+		IpamPoolId: aws.String(ipamPoolID),
+	}
+
+	output, err := findIPAMPoolAllocations(ctx, conn, &input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfslices.Filter(output, func(v awstypes.IpamPoolAllocation) bool {
+		return aws.ToString(v.ResourceId) == resourceID
+	}), nil
 }
 
 func findIPAMPoolCIDR(ctx context.Context, conn *ec2.Client, input *ec2.GetIpamPoolCidrsInput) (*awstypes.IpamPoolCidr, error) {

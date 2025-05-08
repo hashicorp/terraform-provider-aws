@@ -48,6 +48,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Factory:  DataSourceDetector,
 			TypeName: "aws_guardduty_detector",
 			Name:     "Detector",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 	}
 }

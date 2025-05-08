@@ -20,6 +20,8 @@ data "aws_bedrock_custom_model" "test" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `model_id` – (Required) Name or ARN of the custom model.
 
 ## Attribute Reference

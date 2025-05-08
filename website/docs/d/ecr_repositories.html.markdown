@@ -20,11 +20,11 @@ data "aws_ecr_repositories" "example" {}
 
 ## Argument Reference
 
-There are no arguments available for this data source.
+This data source does not support any arguments.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - AWS Region.
 * `names` - A list if AWS Elastic Container Registries for the region.

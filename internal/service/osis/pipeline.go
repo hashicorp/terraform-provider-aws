@@ -226,7 +226,7 @@ func (r *pipelineResource) Create(ctx context.Context, request resource.CreateRe
 	input.Tags = getTagsIn(ctx)
 
 	// Retry for IAM eventual consistency.
-	_, err := tfresource.RetryWhenIsA[*awstypes.ValidationException](ctx, propagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsA[*awstypes.ValidationException](ctx, propagationTimeout, func() (any, error) {
 		return conn.CreatePipeline(ctx, &input)
 	})
 
@@ -236,11 +236,13 @@ func (r *pipelineResource) Create(ctx context.Context, request resource.CreateRe
 		return
 	}
 
-	data.setID()
+	// Set values for unknowns.
+	data.ID = fwflex.StringValueToFramework(ctx, name)
 
 	pipeline, err := waitPipelineCreated(ctx, conn, name, r.CreateTimeout(ctx, data.Timeouts))
 
 	if err != nil {
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), name)...)
 		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("pipeline_name"), name)...)
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for OpenSearch Ingestion Pipeline (%s) create", name), err.Error())
 
@@ -248,7 +250,7 @@ func (r *pipelineResource) Create(ctx context.Context, request resource.CreateRe
 	}
 
 	// Set values for unknowns.
-	data.IngestEndpointUrls.SetValue = fwflex.FlattenFrameworkStringValueSet(ctx, pipeline.IngestEndpointUrls)
+	data.IngestEndpointURLs.SetValue = fwflex.FlattenFrameworkStringValueSet(ctx, pipeline.IngestEndpointUrls)
 	data.PipelineARN = fwflex.StringToFramework(ctx, pipeline.PipelineArn)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
@@ -261,14 +263,9 @@ func (r *pipelineResource) Read(ctx context.Context, request resource.ReadReques
 		return
 	}
 
-	if err := data.InitFromID(); err != nil {
-		response.Diagnostics.AddError("parsing resource ID", err.Error())
-
-		return
-	}
-
 	conn := r.Meta().OpenSearchIngestionClient(ctx)
 
+	data.PipelineName = data.ID
 	name := data.PipelineName.ValueString()
 	pipeline, err := findPipelineByName(ctx, conn, name)
 
@@ -397,7 +394,7 @@ func findPipelineByName(ctx context.Context, conn *osis.Client, name string) (*a
 }
 
 func statusPipeline(ctx context.Context, conn *osis.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findPipelineByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
@@ -485,7 +482,7 @@ type pipelineResourceModel struct {
 	BufferOptions             fwtypes.ListNestedObjectValueOf[bufferOptionsModel]           `tfsdk:"buffer_options"`
 	EncryptionAtRestOptions   fwtypes.ListNestedObjectValueOf[encryptionAtRestOptionsModel] `tfsdk:"encryption_at_rest_options"`
 	ID                        types.String                                                  `tfsdk:"id"`
-	IngestEndpointUrls        fwtypes.SetValueOf[types.String]                              `tfsdk:"ingest_endpoint_urls"`
+	IngestEndpointURLs        fwtypes.SetOfString                                           `tfsdk:"ingest_endpoint_urls"`
 	LogPublishingOptions      fwtypes.ListNestedObjectValueOf[logPublishingOptionsModel]    `tfsdk:"log_publishing_options"`
 	MaxUnits                  types.Int64                                                   `tfsdk:"max_units"`
 	MinUnits                  types.Int64                                                   `tfsdk:"min_units"`
@@ -496,16 +493,6 @@ type pipelineResourceModel struct {
 	TagsAll                   tftags.Map                                                    `tfsdk:"tags_all"`
 	Timeouts                  timeouts.Value                                                `tfsdk:"timeouts"`
 	VPCOptions                fwtypes.ListNestedObjectValueOf[vpcOptionsModel]              `tfsdk:"vpc_options"`
-}
-
-func (data *pipelineResourceModel) InitFromID() error {
-	data.PipelineName = data.ID
-
-	return nil
-}
-
-func (data *pipelineResourceModel) setID() {
-	data.ID = data.PipelineName
 }
 
 type bufferOptionsModel struct {

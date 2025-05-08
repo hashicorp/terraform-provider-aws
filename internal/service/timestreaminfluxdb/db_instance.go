@@ -241,9 +241,6 @@ func (r *resourceDBInstance) Schema(ctx context.Context, req resource.SchemaRequ
 			},
 			"secondary_availability_zone": schema.StringAttribute{
 				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
 				Description: `The Availability Zone in which the standby instance is located when deploying 
 					with a MultiAZ standby instance.`,
 			},
@@ -503,9 +500,7 @@ func (r *resourceDBInstance) Update(ctx context.Context, req resource.UpdateRequ
 		}
 
 		plan.SecondaryAvailabilityZone = fwflex.StringToFrameworkLegacy(ctx, output.SecondaryAvailabilityZone)
-	}
-
-	if plan.SecondaryAvailabilityZone.IsUnknown() {
+	} else {
 		plan.SecondaryAvailabilityZone = state.SecondaryAvailabilityZone
 	}
 
@@ -630,7 +625,7 @@ func waitDBInstanceDeleted(ctx context.Context, conn *timestreaminfluxdb.Client,
 }
 
 func statusDBInstance(ctx context.Context, conn *timestreaminfluxdb.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := findDBInstanceByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil

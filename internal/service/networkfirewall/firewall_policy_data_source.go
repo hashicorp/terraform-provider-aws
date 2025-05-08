@@ -43,6 +43,39 @@ func dataSourceFirewallPolicy() *schema.Resource {
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
+							"policy_variables": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"rule_variables": {
+											Type:     schema.TypeSet,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"ip_set": {
+														Type:     schema.TypeList,
+														Computed: true,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"definition": {
+																	Type:     schema.TypeSet,
+																	Computed: true,
+																	Elem:     &schema.Schema{Type: schema.TypeString},
+																},
+															},
+														},
+													},
+													names.AttrKey: {
+														Type:     schema.TypeString,
+														Computed: true,
+													},
+												},
+											},
+										},
+									},
+								},
+							},
 							"stateful_default_actions": {
 								Type:     schema.TypeSet,
 								Computed: true,
@@ -92,7 +125,7 @@ func dataSourceFirewallPolicy() *schema.Resource {
 									},
 								},
 							},
-							"stateless_custom_action": sdkv2.DataSourcePropertyFromResourceProperty(customActionSchema()),
+							"stateless_custom_action": sdkv2.ComputedOnlyFromSchema(customActionSchema()),
 							"stateless_default_actions": {
 								Type:     schema.TypeSet,
 								Computed: true,
@@ -142,7 +175,7 @@ func dataSourceFirewallPolicy() *schema.Resource {
 	}
 }
 
-func dataSourceFirewallPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceFirewallPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NetworkFirewallClient(ctx)
 

@@ -14,6 +14,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -294,6 +295,44 @@ func TestAccCognitoIDPUserPool_withAdvancedSecurityMode(t *testing.T) {
 				Config: testAccUserPoolConfig_name(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "user_pool_add_ons.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCognitoIDPUserPool_withAdvancedSecurityAdditionalFlows(t *testing.T) {
+	ctx := acctest.Context(t)
+	var pool awstypes.UserPoolType
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cognito_user_pool.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserPoolDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserPoolConfig_advancedSecurityAdditionalFlows(rName, "ENFORCED", "ENFORCED"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserPoolExists(ctx, resourceName, &pool),
+					resource.TestCheckResourceAttr(resourceName, "user_pool_add_ons.0.advanced_security_mode", "ENFORCED"),
+					resource.TestCheckResourceAttr(resourceName, "user_pool_add_ons.0.advanced_security_additional_flows.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "user_pool_add_ons.0.advanced_security_additional_flows.0.custom_auth_mode", "ENFORCED"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccUserPoolConfig_advancedSecurityAdditionalFlows(rName, "AUDIT", "AUDIT"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "user_pool_add_ons.0.advanced_security_mode", "AUDIT"),
+					resource.TestCheckResourceAttr(resourceName, "user_pool_add_ons.0.advanced_security_additional_flows.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "user_pool_add_ons.0.advanced_security_additional_flows.0.custom_auth_mode", "AUDIT"),
 				),
 			},
 		},
@@ -1147,7 +1186,7 @@ func TestAccCognitoIDPUserPool_withPasswordPolicy(t *testing.T) {
 	})
 }
 
-func TestAccCognitoIDPUserPool_withUsername(t *testing.T) {
+func TestAccCognitoIDPUserPool_usernameConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pool awstypes.UserPoolType
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1160,12 +1199,17 @@ func TestAccCognitoIDPUserPool_withUsername(t *testing.T) {
 		CheckDestroy:             testAccCheckUserPoolDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserPoolConfig_nameConfiguration(rName),
+				Config: testAccUserPoolConfig_usernameConfiguration(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolExists(ctx, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "username_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "username_configuration.0.case_sensitive", acctest.CtTrue),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -1173,12 +1217,17 @@ func TestAccCognitoIDPUserPool_withUsername(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccUserPoolConfig_nameConfigurationUpdated(rName),
+				Config: testAccUserPoolConfig_usernameConfiguration(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolExists(ctx, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "username_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "username_configuration.0.case_sensitive", acctest.CtFalse),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
 			},
 		},
 	})
@@ -2206,6 +2255,22 @@ resource "aws_cognito_user_pool" "test" {
 `, rName, advancedSecurityMode)
 }
 
+func testAccUserPoolConfig_advancedSecurityAdditionalFlows(rName, advancedSecurityMode, customAuthMode string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+  name           = %[1]q
+  user_pool_tier = "PLUS"
+
+  user_pool_add_ons {
+    advanced_security_mode = %[2]q
+    advanced_security_additional_flows {
+      custom_auth_mode = %[3]q
+    }
+  }
+}
+`, rName, advancedSecurityMode, customAuthMode)
+}
+
 func testAccUserPoolConfig_deviceConfiguration(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
@@ -2582,28 +2647,16 @@ resource "aws_cognito_user_pool" "test" {
 `, name)
 }
 
-func testAccUserPoolConfig_nameConfiguration(name string) string {
+func testAccUserPoolConfig_usernameConfiguration(name string, caseSensitive bool) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
   name = %[1]q
 
   username_configuration {
-    case_sensitive = true
+    case_sensitive = %[2]t
   }
 }
-`, name)
-}
-
-func testAccUserPoolConfig_nameConfigurationUpdated(name string) string {
-	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "test" {
-  name = %[1]q
-
-  username_configuration {
-    case_sensitive = false
-  }
-}
-`, name)
+`, name, caseSensitive)
 }
 
 func testAccUserPoolLambdaConfig_base(name string) string {

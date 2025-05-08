@@ -24,9 +24,13 @@ data "aws_route53_resolver_firewall_rule_group_association" "example" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `firewall_rule_group_association_id` - (Required) The identifier for the association.
 
-The following attribute is additionally exported:
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) of the firewall rule group association.
 * `creation_time` - The date and time that the association was created, in Unix time format and Coordinated Universal Time (UTC).

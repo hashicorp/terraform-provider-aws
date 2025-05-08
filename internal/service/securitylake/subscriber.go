@@ -286,7 +286,7 @@ func (r *subscriberResource) Read(ctx context.Context, request resource.ReadRequ
 	}
 
 	if tags, err := listTags(ctx, conn, data.ID.ValueString()); err == nil {
-		setTagsOut(ctx, Tags(tags))
+		setTagsOut(ctx, svcTags(tags))
 	}
 
 	response.Diagnostics.Append(data.refreshFromOutput(ctx, subscriberIdentity, output)...)
@@ -433,7 +433,7 @@ func findSubscriberByID(ctx context.Context, conn *securitylake.Client, id strin
 }
 
 func statusSubscriber(ctx context.Context, conn *securitylake.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findSubscriberByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
@@ -615,7 +615,8 @@ func flattenSubscriberLogSourceResourceModel(ctx context.Context, awsLogApiObjec
 	var obj map[string]attr.Value
 	var objVal basetypes.ObjectValue
 
-	if logSourceType == "aws" {
+	switch logSourceType {
+	case "aws":
 		var d diag.Diagnostics
 		elemType = types.ObjectType{AttrTypes: subscriberLogSourceResourceModelAttrTypes}
 		obj = map[string]attr.Value{
@@ -624,7 +625,7 @@ func flattenSubscriberLogSourceResourceModel(ctx context.Context, awsLogApiObjec
 		}
 		objVal, d = types.ObjectValue(subscriberLogSourceResourceModelAttrTypes, obj)
 		diags.Append(d...)
-	} else if logSourceType == "custom" {
+	case "custom":
 		elemType = types.ObjectType{AttrTypes: subscriberCustomLogSourceResourceModelAttrTypes}
 		attributes, d := flattenSubscriberCustomLogSourceAttributeModel(ctx, customLogApiObject.Attributes)
 		diags.Append(d...)

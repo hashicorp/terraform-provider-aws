@@ -98,7 +98,7 @@ func resourceTableReplica() *schema.Resource {
 	}
 }
 
-func resourceTableReplicaCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTableReplicaCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
@@ -194,7 +194,7 @@ func resourceTableReplicaCreate(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceTableReplicaUpdate(ctx, d, meta)...)
 }
 
-func resourceTableReplicaRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTableReplicaRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
@@ -267,7 +267,7 @@ func resourceTableReplicaRead(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceTableReplicaReadReplica(ctx, d, meta)...)
 }
 
-func resourceTableReplicaReadReplica(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTableReplicaReadReplica(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
@@ -313,7 +313,7 @@ func resourceTableReplicaReadReplica(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func resourceTableReplicaUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTableReplicaUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
@@ -394,7 +394,7 @@ func resourceTableReplicaUpdate(ctx context.Context, d *schema.ResourceData, met
 	// * deletion_protection_enabled
 	if d.HasChanges("point_in_time_recovery", "deletion_protection_enabled") {
 		if d.HasChange("point_in_time_recovery") {
-			if err := updatePITR(ctx, conn, tableName, d.Get("point_in_time_recovery").(bool), replicaRegion, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			if err := updatePITR(ctx, conn, tableName, d.Get("point_in_time_recovery").(bool), nil, replicaRegion, d.Timeout(schema.TimeoutUpdate)); err != nil {
 				return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTableReplica, d.Id(), err)
 			}
 		}
@@ -423,7 +423,7 @@ func resourceTableReplicaUpdate(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceTableReplicaRead(ctx, d, meta)...)
 }
 
-func resourceTableReplicaDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTableReplicaDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 

@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -36,7 +37,8 @@ const (
 
 // @SDKResource("aws_accessanalyzer_analyzer", name="Analyzer")
 // @Tags(identifierAttribute="arn")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/accessanalyzer/types;types.AnalyzerSummary", serialize="true", preCheck="true")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/accessanalyzer/types;types.AnalyzerSummary", serialize="true")
+// @Testing(preCheck="testAccPreCheck")
 func resourceAnalyzer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAnalyzerCreate,
@@ -76,6 +78,47 @@ func resourceAnalyzer() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"analysis_rule": {
+										Type:     schema.TypeList,
+										Optional: true,
+										ForceNew: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"exclusion": {
+													Type:     schema.TypeList,
+													Optional: true,
+													ForceNew: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"account_ids": {
+																Type:     schema.TypeList,
+																Optional: true,
+																ForceNew: true,
+																MaxItems: 2000,
+																Elem: &schema.Schema{
+																	Type:         schema.TypeString,
+																	ValidateFunc: validation.StringMatch(regexache.MustCompile(`^\d{12}$`), "Must be a 12-digit account ID"),
+																},
+															},
+															names.AttrResourceTags: {
+																Type:     schema.TypeList,
+																Optional: true,
+																ForceNew: true,
+																Elem: &schema.Schema{
+																	Type: schema.TypeMap,
+																	Elem: &schema.Schema{
+																		Type:         schema.TypeString,
+																		ValidateFunc: validation.StringLenBetween(0, 256),
+																	},
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
 									"unused_access_age": {
 										Type:     schema.TypeInt,
 										Optional: true,
@@ -100,7 +143,7 @@ func resourceAnalyzer() *schema.Resource {
 	}
 }
 
-func resourceAnalyzerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAnalyzerCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AccessAnalyzerClient(ctx)
 
@@ -112,13 +155,13 @@ func resourceAnalyzerCreate(ctx context.Context, d *schema.ResourceData, meta in
 		Type:         types.Type(d.Get(names.AttrType).(string)),
 	}
 
-	if v, ok := d.GetOk(names.AttrConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Configuration = expandAnalyzerConfiguration(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk(names.AttrConfiguration); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.Configuration = expandAnalyzerConfiguration(v.([]any)[0].(map[string]any))
 	}
 
 	// Handle Organizations eventual consistency.
 	_, err := tfresource.RetryWhenIsAErrorMessageContains[*types.ValidationException](ctx, organizationCreationTimeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.CreateAnalyzer(ctx, &input)
 		},
 		"You must create an organization",
@@ -133,7 +176,7 @@ func resourceAnalyzerCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceAnalyzerRead(ctx, d, meta)...)
 }
 
-func resourceAnalyzerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAnalyzerRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AccessAnalyzerClient(ctx)
 
@@ -152,7 +195,7 @@ func resourceAnalyzerRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("analyzer_name", analyzer.Name)
 	d.Set(names.AttrARN, analyzer.Arn)
 	if analyzer.Configuration != nil {
-		if err := d.Set(names.AttrConfiguration, []interface{}{flattenConfiguration(analyzer.Configuration)}); err != nil {
+		if err := d.Set(names.AttrConfiguration, []any{flattenAnalyzerConfiguration(analyzer.Configuration)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting configuration: %s", err)
 		}
 	} else {
@@ -165,7 +208,7 @@ func resourceAnalyzerRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func resourceAnalyzerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAnalyzerUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Tags only.
@@ -173,7 +216,7 @@ func resourceAnalyzerUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceAnalyzerRead(ctx, d, meta)...)
 }
 
-func resourceAnalyzerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAnalyzerDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AccessAnalyzerClient(ctx)
 
@@ -220,22 +263,26 @@ func findAnalyzerByName(ctx context.Context, conn *accessanalyzer.Client, name s
 	return output.Analyzer, nil
 }
 
-func expandAnalyzerConfiguration(tfMap map[string]interface{}) types.AnalyzerConfiguration {
+func expandAnalyzerConfiguration(tfMap map[string]any) types.AnalyzerConfiguration {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &types.AnalyzerConfigurationMemberUnusedAccess{}
 
-	if v, ok := tfMap["unused_access"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.Value = expandUnusedAccess(v[0].(map[string]interface{}))
+	if v, ok := tfMap["unused_access"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Value = expandUnusedAccessConfiguration(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandUnusedAccess(tfMap map[string]interface{}) types.UnusedAccessConfiguration {
+func expandUnusedAccessConfiguration(tfMap map[string]any) types.UnusedAccessConfiguration {
 	apiObject := types.UnusedAccessConfiguration{}
+
+	if v, ok := tfMap["analysis_rule"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.AnalysisRule = expandAnalysisRule(v[0].(map[string]any))
+	}
 
 	if v, ok := tfMap["unused_access_age"].(int); ok && v != 0 {
 		apiObject.UnusedAccessAge = aws.Int32(int32(v))
@@ -244,30 +291,144 @@ func expandUnusedAccess(tfMap map[string]interface{}) types.UnusedAccessConfigur
 	return apiObject
 }
 
-func flattenConfiguration(apiObject types.AnalyzerConfiguration) map[string]interface{} {
+func expandAnalysisRule(tfMap map[string]any) *types.AnalysisRule {
+	apiObject := &types.AnalysisRule{}
+
+	if v, ok := tfMap["exclusion"].([]any); ok && len(v) > 0 {
+		apiObject.Exclusions = expandAnalysisRuleCriterias(v)
+	}
+
+	return apiObject
+}
+
+func expandAnalysisRuleCriterias(tfList []any) []types.AnalysisRuleCriteria {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []types.AnalysisRuleCriteria
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		apiObject := expandAnalysisRuleCriteria(tfMap)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, *apiObject)
+	}
+
+	return apiObjects
+}
+
+func expandAnalysisRuleCriteria(tfMap map[string]any) *types.AnalysisRuleCriteria {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.AnalysisRuleCriteria{}
+
+	if tfList, ok := tfMap["account_ids"].([]any); ok && len(tfList) > 0 {
+		for _, v := range tfList {
+			accountID, ok := v.(string)
+			if !ok {
+				continue
+			}
+			apiObject.AccountIds = append(apiObject.AccountIds, accountID)
+		}
+	}
+
+	if tfList, ok := tfMap[names.AttrResourceTags].([]any); ok && len(tfList) > 0 {
+		for _, v := range tfList {
+			apiObject.ResourceTags = append(apiObject.ResourceTags, flex.ExpandStringValueMap(v.(map[string]any)))
+		}
+	}
+
+	return apiObject
+}
+
+func flattenAnalyzerConfiguration(apiObject types.AnalyzerConfiguration) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	switch v := apiObject.(type) {
 	case *types.AnalyzerConfigurationMemberUnusedAccess:
-		tfMap["unused_access"] = []interface{}{flattenUnusedAccessConfiguration(&v.Value)}
+		tfMap["unused_access"] = []any{flattenUnusedAccessConfiguration(&v.Value)}
 	}
 
 	return tfMap
 }
 
-func flattenUnusedAccessConfiguration(apiObject *types.UnusedAccessConfiguration) map[string]interface{} {
+func flattenUnusedAccessConfiguration(apiObject *types.UnusedAccessConfiguration) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
+
+	if v := apiObject.AnalysisRule; v != nil {
+		tfMap["analysis_rule"] = []any{flattenAnalysisRule(v)}
+	}
 
 	if v := apiObject.UnusedAccessAge; v != nil {
 		tfMap["unused_access_age"] = aws.ToInt32(v)
+	}
+
+	return tfMap
+}
+
+func flattenAnalysisRule(apiObject *types.AnalysisRule) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.Exclusions; v != nil {
+		tfMap["exclusion"] = flattenAnalysisRuleCriterias(v)
+	}
+
+	return tfMap
+}
+
+func flattenAnalysisRuleCriterias(apiObjects []types.AnalysisRuleCriteria) []any {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []any
+
+	for _, apiObject := range apiObjects {
+		tfMap := flattenAnalysisRuleCriteria(&apiObject)
+		if tfMap != nil {
+			tfList = append(tfList, tfMap)
+		}
+	}
+
+	return tfList
+}
+
+func flattenAnalysisRuleCriteria(apiObject *types.AnalysisRuleCriteria) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.AccountIds; len(v) > 0 {
+		tfMap["account_ids"] = v
+	}
+
+	if v := apiObject.ResourceTags; len(v) > 0 {
+		tfMap[names.AttrResourceTags] = v
 	}
 
 	return tfMap

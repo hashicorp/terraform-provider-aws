@@ -7,13 +7,17 @@ import (
 	"context"
 	"log"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -25,6 +29,7 @@ func resourceImageVersion() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceImageVersionCreate,
 		ReadWithoutTimeout:   resourceImageVersionRead,
+		UpdateWithoutTimeout: resourceImageVersionUpdate,
 		DeleteWithoutTimeout: resourceImageVersionDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -44,6 +49,10 @@ func resourceImageVersion() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"horovod": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"image_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -53,6 +62,36 @@ func resourceImageVersion() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"job_type": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.JobType](),
+			},
+			"ml_framework": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[a-zA-Z]+ ?\d+\.\d+(\.\d+)?$`), ""),
+			},
+			"processor": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.Processor](),
+			},
+			"programming_lang": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[a-zA-Z]+ ?\d+\.\d+(\.\d+)?$`), ""),
+			},
+			"release_notes": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(0, 255),
+			},
+			"vendor_guidance": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.VendorGuidance](),
+			},
 			names.AttrVersion: {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -61,14 +100,43 @@ func resourceImageVersion() *schema.Resource {
 	}
 }
 
-func resourceImageVersionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceImageVersionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
 	name := d.Get("image_name").(string)
 	input := &sagemaker.CreateImageVersionInput{
-		ImageName: aws.String(name),
-		BaseImage: aws.String(d.Get("base_image").(string)),
+		ImageName:   aws.String(name),
+		BaseImage:   aws.String(d.Get("base_image").(string)),
+		ClientToken: aws.String(id.UniqueId()),
+	}
+
+	if v, ok := d.GetOk("job_type"); ok {
+		input.JobType = awstypes.JobType(v.(string))
+	}
+
+	if v, ok := d.GetOk("processor"); ok {
+		input.Processor = awstypes.Processor(v.(string))
+	}
+
+	if v, ok := d.GetOk("release_notes"); ok {
+		input.ReleaseNotes = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("vendor_guidance"); ok {
+		input.VendorGuidance = awstypes.VendorGuidance(v.(string))
+	}
+
+	if v, ok := d.GetOk("horovod"); ok {
+		input.Horovod = aws.Bool(v.(bool))
+	}
+
+	if v, ok := d.GetOk("ml_framework"); ok {
+		input.MLFramework = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("programming_lang"); ok {
+		input.ProgrammingLang = aws.String(v.(string))
 	}
 
 	_, err := conn.CreateImageVersion(ctx, input)
@@ -85,7 +153,7 @@ func resourceImageVersionCreate(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceImageVersionRead(ctx, d, meta)...)
 }
 
-func resourceImageVersionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceImageVersionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -107,11 +175,62 @@ func resourceImageVersionRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("container_image", image.ContainerImage)
 	d.Set(names.AttrVersion, image.Version)
 	d.Set("image_name", d.Id())
+	d.Set("horovod", image.Horovod)
+	d.Set("job_type", image.JobType)
+	d.Set("processor", image.Processor)
+	d.Set("release_notes", image.ReleaseNotes)
+	d.Set("vendor_guidance", image.VendorGuidance)
+	d.Set("ml_framework", image.MLFramework)
+	d.Set("programming_lang", image.ProgrammingLang)
 
 	return diags
 }
 
-func resourceImageVersionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceImageVersionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
+
+	input := &sagemaker.UpdateImageVersionInput{
+		ImageName: aws.String(d.Id()),
+		Version:   aws.Int32(int32(d.Get(names.AttrVersion).(int))),
+	}
+
+	if d.HasChange("horovod") {
+		input.Horovod = aws.Bool(d.Get("horovod").(bool))
+	}
+
+	if d.HasChange("job_type") {
+		input.JobType = awstypes.JobType(d.Get("job_type").(string))
+	}
+
+	if d.HasChange("processor") {
+		input.Processor = awstypes.Processor(d.Get("processor").(string))
+	}
+
+	if d.HasChange("release_notes") {
+		input.ReleaseNotes = aws.String(d.Get("release_notes").(string))
+	}
+
+	if d.HasChange("vendor_guidance") {
+		input.VendorGuidance = awstypes.VendorGuidance(d.Get("vendor_guidance").(string))
+	}
+
+	if d.HasChange("ml_framework") {
+		input.MLFramework = aws.String(d.Get("ml_framework").(string))
+	}
+
+	if d.HasChange("programming_lang") {
+		input.ProgrammingLang = aws.String(d.Get("programming_lang").(string))
+	}
+
+	if _, err := conn.UpdateImageVersion(ctx, input); err != nil {
+		return sdkdiag.AppendErrorf(diags, "updating SageMaker AI Image Version (%s): %s", d.Id(), err)
+	}
+
+	return append(diags, resourceImageVersionRead(ctx, d, meta)...)
+}
+
+func resourceImageVersionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 

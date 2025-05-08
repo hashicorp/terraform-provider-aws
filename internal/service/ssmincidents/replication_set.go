@@ -102,7 +102,7 @@ func ResourceReplicationSet() *schema.Resource {
 	}
 }
 
-func resourceReplicationSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReplicationSetCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	client := meta.(*conns.AWSClient).SSMIncidentsClient(ctx)
 
@@ -133,7 +133,7 @@ func resourceReplicationSetCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceReplicationSetRead(ctx, d, meta)...)
 }
 
-func resourceReplicationSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReplicationSetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	client := meta.(*conns.AWSClient).SSMIncidentsClient(ctx)
 
@@ -161,7 +161,7 @@ func resourceReplicationSetRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceReplicationSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReplicationSetUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	client := meta.(*conns.AWSClient).SSMIncidentsClient(ctx)
 
@@ -192,7 +192,7 @@ func resourceReplicationSetUpdate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceReplicationSetRead(ctx, d, meta)...)
 }
 
-func resourceReplicationSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReplicationSetDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	client := meta.(*conns.AWSClient).SSMIncidentsClient(ctx)
 
@@ -222,10 +222,10 @@ func resourceReplicationSetDelete(ctx context.Context, d *schema.ResourceData, m
 }
 
 // converts a list of regions to a map which maps region name to kms key arn
-func regionListToRegionMap(list []interface{}) map[string]string {
+func regionListToRegionMap(list []any) map[string]string {
 	regionMap := make(map[string]string)
 	for _, region := range list {
-		regionData := region.(map[string]interface{})
+		regionData := region.(map[string]any)
 		regionName := regionData[names.AttrName].(string)
 		regionMap[regionName] = regionData[names.AttrKMSKeyARN].(string)
 	}
@@ -293,7 +293,7 @@ func resourceReplicationSetImport(ctx context.Context, d *schema.ResourceData, m
 	return []*schema.ResourceData{d}, nil
 }
 
-func validateNonAliasARN(value interface{}, path cty.Path) diag.Diagnostics {
+func validateNonAliasARN(value any, path cty.Path) diag.Diagnostics {
 	parsedARN, err := arn.Parse(value.(string))
 	var diags diag.Diagnostics
 

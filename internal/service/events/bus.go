@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -39,6 +40,23 @@ func resourceBus() *schema.Resource {
 			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"dead_letter_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrARN: {
+							Type:     schema.TypeString,
+							Optional: true,
+							ValidateFunc: validation.All(
+								validation.StringLenBetween(1, 1600),
+								verify.ValidARN,
+							),
+						},
+					},
+				},
 			},
 			names.AttrDescription: {
 				Type:         schema.TypeString,
@@ -68,7 +86,7 @@ func resourceBus() *schema.Resource {
 	}
 }
 
-func resourceBusCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBusCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
@@ -76,6 +94,10 @@ func resourceBusCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	input := &eventbridge.CreateEventBusInput{
 		Name: aws.String(eventBusName),
 		Tags: getTagsIn(ctx),
+	}
+
+	if v, ok := d.GetOk("dead_letter_config"); ok && len(v.([]any)) > 0 {
+		input.DeadLetterConfig = expandDeadLetterConfig(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -110,7 +132,7 @@ func resourceBusCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		err := createTags(ctx, conn, aws.ToString(output.EventBusArn), tags)
 
 		// If default tags only, continue. Otherwise, error.
-		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]any)) == 0) && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
 			return append(diags, resourceBusRead(ctx, d, meta)...)
 		}
 
@@ -122,7 +144,7 @@ func resourceBusCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	return append(diags, resourceBusRead(ctx, d, meta)...)
 }
 
-func resourceBusRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBusRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
@@ -139,6 +161,7 @@ func resourceBusRead(ctx context.Context, d *schema.ResourceData, meta interface
 	}
 
 	d.Set(names.AttrARN, output.Arn)
+	d.Set("dead_letter_config", flattenDeadLetterConfig(output.DeadLetterConfig))
 	d.Set(names.AttrDescription, output.Description)
 	d.Set("kms_key_identifier", output.KmsKeyIdentifier)
 	d.Set(names.AttrName, output.Name)
@@ -146,13 +169,17 @@ func resourceBusRead(ctx context.Context, d *schema.ResourceData, meta interface
 	return diags
 }
 
-func resourceBusUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBusUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
-	if d.HasChanges(names.AttrDescription, "kms_key_identifier") {
+	if d.HasChanges("dead_letter_config", names.AttrDescription, "kms_key_identifier") {
 		input := &eventbridge.UpdateEventBusInput{
 			Name: aws.String(d.Get(names.AttrName).(string)),
+		}
+
+		if v, ok := d.GetOk("dead_letter_config"); ok && len(v.([]any)) > 0 {
+			input.DeadLetterConfig = expandDeadLetterConfig(v.([]any)[0].(map[string]any))
 		}
 
 		// To unset the description, the only way is to explicitly set it to the empty string
@@ -176,7 +203,7 @@ func resourceBusUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 	return append(diags, resourceBusRead(ctx, d, meta)...)
 }
 
-func resourceBusDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBusDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
@@ -219,4 +246,26 @@ func findEventBusByName(ctx context.Context, conn *eventbridge.Client, name stri
 	}
 
 	return output, nil
+}
+
+func expandDeadLetterConfig(tfMap map[string]any) *types.DeadLetterConfig {
+	if tfMap == nil {
+		return nil
+	}
+	apiObject := &types.DeadLetterConfig{}
+	if v, ok := tfMap[names.AttrARN].(string); ok && v != "" {
+		apiObject.Arn = aws.String(v)
+	}
+	return apiObject
+}
+
+func flattenDeadLetterConfig(apiObject *types.DeadLetterConfig) []map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+	tfMap := map[string]any{}
+	if v := apiObject.Arn; v != nil {
+		tfMap[names.AttrARN] = aws.ToString(v)
+	}
+	return []map[string]any{tfMap}
 }

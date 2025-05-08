@@ -69,7 +69,7 @@ func resourceHostedZoneDNSSEC() *schema.Resource {
 	}
 }
 
-func resourceHostedZoneDNSSECCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHostedZoneDNSSECCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
@@ -96,7 +96,7 @@ func resourceHostedZoneDNSSECCreate(ctx context.Context, d *schema.ResourceData,
 	return append(diags, resourceHostedZoneDNSSECRead(ctx, d, meta)...)
 }
 
-func resourceHostedZoneDNSSECRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHostedZoneDNSSECRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
@@ -118,7 +118,7 @@ func resourceHostedZoneDNSSECRead(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func resourceHostedZoneDNSSECUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHostedZoneDNSSECUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
@@ -144,7 +144,7 @@ func resourceHostedZoneDNSSECUpdate(ctx context.Context, d *schema.ResourceData,
 	return append(diags, resourceHostedZoneDNSSECRead(ctx, d, meta)...)
 }
 
-func resourceHostedZoneDNSSECDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHostedZoneDNSSECDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
@@ -178,7 +178,7 @@ func hostedZoneDNSSECDisable(ctx context.Context, conn *route53.Client, hostedZo
 	const (
 		timeout = 5 * time.Minute
 	)
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.KeySigningKeyInParentDSRecord](ctx, timeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.KeySigningKeyInParentDSRecord](ctx, timeout, func() (any, error) {
 		return conn.DisableHostedZoneDNSSEC(ctx, input)
 	})
 
@@ -241,7 +241,7 @@ func findHostedZoneDNSSECByZoneID(ctx context.Context, conn *route53.Client, hos
 }
 
 func statusHostedZoneDNSSEC(ctx context.Context, conn *route53.Client, hostedZoneID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findHostedZoneDNSSECByZoneID(ctx, conn, hostedZoneID)
 
 		if tfresource.NotFound(err) {

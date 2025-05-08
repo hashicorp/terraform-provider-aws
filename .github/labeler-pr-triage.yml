@@ -779,6 +779,7 @@ service/ec2:
               - 'website/**/availability_zone*'
               - 'website/**/ec2_availability_*'
               - 'website/**/ec2_capacity_*'
+              - 'website/**/ec2_default_credit_specification*'
               - 'website/**/ec2_fleet*'
               - 'website/**/ec2_host*'
               - 'website/**/ec2_image_*'
@@ -1576,6 +1577,18 @@ service/nimble:
           - any-glob-to-any-file:
               - 'internal/service/nimble/**/*'
               - 'website/**/nimble_*'
+service/notifications:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/notifications/**/*'
+              - 'website/**/notifications_*'
+service/notificationscontacts:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/notificationscontacts/**/*'
+              - 'website/**/notificationscontacts_*'
 service/oam:
   - any:
       - changed-files:

@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_cloudwatch_event_bus: Add `dead_letter_config` argument
+```
+
+```release-note:enhancement
+data-source/aws_cloudwatch_event_bus: Add `dead_letter_config` attribute
+```

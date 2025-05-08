@@ -16,6 +16,10 @@ Provides a way to check whether default EBS encryption is enabled for your AWS a
 data "aws_ebs_encryption_by_default" "current" {}
 ```
 
+## Argument Reference
+
+This data source does not support any arguments.
+
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:

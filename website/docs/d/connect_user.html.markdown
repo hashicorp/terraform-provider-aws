@@ -14,7 +14,7 @@ Provides details about a specific Amazon Connect User.
 
 By `name`
 
-```hcl
+```terraform
 data "aws_connect_user" "example" {
   instance_id = "aaaaaaaa-bbbb-cccc-dddd-111111111111"
   name        = "Example"
@@ -23,7 +23,7 @@ data "aws_connect_user" "example" {
 
 By `user_id`
 
-```hcl
+```terraform
 data "aws_connect_user" "example" {
   instance_id = "aaaaaaaa-bbbb-cccc-dddd-111111111111"
   user_id     = "cccccccc-bbbb-cccc-dddd-111111111111"
@@ -62,6 +62,7 @@ An `identity_info` block supports the following attributes:
 * `email` - The email address.
 * `first_name` - The first name.
 * `last_name` - The last name.
+* `secondary_email` - The secondary email address. If present, email notifications will be sent to this email address instead of the primary one.
 
 ### `phone_config`
 

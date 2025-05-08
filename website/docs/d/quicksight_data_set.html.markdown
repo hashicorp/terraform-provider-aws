@@ -22,15 +22,14 @@ data "aws_quicksight_data_set" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
 * `data_set_id` - (Required) Identifier for the data set.
-
-The following arguments are optional:
-
 * `aws_account_id` - (Optional) AWS account ID.
 
 ## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 See the [Data Set Resource](/docs/providers/aws/r/quicksight_data_set.html) for details on the
 returned attributes - they are identical.

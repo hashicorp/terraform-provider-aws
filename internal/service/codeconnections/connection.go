@@ -35,6 +35,7 @@ import (
 
 // @FrameworkResource("aws_codeconnections_connection", name="Connection")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/codeconnections/types;types.Connection")
 func newConnectionResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &connectionResource{}
 
@@ -304,7 +305,7 @@ func waitConnectionDeleted(ctx context.Context, conn *codeconnections.Client, id
 }
 
 func statusConnection(ctx context.Context, conn *codeconnections.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := findConnectionByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {

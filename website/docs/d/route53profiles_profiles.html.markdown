@@ -20,11 +20,11 @@ data "aws_route53profiles_profiles" "example" {}
 
 ## Argument Reference
 
-There are no arguments available for this data source.
+This data source does not support any arguments.
 
 ## Attribute Reference
 
-This data source exports the following attributes:
+This data source exports the following attributes in addition to the arguments above:
 
 * `profiles` - List of Profiles.
     * `arn` - ARN of the Profile.

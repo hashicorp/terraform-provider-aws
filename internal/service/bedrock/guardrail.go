@@ -600,7 +600,7 @@ func waitGuardrailDeleted(ctx context.Context, conn *bedrock.Client, id string, 
 }
 
 func statusGuardrail(ctx context.Context, conn *bedrock.Client, id, version string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := findGuardrailByTwoPartKey(ctx, conn, id, version)
 		if tfresource.NotFound(err) {
 			return nil, "", nil

@@ -163,6 +163,10 @@ func dataSourceTable() *schema.Resource {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
+						"recovery_period_in_days": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
 					},
 				},
 			},
@@ -253,7 +257,7 @@ func dataSourceTable() *schema.Resource {
 	}
 }
 
-func dataSourceTableRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceTableRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 

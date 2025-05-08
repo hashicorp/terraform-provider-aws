@@ -20,6 +20,8 @@ data "aws_location_map" "example" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `map_name` - (Required) Name of the map resource.
 
 ## Attribute Reference

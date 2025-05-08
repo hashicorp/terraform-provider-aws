@@ -194,6 +194,54 @@ func testAccWorkspace_workspaceProperties(t *testing.T) {
 	})
 }
 
+func testAccWorkspace_workspaceProperties_runningModeAutoStopTimeoutInMinutes(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v1 types.Workspace
+	rName := sdkacctest.RandString(8)
+	domain := acctest.RandomDomainName()
+
+	resourceName := "aws_workspaces_workspace.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckDirectory(ctx, t)
+			acctest.PreCheckDirectoryServiceSimpleDirectory(ctx, t)
+			acctest.PreCheckHasIAMRole(ctx, t, "workspaces_DefaultRole")
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(workspaces.ServiceID)),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Destroy: false,
+				Config:  testAccWorkspaceConfig_propertiesAutoStopTimeoutInMinutes(rName, domain, 120),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWorkspaceExists(ctx, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "workspace_properties.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.compute_type_name", string(types.ComputeValue)),
+					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.root_volume_size_gib", "80"),
+					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.running_mode", string(types.RunningModeAutoStop)),
+					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.running_mode_auto_stop_timeout_in_minutes", "120"),
+					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.user_volume_size_gib", "10"),
+				),
+			},
+			{
+				Config: testAccWorkspaceConfig_propertiesAutoStopTimeoutInMinutes(rName, domain, 180),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWorkspaceExists(ctx, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "workspace_properties.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.compute_type_name", string(types.ComputeValue)),
+					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.root_volume_size_gib", "80"),
+					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.running_mode", string(types.RunningModeAutoStop)),
+					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.running_mode_auto_stop_timeout_in_minutes", "180"),
+					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.user_volume_size_gib", "10"),
+				),
+			},
+		},
+	})
+}
+
 // testAccWorkspace_workspaceProperties_runningModeAlwaysOn
 // validates workspace resource creation/import when workspace_properties.running_mode is set to ALWAYS_ON
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/13558
@@ -389,7 +437,7 @@ func testAccCheckWorkspaceExists(ctx context.Context, n string, v *types.Workspa
 
 func testAccWorkspaceConfig_Prerequisites(rName, domain string) string {
 	return acctest.ConfigCompose(
-		testAccDirectoryConfig_Prerequisites(rName, domain),
+		testAccDirectoryConfig_base(rName, domain),
 		fmt.Sprintf(`
 data "aws_workspaces_bundle" "test" {
   bundle_id = "wsb-bh8rsxt14" # Value with Windows 10 (English)
@@ -552,6 +600,31 @@ resource "aws_workspaces_workspace" "test" {
   }
 }
 `, rName))
+}
+
+func testAccWorkspaceConfig_propertiesAutoStopTimeoutInMinutes(rName, domain string, autoStoptimeoutInMinutes int) string {
+	return acctest.ConfigCompose(
+		testAccWorkspaceConfig_Prerequisites(rName, domain),
+		fmt.Sprintf(`
+resource "aws_workspaces_workspace" "test" {
+  bundle_id    = data.aws_workspaces_bundle.test.id
+  directory_id = aws_workspaces_directory.test.id
+
+  # NOTE: WorkSpaces API doesn't allow creating users in the directory.
+  # However, "Administrator"" user is always present in a bare directory.
+  user_name = "Administrator"
+
+  workspace_properties {
+    # NOTE: Compute type and volume size update not allowed within 6 hours after creation.
+    running_mode                              = "AUTO_STOP"
+    running_mode_auto_stop_timeout_in_minutes = %[2]d
+  }
+
+  tags = {
+    Name = "tf-testacc-workspaces-workspace-%[1]s"
+  }
+}
+`, rName, autoStoptimeoutInMinutes))
 }
 
 func testAccWorkspaceConfig_validateRootVolumeSize(rName, domain string) string {

@@ -34,6 +34,7 @@ import (
 
 // @FrameworkResource("aws_codeconnections_host", name="Host")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/codeconnections/types;types.Host")
 func newHostResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &hostResource{}
 
@@ -353,7 +354,7 @@ func waitHostDeleted(ctx context.Context, conn *codeconnections.Client, id strin
 }
 
 func statusHost(ctx context.Context, conn *codeconnections.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := findHostByARN(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil

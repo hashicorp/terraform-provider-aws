@@ -66,7 +66,7 @@ func resourcePermission() *schema.Resource {
 	}
 }
 
-func resourceSetPermission(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSetPermission(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpsWorksClient(ctx)
 
@@ -88,7 +88,7 @@ func resourceSetPermission(ctx context.Context, d *schema.ResourceData, meta int
 		input.Level = aws.String(d.Get("level").(string))
 	}
 
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ResourceNotFoundException](ctx, propagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ResourceNotFoundException](ctx, propagationTimeout, func() (any, error) {
 		return conn.SetPermission(ctx, input)
 	}, "Unable to find user with ARN")
 
@@ -103,7 +103,7 @@ func resourceSetPermission(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourcePermissionRead(ctx, d, meta)...)
 }
 
-func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpsWorksClient(ctx)
 

@@ -108,20 +108,20 @@ func resourceDomainSAMLOptions() *schema.Resource {
 	}
 }
 
-func resourceDomainSAMLOptionsPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainSAMLOptionsPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticsearchClient(ctx)
 
 	domainName := d.Get(names.AttrDomainName).(string)
 	input := &elasticsearch.UpdateElasticsearchDomainConfigInput{
 		AdvancedSecurityOptions: &awstypes.AdvancedSecurityOptionsInput{
-			SAMLOptions: expandESSAMLOptions(d.Get("saml_options").([]interface{})),
+			SAMLOptions: expandESSAMLOptions(d.Get("saml_options").([]any)),
 		},
 		DomainName: aws.String(domainName),
 	}
 
 	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ValidationException](ctx, propagationTimeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.UpdateElasticsearchDomainConfig(ctx, input)
 		}, "A change/update is in progress")
 
@@ -140,7 +140,7 @@ func resourceDomainSAMLOptionsPut(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceDomainSAMLOptionsRead(ctx, d, meta)...)
 }
 
-func resourceDomainSAMLOptionsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainSAMLOptionsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticsearchClient(ctx)
 
@@ -164,7 +164,7 @@ func resourceDomainSAMLOptionsRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func resourceDomainSAMLOptionsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainSAMLOptionsDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticsearchClient(ctx)
 
@@ -190,8 +190,8 @@ func resourceDomainSAMLOptionsDelete(ctx context.Context, d *schema.ResourceData
 }
 
 func domainSamlOptionsDiffSupress(k, old, new string, d *schema.ResourceData) bool {
-	if v, ok := d.Get("saml_options").([]interface{}); ok && len(v) > 0 {
-		if enabled, ok := v[0].(map[string]interface{})[names.AttrEnabled].(bool); ok && !enabled {
+	if v, ok := d.Get("saml_options").([]any); ok && len(v) > 0 {
+		if enabled, ok := v[0].(map[string]any)[names.AttrEnabled].(bool); ok && !enabled {
 			return true
 		}
 	}

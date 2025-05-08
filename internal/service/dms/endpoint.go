@@ -286,6 +286,11 @@ func resourceEndpoint() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
 						},
+						"use_large_integer_value": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
 					},
 				},
 			},
@@ -535,7 +540,7 @@ func resourceEndpoint() *schema.Resource {
 							Optional:         true,
 							Default:          awstypes.CannedAclForObjectsValueNone,
 							ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.CannedAclForObjectsValue](),
-							StateFunc: func(v interface{}) string {
+							StateFunc: func(v any) string {
 								return strings.ToLower(v.(string))
 							},
 						},
@@ -609,7 +614,7 @@ func resourceEndpoint() *schema.Resource {
 							Optional:         true,
 							Default:          awstypes.DatePartitionDelimiterValueSlash,
 							ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.DatePartitionDelimiterValue](),
-							StateFunc: func(v interface{}) string {
+							StateFunc: func(v any) string {
 								return strings.ToLower(v.(string))
 							},
 						},
@@ -623,7 +628,7 @@ func resourceEndpoint() *schema.Resource {
 							Optional:         true,
 							Default:          awstypes.DatePartitionSequenceValueYyyymmdd,
 							ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.DatePartitionSequenceValue](),
-							StateFunc: func(v interface{}) string {
+							StateFunc: func(v any) string {
 								return strings.ToLower(v.(string))
 							},
 						},
@@ -781,7 +786,7 @@ func resourceEndpoint() *schema.Resource {
 	}
 }
 
-func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
@@ -833,7 +838,7 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 	case engineNameAuroraPostgresql, engineNamePostgres:
 		settings := &awstypes.PostgreSQLSettings{}
 		if _, ok := d.GetOk("postgres_settings"); ok {
-			settings = expandPostgreSQLSettings(d.Get("postgres_settings").([]interface{})[0].(map[string]interface{}))
+			settings = expandPostgreSQLSettings(d.Get("postgres_settings").([]any)[0].(map[string]any))
 		}
 
 		if _, ok := d.GetOk("secrets_manager_arn"); ok {
@@ -865,9 +870,9 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 			UseNewMappingType:       aws.Bool(d.Get("elasticsearch_settings.0.use_new_mapping_type").(bool)),
 		}
 	case engineNameKafka:
-		input.KafkaSettings = expandKafkaSettings(d.Get("kafka_settings").([]interface{})[0].(map[string]interface{}))
+		input.KafkaSettings = expandKafkaSettings(d.Get("kafka_settings").([]any)[0].(map[string]any))
 	case engineNameKinesis:
-		input.KinesisSettings = expandKinesisSettings(d.Get("kinesis_settings").([]interface{})[0].(map[string]interface{}))
+		input.KinesisSettings = expandKinesisSettings(d.Get("kinesis_settings").([]any)[0].(map[string]any))
 	case engineNameMongodb:
 		var settings = &awstypes.MongoDbSettings{}
 
@@ -914,7 +919,7 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 			expandTopLevelConnectionInfo(d, input)
 		}
 	case engineNameRedis:
-		input.RedisSettings = expandRedisSettings(d.Get("redis_settings").([]interface{})[0].(map[string]interface{}))
+		input.RedisSettings = expandRedisSettings(d.Get("redis_settings").([]any)[0].(map[string]any))
 	case engineNameRedshift:
 		var settings = &awstypes.RedshiftSettings{
 			DatabaseName: aws.String(d.Get(names.AttrDatabaseName).(string)),
@@ -933,8 +938,8 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 			expandTopLevelConnectionInfo(d, input)
 		}
 
-		if v, ok := d.GetOk("redshift_settings"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			tfMap := v.([]interface{})[0].(map[string]interface{})
+		if v, ok := d.GetOk("redshift_settings"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			tfMap := v.([]any)[0].(map[string]any)
 
 			if v, ok := tfMap["bucket_folder"].(string); ok && v != "" {
 				settings.BucketFolder = aws.String(v)
@@ -1016,13 +1021,13 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 			expandTopLevelConnectionInfo(d, input)
 		}
 	case engineNameS3:
-		input.S3Settings = expandS3Settings(d.Get("s3_settings").([]interface{})[0].(map[string]interface{}))
+		input.S3Settings = expandS3Settings(d.Get("s3_settings").([]any)[0].(map[string]any))
 	default:
 		expandTopLevelConnectionInfo(d, input)
 	}
 
 	_, err := tfresource.RetryWhenIsA[*awstypes.AccessDeniedFault](ctx, d.Timeout(schema.TimeoutCreate),
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.CreateEndpoint(ctx, input)
 		})
 
@@ -1035,7 +1040,7 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceEndpointRead(ctx, d, meta)...)
 }
 
-func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
@@ -1058,7 +1063,7 @@ func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
@@ -1179,12 +1184,12 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				}
 			case engineNameKafka:
 				if d.HasChange("kafka_settings") {
-					input.KafkaSettings = expandKafkaSettings(d.Get("kafka_settings").([]interface{})[0].(map[string]interface{}))
+					input.KafkaSettings = expandKafkaSettings(d.Get("kafka_settings").([]any)[0].(map[string]any))
 					input.EngineName = aws.String(engineName)
 				}
 			case engineNameKinesis:
 				if d.HasChanges("kinesis_settings") {
-					input.KinesisSettings = expandKinesisSettings(d.Get("kinesis_settings").([]interface{})[0].(map[string]interface{}))
+					input.KinesisSettings = expandKinesisSettings(d.Get("kinesis_settings").([]any)[0].(map[string]any))
 					input.EngineName = aws.String(engineName)
 				}
 			case engineNameMongodb:
@@ -1255,7 +1260,7 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				}
 			case engineNameRedis:
 				if d.HasChanges("redis_settings") {
-					input.RedisSettings = expandRedisSettings(d.Get("redis_settings").([]interface{})[0].(map[string]interface{}))
+					input.RedisSettings = expandRedisSettings(d.Get("redis_settings").([]any)[0].(map[string]any))
 					input.EngineName = aws.String(engineName)
 				}
 			case engineNameRedshift:
@@ -1282,8 +1287,8 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta in
 						// Update connection info in top-level namespace as well
 						expandTopLevelConnectionInfoModify(d, input)
 
-						if v, ok := d.GetOk("redshift_settings"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-							tfMap := v.([]interface{})[0].(map[string]interface{})
+						if v, ok := d.GetOk("redshift_settings"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+							tfMap := v.([]any)[0].(map[string]any)
 
 							if v, ok := tfMap["bucket_folder"].(string); ok && v != "" {
 								input.RedshiftSettings.BucketFolder = aws.String(v)
@@ -1381,7 +1386,7 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				}
 			case engineNameS3:
 				if d.HasChanges("s3_settings") {
-					input.S3Settings = expandS3Settings(d.Get("s3_settings").([]interface{})[0].(map[string]interface{}))
+					input.S3Settings = expandS3Settings(d.Get("s3_settings").([]any)[0].(map[string]any))
 					input.EngineName = aws.String(engineName)
 				}
 			default:
@@ -1423,7 +1428,7 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceEndpointRead(ctx, d, meta)...)
 }
 
-func resourceEndpointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEndpointDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
@@ -1448,30 +1453,30 @@ func resourceEndpointDelete(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func requireEngineSettingsCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+func requireEngineSettingsCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v any) error {
 	switch engineName := diff.Get("engine_name").(string); engineName {
 	case engineNameElasticsearch, engineNameOpenSearch:
-		if v, ok := diff.GetOk("elasticsearch_settings"); !ok || len(v.([]interface{})) == 0 || v.([]interface{})[0] == nil {
+		if v, ok := diff.GetOk("elasticsearch_settings"); !ok || len(v.([]any)) == 0 || v.([]any)[0] == nil {
 			return fmt.Errorf("elasticsearch_settings must be set when engine_name = %q", engineName)
 		}
 	case engineNameKafka:
-		if v, ok := diff.GetOk("kafka_settings"); !ok || len(v.([]interface{})) == 0 || v.([]interface{})[0] == nil {
+		if v, ok := diff.GetOk("kafka_settings"); !ok || len(v.([]any)) == 0 || v.([]any)[0] == nil {
 			return fmt.Errorf("kafka_settings must be set when engine_name = %q", engineName)
 		}
 	case engineNameKinesis:
-		if v, ok := diff.GetOk("kinesis_settings"); !ok || len(v.([]interface{})) == 0 || v.([]interface{})[0] == nil {
+		if v, ok := diff.GetOk("kinesis_settings"); !ok || len(v.([]any)) == 0 || v.([]any)[0] == nil {
 			return fmt.Errorf("kinesis_settings must be set when engine_name = %q", engineName)
 		}
 	case engineNameMongodb:
-		if v, ok := diff.GetOk("mongodb_settings"); !ok || len(v.([]interface{})) == 0 || v.([]interface{})[0] == nil {
+		if v, ok := diff.GetOk("mongodb_settings"); !ok || len(v.([]any)) == 0 || v.([]any)[0] == nil {
 			return fmt.Errorf("mongodb_settings must be set when engine_name = %q", engineName)
 		}
 	case engineNameRedis:
-		if v, ok := diff.GetOk("redis_settings"); !ok || len(v.([]interface{})) == 0 || v.([]interface{})[0] == nil {
+		if v, ok := diff.GetOk("redis_settings"); !ok || len(v.([]any)) == 0 || v.([]any)[0] == nil {
 			return fmt.Errorf("redis_settings must be set when engine_name = %q", engineName)
 		}
 	case engineNameS3:
-		if v, ok := diff.GetOk("s3_settings"); !ok || len(v.([]interface{})) == 0 || v.([]interface{})[0] == nil {
+		if v, ok := diff.GetOk("s3_settings"); !ok || len(v.([]any)) == 0 || v.([]any)[0] == nil {
 			return fmt.Errorf("s3_settings must be set when engine_name = %q", engineName)
 		}
 	}
@@ -1587,14 +1592,14 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *awstypes.Endpoin
 			tfMap := flattenKafkaSettings(endpoint.KafkaSettings)
 			tfMap["sasl_password"] = d.Get("kafka_settings.0.sasl_password").(string)
 
-			if err := d.Set("kafka_settings", []interface{}{tfMap}); err != nil {
+			if err := d.Set("kafka_settings", []any{tfMap}); err != nil {
 				return fmt.Errorf("setting kafka_settings: %w", err)
 			}
 		} else {
 			d.Set("kafka_settings", nil)
 		}
 	case engineNameKinesis:
-		if err := d.Set("kinesis_settings", []interface{}{flattenKinesisSettings(endpoint.KinesisSettings)}); err != nil {
+		if err := d.Set("kinesis_settings", []any{flattenKinesisSettings(endpoint.KinesisSettings)}); err != nil {
 			return fmt.Errorf("setting kinesis_settings: %w", err)
 		}
 	case engineNameMongodb:
@@ -1627,7 +1632,7 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *awstypes.Endpoin
 		tfMap := flattenRedisSettings(endpoint.RedisSettings)
 		tfMap["auth_password"] = d.Get("redis_settings.0.auth_password").(string)
 
-		if err := d.Set("redis_settings", []interface{}{tfMap}); err != nil {
+		if err := d.Set("redis_settings", []any{tfMap}); err != nil {
 			return fmt.Errorf("setting redis_settings: %w", err)
 		}
 	case engineNameRedshift:
@@ -1809,12 +1814,12 @@ func findReplicationTasksByEndpointARN(ctx context.Context, conn *dms.Client, ar
 	return findReplicationTasks(ctx, conn, input)
 }
 
-func flattenOpenSearchSettings(settings *awstypes.ElasticsearchSettings) []map[string]interface{} {
+func flattenOpenSearchSettings(settings *awstypes.ElasticsearchSettings) []map[string]any {
 	if settings == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"endpoint_uri":               aws.ToString(settings.EndpointUri),
 		"error_retry_duration":       aws.ToInt32(settings.ErrorRetryDuration),
 		"full_load_error_percentage": aws.ToInt32(settings.FullLoadErrorPercentage),
@@ -1822,10 +1827,10 @@ func flattenOpenSearchSettings(settings *awstypes.ElasticsearchSettings) []map[s
 		"use_new_mapping_type":       aws.ToBool(settings.UseNewMappingType),
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func expandKafkaSettings(tfMap map[string]interface{}) *awstypes.KafkaSettings {
+func expandKafkaSettings(tfMap map[string]any) *awstypes.KafkaSettings {
 	if tfMap == nil {
 		return nil
 	}
@@ -1911,12 +1916,12 @@ func expandKafkaSettings(tfMap map[string]interface{}) *awstypes.KafkaSettings {
 	return apiObject
 }
 
-func flattenKafkaSettings(apiObject *awstypes.KafkaSettings) map[string]interface{} {
+func flattenKafkaSettings(apiObject *awstypes.KafkaSettings) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Broker; v != nil {
 		tfMap["broker"] = aws.ToString(v)
@@ -1991,7 +1996,7 @@ func flattenKafkaSettings(apiObject *awstypes.KafkaSettings) map[string]interfac
 	return tfMap
 }
 
-func expandKinesisSettings(tfMap map[string]interface{}) *awstypes.KinesisSettings {
+func expandKinesisSettings(tfMap map[string]any) *awstypes.KinesisSettings {
 	if tfMap == nil {
 		return nil
 	}
@@ -2034,15 +2039,19 @@ func expandKinesisSettings(tfMap map[string]interface{}) *awstypes.KinesisSettin
 		apiObject.StreamArn = aws.String(v)
 	}
 
+	if v, ok := tfMap["use_large_integer_value"].(bool); ok {
+		apiObject.UseLargeIntegerValue = aws.Bool(v)
+	}
+
 	return apiObject
 }
 
-func flattenKinesisSettings(apiObject *awstypes.KinesisSettings) map[string]interface{} {
+func flattenKinesisSettings(apiObject *awstypes.KinesisSettings) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.IncludeControlDetails; v != nil {
 		tfMap["include_control_details"] = aws.ToBool(v)
@@ -2078,15 +2087,19 @@ func flattenKinesisSettings(apiObject *awstypes.KinesisSettings) map[string]inte
 		tfMap[names.AttrStreamARN] = aws.ToString(v)
 	}
 
+	if v := apiObject.UseLargeIntegerValue; v != nil {
+		tfMap["use_large_integer_value"] = aws.ToBool(v)
+	}
+
 	return tfMap
 }
 
-func flattenMongoDBSettings(settings *awstypes.MongoDbSettings) []map[string]interface{} {
+func flattenMongoDBSettings(settings *awstypes.MongoDbSettings) []map[string]any {
 	if settings == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"auth_type":           string(settings.AuthType),
 		"auth_mechanism":      string(settings.AuthMechanism),
 		"nesting_level":       string(settings.NestingLevel),
@@ -2095,10 +2108,10 @@ func flattenMongoDBSettings(settings *awstypes.MongoDbSettings) []map[string]int
 		"auth_source":         aws.ToString(settings.AuthSource),
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func expandRedisSettings(tfMap map[string]interface{}) *awstypes.RedisSettings {
+func expandRedisSettings(tfMap map[string]any) *awstypes.RedisSettings {
 	if tfMap == nil {
 		return nil
 	}
@@ -2130,12 +2143,12 @@ func expandRedisSettings(tfMap map[string]interface{}) *awstypes.RedisSettings {
 	return apiObject
 }
 
-func flattenRedisSettings(apiObject *awstypes.RedisSettings) map[string]interface{} {
+func flattenRedisSettings(apiObject *awstypes.RedisSettings) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.AuthPassword; v != nil {
 		tfMap["auth_password"] = aws.ToString(v)
@@ -2155,12 +2168,12 @@ func flattenRedisSettings(apiObject *awstypes.RedisSettings) map[string]interfac
 	return tfMap
 }
 
-func flattenRedshiftSettings(settings *awstypes.RedshiftSettings) []map[string]interface{} {
+func flattenRedshiftSettings(settings *awstypes.RedshiftSettings) []map[string]any {
 	if settings == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"bucket_folder":                     aws.ToString(settings.BucketFolder),
 		names.AttrBucketName:                aws.ToString(settings.BucketName),
 		"encryption_mode":                   string(settings.EncryptionMode),
@@ -2168,10 +2181,10 @@ func flattenRedshiftSettings(settings *awstypes.RedshiftSettings) []map[string]i
 		"service_access_role_arn":           aws.ToString(settings.ServiceAccessRoleArn),
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func expandPostgreSQLSettings(tfMap map[string]interface{}) *awstypes.PostgreSQLSettings {
+func expandPostgreSQLSettings(tfMap map[string]any) *awstypes.PostgreSQLSettings {
 	if tfMap == nil {
 		return nil
 	}
@@ -2230,12 +2243,12 @@ func expandPostgreSQLSettings(tfMap map[string]interface{}) *awstypes.PostgreSQL
 	return apiObject
 }
 
-func flattenPostgreSQLSettings(apiObject *awstypes.PostgreSQLSettings) []map[string]interface{} {
+func flattenPostgreSQLSettings(apiObject *awstypes.PostgreSQLSettings) []map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.AfterConnectScript; v != nil {
 		tfMap["after_connect_script"] = aws.ToString(v)
@@ -2280,10 +2293,10 @@ func flattenPostgreSQLSettings(apiObject *awstypes.PostgreSQLSettings) []map[str
 		tfMap["slot_name"] = aws.ToString(v)
 	}
 
-	return []map[string]interface{}{tfMap}
+	return []map[string]any{tfMap}
 }
 
-func expandS3Settings(tfMap map[string]interface{}) *awstypes.S3Settings {
+func expandS3Settings(tfMap map[string]any) *awstypes.S3Settings {
 	if tfMap == nil {
 		return nil
 	}
@@ -2408,12 +2421,12 @@ func expandS3Settings(tfMap map[string]interface{}) *awstypes.S3Settings {
 	return apiObject
 }
 
-func flattenS3Settings(apiObject *awstypes.S3Settings) []map[string]interface{} {
+func flattenS3Settings(apiObject *awstypes.S3Settings) []map[string]any {
 	if apiObject == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.AddColumnName; v != nil {
 		tfMap["add_column_name"] = aws.ToBool(v)
@@ -2511,7 +2524,7 @@ func flattenS3Settings(apiObject *awstypes.S3Settings) []map[string]interface{} 
 		tfMap["use_task_start_time_for_full_load_timestamp"] = aws.ToBool(v)
 	}
 
-	return []map[string]interface{}{tfMap}
+	return []map[string]any{tfMap}
 }
 
 func suppressExtraConnectionAttributesDiffs(_, old, new string, d *schema.ResourceData) bool {
@@ -2527,9 +2540,9 @@ func suppressExtraConnectionAttributesDiffs(_, old, new string, d *schema.Resour
 		// the returned attributes were set in the {engine}_settings block or originally
 		// in the extra_connection_attributes field
 		if v, ok := d.GetOk("mongodb_settings"); ok {
-			config = engineSettingsToSet(v.([]interface{}))
+			config = engineSettingsToSet(v.([]any))
 		} else if v, ok := d.GetOk("s3_settings"); ok {
-			config = engineSettingsToSet(v.([]interface{}))
+			config = engineSettingsToSet(v.([]any))
 		}
 
 		if o != nil && config != nil {
@@ -2575,12 +2588,12 @@ func extraConnectionAttributesToSet(extra string) *schema.Set {
 
 // engineSettingsToSet accepts the {engine}_settings block as a list
 // and returns the Set representation, with each element being the key/value pair
-func engineSettingsToSet(l []interface{}) *schema.Set {
+func engineSettingsToSet(l []any) *schema.Set {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := l[0].(map[string]interface{})
+	tfMap, ok := l[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -2679,7 +2692,7 @@ func findEndpoints(ctx context.Context, conn *dms.Client, input *dms.DescribeEnd
 }
 
 func statusEndpoint(ctx context.Context, conn *dms.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findEndpointByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

@@ -10,7 +10,7 @@ description: |-
 
 Terraform data source for managing an AWS AppStream 2.0 Image.
 
-### Basic Usage
+## Example Usage
 
 ```terraform
 data "aws_appstream_image" "test" {
