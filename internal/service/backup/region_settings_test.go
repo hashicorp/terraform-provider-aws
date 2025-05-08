@@ -8,8 +8,12 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/backup"
+	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfbackup "github.com/hashicorp/terraform-provider-aws/internal/service/backup"
@@ -20,7 +24,8 @@ func TestAccBackupRegionSettings_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic: testAccRegionSettings_basic,
+		acctest.CtBasic:  testAccRegionSettings_basic,
+		"Identity_Basic": testAccBackupRegionSettings_Identity_Basic,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -112,6 +117,40 @@ func testAccRegionSettings_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "resource_type_management_preference.DynamoDB", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_management_preference.EFS", acctest.CtTrue),
 				),
+			},
+		},
+	})
+}
+
+func testAccBackupRegionSettings_Identity_Basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	var settings backup.DescribeRegionSettingsOutput
+	resourceName := "aws_backup_region_settings.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.FSxEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRegionSettingsConfig_1(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRegionSettingsExists(ctx, &settings),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrRegion), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
