@@ -9,7 +9,18 @@ on:
     branches:
       - main
       - "release/**"
-  pull_request_target:
+  pull_request:
+    paths-ignore:
+      - .github/**
+      - .teamcity/**
+      - .release/**
+      - infrastructure/**
+      - .archive/**
+      - .changelog/**
+      - .devcontainer/**
+      - docs/**
+      - examples/**
+      - META.d/**
 
 ## NOTE: !!!
 ## When changing these workflows, ensure that the following is updated:
@@ -26,11 +37,25 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-
       - name: Setup Go
         uses: actions/setup-go@0aaccfd150d50ccaeb58ebd88d36e91967a5f35b # v5.4.0
         with:
-          go-version-file: .go-version
+          go-version-file: go.mod
+      - name: go env
+        run: |
+          echo "GOCACHE=$(go env GOCACHE)" >> $GITHUB_ENV
+      - uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        continue-on-error: true
+        timeout-minutes: 2
+        with:
+          path: ${{ env.GOCACHE }}
+          key: ${{ runner.os }}-GOCACHE-${{ hashFiles('go.sum') }}-${{ hashFiles('internal/**') }}
+      - uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        continue-on-error: true
+        timeout-minutes: 2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
 
       - name: Run make deps-check
         run: |
