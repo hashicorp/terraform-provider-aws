@@ -63,5 +63,4 @@ jobs:
       - name: Run make deps-check
         run: |
           echo "Using make to check dependencies"
-          grep -r "theupdateframework" .
           make deps-check
