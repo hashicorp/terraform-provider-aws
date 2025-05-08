@@ -43,6 +43,11 @@ func resourceDomainConfiguration() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"authentication_type": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.AuthenticationType](),
+			},
 			"authorizer_config": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -158,6 +163,10 @@ func resourceDomainConfigurationCreate(ctx context.Context, d *schema.ResourceDa
 		input.ValidationCertificateArn = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("authentication_type"); ok {
+		input.AuthenticationType = awstypes.AuthenticationType(v.(string))
+	}
+
 	output, err := conn.CreateDomainConfiguration(ctx, input)
 
 	if err != nil {
@@ -209,6 +218,7 @@ func resourceDomainConfigurationRead(ctx context.Context, d *schema.ResourceData
 		d.Set("tls_config", nil)
 	}
 	d.Set("validation_certificate_arn", d.Get("validation_certificate_arn"))
+	d.Set("authentication_type", output.AuthenticationType)
 
 	return diags
 }
@@ -238,6 +248,10 @@ func resourceDomainConfigurationUpdate(ctx context.Context, d *schema.ResourceDa
 			if v, ok := d.GetOk("tls_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 				input.TlsConfig = expandTlsConfig(v.([]any)[0].(map[string]any))
 			}
+		}
+
+		if d.HasChange("authentication_type") {
+			input.AuthenticationType = awstypes.AuthenticationType(d.Get("authentication_type").(string))
 		}
 
 		_, err := conn.UpdateDomainConfiguration(ctx, input)
