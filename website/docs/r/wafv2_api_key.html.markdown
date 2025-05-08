@@ -23,7 +23,7 @@ resource "aws_wafv2_api_key" "example" {
 
 This resource supports the following arguments:
 
-- `scope` - (Required) Specifies whether this is for an AWS CloudFront distribution or for a regional application. Valid values are `CLOUDFRONT` or `REGIONAL`. Changing this forces a new resource to be created. **NOTE:** WAFv2 resources deployed for `CLOUDFRONT` must be created within the `us-east-1` region.
+- `scope` - (Required) Specifies whether this is for an AWS CloudFront distribution or for a regional application. Valid values are `CLOUDFRONT` or `REGIONAL`. Changing this forces a new resource to be created. **NOTE:** WAFv2 API Keys deployed for `CLOUDFRONT` must be created within the `us-east-1` region.
 - `token_domains` - (Required) The domains that you want to be able to use the API key with, for example `example.com`. You can specify up to 5 domains. Changing this forces a new resource to be created.
 
 ## Attribute Reference
@@ -34,8 +34,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-WAFv2 API Keys can be imported using the `api_key` and `scope` separated by a comma (`,`). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import WAFv2 API Key using `api_key,scope`. For example:
+
+```terraform
+import {
+  to = aws_wafv2_api_key.example
+  id = "a1b2c3d4-5678-90ab-cdef-EXAMPLE11111,REGIONAL"
+}
+```
+
+Using `terraform import`, import WAFv2 API Key using `api_key,scope`. For example:
 
 ```console
-$ terraform import aws_wafv2_api_key.example a1b2c3d4-5678-90ab-cdef-EXAMPLE11111,REGIONAL
+% terraform import aws_wafv2_api_key.example a1b2c3d4-5678-90ab-cdef-EXAMPLE11111,REGIONAL
 ```
