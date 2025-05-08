@@ -5,6 +5,7 @@ package backup
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/service/backup"
@@ -14,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_backup_region_settings", name="Region Settings")
@@ -26,7 +28,16 @@ func resourceRegionSettings() *schema.Resource {
 		DeleteWithoutTimeout: schema.NoopContext,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				if region, ok := rd.GetOk(names.AttrRegion); ok {
+					if region != rd.Id() {
+						return nil, fmt.Errorf("the region passed for import %q does not match the region in the ID %q", region, rd.Id())
+					}
+				} else {
+					rd.Set(names.AttrRegion, rd.Id())
+				}
+				return []*schema.ResourceData{rd}, nil
+			},
 		},
 
 		Schema: map[string]*schema.Schema{
