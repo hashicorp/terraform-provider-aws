@@ -109,6 +109,7 @@ const (
 	Macie2EndpointID                       = "macie2"
 	MediaConvertEndpointID                 = "mediaconvert"
 	MediaLiveEndpointID                    = "medialive"
+	NotificationsEndpointID                = "notifications"
 	ObservabilityAccessManagerEndpointID   = "oam"
 	OpenSearchIngestionEndpointID          = "osis"
 	OpenSearchServerlessEndpointID         = "aoss"
