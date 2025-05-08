@@ -17,6 +17,7 @@ import (
 )
 
 // @SDKResource("aws_backup_region_settings", name="Region Settings")
+// @SingletonIdentity
 func resourceRegionSettings() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRegionSettingsUpdate,
