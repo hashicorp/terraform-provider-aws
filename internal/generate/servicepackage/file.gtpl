@@ -175,7 +175,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IsValidateOverrideInPartition: {{ $value.ValidateRegionOverrideInPartition }},
 			}),
 	{{- end }}
-			{{- if $value.SingletonIdentity }}
+			{{- if $value.ARNIdentity }}
+				Identity: inttypes.ARNIdentity(),
+			{{- else if $value.SingletonIdentity }}
 				Identity: inttypes.RegionalSingletonIdentity(),
 			{{- end }}
 		},
