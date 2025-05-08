@@ -86,4 +86,17 @@ type ServicePackageSDKResource struct {
 	Name     string
 	Tags     unique.Handle[ServicePackageResourceTags]
 	Region   unique.Handle[ServicePackageResourceRegion]
+	Identity Identity
+}
+
+type Identity struct {
+	Global    bool
+	Singleton bool
+}
+
+func RegionalSingletonIdentity() Identity {
+	return Identity{
+		Global:    false,
+		Singleton: true,
+	}
 }
