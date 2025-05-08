@@ -1,4 +1,9 @@
 ## 6.0.0-beta2 (Unreleased)
+
+NOTES:
+
+* data-source/aws_kms_secret: This data source will be removed in a future version ([#42524](https://github.com/hashicorp/terraform-provider-aws/issues/42524))
+
 ## 6.0.0-beta1 (May  7, 2025)
 
 BREAKING CHANGES:
