@@ -10,6 +10,9 @@ on:
       - main
       - "release/**"
   pull_request:
+    branches:
+      - main
+      - "release/**"
     paths-ignore:
       - .teamcity/**
       - .release/**
