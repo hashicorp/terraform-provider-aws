@@ -92,6 +92,7 @@ Upgrade topics:
 - [Resource `aws_rekognition_stream_processor`](#resource-aws_rekognition_stream_processor)
 - [Resource `aws_resiliencehub_resiliency_policy`](#resource-aws_resiliencehub_resiliency_policy)
 - [Resource `aws_s3_bucket`](#resource-aws_s3_bucket)
+- [Resource `aws_sagemaker_image_version`](#resource-aws_sagemaker_image_version)
 - [Resource `aws_sagemaker_notebook_instance`](#resource-aws_sagemaker_notebook_instance)
 - [Resource `aws_servicequotas_template`](#resource-aws_servicequotas_template)
 - [Resource `aws_spot_instance_request`](#resource-aws_spot_instance_request)
@@ -633,6 +634,11 @@ The resource configuration itself does not change. However, now, include an inde
 ## Resource `aws_s3_bucket`
 
 `bucket_region` has been added and should be used instead of `region`, which is now used for [Enhanced Region Support](enhanced-region-support.html).
+
+## Resource `aws_sagemaker_image_version`
+
+For the `id`, use a comma-delimited string concatenating `image_name` and `version`. For example, in an import command, use comma-delimiting for the composite `id`.
+Use `image_name` to reference the image name.
 
 ## Resource `aws_sagemaker_notebook_instance`
 
