@@ -76,7 +76,7 @@ const (
 )
 
 type dataSource{{ .DataSource }} struct {
-	framework.DataSourceWithConfigure
+	framework.DataSourceWithModel[dataSource{{ .DataSource }}Model]
 }
 
 {{ if .IncludeComments }}
@@ -229,6 +229,7 @@ func (d *dataSource{{ .DataSource }}) Read(ctx context.Context, req datasource.R
 // https://developer.hashicorp.com/terraform/plugin/framework/handling-data/accessing-values
 {{- end }}
 type dataSource{{ .DataSource }}Model struct {
+    framework.WithRegionModel
 	ARN             types.String                                          `tfsdk:"arn"`
 	ComplexArgument fwtypes.ListNestedObjectValueOf[complexArgumentModel] `tfsdk:"complex_argument"`
 	Description     types.String                                          `tfsdk:"description"`
