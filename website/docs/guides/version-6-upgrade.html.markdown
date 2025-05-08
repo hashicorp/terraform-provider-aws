@@ -147,8 +147,6 @@ provider "aws" {
 }
 ```
 
----
-
 ## Removed Provider Arguments
 
 Remove the following from your provider configuration—they are no longer supported:
@@ -157,13 +155,9 @@ Remove the following from your provider configuration—they are no longer suppo
 - `endpoints.simpledb` and `endpoints.sdb` – removed due to the removal of Amazon SimpleDB support.
 - `endpoints.worklink` – removed due to the removal of Amazon Worklink support.
 
----
-
 ## Enhanced Region Support
 
 Version 6.0.0 adds `region` to most resources making it significantly easier to manage infrastructure across AWS Regions without requiring multiple provider configurations. See [Enhanced Region Support](enhanced-region-support.html).
-
----
 
 ## Amazon Elastic Transcoder Deprecation
 
@@ -175,8 +169,6 @@ The following resources are deprecated and will be removed in a future major rel
 - `aws_elastictranscoder_preset`
 
 Use [AWS Elemental MediaConvert](https://aws.amazon.com/blogs/media/migrating-workflows-from-amazon-elastic-transcoder-to-aws-elemental-mediaconvert/) instead.
-
----
 
 ## CloudWatch Evidently Deprecation
 
@@ -190,8 +182,6 @@ The following resources are deprecated and will be removed in a future major rel
 - `aws_evidently_segment`
 
 Migrate to [AWS AppConfig Feature Flags](https://aws.amazon.com/blogs/mt/using-aws-appconfig-feature-flags/).
-
----
 
 ## Nullable Boolean Validation Update
 
@@ -213,8 +203,6 @@ Update your configuration to _only_ use `""`, `true`, or `false` if you use the 
 | `aws_mq_broker`                         | `logs.audit`                                                             |
 
 This is due to changes to `TypeNullableBool`.
-
---
 
 ## OpsWorks Stacks Removal
 
@@ -238,13 +226,9 @@ The AWS OpsWorks Stacks service has reached [End of Life](https://docs.aws.amazo
 - `aws_opsworks_static_web_layer`
 - `aws_opsworks_user_profile`
 
----
-
 ## SimpleDB Support Removed
 
 The `aws_simpledb_domain` resource has been removed, as the [AWS SDK for Go v2](https://docs.aws.amazon.com/sdk-for-go/v2/developer-guide/welcome.html) no longer supports Amazon SimpleDB.
-
----
 
 ## Worklink Support Removed
 
@@ -252,8 +236,6 @@ The following resources have been removed due to dropped support for Amazon Work
 
 - `aws_worklink_fleet`
 - `aws_worklink_website_certificate_authority_association`
-
----
 
 ## S3 Global Endpoint Deprecation
 
@@ -265,8 +247,6 @@ To prepare:
 
 - Remove `s3_us_east_1_regional_endpoint` from your provider configuration, **or**
 - Set its value to `regional` and verify functionality.
-
----
 
 ## Data Source `aws_ami`
 
@@ -307,27 +287,19 @@ allow_unsafe_filter = true
 
 However, this may lead to unreliable results and should be avoided unless absolutely necessary.
 
----
-
 ## Data Source `aws_batch_compute_environment`
 
 `compute_environment_name` has been renamed to `name`.
 
 Update your configurations to replace any usage of `compute_environment_name` with `name` to use this version.
 
----
-
 ## Data Source `aws_ecs_task_definition`
 
 Remove `inference_accelerator`—it is no longer supported. Amazon Elastic Inference reached end of life in April 2024.
 
----
-
 ## Data Source `aws_ecs_task_execution`
 
 Remove `inference_accelerator_overrides`—it is no longer supported. Amazon Elastic Inference reached end of life in April 2024.
-
----
 
 ## Data Source `aws_elbv2_listener_rule`
 
@@ -348,33 +320,23 @@ Treat the following as lists of nested blocks instead of single-nested blocks:
 
 The data source configuration itself does not change. However, now, include an index when referencing them. For example, update `action[0].authenticate_cognito.scope` to `action[0].authenticate_cognito[0].scope`.
 
----
-
 ## Data Source `aws_globalaccelerator_accelerator`
 
 `id` is now **computed only** and can no longer be set manually.
 If your configuration explicitly attempts to set a value for `id`, you must remove it to avoid an error.
 
----
-
 ## Data Source `aws_identitystore_group`
 
 Remove `filter`—it is no longer supported. To locate a group, update your configuration to use `alternate_identifier` instead.
-
----
 
 ## Data Source `aws_identitystore_user`
 
 Remove `filter`—it is no longer supported.
 To locate a user, update your configuration to use `alternate_identifier` instead.
 
----
-
 ## Data Source `aws_kms_secret`
 
 The functionality for this data source was removed in **v2.0.0** and the data source will be removed in a future version.
-
----
 
 ## Data Source `aws_launch_template`
 
@@ -383,76 +345,52 @@ Remove the following—they are no longer supported:
 - `elastic_gpu_specifications`: Amazon Elastic Graphics reached end of life in January 2024.
 - `elastic_inference_accelerator`: Amazon Elastic Inference reached end of life in April 2024.
 
----
-
 ## Data Source `aws_opensearch_domain`
 
 Remove `kibana_endpoint`—it is no longer supported. AWS OpenSearch Service no longer uses Kibana endpoints. The service now uses **Dashboards**, accessible at the `/_dashboards/` path on the domain endpoint.
 For more details, refer to the [AWS OpenSearch Dashboards documentation](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/dashboards.html).
 
----
-
 ## Data Source `aws_opensearchserverless_security_config`
 
 Treat `saml_options` as a list of nested blocks instead of a single-nested block. The data source configuration itself does not change. However, now, include an index when referencing it. For example, update `saml_options.session_timeout` to `saml_options[0].session_timeout`.
-
----
 
 ## Data Source `aws_quicksight_data_set`
 
 Remove `tags_all`—it is no longer supported.
 
----
-
 ## Data Source `aws_region`
 
 `name` has been deprecated. Use `region` instead.
-
----
 
 ## Data Source `aws_s3_bucket`
 
 `bucket_region` has been added and should be used instead of `region`, which is now used for [Enhanced Region Support](enhanced-region-support.html).
 
----
-
 ## Data Source `aws_service_discovery_service`
 
 Remove `tags_all`—it is no longer supported.
-
----
 
 ## Data Source `aws_servicequotas_templates`
 
 `region` has been deprecated. Use `aws_region` instead.
 
----
-
 ## Data Source `aws_ssmincidents_replication_set`
 
 `region` has been deprecated. Use `regions` instead.
-
----
 
 ## Data Source `aws_vpc_endpoint_service`
 
 `region` has been deprecated. Use `service_region` instead.
 
----
-
 ## Data Source `aws_vpc_peering_connection`
 
 `region` has been deprecated. Use `requester_region` instead.
-
----
 
 ## Resource `aws_api_gateway_account`
 
 Remove `reset_on_delete`—it is no longer supported. The destroy operation will now always reset the API Gateway account settings by default.
 
 If you want to retain the previous behavior (where the account settings were not changed upon destruction), use a `removed` block in your configuration. For more details, see the [removing resources documentation](https://developer.hashicorp.com/terraform/language/resources/syntax#removing-resources).
-
----
 
 ## Resource `aws_api_gateway_deployment`
 
@@ -495,13 +433,9 @@ Import the existing stage, replacing `rest_api_id` and `stage_name` with your va
 terraform import aws_api_gateway_stage.prod rest_api_id/stage_name
 ```
 
----
-
 ## Resource `aws_batch_compute_environment`
 
 Replace any usage of `compute_environment_name` with `name` and `compute_environment_name_prefix` with `name_prefix` as they have been renamed.
-
----
 
 ## Resource `aws_batch_job_queue`
 
@@ -533,8 +467,6 @@ resource "aws_batch_job_queue" "example" {
 }
 ```
 
----
-
 ## Resource `aws_bedrock_model_invocation_logging_configuration`
 
 Treat the following as lists of nested blocks instead of single-nested blocks:
@@ -546,79 +478,53 @@ Treat the following as lists of nested blocks instead of single-nested blocks:
 
 The resource configuration itself does not change, but you must now include an index when referencing them. For example, update `logging_config.cloudwatch_config.log_group_name` to `logging_config[0].cloudwatch_config[0].log_group_name`.
 
----
-
 ## Resource `aws_cloudformation_stack_set_instance`
 
 `region` has been deprecated. Use `stack_set_instance_region` instead.
-
----
 
 ## Resource `aws_cloudfront_key_value_store`
 
 Use `name` to reference the resource name. `id` represents the ID value returned by the AWS API.
 
----
-
 ## Resource `aws_cloudfront_response_headers_policy`
 
 Do not set a value for `etag` as it is now computed only.
-
----
 
 ## Resource `aws_cognito_user_in_group`
 
 For the `id`, use a comma-delimited string concatenating `user_pool_id`, `group_name`, and `username`. For example, in an import command, use comma-delimiting for the composite `id`.
 
----
-
 ## Resource `aws_config_aggregate_authorization`
 
 `region` has been deprecated. Use `authorized_aws_region` instead.
-
----
 
 ## Resource `aws_db_instance`
 
 Do not use `character_set_name` with `replicate_source_db`, `restore_to_point_in_time`, `s3_import`, or `snapshot_identifier`. The combination is no longer valid.
 
----
-
 ## Resource `aws_dms_endpoint`
 
 `s3_settings` has been removed. Use the `aws_dms_s3_endpoint` resource rather than `s3_settings` of `aws_dms_endpoint`.
-
----
 
 ## Resource `aws_dx_gateway_association`
 
 Remove `vpn_gateway_id`—it is no longer supported. Use `associated_gateway_id` instead.
 
----
-
 ## Resource `aws_dx_hosted_connection`
 
 `region` has been deprecated. Use `connection_region` instead.
-
----
 
 ## Resource `aws_ecs_task_definition`
 
 Remove `inference_accelerator`—it is no longer supported. Amazon Elastic Inference reached end of life in April 2024.
 
----
-
 ## Resource `aws_eip`
 
 Remove `vpc`—it is no longer supported. Use `domain` instead.
 
----
-
 ## Resource `aws_eks_addon`
 
 Remove `resolve_conflicts`—it is no longer supported. Use `resolve_conflicts_on_create` and `resolve_conflicts_on_update` instead.
-
----
 
 ## Resource `aws_elasticache_replication_group`
 
@@ -626,34 +532,24 @@ Remove `resolve_conflicts`—it is no longer supported. Use `resolve_conflicts_o
 * The ability to provide an uppercase `engine` value is deprecated. In `v7.0.0`, plan-time validation of `engine` will require an entirely lowercase value to match the returned value from the AWS API without diff suppression.
 * See also [changes](#typenullablebool-validation-update) to `at_rest_encryption_enabled` and `auto_minor_version_upgrade`.
 
----
-
 ## Resource `aws_elasticache_user`
 
 The ability to provide an uppercase `engine` value is deprecated.
 In `v7.0.0`, plan-time validation of `engine` will require an entirely lowercase value to match the returned value from the AWS API without diff suppression.
-
----
 
 ## Resource `aws_elasticache_user_group`
 
 The ability to provide an uppercase `engine` value is deprecated.
 In `v7.0.0`, plan-time validation of `engine` will require an entirely lowercase value to match the returned value from the AWS API without diff suppression.
 
----
-
 ## Resource `aws_flow_log`
 
 Remove `log_group_name`—it is no longer supported. Use `log_destination` instead.
-
----
 
 ## Resource `aws_guardduty_detector`
 
 `datasources` is deprecated.
 Use the `aws_guardduty_detector_feature` resource instead.
-
----
 
 ## Resource `aws_guardduty_organization_configuration`
 
@@ -661,20 +557,14 @@ Use the `aws_guardduty_detector_feature` resource instead.
 * `auto_enable_organization_members` is now required.
 * `datasources` is deprecated.
 
----
-
 ## Resource `aws_instance`
 
 * `user_data` no longer applies hashing and is now stored in clear text. **Do not include passwords or sensitive information** in `user_data`, as it will be visible in plaintext. Follow [AWS Best Practices](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-metadata.html) to secure your instance metadata. If you need to provide base64-encoded user data, use `user_data_base64` instead.
 * Remove `cpu_core_count` and `cpu_threads_per_core`—they are no longer supported. Instead, use the `cpu_options` configuration block with `core_count` and `threads_per_core`.
 
----
-
 ## Resource `aws_kinesis_analytics_application`
 
 This resource is deprecated and will be removed in a future version. [Effective January 27, 2026](https://aws.amazon.com/blogs/big-data/migrate-from-amazon-kinesis-data-analytics-for-sql-to-amazon-managed-service-for-apache-flink-and-amazon-managed-service-for-apache-flink-studio/), AWS will [no longer support](https://docs.aws.amazon.com/kinesisanalytics/latest/dev/discontinuation.html) Amazon Kinesis Data Analytics for SQL. Use the `aws_kinesisanalyticsv2_application` resource instead to manage Amazon Kinesis Data Analytics for Apache Flink applications. AWS provides guidance for migrating from [Amazon Kinesis Data Analytics for SQL Applications to Amazon Managed Service for Apache Flink Studio](https://aws.amazon.com/blogs/big-data/migrate-from-amazon-kinesis-data-analytics-for-sql-applications-to-amazon-managed-service-for-apache-flink-studio/) including [examples](https://docs.aws.amazon.com/kinesisanalytics/latest/dev/migrating-to-kda-studio-overview.html).
-
----
 
 ## Resource `aws_launch_template`
 
@@ -682,32 +572,22 @@ This resource is deprecated and will be removed in a future version. [Effective 
 * Remove `elastic_inference_accelerator`—it is no longer supported. Amazon Elastic Inference reached end of life in April 2024.
 * See also [changes](#typenullablebool-validation-update) to `block_device_mappings.ebs.delete_on_termination`, `block_device_mappings.ebs.encrypted`, `ebs_optimized`, `network_interfaces.associate_carrier_ip_address`, `network_interfaces.associate_public_ip_address`, `network_interfaces.delete_on_termination`, and `network_interfaces.primary_ipv6`.
 
----
-
 ## Resource `aws_lb_listener`
 
 * For `mutual_authentication`, `advertise_trust_store_ca_names`, `ignore_client_certificate_expiry`, and `trust_store_arn` can now only be set when `mode` is `verify`.
 * `trust_store_arn` is required when `mode` is `verify`.
 
----
-
 ## Resource `aws_media_store_container`
 
 This resource is deprecated and will be removed in a future version. AWS has [announced](https://aws.amazon.com/blogs/media/support-for-aws-elemental-mediastore-ending-soon/) the discontinuation of AWS Elemental MediaStore, effective November 13, 2025. Users should begin transitioning to alternative solutions as soon as possible. For simple live streaming workflows, AWS recommends migrating to Amazon S3. For advanced use cases that require features such as packaging, DRM, or cross-region redundancy, consider using AWS Elemental MediaPackage.
-
----
 
 ## Resource `aws_media_store_container_policy`
 
 This resource is deprecated and will be removed in a future version. AWS has [announced](https://aws.amazon.com/blogs/media/support-for-aws-elemental-mediastore-ending-soon/) the discontinuation of AWS Elemental MediaStore, effective November 13, 2025. Users should begin transitioning to alternative solutions as soon as possible. For simple live streaming workflows, AWS recommends migrating to Amazon S3. For advanced use cases that require features such as packaging, DRM, or cross-region redundancy, consider using AWS Elemental MediaPackage.
 
----
-
 ## Resource `aws_networkmanager_core_network`
 
 Remove `base_policy_region`—it is no longer supported. Use `base_policy_regions` instead.
-
----
 
 ## Resource `aws_opensearch_domain`
 
@@ -715,19 +595,13 @@ Remove `kibana_endpoint`—it is no longer supported. AWS OpenSearch Service doe
 
 For more information, see the [AWS OpenSearch Dashboards documentation](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/dashboards.html).
 
----
-
 ## Resource `aws_opensearchserverless_security_config`
 
 Treat `saml_options` as a list of nested blocks instead of a single-nested block. The resource configuration itself does not change. However, now, include an index when referencing it. For example, update `saml_options.session_timeout` to `saml_options[0].session_timeout`.
 
----
-
 ## Resource `aws_paymentcryptography_key`
 
 Treat the `key_attributes` and `key_attributes.key_modes_of_use` as lists of nested blocks instead of single-nested blocks. The resource configuration itself does not change. However, now, include an index when referencing them. For example, update `key_attributes.key_modes_of_use.decrypt` to `key_attributes[0].key_modes_of_use[0].decrypt`.
-
----
 
 ## Resource `aws_redshift_cluster`
 
@@ -736,19 +610,13 @@ Treat the `key_attributes` and `key_attributes.key_modes_of_use` as lists of nes
 * Remove `logging`—it is no longer supported. Use the `aws_redshift_logging` resource instead.
 * `cluster_public_key`, `cluster_revision_number`, and `endpoint` are now read only and should not be set.
 
----
-
 ## Resource `aws_redshift_service_account`
 
 The `aws_redshift_service_account` resource has been removed. AWS [recommends](https://docs.aws.amazon.com/redshift/latest/mgmt/db-auditing.html#db-auditing-bucket-permissions) that a [service principal name](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_principal.html#principal-services) should be used instead of an AWS account ID in any relevant IAM policy.
 
----
-
 ## Resource `aws_rekognition_stream_processor`
 
 Treat `regions_of_interest.bounding_box` as a list of nested blocks instead of a single-nested block. The resource configuration itself does not change. However, now, include an index when referencing it. For example, update `regions_of_interest[0].bounding_box.height` to `regions_of_interest[0].bounding_box[0].height`.
-
----
 
 ## Resource `aws_resiliencehub_resiliency_policy`
 
@@ -762,49 +630,33 @@ Treat the following as lists of nested blocks instead of single-nested blocks:
 
 The resource configuration itself does not change. However, now, include an index when referencing them. For example, update `policy.az.rpo` to `policy[0].az[0].rpo`.
 
----
-
 ## Resource `aws_s3_bucket`
 
 `bucket_region` has been added and should be used instead of `region`, which is now used for [Enhanced Region Support](enhanced-region-support.html).
-
----
 
 ## Resource `aws_sagemaker_notebook_instance`
 
 Remove `accelerator_types`—it is no longer supported. Instead, use `instance_type` to use [Inferentia](https://docs.aws.amazon.com/sagemaker/latest/dg/neo-supported-cloud.html).
 
----
-
 ## Resource `aws_servicequotas_template`
 
 `region` has been deprecated. Use `aws_region` instead.
-
----
 
 ## Resource `aws_spot_instance_request`
 
 Remove `block_duration_minutes`—it is no longer supported.
 
----
-
 ## Resource `aws_ssm_association`
 
 Remove `instance_id`—it is no longer supported. Use `targets` instead.
-
----
 
 ## Resource `aws_ssmincidents_replication_set`
 
 `region` has been deprecated. Use `regions` instead.
 
----
-
 ## Resource `aws_verifiedpermissions_schema`
 
 Treat `definition` as a list of nested blocks instead of a single-nested block. The resource configuration itself does not change. However, now, include an index when referencing it. For example, update `definition.value` to `definition[0].value`.
-
----
 
 ## Resource `aws_wafv2_web_acl`
 
