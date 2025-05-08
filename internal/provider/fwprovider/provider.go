@@ -431,7 +431,7 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 					var diags diag.Diagnostics
 					var overrideRegion string
 
-					if !tfunique.IsHandleNil(v.Region) && !v.Region.Value().IsOverrideDisabled && getAttribute != nil {
+					if isRegionOverrideEnabled && getAttribute != nil {
 						var target types.String
 						diags.Append(getAttribute(ctx, path.Root(names.AttrRegion), &target)...)
 						if diags.HasError() {
@@ -491,7 +491,7 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 						var diags diag.Diagnostics
 						var overrideRegion string
 
-						if !tfunique.IsHandleNil(v.Region) && !v.Region.Value().IsOverrideDisabled && getAttribute != nil {
+						if isRegionOverrideEnabled && getAttribute != nil {
 							var target types.String
 							diags.Append(getAttribute(ctx, path.Root(names.AttrRegion), &target)...)
 							if diags.HasError() {
@@ -557,7 +557,7 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 					var diags diag.Diagnostics
 					var overrideRegion string
 
-					if !tfunique.IsHandleNil(v.Region) && !v.Region.Value().IsOverrideDisabled && getAttribute != nil {
+					if isRegionOverrideEnabled && getAttribute != nil {
 						var target types.String
 						diags.Append(getAttribute(ctx, path.Root(names.AttrRegion), &target)...)
 						if diags.HasError() {

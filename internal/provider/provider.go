@@ -397,7 +397,7 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 				bootstrapContext: func(ctx context.Context, getAttribute getAttributeFunc, meta any) (context.Context, error) {
 					var overrideRegion string
 
-					if v := v.Region; !tfunique.IsHandleNil(v) && !v.Value().IsOverrideDisabled && getAttribute != nil {
+					if isRegionOverrideEnabled && getAttribute != nil {
 						if region, ok := getAttribute(names.AttrRegion); ok {
 							overrideRegion = region.(string)
 						}
