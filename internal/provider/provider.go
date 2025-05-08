@@ -340,9 +340,9 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 				continue
 			}
 
-			var isRegionOverrideEnabled bool
-			if v := v.Region; !tfunique.IsHandleNil(v) && !v.Value().IsOverrideDisabled {
-				isRegionOverrideEnabled = true
+			isRegionOverrideEnabled := true
+			if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideDisabled {
+				isRegionOverrideEnabled = false
 			}
 
 			var interceptors interceptorInvocations
@@ -446,9 +446,9 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 				continue
 			}
 
-			var isRegionOverrideEnabled bool
-			if v := v.Region; !tfunique.IsHandleNil(v) && !v.Value().IsOverrideDisabled {
-				isRegionOverrideEnabled = true
+			isRegionOverrideEnabled := true
+			if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideDisabled {
+				isRegionOverrideEnabled = false
 			}
 
 			var interceptors interceptorInvocations
@@ -593,7 +593,12 @@ func validateResourceSchemas(ctx context.Context) error {
 			r := v.Factory()
 			s := r.SchemaMap()
 
-			if v := v.Region; !tfunique.IsHandleNil(v) && !v.Value().IsOverrideDisabled {
+			isRegionOverrideEnabled := true
+			if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideDisabled {
+				isRegionOverrideEnabled = false
+			}
+
+			if isRegionOverrideEnabled {
 				if _, ok := s[names.AttrRegion]; ok {
 					errs = append(errs, fmt.Errorf("`%s` attribute is defined: %s resource", names.AttrRegion, typeName))
 					continue
