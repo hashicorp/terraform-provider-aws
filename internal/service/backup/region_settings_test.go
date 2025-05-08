@@ -5,6 +5,7 @@ package backup_test
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/backup"
@@ -156,6 +157,42 @@ func testAccBackupRegionSettings_Identity_Basic(t *testing.T) {
 	})
 }
 
+func TestAccBackupRegionSettings_Identity_RegionOverride(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_backup_region_settings.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.FSxEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRegionSettingsConfig_regionOverride(),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrRegion), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckRegionSettingsExists(ctx context.Context, v *backup.DescribeRegionSettingsOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupClient(ctx)
@@ -258,4 +295,32 @@ resource "aws_backup_region_settings" "test" {
   }
 }
 `
+}
+
+func testAccRegionSettingsConfig_regionOverride() string {
+	return fmt.Sprintf(`
+resource "aws_backup_region_settings" "test" {
+  region = %[1]q
+
+  resource_type_opt_in_preference = {
+    "Aurora"                 = true
+    "CloudFormation"         = true
+    "DocumentDB"             = true
+    "DynamoDB"               = true
+    "EBS"                    = true
+    "EC2"                    = true
+    "EFS"                    = true
+    "FSx"                    = true
+    "Neptune"                = true
+    "RDS"                    = true
+    "Redshift"               = true
+    "Redshift Serverless"    = true
+    "S3"                     = true
+    "SAP HANA on Amazon EC2" = true
+    "Storage Gateway"        = true
+    "Timestream"             = true
+    "VirtualMachine"         = true
+  }
+}
+`, acctest.AlternateRegion())
 }
