@@ -124,6 +124,7 @@ type ResourceDatum struct {
 	TagsIdentifierAttribute           string
 	TagsResourceType                  string
 	ValidateRegionOverrideInPartition bool
+	SingletonIdentity                 bool
 }
 
 type ServiceDatum struct {
@@ -246,6 +247,9 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				if attr, ok := args.Keyword["resourceType"]; ok {
 					d.TagsResourceType = attr
 				}
+
+			case "SingletonIdentity":
+				d.SingletonIdentity = true
 			}
 		}
 	}
