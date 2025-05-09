@@ -4,9 +4,7 @@
 package rds
 
 import (
-	"bytes"
 	"context"
-	"fmt"
 	"iter"
 	"log"
 	"slices"
@@ -99,7 +97,7 @@ func resourceParameterGroup() *schema.Resource {
 						},
 					},
 				},
-				Set: resourceParameterHash,
+				Set: parameterHash,
 			},
 			names.AttrSkipDestroy: {
 				Type:     schema.TypeBool,
@@ -426,17 +424,21 @@ func findDBParameters(ctx context.Context, conn *rds.Client, input *rds.Describe
 	return output, nil
 }
 
-func resourceParameterHash(v any) int {
-	var buf bytes.Buffer
+func parameterHash(v any) int {
+	var str strings.Builder
 	m := v.(map[string]any)
-	// Store the value as a lower case string, to match how we store them in FlattenParameters
-	fmt.Fprintf(&buf, "%s-", strings.ToLower(m[names.AttrName].(string)))
-	fmt.Fprintf(&buf, "%s-", strings.ToLower(m["apply_method"].(string)))
-	fmt.Fprintf(&buf, "%s-", m[names.AttrValue].(string))
+
+	// Store the value as a lower case string, to match how we store them in FlattenParameters.
+	str.WriteString(strings.ToLower(m[names.AttrName].(string)))
+	str.WriteRune('-')
+	str.WriteString(strings.ToLower(m["apply_method"].(string)))
+	str.WriteRune('-')
+	str.WriteString(m[names.AttrValue].(string))
+	str.WriteRune('-')
 
 	// This hash randomly affects the "order" of the set, which affects in what order parameters
 	// are applied, when there are more than 20 (chunked).
-	return create.StringHashcode(buf.String())
+	return create.StringHashcode(str.String())
 }
 
 func parameterGroupModifyChunk(all []types.Parameter, maxChunkSize int) ([]types.Parameter, []types.Parameter) {

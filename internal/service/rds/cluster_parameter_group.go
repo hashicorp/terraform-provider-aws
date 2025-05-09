@@ -94,7 +94,7 @@ func resourceClusterParameterGroup() *schema.Resource {
 						},
 					},
 				},
-				Set: resourceParameterHash,
+				Set: parameterHash,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
