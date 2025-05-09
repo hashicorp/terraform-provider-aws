@@ -49,6 +49,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
 			}),
+			Identity: inttypes.RegionalSingletonIdentity(),
 		},
 		{
 			Factory:  newNotificationChannelResource,
