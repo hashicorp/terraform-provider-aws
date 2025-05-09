@@ -1,0 +1,3 @@
+```release-note:note
+resource/aws_amplify_webhook: Use the `appId` from the GetWebhook response instead of parsing `webhookArn`
+```
