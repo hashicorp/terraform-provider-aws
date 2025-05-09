@@ -43,6 +43,7 @@ func TestAccImageBuilderInfrastructureConfiguration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "instance_types.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "key_pair", ""),
 					resource.TestCheckResourceAttr(resourceName, "logging.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "placement.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "resource_tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "0"),
@@ -346,6 +347,150 @@ func TestAccImageBuilderInfrastructureConfiguration_LoggingS3Logs_s3KeyPrefix(t 
 	})
 }
 
+func TestAccImageBuilderInfrastructureConfiguration_placementTenancy(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_imagebuilder_infrastructure_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInfrastructureConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInfrastructureConfigurationConfig_placementTenancy(rName, "default"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "placement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "placement.0.tenancy", "default"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccInfrastructureConfigurationConfig_placementTenancy(rName, "dedicated"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
+					acctest.CheckResourceAttrRFC3339(resourceName, "date_updated"),
+					resource.TestCheckResourceAttr(resourceName, "placement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "placement.0.tenancy", "dedicated"),
+				),
+			},
+			{
+				Config: testAccInfrastructureConfigurationConfig_placementTenancy(rName, "host"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
+					acctest.CheckResourceAttrRFC3339(resourceName, "date_updated"),
+					resource.TestCheckResourceAttr(resourceName, "placement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "placement.0.tenancy", "host"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccImageBuilderInfrastructureConfiguration_placementAvailabilityZone(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	availabilityZonesDataSourceName := "data.aws_availability_zones.available"
+	resourceName := "aws_imagebuilder_infrastructure_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInfrastructureConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInfrastructureConfigurationConfig_placementAvailabilityZone(rName, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "placement.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "placement.0.availability_zone", availabilityZonesDataSourceName, "names.0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccInfrastructureConfigurationConfig_placementAvailabilityZone(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
+					acctest.CheckResourceAttrRFC3339(resourceName, "date_updated"),
+					resource.TestCheckResourceAttr(resourceName, "placement.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "placement.0.availability_zone", availabilityZonesDataSourceName, "names.1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccImageBuilderInfrastructureConfiguration_placementHostResourceGroupARN(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceGroupNme := "aws_resourcegroups_group.test"
+	resourceName := "aws_imagebuilder_infrastructure_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInfrastructureConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInfrastructureConfigurationConfig_placementHostResourceGroupArn(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "placement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "placement.0.tenancy", "host"),
+					resource.TestCheckResourceAttrPair(resourceName, "placement.0.host_resource_group_arn", resourceGroupNme, names.AttrARN),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccImageBuilderInfrastructureConfiguration_placementHostId(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	hostName := "aws_ec2_host.test"
+	resourceName := "aws_imagebuilder_infrastructure_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInfrastructureConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInfrastructureConfigurationConfig_placementHostId(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "placement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "placement.0.tenancy", "host"),
+					resource.TestCheckResourceAttrPair(resourceName, "placement.0.host_id", hostName, names.AttrID),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccImageBuilderInfrastructureConfiguration_resourceTags(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -570,42 +715,6 @@ func TestAccImageBuilderInfrastructureConfiguration_terminateInstanceOnFailure(t
 					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "date_updated"),
 					resource.TestCheckResourceAttr(resourceName, "terminate_instance_on_failure", acctest.CtFalse),
-				),
-			},
-		},
-	})
-}
-
-func TestAccImageBuilderInfrastructureConfiguration_placement(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_imagebuilder_infrastructure_configuration.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInfrastructureConfigurationDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccInfrastructureConfigurationConfig_placement(rName, "dedicated"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "placement.0.tenancy", "dedicated"),
-					resource.TestCheckResourceAttr(resourceName, "placement.0.availability_zone", acctest.Region()+"a"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccInfrastructureConfigurationConfig_placement(rName, "default"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "placement.0.tenancy", "default"),
-					resource.TestCheckResourceAttr(resourceName, "placement.0.availability_zone", acctest.Region()+"a"),
 				),
 			},
 		},
@@ -884,6 +993,91 @@ resource "aws_imagebuilder_infrastructure_configuration" "test" {
 `, rName))
 }
 
+func testAccInfrastructureConfigurationConfig_placementTenancy(rName string, tenancy string) string {
+	return acctest.ConfigCompose(
+		testAccInfrastructureConfigurationConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_imagebuilder_infrastructure_configuration" "test" {
+  instance_profile_name = aws_iam_instance_profile.test.name
+  name                  = %[1]q
+
+  placement {
+    tenancy = %[2]q
+  }
+}
+`, rName, tenancy))
+}
+
+func testAccInfrastructureConfigurationConfig_placementAvailabilityZone(rName string, azIndex int) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptIn(),
+		testAccInfrastructureConfigurationConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_imagebuilder_infrastructure_configuration" "test" {
+  instance_profile_name = aws_iam_instance_profile.test.name
+  name                  = %[1]q
+
+  placement {
+    availability_zone = data.aws_availability_zones.available.names[%[2]d]
+  }
+}
+`, rName, azIndex))
+}
+
+func testAccInfrastructureConfigurationConfig_placementHostResourceGroupARN(rName string) string {
+	return acctest.ConfigCompose(
+		testAccInfrastructureConfigurationConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_resourcegroups_group" "test" {
+  name = %[1]q
+
+  resource_query {
+    query = jsonencode({
+      ResourceTypeFilters = ["AWS::EC2::Instance"]
+      TagFilters = [
+        {
+          Key    = "Stage"
+          Values = ["Test"]
+        },
+      ]
+    })
+  }
+}
+
+resource "aws_imagebuilder_infrastructure_configuration" "test" {
+  instance_profile_name = aws_iam_instance_profile.test.name
+  name                  = %[1]q
+
+  placement {
+    tenancy                 = "host"
+    host_resource_group_arn = aws_resourcegroups_group.test.arn
+  }
+}
+`, rName))
+}
+
+func testAccInfrastructureConfigurationConfig_placementHostId(rName string) string {
+	return acctest.ConfigCompose(
+		testAccInfrastructureConfigurationConfig_base(rName),
+		acctest.ConfigAvailableAZsNoOptIn(),
+		fmt.Sprintf(`
+resource "aws_ec2_host" "test" {
+  availability_zone = data.aws_availability_zones.available.names[1]
+  instance_type     = "a1.medium"
+}
+
+resource "aws_imagebuilder_infrastructure_configuration" "test" {
+  instance_profile_name = aws_iam_instance_profile.test.name
+  name                  = %[1]q
+
+  placement {
+    tenancy = "host"
+    host_id = aws_ec2_host.test.id
+  }
+}
+`, rName))
+}
+
 func testAccInfrastructureConfigurationConfig_resourceTags(rName string, resourceTagKey string, resourceTagValue string) string {
 	return acctest.ConfigCompose(
 		testAccInfrastructureConfigurationConfig_base(rName),
@@ -1064,22 +1258,4 @@ resource "aws_imagebuilder_infrastructure_configuration" "test" {
   terminate_instance_on_failure = %[2]t
 }
 `, rName, terminateInstanceOnFailure))
-}
-
-func testAccInfrastructureConfigurationConfig_placement(rName, tenancy string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptIn(),
-		testAccInfrastructureConfigurationConfig_base(rName),
-		fmt.Sprintf(`
-data "aws_region" "current" {}
-
-resource "aws_imagebuilder_infrastructure_configuration" "test" {
-  instance_profile_name = aws_iam_instance_profile.test.name
-  name                  = %[1]q
-  placement {
-    tenancy           = %[2]q
-    availability_zone = data.aws_availability_zones.available.names[0]
-  }
-}
-`, rName, tenancy))
 }
