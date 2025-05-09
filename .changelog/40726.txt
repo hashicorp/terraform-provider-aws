@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_sagemaker_domain: Modification of `domain_settings.security_group_ids` no longer forces a replacement
+```
