@@ -111,6 +111,8 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 	{{- end }}
 			{{- if $value.ARNIdentity }}
 				Identity: inttypes.ARNIdentity(),
+			{{- else if $value.SingletonIdentity }}
+				Identity: inttypes.RegionalSingletonIdentity(),
 			{{- end }}
 		},
 {{- end }}
