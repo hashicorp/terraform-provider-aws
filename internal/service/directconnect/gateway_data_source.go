@@ -19,7 +19,7 @@ import (
 )
 
 // @SDKDataSource("aws_dx_gateway", name="Gateway")
-// @Region(overrideEnabled=false)
+// @Region(global=true)
 func dataSourceGateway() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceGatewayRead,
