@@ -35,5 +35,4 @@ func populateFromResourceState(format string, state *tfjson.StateResource) (stri
 	}
 
 	return buf.String(), nil
-
 }
