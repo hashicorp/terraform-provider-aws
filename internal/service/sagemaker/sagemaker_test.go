@@ -71,6 +71,7 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"workspaceSettings":                                       testAccDomain_workspaceSettings,
 			"domainSettings":                                          testAccDomain_domainSettings,
 			"domainSettingsDockerSettingsUpdated":                     testAccDomain_domainSettingsDockerSettingsUpdated,
+			"domainSettingsSecurityGroupIDs":                          testAccDomain_domainSettingsSecurityGroupIDs,
 			"rSessionAppSettings":                                     testAccDomain_rSessionAppSettings,
 			"rStudioServerProAppSettings":                             testAccDomain_rStudioServerProAppSettings,
 			"rStudioServerProDomainSettings":                          testAccDomain_rStudioServerProDomainSettings,
