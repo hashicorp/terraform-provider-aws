@@ -141,6 +141,7 @@ The following arguments are optional:
 
 * `fail_on_warnings` - (Optional) Whether to rollback the API update when a warning is encountered. The default value is `false`.
 * `parameters` - (Optional) Map of customizations for importing the specification in the `body` argument. For example, to exclude DocumentationParts from an imported API, use `ignore = "documentation"`. Additional documentation, including other parameters such as `basepath`, can be found in the [API Gateway Developer Guide](https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-import-api.html).
+* `put_rest_api_mode` - (Optional) Mode of the PutRestApi operation. Valid values are `overwrite` and `merge`. The default value is `overwrite`. When set to `merge`, the API Gateway will not delete existing literal properties if they are not explicitly set in the OpenAPI definition. When set to `overwrite`, all existing literal properties will be deleted if they are not explicitly set in the OpenAPI definition. Additional information in [API Gateway Docs](https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-import-api-update.html).
 * `triggers` - (Optional) Map of arbitrary keys and values that, when changed, will trigger a redeployment. To force a redeployment without changing these keys/values, use the [`-replace` option](https://developer.hashicorp.com/terraform/cli/commands/plan#replace-address) with `terraform plan` or `terraform apply`.
 
 ## Attribute Reference
