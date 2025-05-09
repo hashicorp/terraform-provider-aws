@@ -205,7 +205,7 @@ func resourceClusterParameterGroupUpdate(ctx context.Context, d *schema.Resource
 		o, n := d.GetChange(names.AttrParameter)
 		os, ns := o.(*schema.Set), n.(*schema.Set)
 
-		for chunk := range slices.Chunk(expandParameters(ns.Difference(os).List()), maxParamModifyChunk) {
+		for chunk := range parameterChunksForModify(expandParameters(ns.Difference(os).List()), maxParamModifyChunk) {
 			input := &rds.ModifyDBClusterParameterGroupInput{
 				DBClusterParameterGroupName: aws.String(d.Id()),
 				Parameters:                  chunk,
