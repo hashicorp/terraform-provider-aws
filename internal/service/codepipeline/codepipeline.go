@@ -1092,27 +1092,13 @@ func expandActionDeclaration(tfMap map[string]any) *types.ActionDeclaration {
 		apiObject.Namespace = aws.String(v)
 	}
 
-	outputArtifacts := []types.OutputArtifact{}
-	outputArtifactsForComputeAction := []types.OutputArtifact{}
-	if v, ok := tfMap["output_artifacts"].([]any); ok && len(v) > 0 {
-		outputArtifacts = expandOutputArtifacts(v)
-	}
-	if v, ok := tfMap["output_artifacts_for_compute_action"].([]any); ok && len(v) > 0 {
-		outputArtifactsForComputeAction = expandOutputArtifactsForComputeAction(v)
-	}
 	if apiObject.ActionTypeId.Category == types.ActionCategoryCompute {
-		if len(outputArtifactsForComputeAction) > 0 {
-			apiObject.OutputArtifacts = outputArtifactsForComputeAction
-		}
-		if len(outputArtifacts) > 0 {
-			log.Printf("[WARN] CodePipeline Pipeline Action %s: output_artifacts is ignored for compute action", aws.ToString(apiObject.Name))
+		if v, ok := tfMap["output_artifacts_for_compute_action"].([]any); ok && len(v) > 0 {
+			apiObject.OutputArtifacts = expandOutputArtifactsForComputeAction(v)
 		}
 	} else {
-		if len(outputArtifacts) > 0 {
-			apiObject.OutputArtifacts = outputArtifacts
-		}
-		if len(outputArtifactsForComputeAction) > 0 {
-			log.Printf("[WARN] CodePipeline Pipeline Action %s: output_artifacts_for_compute_action is ignored for non-compute action", aws.ToString(apiObject.Name))
+		if v, ok := tfMap["output_artifacts"].([]any); ok && len(v) > 0 {
+			apiObject.OutputArtifacts = expandOutputArtifacts(v)
 		}
 	}
 
