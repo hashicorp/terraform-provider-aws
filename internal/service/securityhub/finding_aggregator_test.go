@@ -57,6 +57,14 @@ func testAccFindingAggregator_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "specified_regions.#", "2"),
 				),
 			},
+			{
+				Config: testAccFindingAggregatorConfig_noRegions(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFindingAggregatorExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "linking_mode", "NO_REGIONS"),
+					resource.TestCheckResourceAttr(resourceName, "specified_regions.#", "0"),
+				),
+			},
 		},
 	})
 }
@@ -160,4 +168,16 @@ resource "aws_securityhub_finding_aggregator" "test_aggregator" {
   depends_on = [aws_securityhub_account.example]
 }
 `, endpoints.EuWest1RegionID, endpoints.EuWest2RegionID)
+}
+
+func testAccFindingAggregatorConfig_noRegions() string {
+	return `
+resource "aws_securityhub_account" "example" {}
+
+resource "aws_securityhub_finding_aggregator" "test_aggregator" {
+  linking_mode = "NO_REGIONS"
+
+  depends_on = [aws_securityhub_account.example]
+}
+`
 }
