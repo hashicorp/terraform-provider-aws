@@ -55,7 +55,7 @@ func resourceAccessPointForDirectoryBucketScope() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"permissions": {
+						names.AttrPermissions: {
 							Type:     schema.TypeList,
 							Optional: true,
 							Elem: &schema.Schema{

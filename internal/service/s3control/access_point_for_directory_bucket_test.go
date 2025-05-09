@@ -4,10 +4,12 @@
 package s3control_test
 
 import (
+	"cmp"
 	"context"
 	"fmt"
-	"sort"
 	"testing"
+
+	"slices"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/s3control"
@@ -47,10 +49,10 @@ func TestAccS3ControlDirectoryAccessPoint_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "network_origin", "Internet"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPolicy, ""),
 					resource.TestCheckResourceAttr(resourceName, "public_access_block_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "public_access_block_configuration.0.block_public_acls", "true"),
-					resource.TestCheckResourceAttr(resourceName, "public_access_block_configuration.0.block_public_policy", "true"),
-					resource.TestCheckResourceAttr(resourceName, "public_access_block_configuration.0.ignore_public_acls", "true"),
-					resource.TestCheckResourceAttr(resourceName, "public_access_block_configuration.0.restrict_public_buckets", "true"),
+					resource.TestCheckResourceAttr(resourceName, "public_access_block_configuration.0.block_public_acls", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "public_access_block_configuration.0.block_public_policy", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "public_access_block_configuration.0.ignore_public_acls", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "public_access_block_configuration.0.restrict_public_buckets", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "vpc_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "scope.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scope.0.permissions.#", "0"),
@@ -656,12 +658,12 @@ func testAccCheckAccessPointForDirectoryBucketHasScope(ctx context.Context, n st
 
 		expectedScope := fn()
 
-		sort.Slice(actualScope.Permissions, func(i, j int) bool {
-			return actualScope.Permissions[i] < actualScope.Permissions[j]
+		slices.SortFunc(actualScope.Permissions, func(a, b types.ScopePermission) int {
+			return cmp.Compare(a, b)
 		})
 
-		sort.Slice(expectedScope.Permissions, func(i, j int) bool {
-			return expectedScope.Permissions[i] < expectedScope.Permissions[j]
+		slices.SortFunc(expectedScope.Permissions, func(a, b types.ScopePermission) int {
+			return cmp.Compare(a, b)
 		})
 
 		if len(actualScope.Permissions) != len(expectedScope.Permissions) {
@@ -674,8 +676,8 @@ func testAccCheckAccessPointForDirectoryBucketHasScope(ctx context.Context, n st
 			}
 		}
 
-		sort.Strings(actualScope.Prefixes)
-		sort.Strings(expectedScope.Prefixes)
+		slices.Sort(actualScope.Prefixes)
+		slices.Sort(expectedScope.Prefixes)
 
 		if len(actualScope.Prefixes) != len(expectedScope.Prefixes) {
 			return fmt.Errorf("scope prefixes count mismatch:\nexpected: %#v\ngot: %#v", expectedScope.Prefixes, actualScope.Prefixes)

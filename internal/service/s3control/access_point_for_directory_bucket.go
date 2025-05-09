@@ -169,7 +169,7 @@ func resourceAccessPointForDirectoryBucket() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"permissions": {
+						names.AttrPermissions: {
 							Type:     schema.TypeList,
 							Optional: true,
 							Elem: &schema.Schema{
@@ -493,7 +493,7 @@ func expandScope(tfMap map[string]any) *types.Scope {
 
 	scope := &types.Scope{}
 
-	if v, ok := tfMap["permissions"].([]any); ok {
+	if v, ok := tfMap[names.AttrPermissions].([]any); ok {
 		for _, perm := range v {
 			if permStr, ok := perm.(string); ok {
 				scope.Permissions = append(scope.Permissions, types.ScopePermission(permStr))
@@ -531,8 +531,8 @@ func flattenScope(scope *types.Scope) map[string]any {
 	}
 
 	return map[string]any{
-		"permissions": permissions,
-		"prefixes":    prefixes,
+		names.AttrPermissions: permissions,
+		"prefixes":            prefixes,
 	}
 }
 

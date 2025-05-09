@@ -105,7 +105,7 @@ func resourceAccessPointForDirectoryBucketPolicyRead(ctx context.Context, d *sch
 
 	arn := fmt.Sprintf("arn:%s:s3express:%s:%s:accesspoint/%s", partition, region, accountID, name)
 	if err := d.Set("access_point_arn", arn); err != nil {
-		return sdkdiag.AppendFromErr(diags, fmt.Errorf("error setting access_point_arn: %w", err))
+		return sdkdiag.AppendFromErr(diags, fmt.Errorf("Error in setting access_point_arn: %w", err))
 	}
 	d.Set("access_point_arn", arn)
 

@@ -56,8 +56,8 @@ func TestAccS3ControlAccessPointForDirectoryBucketScope_basic(t *testing.T) {
 						return "", fmt.Errorf("not found: %s", resourceName)
 					}
 
-					name := rs.Primary.Attributes["name"]
-					accountID := rs.Primary.Attributes["account_id"]
+					name := rs.Primary.Attributes[names.AttrName]
+					accountID := rs.Primary.Attributes[names.AttrAccountID]
 
 					if name == "" || accountID == "" {
 						return "", fmt.Errorf("missing name or account_id in state")
@@ -158,8 +158,8 @@ func TestAccS3ControlAccessPointScope_update(t *testing.T) {
 						return "", fmt.Errorf("not found: %s", resourceName)
 					}
 
-					name := rs.Primary.Attributes["name"]
-					accountID := rs.Primary.Attributes["account_id"]
+					name := rs.Primary.Attributes[names.AttrName]
+					accountID := rs.Primary.Attributes[names.AttrAccountID]
 
 					if name == "" || accountID == "" {
 						return "", fmt.Errorf("missing name or account_id in state")
