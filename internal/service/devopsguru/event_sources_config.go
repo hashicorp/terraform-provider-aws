@@ -24,6 +24,7 @@ import (
 )
 
 // @FrameworkResource("aws_devopsguru_event_sources_config", name="Event Sources Config")
+// @SingletonIdentity
 func newEventSourcesConfigResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &eventSourcesConfigResource{}, nil
 }
