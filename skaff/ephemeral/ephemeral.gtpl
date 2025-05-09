@@ -73,7 +73,7 @@ const (
 )
 
 type ephemeral{{ .EphemeralResource }} struct {
-	framework.EphemeralResourceWithConfigure
+	framework.EphemeralResourceWithModel[ephemeral{{ .EphemeralResource }}Model]
 }
 
 {{ if .IncludeComments }}
@@ -218,6 +218,7 @@ func (e *ephemeral{{ .EphemeralResource }}) Open(ctx context.Context, req epheme
 // https://developer.hashicorp.com/terraform/plugin/framework/handling-data/accessing-values
 {{- end }}
 type ephemeral{{ .EphemeralResource }}Model struct {
+	framework.WithRegionModel
 	ARN             types.String                                          `tfsdk:"arn"`
 	ComplexArgument fwtypes.ListNestedObjectValueOf[complexArgumentModel] `tfsdk:"complex_argument"`
 	Description     types.String                                          `tfsdk:"description"`
