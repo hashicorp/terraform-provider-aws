@@ -1,4 +1,4 @@
-name: Dependency Checks
+name: Pull Request Target Check
 
 permissions:
   contents: read
@@ -12,16 +12,8 @@ on:
     branches:
       - main
       - "release/**"
-    paths-ignore:
-      - .teamcity/**
-      - .release/**
-      - infrastructure/**
-      - .archive/**
-      - .changelog/**
-      - .devcontainer/**
-      - docs/**
-      - examples/**
-      - META.d/**
+    paths:
+      - .github/workflows/**
 
 ## NOTE: !!!
 ## When changing these workflows, ensure that the following is updated:
@@ -31,7 +23,7 @@ on:
 
 jobs:
   checks:
-    name: go mod
+    name: pr-target-check
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -59,8 +51,7 @@ jobs:
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
-
-      - name: Run make deps-check
+      - name: Run make pr-target-check
         run: |
-          echo "Using make to check dependencies"
-          make deps-check
+          echo "Using make to check for disallowed uses of PR target"
+          make pr-target-check
