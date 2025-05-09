@@ -118,11 +118,11 @@ func TestAccBatchJobQueue_Identity_RegionOverride(t *testing.T) {
 				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
-			// {
-			// 	ResourceName:      resourceName,
-			// 	ImportState:       true,
-			// 	ImportStateVerify: true,
-			// },
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
