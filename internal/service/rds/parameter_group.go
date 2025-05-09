@@ -115,14 +115,14 @@ func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
 	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
-	input := &rds.CreateDBParameterGroupInput{
+	input := rds.CreateDBParameterGroupInput{
 		DBParameterGroupFamily: aws.String(d.Get(names.AttrFamily).(string)),
 		DBParameterGroupName:   aws.String(name),
 		Description:            aws.String(d.Get(names.AttrDescription).(string)),
 		Tags:                   getTagsIn(ctx),
 	}
 
-	output, err := conn.CreateDBParameterGroup(ctx, input)
+	output, err := conn.CreateDBParameterGroup(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating RDS DB Parameter Group (%s): %s", name, err)
@@ -158,7 +158,7 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set(names.AttrName, dbParameterGroup.DBParameterGroupName)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(dbParameterGroup.DBParameterGroupName)))
 
-	input := &rds.DescribeDBParametersInput{
+	input := rds.DescribeDBParametersInput{
 		DBParameterGroupName: aws.String(d.Id()),
 	}
 
@@ -176,7 +176,7 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 		input.Source = aws.String(parameterSourceUser)
 	}
 
-	parameters, err := findDBParameters(ctx, conn, input, tfslices.PredicateTrue[*types.Parameter]())
+	parameters, err := findDBParameters(ctx, conn, &input, tfslices.PredicateTrue[*types.Parameter]())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading RDS DB Parameter Group (%s) parameters: %s", d.Id(), err)
@@ -246,23 +246,16 @@ func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, m
 		o, n := d.GetChange(names.AttrParameter)
 		os, ns := o.(*schema.Set), n.(*schema.Set)
 
-		if parameters := expandParameters(ns.Difference(os).List()); len(parameters) > 0 {
-			// We can only modify 20 parameters at a time, so walk them until
-			// we've got them all.
-			for parameters != nil {
-				var paramsToModify []types.Parameter
-				paramsToModify, parameters = parameterGroupModifyChunk(parameters, maxParamModifyChunk)
+		for chunk := range parameterChunksForModify(expandParameters(ns.Difference(os).List()), maxParamModifyChunk) {
+			input := rds.ModifyDBParameterGroupInput{
+				DBParameterGroupName: aws.String(d.Id()),
+				Parameters:           chunk,
+			}
 
-				input := &rds.ModifyDBParameterGroupInput{
-					DBParameterGroupName: aws.String(d.Id()),
-					Parameters:           paramsToModify,
-				}
+			_, err := conn.ModifyDBParameterGroup(ctx, &input)
 
-				_, err := conn.ModifyDBParameterGroup(ctx, input)
-
-				if err != nil {
-					return sdkdiag.AppendErrorf(diags, "modifying RDS DB Parameter Group (%s): %s", d.Id(), err)
-				}
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "modifying RDS DB Parameter Group (%s): %s", d.Id(), err)
 			}
 		}
 
@@ -281,26 +274,17 @@ func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, m
 		}
 
 		// Reset parameters that have been removed.
-		if resetParameters := tfmaps.Values(toRemove); len(resetParameters) > 0 {
-			for resetParameters != nil {
-				var paramsToReset []types.Parameter
-				if len(resetParameters) <= maxParamModifyChunk {
-					paramsToReset, resetParameters = resetParameters[:], nil
-				} else {
-					paramsToReset, resetParameters = resetParameters[:maxParamModifyChunk], resetParameters[maxParamModifyChunk:]
-				}
+		for chunk := range slices.Chunk(tfmaps.Values(toRemove), maxParamModifyChunk) {
+			input := rds.ResetDBParameterGroupInput{
+				DBParameterGroupName: aws.String(d.Id()),
+				Parameters:           chunk,
+				ResetAllParameters:   aws.Bool(false),
+			}
 
-				input := &rds.ResetDBParameterGroupInput{
-					DBParameterGroupName: aws.String(d.Id()),
-					Parameters:           paramsToReset,
-					ResetAllParameters:   aws.Bool(false),
-				}
+			_, err := conn.ResetDBParameterGroup(ctx, &input)
 
-				_, err := conn.ResetDBParameterGroup(ctx, input)
-
-				if err != nil {
-					return sdkdiag.AppendErrorf(diags, "resetting RDS DB Parameter Group (%s): %s", d.Id(), err)
-				}
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "resetting RDS DB Parameter Group (%s): %s", d.Id(), err)
 			}
 		}
 	}
@@ -321,10 +305,11 @@ func resourceParameterGroupDelete(ctx context.Context, d *schema.ResourceData, m
 	const (
 		timeout = 3 * time.Minute
 	)
+	input := rds.DeleteDBParameterGroupInput{
+		DBParameterGroupName: aws.String(d.Id()),
+	}
 	_, err := tfresource.RetryWhenIsA[*types.InvalidDBParameterGroupStateFault](ctx, timeout, func() (any, error) {
-		return conn.DeleteDBParameterGroup(ctx, &rds.DeleteDBParameterGroupInput{
-			DBParameterGroupName: aws.String(d.Id()),
-		})
+		return conn.DeleteDBParameterGroup(ctx, &input)
 	})
 
 	if errs.IsA[*types.DBParameterGroupNotFoundFault](err) {
@@ -339,10 +324,10 @@ func resourceParameterGroupDelete(ctx context.Context, d *schema.ResourceData, m
 }
 
 func findDBParameterGroupByName(ctx context.Context, conn *rds.Client, name string) (*types.DBParameterGroup, error) {
-	input := &rds.DescribeDBParameterGroupsInput{
+	input := rds.DescribeDBParameterGroupsInput{
 		DBParameterGroupName: aws.String(name),
 	}
-	output, err := findDBParameterGroup(ctx, conn, input, tfslices.PredicateTrue[*types.DBParameterGroup]())
+	output, err := findDBParameterGroup(ctx, conn, &input, tfslices.PredicateTrue[*types.DBParameterGroup]())
 
 	if err != nil {
 		return nil, err
@@ -439,65 +424,6 @@ func parameterHash(v any) int {
 	// This hash randomly affects the "order" of the set, which affects in what order parameters
 	// are applied, when there are more than 20 (chunked).
 	return create.StringHashcode(str.String())
-}
-
-func parameterGroupModifyChunk(all []types.Parameter, maxChunkSize int) ([]types.Parameter, []types.Parameter) {
-	// Since the hash randomly affect the set "order," this attempts to prioritize important
-	// parameters to go in the first chunk (i.e., charset).
-
-	if len(all) <= maxChunkSize {
-		return all[:], nil
-	}
-
-	var modifyChunk, remainder []types.Parameter
-
-	// pass 1
-	for i, p := range all {
-		if len(modifyChunk) >= maxChunkSize {
-			remainder = append(remainder, all[i:]...)
-			return modifyChunk, remainder
-		}
-
-		if strings.Contains(aws.ToString(p.ParameterName), "character_set") && p.ApplyMethod != types.ApplyMethodPendingReboot {
-			modifyChunk = append(modifyChunk, p)
-			continue
-		}
-
-		remainder = append(remainder, p)
-	}
-
-	all = remainder
-	remainder = nil
-
-	// pass 2 - avoid pending reboot
-	for i, p := range all {
-		if len(modifyChunk) >= maxChunkSize {
-			remainder = append(remainder, all[i:]...)
-			return modifyChunk, remainder
-		}
-
-		if p.ApplyMethod != types.ApplyMethodPendingReboot {
-			modifyChunk = append(modifyChunk, p)
-			continue
-		}
-
-		remainder = append(remainder, p)
-	}
-
-	all = remainder
-	remainder = nil
-
-	// pass 3 - everything else
-	for i, p := range all {
-		if len(modifyChunk) >= maxChunkSize {
-			remainder = append(remainder, all[i:]...)
-			return modifyChunk, remainder
-		}
-
-		modifyChunk = append(modifyChunk, p)
-	}
-
-	return modifyChunk, remainder
 }
 
 func parameterChunksForModify(parameters []types.Parameter, maxChunkSize int) iter.Seq[[]types.Parameter] {
