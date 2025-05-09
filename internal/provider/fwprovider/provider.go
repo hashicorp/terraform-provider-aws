@@ -518,9 +518,9 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 			}
 		}
 
-		for _, v := range sp.FrameworkResources(ctx) {
-			typeName := v.TypeName
-			inner, err := v.Factory(ctx)
+		for _, res := range sp.FrameworkResources(ctx) {
+			typeName := res.TypeName
+			inner, err := res.Factory(ctx)
 
 			if err != nil {
 				errs = append(errs, fmt.Errorf("creating resource (%s): %w", typeName, err))
@@ -528,14 +528,14 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 			}
 
 			var isRegionOverrideEnabled bool
-			if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
+			if v := res.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
 				isRegionOverrideEnabled = true
 			}
 
 			var interceptors interceptorInvocations
 
 			if isRegionOverrideEnabled {
-				v := v.Region.Value()
+				v := res.Region.Value()
 
 				interceptors = append(interceptors, resourceInjectRegionAttribute())
 				if v.IsValidateOverrideInPartition {
@@ -544,11 +544,15 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 				interceptors = append(interceptors, resourceDefaultRegion())
 				interceptors = append(interceptors, resourceForceNewIfRegionChanges())
 				interceptors = append(interceptors, resourceSetRegionInState())
-				interceptors = append(interceptors, resourceImportRegion())
+				if res.Identity.ARN {
+					interceptors = append(interceptors, resourceImportRegionNoDefault())
+				} else {
+					interceptors = append(interceptors, resourceImportRegion())
+				}
 			}
 
-			if !tfunique.IsHandleNil(v.Tags) {
-				interceptors = append(interceptors, resourceTransparentTagging(v.Tags))
+			if !tfunique.IsHandleNil(res.Tags) {
+				interceptors = append(interceptors, resourceTransparentTagging(res.Tags))
 			}
 
 			opts := wrappedResourceOptions{
@@ -567,7 +571,7 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 						overrideRegion = target.ValueString()
 					}
 
-					ctx = conns.NewResourceContext(ctx, servicePackageName, v.Name, overrideRegion)
+					ctx = conns.NewResourceContext(ctx, servicePackageName, res.Name, overrideRegion)
 					if c != nil {
 						ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx))
 						ctx = c.RegisterLogger(ctx)
