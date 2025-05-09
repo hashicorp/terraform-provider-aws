@@ -98,6 +98,12 @@ func (r *resourceRevisionExclusive) Schema(ctx context.Context, req resource.Sch
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			"finalized": schema.BoolAttribute{
+				Optional: true,
+			},
+			"force_destroy": schema.BoolAttribute{
+				Optional: true,
+			},
 			names.AttrID: framework.IDAttribute(),
 			"updated_at": schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
@@ -660,6 +666,18 @@ func (r *resourceRevisionExclusive) Create(ctx context.Context, req resource.Cre
 	}
 	plan.Assets = assetsVal
 
+	// finalize asset if requested
+	if plan.Finalized.ValueBool() {
+		err = finalizeAsset(ctx, conn, plan.DataSetID.ValueString(), plan.ID.ValueString(), plan.Finalized.ValueBool())
+		if err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionExclusive, revisionID, err),
+				err.Error(),
+			)
+			return
+		}
+	}
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
@@ -703,6 +721,17 @@ func (r *resourceRevisionExclusive) Delete(ctx context.Context, req resource.Del
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
+	}
+
+	if state.ForceDestroy.ValueBool() && state.Finalized.ValueBool() {
+		err := finalizeAsset(ctx, conn, state.DataSetID.ValueString(), state.ID.ValueString(), false)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.DataExchange, create.ErrActionDeleting, ResNameRevisionExclusive, state.ID.String(), err),
+				err.Error(),
+			)
+			return
+		}
 	}
 
 	input := dataexchange.DeleteRevisionInput{
@@ -766,17 +795,34 @@ func getRevisionAsset(ctx context.Context, conn *dataexchange.Client, input data
 	return newAsset, nil
 }
 
+// finalizeAsset will either finalize or de-finalize the asset
+func finalizeAsset(ctx context.Context, conn *dataexchange.Client, datasetId, revisionId string, finalized bool) error {
+	input := dataexchange.UpdateRevisionInput{
+		DataSetId:  aws.String(datasetId),
+		RevisionId: aws.String(revisionId),
+		Finalized:  aws.Bool(finalized),
+	}
+	_, err := conn.UpdateRevision(ctx, &input)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 type resourceRevisionExclusiveModel struct {
-	ARN       types.String                               `tfsdk:"arn"`
-	Assets    fwtypes.SetNestedObjectValueOf[assetModel] `tfsdk:"asset"`
-	Comment   types.String                               `tfsdk:"comment"`
-	CreatedAt timetypes.RFC3339                          `tfsdk:"created_at"`
-	DataSetID types.String                               `tfsdk:"data_set_id"`
-	ID        types.String                               `tfsdk:"id"`
-	UpdatedAt timetypes.RFC3339                          `tfsdk:"updated_at"`
-	Tags      tftags.Map                                 `tfsdk:"tags"`
-	TagsAll   tftags.Map                                 `tfsdk:"tags_all"`
-	Timeouts  timeouts.Value                             `tfsdk:"timeouts"`
+	ARN          types.String                               `tfsdk:"arn"`
+	Assets       fwtypes.SetNestedObjectValueOf[assetModel] `tfsdk:"asset"`
+	Comment      types.String                               `tfsdk:"comment"`
+	CreatedAt    timetypes.RFC3339                          `tfsdk:"created_at"`
+	DataSetID    types.String                               `tfsdk:"data_set_id"`
+	Finalized    types.Bool                                 `tfsdk:"finalized"`
+	ForceDestroy types.Bool                                 `tfsdk:"force_destroy"`
+	ID           types.String                               `tfsdk:"id"`
+	UpdatedAt    timetypes.RFC3339                          `tfsdk:"updated_at"`
+	Tags         tftags.Map                                 `tfsdk:"tags"`
+	TagsAll      tftags.Map                                 `tfsdk:"tags_all"`
+	Timeouts     timeouts.Value                             `tfsdk:"timeouts"`
 }
 
 type assetModel struct {
