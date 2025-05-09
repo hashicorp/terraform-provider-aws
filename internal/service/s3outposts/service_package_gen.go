@@ -34,10 +34,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceEndpoint,
 			TypeName: "aws_s3outposts_endpoint",
 			Name:     "Endpoint",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region:   unique.Make(inttypes.ServicePackageResourceRegion{}),
 		},
 	}
 }

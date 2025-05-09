@@ -404,9 +404,9 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 				continue
 			}
 
-			var isRegionOverrideEnabled bool
-			if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
-				isRegionOverrideEnabled = true
+			isRegionOverrideEnabled := true
+			if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideDisabled {
+				isRegionOverrideEnabled = false
 			}
 
 			var interceptors interceptorInvocations
@@ -415,7 +415,7 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 				v := v.Region.Value()
 
 				interceptors = append(interceptors, dataSourceInjectRegionAttribute())
-				if v.IsValidateOverrideInPartition {
+				if !v.DoNotValidateOverrideValue {
 					interceptors = append(interceptors, dataSourceValidateRegion())
 				}
 				interceptors = append(interceptors, dataSourceSetRegionInState())
@@ -431,7 +431,7 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 					var diags diag.Diagnostics
 					var overrideRegion string
 
-					if !tfunique.IsHandleNil(v.Region) && v.Region.Value().IsOverrideEnabled && getAttribute != nil {
+					if isRegionOverrideEnabled && getAttribute != nil {
 						var target types.String
 						diags.Append(getAttribute(ctx, path.Root(names.AttrRegion), &target)...)
 						if diags.HasError() {
@@ -468,9 +468,9 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 					continue
 				}
 
-				var isRegionOverrideEnabled bool
-				if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
-					isRegionOverrideEnabled = true
+				isRegionOverrideEnabled := true
+				if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideDisabled {
+					isRegionOverrideEnabled = false
 				}
 
 				var interceptors interceptorInvocations
@@ -479,7 +479,7 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 					v := v.Region.Value()
 
 					interceptors = append(interceptors, ephemeralResourceInjectRegionAttribute())
-					if v.IsValidateOverrideInPartition {
+					if !v.DoNotValidateOverrideValue {
 						interceptors = append(interceptors, ephemeralResourceValidateRegion())
 					}
 					interceptors = append(interceptors, ephemeralResourceSetRegionInResult())
@@ -491,7 +491,7 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 						var diags diag.Diagnostics
 						var overrideRegion string
 
-						if !tfunique.IsHandleNil(v.Region) && v.Region.Value().IsOverrideEnabled && getAttribute != nil {
+						if isRegionOverrideEnabled && getAttribute != nil {
 							var target types.String
 							diags.Append(getAttribute(ctx, path.Root(names.AttrRegion), &target)...)
 							if diags.HasError() {
@@ -527,9 +527,9 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 				continue
 			}
 
-			var isRegionOverrideEnabled bool
-			if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
-				isRegionOverrideEnabled = true
+			isRegionOverrideEnabled := true
+			if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideDisabled {
+				isRegionOverrideEnabled = false
 			}
 
 			var interceptors interceptorInvocations
@@ -538,7 +538,7 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 				v := v.Region.Value()
 
 				interceptors = append(interceptors, resourceInjectRegionAttribute())
-				if v.IsValidateOverrideInPartition {
+				if !v.DoNotValidateOverrideValue {
 					interceptors = append(interceptors, resourceValidateRegion())
 				}
 				interceptors = append(interceptors, resourceDefaultRegion())
@@ -557,7 +557,7 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 					var diags diag.Diagnostics
 					var overrideRegion string
 
-					if !tfunique.IsHandleNil(v.Region) && v.Region.Value().IsOverrideEnabled && getAttribute != nil {
+					if isRegionOverrideEnabled && getAttribute != nil {
 						var target types.String
 						diags.Append(getAttribute(ctx, path.Root(names.AttrRegion), &target)...)
 						if diags.HasError() {
@@ -605,7 +605,12 @@ func (p *fwprovider) validateResourceSchemas(ctx context.Context) error {
 			schemaResponse := datasource.SchemaResponse{}
 			ds.Schema(ctx, datasource.SchemaRequest{}, &schemaResponse)
 
-			if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
+			isRegionOverrideEnabled := true
+			if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideDisabled {
+				isRegionOverrideEnabled = false
+			}
+
+			if isRegionOverrideEnabled {
 				if _, ok := schemaResponse.Schema.Attributes[names.AttrRegion]; ok {
 					errs = append(errs, fmt.Errorf("`%s` attribute is defined: %s data source", names.AttrRegion, typeName))
 					continue
@@ -640,7 +645,12 @@ func (p *fwprovider) validateResourceSchemas(ctx context.Context) error {
 				schemaResponse := ephemeral.SchemaResponse{}
 				er.Schema(ctx, ephemeral.SchemaRequest{}, &schemaResponse)
 
-				if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
+				isRegionOverrideEnabled := true
+				if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideDisabled {
+					isRegionOverrideEnabled = false
+				}
+
+				if isRegionOverrideEnabled {
 					if _, ok := schemaResponse.Schema.Attributes[names.AttrRegion]; ok {
 						errs = append(errs, fmt.Errorf("`%s` attribute is defined: %s ephemeral resource", names.AttrRegion, typeName))
 						continue
@@ -661,7 +671,12 @@ func (p *fwprovider) validateResourceSchemas(ctx context.Context) error {
 			schemaResponse := resource.SchemaResponse{}
 			r.Schema(ctx, resource.SchemaRequest{}, &schemaResponse)
 
-			if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
+			isRegionOverrideEnabled := true
+			if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideDisabled {
+				isRegionOverrideEnabled = false
+			}
+
+			if isRegionOverrideEnabled {
 				if _, ok := schemaResponse.Schema.Attributes[names.AttrRegion]; ok {
 					errs = append(errs, fmt.Errorf("`%s` attribute is defined: %s resource", names.AttrRegion, typeName))
 					continue

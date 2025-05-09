@@ -23,7 +23,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			TypeName: "aws_cloudfront_origin_access_control",
 			Name:     "Origin Access Control",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
+				IsOverrideDisabled: true,
 			}),
 		},
 	}
@@ -36,7 +36,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "aws_cloudfront_continuous_deployment_policy",
 			Name:     "Continuous Deployment Policy",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
+				IsOverrideDisabled: true,
 			}),
 		},
 		{
@@ -44,7 +44,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "aws_cloudfront_key_value_store",
 			Name:     "Key Value Store",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
+				IsOverrideDisabled: true,
 			}),
 		},
 		{
@@ -55,7 +55,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
+				IsOverrideDisabled: true,
 			}),
 		},
 	}
@@ -68,7 +68,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			TypeName: "aws_cloudfront_cache_policy",
 			Name:     "Cache Policy",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
+				IsOverrideDisabled: true,
 			}),
 		},
 		{
@@ -79,7 +79,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
+				IsOverrideDisabled: true,
 			}),
 		},
 		{
@@ -87,7 +87,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			TypeName: "aws_cloudfront_function",
 			Name:     "Function",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
+				IsOverrideDisabled: true,
 			}),
 		},
 		{
@@ -95,7 +95,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			TypeName: "aws_cloudfront_log_delivery_canonical_user_id",
 			Name:     "Log Delivery Canonical User ID",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
+				IsOverrideDisabled: true,
 			}),
 		},
 		{
@@ -103,7 +103,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			TypeName: "aws_cloudfront_origin_access_identities",
 			Name:     "Origin Access Identities",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
+				IsOverrideDisabled: true,
 			}),
 		},
 		{
@@ -111,7 +111,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			TypeName: "aws_cloudfront_origin_access_identity",
 			Name:     "Origin Access Identity",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
+				IsOverrideDisabled: true,
 			}),
 		},
 		{
@@ -119,7 +119,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			TypeName: "aws_cloudfront_origin_request_policy",
 			Name:     "Origin Request Policy",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
+				IsOverrideDisabled: true,
 			}),
 		},
 		{
@@ -127,7 +127,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			TypeName: "aws_cloudfront_realtime_log_config",
 			Name:     "Real-time Log Config",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
+				IsOverrideDisabled: true,
 			}),
 		},
 		{
@@ -135,7 +135,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			TypeName: "aws_cloudfront_response_headers_policy",
 			Name:     "Response Headers Policy",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
+				IsOverrideDisabled: true,
 			}),
 		},
 	}
@@ -148,7 +148,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_cloudfront_cache_policy",
 			Name:     "Cache Policy",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
+				IsOverrideDisabled: true,
 			}),
 		},
 		{
@@ -159,7 +159,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
+				IsOverrideDisabled: true,
 			}),
 		},
 		{
@@ -167,7 +167,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_cloudfront_field_level_encryption_config",
 			Name:     "Field-level Encryption Config",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
+				IsOverrideDisabled: true,
 			}),
 		},
 		{
@@ -175,7 +175,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_cloudfront_field_level_encryption_profile",
 			Name:     "Field-level Encryption Profile",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
+				IsOverrideDisabled: true,
 			}),
 		},
 		{
@@ -183,7 +183,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_cloudfront_function",
 			Name:     "Function",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
+				IsOverrideDisabled: true,
 			}),
 		},
 		{
@@ -191,7 +191,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_cloudfront_key_group",
 			Name:     "Key Group",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
+				IsOverrideDisabled: true,
 			}),
 		},
 		{
@@ -199,7 +199,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_cloudfront_monitoring_subscription",
 			Name:     "Monitoring Subscription",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
+				IsOverrideDisabled: true,
 			}),
 		},
 		{
@@ -207,7 +207,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_cloudfront_origin_access_control",
 			Name:     "Origin Access Control",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
+				IsOverrideDisabled: true,
 			}),
 		},
 		{
@@ -215,7 +215,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_cloudfront_origin_access_identity",
 			Name:     "Origin Access Identity",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
+				IsOverrideDisabled: true,
 			}),
 		},
 		{
@@ -223,7 +223,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_cloudfront_origin_request_policy",
 			Name:     "Origin Request Policy",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
+				IsOverrideDisabled: true,
 			}),
 		},
 		{
@@ -231,7 +231,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_cloudfront_public_key",
 			Name:     "Public Key",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
+				IsOverrideDisabled: true,
 			}),
 		},
 		{
@@ -239,7 +239,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_cloudfront_realtime_log_config",
 			Name:     "Real-time Log Config",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
+				IsOverrideDisabled: true,
 			}),
 		},
 		{
@@ -247,7 +247,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_cloudfront_response_headers_policy",
 			Name:     "Response Headers Policy",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
+				IsOverrideDisabled: true,
 			}),
 		},
 	}

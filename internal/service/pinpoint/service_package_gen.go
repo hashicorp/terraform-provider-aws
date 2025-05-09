@@ -29,10 +29,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{}),
 		},
 	}
 }
@@ -47,46 +44,31 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceADMChannel,
 			TypeName: "aws_pinpoint_adm_channel",
 			Name:     "ADM Channel",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region:   unique.Make(inttypes.ServicePackageResourceRegion{}),
 		},
 		{
 			Factory:  resourceAPNSChannel,
 			TypeName: "aws_pinpoint_apns_channel",
 			Name:     "APNS Channel",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region:   unique.Make(inttypes.ServicePackageResourceRegion{}),
 		},
 		{
 			Factory:  resourceAPNSSandboxChannel,
 			TypeName: "aws_pinpoint_apns_sandbox_channel",
 			Name:     "APNS Sandbox Channel",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region:   unique.Make(inttypes.ServicePackageResourceRegion{}),
 		},
 		{
 			Factory:  resourceAPNSVoIPChannel,
 			TypeName: "aws_pinpoint_apns_voip_channel",
 			Name:     "APNS VoIP Channel",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region:   unique.Make(inttypes.ServicePackageResourceRegion{}),
 		},
 		{
 			Factory:  resourceAPNSVoIPSandboxChannel,
 			TypeName: "aws_pinpoint_apns_voip_sandbox_channel",
 			Name:     "APNS VoIP Sandbox Channel",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region:   unique.Make(inttypes.ServicePackageResourceRegion{}),
 		},
 		{
 			Factory:  resourceApp,
@@ -95,55 +77,37 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{}),
 		},
 		{
 			Factory:  resourceBaiduChannel,
 			TypeName: "aws_pinpoint_baidu_channel",
 			Name:     "Baidu Channel",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region:   unique.Make(inttypes.ServicePackageResourceRegion{}),
 		},
 		{
 			Factory:  resourceEmailChannel,
 			TypeName: "aws_pinpoint_email_channel",
 			Name:     "Email Channel",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region:   unique.Make(inttypes.ServicePackageResourceRegion{}),
 		},
 		{
 			Factory:  resourceEventStream,
 			TypeName: "aws_pinpoint_event_stream",
 			Name:     "Event Stream",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region:   unique.Make(inttypes.ServicePackageResourceRegion{}),
 		},
 		{
 			Factory:  resourceGCMChannel,
 			TypeName: "aws_pinpoint_gcm_channel",
 			Name:     "GCM Channel",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region:   unique.Make(inttypes.ServicePackageResourceRegion{}),
 		},
 		{
 			Factory:  resourceSMSChannel,
 			TypeName: "aws_pinpoint_sms_channel",
 			Name:     "SMS Channel",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region:   unique.Make(inttypes.ServicePackageResourceRegion{}),
 		},
 	}
 }

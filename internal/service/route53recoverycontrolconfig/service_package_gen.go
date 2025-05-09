@@ -36,7 +36,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_route53recoverycontrolconfig_cluster",
 			Name:     "Cluster",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
+				IsOverrideDisabled: true,
 			}),
 		},
 		{
@@ -44,7 +44,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_route53recoverycontrolconfig_control_panel",
 			Name:     "Control Panel",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
+				IsOverrideDisabled: true,
 			}),
 		},
 		{
@@ -52,7 +52,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_route53recoverycontrolconfig_routing_control",
 			Name:     "Routing Control",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
+				IsOverrideDisabled: true,
 			}),
 		},
 		{
@@ -60,7 +60,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_route53recoverycontrolconfig_safety_rule",
 			Name:     "Safety Rule",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
+				IsOverrideDisabled: true,
 			}),
 		},
 	}

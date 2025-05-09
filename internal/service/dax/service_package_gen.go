@@ -37,28 +37,19 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{}),
 		},
 		{
 			Factory:  ResourceParameterGroup,
 			TypeName: "aws_dax_parameter_group",
 			Name:     "Parameter Group",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region:   unique.Make(inttypes.ServicePackageResourceRegion{}),
 		},
 		{
 			Factory:  ResourceSubnetGroup,
 			TypeName: "aws_dax_subnet_group",
 			Name:     "Subnet Group",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region:   unique.Make(inttypes.ServicePackageResourceRegion{}),
 		},
 	}
 }

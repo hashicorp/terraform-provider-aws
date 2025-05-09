@@ -23,17 +23,14 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			TypeName: "aws_ecr_lifecycle_policy_document",
 			Name:     "Lifecycle Policy Document",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
+				IsOverrideDisabled: true,
 			}),
 		},
 		{
 			Factory:  newRepositoriesDataSource,
 			TypeName: "aws_ecr_repositories",
 			Name:     "Repositories",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region:   unique.Make(inttypes.ServicePackageResourceRegion{}),
 		},
 	}
 }
@@ -44,10 +41,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newAccountSettingResource,
 			TypeName: "aws_ecr_account_setting",
 			Name:     "Account Setting",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region:   unique.Make(inttypes.ServicePackageResourceRegion{}),
 		},
 	}
 }
@@ -58,28 +52,19 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Factory:  dataSourceAuthorizationToken,
 			TypeName: "aws_ecr_authorization_token",
 			Name:     "Authorization Token",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region:   unique.Make(inttypes.ServicePackageResourceRegion{}),
 		},
 		{
 			Factory:  dataSourceImage,
 			TypeName: "aws_ecr_image",
 			Name:     "Image",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region:   unique.Make(inttypes.ServicePackageResourceRegion{}),
 		},
 		{
 			Factory:  dataSourcePullThroughCacheRule,
 			TypeName: "aws_ecr_pull_through_cache_rule",
 			Name:     "Pull Through Cache Rule",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region:   unique.Make(inttypes.ServicePackageResourceRegion{}),
 		},
 		{
 			Factory:  dataSourceRepository,
@@ -88,19 +73,13 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{}),
 		},
 		{
 			Factory:  dataSourceRepositoryCreationTemplate,
 			TypeName: "aws_ecr_repository_creation_template",
 			Name:     "Repository Creation Template",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region:   unique.Make(inttypes.ServicePackageResourceRegion{}),
 		},
 	}
 }
@@ -111,46 +90,31 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceLifecyclePolicy,
 			TypeName: "aws_ecr_lifecycle_policy",
 			Name:     "Lifecycle Policy",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region:   unique.Make(inttypes.ServicePackageResourceRegion{}),
 		},
 		{
 			Factory:  resourcePullThroughCacheRule,
 			TypeName: "aws_ecr_pull_through_cache_rule",
 			Name:     "Pull Through Cache Rule",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region:   unique.Make(inttypes.ServicePackageResourceRegion{}),
 		},
 		{
 			Factory:  resourceRegistryPolicy,
 			TypeName: "aws_ecr_registry_policy",
 			Name:     "Registry Policy",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region:   unique.Make(inttypes.ServicePackageResourceRegion{}),
 		},
 		{
 			Factory:  resourceRegistryScanningConfiguration,
 			TypeName: "aws_ecr_registry_scanning_configuration",
 			Name:     "Registry Scanning Configuration",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region:   unique.Make(inttypes.ServicePackageResourceRegion{}),
 		},
 		{
 			Factory:  resourceReplicationConfiguration,
 			TypeName: "aws_ecr_replication_configuration",
 			Name:     "Replication Configuration",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region:   unique.Make(inttypes.ServicePackageResourceRegion{}),
 		},
 		{
 			Factory:  resourceRepository,
@@ -159,28 +123,19 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{}),
 		},
 		{
 			Factory:  resourceRepositoryCreationTemplate,
 			TypeName: "aws_ecr_repository_creation_template",
 			Name:     "Repository Creation Template",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region:   unique.Make(inttypes.ServicePackageResourceRegion{}),
 		},
 		{
 			Factory:  resourceRepositoryPolicy,
 			TypeName: "aws_ecr_repository_policy",
 			Name:     "Repsitory Policy",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region:   unique.Make(inttypes.ServicePackageResourceRegion{}),
 		},
 	}
 }

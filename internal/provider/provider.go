@@ -340,9 +340,9 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 				continue
 			}
 
-			var isRegionOverrideEnabled bool
-			if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
-				isRegionOverrideEnabled = true
+			isRegionOverrideEnabled := true
+			if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideDisabled {
+				isRegionOverrideEnabled = false
 			}
 
 			var interceptors interceptorInvocations
@@ -371,7 +371,7 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 					}
 				}
 
-				if v.IsValidateOverrideInPartition {
+				if !v.DoNotValidateOverrideValue {
 					interceptors = append(interceptors, interceptorInvocation{
 						when:        Before,
 						why:         Read,
@@ -397,7 +397,7 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 				bootstrapContext: func(ctx context.Context, getAttribute getAttributeFunc, meta any) (context.Context, error) {
 					var overrideRegion string
 
-					if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled && getAttribute != nil {
+					if isRegionOverrideEnabled && getAttribute != nil {
 						if region, ok := getAttribute(names.AttrRegion); ok {
 							overrideRegion = region.(string)
 						}
@@ -446,9 +446,9 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 				continue
 			}
 
-			var isRegionOverrideEnabled bool
-			if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
-				isRegionOverrideEnabled = true
+			isRegionOverrideEnabled := true
+			if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideDisabled {
+				isRegionOverrideEnabled = false
 			}
 
 			var interceptors interceptorInvocations
@@ -481,7 +481,7 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 					}
 				}
 
-				if v.IsValidateOverrideInPartition {
+				if !v.DoNotValidateOverrideValue {
 					interceptors = append(interceptors, interceptorInvocation{
 						when:        Before,
 						why:         CustomizeDiff,
@@ -566,7 +566,7 @@ func validateResourceSchemas(ctx context.Context) error {
 			r := v.Factory()
 			s := r.SchemaMap()
 
-			if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
+			if v := v.Region; !tfunique.IsHandleNil(v) && !v.Value().IsOverrideDisabled {
 				if _, ok := s[names.AttrRegion]; ok {
 					errs = append(errs, fmt.Errorf("`%s` attribute is defined: %s data source", names.AttrRegion, typeName))
 					continue
@@ -593,7 +593,12 @@ func validateResourceSchemas(ctx context.Context) error {
 			r := v.Factory()
 			s := r.SchemaMap()
 
-			if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
+			isRegionOverrideEnabled := true
+			if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideDisabled {
+				isRegionOverrideEnabled = false
+			}
+
+			if isRegionOverrideEnabled {
 				if _, ok := s[names.AttrRegion]; ok {
 					errs = append(errs, fmt.Errorf("`%s` attribute is defined: %s resource", names.AttrRegion, typeName))
 					continue

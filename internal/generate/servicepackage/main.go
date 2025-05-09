@@ -117,13 +117,13 @@ func main() {
 }
 
 type ResourceDatum struct {
-	FactoryName                       string
-	Name                              string // Friendly name (without service name), e.g. "Topic", not "SNS Topic"
-	RegionOverrideEnabled             bool
-	TransparentTagging                bool
-	TagsIdentifierAttribute           string
-	TagsResourceType                  string
-	ValidateRegionOverrideInPartition bool
+	FactoryName                string
+	Name                       string // Friendly name (without service name), e.g. "Topic", not "SNS Topic"
+	RegionOverrideDisabled     bool
+	TransparentTagging         bool
+	TagsIdentifierAttribute    string
+	TagsResourceType           string
+	DoNotValidateOverrideValue bool
 }
 
 type ServiceDatum struct {
@@ -207,10 +207,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 	v.functionName = funcDecl.Name.Name
 
 	// Look first for per-resource annotations such as tagging and Region.
-	d := ResourceDatum{
-		RegionOverrideEnabled:             true,
-		ValidateRegionOverrideInPartition: true,
-	}
+	d := ResourceDatum{}
 
 	for _, line := range funcDecl.Doc.List {
 		line := line.Text
@@ -222,14 +219,14 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					if enabled, err := strconv.ParseBool(attr); err != nil {
 						v.errs = append(v.errs, fmt.Errorf("invalid Region/overrideEnabled value (%s): %s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
 					} else {
-						d.RegionOverrideEnabled = enabled
+						d.RegionOverrideDisabled = !enabled
 					}
 				}
 				if attr, ok := args.Keyword["validateOverrideInPartition"]; ok {
 					if validate, err := strconv.ParseBool(attr); err != nil {
 						v.errs = append(v.errs, fmt.Errorf("invalid Region/validateOverrideInPartition value (%s): %s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
 					} else {
-						d.ValidateRegionOverrideInPartition = validate
+						d.DoNotValidateOverrideValue = !validate
 					}
 				}
 			case "Tags":

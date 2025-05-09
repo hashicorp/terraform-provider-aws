@@ -27,7 +27,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "aws_cloudfrontkeyvaluestore_key",
 			Name:     "Key",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
+				IsOverrideDisabled: true,
 			}),
 		},
 	}
