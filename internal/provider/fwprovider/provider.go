@@ -544,7 +544,7 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 				interceptors = append(interceptors, resourceDefaultRegion())
 				interceptors = append(interceptors, resourceForceNewIfRegionChanges())
 				interceptors = append(interceptors, resourceSetRegionInState())
-				if res.Identity.ARN {
+				if res.Identity.Singleton || res.Identity.ARN {
 					interceptors = append(interceptors, resourceImportRegionNoDefault())
 				} else {
 					interceptors = append(interceptors, resourceImportRegion())
