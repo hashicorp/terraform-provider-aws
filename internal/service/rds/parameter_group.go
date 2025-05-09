@@ -7,7 +7,9 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"iter"
 	"log"
+	"slices"
 	"strings"
 	"time"
 
@@ -22,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfiters "github.com/hashicorp/terraform-provider-aws/internal/iters"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -493,4 +496,47 @@ func parameterGroupModifyChunk(all []types.Parameter, maxChunkSize int) ([]types
 	}
 
 	return modifyChunk, remainder
+}
+
+func parameterChunksForModify(parameters []types.Parameter, maxChunkSize int) iter.Seq[[]types.Parameter] {
+	// Parameters that must be chunked together.
+	// See https://github.com/aws-cloudformation/aws-cloudformation-resource-providers-rds/blob/master/aws-rds-dbclusterparametergroup/src/main/java/software/amazon/rds/dbclusterparametergroup/BaseHandlerStd.java
+	// and https://github.com/aws-cloudformation/aws-cloudformation-resource-providers-rds/blob/master/aws-rds-dbparametergroup/src/main/java/software/amazon/rds/dbparametergroup/BaseHandlerStd.java.
+	dependencies := [][]string{
+		{"collation_server", "character_set_server"},
+		{"gtid-mode", "enforce_gtid_consistency"},
+		{"password_encryption", "rds.accepted_password_auth_method"},
+		{"ssl_max_protocol_version", "ssl_min_protocol_version"},
+		{"rds.change_data_capture_streaming", "binlog_format"},
+		{"aurora_enhanced_binlog", "binlog_backup", "binlog_replication_globaldb"},
+	}
+	dependencyBins := make([][]types.Parameter, len(dependencies))
+	var immediate, pendingReboot []types.Parameter
+	var chunks []iter.Seq[[]types.Parameter]
+
+parameterLoop:
+	for _, parameter := range parameters {
+		parameterName := aws.ToString(parameter.ParameterName)
+
+		for i, dependency := range dependencies {
+			if slices.Contains(dependency, parameterName) {
+				dependencyBins[i] = append(dependencyBins[i], parameter)
+				continue parameterLoop
+			}
+		}
+
+		if parameter.ApplyMethod == types.ApplyMethodPendingReboot {
+			pendingReboot = append(pendingReboot, parameter)
+		} else {
+			immediate = append(immediate, parameter)
+		}
+	}
+
+	for _, dependencyBin := range dependencyBins {
+		chunks = append(chunks, slices.Chunk(dependencyBin, maxChunkSize))
+	}
+	chunks = append(chunks, slices.Chunk(immediate, maxChunkSize))
+	chunks = append(chunks, slices.Chunk(pendingReboot, maxChunkSize))
+
+	return tfiters.Concat(chunks...)
 }
