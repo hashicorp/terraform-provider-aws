@@ -539,10 +539,17 @@ func TestAccRDSClusterParameterGroup_charsetAndCollation(t *testing.T) {
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrFamily), knownvalue.StringExact("aurora-mysql8.0")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrParameter), knownvalue.SetSizeExact(28)),
 				},
 			},
 		},
@@ -1529,7 +1536,7 @@ resource "aws_rds_cluster_parameter_group" "test" {
   parameter {
     name         = "innodb_adaptive_hash_index"
     value        = var.innodb_adaptive_hash_index ? 1 : 0
-    apply_method = "immediate"
+    apply_method = "pending-reboot"
   }
 
   parameter {
@@ -1631,7 +1638,7 @@ resource "aws_rds_cluster_parameter_group" "test" {
   parameter {
     name         = "binlog_cache_size"
     value        = var.binlog_cache_size
-    apply_method = "immediate"
+    apply_method = "pending-reboot"
   }
 
   parameter {
