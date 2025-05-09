@@ -101,7 +101,7 @@ func (r *resourceRevisionExclusive) Schema(ctx context.Context, req resource.Sch
 			"finalized": schema.BoolAttribute{
 				Optional: true,
 			},
-			"force_destroy": schema.BoolAttribute{
+			names.AttrForceDestroy: schema.BoolAttribute{
 				Optional: true,
 			},
 			names.AttrID: framework.IDAttribute(),
@@ -803,11 +803,8 @@ func finalizeAsset(ctx context.Context, conn *dataexchange.Client, datasetId, re
 		Finalized:  aws.Bool(finalized),
 	}
 	_, err := conn.UpdateRevision(ctx, &input)
-	if err != nil {
-		return err
-	}
 
-	return nil
+	return err
 }
 
 type resourceRevisionExclusiveModel struct {
