@@ -124,6 +124,8 @@ type ResourceDatum struct {
 	TagsIdentifierAttribute           string
 	TagsResourceType                  string
 	ValidateRegionOverrideInPartition bool
+	ARNIdentity                       bool
+	SingletonIdentity                 bool
 }
 
 type ServiceDatum struct {
@@ -246,6 +248,12 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				if attr, ok := args.Keyword["resourceType"]; ok {
 					d.TagsResourceType = attr
 				}
+
+			case "ArnIdentity":
+				d.ARNIdentity = true
+
+			case "SingletonIdentity":
+				d.SingletonIdentity = true
 			}
 		}
 	}
@@ -379,7 +387,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				} else {
 					v.sdkResources[typeName] = d
 				}
-			case "Region", "Tags":
+			case "Region", "Tags", "ArnIdentity", "SingletonIdentity":
 				// Handled above.
 			case "Testing":
 				// Ignored.

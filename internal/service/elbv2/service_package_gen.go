@@ -154,6 +154,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
 			}),
+			Identity: inttypes.ARNIdentity(),
 		},
 		{
 			Factory:  resourceListener,
@@ -220,6 +221,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IsOverrideEnabled:             true,
 				IsValidateOverrideInPartition: true,
 			}),
+			Identity: inttypes.ARNIdentity(),
 		},
 		{
 			Factory:  resourceListener,

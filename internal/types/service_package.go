@@ -52,6 +52,7 @@ type ServicePackageFrameworkResource struct {
 	Name     string
 	Tags     unique.Handle[ServicePackageResourceTags]
 	Region   unique.Handle[ServicePackageResourceRegion]
+	Identity Identity
 }
 
 // ServicePackageSDKDataSource represents a Terraform Plugin SDK data source
@@ -72,4 +73,24 @@ type ServicePackageSDKResource struct {
 	Name     string
 	Tags     unique.Handle[ServicePackageResourceTags]
 	Region   unique.Handle[ServicePackageResourceRegion]
+	Identity Identity
+}
+
+type Identity struct {
+	Global    bool
+	Singleton bool
+	ARN       bool
+}
+
+func RegionalSingletonIdentity() Identity {
+	return Identity{
+		Global:    false,
+		Singleton: true,
+	}
+}
+
+func ARNIdentity() Identity {
+	return Identity{
+		ARN: true,
+	}
 }
