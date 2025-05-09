@@ -507,17 +507,9 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 					interceptor: forceNewIfRegionChanges(),
 				})
 				if resource.Identity.Singleton || resource.Identity.ARN {
-					interceptors = append(interceptors, interceptorInvocation{
-						when:        Before,
-						why:         Import,
-						interceptor: importRegionNoDefault(),
-					})
+					interceptors = append(interceptors, resourceImportRegionNoDefault())
 				} else {
-					interceptors = append(interceptors, interceptorInvocation{
-						when:        Before,
-						why:         Import,
-						interceptor: importRegion(),
-					})
+					interceptors = append(interceptors, resourceImportRegion())
 				}
 			}
 
