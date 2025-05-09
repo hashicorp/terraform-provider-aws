@@ -109,6 +109,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				IsValidateOverrideInPartition: {{ $value.ValidateRegionOverrideInPartition }},
 			}),
 	{{- end }}
+			{{- if $value.ARNIdentity }}
+				Identity: inttypes.ARNIdentity(),
+			{{- end }}
 		},
 {{- end }}
 	}
