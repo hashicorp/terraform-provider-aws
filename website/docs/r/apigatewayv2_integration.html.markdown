@@ -114,7 +114,9 @@ Valid values: `AWS` (supported only for WebSocket APIs), `AWS_PROXY`, `HTTP` (su
 * `content_handling_strategy` - (Optional) How to handle response payload content type conversions. Valid values: `CONVERT_TO_BINARY`, `CONVERT_TO_TEXT`. Supported only for WebSocket APIs.
 * `credentials_arn` - (Optional) Credentials required for the integration, if any.
 * `description` - (Optional) Description of the integration.
-* `integration_method` - (Optional) Integration's HTTP method. Must be specified if `integration_type` is not `MOCK`.
+* `integration_method` - (Optional) Integration's HTTP method. Must be specified if `integration_type` is not `MOCK`. 
+For `AWS_PROXY` integrations, the method must be `POST`. For WebSocket APIs with Lambda integrations, the method must also be `POST`. 
+See [AWS CloudFormation Documentation for AWS::ApiGatewayV2::Integration](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-apigatewayv2-integration.html) for more details.
 * `integration_subtype` - (Optional) AWS service action to invoke. Supported only for HTTP APIs when `integration_type` is `AWS_PROXY`. See the [AWS service integration reference](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-aws-services-reference.html) documentation for supported values. Must be between 1 and 128 characters in length.
 * `integration_uri` - (Optional) URI of the Lambda function for a Lambda proxy integration, when `integration_type` is `AWS_PROXY`.
 For an `HTTP` integration, specify a fully-qualified URL. For an HTTP API private integration, specify the ARN of an Application Load Balancer listener, Network Load Balancer listener, or AWS Cloud Map service.
