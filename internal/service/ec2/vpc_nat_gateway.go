@@ -257,6 +257,54 @@ func resourceNATGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta 
 				}
 			}
 		}
+
+		if d.HasChange("secondary_private_ip_address_count") {
+			o, n := d.GetChange("secondary_private_ip_address_count")
+			os, ns := o.(int), n.(int)
+
+			if ns > os {
+				input := &ec2.AssignPrivateNatGatewayAddressInput{
+					NatGatewayId:          aws.String(d.Id()),
+					PrivateIpAddressCount: aws.Int32(int32(ns - os)),
+				}
+
+				_, err := conn.AssignPrivateNatGatewayAddress(ctx, input)
+
+				for countID := os; countID < ns; countID++ {
+					if _, err := waitNATGatewayAddressCountIDAssigned(ctx, conn, d.Id(), countID, d.Timeout(schema.TimeoutUpdate)); err != nil {
+						return sdkdiag.AppendErrorf(diags, "waiting for EC2 NAT Gateway (%s) private IP address assign: %s", d.Id(), err)
+					}
+				}
+
+				if err != nil {
+					return sdkdiag.AppendErrorf(diags, "assigning EC2 NAT Gateway (%s) private IP addresses: %s", d.Id(), err)
+				}
+
+			}
+
+			if ns < os {
+				OldPrivateIpAddresses := flex.ExpandStringValueSet(d.Get("secondary_private_ip_addresses").(*schema.Set))
+
+				input := &ec2.UnassignPrivateNatGatewayAddressInput{
+					NatGatewayId:       aws.String(d.Id()),
+					PrivateIpAddresses: OldPrivateIpAddresses[:os-ns],
+				}
+
+				_, err := conn.UnassignPrivateNatGatewayAddress(ctx, input)
+
+				if err != nil {
+					return sdkdiag.AppendErrorf(diags, "unassigning EC2 NAT Gateway%s) private IP addresses: %s", d.Id(), err)
+				}
+
+				for _, privateIP := range OldPrivateIpAddresses[:os-ns] {
+					if _, err := waitNATGatewayAddressUnassigned(ctx, conn, d.Id(), privateIP, d.Timeout(schema.TimeoutUpdate)); err != nil {
+						return sdkdiag.AppendErrorf(diags, "waiting for EC2 NAT Gateway (%s) private IP address (%s) unassign: %s", d.Id(), privateIP, err)
+					}
+				}
+			}
+
+		}
+
 	case awstypes.ConnectivityTypePublic:
 		if d.HasChanges("secondary_allocation_ids") {
 			o, n := d.GetChange("secondary_allocation_ids")
@@ -363,14 +411,6 @@ func resourceNATGatewayCustomizeDiff(ctx context.Context, diff *schema.ResourceD
 
 		if v, ok := diff.GetOk("secondary_allocation_ids"); ok && v.(*schema.Set).Len() > 0 {
 			return fmt.Errorf(`secondary_allocation_ids is not supported with connectivity_type = "%s"`, connectivityType)
-		}
-
-		if diff.Id() != "" && diff.HasChange("secondary_private_ip_address_count") {
-			if v := diff.GetRawConfig().GetAttr("secondary_private_ip_address_count"); v.IsKnown() && !v.IsNull() {
-				if err := diff.ForceNew("secondary_private_ip_address_count"); err != nil {
-					return fmt.Errorf("setting secondary_private_ip_address_count to ForceNew: %s", err)
-				}
-			}
 		}
 
 		if diff.Id() != "" && diff.HasChange("secondary_private_ip_addresses") {

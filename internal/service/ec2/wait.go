@@ -1249,6 +1249,27 @@ func waitNATGatewayAddressAssigned(ctx context.Context, conn *ec2.Client, natGat
 	return nil, err
 }
 
+func waitNATGatewayAddressCountIDAssigned(ctx context.Context, conn *ec2.Client, natGatewayID string, countID int, timeout time.Duration) (*awstypes.NatGatewayAddress, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.NatGatewayAddressStatusAssigning),
+		Target:  enum.Slice(awstypes.NatGatewayAddressStatusSucceeded),
+		Refresh: statusNATGatewayAddressByNATGatewayIDAndCountID(ctx, conn, natGatewayID, countID),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.NatGatewayAddress); ok {
+		if output.Status == awstypes.NatGatewayAddressStatusFailed {
+			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureMessage)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
 func waitNATGatewayAddressAssociated(ctx context.Context, conn *ec2.Client, natGatewayID, allocationID string, timeout time.Duration) (*awstypes.NatGatewayAddress, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.NatGatewayAddressStatusAssociating),
