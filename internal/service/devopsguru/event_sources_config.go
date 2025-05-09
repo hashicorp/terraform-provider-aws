@@ -5,10 +5,12 @@ package devopsguru
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/service/devopsguru"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/devopsguru/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -35,7 +37,6 @@ const (
 
 type eventSourcesConfigResource struct {
 	framework.ResourceWithModel[eventSourcesConfigResourceModel]
-	framework.WithImportByID
 }
 
 func (r *eventSourcesConfigResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -187,4 +188,28 @@ type eventSourcesData struct {
 
 type amazonCodeGuruProfilerData struct {
 	Status fwtypes.StringEnum[awstypes.EventSourceOptInStatus] `tfsdk:"status"`
+}
+
+func (r *eventSourcesConfigResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	var region types.String
+	response.Diagnostics.Append(response.State.GetAttribute(ctx, path.Root("region"), &region)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	if !region.IsNull() {
+		if region.ValueString() != request.ID {
+			response.Diagnostics.AddError(
+				"Invalid Resource Import ID Value",
+				fmt.Sprintf("The region passed for import, %q, does not match the region %q in the ID", region.ValueString(), request.ID),
+			)
+			return
+		}
+	} else {
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("region"), request.ID)...)
+	}
+
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), request.ID)...)
+
+	return
 }
