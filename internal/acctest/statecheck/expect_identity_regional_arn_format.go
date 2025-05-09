@@ -62,7 +62,7 @@ func (e expectIdentityRegionalARNFormatCheck) CheckState(ctx context.Context, re
 	}
 }
 
-func ExpectIdentityRegionalARNFormat(ctx context.Context, resourceAddress string, arnService, arnFormat string) statecheck.StateCheck {
+func ExpectIdentityRegionalARNFormat(resourceAddress string, arnService, arnFormat string) statecheck.StateCheck {
 	return expectIdentityRegionalARNFormatCheck{
 		base:       NewBase(resourceAddress),
 		arnService: arnService,
@@ -73,7 +73,7 @@ func ExpectIdentityRegionalARNFormat(ctx context.Context, resourceAddress string
 	}
 }
 
-func ExpectIdentityRegionalARNAlternateRegionFormat(ctx context.Context, resourceAddress string, arnService, arnFormat string) statecheck.StateCheck {
+func ExpectIdentityRegionalARNAlternateRegionFormat(resourceAddress string, arnService, arnFormat string) statecheck.StateCheck {
 	return expectIdentityRegionalARNFormatCheck{
 		base:       NewBase(resourceAddress),
 		arnService: arnService,

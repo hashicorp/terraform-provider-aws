@@ -98,7 +98,7 @@ func TestAccBatchJobQueue_Identity_Basic(t *testing.T) {
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
-					tfstatecheck.ExpectIdentityRegionalARNFormat(ctx, resourceName, "batch", "job-queue/{name}"),
+					tfstatecheck.ExpectIdentityRegionalARNFormat(resourceName, "batch", "job-queue/{name}"),
 				},
 			},
 			{
@@ -153,7 +153,7 @@ func TestAccBatchJobQueue_Identity_RegionOverride(t *testing.T) {
 				Config: testAccJobQueueConfig_regionOverride(rName),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
-					tfstatecheck.ExpectIdentityRegionalARNAlternateRegionFormat(ctx, resourceName, "batch", "job-queue/{name}"),
+					tfstatecheck.ExpectIdentityRegionalARNAlternateRegionFormat(resourceName, "batch", "job-queue/{name}"),
 				},
 			},
 			{
