@@ -11,6 +11,7 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/eks"
 	"github.com/aws/aws-sdk-go-v2/service/eks/types"
+	"github.com/google/go-cmp/cmp"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -114,9 +115,10 @@ func TestAccEKSAddon_addonVersion(t *testing.T) {
 	var addon1, addon2 types.Addon
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_addon.test"
-	addonName := "vpc-cni"
-	addonVersion1 := "v1.17.1-eksbuild.1"
-	addonVersion2 := "v1.18.5-eksbuild.1"
+	addonName := "kube-proxy"
+	addonVersion1 := "v1.29.13-eksbuild.3"
+	addonVersion2 := "v1.30.9-eksbuild.3"
+	addonVersion3 := "v1.32.0-eksbuild.2"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t); testAccPreCheckAddon(ctx, t) },
@@ -125,7 +127,7 @@ func TestAccEKSAddon_addonVersion(t *testing.T) {
 		CheckDestroy:             testAccCheckAddonDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAddonConfig_version(rName, addonName, addonVersion1),
+				Config: testAccAddonConfig_version(rName, addonName, addonVersion1, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAddonExists(ctx, resourceName, &addon1),
 					resource.TestCheckResourceAttr(resourceName, "addon_version", addonVersion1),
@@ -135,14 +137,18 @@ func TestAccEKSAddon_addonVersion(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"resolve_conflicts_on_create", "resolve_conflicts_on_update"},
+				ImportStateVerifyIgnore: []string{"resolve_conflicts_on_create", "resolve_conflicts_on_update", "incremental_version_update"},
 			},
 			{
-				Config: testAccAddonConfig_version(rName, addonName, addonVersion2),
+				Config: testAccAddonConfig_version(rName, addonName, addonVersion2, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAddonExists(ctx, resourceName, &addon2),
 					resource.TestCheckResourceAttr(resourceName, "addon_version", addonVersion2),
 				),
+			},
+			{
+				Config:      testAccAddonConfig_version(rName, addonName, addonVersion3, true),
+				ExpectError: regexache.MustCompile("incremental_version_update is enabled: minor version upgrade must be done one version at a time"),
 			},
 		},
 	})
@@ -593,16 +599,17 @@ resource "aws_eks_addon" "test" {
 `, rName, addonName))
 }
 
-func testAccAddonConfig_version(rName, addonName, addonVersion string) string {
+func testAccAddonConfig_version(rName, addonName, addonVersion string, incremental bool) string {
 	return acctest.ConfigCompose(testAccAddonConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_addon" "test" {
   cluster_name                = aws_eks_cluster.test.name
   addon_name                  = %[2]q
   addon_version               = %[3]q
+  incremental_version_update  = %[4]t
   resolve_conflicts_on_create = "OVERWRITE"
   resolve_conflicts_on_update = "OVERWRITE"
 }
-`, rName, addonName, addonVersion))
+`, rName, addonName, addonVersion, incremental))
 }
 
 func testAccAddonConfig_preserve(rName, addonName string) string {
@@ -744,4 +751,52 @@ resource "aws_eks_addon" "test" {
   resolve_conflicts    = %[5]q
 }
 `, rName, addonName, addonVersion, configurationValues, resolveConflicts))
+}
+
+func TestParseAddonVersion(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		Name     string
+		Input    string
+		Expected tfeks.EksAddonVersion
+		Error    bool
+	}{
+		{
+			Name:  "valid",
+			Input: "v1.13.4-eksbuild.1",
+			Expected: tfeks.EksAddonVersion{
+				Major: 1,
+				Minor: 13,
+				Patch: 4,
+				Build: 1,
+				Raw:   "v1.13.4-eksbuild.1",
+			},
+			Error: false,
+		},
+		{
+			Name:     "invalid",
+			Input:    "v1.13.4-eksbuild",
+			Expected: tfeks.EksAddonVersion{},
+			Error:    true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.Name, func(t *testing.T) {
+			t.Parallel()
+
+			got, err := tfeks.ParseAddonVersion(tc.Input)
+			if err != nil && !tc.Error {
+				t.Errorf("got error (%s), expected no error", err)
+			}
+			if err == nil && tc.Error {
+				t.Errorf("got (%#v) and no error, expected error", got)
+			}
+
+			if diff := cmp.Diff(got, tc.Expected); diff != "" {
+				t.Errorf("unexpected diff (+expected, -got): %s", diff)
+			}
+		})
+	}
 }
