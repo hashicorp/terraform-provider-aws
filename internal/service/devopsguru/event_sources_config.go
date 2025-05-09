@@ -210,6 +210,4 @@ func (r *eventSourcesConfigResource) ImportState(ctx context.Context, request re
 	}
 
 	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), request.ID)...)
-
-	return
 }

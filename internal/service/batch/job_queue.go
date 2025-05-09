@@ -570,5 +570,4 @@ func (r *jobQueueResource) ImportState(ctx context.Context, request resource.Imp
 
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrARN), request, response)
 	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), request.ID)...)
-	return
 }
