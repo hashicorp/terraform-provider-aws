@@ -43,6 +43,7 @@ func TestAccOrganizations_serial(t *testing.T) {
 			"ParentId":        testAccAccount_ParentID,
 			"Tags":            testAccAccount_Tags,
 			"GovCloud":        testAccAccount_govCloud,
+			"AccountUpdate":   testAccAccount_AccountUpdate,
 		},
 		"OrganizationalUnit": {
 			acctest.CtBasic:                      testAccOrganizationalUnit_basic,
