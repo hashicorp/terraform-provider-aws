@@ -14,4 +14,5 @@ var (
 	FindRuleGroupNamespaceByARN    = findRuleGroupNamespaceByARN
 	FindScraperByID                = findScraperByID
 	FindWorkspaceByID              = findWorkspaceByID
+	FindWorkspaceConfigurationByID = findWorkspaceConfigurationByID
 )
