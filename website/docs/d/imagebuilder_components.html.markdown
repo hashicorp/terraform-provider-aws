@@ -25,6 +25,8 @@ data "aws_imagebuilder_components" "example" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `owner` - (Optional) Owner of the image recipes. Valid values are `Self`, `Shared`, `Amazon` and `ThirdParty`. Defaults to `Self`.
 * `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
 

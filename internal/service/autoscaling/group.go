@@ -98,6 +98,48 @@ func resourceGroup() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
+			"capacity_reservation_specification": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"capacity_reservation_preference": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.CapacityReservationPreference](),
+						},
+						"capacity_reservation_target": {
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"capacity_reservation_ids": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+										},
+										ConflictsWith: []string{"capacity_reservation_specification.0.capacity_reservation_target.0.capacity_reservation_resource_group_arns"},
+									},
+									"capacity_reservation_resource_group_arns": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+											ValidateFunc: verify.ValidARN,
+										},
+										ConflictsWith: []string{"capacity_reservation_specification.0.capacity_reservation_target.0.capacity_reservation_ids"},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"context": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -1044,11 +1086,11 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	startTime := time.Now()
 
 	asgName := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
-	inputCASG := &autoscaling.CreateAutoScalingGroupInput{
+	inputCASG := autoscaling.CreateAutoScalingGroupInput{
 		AutoScalingGroupName:             aws.String(asgName),
 		NewInstancesProtectedFromScaleIn: aws.Bool(d.Get("protect_from_scale_in").(bool)),
 	}
-	inputUASG := &autoscaling.UpdateAutoScalingGroupInput{
+	inputUASG := autoscaling.UpdateAutoScalingGroupInput{
 		AutoScalingGroupName: aws.String(asgName),
 	}
 
@@ -1096,6 +1138,10 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	if v, ok := d.GetOk("capacity_rebalance"); ok {
 		inputCASG.CapacityRebalance = aws.Bool(v.(bool))
+	}
+
+	if v, ok := d.GetOk("capacity_reservation_specification"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		inputCASG.CapacityReservationSpecification = expandCapacityReservationSpecification(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("context"); ok {
@@ -1172,7 +1218,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
 		func() (any, error) {
-			return conn.CreateAutoScalingGroup(ctx, inputCASG)
+			return conn.CreateAutoScalingGroup(ctx, &inputCASG)
 		},
 		// ValidationError: You must use a valid fully-formed launch template. Value (tf-acc-test-6643732652421074386) for parameter iamInstanceProfile.name is invalid. Invalid IAM Instance Profile name
 		errCodeValidationError, "Invalid IAM Instance Profile")
@@ -1199,7 +1245,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 			}
 		}
 
-		_, err = conn.UpdateAutoScalingGroup(ctx, inputUASG)
+		_, err = conn.UpdateAutoScalingGroup(ctx, &inputUASG)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting Auto Scaling Group (%s) initial capacity: %s", d.Id(), err)
@@ -1238,12 +1284,12 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	if v, ok := d.GetOk("suspended_processes"); ok && v.(*schema.Set).Len() > 0 {
-		input := &autoscaling.SuspendProcessesInput{
+		input := autoscaling.SuspendProcessesInput{
 			AutoScalingGroupName: aws.String(d.Id()),
 			ScalingProcesses:     flex.ExpandStringValueSet(v.(*schema.Set)),
 		}
 
-		_, err := conn.SuspendProcesses(ctx, input)
+		_, err := conn.SuspendProcesses(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "suspending Auto Scaling Group (%s) scaling processes: %s", d.Id(), err)
@@ -1251,13 +1297,13 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	if v, ok := d.GetOk("enabled_metrics"); ok && v.(*schema.Set).Len() > 0 {
-		input := &autoscaling.EnableMetricsCollectionInput{
+		input := autoscaling.EnableMetricsCollectionInput{
 			AutoScalingGroupName: aws.String(d.Id()),
 			Granularity:          aws.String(d.Get("metrics_granularity").(string)),
 			Metrics:              flex.ExpandStringValueSet(v.(*schema.Set)),
 		}
 
-		_, err := conn.EnableMetricsCollection(ctx, input)
+		_, err := conn.EnableMetricsCollection(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "enabling Auto Scaling Group (%s) metrics collection: %s", d.Id(), err)
@@ -1296,6 +1342,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	d.Set(names.AttrAvailabilityZones, g.AvailabilityZones)
 	d.Set("availability_zone_distribution", []any{flattenAvailabilityZoneDistribution(g.AvailabilityZoneDistribution)})
 	d.Set("capacity_rebalance", g.CapacityRebalance)
+	d.Set("capacity_reservation_specification", []any{flattenCapacityReservationSpecification(g.CapacityReservationSpecification)})
 	d.Set("context", g.Context)
 	d.Set("default_cooldown", g.DefaultCooldown)
 	d.Set("default_instance_warmup", g.DefaultInstanceWarmup)
@@ -1390,7 +1437,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 		"traffic_source",
 		"warm_pool",
 	) {
-		input := &autoscaling.UpdateAutoScalingGroupInput{
+		input := autoscaling.UpdateAutoScalingGroupInput{
 			AutoScalingGroupName:             aws.String(d.Id()),
 			NewInstancesProtectedFromScaleIn: aws.Bool(d.Get("protect_from_scale_in").(bool)),
 		}
@@ -1414,6 +1461,12 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 				input.CapacityRebalance = aws.Bool(v.(bool))
 			} else {
 				input.CapacityRebalance = aws.Bool(false)
+			}
+		}
+
+		if d.HasChange("capacity_reservation_specification") {
+			if v, ok := d.GetOk("capacity_reservation_specification"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.CapacityReservationSpecification = expandCapacityReservationSpecification(v.([]any)[0].(map[string]any))
 			}
 		}
 
@@ -1510,7 +1563,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 
 		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate),
 			func() (any, error) {
-				return conn.UpdateAutoScalingGroup(ctx, input)
+				return conn.UpdateAutoScalingGroup(ctx, &input)
 			},
 			errCodeOperationError, errCodeUpdateASG, errCodeValidationError)
 
@@ -1536,12 +1589,12 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 		// API only supports adding or removing 10 at a time.
 		batchSize := 10
 		for chunk := range slices.Chunk(expandTrafficSourceIdentifiers(os.Difference(ns).List()), batchSize) {
-			input := &autoscaling.DetachTrafficSourcesInput{
+			input := autoscaling.DetachTrafficSourcesInput{
 				AutoScalingGroupName: aws.String(d.Id()),
 				TrafficSources:       chunk,
 			}
 
-			_, err := conn.DetachTrafficSources(ctx, input)
+			_, err := conn.DetachTrafficSources(ctx, &input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "detaching Auto Scaling Group (%s) traffic sources: %s", d.Id(), err)
@@ -1553,12 +1606,12 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 		}
 
 		for chunk := range slices.Chunk(expandTrafficSourceIdentifiers(ns.Difference(os).List()), batchSize) {
-			input := &autoscaling.AttachTrafficSourcesInput{
+			input := autoscaling.AttachTrafficSourcesInput{
 				AutoScalingGroupName: aws.String(d.Id()),
 				TrafficSources:       chunk,
 			}
 
-			_, err := conn.AttachTrafficSources(ctx, input)
+			_, err := conn.AttachTrafficSources(ctx, &input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "attaching Auto Scaling Group (%s) traffic sources: %s", d.Id(), err)
@@ -1577,12 +1630,12 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 		// API only supports adding or removing 10 at a time.
 		batchSize := 10
 		for chunk := range slices.Chunk(flex.ExpandStringValueSet(os.Difference(ns)), batchSize) {
-			input := &autoscaling.DetachLoadBalancersInput{
+			input := autoscaling.DetachLoadBalancersInput{
 				AutoScalingGroupName: aws.String(d.Id()),
 				LoadBalancerNames:    chunk,
 			}
 
-			_, err := conn.DetachLoadBalancers(ctx, input)
+			_, err := conn.DetachLoadBalancers(ctx, &input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "detaching Auto Scaling Group (%s) load balancers: %s", d.Id(), err)
@@ -1594,12 +1647,12 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 		}
 
 		for chunk := range slices.Chunk(flex.ExpandStringValueSet(ns.Difference(os)), batchSize) {
-			input := &autoscaling.AttachLoadBalancersInput{
+			input := autoscaling.AttachLoadBalancersInput{
 				AutoScalingGroupName: aws.String(d.Id()),
 				LoadBalancerNames:    chunk,
 			}
 
-			_, err := conn.AttachLoadBalancers(ctx, input)
+			_, err := conn.AttachLoadBalancers(ctx, &input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "attaching Auto Scaling Group (%s) load balancers: %s", d.Id(), err)
@@ -1618,12 +1671,12 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 		// API only supports adding or removing 10 at a time.
 		batchSize := 10
 		for chunk := range slices.Chunk(flex.ExpandStringValueSet(os.Difference(ns)), batchSize) {
-			input := &autoscaling.DetachLoadBalancerTargetGroupsInput{
+			input := autoscaling.DetachLoadBalancerTargetGroupsInput{
 				AutoScalingGroupName: aws.String(d.Id()),
 				TargetGroupARNs:      chunk,
 			}
 
-			_, err := conn.DetachLoadBalancerTargetGroups(ctx, input)
+			_, err := conn.DetachLoadBalancerTargetGroups(ctx, &input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "detaching Auto Scaling Group (%s) target groups: %s", d.Id(), err)
@@ -1635,12 +1688,12 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 		}
 
 		for chunk := range slices.Chunk(flex.ExpandStringValueSet(ns.Difference(os)), batchSize) {
-			input := &autoscaling.AttachLoadBalancerTargetGroupsInput{
+			input := autoscaling.AttachLoadBalancerTargetGroupsInput{
 				AutoScalingGroupName: aws.String(d.Id()),
 				TargetGroupARNs:      chunk,
 			}
 
-			_, err := conn.AttachLoadBalancerTargetGroups(ctx, input)
+			_, err := conn.AttachLoadBalancerTargetGroups(ctx, &input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "attaching Auto Scaling Group (%s) target groups: %s", d.Id(), err)
@@ -1742,12 +1795,12 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 		os, ns := o.(*schema.Set), n.(*schema.Set)
 
 		if disableMetrics := os.Difference(ns); disableMetrics.Len() != 0 {
-			input := &autoscaling.DisableMetricsCollectionInput{
+			input := autoscaling.DisableMetricsCollectionInput{
 				AutoScalingGroupName: aws.String(d.Id()),
 				Metrics:              flex.ExpandStringValueSet(disableMetrics),
 			}
 
-			_, err := conn.DisableMetricsCollection(ctx, input)
+			_, err := conn.DisableMetricsCollection(ctx, &input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "disabling Auto Scaling Group (%s) metrics collection: %s", d.Id(), err)
@@ -1755,13 +1808,13 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 		}
 
 		if enableMetrics := ns.Difference(os); enableMetrics.Len() != 0 {
-			input := &autoscaling.EnableMetricsCollectionInput{
+			input := autoscaling.EnableMetricsCollectionInput{
 				AutoScalingGroupName: aws.String(d.Id()),
 				Granularity:          aws.String(d.Get("metrics_granularity").(string)),
 				Metrics:              flex.ExpandStringValueSet(enableMetrics),
 			}
 
-			_, err := conn.EnableMetricsCollection(ctx, input)
+			_, err := conn.EnableMetricsCollection(ctx, &input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "enabling Auto Scaling Group (%s) metrics collection: %s", d.Id(), err)
@@ -1774,12 +1827,12 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 		os, ns := o.(*schema.Set), n.(*schema.Set)
 
 		if resumeProcesses := os.Difference(ns); resumeProcesses.Len() != 0 {
-			input := &autoscaling.ResumeProcessesInput{
+			input := autoscaling.ResumeProcessesInput{
 				AutoScalingGroupName: aws.String(d.Id()),
 				ScalingProcesses:     flex.ExpandStringValueSet(resumeProcesses),
 			}
 
-			_, err := conn.ResumeProcesses(ctx, input)
+			_, err := conn.ResumeProcesses(ctx, &input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "resuming Auto Scaling Group (%s) scaling processes: %s", d.Id(), err)
@@ -1787,12 +1840,12 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 		}
 
 		if suspendProcesses := ns.Difference(os); suspendProcesses.Len() != 0 {
-			input := &autoscaling.SuspendProcessesInput{
+			input := autoscaling.SuspendProcessesInput{
 				AutoScalingGroupName: aws.String(d.Id()),
 				ScalingProcesses:     flex.ExpandStringValueSet(suspendProcesses),
 			}
 
-			_, err := conn.SuspendProcesses(ctx, input)
+			_, err := conn.SuspendProcesses(ctx, &input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "suspending Auto Scaling Group (%s) scaling processes: %s", d.Id(), err)
@@ -1837,12 +1890,13 @@ func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	log.Printf("[DEBUG] Deleting Auto Scaling Group: %s", d.Id())
+	input := autoscaling.DeleteAutoScalingGroupInput{
+		AutoScalingGroupName: aws.String(d.Id()),
+		ForceDelete:          aws.Bool(forceDeleteGroup),
+	}
 	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete),
 		func() (any, error) {
-			return conn.DeleteAutoScalingGroup(ctx, &autoscaling.DeleteAutoScalingGroupInput{
-				AutoScalingGroupName: aws.String(d.Id()),
-				ForceDelete:          aws.Bool(forceDeleteGroup),
-			})
+			return conn.DeleteAutoScalingGroup(ctx, &input)
 		},
 		errCodeResourceInUseFault, errCodeScalingActivityInProgressFault)
 
@@ -1867,7 +1921,7 @@ func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 }
 
 func drainGroup(ctx context.Context, conn *autoscaling.Client, name string, instances []awstypes.Instance, timeout time.Duration) error {
-	input := &autoscaling.UpdateAutoScalingGroupInput{
+	input := autoscaling.UpdateAutoScalingGroupInput{
 		AutoScalingGroupName: aws.String(name),
 		DesiredCapacity:      aws.Int32(0),
 		MinSize:              aws.Int32(0),
@@ -1875,7 +1929,7 @@ func drainGroup(ctx context.Context, conn *autoscaling.Client, name string, inst
 	}
 
 	log.Printf("[DEBUG] Draining Auto Scaling Group: %s", name)
-	if _, err := conn.UpdateAutoScalingGroup(ctx, input); err != nil {
+	if _, err := conn.UpdateAutoScalingGroup(ctx, &input); err != nil {
 		return fmt.Errorf("setting Auto Scaling Group (%s) capacity to 0: %w", name, err)
 	}
 
@@ -1896,13 +1950,13 @@ func drainGroup(ctx context.Context, conn *autoscaling.Client, name string, inst
 	}
 	const batchSize = 50 // API limit.
 	for chunk := range slices.Chunk(instanceIDs, batchSize) {
-		input := &autoscaling.SetInstanceProtectionInput{
+		input := autoscaling.SetInstanceProtectionInput{
 			AutoScalingGroupName: aws.String(name),
 			InstanceIds:          chunk,
 			ProtectedFromScaleIn: aws.Bool(false),
 		}
 
-		_, err := conn.SetInstanceProtection(ctx, input)
+		_, err := conn.SetInstanceProtection(ctx, &input)
 
 		// Ignore ValidationError when instance is already fully terminated
 		// and is not a part of Auto Scaling Group anymore.
@@ -1930,12 +1984,13 @@ func deleteWarmPool(ctx context.Context, conn *autoscaling.Client, name string, 
 	}
 
 	log.Printf("[DEBUG] Deleting Auto Scaling Warm Pool: %s", name)
+	input := autoscaling.DeleteWarmPoolInput{
+		AutoScalingGroupName: aws.String(name),
+		ForceDelete:          aws.Bool(force),
+	}
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout,
 		func() (any, error) {
-			return conn.DeleteWarmPool(ctx, &autoscaling.DeleteWarmPoolInput{
-				AutoScalingGroupName: aws.String(name),
-				ForceDelete:          aws.Bool(force),
-			})
+			return conn.DeleteWarmPool(ctx, &input)
 		},
 		errCodeResourceInUseFault, errCodeScalingActivityInProgressFault)
 
@@ -1955,14 +2010,14 @@ func deleteWarmPool(ctx context.Context, conn *autoscaling.Client, name string, 
 }
 
 func drainWarmPool(ctx context.Context, conn *autoscaling.Client, name string, timeout time.Duration) error {
-	input := &autoscaling.PutWarmPoolInput{
+	input := autoscaling.PutWarmPoolInput{
 		AutoScalingGroupName:     aws.String(name),
 		MaxGroupPreparedCapacity: aws.Int32(0),
 		MinSize:                  aws.Int32(0),
 	}
 
 	log.Printf("[DEBUG] Draining Auto Scaling Warm Pool: %s", name)
-	if _, err := conn.PutWarmPool(ctx, input); err != nil {
+	if _, err := conn.PutWarmPool(ctx, &input); err != nil {
 		return fmt.Errorf("setting Auto Scaling Warm Pool (%s) capacity to 0: %w", name, err)
 	}
 
@@ -1977,11 +2032,11 @@ func findELBInstanceStates(ctx context.Context, conn *elasticloadbalancing.Clien
 	instanceStates := make(map[string]map[string]string)
 
 	for _, lbName := range g.LoadBalancerNames {
-		input := &elasticloadbalancing.DescribeInstanceHealthInput{
+		input := elasticloadbalancing.DescribeInstanceHealthInput{
 			LoadBalancerName: aws.String(lbName),
 		}
 
-		output, err := conn.DescribeInstanceHealth(ctx, input)
+		output, err := conn.DescribeInstanceHealth(ctx, &input)
 
 		if err != nil {
 			return nil, fmt.Errorf("reading load balancer (%s) instance health: %w", lbName, err)
@@ -2010,11 +2065,11 @@ func findELBV2InstanceStates(ctx context.Context, conn *elasticloadbalancingv2.C
 	instanceStates := make(map[string]map[string]string)
 
 	for _, targetGroupARN := range g.TargetGroupARNs {
-		input := &elasticloadbalancingv2.DescribeTargetHealthInput{
+		input := elasticloadbalancingv2.DescribeTargetHealthInput{
 			TargetGroupArn: aws.String(targetGroupARN),
 		}
 
-		output, err := conn.DescribeTargetHealth(ctx, input)
+		output, err := conn.DescribeTargetHealth(ctx, &input)
 
 		if err != nil {
 			return nil, fmt.Errorf("reading target group (%s) instance health: %w", targetGroupARN, err)
@@ -2071,11 +2126,11 @@ func findGroups(ctx context.Context, conn *autoscaling.Client, input *autoscalin
 }
 
 func findGroupByName(ctx context.Context, conn *autoscaling.Client, name string) (*awstypes.AutoScalingGroup, error) {
-	input := &autoscaling.DescribeAutoScalingGroupsInput{
+	input := autoscaling.DescribeAutoScalingGroupsInput{
 		AutoScalingGroupNames: []string{name},
 	}
 
-	output, err := findGroup(ctx, conn, input)
+	output, err := findGroup(ctx, conn, &input)
 
 	if err != nil {
 		return nil, err
@@ -2126,12 +2181,12 @@ func findInstanceRefreshes(ctx context.Context, conn *autoscaling.Client, input 
 }
 
 func findLoadBalancerStates(ctx context.Context, conn *autoscaling.Client, name string) ([]awstypes.LoadBalancerState, error) {
-	input := &autoscaling.DescribeLoadBalancersInput{
+	input := autoscaling.DescribeLoadBalancersInput{
 		AutoScalingGroupName: aws.String(name),
 	}
 	var output []awstypes.LoadBalancerState
 
-	pages := autoscaling.NewDescribeLoadBalancersPaginator(conn, input)
+	pages := autoscaling.NewDescribeLoadBalancersPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -2153,12 +2208,12 @@ func findLoadBalancerStates(ctx context.Context, conn *autoscaling.Client, name 
 }
 
 func findLoadBalancerTargetGroupStates(ctx context.Context, conn *autoscaling.Client, name string) ([]awstypes.LoadBalancerTargetGroupState, error) {
-	input := &autoscaling.DescribeLoadBalancerTargetGroupsInput{
+	input := autoscaling.DescribeLoadBalancerTargetGroupsInput{
 		AutoScalingGroupName: aws.String(name),
 	}
 	var output []awstypes.LoadBalancerTargetGroupState
 
-	pages := autoscaling.NewDescribeLoadBalancerTargetGroupsPaginator(conn, input)
+	pages := autoscaling.NewDescribeLoadBalancerTargetGroupsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -2208,11 +2263,11 @@ func findScalingActivities(ctx context.Context, conn *autoscaling.Client, input 
 }
 
 func findScalingActivitiesByName(ctx context.Context, conn *autoscaling.Client, name string, startTime time.Time) ([]awstypes.Activity, error) {
-	input := &autoscaling.DescribeScalingActivitiesInput{
+	input := autoscaling.DescribeScalingActivitiesInput{
 		AutoScalingGroupName: aws.String(name),
 	}
 
-	return findScalingActivities(ctx, conn, input, startTime)
+	return findScalingActivities(ctx, conn, &input, startTime)
 }
 
 func findTrafficSourceStates(ctx context.Context, conn *autoscaling.Client, input *autoscaling.DescribeTrafficSourcesInput) ([]awstypes.TrafficSourceState, error) {
@@ -2240,14 +2295,14 @@ func findTrafficSourceStates(ctx context.Context, conn *autoscaling.Client, inpu
 }
 
 func findTrafficSourceStatesByTwoPartKey(ctx context.Context, conn *autoscaling.Client, asgName, trafficSourceType string) ([]awstypes.TrafficSourceState, error) {
-	input := &autoscaling.DescribeTrafficSourcesInput{
+	input := autoscaling.DescribeTrafficSourcesInput{
 		AutoScalingGroupName: aws.String(asgName),
 	}
 	if trafficSourceType != "" {
 		input.TrafficSourceType = aws.String(trafficSourceType)
 	}
 
-	return findTrafficSourceStates(ctx, conn, input)
+	return findTrafficSourceStates(ctx, conn, &input)
 }
 
 func findWarmPool(ctx context.Context, conn *autoscaling.Client, input *autoscaling.DescribeWarmPoolInput) (*autoscaling.DescribeWarmPoolOutput, error) {
@@ -2283,11 +2338,11 @@ func findWarmPool(ctx context.Context, conn *autoscaling.Client, input *autoscal
 }
 
 func findWarmPoolByName(ctx context.Context, conn *autoscaling.Client, name string) (*autoscaling.DescribeWarmPoolOutput, error) {
-	input := &autoscaling.DescribeWarmPoolInput{
+	input := autoscaling.DescribeWarmPoolInput{
 		AutoScalingGroupName: aws.String(name),
 	}
 
-	return findWarmPool(ctx, conn, input)
+	return findWarmPool(ctx, conn, &input)
 }
 
 func statusGroupCapacity(ctx context.Context, conn *autoscaling.Client, elbconn *elasticloadbalancing.Client, elbv2conn *elasticloadbalancingv2.Client, name string, cb func(int, int) error, startTime time.Time, ignoreFailedScalingActivities bool) retry.StateRefreshFunc {
@@ -2413,12 +2468,12 @@ func statusGroupInstanceCount(ctx context.Context, conn *autoscaling.Client, nam
 
 func statusInstanceRefresh(ctx context.Context, conn *autoscaling.Client, name, id string) retry.StateRefreshFunc {
 	return func() (any, string, error) {
-		input := &autoscaling.DescribeInstanceRefreshesInput{
+		input := autoscaling.DescribeInstanceRefreshesInput{
 			AutoScalingGroupName: aws.String(name),
 			InstanceRefreshIds:   []string{id},
 		}
 
-		output, err := findInstanceRefresh(ctx, conn, input)
+		output, err := findInstanceRefresh(ctx, conn, &input)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -2693,6 +2748,8 @@ func waitInstanceRefreshCancelled(ctx context.Context, conn *autoscaling.Client,
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.InstanceRefresh); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+
 		return output, err
 	}
 
@@ -3412,6 +3469,42 @@ func expandAvailabilityZoneDistribution(tfMap map[string]any) *awstypes.Availabi
 	return apiObject
 }
 
+func expandCapacityReservationSpecification(tfMap map[string]any) *awstypes.CapacityReservationSpecification {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.CapacityReservationSpecification{}
+
+	if v, ok := tfMap["capacity_reservation_preference"].(string); ok && v != "" {
+		apiObject.CapacityReservationPreference = awstypes.CapacityReservationPreference(v)
+	}
+
+	if v, ok := tfMap["capacity_reservation_target"].([]any); ok && len(v) > 0 {
+		apiObject.CapacityReservationTarget = expandCapacityReservationTarget(v[0].(map[string]any))
+	}
+
+	return apiObject
+}
+
+func expandCapacityReservationTarget(tfMap map[string]any) *awstypes.CapacityReservationTarget {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.CapacityReservationTarget{}
+
+	if v, ok := tfMap["capacity_reservation_ids"].([]any); ok && len(v) > 0 {
+		apiObject.CapacityReservationIds = flex.ExpandStringValueList(v)
+	}
+
+	if v, ok := tfMap["capacity_reservation_resource_group_arns"].([]any); ok && len(v) > 0 {
+		apiObject.CapacityReservationResourceGroupArns = flex.ExpandStringValueList(v)
+	}
+
+	return apiObject
+}
+
 func expandTrafficSourceIdentifier(tfMap map[string]any) awstypes.TrafficSourceIdentifier {
 	apiObject := awstypes.TrafficSourceIdentifier{}
 
@@ -3453,8 +3546,44 @@ func flattenAvailabilityZoneDistribution(apiObject *awstypes.AvailabilityZoneDis
 	}
 
 	tfMap := map[string]any{}
+
 	if v := apiObject.CapacityDistributionStrategy; v != "" {
-		tfMap["capacity_distribution_strategy"] = string(v)
+		tfMap["capacity_distribution_strategy"] = v
+	}
+
+	return tfMap
+}
+
+func flattenCapacityReservationSpecification(apiObject *awstypes.CapacityReservationSpecification) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+	if v := apiObject.CapacityReservationPreference; v != "" {
+		tfMap["capacity_reservation_preference"] = v
+	}
+
+	if v := apiObject.CapacityReservationTarget; v != nil {
+		tfMap["capacity_reservation_target"] = []any{flattenCapacityReservationTarget(v)}
+	}
+
+	return tfMap
+}
+
+func flattenCapacityReservationTarget(apiObject *awstypes.CapacityReservationTarget) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.CapacityReservationIds; len(v) > 0 {
+		tfMap["capacity_reservation_ids"] = v
+	}
+
+	if v := apiObject.CapacityReservationResourceGroupArns; len(v) > 0 {
+		tfMap["capacity_reservation_resource_group_arns"] = v
 	}
 
 	return tfMap

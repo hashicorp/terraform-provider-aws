@@ -22,7 +22,7 @@ resource "aws_ec2_instance_metadata_defaults" "enforce-imdsv2" {
 
 ## Argument Reference
 
-This resource supports the following arguments.
+This resource supports the following arguments:
 
 * `http_endpoint` - (Optional) Whether the metadata service is available. Can be `"enabled"`, `"disabled"`, or `"no-preference"`. Default: `"no-preference"`.
 * `http_tokens` - (Optional) Whether the metadata service requires session tokens, also referred to as _Instance Metadata Service Version 2 (IMDSv2)_. Can be `"optional"`, `"required"`, or `"no-preference"`. Default: `"no-preference"`.

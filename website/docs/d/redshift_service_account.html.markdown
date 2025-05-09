@@ -62,6 +62,8 @@ resource "aws_s3_bucket_policy" "allow_audit_logging" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `region` - (Optional) Name of the region whose AWS Redshift account ID is desired.
 Defaults to the region from the AWS provider configuration.
 

@@ -12,7 +12,7 @@ The App Mesh Virtual Router data source allows details of an App Mesh Virtual Se
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_appmesh_virtual_router" "test" {
   name      = "example-router-name"
   mesh_name = "example-mesh-name"
