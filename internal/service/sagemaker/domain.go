@@ -1744,6 +1744,8 @@ func expandDomainSettingsUpdate(l []any) *awstypes.DomainSettingsForUpdate {
 
 	if v, ok := m[names.AttrSecurityGroupIDs].(*schema.Set); ok && v.Len() > 0 {
 		config.SecurityGroupIds = flex.ExpandStringValueSet(v)
+	} else {
+		config.SecurityGroupIds = []string{}
 	}
 
 	if v, ok := m["r_studio_server_pro_domain_settings"].([]any); ok && len(v) > 0 {
