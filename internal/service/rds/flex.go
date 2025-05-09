@@ -4,7 +4,6 @@
 package rds
 
 import (
-	"slices"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -35,7 +34,7 @@ func flattenManagedMasterUserSecret(apiObject *types.MasterUserSecret) map[strin
 }
 
 func expandParameters(tfList []any) []types.Parameter {
-	var characterSetsAndCollation, others []types.Parameter
+	var apiObjects []types.Parameter
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]any)
@@ -43,13 +42,12 @@ func expandParameters(tfList []any) []types.Parameter {
 			continue
 		}
 
-		parameterName := strings.ToLower(tfMap[names.AttrName].(string))
-		if parameterName == "" {
+		if tfMap[names.AttrName].(string) == "" {
 			continue
 		}
 
 		apiObject := types.Parameter{
-			ParameterName:  aws.String(parameterName),
+			ParameterName:  aws.String(strings.ToLower(tfMap[names.AttrName].(string))),
 			ParameterValue: aws.String(tfMap[names.AttrValue].(string)),
 		}
 
@@ -57,15 +55,10 @@ func expandParameters(tfList []any) []types.Parameter {
 			apiObject.ApplyMethod = types.ApplyMethod(strings.ToLower(v))
 		}
 
-		// Keep character set and collation parameters together.
-		if strings.HasPrefix(parameterName, "character_set_") || strings.HasPrefix(parameterName, "collation_") {
-			characterSetsAndCollation = append(characterSetsAndCollation, apiObject)
-		} else {
-			others = append(others, apiObject)
-		}
+		apiObjects = append(apiObjects, apiObject)
 	}
 
-	return slices.Concat(characterSetsAndCollation, others)
+	return apiObjects
 }
 
 func flattenParameters(apiObject []types.Parameter) []any {
