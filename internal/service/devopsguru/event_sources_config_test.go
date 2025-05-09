@@ -10,8 +10,12 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/devopsguru"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/devopsguru/types"
+	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -42,6 +46,40 @@ func testAccEventSourcesConfig_basic(t *testing.T) {
 						names.AttrStatus: "ENABLED",
 					}),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccDevOpsGuruEventSourcesConfig_Identity_Basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	var cfg devopsguru.DescribeEventSourcesConfigOutput
+	resourceName := "aws_devopsguru_event_sources_config.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.DevOpsGuruEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.DevOpsGuruServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEventSourcesConfigDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEventSourcesConfigConfig_basic(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEventSourcesConfigExists(ctx, resourceName, &cfg),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrRegion), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+				},
 			},
 			{
 				ResourceName:      resourceName,
