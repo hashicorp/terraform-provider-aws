@@ -157,6 +157,14 @@ func importRegion() importInterceptor {
 	})
 }
 
+func resourceImportRegion() interceptorInvocation {
+	return interceptorInvocation{
+		when:        Before,
+		why:         Import,
+		interceptor: importRegion(),
+	}
+}
+
 // importRegionNoDefault does not provide a default value for `region`. This should be used when the import ID is or contains a region.
 func importRegionNoDefault() importInterceptor {
 	return interceptorFunc2[*schema.ResourceData, []*schema.ResourceData, error](func(ctx context.Context, opts importInterceptorOptions) ([]*schema.ResourceData, error) {
@@ -176,4 +184,12 @@ func importRegionNoDefault() importInterceptor {
 
 		return []*schema.ResourceData{d}, nil
 	})
+}
+
+func resourceImportRegionNoDefault() interceptorInvocation {
+	return interceptorInvocation{
+		when:        Before,
+		why:         Import,
+		interceptor: importRegionNoDefault(),
+	}
 }
