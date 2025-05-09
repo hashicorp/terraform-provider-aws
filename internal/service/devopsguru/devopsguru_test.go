@@ -17,9 +17,10 @@ func TestAccDevOpsGuru_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"EventSourcesConfig": {
-			acctest.CtBasic:      testAccEventSourcesConfig_basic,
-			acctest.CtDisappears: testAccEventSourcesConfig_disappears,
-			"Identity_Basic":     testAccDevOpsGuruEventSourcesConfig_Identity_Basic,
+			acctest.CtBasic:           testAccEventSourcesConfig_basic,
+			acctest.CtDisappears:      testAccEventSourcesConfig_disappears,
+			"Identity_Basic":          testAccDevOpsGuruEventSourcesConfig_Identity_Basic,
+			"Identity_RegionOverride": testAccDevOpsGuruEventSourcesConfig_Identity_RegionOverride,
 		},
 		// A maxiumum of 2 notification channels can be configured at once, so
 		// serialize tests for safety.
