@@ -186,6 +186,31 @@ func resourceCluster() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
+			"manage_master_user_password": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"master_user_secret": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"kms_key_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"secret_arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"secret_status": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"master_password": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -488,8 +513,11 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 	} else {
 		// Secondary DocDB clusters part of a global cluster will not supply the master_password
 		if _, ok := d.GetOk("global_cluster_identifier"); !ok {
-			if _, ok := d.GetOk("master_password"); !ok && masterPasswordWO == "" {
-				return sdkdiag.AppendErrorf(diags, `provider.aws: aws_docdb_cluster: %s: "master_password", "master_password_wo": required field is not set`, identifier)
+			// If manage_master_user_password is true, we don't need master_password
+			if manageMasterPassword, ok := d.GetOk("manage_master_user_password"); !ok || !manageMasterPassword.(bool) {
+				if _, ok := d.GetOk("master_password"); !ok && masterPasswordWO == "" {
+					return sdkdiag.AppendErrorf(diags, `provider.aws: aws_docdb_cluster: %s: "master_password", "master_password_wo": required field is not set`, identifier)
+				}
 			}
 		}
 
@@ -540,12 +568,16 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 			input.KmsKeyId = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("master_password"); ok {
-			input.MasterUserPassword = aws.String(v.(string))
-		}
+		if v, ok := d.GetOk("manage_master_user_password"); ok && v.(bool) {
+			input.ManageMasterUserPassword = aws.Bool(v.(bool))
+		} else {
+			if v, ok := d.GetOk("master_password"); ok {
+				input.MasterUserPassword = aws.String(v.(string))
+			}
 
-		if masterPasswordWO != "" {
-			input.MasterUserPassword = aws.String(masterPasswordWO)
+			if masterPasswordWO != "" {
+				input.MasterUserPassword = aws.String(masterPasswordWO)
+			}
 		}
 
 		if v, ok := d.GetOk(names.AttrPort); ok {
@@ -663,6 +695,20 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 	d.Set(names.AttrVPCSecurityGroupIDs, securityGroupIDs)
 
+	// Set master_user_secret if exists
+	if dbc.MasterUserSecret != nil {
+		masterUserSecret := []map[string]interface{}{
+			{
+				"kms_key_id":    aws.ToString(dbc.MasterUserSecret.KmsKeyId),
+				"secret_arn":    aws.ToString(dbc.MasterUserSecret.SecretArn),
+				"secret_status": aws.ToString(dbc.MasterUserSecret.SecretStatus),
+			},
+		}
+		if err := d.Set("master_user_secret", masterUserSecret); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting master_user_secret: %s", err)
+		}
+	}
+
 	return diags
 }
 
@@ -698,6 +744,10 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 
 		if d.HasChange(names.AttrEngineVersion) {
 			input.EngineVersion = aws.String(d.Get(names.AttrEngineVersion).(string))
+		}
+
+		if d.HasChange("manage_master_user_password") {
+			input.ManageMasterUserPassword = aws.Bool(d.Get("manage_master_user_password").(bool))
 		}
 
 		if d.HasChange("master_password") {
