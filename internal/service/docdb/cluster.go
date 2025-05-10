@@ -696,9 +696,9 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	if dbc.MasterUserSecret != nil {
 		masterUserSecret := []map[string]interface{}{
 			{
-				"kms_key_id":     aws.ToString(dbc.MasterUserSecret.KmsKeyId),
-				"secret_arn":     aws.ToString(dbc.MasterUserSecret.SecretArn),
-				"secret_status":  aws.ToString(dbc.MasterUserSecret.SecretStatus),
+				"kms_key_id":    aws.ToString(dbc.MasterUserSecret.KmsKeyId),
+				"secret_arn":    aws.ToString(dbc.MasterUserSecret.SecretArn),
+				"secret_status": aws.ToString(dbc.MasterUserSecret.SecretStatus),
 			},
 		}
 		if err := d.Set("master_user_secret", masterUserSecret); err != nil {
