@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
+	"golang.org/x/mod/semver"
 )
 
 // @SDKResource("aws_sagemaker_mlflow_tracking_server", name="Mlflow Tracking Server")
@@ -144,7 +145,7 @@ func resourceMlflowTrackingServerRead(ctx context.Context, d *schema.ResourceDat
 	d.Set(names.AttrARN, output.TrackingServerArn)
 	d.Set("artifact_store_uri", output.ArtifactStoreUri)
 	d.Set(names.AttrRoleARN, output.RoleArn)
-	d.Set("mlflow_version", output.MlflowVersion)
+	d.Set("mlflow_version", normalizeMlflowVersion(aws.ToString(output.MlflowVersion)))
 	d.Set("tracking_server_size", output.TrackingServerSize)
 	d.Set("weekly_maintenance_window_start", output.WeeklyMaintenanceWindowStart)
 	d.Set("tracking_server_url", output.TrackingServerUrl)
@@ -245,4 +246,11 @@ func findMlflowTrackingServerByName(ctx context.Context, conn *sagemaker.Client,
 	}
 
 	return output, nil
+}
+
+// normalizeMlflowVersion normalizes the MLflow version to major/minor
+// format (e.g., "1.26" instead of "1.26.0").
+func normalizeMlflowVersion(version string) string {
+	majorMinor := semver.MajorMinor("v" + version)
+	return majorMinor[1:]
 }
