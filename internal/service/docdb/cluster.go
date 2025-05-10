@@ -215,13 +215,13 @@ func resourceCluster() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Sensitive:     true,
-				ConflictsWith: []string{"master_password_wo", "manage_master_user_password"},
+				ConflictsWith: []string{"master_password_wo"},
 			},
 			"master_password_wo": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				WriteOnly:     true,
-				ConflictsWith: []string{"master_password", "manage_master_user_password"},
+				ConflictsWith: []string{"master_password"},
 				RequiredWith:  []string{"master_password_wo_version"},
 			},
 			"master_password_wo_version": {
@@ -513,8 +513,11 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 	} else {
 		// Secondary DocDB clusters part of a global cluster will not supply the master_password
 		if _, ok := d.GetOk("global_cluster_identifier"); !ok {
-			if _, ok := d.GetOk("master_password"); !ok && masterPasswordWO == "" {
-				return sdkdiag.AppendErrorf(diags, `provider.aws: aws_docdb_cluster: %s: "master_password", "master_password_wo": required field is not set`, identifier)
+			// If manage_master_user_password is true, we don't need master_password
+			if manageMasterPassword, ok := d.GetOk("manage_master_user_password"); !ok || !manageMasterPassword.(bool) {
+				if _, ok := d.GetOk("master_password"); !ok && masterPasswordWO == "" {
+					return sdkdiag.AppendErrorf(diags, `provider.aws: aws_docdb_cluster: %s: "master_password", "master_password_wo": required field is not set`, identifier)
+				}
 			}
 		}
 

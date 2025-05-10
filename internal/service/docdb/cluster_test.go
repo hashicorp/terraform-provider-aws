@@ -1623,10 +1623,10 @@ resource "aws_docdb_cluster" "test" {
     data.aws_availability_zones.available.names[2]
   ]
 
-  master_username            = "tfacctest"
+  master_username             = "tfacctest"
   manage_master_user_password = %[2]t
   %[3]s
-  skip_final_snapshot        = true
+  skip_final_snapshot         = true
 }
 `, rName, manageMasterUserPassword, passwordConfig))
 }
