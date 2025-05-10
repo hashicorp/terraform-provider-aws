@@ -92,7 +92,7 @@ func resourceTable() *schema.Resource {
 				return nil
 			},
 			func(_ context.Context, diff *schema.ResourceDiff, meta any) error {
-				if diff.Id() != "" && (diff.HasChange("stream_enabled") || diff.HasChange("stream_view_type")) {
+				if diff.Id() != "" && (diff.HasChange("stream_enabled") || (diff.Get("stream_view_type") != "" && diff.HasChange("stream_view_type"))) {
 					if err := diff.SetNewComputed(names.AttrStreamARN); err != nil {
 						return fmt.Errorf("setting stream_arn to computed: %s", err)
 					}
