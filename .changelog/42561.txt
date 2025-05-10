@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_dynamodb_table: Fix to properly handle `stream_arn` attribute when `stream_view_type` argument changes.
+```
