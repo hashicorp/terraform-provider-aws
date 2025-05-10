@@ -49,6 +49,7 @@ var (
 	FindDBProxyByName                          = findDBProxyByName
 	FindDBProxyEndpointByTwoPartKey            = findDBProxyEndpointByTwoPartKey
 	FindDBProxyTargetByFourPartKey             = findDBProxyTargetByFourPartKey
+	FindDBProxyAuthItemByArn                   = findDBProxyAuthItemByArn
 	FindDBShardGroupByID                       = findDBShardGroupByID
 	FindDBSnapshotByID                         = findDBSnapshotByID
 	FindDBSubnetGroupByName                    = findDBSubnetGroupByName
