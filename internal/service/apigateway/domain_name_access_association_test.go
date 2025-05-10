@@ -129,6 +129,34 @@ func testAccDomainNameAccessAssociationConfig_basic(rName, domainName, key, cert
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
+resource "aws_api_gateway_domain_name_access_association" "test" {
+  access_association_source      = aws_vpc_endpoint.test.id
+  access_association_source_type = "VPCE"
+  domain_name_arn                = aws_api_gateway_domain_name.test.arn
+}
+
+resource "aws_api_gateway_domain_name" "test" {
+  domain_name     = %[2]q
+  certificate_arn = aws_acm_certificate.test.arn
+
+  endpoint_configuration {
+    types = ["PRIVATE"]
+  }
+}
+
+resource "aws_vpc_endpoint" "test" {
+  private_dns_enabled = false
+  security_group_ids  = [aws_default_security_group.test.id]
+  service_name        = "com.amazonaws.${data.aws_region.current.name}.execute-api"
+  subnet_ids          = [aws_subnet.test.id]
+  vpc_endpoint_type   = "Interface"
+  vpc_id              = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
 data "aws_region" "current" {}
 
 resource "aws_vpc" "test" {
@@ -155,37 +183,9 @@ resource "aws_subnet" "test" {
   }
 }
 
-resource "aws_vpc_endpoint" "test" {
-  private_dns_enabled = false
-  security_group_ids  = [aws_default_security_group.test.id]
-  service_name        = "com.amazonaws.${data.aws_region.current.name}.execute-api"
-  subnet_ids          = [aws_subnet.test.id]
-  vpc_endpoint_type   = "Interface"
-  vpc_id              = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
 resource "aws_acm_certificate" "test" {
   certificate_body = "%[3]s"
   private_key      = "%[4]s"
-}
-
-resource "aws_api_gateway_domain_name" "test" {
-  domain_name     = %[2]q
-  certificate_arn = aws_acm_certificate.test.arn
-
-  endpoint_configuration {
-    types = ["PRIVATE"]
-  }
-}
-
-resource "aws_api_gateway_domain_name_access_association" "test" {
-  access_association_source      = aws_vpc_endpoint.test.id
-  access_association_source_type = "VPCE"
-  domain_name_arn                = aws_api_gateway_domain_name.test.arn
 }
 `, rName, domainName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)))
 }
