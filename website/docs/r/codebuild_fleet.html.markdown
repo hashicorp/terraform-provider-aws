@@ -55,6 +55,7 @@ The following arguments are optional:
 * `fleet_service_role` - (Optional) The service role associated with the compute fleet.
 * `image_id` - (Optional) The Amazon Machine Image (AMI) of the compute fleet.
 * `overflow_behavior` - (Optional) Overflow behavior for compute fleet. Valid values: `ON_DEMAND`, `QUEUE`.
+* `proxy_configuration` - (Optional) Configuration block for proxy settings that CodeBuild fleet uses to access external resources. See [`proxy_configuration`](#proxy_configuration) below.
 * `scaling_configuration` - (Optional) Configuration block. This option is only valid when your overflow behavior is `QUEUE`. See [`scaling_configuration`](#scaling_configuration) below.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpc_config` - (Optional) Configuration block. See [`vpc_config`](#vpc_config) below.
@@ -82,6 +83,17 @@ The following arguments are optional:
 * `security_group_ids` - (Required) A list of one or more security groups IDs in your Amazon VPC.
 * `subnets` - (Required) A list of one or more subnet IDs in your Amazon VPC.
 * `vpc_id` - (Required) The ID of the Amazon VPC.
+
+### proxy_configuration
+
+* `default_behavior` - (Required) The default behavior of the proxy. Valid values: `ALLOW_ALL`, `DENY_ALL`.
+* `ordered_proxy_rules` - (Optional) Configuration block for a list of proxy rules. Detailed below.
+
+#### proxy_configuration: ordered_proxy_rules
+
+* `effect` - (Required) The effect of the proxy rule. Valid values: `ALLOW`, `DENY`.
+* `entities` - (Required) A list of entities to apply the proxy rule to. For `DOMAIN` type, enter fully qualified domain names such as `example.com` or patterns such as `*.example.org`. For `IP` type, enter IP addresses or CIDR blocks such as `192.168.1.0/24`.
+* `type` - (Required) The type of the proxy rule. Valid values: `DOMAIN`, `IP`.
 
 ## Attribute Reference
 
