@@ -11,13 +11,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccAccountPrimaryContactDataSource_basic(t *testing.T) {
+func testAccPrimaryContactDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	resourceName := "aws_account_primary_contact.test"
 	dataSourceName := "data.aws_account_primary_contact.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AccountServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -45,13 +44,12 @@ func TestAccAccountPrimaryContactDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccAccountPrimaryContactDataSource_accountID(t *testing.T) {
+func testAccPrimaryContactDataSource_accountID(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	resourceName := "aws_account_primary_contact.test"
 	dataSourceName := "data.aws_account_primary_contact.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
