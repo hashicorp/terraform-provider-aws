@@ -335,8 +335,8 @@ func testAccDomainConfigurationConfig_securityPolicy(rName, rootDomain, domain, 
 resource "aws_iot_domain_configuration" "test" {
   depends_on = [aws_acm_certificate_validation.test]
 
-	authentication_type = %[5]q
-	application_protocol = %[6]q
+  authentication_type  = %[5]q
+  application_protocol = %[6]q
 
   authorizer_config {
     allow_authorizer_override = %[4]t
