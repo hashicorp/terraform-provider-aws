@@ -46,11 +46,13 @@ func resourceDomainConfiguration() *schema.Resource {
 			"application_protocol": {
 				Type:             schema.TypeString,
 				Optional:         true,
+				Computed:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.ApplicationProtocol](),
 			},
 			"authentication_type": {
 				Type:             schema.TypeString,
 				Optional:         true,
+				Computed:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.AuthenticationType](),
 			},
 			"authorizer_config": {
