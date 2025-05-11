@@ -1341,6 +1341,7 @@ func validExperimentTemplateActionTargetKey() schema.SchemaValidateFunc {
 		"Tasks",
 		"TransitGateways",
 		"Volumes",
+		"Functions",
 	}
 
 	return validation.All(
