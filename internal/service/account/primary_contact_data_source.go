@@ -9,27 +9,22 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkDataSource("aws_account_primary_contact", name="Primary Contact")
-func newDataSourcePrimaryContact(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourcePrimaryContact{}, nil
+func newPrimaryContactDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &primaryContactDataSOurce{}, nil
 }
 
-const (
-	DSNamePrimaryContact = "Primary Contact Data Source"
-)
-
-type dataSourcePrimaryContact struct {
+type primaryContactDataSOurce struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *dataSourcePrimaryContact) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (d *primaryContactDataSOurce) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrAccountID: schema.StringAttribute{
 				Optional: true,
@@ -75,38 +70,33 @@ func (d *dataSourcePrimaryContact) Schema(ctx context.Context, req datasource.Sc
 	}
 }
 
-func (d *dataSourcePrimaryContact) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *primaryContactDataSOurce) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+	var data primaryContactDataSourceModel
+	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := d.Meta().AccountClient(ctx)
 
-	var data dataSourcePrimaryContactModel
-	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	output, err := findContactInformation(ctx, conn, fwflex.StringValueFromFramework(ctx, data.AccountID))
 
-	if data.AccountId.IsNull() {
-		data.AccountId = types.StringValue("")
-	}
-
-	output, err := findContactInformation(ctx, conn, data.AccountId.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Account, create.ErrActionReading, DSNamePrimaryContact, data.AccountId.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError("reading Account Primary Contact", err.Error())
+
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, output, &data)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-type dataSourcePrimaryContactModel struct {
-	AccountId        types.String `tfsdk:"account_id"`
+type primaryContactDataSourceModel struct {
+	AccountID        types.String `tfsdk:"account_id"`
 	AddressLine1     types.String `tfsdk:"address_line_1"`
 	AddressLine2     types.String `tfsdk:"address_line_2"`
 	AddressLine3     types.String `tfsdk:"address_line_3"`
@@ -118,5 +108,5 @@ type dataSourcePrimaryContactModel struct {
 	PhoneNumber      types.String `tfsdk:"phone_number"`
 	PostalCode       types.String `tfsdk:"postal_code"`
 	StateOrRegion    types.String `tfsdk:"state_or_region"`
-	WebsiteUrl       types.String `tfsdk:"website_url"`
+	WebsiteURL       types.String `tfsdk:"website_url"`
 }
