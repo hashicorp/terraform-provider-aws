@@ -689,9 +689,9 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	d.Set(names.AttrKMSKeyID, dbc.KmsKeyId)
 	if v := dbc.MasterUserSecret; v != nil {
 		tfList := []any{map[string]any{
-			names.AttrKMSKeyID:    aws.ToString(v.KmsKeyId),
-			"secret_arn":    aws.ToString(v.SecretArn),
-			"secret_status": aws.ToString(v.SecretStatus),
+			names.AttrKMSKeyID: aws.ToString(v.KmsKeyId),
+			"secret_arn":       aws.ToString(v.SecretArn),
+			"secret_status":    aws.ToString(v.SecretStatus),
 		}}
 		if err := d.Set("master_user_secret", tfList); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting master_user_secret: %s", err)
