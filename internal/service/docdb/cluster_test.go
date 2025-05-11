@@ -1581,7 +1581,7 @@ resource "aws_docdb_cluster" "test" {
 `, rName, storageType))
 }
 
-func testAccClusterConfig_passwordWriteOnly(rName, password string, passworVersion int) string {
+func testAccClusterConfig_passwordWriteOnly(rName, password string, passwordVersion int) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_docdb_cluster" "test" {
   cluster_identifier = %[1]q
@@ -1602,7 +1602,7 @@ resource "aws_docdb_cluster" "test" {
     "profiler",
   ]
 }
-`, rName, password, passworVersion))
+`, rName, password, passwordVersion))
 }
 
 func testAccClusterConfig_manageMasterUserPassword(rName string, manageMasterUserPassword bool) string {
