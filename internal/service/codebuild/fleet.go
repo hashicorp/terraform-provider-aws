@@ -188,6 +188,43 @@ func resourceFleet() *schema.Resource {
 					},
 				},
 			},
+			"proxy_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"default_behavior": {
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[types.FleetProxyRuleBehavior](),
+						},
+						"ordered_proxy_rules": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"effect": {
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[types.FleetProxyRuleEffectType](),
+									},
+									"entities": {
+										Type:     schema.TypeList,
+										Required: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+									"type": {
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[types.FleetProxyRuleType](),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			names.AttrVPCConfig: {
@@ -261,6 +298,10 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	if v, ok := d.GetOk(names.AttrVPCConfig); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		input.VpcConfig = expandVPCConfig(v.([]any)[0].(map[string]any))
+	}
+
+	if v, ok := d.GetOk("proxy_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.ProxyConfiguration = expandProxyConfiguration(v.([]any)[0].(map[string]any))
 	}
 
 	// InvalidInputException: CodeBuild is not authorized to perform
@@ -338,6 +379,10 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta any) di
 		return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionSetting, resNameFleet, d.Id(), err)
 	}
 
+	if err := d.Set("proxy_configuration", flattenProxyConfiguration(fleet.ProxyConfiguration)); err != nil {
+		return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionSetting, resNameFleet, d.Id(), err)
+	}
+
 	setTagsOut(ctx, fleet.Tags)
 
 	return diags
@@ -395,6 +440,12 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 	if d.HasChange(names.AttrVPCConfig) {
 		if v, ok := d.GetOk(names.AttrVPCConfig); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 			input.VpcConfig = expandVPCConfig(v.([]any)[0].(map[string]any))
+		}
+	}
+
+	if d.HasChange("proxy_configuration") {
+		if v, ok := d.GetOk("proxy_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.ProxyConfiguration = expandProxyConfiguration(v.([]any)[0].(map[string]any))
 		}
 	}
 
@@ -766,6 +817,133 @@ func flattenStatus(apiObject *types.FleetStatus) map[string]any {
 
 	if v := apiObject.StatusCode; v != "" {
 		tfMap[names.AttrStatusCode] = v
+	}
+
+	return tfMap
+}
+
+func expandProxyConfiguration(tfMap map[string]any) *types.ProxyConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.ProxyConfiguration{}
+
+	if v, ok := tfMap["default_behavior"].(string); ok && v != "" {
+		apiObject.DefaultBehavior = types.FleetProxyRuleBehavior(v)
+	}
+
+	if v, ok := tfMap["ordered_proxy_rules"].([]any); ok && len(v) > 0 {
+		apiObject.OrderedProxyRules = expandFleetProxyRules(v)
+	}
+
+	return apiObject
+}
+
+func expandFleetProxyRules(tfList []any) []types.FleetProxyRule {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []types.FleetProxyRule
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		apiObject := expandFleetProxyRule(tfMap)
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, *apiObject)
+	}
+	return apiObjects
+}
+
+func expandFleetProxyRule(tfMap map[string]any) *types.FleetProxyRule {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.FleetProxyRule{}
+
+	if v, ok := tfMap["effect"].(string); ok && v != "" {
+		apiObject.Effect = types.FleetProxyRuleEffectType(v)
+	}
+
+	if v, ok := tfMap["entities"].([]any); ok && len(v) > 0 {
+		var entities []string
+		for _, e := range v {
+			if entity, ok := e.(string); ok {
+				entities = append(entities, entity)
+			}
+		}
+		apiObject.Entities = entities
+	}
+
+	if v, ok := tfMap["type"].(string); ok && v != "" {
+		apiObject.Type = types.FleetProxyRuleType(v)
+	}
+
+	return apiObject
+}
+
+func flattenProxyConfiguration(apiObject *types.ProxyConfiguration) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.DefaultBehavior; v != "" {
+		tfMap["default_behavior"] = v
+	}
+
+	if v := apiObject.OrderedProxyRules; v != nil {
+		tfMap["ordered_proxy_rules"] = flattenFleetProxyRules(v)
+	}
+
+	if len(tfMap) == 0 {
+		return nil
+	}
+
+	return []any{tfMap}
+}
+
+func flattenFleetProxyRules(apiObjects []types.FleetProxyRule) []any {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []any
+
+	for _, apiObject := range apiObjects {
+		tfList = append(tfList, flattenFleetProxyRule(&apiObject))
+	}
+
+	return tfList
+}
+
+func flattenFleetProxyRule(apiObject *types.FleetProxyRule) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.Effect; v != "" {
+		tfMap["effect"] = v
+	}
+
+	if v := apiObject.Entities; v != nil {
+		tfMap["entities"] = v
+	}
+
+	if v := apiObject.Type; v != "" {
+		tfMap["type"] = v
 	}
 
 	return tfMap
