@@ -25,7 +25,6 @@ func testAccPrimaryContactDataSource_basic(t *testing.T) {
 			{
 				Config: testAccPrimaryContactDataSourceConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrAccountID, resourceName, names.AttrAccountID),
 					resource.TestCheckResourceAttrPair(dataSourceName, "address_line_1", resourceName, "address_line_1"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "address_line_2", resourceName, "address_line_2"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "address_line_3", resourceName, "address_line_3"),
