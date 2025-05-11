@@ -214,7 +214,7 @@ func resourceFleet() *schema.Resource {
 										Required: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
-									"type": {
+									names.AttrType: {
 										Type:             schema.TypeString,
 										Required:         true,
 										ValidateDiagFunc: enum.Validate[types.FleetProxyRuleType](),
@@ -884,7 +884,7 @@ func expandFleetProxyRule(tfMap map[string]any) *types.FleetProxyRule {
 		apiObject.Entities = entities
 	}
 
-	if v, ok := tfMap["type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
 		apiObject.Type = types.FleetProxyRuleType(v)
 	}
 
@@ -943,7 +943,7 @@ func flattenFleetProxyRule(apiObject *types.FleetProxyRule) map[string]any {
 	}
 
 	if v := apiObject.Type; v != "" {
-		tfMap["type"] = v
+		tfMap[names.AttrType] = v
 	}
 
 	return tfMap
