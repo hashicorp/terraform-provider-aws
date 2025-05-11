@@ -1628,11 +1628,10 @@ resource "aws_docdb_cluster" "test" {
   ]
 
   master_username             = "tfacctest"
-  manage_master_user_password = %[2]t
 
-  %[3]s
+  %[2]s
 
   skip_final_snapshot = true
 }
-`, rName, manageMasterUserPassword, passwordConfig))
+`, rName, passwordConfig))
 }
