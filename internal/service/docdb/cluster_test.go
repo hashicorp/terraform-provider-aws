@@ -974,7 +974,7 @@ func TestAccDocDBCluster_manageMasterUserPassword(t *testing.T) {
 				Config: testAccClusterConfig_manageMasterUserPassword(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "manage_master_user_password", "true"),
+					resource.TestCheckResourceAttr(resourceName, "manage_master_user_password", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "master_user_secret.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.secret_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.secret_status"),
@@ -997,7 +997,7 @@ func TestAccDocDBCluster_manageMasterUserPassword(t *testing.T) {
 				Config: testAccClusterConfig_manageMasterUserPassword(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "manage_master_user_password", "false"),
+					resource.TestCheckResourceAttr(resourceName, "manage_master_user_password", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "master_password", "avoid-plaintext-passwords"),
 				),
 			},
@@ -1608,9 +1608,13 @@ resource "aws_docdb_cluster" "test" {
 func testAccClusterConfig_manageMasterUserPassword(rName string, manageMasterUserPassword bool) string {
 	var passwordConfig string
 	if manageMasterUserPassword {
-		passwordConfig = ""
+		passwordConfig = `
+		manage_master_user_password = true
+		`
 	} else {
-		passwordConfig = "master_password = \"avoid-plaintext-passwords\""
+		passwordConfig = `
+		master_password = "avoid-plaintext-passwords"
+		`
 	}
 
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`

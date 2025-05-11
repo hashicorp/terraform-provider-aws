@@ -214,7 +214,7 @@ func resourceCluster() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"kms_key_id": {
+						names.AttrKMSKeyID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -689,7 +689,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	d.Set(names.AttrKMSKeyID, dbc.KmsKeyId)
 	if v := dbc.MasterUserSecret; v != nil {
 		tfList := []any{map[string]any{
-			"kms_key_id":    aws.ToString(v.KmsKeyId),
+			names.AttrKMSKeyID:    aws.ToString(v.KmsKeyId),
 			"secret_arn":    aws.ToString(v.SecretArn),
 			"secret_status": aws.ToString(v.SecretStatus),
 		}}
