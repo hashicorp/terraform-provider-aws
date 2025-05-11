@@ -1,3 +1,3 @@
 ```release-note:enhancement
-resource/aws_docdb_cluster: Add `manage_master_user_password` argument allowing management of master user password through Secrets Manager
+resource/aws_docdb_cluster: Add `manage_master_user_password` argument and `master_user_secret` attribute
 ```
