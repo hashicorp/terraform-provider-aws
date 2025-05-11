@@ -1627,7 +1627,7 @@ resource "aws_docdb_cluster" "test" {
     data.aws_availability_zones.available.names[2]
   ]
 
-  master_username             = "tfacctest"
+  master_username = "tfacctest"
 
   %[2]s
 
