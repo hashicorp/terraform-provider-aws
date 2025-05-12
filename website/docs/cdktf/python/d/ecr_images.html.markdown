@@ -53,7 +53,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The name of the repository.
 * `image_ids` - List of image objects containing image digest and tags. Each object has the following attributes:
-  * `image_digest` - The sha256 digest of the image manifest.
-  * `image_tag` - The tag associated with the image.
+    * `image_digest` - The sha256 digest of the image manifest.
+    * `image_tag` - The tag associated with the image.
 
 <!-- cache-key: cdktf-0.20.8 -->

@@ -77,7 +77,7 @@ resource "aws_ecr_repository_policy" "test" {
       Sid       = "new policy"
       Effect    = "Allow"
       Principal = "*"
-      Action    = [
+      Action = [
         "ecr:GetDownloadUrlForLayer",
         "ecr:BatchGetImage",
         "ecr:BatchCheckLayerAvailability",
