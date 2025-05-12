@@ -573,7 +573,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 			input.KmsKeyId = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("manage_master_user_password"); ok && v.(bool) {
+		if v, ok := d.GetOk("manage_master_user_password"); ok {
 			input.ManageMasterUserPassword = aws.Bool(v.(bool))
 		} else {
 			if v, ok := d.GetOk("master_password"); ok {
