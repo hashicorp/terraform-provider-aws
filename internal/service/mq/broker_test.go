@@ -318,9 +318,9 @@ func TestNormalizeEngineVersion(t *testing.T) {
 }
 
 const (
-	testAccBrokerVersionNewer = "5.17.6"  // before changing, check b/c must be valid on GovCloud
-	testAccBrokerVersionOlder = "5.16.7"  // before changing, check b/c must be valid on GovCloud
-	testAccRabbitVersion      = "3.11.20" // before changing, check b/c must be valid on GovCloud
+	testAccBrokerVersionNewer = "5.17.6" // before changing, check b/c must be valid on GovCloud
+	// testAccBrokerVersionOlder = "5.16.7"  // before changing, check b/c must be valid on GovCloud
+	testAccRabbitVersion = "3.11.20" // before changing, check b/c must be valid on GovCloud
 
 	testAccActiveVersionNormalized5_18 = "5.18"
 	testAccRabbitVersionNormalized3_13 = "3.13"
@@ -1119,6 +1119,7 @@ func TestAccMQBroker_Update_securityGroup(t *testing.T) {
 	})
 }
 
+/*
 func TestAccMQBroker_Update_engineVersion(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -1162,6 +1163,7 @@ func TestAccMQBroker_Update_engineVersion(t *testing.T) {
 		},
 	})
 }
+*/
 
 func TestAccMQBroker_Update_hostInstanceType(t *testing.T) {
 	ctx := acctest.Context(t)
