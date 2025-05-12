@@ -25,6 +25,7 @@ ENHANCEMENTS:
 * resource/aws_dynamodb_table: Add `point_in_time_recovery.recovery_period_in_days` argument ([#41484](https://github.com/hashicorp/terraform-provider-aws/issues/41484))
 * resource/aws_ec2_client_vpn_endpoint: Add `client_route_enforcement_options` argument ([#42424](https://github.com/hashicorp/terraform-provider-aws/issues/42424))
 * resource/aws_ecs_account_setting_default: Add support for `defaultLogDriverMode` value in `Name` argument ([#42418](https://github.com/hashicorp/terraform-provider-aws/issues/42418))
+* resource/aws_msk_serverless_cluster: Add `bootstrap_brokers_sasl_iam` attribute. This functionality requires the `kafka:GetBootstrapBrokers` IAM permission ([#42148](https://github.com/hashicorp/terraform-provider-aws/issues/42148))
 * resource/aws_redshiftserverless_workgroup: Add `track_name` argument ([#42451](https://github.com/hashicorp/terraform-provider-aws/issues/42451))
 * resource/aws_rum_app_monitor: Add `domain_list` argument ([#42456](https://github.com/hashicorp/terraform-provider-aws/issues/42456))
 * resource/aws_rum_app_monitor: Mark `domain` as Optional ([#42456](https://github.com/hashicorp/terraform-provider-aws/issues/42456))
@@ -44,6 +45,8 @@ BUG FIXES:
 * resource/aws_controltower_control: Fix handling `ResourceNotFound` exceptions during delete ([#42494](https://github.com/hashicorp/terraform-provider-aws/issues/42494))
 * resource/aws_controltower_control: Fix handling of `parameters` block removal ([#42494](https://github.com/hashicorp/terraform-provider-aws/issues/42494))
 * resource/aws_ec2_network_insights_path: Fix failure when `filter_at_source.source_address` is unspecified. ([#42369](https://github.com/hashicorp/terraform-provider-aws/issues/42369))
+* resource/aws_lb_listener: Don't send zero value (`false`, `0` or `""`) for unconfigured listener attributes on Create ([#41846](https://github.com/hashicorp/terraform-provider-aws/issues/41846))
+* resource/aws_rds_cluster_parameter_group: Fix `InvalidParameterValue: collation_server '..' is not valid for character_set '...'` errors on Create ([#42559](https://github.com/hashicorp/terraform-provider-aws/issues/42559))
 
 ## 5.97.0 (May  1, 2025)
 
