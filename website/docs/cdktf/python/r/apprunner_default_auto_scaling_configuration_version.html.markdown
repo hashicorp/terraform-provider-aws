@@ -46,7 +46,7 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments supported:
+This resource supports the following arguments:
 
 * `auto_scaling_configuration_arn` - (Required) The ARN of the App Runner auto scaling configuration that you want to set as the default.
 
@@ -79,4 +79,4 @@ Using `terraform import`, import App Runner default auto scaling configurations 
 % terraform import aws_apprunner_default_auto_scaling_configuration_version.example us-west-2
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-4c79955898bfd3eaa506b9ca0c64e46b64e2bee7808155f130883a62e8fa702e -->
+<!-- cache-key: cdktf-0.20.8 input-a23cec661f05dd4fdfeef2c9ef66218874f6a00d40152114c874e1c48ecfdaf2 -->

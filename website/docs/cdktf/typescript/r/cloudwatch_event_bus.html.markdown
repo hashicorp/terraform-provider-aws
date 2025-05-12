@@ -82,6 +82,8 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `deadLetterConfig` - (Optional) Configuration details of the Amazon SQS queue for EventBridge to use as a dead-letter queue (DLQ). This block supports the following arguments:
+    * `arn` - (Optional) The ARN of the SQS queue specified as the target for the dead-letter queue.
 * `description` - (Optional) Event bus description.
 * `eventSourceName` - (Optional) Partner event source that the new event bus will be matched with. Must match `name`.
 * `kmsKeyIdentifier` - (Optional) Identifier of the AWS KMS customer managed key for EventBridge to use, if you choose to use a customer managed key to encrypt events on this event bus. The identifier can be the key Amazon Resource Name (ARN), KeyId, key alias, or key alias ARN.
@@ -127,4 +129,4 @@ Using `terraform import`, import EventBridge event buses using the name of the e
 % terraform import aws_cloudwatch_event_bus.messenger chat-messages
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-5bce83b24545a08c858c24112891176fe8b5151d2f0d3398de3ecac30fde60c6 -->
+<!-- cache-key: cdktf-0.20.8 input-74e8cec84020e703b4118381101396b748434325ddcdb39a4b7ebee3a37c011f -->

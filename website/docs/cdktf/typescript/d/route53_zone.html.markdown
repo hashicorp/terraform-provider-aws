@@ -49,9 +49,7 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available
-Hosted Zone. You have to use `zoneId` or `name`, not both of them. The given filter must match exactly one
-Hosted Zone. If you use `name` field for private Hosted Zone, you need to add `privateZone` field to `true`.
+This data source supports the following arguments:
 
 * `zoneId` - (Optional) Hosted Zone id of the desired Hosted Zone.
 * `name` - (Optional) Hosted Zone name of the desired Hosted Zone.
@@ -59,14 +57,13 @@ Hosted Zone. If you use `name` field for private Hosted Zone, you need to add `p
 * `vpcId` - (Optional) Used with `name` field to get a private Hosted Zone associated with the vpc_id (in this case, private_zone is not mandatory).
 * `tags` - (Optional) Used with `name` field. A map of tags, each pair of which must exactly match a pair on the desired Hosted Zone.
 
+The arguments of this data source act as filters for querying the available
+Hosted Zone. You have to use `zoneId` or `name`, not both of them. The given filter must match exactly one
+Hosted Zone. If you use `name` field for private Hosted Zone, you need to add `privateZone` field to `true`.
+
 ## Attribute Reference
 
-All of the argument attributes are also exported as
-result attributes. This data source will complete the data by populating
-any fields that are not included in the configuration with the data for
-the selected Hosted Zone.
-
-The following attribute is additionally exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Hosted Zone.
 * `callerReference` - Caller Reference of the Hosted Zone.
@@ -81,4 +78,4 @@ The following attribute is additionally exported:
 * `tags` - A map of tags assigned to the Hosted Zone.
 * `zoneId` - The Hosted Zone identifier.
 
-<!-- cache-key: cdktf-0.20.8 input-801182a67123797b89e33b036efcdaf21713389a304311326b773bb8831f747d -->
+<!-- cache-key: cdktf-0.20.8 input-745be1dc3d611e24a2f9b698d0b5a33a1957ec75cd98813aa4777dfc944655cc -->

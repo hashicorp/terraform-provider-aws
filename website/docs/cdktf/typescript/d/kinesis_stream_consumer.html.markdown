@@ -39,6 +39,8 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `arn` - (Optional) ARN of the stream consumer.
 * `name` - (Optional) Name of the stream consumer.
 * `streamArn` - (Required) ARN of the data stream the consumer is registered with.
@@ -53,4 +55,4 @@ This data source exports the following attributes in addition to the arguments a
 
 [1]: https://docs.aws.amazon.com/streams/latest/dev/amazon-kinesis-consumers.html
 
-<!-- cache-key: cdktf-0.20.8 input-482a972e99b29826e09a6b01244884263ba57e5574eae706e0c8646f0c88959b -->
+<!-- cache-key: cdktf-0.20.8 input-f6f37ad1cb997b2e7c173c7bc5440b8e3112af2e49749040fe45f8576928696a -->

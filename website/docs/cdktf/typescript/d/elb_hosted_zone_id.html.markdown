@@ -46,6 +46,8 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `region` - (Optional) Name of the region whose AWS ELB HostedZoneId is desired.
   Defaults to the region from the AWS provider configuration.
 
@@ -55,4 +57,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `id` - ID of the AWS ELB HostedZoneId in the selected region.
 
-<!-- cache-key: cdktf-0.20.8 input-c2a71897abaf8ebad957ebc450a6e6db3c22c6c5e61e688eccadc3e3e3d48143 -->
+<!-- cache-key: cdktf-0.20.8 input-04ba3b79eb871fa0308c50368741cfcd07d473edc380fbcd53e394c48ff2cd4e -->

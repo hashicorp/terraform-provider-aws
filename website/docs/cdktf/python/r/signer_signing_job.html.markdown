@@ -51,6 +51,8 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `profile_name` - (Required) The name of the profile to initiate the signing operation.
 * `source` - (Required) The S3 bucket that contains the object to sign. See [Source](#source) below for details.
 * `destination` - (Required) The S3 bucket in which to save your signed object. See [Destination](#destination) below for details.
@@ -127,4 +129,4 @@ Using `terraform import`, import Signer signing jobs using the `job_id`. For exa
 % terraform import aws_signer_signing_job.test_signer_signing_job 9ed7e5c3-b8d4-4da0-8459-44e0b068f7ee
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-c1b438ff5be624709d7988f68eee2a0f8bb3759d4c25af0f1c443c2548e0904f -->
+<!-- cache-key: cdktf-0.20.8 input-6c5499be1c9d09f579d4b7d9fd73a7211d4feaa55972095d8f20833f58d32df4 -->

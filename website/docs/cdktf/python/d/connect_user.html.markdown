@@ -97,4 +97,4 @@ A `phone_config` block supports the following attributes:
 * `desk_phone_number` - The phone number for the user's desk phone.
 * `phone_type` - The phone type. Valid values are `DESK_PHONE` and `SOFT_PHONE`.
 
-<!-- cache-key: cdktf-0.20.8 input-7f88146fd5e714f31cff5512374264e830c13ef50c58f6f741b40f7c96f77171 -->
+<!-- cache-key: cdktf-0.20.8 input-6418677498d3243fc3fad545047e17a0d6914a6f2c25c35af2a886541c4e8bb5 -->

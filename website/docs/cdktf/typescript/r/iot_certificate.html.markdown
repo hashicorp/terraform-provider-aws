@@ -84,6 +84,8 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `active` - (Required)  Boolean flag to indicate if the certificate should be active
 * `csr` - (Optional) The certificate signing request. Review
   [CreateCertificateFromCsr](https://docs.aws.amazon.com/iot/latest/apireference/API_CreateCertificateFromCsr.html)
@@ -108,4 +110,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `publicKey` - When neither CSR nor certificate is provided, the public key.
 * `privateKey` - When neither CSR nor certificate is provided, the private key.
 
-<!-- cache-key: cdktf-0.20.8 input-cd4ec9a7a491e894c7c1bf387191cc12633a4113cd2e7bf2fe6ecc7c3615caa6 -->
+<!-- cache-key: cdktf-0.20.8 input-da81b42db3f4a2f1bad07a0efa876f3b9b302dfc7c64a119757e584db98448de -->

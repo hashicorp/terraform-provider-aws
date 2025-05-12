@@ -33,6 +33,8 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `arn` - (Required) ARN of the image pipeline.
 
 ## Attribute Reference
@@ -65,4 +67,4 @@ This data source exports the following attributes in addition to the arguments a
 * `status` - Status of the image pipeline.
 * `tags` - Key-value map of resource tags for the image pipeline.
 
-<!-- cache-key: cdktf-0.20.8 input-86d00bfacbf8211ac391b618aacd3783f3887b1dc59f3fa49b15ed84f7aa629d -->
+<!-- cache-key: cdktf-0.20.8 input-45e94706b7bd6191134d25fdea57b39f85d1b90fdbeff5c524b762c54d5fd886 -->

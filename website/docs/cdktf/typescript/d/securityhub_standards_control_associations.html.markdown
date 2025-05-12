@@ -46,6 +46,8 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `securityControlId` - (Required) The identifier of the control (identified with `SecurityControlId`, `SecurityControlArn`, or a mix of both parameters).
 
 ## Attribute Reference
@@ -67,4 +69,4 @@ See [`standardsControlAssociations`](#standards_control_associations-attribute-r
 * `updatedAt` - Last time that a control's enablement status in a specified standard was updated.
 * `updatedReason` - Reason for updating a control's enablement status in a specified standard.
 
-<!-- cache-key: cdktf-0.20.8 input-c00380a89860eece1814ac9de7eefbb73fb280e1bf0a1078f9a81c54f1e95d9b -->
+<!-- cache-key: cdktf-0.20.8 input-485827313a723854cd37b4be694aeb17c90ad59eb685ef4ec7ba37de74762d8c -->
