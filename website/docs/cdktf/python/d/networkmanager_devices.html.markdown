@@ -36,6 +36,8 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `global_network_id` - (Required) ID of the Global Network of the devices to retrieve.
 * `site_id` - (Optional) ID of the site of the devices to retrieve.
 * `tags` - (Optional) Restricts the list to the devices with these tags.
@@ -46,4 +48,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `ids` - IDs of the devices.
 
-<!-- cache-key: cdktf-0.20.8 input-9df9546ef10dcce363950ea6c2c54dab55158382413f15d47a541efaeb75a8bb -->
+<!-- cache-key: cdktf-0.20.8 input-644fce3d16db9a6450adf13f869f38e3cb841b67d89b67b5220257321dba7e4a -->

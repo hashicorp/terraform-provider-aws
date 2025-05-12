@@ -41,36 +41,32 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `id` - (Optional) ID of the specific VPN Gateway to retrieve.
+* `state` - (Optional) State of the specific VPN Gateway to retrieve.
+* `availability_zone` - (Optional) Availability Zone of the specific VPN Gateway to retrieve.
+* `attached_vpc_id` - (Optional) ID of a VPC attached to the specific VPN Gateway to retrieve.
+* `filter` - (Optional) Custom filter block as described below.
+* `tags` - (Optional) Map of tags, each pair of which must exactly match
+  a pair on the desired VPN Gateway.
+* `amazon_side_asn` - (Optional) Autonomous System Number (ASN) for the Amazon side of the specific VPN Gateway to retrieve.
+
 The arguments of this data source act as filters for querying the available VPN gateways.
 The given filters must match exactly one VPN gateway whose data will be exported as attributes.
 
-* `id` - (Optional) ID of the specific VPN Gateway to retrieve.
+### `filter`
 
-* `state` - (Optional) State of the specific VPN Gateway to retrieve.
-
-* `availability_zone` - (Optional) Availability Zone of the specific VPN Gateway to retrieve.
-
-* `attached_vpc_id` - (Optional) ID of a VPC attached to the specific VPN Gateway to retrieve.
-
-* `filter` - (Optional) Custom filter block as described below.
-
-* `tags` - (Optional) Map of tags, each pair of which must exactly match
-  a pair on the desired VPN Gateway.
-
-* `amazon_side_asn` - (Optional) Autonomous System Number (ASN) for the Amazon side of the specific VPN Gateway to retrieve.
-
-More complex filters can be expressed using one or more `filter` sub-blocks,
-which take the following arguments:
+More complex filters can be expressed using one or more `filter` sub-blocks, which take the following arguments:
 
 * `name` - (Required) Name of the field to filter by, as defined by
   [the underlying AWS API](http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeVpnGateways.html).
-
 * `values` - (Required) Set of values that are accepted for the given field.
   A VPN Gateway will be selected if any one of the given values matches.
 
 ## Attribute Reference
 
-All of the argument attributes are also exported as result attributes.
+This data source exports no additional attributes.
 
 ## Timeouts
 
@@ -78,4 +74,4 @@ All of the argument attributes are also exported as result attributes.
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.8 input-201be9d39d8341a8d96efb3b53da93d78c8ce2b555effb2685f5ba9809677802 -->
+<!-- cache-key: cdktf-0.20.8 input-ab6bce22fc5d1859e0702e52dbeb5c9df4bbadb139bd6ac518cdc999aa60deb2 -->

@@ -62,8 +62,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-Spot Instance Requests support all the same arguments as
-[`aws_instance`](instance.html), with the addition of:
+This resource supports the following arguments:
+
+Spot Instance Requests support all the same arguments as [`aws_instance`](instance.html), with the addition of:
 
 * `spot_price` - (Optional; Default: On-demand price) The maximum price to request on the spot market.
 * `wait_for_fulfillment` - (Optional; Default: false) If set, Terraform will
@@ -115,4 +116,4 @@ should only be used for informational purposes, not for resource dependencies:
 * `read` - (Default `15m`)
 * `delete` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.8 input-41ed2e086fde1e9ac47e3151ca332ac4c789a2f389301862b42d62217ca9d626 -->
+<!-- cache-key: cdktf-0.20.8 input-5b0e79480fdada45ad4fd09733380e9ac4df8581e7d0b1fb0a5ef8bed3fbb8e7 -->

@@ -64,10 +64,19 @@ The following arguments are required:
   Can consist of lowercase letters, numbers, and underscores, and must begin and end with a lowercase letter or number.
 * `table_bucket_arn` - (Required, Forces new resource) ARN referencing the Table Bucket that contains this Namespace.
 
-The following argument is optional:
+The following arguments are optional:
 
+* `encryption_configuration` - (Optional) A single table bucket encryption configuration object.
+  [See `encryption_configuration` below](#encryption_configuration).
 * `maintenance_configuration` - (Optional) A single table bucket maintenance configuration object.
   [See `maintenance_configuration` below](#maintenance_configuration).
+
+### `encryption_configuration`
+
+The `encryption_configuration` object supports the following arguments:
+
+* `kms_key_arn` - (Optional) The ARN of a KMS Key to be used with `aws:kms` `sse_algorithm`
+* `sse_algorithm` - (Required) One of `aws:kms` or `AES256`
 
 ### `maintenance_configuration`
 
@@ -153,4 +162,4 @@ Using `terraform import`, import S3 Tables Table using the `table_bucket_arn`, t
 % terraform import aws_s3tables_table.example 'arn:aws:s3tables:us-west-2:123456789012:bucket/example-bucket;example-namespace;example-table'
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-3189b3495b8a3a1d13dc53b7e36632bed7f78b1ee826b83e8ee5712ea21b5a40 -->
+<!-- cache-key: cdktf-0.20.8 input-a23e8dc822ca9df49432f86028589e4f3640480f7074f385e59b6a968cc08cbf -->

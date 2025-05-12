@@ -42,9 +42,10 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `region` - (Optional) Name of the region whose AWS ELB HostedZoneId is desired.
   Defaults to the region from the AWS provider configuration.
-
 * `load_balancer_type` - (Optional) Type of load balancer to create. Possible values are `application` or `network`. The default value is `application`.
 
 ## Attribute Reference
@@ -53,4 +54,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `id` - ID of the AWS ELB HostedZoneId in the selected region.
 
-<!-- cache-key: cdktf-0.20.8 input-20d3ff7ccd02c50f477bfaf817b623cdbb551c7595c79a649d2e2c4d5256df5a -->
+<!-- cache-key: cdktf-0.20.8 input-ba7cf1aba696164bd6d94c1520d2ef59c7e08bf1768812ed6f86e6421fe11bc9 -->

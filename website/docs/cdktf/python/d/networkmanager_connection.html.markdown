@@ -34,6 +34,8 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `global_network_id` - (Required) ID of the Global Network of the connection to retrieve.
 * `connection_id` - (Required) ID of the specific connection to retrieve.
 
@@ -49,4 +51,4 @@ This data source exports the following attributes in addition to the arguments a
 * `link_id` - ID of the link for the first device.
 * `tags` - Key-value tags for the connection.
 
-<!-- cache-key: cdktf-0.20.8 input-a0cbd17186f4f009da616a66e54bfb81cbdebd2f6465c7c104a1c2b92433b010 -->
+<!-- cache-key: cdktf-0.20.8 input-ee672bad6bca2c55712530d78f1a119fa2eb8666ead9c01b803d8dabd479f0a1 -->

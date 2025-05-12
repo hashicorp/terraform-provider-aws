@@ -62,4 +62,4 @@ The `s3_path` configuration block supports the following attributes:
 * `bucket` - Name of the S3 bucket that contains the file.
 * `key` - Name of the file.
 
-<!-- cache-key: cdktf-0.20.8 input-e521c2de099004f9800122d251b7adbf8d33a85b59c414cf1d1afcea0967b75a -->
+<!-- cache-key: cdktf-0.20.8 input-9636299335f64ae0203ecc7a3f4e528046b49f94cf91c231efcff331e9a669fa -->

@@ -241,6 +241,8 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `amazon_managed_kafka_event_source_config` - (Optional) Additional configuration block for Amazon Managed Kafka sources. Incompatible with "self_managed_event_source" and "self_managed_kafka_event_source_config". Detailed below.
 * `batch_size` - (Optional) The largest number of records that Lambda will retrieve from your event source at the time of invocation. Defaults to `100` for DynamoDB, Kinesis, MQ and MSK, `10` for SQS.
 * `bisect_batch_on_function_error`: - (Optional) If the function returns an error, split the batch in two and retry. Only available for stream sources (DynamoDB and Kinesis). Defaults to `false`.
@@ -362,4 +364,4 @@ Using `terraform import`, import Lambda event source mappings using the `UUID` (
 % terraform import aws_lambda_event_source_mapping.event_source_mapping 12345kxodurf3443
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-9e0d3aa6b569a6f9fca1bf2161ad921c3f1baf63395b0b74d354d95186db63f0 -->
+<!-- cache-key: cdktf-0.20.8 input-f539408d74799c9ec0fa3ab7bf3fd09a1b695e2e4e6790a9c451f503a7bc4007 -->

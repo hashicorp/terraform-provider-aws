@@ -44,6 +44,8 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `name` - (Required) The name of the Device Pool
 * `projectArn` - (Required) The ARN of the project for the device pool.
 * `rule` - (Required) The device pool's rules. See [Rule](#rule).
@@ -96,4 +98,4 @@ Using `terraform import`, import DeviceFarm Device Pools using their ARN. For ex
 % terraform import aws_devicefarm_device_pool.example arn:aws:devicefarm:us-west-2:123456789012:devicepool:4fa784c7-ccb4-4dbf-ba4f-02198320daa1/4fa784c7-ccb4-4dbf-ba4f-02198320daa1
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-70dc4ff5fd779dddf25798da293a38ce0cbfa6d4a0332256582b1806152f2230 -->
+<!-- cache-key: cdktf-0.20.8 input-7401e5540bbc9c409a752330f93de1b986a90f0ccd903a5fcf9a5e71234f64b3 -->

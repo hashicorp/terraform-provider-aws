@@ -54,4 +54,4 @@ This data source exports the following attributes in addition to the arguments a
 * `spec` - Virtual node specification. See the [`aws_appmesh_virtual_node`](/docs/providers/aws/r/appmesh_virtual_node.html#spec) resource for details.
 * `tags` - Map of tags.
 
-<!-- cache-key: cdktf-0.20.8 input-0af250ec57ad7c06ff9123a832f3205783a39694eff720e32b0655ce7952fa68 -->
+<!-- cache-key: cdktf-0.20.8 input-c5d298360f60f6103df77d94a875b5d57e722ea84605e111f878a68247bbcba8 -->
