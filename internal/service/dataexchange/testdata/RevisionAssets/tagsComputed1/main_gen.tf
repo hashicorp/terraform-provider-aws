@@ -1,4 +1,9 @@
-resource "aws_dataexchange_revision_exclusive" "test" {
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
+provider "null" {}
+
+resource "aws_dataexchange_revision_assets" "test" {
   data_set_id = aws_dataexchange_data_set.test.id
 
   asset {
@@ -10,7 +15,9 @@ resource "aws_dataexchange_revision_exclusive" "test" {
     }
   }
 
-{{- template "tags" . }}
+  tags = {
+    (var.unknownTagKey) = null_resource.test.id
+  }
 }
 
 resource "aws_dataexchange_data_set" "test" {
@@ -28,4 +35,17 @@ resource "aws_s3_object" "test" {
   bucket  = aws_s3_bucket.test.bucket
   key     = "test"
   content = "test"
+}
+
+resource "null_resource" "test" {}
+
+variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
+}
+
+variable "unknownTagKey" {
+  type     = string
+  nullable = false
 }

@@ -3,7 +3,7 @@
 
 provider "null" {}
 
-resource "aws_dataexchange_revision_exclusive" "test" {
+resource "aws_dataexchange_revision_assets" "test" {
   data_set_id = aws_dataexchange_data_set.test.id
 
   asset {

@@ -29,12 +29,12 @@ import (
 )
 
 // lintignore:AT002
-func TestAccDataExchangeRevisionExclusive_S3Snapshot_ImportFromS3(t *testing.T) {
+func TestAccDataExchangeRevisionAssets_S3Snapshot_ImportFromS3(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var revision dataexchange.GetRevisionOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_dataexchange_revision_exclusive.test"
+	resourceName := "aws_dataexchange_revision_assets.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -43,12 +43,12 @@ func TestAccDataExchangeRevisionExclusive_S3Snapshot_ImportFromS3(t *testing.T) 
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataExchangeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRevisionExclusiveDestroy(ctx),
+		CheckDestroy:             testAccCheckRevisionAssetsDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRevisionExclusiveConfig_s3Snapshot_importFromS3(rName),
+				Config: testAccRevisionAssetsConfig_s3Snapshot_importFromS3(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRevisionExclusiveExists(ctx, resourceName, &revision),
+					testAccCheckRevisionAssetsExists(ctx, resourceName, &revision),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dataexchange", "data-sets/{data_set_id}/revisions/{id}"),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrComment),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedAt),
@@ -74,12 +74,12 @@ func TestAccDataExchangeRevisionExclusive_S3Snapshot_ImportFromS3(t *testing.T) 
 	})
 }
 
-func TestAccDataExchangeRevisionExclusive_disappears(t *testing.T) {
+func TestAccDataExchangeRevisionAssets_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var revisionexclusive dataexchange.GetRevisionOutput
+	var revision dataexchange.GetRevisionOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_dataexchange_revision_exclusive.test"
+	resourceName := "aws_dataexchange_revision_assets.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -88,13 +88,13 @@ func TestAccDataExchangeRevisionExclusive_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataExchangeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRevisionExclusiveDestroy(ctx),
+		CheckDestroy:             testAccCheckRevisionAssetsDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRevisionExclusiveConfig_s3Snapshot_importFromS3(rName),
+				Config: testAccRevisionAssetsConfig_s3Snapshot_importFromS3(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRevisionExclusiveExists(ctx, resourceName, &revisionexclusive),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfdataexchange.ResourceRevisionExclusive, resourceName),
+					testAccCheckRevisionAssetsExists(ctx, resourceName, &revision),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfdataexchange.ResourceRevisionAssets, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -103,12 +103,12 @@ func TestAccDataExchangeRevisionExclusive_disappears(t *testing.T) {
 }
 
 // lintignore:AT002
-func TestAccDataExchangeRevisionExclusive_S3Snapshot_ImportMultipleFromS3(t *testing.T) {
+func TestAccDataExchangeRevisionAssets_S3Snapshot_ImportMultipleFromS3(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var revision dataexchange.GetRevisionOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_dataexchange_revision_exclusive.test"
+	resourceName := "aws_dataexchange_revision_assets.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -117,12 +117,12 @@ func TestAccDataExchangeRevisionExclusive_S3Snapshot_ImportMultipleFromS3(t *tes
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataExchangeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRevisionExclusiveDestroy(ctx),
+		CheckDestroy:             testAccCheckRevisionAssetsDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRevisionExclusiveConfig_s3SNapsht_importMultipleFromS3(rName),
+				Config: testAccRevisionAssetsConfig_s3SNapsht_importMultipleFromS3(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRevisionExclusiveExists(ctx, resourceName, &revision),
+					testAccCheckRevisionAssetsExists(ctx, resourceName, &revision),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("asset"), knownvalue.SetExact([]knownvalue.Check{
@@ -139,12 +139,12 @@ func TestAccDataExchangeRevisionExclusive_S3Snapshot_ImportMultipleFromS3(t *tes
 }
 
 // lintignore:AT002
-func TestAccDataExchangeRevisionExclusive_S3Snapshot_Upload(t *testing.T) {
+func TestAccDataExchangeRevisionAssets_S3Snapshot_Upload(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var revision dataexchange.GetRevisionOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_dataexchange_revision_exclusive.test"
+	resourceName := "aws_dataexchange_revision_assets.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -153,12 +153,12 @@ func TestAccDataExchangeRevisionExclusive_S3Snapshot_Upload(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataExchangeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRevisionExclusiveDestroy(ctx),
+		CheckDestroy:             testAccCheckRevisionAssetsDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRevisionExclusiveConfig_s3Snapshot_upload(rName, "test-fixtures/data.json"),
+				Config: testAccRevisionAssetsConfig_s3Snapshot_upload(rName, "test-fixtures/data.json"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRevisionExclusiveExists(ctx, resourceName, &revision),
+					testAccCheckRevisionAssetsExists(ctx, resourceName, &revision),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dataexchange", "data-sets/{data_set_id}/revisions/{id}"),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrComment),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedAt),
@@ -180,12 +180,12 @@ func TestAccDataExchangeRevisionExclusive_S3Snapshot_Upload(t *testing.T) {
 }
 
 // lintignore:AT002
-func TestAccDataExchangeRevisionExclusive_S3Snapshot_UploadMultiple(t *testing.T) {
+func TestAccDataExchangeRevisionAssets_S3Snapshot_UploadMultiple(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var revision dataexchange.GetRevisionOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_dataexchange_revision_exclusive.test"
+	resourceName := "aws_dataexchange_revision_assets.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -194,12 +194,12 @@ func TestAccDataExchangeRevisionExclusive_S3Snapshot_UploadMultiple(t *testing.T
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataExchangeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRevisionExclusiveDestroy(ctx),
+		CheckDestroy:             testAccCheckRevisionAssetsDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRevisionExclusiveConfig_s3Snapshot_uploadMultiple(rName, "test-fixtures/data.json", "test-fixtures/data2.json"),
+				Config: testAccRevisionAssetsConfig_s3Snapshot_uploadMultiple(rName, "test-fixtures/data.json", "test-fixtures/data2.json"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRevisionExclusiveExists(ctx, resourceName, &revision),
+					testAccCheckRevisionAssetsExists(ctx, resourceName, &revision),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dataexchange", "data-sets/{data_set_id}/revisions/{id}"),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrComment),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedAt),
@@ -222,12 +222,12 @@ func TestAccDataExchangeRevisionExclusive_S3Snapshot_UploadMultiple(t *testing.T
 }
 
 // lintignore:AT002
-func TestAccDataExchangeRevisionExclusive_S3Snapshot_ImportAndUpload(t *testing.T) {
+func TestAccDataExchangeRevisionAssets_S3Snapshot_ImportAndUpload(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var revision dataexchange.GetRevisionOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_dataexchange_revision_exclusive.test"
+	resourceName := "aws_dataexchange_revision_assets.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -236,12 +236,12 @@ func TestAccDataExchangeRevisionExclusive_S3Snapshot_ImportAndUpload(t *testing.
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataExchangeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRevisionExclusiveDestroy(ctx),
+		CheckDestroy:             testAccCheckRevisionAssetsDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRevisionExclusiveConfig_s3Snapshot_importAndUpload(rName, "test-fixtures/data.json"),
+				Config: testAccRevisionAssetsConfig_s3Snapshot_importAndUpload(rName, "test-fixtures/data.json"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRevisionExclusiveExists(ctx, resourceName, &revision),
+					testAccCheckRevisionAssetsExists(ctx, resourceName, &revision),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dataexchange", "data-sets/{data_set_id}/revisions/{id}"),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrComment),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedAt),
@@ -263,12 +263,12 @@ func TestAccDataExchangeRevisionExclusive_S3Snapshot_ImportAndUpload(t *testing.
 	})
 }
 
-func TestAccDataExchangeRevisionExclusive_S3DataAccessFromS3Bucket_basic(t *testing.T) {
+func TestAccDataExchangeRevisionAssets_S3DataAccessFromS3Bucket_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var revision dataexchange.GetRevisionOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_dataexchange_revision_exclusive.test"
+	resourceName := "aws_dataexchange_revision_assets.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -277,12 +277,12 @@ func TestAccDataExchangeRevisionExclusive_S3DataAccessFromS3Bucket_basic(t *test
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataExchangeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRevisionExclusiveDestroy(ctx),
+		CheckDestroy:             testAccCheckRevisionAssetsDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRevisionExclusiveConfig_s3DataAccessFromS3Bucket_basic(rName),
+				Config: testAccRevisionAssetsConfig_s3DataAccessFromS3Bucket_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRevisionExclusiveExists(ctx, resourceName, &revision),
+					testAccCheckRevisionAssetsExists(ctx, resourceName, &revision),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dataexchange", "data-sets/{data_set_id}/revisions/{id}"),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrComment),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedAt),
@@ -308,12 +308,12 @@ func TestAccDataExchangeRevisionExclusive_S3DataAccessFromS3Bucket_basic(t *test
 	})
 }
 
-func TestAccDataExchangeRevisionExclusive_S3DataAccessFromS3Bucket_keys(t *testing.T) {
+func TestAccDataExchangeRevisionAssets_S3DataAccessFromS3Bucket_keys(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var revision dataexchange.GetRevisionOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_dataexchange_revision_exclusive.test"
+	resourceName := "aws_dataexchange_revision_assets.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -322,12 +322,12 @@ func TestAccDataExchangeRevisionExclusive_S3DataAccessFromS3Bucket_keys(t *testi
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataExchangeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRevisionExclusiveDestroy(ctx),
+		CheckDestroy:             testAccCheckRevisionAssetsDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRevisionExclusiveConfig_s3DataAccessFromS3Bucket_keys(rName),
+				Config: testAccRevisionAssetsConfig_s3DataAccessFromS3Bucket_keys(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRevisionExclusiveExists(ctx, resourceName, &revision),
+					testAccCheckRevisionAssetsExists(ctx, resourceName, &revision),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dataexchange", "data-sets/{data_set_id}/revisions/{id}"),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrComment),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedAt),
@@ -348,12 +348,12 @@ func TestAccDataExchangeRevisionExclusive_S3DataAccessFromS3Bucket_keys(t *testi
 	})
 }
 
-func TestAccDataExchangeRevisionExclusive_S3DataAccessFromS3Bucket_multiple(t *testing.T) {
+func TestAccDataExchangeRevisionAssets_S3DataAccessFromS3Bucket_multiple(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var revision dataexchange.GetRevisionOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_dataexchange_revision_exclusive.test"
+	resourceName := "aws_dataexchange_revision_assets.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -362,12 +362,12 @@ func TestAccDataExchangeRevisionExclusive_S3DataAccessFromS3Bucket_multiple(t *t
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataExchangeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRevisionExclusiveDestroy(ctx),
+		CheckDestroy:             testAccCheckRevisionAssetsDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRevisionExclusiveConfig_s3DataAccessFromS3Bucket_multiple(rName),
+				Config: testAccRevisionAssetsConfig_s3DataAccessFromS3Bucket_multiple(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRevisionExclusiveExists(ctx, resourceName, &revision),
+					testAccCheckRevisionAssetsExists(ctx, resourceName, &revision),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dataexchange", "data-sets/{data_set_id}/revisions/{id}"),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrComment),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedAt),
@@ -389,12 +389,12 @@ func TestAccDataExchangeRevisionExclusive_S3DataAccessFromS3Bucket_multiple(t *t
 	})
 }
 
-func TestAccDataExchangeRevisionExclusive_S3DataAccessFromS3Bucket_cmk_basic(t *testing.T) {
+func TestAccDataExchangeRevisionAssets_S3DataAccessFromS3Bucket_cmk_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var revision dataexchange.GetRevisionOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_dataexchange_revision_exclusive.test"
+	resourceName := "aws_dataexchange_revision_assets.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -403,12 +403,12 @@ func TestAccDataExchangeRevisionExclusive_S3DataAccessFromS3Bucket_cmk_basic(t *
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataExchangeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRevisionExclusiveDestroy(ctx),
+		CheckDestroy:             testAccCheckRevisionAssetsDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRevisionExclusiveConfig_s3DataAccessFromS3Bucket_cmk(rName),
+				Config: testAccRevisionAssetsConfig_s3DataAccessFromS3Bucket_cmk(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRevisionExclusiveExists(ctx, resourceName, &revision),
+					testAccCheckRevisionAssetsExists(ctx, resourceName, &revision),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dataexchange", "data-sets/{data_set_id}/revisions/{id}"),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrComment),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedAt),
@@ -434,12 +434,12 @@ func TestAccDataExchangeRevisionExclusive_S3DataAccessFromS3Bucket_cmk_basic(t *
 	})
 }
 
-func testAccCheckRevisionExclusiveDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckRevisionAssetsDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DataExchangeClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_dataexchange_revision_exclusive" {
+			if rs.Type != "aws_dataexchange_revision_assets" {
 				continue
 			}
 
@@ -448,35 +448,35 @@ func testAccCheckRevisionExclusiveDestroy(ctx context.Context) resource.TestChec
 				return nil
 			}
 			if err != nil {
-				return create.Error(names.DataExchange, create.ErrActionCheckingDestroyed, tfdataexchange.ResNameRevisionExclusive, rs.Primary.ID, err)
+				return create.Error(names.DataExchange, create.ErrActionCheckingDestroyed, tfdataexchange.ResNameRevisionAssets, rs.Primary.ID, err)
 			}
 
-			return create.Error(names.DataExchange, create.ErrActionCheckingDestroyed, tfdataexchange.ResNameRevisionExclusive, rs.Primary.ID, errors.New("not destroyed"))
+			return create.Error(names.DataExchange, create.ErrActionCheckingDestroyed, tfdataexchange.ResNameRevisionAssets, rs.Primary.ID, errors.New("not destroyed"))
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckRevisionExclusiveExists(ctx context.Context, name string, revisionexclusive *dataexchange.GetRevisionOutput) resource.TestCheckFunc {
+func testAccCheckRevisionAssetsExists(ctx context.Context, name string, revision *dataexchange.GetRevisionOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
-			return create.Error(names.DataExchange, create.ErrActionCheckingExistence, tfdataexchange.ResNameRevisionExclusive, name, errors.New("not found"))
+			return create.Error(names.DataExchange, create.ErrActionCheckingExistence, tfdataexchange.ResNameRevisionAssets, name, errors.New("not found"))
 		}
 
 		if rs.Primary.ID == "" {
-			return create.Error(names.DataExchange, create.ErrActionCheckingExistence, tfdataexchange.ResNameRevisionExclusive, name, errors.New("not set"))
+			return create.Error(names.DataExchange, create.ErrActionCheckingExistence, tfdataexchange.ResNameRevisionAssets, name, errors.New("not set"))
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DataExchangeClient(ctx)
 
 		resp, err := tfdataexchange.FindRevisionByID(ctx, conn, rs.Primary.Attributes["data_set_id"], rs.Primary.ID)
 		if err != nil {
-			return create.Error(names.DataExchange, create.ErrActionCheckingExistence, tfdataexchange.ResNameRevisionExclusive, rs.Primary.ID, err)
+			return create.Error(names.DataExchange, create.ErrActionCheckingExistence, tfdataexchange.ResNameRevisionAssets, rs.Primary.ID, err)
 		}
 
-		*revisionexclusive = *resp
+		*revision = *resp
 
 		return nil
 	}
@@ -612,9 +612,9 @@ func s3DataAccessAssetDefaults(bucket string) map[string]knownvalue.Check {
 	}
 }
 
-func testAccRevisionExclusiveConfig_s3Snapshot_importFromS3(rName string) string {
+func testAccRevisionAssetsConfig_s3Snapshot_importFromS3(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_dataexchange_revision_exclusive" "test" {
+resource "aws_dataexchange_revision_assets" "test" {
   data_set_id = aws_dataexchange_data_set.test.id
 
   asset {
@@ -646,9 +646,9 @@ resource "aws_s3_object" "test" {
 `, rName)
 }
 
-func testAccRevisionExclusiveConfig_s3SNapsht_importMultipleFromS3(rName string) string {
+func testAccRevisionAssetsConfig_s3SNapsht_importMultipleFromS3(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_dataexchange_revision_exclusive" "test" {
+resource "aws_dataexchange_revision_assets" "test" {
   data_set_id = aws_dataexchange_data_set.test.id
 
   asset {
@@ -692,9 +692,9 @@ resource "aws_s3_object" "test" {
 `, rName)
 }
 
-func testAccRevisionExclusiveConfig_s3Snapshot_upload(rName, filename string) string {
+func testAccRevisionAssetsConfig_s3Snapshot_upload(rName, filename string) string {
 	return fmt.Sprintf(`
-resource "aws_dataexchange_revision_exclusive" "test" {
+resource "aws_dataexchange_revision_assets" "test" {
   data_set_id = aws_dataexchange_data_set.test.id
 
   asset {
@@ -712,9 +712,9 @@ resource "aws_dataexchange_data_set" "test" {
 `, rName, filename)
 }
 
-func testAccRevisionExclusiveConfig_s3Snapshot_uploadMultiple(rName, filename, filename2 string) string {
+func testAccRevisionAssetsConfig_s3Snapshot_uploadMultiple(rName, filename, filename2 string) string {
 	return fmt.Sprintf(`
-resource "aws_dataexchange_revision_exclusive" "test" {
+resource "aws_dataexchange_revision_assets" "test" {
   data_set_id = aws_dataexchange_data_set.test.id
 
   asset {
@@ -738,9 +738,9 @@ resource "aws_dataexchange_data_set" "test" {
 `, rName, filename, filename2)
 }
 
-func testAccRevisionExclusiveConfig_s3Snapshot_importAndUpload(rName, filename string) string {
+func testAccRevisionAssetsConfig_s3Snapshot_importAndUpload(rName, filename string) string {
 	return fmt.Sprintf(`
-resource "aws_dataexchange_revision_exclusive" "test" {
+resource "aws_dataexchange_revision_assets" "test" {
   data_set_id = aws_dataexchange_data_set.test.id
 
   asset {
@@ -778,9 +778,9 @@ resource "aws_s3_object" "test" {
 `, rName, filename)
 }
 
-func testAccRevisionExclusiveConfig_s3DataAccessFromS3Bucket_basic(rName string) string {
+func testAccRevisionAssetsConfig_s3DataAccessFromS3Bucket_basic(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_dataexchange_revision_exclusive" "test" {
+resource "aws_dataexchange_revision_assets" "test" {
   data_set_id = aws_dataexchange_data_set.test.id
 
   asset {
@@ -860,7 +860,7 @@ data "aws_iam_policy_document" "test" {
 `, rName)
 }
 
-func testAccRevisionExclusiveConfig_s3DataAccessFromS3Bucket_baseConfig(rName string) string {
+func testAccRevisionAssetsConfig_s3DataAccessFromS3Bucket_baseConfig(rName string) string {
 	return fmt.Sprintf(`	
 resource "aws_dataexchange_data_set" "test" {
   asset_type  = "S3_DATA_ACCESS"
@@ -925,9 +925,9 @@ data "aws_iam_policy_document" "test" {
 `, rName)
 }
 
-func testAccRevisionExclusiveConfig_s3DataAccessFromS3Bucket_keys(rName string) string {
-	return acctest.ConfigCompose(testAccRevisionExclusiveConfig_s3DataAccessFromS3Bucket_baseConfig(rName), `
-resource "aws_dataexchange_revision_exclusive" "test" {
+func testAccRevisionAssetsConfig_s3DataAccessFromS3Bucket_keys(rName string) string {
+	return acctest.ConfigCompose(testAccRevisionAssetsConfig_s3DataAccessFromS3Bucket_baseConfig(rName), `
+resource "aws_dataexchange_revision_assets" "test" {
   data_set_id = aws_dataexchange_data_set.test.id
 
   asset {
@@ -948,9 +948,9 @@ resource "aws_dataexchange_revision_exclusive" "test" {
 	)
 }
 
-func testAccRevisionExclusiveConfig_s3DataAccessFromS3Bucket_multiple(rName string) string {
+func testAccRevisionAssetsConfig_s3DataAccessFromS3Bucket_multiple(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_dataexchange_revision_exclusive" "test" {
+resource "aws_dataexchange_revision_assets" "test" {
   data_set_id = aws_dataexchange_data_set.test.id
 
   asset {
@@ -1046,9 +1046,9 @@ data "aws_iam_policy_document" "test" {
 `, rName)
 }
 
-func testAccRevisionExclusiveConfig_s3DataAccessFromS3Bucket_cmk(rName string) string {
+func testAccRevisionAssetsConfig_s3DataAccessFromS3Bucket_cmk(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_dataexchange_revision_exclusive" "test" {
+resource "aws_dataexchange_revision_assets" "test" {
   data_set_id = aws_dataexchange_data_set.test.id
 
   asset {

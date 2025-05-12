@@ -1,9 +1,16 @@
 # Copyright (c) HashiCorp, Inc.
 # SPDX-License-Identifier: MPL-2.0
 
-provider "null" {}
+provider "aws" {
+  default_tags {
+    tags = var.provider_tags
+  }
+  ignore_tags {
+    keys = var.ignore_tag_keys
+  }
+}
 
-resource "aws_dataexchange_revision_exclusive" "test" {
+resource "aws_dataexchange_revision_assets" "test" {
   data_set_id = aws_dataexchange_data_set.test.id
 
   asset {
@@ -15,9 +22,7 @@ resource "aws_dataexchange_revision_exclusive" "test" {
     }
   }
 
-  tags = {
-    (var.unknownTagKey) = null_resource.test.id
-  }
+  tags = var.resource_tags
 }
 
 resource "aws_dataexchange_data_set" "test" {
@@ -37,15 +42,26 @@ resource "aws_s3_object" "test" {
   content = "test"
 }
 
-resource "null_resource" "test" {}
-
 variable "rName" {
   description = "Name for resource"
   type        = string
   nullable    = false
 }
 
-variable "unknownTagKey" {
-  type     = string
+variable "resource_tags" {
+  description = "Tags to set on resource. To specify no tags, set to `null`"
+  # Not setting a default, so that this must explicitly be set to `null` to specify no tags
+  type     = map(string)
+  nullable = true
+}
+
+variable "provider_tags" {
+  type     = map(string)
+  nullable = true
+  default  = null
+}
+
+variable "ignore_tag_keys" {
+  type     = set(string)
   nullable = false
 }

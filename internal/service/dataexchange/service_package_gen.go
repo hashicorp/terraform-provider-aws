@@ -26,9 +26,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Name:     "Event Action",
 		},
 		{
-			Factory:  newResourceRevisionExclusive,
-			TypeName: "aws_dataexchange_revision_exclusive",
-			Name:     "Revision Exclusive",
+			Factory:  newResourceRevisionAssets,
+			TypeName: "aws_dataexchange_revision_assets",
+			Name:     "Revision Assets",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},

@@ -5,12 +5,9 @@ provider "aws" {
   default_tags {
     tags = var.provider_tags
   }
-  ignore_tags {
-    keys = var.ignore_tag_keys
-  }
 }
 
-resource "aws_dataexchange_revision_exclusive" "test" {
+resource "aws_dataexchange_revision_assets" "test" {
   data_set_id = aws_dataexchange_data_set.test.id
 
   asset {
@@ -57,11 +54,5 @@ variable "resource_tags" {
 
 variable "provider_tags" {
   type     = map(string)
-  nullable = true
-  default  = null
-}
-
-variable "ignore_tag_keys" {
-  type     = set(string)
   nullable = false
 }
