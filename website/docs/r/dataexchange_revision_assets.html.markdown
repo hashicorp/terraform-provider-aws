@@ -1,21 +1,21 @@
 ---
 subcategory: "Data Exchange"
 layout: "aws"
-page_title: "AWS: aws_dataexchange_revision_exclusive"
+page_title: "AWS: aws_dataexchange_revision_assets"
 description: |-
-  Terraform resource for managing an AWS Data Exchange Revision Exclusive.
+  Terraform resource for managing an AWS Data Exchange Revision Assets.
 ---
 
-# Resource: aws_dataexchange_revision_exclusive
+# Resource: aws_dataexchange_revision_assets
 
-Terraform resource for managing an AWS Data Exchange Revision Exclusive.
+Terraform resource for managing an AWS Data Exchange Revision Assets.
 
 ## Example Usage
 
 ### Basic Usage
 
 ```terraform
-resource "aws_dataexchange_revision_exclusive" "example" {
+resource "aws_dataexchange_revision_assets" "example" {
   data_set_id = "example-data-set-id"
 
   asset {
@@ -73,7 +73,7 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The ARN of the Data Exchange Revision Exclusive.
+* `arn` - The ARN of the Data Exchange Revision Assets.
 * `id` - The unique identifier for the revision.
 * `created_at` - The timestamp when the revision was created, in RFC3339 format.
 * `updated_at` - The timestamp when the revision was last updated, in RFC3339 format.
