@@ -174,7 +174,7 @@ func testAccFindingAggregatorConfig_NoRegions() string {
 resource "aws_securityhub_account" "example" {}
 
 resource "aws_securityhub_finding_aggregator" "test_aggregator" {
-  linking_mode      = "NO_REGIONS"
+  linking_mode = "NO_REGIONS"
 
   depends_on = [aws_securityhub_account.example]
 }

@@ -64,7 +64,7 @@ The following example will enable the aggregator but not link any AWS Regions to
 resource "aws_securityhub_account" "example" {}
 
 resource "aws_securityhub_finding_aggregator" "example" {
-  linking_mode      = "NO_REGIONS"
+  linking_mode = "NO_REGIONS"
 
   depends_on = [aws_securityhub_account.example]
 }
