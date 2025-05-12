@@ -13,6 +13,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bcmdataexports/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/mapplanmodifier"
@@ -164,7 +165,8 @@ func (r *exportResource) Schema(ctx context.Context, req resource.SchemaRequest,
 
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrID:      framework.IDAttribute(),
+			names.AttrARN:     framework.ARNAttributeComputedOnly(),
+			names.AttrID:      framework.IDAttributeDeprecatedWithAlternate(path.Root(names.AttrARN)),
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
@@ -244,13 +246,14 @@ func (r *exportResource) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
+	plan.ARN = flex.StringToFramework(ctx, out.ExportArn)
 	plan.ID = flex.StringToFramework(ctx, out.ExportArn)
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	outputRaw, err := waitExportCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
+	outputRaw, err := waitExportCreated(ctx, conn, plan.ARN.ValueString(), createTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.BCMDataExports, create.ErrActionWaitingForCreation, ResNameExport, plan.ID.String(), err),
+			create.ProblemStandardMessage(names.BCMDataExports, create.ErrActionWaitingForCreation, ResNameExport, plan.ARN.String(), err),
 			err.Error(),
 		)
 		return
@@ -274,14 +277,14 @@ func (r *exportResource) Read(ctx context.Context, req resource.ReadRequest, res
 		return
 	}
 
-	out, err := findExportByID(ctx, conn, state.ID.ValueString())
+	out, err := findExportByARN(ctx, conn, state.ARN.ValueString())
 	if tfresource.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.BCMDataExports, create.ErrActionSetting, ResNameExport, state.ID.String(), err),
+			create.ProblemStandardMessage(names.BCMDataExports, create.ErrActionSetting, ResNameExport, state.ARN.String(), err),
 			err.Error(),
 		)
 		return
@@ -315,19 +318,19 @@ func (r *exportResource) Update(ctx context.Context, req resource.UpdateRequest,
 			return
 		}
 
-		in.ExportArn = plan.ID.ValueStringPointer()
+		in.ExportArn = plan.ARN.ValueStringPointer()
 
 		out, err := conn.UpdateExport(ctx, in)
 		if err != nil {
 			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.BCMDataExports, create.ErrActionUpdating, ResNameExport, plan.ID.String(), err),
+				create.ProblemStandardMessage(names.BCMDataExports, create.ErrActionUpdating, ResNameExport, plan.ARN.String(), err),
 				err.Error(),
 			)
 			return
 		}
 		if out == nil {
 			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.BCMDataExports, create.ErrActionUpdating, ResNameExport, plan.ID.String(), nil),
+				create.ProblemStandardMessage(names.BCMDataExports, create.ErrActionUpdating, ResNameExport, plan.ARN.String(), nil),
 				errors.New("empty output").Error(),
 			)
 			return
@@ -337,10 +340,10 @@ func (r *exportResource) Update(ctx context.Context, req resource.UpdateRequest,
 	}
 
 	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	_, err := waitExportUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
+	_, err := waitExportUpdated(ctx, conn, plan.ARN.ValueString(), updateTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.BCMDataExports, create.ErrActionWaitingForUpdate, ResNameExport, plan.ID.String(), err),
+			create.ProblemStandardMessage(names.BCMDataExports, create.ErrActionWaitingForUpdate, ResNameExport, plan.ARN.String(), err),
 			err.Error(),
 		)
 		return
@@ -359,7 +362,7 @@ func (r *exportResource) Delete(ctx context.Context, req resource.DeleteRequest,
 	}
 
 	in := &bcmdataexports.DeleteExportInput{
-		ExportArn: state.ID.ValueStringPointer(),
+		ExportArn: state.ARN.ValueStringPointer(),
 	}
 
 	_, err := conn.DeleteExport(ctx, in)
@@ -370,7 +373,7 @@ func (r *exportResource) Delete(ctx context.Context, req resource.DeleteRequest,
 
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.BCMDataExports, create.ErrActionDeleting, ResNameExport, state.ID.String(), err),
+			create.ProblemStandardMessage(names.BCMDataExports, create.ErrActionDeleting, ResNameExport, state.ARN.String(), err),
 			err.Error(),
 		)
 		return
@@ -415,7 +418,7 @@ func waitExportUpdated(ctx context.Context, conn *bcmdataexports.Client, id stri
 
 func statusExport(ctx context.Context, conn *bcmdataexports.Client, id string) retry.StateRefreshFunc {
 	return func() (any, string, error) {
-		out, err := findExportByID(ctx, conn, id)
+		out, err := findExportByARN(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -428,7 +431,7 @@ func statusExport(ctx context.Context, conn *bcmdataexports.Client, id string) r
 	}
 }
 
-func findExportByID(ctx context.Context, conn *bcmdataexports.Client, exportArn string) (*bcmdataexports.GetExportOutput, error) {
+func findExportByARN(ctx context.Context, conn *bcmdataexports.Client, exportArn string) (*bcmdataexports.GetExportOutput, error) {
 	in := &bcmdataexports.GetExportInput{
 		ExportArn: aws.String(exportArn),
 	}
@@ -453,6 +456,7 @@ func findExportByID(ctx context.Context, conn *bcmdataexports.Client, exportArn 
 }
 
 type exportResourceModel struct {
+	ARN      types.String                                `tfsdk:"arn"`
 	Export   fwtypes.ListNestedObjectValueOf[exportData] `tfsdk:"export"`
 	ID       types.String                                `tfsdk:"id"`
 	Tags     tftags.Map                                  `tfsdk:"tags"`
