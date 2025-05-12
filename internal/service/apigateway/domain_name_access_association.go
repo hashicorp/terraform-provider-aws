@@ -8,6 +8,7 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -30,6 +31,7 @@ import (
 
 // @FrameworkResource("aws_api_gateway_domain_name_access_association", name="Domain Name Access Association")
 // @Tags(identifierAttribute="arn")
+// @ArnIdentity
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/apigateway;types.DomainNameAccessAssociation")
 // @Testing(generator="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.RandomSubdomain()")
 // @Testing(tlsKey=true, tlsKeyDomain="rName")
@@ -42,7 +44,6 @@ func newDomainNameAccessAssociationResource(context.Context) (resource.ResourceW
 type domainNameAccessAssociationResource struct {
 	framework.ResourceWithModel[domainNameAccessAssociationResourceModel]
 	framework.WithNoOpUpdate[domainNameAccessAssociationResourceModel]
-	framework.WithImportByID
 }
 
 func (r *domainNameAccessAssociationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -233,4 +234,40 @@ func (model *domainNameAccessAssociationResourceModel) InitFromID() error {
 	model.DomainNameAccessAssociationARN = model.ID
 
 	return nil
+}
+
+func (r *domainNameAccessAssociationResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	arnARN, err := arn.Parse(request.ID)
+	if err != nil {
+		response.Diagnostics.AddError(
+			"Invalid Resource Import ID Value",
+			"The import ID could not be parsed as an ARN.\n\n"+
+				fmt.Sprintf("Value: %q\nError: %s", request.ID, err),
+		)
+		return
+	}
+
+	var region types.String
+	response.Diagnostics.Append(response.State.GetAttribute(ctx, path.Root("region"), &region)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	if !region.IsNull() {
+		if region.ValueString() != arnARN.Region {
+			response.Diagnostics.AddError(
+				"Invalid Resource Import ID Value",
+				fmt.Sprintf("The region passed for import, %q, does not match the region %q in the ARN %q", region.ValueString(), arnARN.Region, request.ID),
+			)
+			return
+		}
+	} else {
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("region"), arnARN.Region)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+	}
+
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrARN), request, response)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), request.ID)...)
 }
