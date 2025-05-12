@@ -39,6 +39,7 @@ import (
 
 // @FrameworkResource("aws_docdbelastic_cluster", name="Cluster")
 // @Tags(identifierAttribute="arn")
+// @ArnIdentity
 func newClusterResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &clusterResource{}
 
@@ -52,7 +53,7 @@ func newClusterResource(context.Context) (resource.ResourceWithConfigure, error)
 type clusterResource struct {
 	framework.ResourceWithModel[clusterResourceModel]
 	framework.WithTimeouts
-	framework.WithImportByID
+	framework.WithImportByARN
 }
 
 const (
