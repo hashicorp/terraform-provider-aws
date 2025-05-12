@@ -28,6 +28,9 @@ This data source supports the following arguments:
 * `image_digest` - (Optional) Sha256 digest of the image manifest. At least one of `image_digest`, `image_tag`, or `most_recent` must be specified.
 * `image_tag` - (Optional) Tag associated with this image. At least one of `image_digest`, `image_tag`, or `most_recent` must be specified.
 * `most_recent` - (Optional) Return the most recently pushed image. At least one of `image_digest`, `image_tag`, or `most_recent` must be specified.
+* `image_tag_regex` - (Optional) Return only images with at least one tag matching the given pattern.
+  Only applicable when using `most_recent`. This allows more advanced filtering not supported by the AWS API.
+  This filtering is done locally on what AWS returns, and could have a performance impact if the result is large.
 
 ## Attribute Reference
 
