@@ -10,9 +10,11 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrock/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
@@ -34,6 +36,7 @@ import (
 
 // @FrameworkResource("aws_bedrock_provisioned_model_throughput", name="Provisioned Model Throughput")
 // @Tags(identifierAttribute="provisioned_model_arn")
+// @ArnIdentity
 // @Testing(tagsTest=false)
 func newProvisionedModelThroughputResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &provisionedModelThroughputResource{}
@@ -46,7 +49,6 @@ func newProvisionedModelThroughputResource(context.Context) (resource.ResourceWi
 type provisionedModelThroughputResource struct {
 	framework.ResourceWithModel[provisionedModelThroughputResourceModel]
 	framework.WithNoOpUpdate[provisionedModelThroughputResourceModel]
-	framework.WithImportByID
 	framework.WithTimeouts
 }
 
@@ -60,7 +62,7 @@ func (r *provisionedModelThroughputResource) Schema(ctx context.Context, request
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			names.AttrID: framework.IDAttribute(),
+			names.AttrID: framework.IDAttributeDeprecatedWithAlternate(path.Root("provisioned_model_arn")),
 			"model_arn": schema.StringAttribute{
 				Required:   true,
 				CustomType: fwtypes.ARNType,
@@ -138,12 +140,6 @@ func (r *provisionedModelThroughputResource) Read(ctx context.Context, request r
 	var data provisionedModelThroughputResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
-		return
-	}
-
-	if err := data.InitFromID(); err != nil {
-		response.Diagnostics.AddError("parsing resource ID", err.Error())
-
 		return
 	}
 
@@ -270,12 +266,42 @@ type provisionedModelThroughputResourceModel struct {
 	Timeouts             timeouts.Value                                  `tfsdk:"timeouts"`
 }
 
-func (data *provisionedModelThroughputResourceModel) InitFromID() error {
-	data.ProvisionedModelARN = data.ID
-
-	return nil
-}
-
 func (data *provisionedModelThroughputResourceModel) setID() {
 	data.ID = data.ProvisionedModelARN
+}
+
+func (w *provisionedModelThroughputResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	arnARN, err := arn.Parse(request.ID)
+	if err != nil {
+		response.Diagnostics.AddError(
+			"Invalid Resource Import ID Value",
+			"The import ID could not be parsed as an ARN.\n\n"+
+				fmt.Sprintf("Value: %q\nError: %s", request.ID, err),
+		)
+		return
+	}
+
+	var region types.String
+	response.Diagnostics.Append(response.State.GetAttribute(ctx, path.Root("region"), &region)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	if !region.IsNull() {
+		if region.ValueString() != arnARN.Region {
+			response.Diagnostics.AddError(
+				"Invalid Resource Import ID Value",
+				fmt.Sprintf("The region passed for import, %q, does not match the region %q in the ARN %q", region.ValueString(), arnARN.Region, request.ID),
+			)
+			return
+		}
+	} else {
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("region"), arnARN.Region)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+	}
+
+	resource.ImportStatePassthroughID(ctx, path.Root("provisioned_model_arn"), request, response)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), request.ID)...)
 }

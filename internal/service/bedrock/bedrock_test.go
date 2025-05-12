@@ -24,6 +24,8 @@ func TestAccBedrock_serial(t *testing.T) {
 			"vpcConfig":                             testAccCustomModel_vpcConfig,
 			"singularDataSourceBasic":               testAccCustomModelDataSource_basic,
 			"pluralDataSourceBasic":                 testAccCustomModelsDataSource_basic,
+			"Identity_Basic":                        testAccCustomModel_Identity_Basic,
+			// "Identity_RegionOverride":               testAccCustomModel_Identity_RegionOverride,
 		},
 		"ModelInvocationLoggingConfiguration": {
 			acctest.CtBasic:      testAccModelInvocationLoggingConfiguration_basic,
