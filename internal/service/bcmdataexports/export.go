@@ -6,9 +6,11 @@ package bcmdataexports
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/bcmdataexports"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bcmdataexports/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -35,6 +37,7 @@ import (
 
 // @FrameworkResource("aws_bcmdataexports_export",name="Export")
 // @Tags(identifierAttribute="id")
+// @ArnIdentity
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bcmdataexports;bcmdataexports.GetExportOutput")
 // @Testing(skipEmptyTags=true, skipNullTags=true)
 func newExportResource(_ context.Context) (resource.ResourceWithConfigure, error) {
@@ -53,7 +56,6 @@ const (
 type exportResource struct {
 	framework.ResourceWithModel[exportResourceModel]
 	framework.WithTimeouts
-	framework.WithImportByID
 }
 
 func (r *exportResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -498,4 +500,19 @@ type destinationConfigurationsData struct {
 
 type refreshCadenceData struct {
 	Frequency fwtypes.StringEnum[awstypes.FrequencyOption] `tfsdk:"frequency"`
+}
+
+func (w *exportResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	_, err := arn.Parse(request.ID)
+	if err != nil {
+		response.Diagnostics.AddError(
+			"Invalid Resource Import ID Value",
+			"The import ID could not be parsed as an ARN.\n\n"+
+				fmt.Sprintf("Value: %q\nError: %s", request.ID, err),
+		)
+		return
+	}
+
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrARN), request, response)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), request.ID)...)
 }

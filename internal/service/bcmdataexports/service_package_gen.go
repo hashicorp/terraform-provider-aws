@@ -29,7 +29,8 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			}),
-			Region: unique.Make(inttypes.ResourceRegionDisabled()),
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Identity: inttypes.ARNIdentity(),
 		},
 	}
 }
