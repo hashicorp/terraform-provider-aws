@@ -32,6 +32,7 @@ func resourceMlflowTrackingServer() *schema.Resource {
 		ReadWithoutTimeout:   resourceMlflowTrackingServerRead,
 		UpdateWithoutTimeout: resourceMlflowTrackingServerUpdate,
 		DeleteWithoutTimeout: resourceMlflowTrackingServerDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -212,12 +213,12 @@ func resourceMlflowTrackingServerDelete(ctx context.Context, d *schema.ResourceD
 	}
 	_, err := conn.DeleteMlflowTrackingServer(ctx, &input)
 
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting SageMaker AI Mlflow Tracking Server (%s): %s", d.Id(), err)
-	}
-
 	if errs.IsA[*awstypes.ResourceNotFound](err) {
 		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting SageMaker AI Mlflow Tracking Server (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitMlflowTrackingServerDeleted(ctx, conn, d.Id()); err != nil {
