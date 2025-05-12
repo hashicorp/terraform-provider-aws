@@ -26,8 +26,8 @@ func TestAccECRImagesDataSource_basic(t *testing.T) {
 			{
 				Config: testAccImagesDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(dataSourceName, "id"),
-					resource.TestCheckResourceAttr(dataSourceName, "repository_name", rName),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrID),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrRepositoryName, rName),
 					resource.TestCheckResourceAttrSet(dataSourceName, "image_ids.#"),
 				),
 			},
@@ -48,8 +48,8 @@ func TestAccECRImagesDataSource_publicRepo(t *testing.T) {
 			{
 				Config: testAccImagesDataSourceConfig_publicRepo(registry, repo),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(dataSourceName, "id"),
-					resource.TestCheckResourceAttr(dataSourceName, "repository_name", repo),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrID),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrRepositoryName, repo),
 					resource.TestCheckResourceAttr(dataSourceName, "registry_id", registry),
 					resource.TestCheckResourceAttrSet(dataSourceName, "image_ids.#"),
 					// Check that we have at least one image with the "latest" tag

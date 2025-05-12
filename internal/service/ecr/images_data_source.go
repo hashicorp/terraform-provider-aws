@@ -6,7 +6,6 @@ package ecr
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecr/types"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -33,7 +32,7 @@ func (d *imagesDataSource) Schema(ctx context.Context, request datasource.Schema
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: framework.IDAttribute(),
-			"repository_name": schema.StringAttribute{
+			names.AttrRepositoryName: schema.StringAttribute{
 				Required:    true,
 				Description: "Name of the repository",
 			},
@@ -65,11 +64,11 @@ func (d *imagesDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 	conn := d.Meta().ECRClient(ctx)
 
 	input := &ecr.ListImagesInput{
-		RepositoryName: aws.String(data.RepositoryName.ValueString()),
+		RepositoryName: data.RepositoryName.ValueStringPointer(),
 	}
 
 	if !data.RegistryID.IsNull() && !data.RegistryID.IsUnknown() {
-		input.RegistryId = aws.String(data.RegistryID.ValueString())
+		input.RegistryId = data.RegistryID.ValueStringPointer()
 	}
 
 	output, err := findImages(ctx, conn, input)
