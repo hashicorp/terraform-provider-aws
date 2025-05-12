@@ -28,6 +28,7 @@ import (
 )
 
 // @FrameworkResource("aws_appfabric_app_bundle", name="App Bundle")
+// @ArnIdentity
 // @Tags(identifierAttribute="id")
 // @Testing(serialize=true)
 // @Testing(generator=false)
@@ -41,7 +42,7 @@ func newAppBundleResource(context.Context) (resource.ResourceWithConfigure, erro
 type appBundleResource struct {
 	framework.ResourceWithModel[appBundleResourceModel]
 	framework.WithNoOpUpdate[appBundleResourceModel]
-	framework.WithImportByID
+	framework.WithImportByARN
 }
 
 func (r *appBundleResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -101,11 +102,6 @@ func (r *appBundleResource) Read(ctx context.Context, request resource.ReadReque
 	var data appBundleResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
-		return
-	}
-	if err := data.InitFromID(); err != nil {
-		response.Diagnostics.AddError("parsing resource ID", err.Error())
-
 		return
 	}
 
@@ -191,12 +187,6 @@ type appBundleResourceModel struct {
 	ID                    types.String `tfsdk:"id"`
 	Tags                  tftags.Map   `tfsdk:"tags"`
 	TagsAll               tftags.Map   `tfsdk:"tags_all"`
-}
-
-func (data *appBundleResourceModel) InitFromID() error {
-	data.ARN = data.ID
-
-	return nil
 }
 
 func (data *appBundleResourceModel) setID() {

@@ -9,8 +9,10 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appfabric/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
+	"github.com/hashicorp/terraform-plugin-testing/compare"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -19,11 +21,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfappfabric "github.com/hashicorp/terraform-provider-aws/internal/service/appfabric"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -56,6 +60,74 @@ func testAccAppBundle_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("customer_managed_key_arn"), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccAppBundle_Identity_Basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	var appbundle awstypes.AppBundle
+	resourceName := "aws_appfabric_app_bundle.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAppBundleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppBundleConfig_basic,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAppBundleExists(ctx, resourceName, &appbundle),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("appfabric", regexache.MustCompile("appbundle/"+verify.UUIDRegexPattern))),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccAppBundle_Identity_RegionOverride(t *testing.T) {
+	ctx := acctest.Context(t)
+	var appbundle awstypes.AppBundle
+	resourceName := "aws_appfabric_app_bundle.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckAlternateRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			testAccPreCheckInRegion(ctx, t, acctest.AlternateRegion())
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppBundleConfig_region(acctest.AlternateRegion()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAppBundleExistsInRegion(ctx, resourceName, &appbundle, acctest.AlternateRegion()),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNAlternateRegionRegexp("appfabric", regexache.MustCompile("appbundle/"+verify.UUIDRegexPattern))),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
 				},
 			},
 			{
