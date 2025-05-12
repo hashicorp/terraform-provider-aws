@@ -331,13 +331,13 @@ resource "aws_s3_bucket" "output" {
 }
 
 resource "aws_s3_object" "training" {
-  bucket = aws_s3_bucket.training.id
+  bucket = aws_s3_bucket.training.bucket
   key    = "data/train.jsonl"
   source = "test-fixtures/train.jsonl"
 }
 
 resource "aws_s3_object" "validation" {
-  bucket = aws_s3_bucket.validation.id
+  bucket = aws_s3_bucket.validation.bucket
   key    = "data/validate.jsonl"
   source = "test-fixtures/validate.jsonl"
 }
@@ -442,11 +442,11 @@ resource "aws_bedrock_custom_model" "test" {
   }
 
   output_data_config {
-    s3_uri = "s3://${aws_s3_bucket.output.id}/data/"
+    s3_uri = "s3://${aws_s3_bucket.output.bucket}/data/"
   }
 
   training_data_config {
-    s3_uri = "s3://${aws_s3_bucket.training.id}/data/train.jsonl"
+    s3_uri = "s3://${aws_s3_bucket.training.bucket}/data/train.jsonl"
   }
 }
 `, rName))
@@ -477,11 +477,11 @@ resource "aws_bedrock_custom_model" "test" {
   }
 
   output_data_config {
-    s3_uri = "s3://${aws_s3_bucket.output.id}/data/"
+    s3_uri = "s3://${aws_s3_bucket.output.bucket}/data/"
   }
 
   training_data_config {
-    s3_uri = "s3://${aws_s3_bucket.training.id}/data/train.jsonl"
+    s3_uri = "s3://${aws_s3_bucket.training.bucket}/data/train.jsonl"
   }
 }
 `, rName))
@@ -503,16 +503,16 @@ resource "aws_bedrock_custom_model" "test" {
   }
 
   output_data_config {
-    s3_uri = "s3://${aws_s3_bucket.output.id}/data/"
+    s3_uri = "s3://${aws_s3_bucket.output.bucket}/data/"
   }
 
   training_data_config {
-    s3_uri = "s3://${aws_s3_bucket.training.id}/data/train.jsonl"
+    s3_uri = "s3://${aws_s3_bucket.training.bucket}/data/train.jsonl"
   }
 
   validation_data_config {
     validator {
-      s3_uri = "s3://${aws_s3_bucket.validation.id}/data/validate.jsonl"
+      s3_uri = "s3://${aws_s3_bucket.validation.bucket}/data/validate.jsonl"
     }
   }
 }
@@ -573,11 +573,11 @@ resource "aws_bedrock_custom_model" "test" {
   }
 
   output_data_config {
-    s3_uri = "s3://${aws_s3_bucket.output.id}/data/"
+    s3_uri = "s3://${aws_s3_bucket.output.bucket}/data/"
   }
 
   training_data_config {
-    s3_uri = "s3://${aws_s3_bucket.training.id}/data/train.jsonl"
+    s3_uri = "s3://${aws_s3_bucket.training.bucket}/data/train.jsonl"
   }
 
   vpc_config {
