@@ -1877,6 +1877,7 @@ resource "aws_mq_broker" "test" {
 `, rName, version)
 }
 
+/*
 func testAccBrokerConfig_engineVersionUpdate(rName, version string) string {
 	return fmt.Sprintf(`
 resource "aws_security_group" "test" {
@@ -1906,6 +1907,7 @@ resource "aws_mq_broker" "test" {
 }
 `, rName, version)
 }
+*/
 
 func testAccBrokerConfig_allFieldsDefaultVPC(rName, version, cfgName, cfgBody string) string {
 	return fmt.Sprintf(`
