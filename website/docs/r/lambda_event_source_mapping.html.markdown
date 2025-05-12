@@ -59,8 +59,8 @@ resource "aws_lambda_event_source_mapping" "example" {
   starting_position = "TRIM_HORIZON"
 
   provisioned_poller_config {
-    maximum_poller = 80
-    minimum_poller = 10
+    maximum_pollers = 80
+    minimum_pollers = 10
   }
 
   self_managed_event_source {
