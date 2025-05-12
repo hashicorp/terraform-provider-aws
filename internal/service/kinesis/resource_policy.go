@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/kinesis"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/kinesis/types"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -27,6 +28,7 @@ import (
 )
 
 // @FrameworkResource("aws_kinesis_resource_policy", name="Resource Policy")
+// @ArnIdentity
 func newResourcePolicyResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourcePolicyResource{}
 
@@ -35,7 +37,6 @@ func newResourcePolicyResource(context.Context) (resource.ResourceWithConfigure,
 
 type resourcePolicyResource struct {
 	framework.ResourceWithModel[resourcePolicyResourceModel]
-	framework.WithImportByID
 }
 
 func (r *resourcePolicyResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -92,12 +93,6 @@ func (r *resourcePolicyResource) Read(ctx context.Context, request resource.Read
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 
 	if response.Diagnostics.HasError() {
-		return
-	}
-
-	if err := data.InitFromID(); err != nil {
-		response.Diagnostics.AddError("parsing resource ID", err.Error())
-
 		return
 	}
 
@@ -215,17 +210,42 @@ type resourcePolicyResourceModel struct {
 	ResourceARN fwtypes.ARN       `tfsdk:"resource_arn"`
 }
 
-func (data *resourcePolicyResourceModel) InitFromID() error {
-	_, err := arn.Parse(data.ID.ValueString())
-	if err != nil {
-		return err
-	}
-
-	data.ResourceARN = fwtypes.ARNValue(data.ID.ValueString())
-
-	return nil
-}
-
 func (data *resourcePolicyResourceModel) setID() {
 	data.ID = data.ResourceARN.StringValue
+}
+
+func (w *resourcePolicyResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	arnARN, err := arn.Parse(request.ID)
+	if err != nil {
+		response.Diagnostics.AddError(
+			"Invalid Resource Import ID Value",
+			"The import ID could not be parsed as an ARN.\n\n"+
+				fmt.Sprintf("Value: %q\nError: %s", request.ID, err),
+		)
+		return
+	}
+
+	var region types.String
+	response.Diagnostics.Append(response.State.GetAttribute(ctx, path.Root("region"), &region)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	if !region.IsNull() {
+		if region.ValueString() != arnARN.Region {
+			response.Diagnostics.AddError(
+				"Invalid Resource Import ID Value",
+				fmt.Sprintf("The region passed for import, %q, does not match the region %q in the ARN %q", region.ValueString(), arnARN.Region, request.ID),
+			)
+			return
+		}
+	} else {
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("region"), arnARN.Region)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+	}
+
+	resource.ImportStatePassthroughID(ctx, path.Root("resource_arn"), request, response)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), request.ID)...)
 }

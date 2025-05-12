@@ -8,10 +8,14 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-testing/compare"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfkinesis "github.com/hashicorp/terraform-provider-aws/internal/service/kinesis"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -41,6 +45,72 @@ func TestAccKinesisResourcePolicy_basic(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrPolicy}, // TODO terraform-plugin-testing
+			},
+		},
+	})
+}
+
+func TestAccKinesisResourcePolicy_Identity_Basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_kinesis_resource_policy.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAlternateAccount(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KinesisServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             testAccCheckResourcePolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResourcePolicyConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResourcePolicyExists(ctx, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("resource_arn"), tfknownvalue.RegionalARNExact("kinesis", ("stream/"+rName))),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New("resource_arn"), compare.ValuesSame()),
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrPolicy},
+			},
+		},
+	})
+}
+
+func TestAccKinesisResourcePolicy_Identity_RegionOverride(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_kinesis_resource_policy.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAlternateAccount(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KinesisServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResourcePolicyConfig_regionOverride(rName),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("resource_arn"), tfknownvalue.RegionalARNAlternateRegionExact("kinesis", ("stream/"+rName))),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New("resource_arn"), compare.ValuesSame()),
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       acctest.CrossRegionImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrPolicy},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrPolicy},
 			},
 		},
 	})
@@ -146,4 +216,46 @@ resource "aws_kinesis_resource_policy" "test" {
 EOF
 }
 `, rName))
+}
+
+func testAccResourcePolicyConfig_regionOverride(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), fmt.Sprintf(`
+data "aws_caller_identity" "target" {
+  provider = "awsalternate"
+}
+
+resource "aws_kinesis_stream" "test" {
+  region = %[2]q
+
+  name        = %[1]q
+  shard_count = 2
+}
+
+resource "aws_kinesis_resource_policy" "test" {
+  region = %[2]q
+
+  resource_arn = aws_kinesis_stream.test.arn
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Id": "writePolicy",
+  "Statement": [{
+    "Sid": "writestatement",
+    "Effect": "Allow",
+    "Principal": {
+      "AWS": "${data.aws_caller_identity.target.account_id}"
+    },
+    "Action": [
+      "kinesis:DescribeStreamSummary",
+      "kinesis:ListShards",
+      "kinesis:PutRecord",
+      "kinesis:PutRecords"
+    ],
+    "Resource": "${aws_kinesis_stream.test.arn}"
+  }]
+}
+EOF
+}
+`, rName, acctest.AlternateRegion()))
 }
