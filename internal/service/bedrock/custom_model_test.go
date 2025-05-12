@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -48,11 +49,12 @@ func testAccCustomModel_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "hyperparameters.learningRate", "0.005"),
 					resource.TestCheckResourceAttr(resourceName, "hyperparameters.learningRateWarmupSteps", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "job_arn"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "job_arn", "bedrock", regexache.MustCompile(`model-customization-job/amazon.titan-text-express-v1.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "job_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "job_status", "InProgress"),
 					resource.TestCheckResourceAttr(resourceName, "output_data_config.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "output_data_config.0.s3_uri"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, "training_data_config.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "training_data_config.0.s3_uri"),
