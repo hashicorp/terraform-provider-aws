@@ -20,6 +20,8 @@ data "aws_cloudfront_distribution" "test" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `id` - Identifier for the distribution. For example: `EDFDVBD632BHDS5`.
 
 ## Attribute Reference

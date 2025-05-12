@@ -30,6 +30,8 @@ data "aws_cloudfront_origin_access_identities" "example" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `comments` (Optional) - Filter origin access identities by comment.
 
 ## Attribute Reference

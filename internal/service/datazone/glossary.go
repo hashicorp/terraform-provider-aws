@@ -231,7 +231,7 @@ func (r *resourceGlossary) Delete(ctx context.Context, req resource.DeleteReques
 			return
 		}
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataZone, create.ErrActionDeleting, ResNameGlossary, state.Id.String(), err),
+			create.ProblemStandardMessage(names.DataZone, create.ErrActionDeleting, ResNameGlossary, state.Id.String(), err2),
 			err2.Error(),
 		)
 		return

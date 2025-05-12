@@ -22,13 +22,9 @@ data "aws_cloudwatch_contributor_managed_insight_rules" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
 * `resource_arn` - (Required) ARN of an Amazon Web Services resource that has managed Contributor Insights rules.
-
-The following arguments are optional:
-
-There are no optional arguments.
 
 ## Attribute Reference
 

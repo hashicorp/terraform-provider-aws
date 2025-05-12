@@ -14,14 +14,14 @@ Terraform data source for managing an AWS App Mesh Virtual Gateway.
 
 ### Basic Usage
 
-```hcl
+```terraform
 data "aws_appmesh_virtual_gateway" "example" {
   mesh_name = "mesh-gateway"
   name      = "example-mesh"
 }
 ```
 
-```hcl
+```terraform
 data "aws_caller_identity" "current" {}
 
 data "aws_appmesh_virtual_gateway" "test" {
