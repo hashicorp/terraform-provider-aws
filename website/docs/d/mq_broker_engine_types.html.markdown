@@ -22,6 +22,8 @@ data "aws_mq_broker_engine_types" "example" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `engine_type` - (Optional) The MQ engine type to return version details for.
 
 ## Attribute Reference

@@ -20,7 +20,7 @@ resource "aws_apprunner_deployment" "example" {
 
 ## Argument Reference
 
-The following arguments supported:
+This resource supports the following arguments:
 
 * `service_arn` - (Required) The Amazon Resource Name (ARN) of the App Runner service to start the deployment for.
 

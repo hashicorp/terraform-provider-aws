@@ -20,6 +20,8 @@ data "aws_api_gateway_domain_name" "example" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `domain_name` - (Required) Fully-qualified domain name to look up. If no domain name is found, an error will be returned.
 * `domain_name_id` - (Optional) The identifier for the domain name resource. Supported only for private custom domain names.
 

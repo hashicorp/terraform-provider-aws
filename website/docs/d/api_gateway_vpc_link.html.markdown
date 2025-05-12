@@ -23,6 +23,8 @@ data "aws_api_gateway_vpc_link" "my_api_gateway_vpc_link" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `name` - (Required) Name of the API Gateway VPC Link to look up. If no API Gateway VPC Link is found with this name, an error will be returned.
  If multiple API Gateway VPC Links are found with this name, an error will be returned.
 

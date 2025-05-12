@@ -240,7 +240,7 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
 
 The example below creates a CloudFront distribution with [standard logging V2 to S3](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/standard-logging.html#enable-access-logging-api).
 
-```hcl
+```terraform
 provider "aws" {
   region = var.region
 }
@@ -294,9 +294,7 @@ resource "aws_cloudwatch_log_delivery" "example" {
 
 ## Argument Reference
 
-The CloudFront distribution argument layout is a complex structure composed of several sub-resources - these resources are laid out below.
-
-### Top-Level Arguments
+This resource supports the following arguments:
 
 * `aliases` (Optional) - Extra CNAMEs (alternate domain names), if any, for this distribution.
 * `comment` (Optional) - Any comments you want to include about the distribution.

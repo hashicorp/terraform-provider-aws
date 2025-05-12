@@ -28,7 +28,7 @@ jobs:
         if: |
           github.event.review.state == 'approved'
           && (steps.community_check.outputs.maintainer == 'true' || steps.community_check.outputs.partner == 'true')
-        uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d # v2.0.0
+        uses: slackapi/slack-github-action@b0fa283ad8fea605de13dc3f449259339835fc52 # v2.1.0
         env:
           REVIEW_AUTHOR_URL: ${{ github.event.review.user.html_url }}
           REVIEW_AUTHOR_LOGIN: ${{ github.event.review.user.login }}
