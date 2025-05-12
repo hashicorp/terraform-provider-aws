@@ -256,6 +256,6 @@ func findMlflowTrackingServerByName(ctx context.Context, conn *sagemaker.Client,
 // normalizeMlflowVersion normalizes the MLflow version to major/minor
 // format (e.g., "1.26" instead of "1.26.0").
 func normalizeMlflowVersion(version string) string {
-	s, _ := semver.MajorAndMinorString(version)
+	s, _ := semver.MajorMinor(version)
 	return s
 }

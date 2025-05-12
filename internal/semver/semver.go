@@ -33,8 +33,8 @@ func GreaterThanOrEqual(s1, s2 string) bool {
 	return v1.GreaterThanOrEqual(v2)
 }
 
-// MajorAndMinorString returns the major and minor version string.
-func MajorAndMinorString(s string) (string, error) {
+// MajorMinor returns the major and minor version string.
+func MajorMinor(s string) (string, error) {
 	v, err := gversion.NewVersion(s)
 
 	if err != nil {
