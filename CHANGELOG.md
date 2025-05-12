@@ -1,8 +1,16 @@
 ## 6.0.0-beta2 (Unreleased)
 
+BREAKING CHANGES:
+
+* resource/aws_sagemaker_image_version: `id` is now a comma-delimited string concatenating `image_name` and `version` ([#42536](https://github.com/hashicorp/terraform-provider-aws/issues/42536))
+
 NOTES:
 
 * data-source/aws_kms_secret: This data source will be removed in a future version ([#42524](https://github.com/hashicorp/terraform-provider-aws/issues/42524))
+
+BUG FIXES:
+
+* resource/aws_sagemaker_image_version: Read the correct image version after creation rather than always fetching the latest ([#42536](https://github.com/hashicorp/terraform-provider-aws/issues/42536))
 
 ## 6.0.0-beta1 (May  7, 2025)
 
