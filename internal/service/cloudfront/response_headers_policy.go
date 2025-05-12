@@ -581,66 +581,54 @@ func expandResponseHeadersPolicyCorsConfig(tfMap map[string]any) *awstypes.Respo
 }
 
 func expandResponseHeadersPolicyAccessControlAllowHeaders(tfMap map[string]any) *awstypes.ResponseHeadersPolicyAccessControlAllowHeaders {
-	if tfMap == nil {
-		return nil
+	var items []string
+	if v, ok := tfMap["items"].(*schema.Set); ok {
+		items = flex.ExpandStringValueSet(v)
 	}
 
-	apiObject := &awstypes.ResponseHeadersPolicyAccessControlAllowHeaders{}
-
-	if v, ok := tfMap["items"].(*schema.Set); ok && v.Len() > 0 {
-		items := flex.ExpandStringValueSet(v)
-		apiObject.Items = items
-		apiObject.Quantity = aws.Int32(int32(len(items)))
+	apiObject := &awstypes.ResponseHeadersPolicyAccessControlAllowHeaders{
+		Items:    items,
+		Quantity: aws.Int32(int32(len(items))),
 	}
-
 	return apiObject
 }
 
 func expandResponseHeadersPolicyAccessControlAllowMethods(tfMap map[string]any) *awstypes.ResponseHeadersPolicyAccessControlAllowMethods {
-	if tfMap == nil {
-		return nil
+	var items []awstypes.ResponseHeadersPolicyAccessControlAllowMethodsValues
+	if v, ok := tfMap["items"].(*schema.Set); ok {
+		items = flex.ExpandStringyValueSet[awstypes.ResponseHeadersPolicyAccessControlAllowMethodsValues](v)
 	}
 
-	apiObject := &awstypes.ResponseHeadersPolicyAccessControlAllowMethods{}
-
-	if v, ok := tfMap["items"].(*schema.Set); ok && v.Len() > 0 {
-		items := flex.ExpandStringyValueSet[awstypes.ResponseHeadersPolicyAccessControlAllowMethodsValues](v)
-		apiObject.Items = items
-		apiObject.Quantity = aws.Int32(int32(len(items)))
+	apiObject := &awstypes.ResponseHeadersPolicyAccessControlAllowMethods{
+		Items:    items,
+		Quantity: aws.Int32(int32(len(items))),
 	}
-
 	return apiObject
 }
 
 func expandResponseHeadersPolicyAccessControlAllowOrigins(tfMap map[string]any) *awstypes.ResponseHeadersPolicyAccessControlAllowOrigins {
-	if tfMap == nil {
-		return nil
+	var items []string
+	if v, ok := tfMap["items"].(*schema.Set); ok {
+		items = flex.ExpandStringValueSet(v)
 	}
 
-	apiObject := &awstypes.ResponseHeadersPolicyAccessControlAllowOrigins{}
-
-	if v, ok := tfMap["items"].(*schema.Set); ok && v.Len() > 0 {
-		items := flex.ExpandStringValueSet(v)
-		apiObject.Items = items
-		apiObject.Quantity = aws.Int32(int32(len(items)))
+	apiObject := &awstypes.ResponseHeadersPolicyAccessControlAllowOrigins{
+		Items:    items,
+		Quantity: aws.Int32(int32(len(items))),
 	}
-
 	return apiObject
 }
 
 func expandResponseHeadersPolicyAccessControlExposeHeaders(tfMap map[string]any) *awstypes.ResponseHeadersPolicyAccessControlExposeHeaders {
-	if tfMap == nil {
-		return nil
+	var items []string
+	if v, ok := tfMap["items"].(*schema.Set); ok {
+		items = flex.ExpandStringValueSet(v)
 	}
 
-	apiObject := &awstypes.ResponseHeadersPolicyAccessControlExposeHeaders{}
-
-	if v, ok := tfMap["items"].(*schema.Set); ok && v.Len() > 0 {
-		items := flex.ExpandStringValueSet(v)
-		apiObject.Items = items
-		apiObject.Quantity = aws.Int32(int32(len(items)))
+	apiObject := &awstypes.ResponseHeadersPolicyAccessControlExposeHeaders{
+		Items:    items,
+		Quantity: aws.Int32(int32(len(items))),
 	}
-
 	return apiObject
 }
 

@@ -22,6 +22,8 @@ func TestAccCloudFrontResponseHeadersPolicy_cors(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName3 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName4 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudfront_response_headers_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -94,6 +96,44 @@ func TestAccCloudFrontResponseHeadersPolicy_cors(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "remove_headers_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "security_headers_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "server_timing_headers_config.#", "0"),
+				),
+			},
+			{
+				Config: testAccResponseHeadersPolicyConfig_corsEmpty(rName3),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResponseHeadersPolicyExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrComment, "test empty"),
+					resource.TestCheckResourceAttr(resourceName, "cors_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cors_config.0.access_control_allow_credentials", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "cors_config.0.access_control_allow_headers.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cors_config.0.access_control_allow_headers.0.items.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cors_config.0.access_control_allow_methods.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cors_config.0.access_control_allow_methods.0.items.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cors_config.0.access_control_allow_origins.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cors_config.0.access_control_allow_origins.0.items.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cors_config.0.access_control_expose_headers.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cors_config.0.access_control_expose_headers.0.items.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cors_config.0.access_control_max_age_sec", "3600"),
+					resource.TestCheckResourceAttr(resourceName, "cors_config.0.origin_override", acctest.CtFalse),
+				),
+			},
+			{
+				Config: testAccResponseHeadersPolicyConfig_corsUnset(rName4),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResponseHeadersPolicyExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrComment, "test unset"),
+					resource.TestCheckResourceAttr(resourceName, "cors_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cors_config.0.access_control_allow_credentials", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "cors_config.0.access_control_allow_headers.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cors_config.0.access_control_allow_headers.0.items.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cors_config.0.access_control_allow_methods.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cors_config.0.access_control_allow_methods.0.items.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cors_config.0.access_control_allow_origins.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cors_config.0.access_control_allow_origins.0.items.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cors_config.0.access_control_expose_headers.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cors_config.0.access_control_expose_headers.0.items.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cors_config.0.access_control_max_age_sec", "3600"),
+					resource.TestCheckResourceAttr(resourceName, "cors_config.0.origin_override", acctest.CtFalse),
 				),
 			},
 		},
@@ -478,6 +518,64 @@ resource "aws_cloudfront_response_headers_policy" "test" {
 
     access_control_expose_headers {
       items = ["HEAD"]
+    }
+
+    access_control_max_age_sec = 3600
+
+    origin_override = false
+  }
+}
+`, rName)
+}
+
+func testAccResponseHeadersPolicyConfig_corsUnset(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudfront_response_headers_policy" "test" {
+  name    = %[1]q
+  comment = "test unset"
+
+  cors_config {
+    access_control_allow_credentials = true
+
+    access_control_allow_headers {}
+
+    access_control_allow_methods {}
+
+    access_control_allow_origins {}
+
+    access_control_expose_headers {}
+
+    access_control_max_age_sec = 3600
+
+    origin_override = false
+  }
+}
+`, rName)
+}
+
+func testAccResponseHeadersPolicyConfig_corsEmpty(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudfront_response_headers_policy" "test" {
+  name    = %[1]q
+  comment = "test empty"
+
+  cors_config {
+    access_control_allow_credentials = true
+
+    access_control_allow_headers {
+      items = []
+    }
+
+    access_control_allow_methods {
+      items = []
+    }
+
+    access_control_allow_origins {
+      items = []
+    }
+
+    access_control_expose_headers {
+      items = []
     }
 
     access_control_max_age_sec = 3600
