@@ -3529,6 +3529,24 @@ resource "aws_dynamodb_table" "test" {
 `, rName)
 }
 
+func testAccTableConfig_regionOverride(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  region = %[2]q
+
+  name           = %[1]q
+  read_capacity  = 1
+  write_capacity = 1
+  hash_key       = %[1]q
+
+  attribute {
+    name = %[1]q
+    type = "S"
+  }
+}
+`, rName, acctest.AlternateRegion())
+}
+
 func testAccTableConfig_enable_deletion_protection(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {

@@ -27,6 +27,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "aws_dynamodb_resource_policy",
 			Name:     "Resource Policy",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.ARNIdentity(),
 		},
 	}
 }
