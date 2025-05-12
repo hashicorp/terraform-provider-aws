@@ -74,7 +74,7 @@ resource "aws_db_option_group" "test" {
 }
 
 data "aws_db_option_group" "test" {
-  option_group_name             = aws_db_option_group.test.name
+  option_group_name = aws_db_option_group.test.name
 }
 `, rName, desc, engineName)
 }
