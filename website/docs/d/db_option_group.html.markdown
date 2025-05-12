@@ -14,7 +14,7 @@ Terraform data source for managing an AWS RDS DB Option Group.
 
 ```terraform
 data "aws_db_option_group" "example" {
-    option_group_name = "option-group-test-terraform"
+  option_group_name = "option-group-test-terraform"
 }
 ```
 
