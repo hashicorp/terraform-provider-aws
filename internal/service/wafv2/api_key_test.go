@@ -6,7 +6,6 @@ package wafv2_test
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"testing"
 
@@ -16,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfwafv2 "github.com/hashicorp/terraform-provider-aws/internal/service/wafv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -46,7 +44,7 @@ func TestAccWAFV2APIKey_basic(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccAPIKeyImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    testAccAPIKeyImportStateIDFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "api_key",
 			},
@@ -81,7 +79,7 @@ func TestAccWAFV2APIKey_multipleTokenDomains(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccAPIKeyImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    testAccAPIKeyImportStateIDFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "api_key",
 			},
@@ -162,52 +160,45 @@ func testAccCheckAPIKeyDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			key := rs.Primary.Attributes["api_key"]
-			scope := rs.Primary.Attributes[names.AttrScope]
+			_, err := tfwafv2.FindAPIKeyByTwoPartKey(ctx, conn, rs.Primary.Attributes["api_key"], awstypes.Scope(rs.Primary.Attributes[names.AttrScope]))
 
-			_, err := tfwafv2.FindAPIKeyByKey(ctx, conn, key, scope)
 			if tfresource.NotFound(err) {
-				return nil
-			}
-			if err != nil {
-				return create.Error(names.WAFV2, create.ErrActionCheckingDestroyed, tfwafv2.ResNameAPIKey, key, err)
+				continue
 			}
 
-			return create.Error(names.WAFV2, create.ErrActionCheckingDestroyed, tfwafv2.ResNameAPIKey, key, errors.New("not destroyed"))
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("WAFv2 API Key %s still exists", rs.Primary.Attributes["api_key"])
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckAPIKeyExists(ctx context.Context, name string, apiKey *awstypes.APIKeySummary) resource.TestCheckFunc {
+func testAccCheckAPIKeyExists(ctx context.Context, n string, v *awstypes.APIKeySummary) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.WAFV2, create.ErrActionCheckingExistence, tfwafv2.ResNameAPIKey, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.WAFV2, create.ErrActionCheckingExistence, tfwafv2.ResNameAPIKey, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Client(ctx)
 
-		key := rs.Primary.Attributes["api_key"]
-		scope := rs.Primary.Attributes[names.AttrScope]
+		output, err := tfwafv2.FindAPIKeyByTwoPartKey(ctx, conn, rs.Primary.Attributes["api_key"], awstypes.Scope(rs.Primary.Attributes[names.AttrScope]))
 
-		resp, err := tfwafv2.FindAPIKeyByKey(ctx, conn, key, scope)
 		if err != nil {
-			return create.Error(names.WAFV2, create.ErrActionCheckingExistence, tfwafv2.ResNameAPIKey, key, err)
+			return err
 		}
 
-		*apiKey = *resp
+		*v = *output
 
 		return nil
 	}
 }
 
-func testAccAPIKeyImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+func testAccAPIKeyImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -217,23 +208,6 @@ func testAccAPIKeyImportStateIdFunc(resourceName string) resource.ImportStateIdF
 		return fmt.Sprintf("%s,%s", rs.Primary.Attributes["api_key"], rs.Primary.Attributes[names.AttrScope]), nil
 	}
 }
-
-// func testAccPreCheck(ctx context.Context, t *testing.T) {
-// 	conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Client(ctx)
-
-// 	input := &wafv2.ListAPIKeysInput{
-// 		Scope: awstypes.ScopeRegional,
-// 	}
-
-// 	_, err := conn.ListAPIKeys(ctx, input)
-
-// 	if acctest.PreCheckSkipError(err) {
-// 		t.Skipf("skipping acceptance testing: %s", err)
-// 	}
-// 	if err != nil {
-// 		t.Fatalf("unexpected PreCheck error: %s", err)
-// 	}
-// }
 
 func testAccAPIKeyConfig_basic(domains []string) string {
 	d, _ := json.Marshal(domains)

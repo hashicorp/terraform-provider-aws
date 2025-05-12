@@ -21,7 +21,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory:  newResourceAPIKey,
+			Factory:  newAPIKeyResource,
 			TypeName: "aws_wafv2_api_key",
 			Name:     "API Key",
 		},

@@ -5,8 +5,6 @@ package wafv2
 
 import (
 	"context"
-	"errors"
-	"fmt"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -22,39 +20,29 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_wafv2_api_key", name="API Key")
-func newResourceAPIKey(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceAPIKey{}, nil
+func newAPIKeyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &apiKeyResource{}, nil
 }
 
-const (
-	ResNameAPIKey = "API Key"
-	// Based on RFC 1034, RFC 1123, and RFC 5890
-	// - Domain labels must start and end with alphanumeric characters
-	// - Domain labels can contain hyphens but not at start or end
-	// - Each domain label can be up to 63 characters
-	// - Must contain at least one period (separating domain and TLD)
-	RegexDNSName  = `^([0-9A-Za-z]([0-9A-Za-z-]{0,61}[0-9A-Za-z])?\.)+[0-9A-Za-z]([0-9A-Za-z-]{0,61}[0-9A-Za-z])?$`
-	apiKeyIDParts = 2
-)
-
-type resourceAPIKey struct {
+type apiKeyResource struct {
 	framework.ResourceWithConfigure
+	framework.WithNoUpdate
 }
 
-func (r *resourceAPIKey) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *apiKeyResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Description: "Provides a WAFv2 API Key resource.",
 		Attributes: map[string]schema.Attribute{
 			"api_key": schema.StringAttribute{
@@ -62,7 +50,16 @@ func (r *resourceAPIKey) Schema(ctx context.Context, req resource.SchemaRequest,
 				Sensitive:   true,
 				Description: "The API key value. This is sensitive and not included in responses.",
 			},
+			names.AttrScope: schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.Scope](),
+				Required:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "Specifies whether this is for an AWS CloudFront distribution or for a regional application. Valid values are CLOUDFRONT or REGIONAL.",
+			},
 			"token_domains": schema.SetAttribute{
+				CustomType:  fwtypes.SetOfStringType,
 				Required:    true,
 				ElementType: types.StringType,
 				PlanModifiers: []planmodifier.Set{
@@ -73,7 +70,12 @@ func (r *resourceAPIKey) Schema(ctx context.Context, req resource.SchemaRequest,
 					setvalidator.SizeAtMost(5),
 					setvalidator.ValueStringsAre(
 						stringvalidator.RegexMatches(
-							regexache.MustCompile(RegexDNSName),
+							// Based on RFC 1034, RFC 1123, and RFC 5890
+							// - Domain labels must start and end with alphanumeric characters
+							// - Domain labels can contain hyphens but not at start or end
+							// - Each domain label can be up to 63 characters
+							// - Must contain at least one period (separating domain and TLD)
+							regexache.MustCompile(`^([0-9A-Za-z]([0-9A-Za-z-]{0,61}[0-9A-Za-z])?\.)+[0-9A-Za-z]([0-9A-Za-z-]{0,61}[0-9A-Za-z])?$`),
 							"domain names must follow DNS format with valid characters: A-Z, a-z, 0-9, -(hyphen) or . (period)",
 						),
 						stringvalidator.LengthAtMost(253),
@@ -81,188 +83,156 @@ func (r *resourceAPIKey) Schema(ctx context.Context, req resource.SchemaRequest,
 				},
 				Description: "The domains that you want to be able to use the API key with, for example example.com. Maximum of 5 domains.",
 			},
-			names.AttrScope: schema.StringAttribute{
-				Required: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-				Validators: []validator.String{
-					stringvalidator.OneOf(enum.Slice(awstypes.ScopeCloudfront, awstypes.ScopeRegional)...),
-				},
-				Description: "Specifies whether this is for an AWS CloudFront distribution or for a regional application. Valid values are CLOUDFRONT or REGIONAL.",
-			},
 		},
 	}
 }
 
-func (r *resourceAPIKey) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan resourceAPIKeyModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
+func (r *apiKeyResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data apiKeyResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
 	conn := r.Meta().WAFV2Client(ctx)
 
 	input := wafv2.CreateAPIKeyInput{
-		Scope:        awstypes.Scope(plan.Scope.ValueString()),
-		TokenDomains: flex.ExpandFrameworkStringValueSet(ctx, plan.TokenDomains),
+		Scope:        data.Scope.ValueEnum(),
+		TokenDomains: fwflex.ExpandFrameworkStringValueSet(ctx, data.TokenDomains),
 	}
 
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("APIKey"))...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	output, err := conn.CreateAPIKey(ctx, &input)
 
-	out, err := conn.CreateAPIKey(ctx, &input)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.WAFV2, create.ErrActionCreating, ResNameAPIKey, "", err),
-			err.Error(),
-		)
-		return
-	}
-	if out == nil || out.APIKey == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.WAFV2, create.ErrActionCreating, ResNameAPIKey, "", nil),
-			errors.New("empty output").Error(),
-		)
+		response.Diagnostics.AddError("creating WAFv2 API Key", err.Error())
+
 		return
 	}
 
-	plan.APIKey = types.StringValue(*out.APIKey)
+	// Set values for unknowns.
+	data.APIKey = fwflex.StringToFramework(ctx, output.APIKey)
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-func (r *resourceAPIKey) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *apiKeyResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data apiKeyResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().WAFV2Client(ctx)
 
-	var state resourceAPIKeyModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+	output, err := findAPIKeyByTwoPartKey(ctx, conn, data.APIKey.ValueString(), data.Scope.ValueEnum())
+
+	if tfresource.NotFound(err) {
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+
 		return
 	}
 
-	out, err := findAPIKeyByKey(ctx, conn, state.APIKey.ValueString(), state.Scope.ValueString())
-	if errs.IsA[*tfresource.EmptyResultError](err) || tfresource.NotFound(err) {
-		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
-		resp.State.RemoveResource(ctx)
-		return
-	}
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.WAFV2, create.ErrActionReading, ResNameAPIKey, state.APIKey.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError("reading WAFv2 API Key", err.Error())
+
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
-	if resp.Diagnostics.HasError() {
+	// Set attributes for import.
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceAPIKey) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	// WAFv2 APIKey cannot be updated - any change requires replacement so we reuse existing data
-	var state resourceAPIKeyModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *apiKeyResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data apiKeyResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
-}
-
-func (r *resourceAPIKey) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().WAFV2Client(ctx)
-
-	var state resourceAPIKeyModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
 
 	input := wafv2.DeleteAPIKeyInput{
-		APIKey: state.APIKey.ValueStringPointer(),
-		Scope:  awstypes.Scope(state.Scope.ValueString()),
+		APIKey: fwflex.StringFromFramework(ctx, data.APIKey),
+		Scope:  data.Scope.ValueEnum(),
 	}
 
 	_, err := conn.DeleteAPIKey(ctx, &input)
+
 	if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
 		return
 	}
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.WAFV2, create.ErrActionDeleting, ResNameAPIKey, state.APIKey.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError("deleting WAFv2 API Key", err.Error())
+
 		return
 	}
 }
 
-func (r *resourceAPIKey) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	parts, err := intflex.ExpandResourceId(req.ID, apiKeyIDParts, true)
+func (r *apiKeyResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	const (
+		apiKeyIDParts = 2
+	)
+	parts, err := intflex.ExpandResourceId(request.ID, apiKeyIDParts, true)
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Unexpected Import Identifier",
-			fmt.Sprintf("Expected import identifier with format: api_key,scope. Valid scope values are CLOUDFRONT or REGIONAL. Got: %q", req.ID),
-		)
+		response.Diagnostics.Append(fwdiag.NewParsingResourceIDErrorDiagnostic(err))
+
 		return
 	}
 
-	scope := parts[1]
-	if scope != string(awstypes.ScopeCloudfront) && scope != string(awstypes.ScopeRegional) {
-		resp.Diagnostics.AddError(
-			"Invalid Scope Value",
-			fmt.Sprintf("Expected scope to be one of %q or %q. Got: %q",
-				string(awstypes.ScopeCloudfront), string(awstypes.ScopeRegional), scope),
-		)
-		return
-	}
-
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("api_key"), parts[0])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrScope), parts[1])...)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("api_key"), parts[0])...)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrScope), parts[1])...)
 }
 
-func findAPIKeyByKey(ctx context.Context, conn *wafv2.Client, key, scope string) (*awstypes.APIKeySummary, error) {
-	input := &wafv2.ListAPIKeysInput{
-		Scope: awstypes.Scope(scope),
+func findAPIKeyByTwoPartKey(ctx context.Context, conn *wafv2.Client, key string, scope awstypes.Scope) (*awstypes.APIKeySummary, error) {
+	input := wafv2.ListAPIKeysInput{
+		Scope: scope,
 	}
 
-	for {
-		output, err := conn.ListAPIKeys(ctx, input)
-		if err != nil {
-			return nil, fmt.Errorf("listing API Keys: %w", err)
+	return findAPIKey(ctx, conn, &input, func(v *awstypes.APIKeySummary) bool {
+		return aws.ToString(v.APIKey) == key
+	})
+}
+
+func findAPIKey(ctx context.Context, conn *wafv2.Client, input *wafv2.ListAPIKeysInput, filter tfslices.Predicate[*awstypes.APIKeySummary]) (*awstypes.APIKeySummary, error) {
+	output, err := findAPIKeys(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findAPIKeys(ctx context.Context, conn *wafv2.Client, input *wafv2.ListAPIKeysInput, filter tfslices.Predicate[*awstypes.APIKeySummary]) ([]awstypes.APIKeySummary, error) {
+	var output []awstypes.APIKeySummary
+
+	err := listAPIKeysPages(ctx, conn, input, func(page *wafv2.ListAPIKeysOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
-		for _, apiKey := range output.APIKeySummaries {
-			if aws.ToString(apiKey.APIKey) == key {
-				return &apiKey, nil
+		for _, v := range page.APIKeySummaries {
+			if filter(&v) {
+				output = append(output, v)
 			}
 		}
 
-		if output.NextMarker == nil {
-			break
-		}
-		input.NextMarker = output.NextMarker
-	}
+		return !lastPage
+	})
 
-	return nil, &tfresource.EmptyResultError{
-		LastRequest: input,
-	}
+	return output, err
 }
 
-type resourceAPIKeyModel struct {
-	APIKey       types.String `tfsdk:"api_key"`
-	Scope        types.String `tfsdk:"scope"`
-	TokenDomains types.Set    `tfsdk:"token_domains"`
+type apiKeyResourceModel struct {
+	APIKey       types.String                       `tfsdk:"api_key"`
+	Scope        fwtypes.StringEnum[awstypes.Scope] `tfsdk:"scope"`
+	TokenDomains fwtypes.SetOfString                `tfsdk:"token_domains"`
 }

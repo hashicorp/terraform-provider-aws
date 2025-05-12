@@ -282,7 +282,7 @@ func sweepAPIKeys(region string) error {
 		}
 
 		for _, v := range page.APIKeySummaries {
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceAPIKey, client,
+			sweepResources = append(sweepResources, framework.NewSweepResource(newAPIKeyResource, client,
 				framework.NewAttribute("api_key", aws.ToString(v.APIKey)),
 				framework.NewAttribute("token_domains", v.TokenDomains),
 				framework.NewAttribute(names.AttrScope, awstypes.ScopeRegional),
