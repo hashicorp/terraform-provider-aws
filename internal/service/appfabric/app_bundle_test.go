@@ -133,6 +133,12 @@ func testAccAppBundle_Identity_RegionOverride(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
+				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
 				ImportStateVerify: true,
 			},
 		},
