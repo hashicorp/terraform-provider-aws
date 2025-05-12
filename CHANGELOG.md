@@ -22,6 +22,7 @@ ENHANCEMENTS:
 * resource/aws_cognito_managed_user_pool_client: Add `refresh_token_rotation` argument ([#42430](https://github.com/hashicorp/terraform-provider-aws/issues/42430))
 * resource/aws_cognito_user_pool_client: Add `refresh_token_rotation` argument ([#42430](https://github.com/hashicorp/terraform-provider-aws/issues/42430))
 * resource/aws_cognitoidp_user_pool: Add `user_pool_add_ons.advanced_security_additional_flows` argument ([#42470](https://github.com/hashicorp/terraform-provider-aws/issues/42470))
+* resource/aws_docdb_cluster: Add `manage_master_user_password` argument and `master_user_secret` attribute ([#42563](https://github.com/hashicorp/terraform-provider-aws/issues/42563))
 * resource/aws_dynamodb_table: Add `point_in_time_recovery.recovery_period_in_days` argument ([#41484](https://github.com/hashicorp/terraform-provider-aws/issues/41484))
 * resource/aws_ec2_client_vpn_endpoint: Add `client_route_enforcement_options` argument ([#42424](https://github.com/hashicorp/terraform-provider-aws/issues/42424))
 * resource/aws_ecs_account_setting_default: Add support for `defaultLogDriverMode` value in `Name` argument ([#42418](https://github.com/hashicorp/terraform-provider-aws/issues/42418))
