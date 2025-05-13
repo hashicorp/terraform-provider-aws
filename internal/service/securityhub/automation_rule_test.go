@@ -11,13 +11,18 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/securityhub/types"
+	"github.com/hashicorp/terraform-plugin-testing/compare"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -38,6 +43,71 @@ func testAccAutomationRule_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAutomationRuleExists(ctx, resourceName, &automationRule),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccAutomationRule_Identity_Basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	var automationRule types.AutomationRulesConfig
+	resourceName := "aws_securityhub_automation_rule.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAutomationRuleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAutomationRuleConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAutomationRuleExists(ctx, resourceName, &automationRule),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("securityhub", regexache.MustCompile("automation-rule/"+verify.UUIDRegexPattern))),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccAutomationRule_Identity_RegionOverride(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	resourceName := "aws_securityhub_automation_rule.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAutomationRuleConfig_regionOverride(rName),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNAlternateRegionRegexp("securityhub", regexache.MustCompile("automation-rule/"+verify.UUIDRegexPattern))),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
 			},
 			{
 				ResourceName:      resourceName,
@@ -422,6 +492,47 @@ resource "aws_securityhub_automation_rule" "test" {
   depends_on = [aws_securityhub_account.test]
 }
 `, rName)
+}
+
+func testAccAutomationRuleConfig_regionOverride(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_securityhub_account" "test" {
+  region = %[2]q
+}
+
+resource "aws_securityhub_automation_rule" "test" {
+  region = %[2]q
+
+  description = "test description"
+  rule_name   = %[1]q
+  rule_order  = 1
+
+  actions {
+    finding_fields_update {
+      severity {
+        label   = "LOW"
+        product = "0.0"
+      }
+
+      types = ["Software and Configuration Checks/Industry and Regulatory Standards"]
+
+      user_defined_fields = {
+        key = "value"
+      }
+    }
+    type = "FINDING_FIELDS_UPDATE"
+  }
+
+  criteria {
+    aws_account_id {
+      comparison = "EQUALS"
+      value      = "1234567890"
+    }
+  }
+
+  depends_on = [aws_securityhub_account.test]
+}
+`, rName, acctest.AlternateRegion())
 }
 
 func testAccAutomationRuleConfig_full(rName string) string {
