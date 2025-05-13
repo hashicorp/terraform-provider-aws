@@ -5,8 +5,10 @@ package ssoadmin
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -25,6 +27,7 @@ import (
 )
 
 // @FrameworkResource("aws_ssoadmin_application_assignment_configuration", name="Application Assignment Configuration")
+// @ArnIdentity
 func newApplicationAssignmentConfigurationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &applicationAssignmentConfigurationResource{}, nil
 }
@@ -49,7 +52,7 @@ func (r *applicationAssignmentConfigurationResource) Schema(ctx context.Context,
 			"assignment_required": schema.BoolAttribute{
 				Required: true,
 			},
-			names.AttrID: framework.IDAttribute(),
+			names.AttrID: framework.IDAttributeDeprecatedWithAlternate(path.Root("application_arn")),
 		},
 	}
 }
@@ -166,15 +169,9 @@ func (r *applicationAssignmentConfigurationResource) Delete(ctx context.Context,
 	}
 }
 
-func (r *applicationAssignmentConfigurationResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	// Set both id and application_arn on import to avoid immediate diff and planned replacement
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-	resource.ImportStatePassthroughID(ctx, path.Root("application_arn"), req, resp)
-}
-
-func findApplicationAssignmentConfigurationByID(ctx context.Context, conn *ssoadmin.Client, id string) (*ssoadmin.GetApplicationAssignmentConfigurationOutput, error) {
+func findApplicationAssignmentConfigurationByID(ctx context.Context, conn *ssoadmin.Client, arn string) (*ssoadmin.GetApplicationAssignmentConfigurationOutput, error) {
 	in := &ssoadmin.GetApplicationAssignmentConfigurationInput{
-		ApplicationArn: aws.String(id),
+		ApplicationArn: aws.String(arn),
 	}
 
 	out, err := conn.GetApplicationAssignmentConfiguration(ctx, in)
@@ -197,4 +194,19 @@ type applicationAssignmentConfigurationResourceModel struct {
 	ApplicationARN     types.String `tfsdk:"application_arn"`
 	AssignmentRequired types.Bool   `tfsdk:"assignment_required"`
 	ID                 types.String `tfsdk:"id"`
+}
+
+func (w *applicationAssignmentConfigurationResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	_, err := arn.Parse(request.ID)
+	if err != nil {
+		response.Diagnostics.AddError(
+			"Invalid Resource Import ID Value",
+			"The import ID could not be parsed as an ARN.\n\n"+
+				fmt.Sprintf("Value: %q\nError: %s", request.ID, err),
+		)
+		return
+	}
+
+	resource.ImportStatePassthroughID(ctx, path.Root("application_arn"), request, response)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), request.ID)...)
 }

@@ -8,6 +8,7 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
@@ -32,13 +33,13 @@ import (
 
 // @FrameworkResource("aws_ssoadmin_application", name="Application")
 // @Tags
+// @ArnIdentity
 func newApplicationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &applicationResource{}, nil
 }
 
 type applicationResource struct {
 	framework.ResourceWithModel[applicationResourceModel]
-	framework.WithImportByID
 }
 
 func (r *applicationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -357,4 +358,19 @@ type portalOptionsModel struct {
 type signInOptionsModel struct {
 	ApplicationURL types.String                              `tfsdk:"application_url"`
 	Origin         fwtypes.StringEnum[awstypes.SignInOrigin] `tfsdk:"origin"`
+}
+
+func (w *applicationResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	_, err := arn.Parse(request.ID)
+	if err != nil {
+		response.Diagnostics.AddError(
+			"Invalid Resource Import ID Value",
+			"The import ID could not be parsed as an ARN.\n\n"+
+				fmt.Sprintf("Value: %q\nError: %s", request.ID, err),
+		)
+		return
+	}
+
+	resource.ImportStatePassthroughID(ctx, path.Root("application_arn"), request, response)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), request.ID)...)
 }
