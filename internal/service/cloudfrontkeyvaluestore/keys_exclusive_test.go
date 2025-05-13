@@ -55,7 +55,7 @@ func TestAccCloudFrontKeyValueStoreKeysExclusive_basic(t *testing.T) {
 				Config: testAccKeysExclusiveConfig_basic(keys, values, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeysExclusiveExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "key_value_store_arn", kvsResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "key_value_store_arn", kvsResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "total_size_in_bytes"),
 					testCheckMultipleKeyValuePairs(keys, values, resourceName),
 				),
