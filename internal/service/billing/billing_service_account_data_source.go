@@ -16,7 +16,6 @@ import (
 )
 
 // @FrameworkDataSource("aws_billing_service_account", name="Service Account")
-// @Region(overrideEnabled=false)
 func newServiceAccountDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &billingServiceAccountDataSource{}
 

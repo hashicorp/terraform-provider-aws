@@ -889,6 +889,8 @@ service "billing" {
   provider_package_correct = "billing"
   doc_prefix               = ["billing_"]
   brand                    = "AWS"
+
+  is_global = true
 }
 
 service "billingconductor" {
