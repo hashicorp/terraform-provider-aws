@@ -1805,8 +1805,55 @@ func TestAccBatchComputeEnvironment_updateEC2(t *testing.T) {
 	})
 }
 
-// Test plan time errors...
+// TestAccBatchComputeEnvironment_unmanagedVCPUs tests the unmanagedv_cpus parameter
+func TestAccBatchComputeEnvironment_unmanagedVCPUs(t *testing.T) {
+	ctx := acctest.Context(t)
+	var ce awstypes.ComputeEnvironmentDetail
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_batch_compute_environment.test"
+	serviceRoleResourceName := "aws_iam_role.batch_service"
 
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckComputeEnvironmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccComputeEnvironmentConfig_unmanagedVCPUs(rName, 4),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckComputeEnvironmentExists(ctx, resourceName, &ce),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "ecs_cluster_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrServiceRole, serviceRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, "ENABLED"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatusReason),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "UNMANAGED"),
+					resource.TestCheckResourceAttr(resourceName, "unmanagedv_cpus", "4"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccComputeEnvironmentConfig_unmanagedVCPUs(rName, 8),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckComputeEnvironmentExists(ctx, resourceName, &ce),
+					resource.TestCheckResourceAttr(resourceName, "unmanagedv_cpus", "8"),
+				),
+			},
+		},
+	})
+}
+
+// TestAccBatchComputeEnvironment_createEC2WithoutComputeResources tests the creation of EC2 without compute resources
 func TestAccBatchComputeEnvironment_createEC2WithoutComputeResources(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -3135,4 +3182,21 @@ resource "aws_batch_compute_environment" "test" {
   type = "MANAGED"
 }
 `, rName))
+}
+
+// testAccComputeEnvironmentConfig_unmanagedVCPUs is a test fixture for unmanagedv_cpus parameter
+func testAccComputeEnvironmentConfig_unmanagedVCPUs(rName string, unmanagedVCPUs int) string {
+	return fmt.Sprintf(`
+%s
+
+resource "aws_batch_compute_environment" "test" {
+  compute_environment_name = %[2]q
+
+  service_role = aws_iam_role.batch_service.arn
+  type         = "UNMANAGED"
+  unmanagedv_cpus = %[3]d
+
+  depends_on = [aws_iam_role_policy_attachment.batch_service]
+}
+`, testAccComputeEnvironmentConfig_base(rName), rName, unmanagedVCPUs)
 }
