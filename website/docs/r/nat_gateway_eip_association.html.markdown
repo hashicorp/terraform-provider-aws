@@ -57,5 +57,5 @@ import {
 Using `terraform import`, import VPC NAT Gateway EIP Association using the `example_id_arg`. For example:
 
 ```console
-% terraform import aws_ec2_vpc_nat_gateway_eip_association.example nat-1234567890abcdef1,eipalloc-1234567890abcdef1
+% terraform import aws_nat_gateway_eip_association.example nat-1234567890abcdef1,eipalloc-1234567890abcdef1
 ```
