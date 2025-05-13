@@ -11,19 +11,21 @@ import (
 )
 
 func populateFromResourceState(format string, state *tfjson.StateResource) (string, error) {
+	remaining := format
+
 	var buf strings.Builder
-	for format != "" {
+	for remaining != "" {
 		var (
 			stuff string
 			found bool
 		)
-		stuff, format, found = strings.Cut(format, "{")
+		stuff, remaining, found = strings.Cut(remaining, "{")
 		buf.WriteString(stuff)
 		if found {
 			var param string
-			param, format, found = strings.Cut(format, "}")
+			param, remaining, found = strings.Cut(remaining, "}")
 			if !found {
-				return "", fmt.Errorf("missing closing '}' in format %q", format)
+				return "", fmt.Errorf("missing closing '}' in format %q", remaining)
 			}
 
 			attr, ok := state.AttributeValues[param]
