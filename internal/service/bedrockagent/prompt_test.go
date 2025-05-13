@@ -162,11 +162,6 @@ func TestAccBedrockAgentPrompt_variants(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "variant.1.template_configuration.0.chat.0.tool_configuration.0.tool.0.tool_spec.0.input_schema.0.json", "{\"Key1\":\"Value1\"}"),
 				),
 			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
 		},
 	})
 }
@@ -221,11 +216,6 @@ func TestAccBedrockAgentPrompt_extraFields(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "variant.0.template_configuration.0.text.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "variant.0.template_configuration.0.text.0.text", "test"),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})

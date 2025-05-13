@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent/document"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
+	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -29,7 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	smithyjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -89,11 +90,8 @@ func (r *promptResource) Schema(ctx context.Context, request resource.SchemaRequ
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"additional_model_request_fields": schema.StringAttribute{
-							CustomType: fwtypes.NewSmithyJSONType(ctx, document.NewLazyDocument),
+							CustomType: jsontypes.NormalizedType{},
 							Optional:   true,
-							Validators: []validator.String{
-								validators.JSON(),
-							},
 						},
 						"model_id": schema.StringAttribute{
 							Optional: true,
@@ -360,13 +358,12 @@ func (r *promptResource) Schema(ctx context.Context, request resource.SchemaRequ
 																						NestedObject: schema.NestedBlockObject{
 																							Attributes: map[string]schema.Attribute{
 																								names.AttrJSON: schema.StringAttribute{
-																									CustomType: fwtypes.NewSmithyJSONType(ctx, document.NewLazyDocument),
+																									CustomType: jsontypes.NormalizedType{},
 																									Optional:   true,
 																									Validators: []validator.String{
 																										stringvalidator.ExactlyOneOf(
 																											path.MatchRelative().AtParent().AtName(names.AttrJSON),
 																										),
-																										validators.JSON(),
 																									},
 																								},
 																							},
@@ -655,7 +652,7 @@ type promptResourceModel struct {
 }
 
 type promptVariantModel struct {
-	AdditionalModelRequestFields fwtypes.SmithyJSON[document.Interface]                             `tfsdk:"additional_model_request_fields"`
+	AdditionalModelRequestFields jsontypes.Normalized                                               `tfsdk:"additional_model_request_fields"  autoflex:"-"`
 	GenAIResource                fwtypes.ListNestedObjectValueOf[promptGenAiResourceModel]          `tfsdk:"gen_ai_resource"`
 	InferenceConfiguration       fwtypes.ListNestedObjectValueOf[promptInferenceConfigurationModel] `tfsdk:"inference_configuration"`
 	Metadata                     fwtypes.ListNestedObjectValueOf[promptMetadataEntryModel]          `tfsdk:"metadata"`
@@ -663,6 +660,83 @@ type promptVariantModel struct {
 	Name                         types.String                                                       `tfsdk:"name"`
 	TemplateConfiguration        fwtypes.ListNestedObjectValueOf[promptTemplateConfigurationModel]  `tfsdk:"template_configuration"`
 	TemplateType                 fwtypes.StringEnum[awstypes.PromptTemplateType]                    `tfsdk:"template_type"`
+}
+
+var (
+	_ fwflex.Expander  = promptVariantModel{}
+	_ fwflex.Flattener = &promptVariantModel{}
+)
+
+func (m promptVariantModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var result any
+	var diags diag.Diagnostics
+
+	var r awstypes.PromptVariant
+	diags.Append(fwflex.Expand(ctx, m.GenAIResource, &r.GenAiResource)...)
+	diags.Append(fwflex.Expand(ctx, m.InferenceConfiguration, &r.InferenceConfiguration)...)
+	diags.Append(fwflex.Expand(ctx, m.Metadata, &r.Metadata)...)
+	diags.Append(fwflex.Expand(ctx, m.ModelID, &r.ModelId)...)
+	diags.Append(fwflex.Expand(ctx, m.Name, &r.Name)...)
+	diags.Append(fwflex.Expand(ctx, m.TemplateConfiguration, &r.TemplateConfiguration)...)
+	diags.Append(fwflex.Expand(ctx, m.TemplateType, &r.TemplateType)...)
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	if !m.AdditionalModelRequestFields.IsNull() {
+		json, err := smithyjson.SmithyDocumentFromString(fwflex.StringValueFromFramework(ctx, m.AdditionalModelRequestFields), document.NewLazyDocument)
+		if err != nil {
+			diags.Append(diag.NewErrorDiagnostic(
+				"Decoding JSON",
+				err.Error(),
+			))
+
+			return nil, diags
+		}
+
+		r.AdditionalModelRequestFields = json
+	}
+
+	result = &r
+
+	return result, diags
+}
+
+func (m *promptVariantModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if v, ok := v.(awstypes.PromptVariant); ok {
+		if v.GenAiResource != nil {
+			diags.Append(fwflex.Flatten(ctx, v.GenAiResource, &m.GenAIResource)...)
+		}
+		if v.InferenceConfiguration != nil {
+			diags.Append(fwflex.Flatten(ctx, v.InferenceConfiguration, &m.InferenceConfiguration)...)
+		}
+		diags.Append(fwflex.Flatten(ctx, v.Metadata, &m.Metadata)...)
+		diags.Append(fwflex.Flatten(ctx, v.ModelId, &m.ModelID)...)
+		diags.Append(fwflex.Flatten(ctx, v.Name, &m.Name)...)
+		diags.Append(fwflex.Flatten(ctx, v.TemplateConfiguration, &m.TemplateConfiguration)...)
+		diags.Append(fwflex.Flatten(ctx, v.TemplateType, &m.TemplateType)...)
+		if diags.HasError() {
+			return diags
+		}
+
+		if v.AdditionalModelRequestFields != nil {
+			json, err := smithyjson.SmithyDocumentToString(v.AdditionalModelRequestFields)
+			if err != nil {
+				diags.Append(diag.NewErrorDiagnostic(
+					"Encoding JSON",
+					err.Error(),
+				))
+
+				return diags
+			}
+
+			m.AdditionalModelRequestFields = jsontypes.NewNormalizedValue(json)
+		}
+	}
+
+	return diags
 }
 
 type promptGenAiResourceModel struct {
@@ -1093,7 +1167,7 @@ type toolSpecificationModel struct {
 }
 
 type toolInputSchemaModel struct {
-	JSON fwtypes.SmithyJSON[document.Interface] `tfsdk:"json"`
+	JSON jsontypes.Normalized `tfsdk:"json" autoflex:"-"`
 }
 
 var (
@@ -1107,11 +1181,18 @@ func (m toolInputSchemaModel) Expand(ctx context.Context) (any, diag.Diagnostics
 
 	switch {
 	case !m.JSON.IsNull():
-		var r awstypes.ToolInputSchemaMemberJson
-		diags.Append(fwflex.Expand(ctx, m.JSON, &r.Value)...)
-		if diags.HasError() {
+		json, err := smithyjson.SmithyDocumentFromString(fwflex.StringValueFromFramework(ctx, m.JSON), document.NewLazyDocument)
+		if err != nil {
+			diags.Append(diag.NewErrorDiagnostic(
+				"Decoding JSON",
+				err.Error(),
+			))
+
 			return nil, diags
 		}
+
+		var r awstypes.ToolInputSchemaMemberJson
+		r.Value = json
 
 		result = &r
 	}
@@ -1124,9 +1205,18 @@ func (m *toolInputSchemaModel) Flatten(ctx context.Context, v any) diag.Diagnost
 
 	switch v := v.(type) {
 	case awstypes.ToolInputSchemaMemberJson:
-		diags.Append(fwflex.Flatten(ctx, v.Value, &m.JSON)...)
-		if diags.HasError() {
-			return diags
+		if v.Value != nil {
+			json, err := smithyjson.SmithyDocumentToString(v.Value)
+			if err != nil {
+				diags.Append(diag.NewErrorDiagnostic(
+					"Encoding JSON",
+					err.Error(),
+				))
+
+				return diags
+			}
+
+			m.JSON = jsontypes.NewNormalizedValue(json)
 		}
 	}
 
