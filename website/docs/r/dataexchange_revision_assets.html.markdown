@@ -36,7 +36,7 @@ resource "aws_dataexchange_revision_assets" "example" {
 
 The following arguments are required:
 
-* `data_set_id` - (Required) The unique identifier for the data set associated with the revision.
+* `data_set_id` - (Required) Unique identifier for the data set associated with the revision.
 * `asset` - (Required) A block to define the asset associated with the revision. See [Asset](#asset) for more details.
 
 The following arguments are optional:
