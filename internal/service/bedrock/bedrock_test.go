@@ -28,9 +28,11 @@ func TestAccBedrock_serial(t *testing.T) {
 			// "Identity_RegionOverride":               testAccCustomModel_Identity_RegionOverride,
 		},
 		"ModelInvocationLoggingConfiguration": {
-			acctest.CtBasic:      testAccModelInvocationLoggingConfiguration_basic,
-			acctest.CtDisappears: testAccModelInvocationLoggingConfiguration_disappears,
-			"upgradeV6.0.0":      testAccModelInvocationLoggingConfiguration_upgrade_V6_0_0,
+			acctest.CtBasic:           testAccModelInvocationLoggingConfiguration_basic,
+			acctest.CtDisappears:      testAccModelInvocationLoggingConfiguration_disappears,
+			"upgradeV6.0.0":           testAccModelInvocationLoggingConfiguration_upgrade_V6_0_0,
+			"Identity_Basic":          testAccModelInvocationLoggingConfiguration_Identity_Basic,
+			"Identity_RegionOverride": testAccModelInvocationLoggingConfiguration_Identity_RegionOverride,
 		},
 	}
 

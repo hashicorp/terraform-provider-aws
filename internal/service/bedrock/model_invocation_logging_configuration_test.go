@@ -8,10 +8,14 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-testing/compare"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfbedrock "github.com/hashicorp/terraform-provider-aws/internal/service/bedrock"
@@ -67,6 +71,69 @@ func testAccModelInvocationLoggingConfiguration_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "logging_config.0.s3_config.0.bucket_name", s3BucketResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "logging_config.0.s3_config.0.key_prefix", "bedrock"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccModelInvocationLoggingConfiguration_Identity_Basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bedrock_model_invocation_logging_configuration.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckModelInvocationLoggingConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccModelInvocationLoggingConfigurationConfig_basic(rName, "null", "null", "null", "null"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckModelInvocationLoggingConfigurationExists(ctx, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrRegion), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccModelInvocationLoggingConfiguration_Identity_RegionOverride(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bedrock_model_invocation_logging_configuration.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckModelInvocationLoggingConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccModelInvocationLoggingConfigurationConfig_regionOverride(rName),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrRegion), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
 			},
 			{
 				ResourceName:      resourceName,
@@ -325,4 +392,132 @@ resource "aws_bedrock_model_invocation_logging_configuration" "test" {
   }
 }
 `, rName, embeddingDataDeliveryEnabled, imageDataDeliveryEnabled, textDataDeliveryEnabled, videoDataDeliveryEnabled)
+}
+
+func testAccModelInvocationLoggingConfigurationConfig_regionOverride(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_bedrock_model_invocation_logging_configuration" "test" {
+  region = %[2]q
+
+  depends_on = [
+    aws_s3_bucket_policy.test,
+    aws_iam_role_policy_attachment.test,
+  ]
+
+  logging_config {
+    cloudwatch_config {
+      log_group_name = aws_cloudwatch_log_group.test.name
+      role_arn       = aws_iam_role.test.arn
+    }
+
+    s3_config {
+      bucket_name = aws_s3_bucket.test.id
+      key_prefix  = "bedrock"
+    }
+  }
+}
+
+data "aws_caller_identity" "current" {}
+data "aws_region" "current" {
+  region = %[2]q
+}
+data "aws_partition" "current" {}
+
+resource "aws_s3_bucket" "test" {
+  region = %[2]q
+
+  bucket        = %[1]q
+  force_destroy = true
+
+  lifecycle {
+    ignore_changes = ["tags", "tags_all"]
+  }
+}
+
+resource "aws_s3_bucket_policy" "test" {
+  region = %[2]q
+
+  bucket = aws_s3_bucket.test.bucket
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Principal": {
+      "Service": "bedrock.amazonaws.com"
+    },
+    "Action": [
+      "s3:*"
+    ],
+    "Resource": [
+      "${aws_s3_bucket.test.arn}/*"
+    ],
+    "Condition": {
+      "StringEquals": {
+        "aws:SourceAccount": "${data.aws_caller_identity.current.account_id}"
+      },
+      "ArnLike": {
+        "aws:SourceArn": "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"
+      }
+    }
+  }]
+}
+EOF
+}
+
+resource "aws_cloudwatch_log_group" "test" {
+  region = %[2]q
+
+  name = %[1]q
+}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Principal": {
+      "Service": "bedrock.amazonaws.com"
+    },
+    "Action": "sts:AssumeRole",
+    "Condition": {
+      "StringEquals": {
+        "aws:SourceAccount": "${data.aws_caller_identity.current.account_id}"
+      },
+      "ArnLike": {
+        "aws:SourceArn": "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"
+      }
+    }
+  }]
+}  
+EOF
+}
+
+resource "aws_iam_policy" "test" {
+  name        = %[1]q
+  path        = "/"
+  description = "BedrockCloudWatchPolicy"
+
+  policy = jsonencode({
+    "Version" : "2012-10-17",
+    "Statement" : [{
+      "Effect" : "Allow",
+      "Action" : [
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
+      "Resource" : "${aws_cloudwatch_log_group.test.arn}:log-stream:aws/bedrock/modelinvocations"
+    }]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  role       = aws_iam_role.test.name
+  policy_arn = aws_iam_policy.test.arn
+}
+`, rName, acctest.AlternateRegion())
 }
