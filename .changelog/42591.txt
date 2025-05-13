@@ -1,0 +1,3 @@
+```release-note:new-resource
+aws_nat_gateway_eip_association
+```
