@@ -6,7 +6,7 @@ package bedrockagent
 import (
 	"context"
 	"encoding/json"
-	"errors"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent"
@@ -21,10 +21,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -42,10 +42,6 @@ func newPromptResource(_ context.Context) (resource.ResourceWithConfigure, error
 	return r, nil
 }
 
-const (
-	ResNamePrompt = "Prompt"
-)
-
 type promptResource struct {
 	framework.ResourceWithConfigure
 	framework.WithImportByID
@@ -54,37 +50,38 @@ type promptResource struct {
 func (r *promptResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrID:  framework.IDAttribute(),
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			names.AttrName: schema.StringAttribute{
-				Required: true,
-			},
-			names.AttrDescription: schema.StringAttribute{
-				Optional: true,
-			},
-			"default_variant": schema.StringAttribute{
-				Optional: true,
-			},
-			"customer_encryption_key_arn": schema.StringAttribute{
-				Optional: true,
-			},
-			names.AttrVersion: schema.StringAttribute{
-				Computed: true,
-			},
 			names.AttrCreatedAt: schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
 			},
+			"customer_encryption_key_arn": schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Optional:   true,
+			},
+			"default_variant": schema.StringAttribute{
+				Optional: true,
+			},
+			names.AttrDescription: schema.StringAttribute{
+				Optional: true,
+			},
+			names.AttrID: framework.IDAttribute(),
+			names.AttrName: schema.StringAttribute{
+				Required: true,
+			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			"updated_at": schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
 			},
-			names.AttrTags:    tftags.TagsAttribute(),
-			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
+			names.AttrVersion: schema.StringAttribute{
+				Computed: true,
+			},
 		},
 		Blocks: map[string]schema.Block{
 			"variant": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[variantModel](ctx),
+				CustomType: fwtypes.NewListNestedObjectTypeOf[promptVariantModel](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						names.AttrName: schema.StringAttribute{
@@ -453,88 +450,89 @@ func (r *promptResource) Schema(ctx context.Context, request resource.SchemaRequ
 }
 
 func (r *promptResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data promptResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().BedrockAgentClient(ctx)
 
-	var plan promptResourceModel
-	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
+	name := fwflex.StringValueFromFramework(ctx, data.Name)
 	var input bedrockagent.CreatePromptInput
-	response.Diagnostics.Append(fwflex.Expand(ctx, plan, &input)...)
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	input.ClientToken = aws.String(id.UniqueId())
+	// Additional fields.
+	input.ClientToken = aws.String(sdkid.UniqueId())
 	input.Tags = getTagsIn(ctx)
 
-	out, err := conn.CreatePrompt(ctx, &input)
+	output, err := conn.CreatePrompt(ctx, &input)
+
 	if err != nil {
-		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionCreating, ResNamePrompt, plan.Name.String(), err),
-			err.Error(),
-		)
-		return
-	}
-	if out == nil {
-		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionCreating, ResNamePrompt, plan.Name.String(), nil),
-			errors.New("empty output").Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("creating Bedrock Agent Prompt (%s)", name), err.Error())
+
 		return
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, out, &plan)...)
+	// Set values for unknowns.
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	response.Diagnostics.Append(response.State.Set(ctx, plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
 func (r *promptResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data promptResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().BedrockAgentClient(ctx)
 
-	var state promptResourceModel
-	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
+	output, err := findPromptByID(ctx, conn, data.ID.ValueString())
 
-	out, err := findPromptByID(ctx, conn, state.ID.ValueString())
 	if tfresource.NotFound(err) {
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
-		return
-	}
-	if err != nil {
-		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionSetting, ResNamePrompt, state.ID.String(), err),
-			err.Error(),
-		)
+
 		return
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, out, &state)...)
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("reading Bedrock Agent Prompt (%s)", data.ID.ValueString()), err.Error())
+
+		return
+	}
+
+	// Set attributes for import.
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
 func (r *promptResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	conn := r.Meta().BedrockAgentClient(ctx)
-
-	var plan, state promptResourceModel
-	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
-	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
+	var new, old promptResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	diff, d := fwflex.Diff(ctx, plan, state)
+	conn := r.Meta().BedrockAgentClient(ctx)
+
+	diff, d := fwflex.Diff(ctx, new, old)
 	response.Diagnostics.Append(d...)
 	if response.Diagnostics.HasError() {
 		return
@@ -542,61 +540,52 @@ func (r *promptResource) Update(ctx context.Context, request resource.UpdateRequ
 
 	if diff.HasChanges() {
 		var input bedrockagent.UpdatePromptInput
-		response.Diagnostics.Append(fwflex.Expand(ctx, plan, &input)...)
+		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
 
-		input.PromptIdentifier = state.ID.ValueStringPointer()
+		// Additional fields.
+		input.PromptIdentifier = old.ID.ValueStringPointer()
 
-		out, err := conn.UpdatePrompt(ctx, &input)
+		output, err := conn.UpdatePrompt(ctx, &input)
+
 		if err != nil {
-			response.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionUpdating, ResNamePrompt, plan.ID.String(), err),
-				err.Error(),
-			)
-			return
-		}
-		if out == nil {
-			response.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionUpdating, ResNamePrompt, plan.ID.String(), nil),
-				errors.New("empty output").Error(),
-			)
+			response.Diagnostics.AddError(fmt.Sprintf("reading Bedrock Agent Prompt (%s)", new.ID.ValueString()), err.Error())
+
 			return
 		}
 
-		response.Diagnostics.Append(fwflex.Flatten(ctx, out, &plan)...)
+		response.Diagnostics.Append(fwflex.Flatten(ctx, output, &new)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
 	}
 
-	response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
 func (r *promptResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
-	conn := r.Meta().BedrockAgentClient(ctx)
-
-	var state promptResourceModel
-	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
+	var data promptResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
+	conn := r.Meta().BedrockAgentClient(ctx)
+
 	input := bedrockagent.DeletePromptInput{
-		PromptIdentifier: state.ID.ValueStringPointer(),
+		PromptIdentifier: fwflex.StringFromFramework(ctx, data.ID),
+	}
+	_, err := conn.DeletePrompt(ctx, &input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return
 	}
 
-	_, err := conn.DeletePrompt(ctx, &input)
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return
-		}
+		response.Diagnostics.AddError(fmt.Sprintf("deleting Bedrock Agent Prompt (%s)", data.ID.ValueString()), err.Error())
 
-		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionDeleting, ResNamePrompt, state.ID.String(), err),
-			err.Error(),
-		)
 		return
 	}
 }
@@ -626,21 +615,21 @@ func findPromptByID(ctx context.Context, conn *bedrockagent.Client, id string) (
 }
 
 type promptResourceModel struct {
-	ID                       types.String                                  `tfsdk:"id"`
-	ARN                      types.String                                  `tfsdk:"arn"`
-	Name                     types.String                                  `tfsdk:"name"`
-	Description              types.String                                  `tfsdk:"description"`
-	DefaultVariant           types.String                                  `tfsdk:"default_variant"`
-	CustomerEncryptionKeyARN types.String                                  `tfsdk:"customer_encryption_key_arn"`
-	Version                  types.String                                  `tfsdk:"version"`
-	CreatedAt                timetypes.RFC3339                             `tfsdk:"created_at"`
-	UpdatedAt                timetypes.RFC3339                             `tfsdk:"updated_at"`
-	Variants                 fwtypes.ListNestedObjectValueOf[variantModel] `tfsdk:"variant"`
-	Tags                     tftags.Map                                    `tfsdk:"tags"`
-	TagsAll                  tftags.Map                                    `tfsdk:"tags_all"`
+	ARN                      types.String                                        `tfsdk:"arn"`
+	CreatedAt                timetypes.RFC3339                                   `tfsdk:"created_at"`
+	CustomerEncryptionKeyARN fwtypes.ARN                                         `tfsdk:"customer_encryption_key_arn"`
+	DefaultVariant           types.String                                        `tfsdk:"default_variant"`
+	Description              types.String                                        `tfsdk:"description"`
+	ID                       types.String                                        `tfsdk:"id"`
+	Name                     types.String                                        `tfsdk:"name"`
+	UpdatedAt                timetypes.RFC3339                                   `tfsdk:"updated_at"`
+	Variants                 fwtypes.ListNestedObjectValueOf[promptVariantModel] `tfsdk:"variant"`
+	Version                  types.String                                        `tfsdk:"version"`
+	Tags                     tftags.Map                                          `tfsdk:"tags"`
+	TagsAll                  tftags.Map                                          `tfsdk:"tags_all"`
 }
 
-type variantModel struct {
+type promptVariantModel struct {
 	Name                         types.String                                                       `tfsdk:"name"`
 	ModelID                      types.String                                                       `tfsdk:"model_id"`
 	AdditionalModelRequestFields types.String                                                       `tfsdk:"additional_model_request_fields"`
@@ -651,7 +640,7 @@ type variantModel struct {
 	TemplateConfiguration        fwtypes.ListNestedObjectValueOf[promptTemplateConfigurationModel]  `tfsdk:"template_configuration"`
 }
 
-func (m *variantModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
+func (m *promptVariantModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
 	t := v.(awstypes.PromptVariant)
 
 	diags.Append(fwflex.Flatten(ctx, t.Name, &m.Name)...)
@@ -682,7 +671,7 @@ func (m *variantModel) Flatten(ctx context.Context, v any) (diags diag.Diagnosti
 	return diags
 }
 
-func (m variantModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
+func (m promptVariantModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
 	var r awstypes.PromptVariant
 	diags.Append(fwflex.Expand(ctx, m.Name, &r.Name)...)
 	diags.Append(fwflex.Expand(ctx, m.ModelID, &r.ModelId)...)
