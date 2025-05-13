@@ -49,8 +49,8 @@ func TestAccSecurityLake_serial(t *testing.T) {
 			"lifecycle":               testAccDataLake_lifeCycle,
 			"lifecycleUpdate":         testAccDataLake_lifeCycleUpdate,
 			"replication":             testAccDataLake_replication,
-			"Identity_Basic":          TestAccDataLake_Identity_Basic,
-			"Identity_RegionOverride": TestAccDataLake_Identity_RegionOverride,
+			"Identity_Basic":          testAccDataLake_Identity_Basic,
+			"Identity_RegionOverride": testAccDataLake_Identity_RegionOverride,
 		},
 		"Subscriber": {
 			"accessType":         testAccSubscriber_accessType,

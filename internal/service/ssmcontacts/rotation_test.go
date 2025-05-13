@@ -81,7 +81,7 @@ func testAccRotation_basic(t *testing.T) {
 	})
 }
 
-func TestAccRotation_Identity_Basic(t *testing.T) {
+func testAccRotation_Identity_Basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -121,7 +121,7 @@ func TestAccRotation_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccRotation_Identity_RegionOverride(t *testing.T) {
+func testAccRotation_Identity_RegionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")

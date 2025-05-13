@@ -64,7 +64,7 @@ func testAccDataLake_basic(t *testing.T) {
 	})
 }
 
-func TestAccDataLake_Identity_Basic(t *testing.T) {
+func testAccDataLake_Identity_Basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var datalake types.DataLakeResource
 	resourceName := "aws_securitylake_data_lake.test"
@@ -101,7 +101,7 @@ func TestAccDataLake_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccDataLake_Identity_RegionOverride(t *testing.T) {
+func testAccDataLake_Identity_RegionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_securitylake_data_lake.test"
