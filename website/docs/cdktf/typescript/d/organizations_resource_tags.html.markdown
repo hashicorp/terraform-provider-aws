@@ -36,6 +36,8 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `resourceId` - (Required) ID of the resource with the tags to list. See details below.
 
 ### resource_id
@@ -53,4 +55,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `tags` - Map of key=value pairs for each tag set on the resource.
 
-<!-- cache-key: cdktf-0.20.8 input-9e1e646d2fbb671bf1b3448756c03ac6bb18b017208c1205580374b81a907e14 -->
+<!-- cache-key: cdktf-0.20.8 input-282d8cd5877f07019e53cfc0c53bc552177e48b4d679d99b98b8163f69d45a01 -->

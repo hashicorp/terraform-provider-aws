@@ -52,6 +52,8 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `arn` - (Optional) ARN of the OpenID Connect provider.
 * `url` - (Optional) URL of the OpenID Connect provider.
 
@@ -63,4 +65,4 @@ This data source exports the following attributes in addition to the arguments a
 * `thumbprint_list` - List of server certificate thumbprints for the OpenID Connect (OIDC) identity provider's server certificate(s).
 * `tags` - Map of resource tags for the IAM OIDC provider.
 
-<!-- cache-key: cdktf-0.20.8 input-642346d1cceb7b38df3f8226fec2a77e31214afb1bcf46792639e9604b9060a4 -->
+<!-- cache-key: cdktf-0.20.8 input-37b01bf18d8f1001b1cf8ef653f71bc6d403aabcddd46aebb8a6bb75851d8222 -->

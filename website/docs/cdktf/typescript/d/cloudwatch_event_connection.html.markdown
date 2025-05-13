@@ -38,18 +38,17 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `name` - Name of the connection.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `name` - Name of the connection.
+* `arn` - ARN (Amazon Resource Name) of the connection.
+* `authorizationType` - Type of authorization specified for the connection. One of `API_KEY`,`BASIC`,`OAUTH_CLIENT_CREDENTIALS`.
+* `kmsKeyIdentifier` - (Optional) Identifier of the AWS KMS customer managed key for EventBridge to use to encrypt the connection, if one has been specified.
+* `secretArn` - ARN of the secret created from the authorization parameters specified for the connection.
 
-* `arn` - ARN (Amazon Resource Name) for the connection.
-
-* `secretArn` - ARN (Amazon Resource Name) for the secret created from the authorization parameters specified for the connection.
-
-* `authorizationType` - Type of authorization to use to connect. One of `API_KEY`,`BASIC`,`OAUTH_CLIENT_CREDENTIALS`.
-
-<!-- cache-key: cdktf-0.20.8 input-c28a6e87c62c9016e5553ac80ba81f240b8c76ab8a07aa2ea802508e58427f58 -->
+<!-- cache-key: cdktf-0.20.8 input-98933010cecb2a20e3b0740ad4377760c1fbc45ac4d3329d453de24c793dcdd6 -->

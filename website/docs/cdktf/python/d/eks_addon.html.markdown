@@ -37,6 +37,8 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `addon_name` – (Required) Name of the EKS add-on. The name must match one of
   the names returned by [list-addon](https://docs.aws.amazon.com/cli/latest/reference/eks/list-addons.html).
 * `cluster_name` – (Required) Name of the EKS Cluster.
@@ -57,4 +59,4 @@ This data source exports the following attributes in addition to the arguments a
 * `created_at` - Date and time in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) that the EKS add-on was created.
 * `modified_at` - Date and time in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) that the EKS add-on was updated.
 
-<!-- cache-key: cdktf-0.20.8 input-3f4eca3f962477e1b91bf2f70b11158ab3a7885fb267a627640071b891b42423 -->
+<!-- cache-key: cdktf-0.20.8 input-283a9517c061cf8893497ac7b465e98e931d12116efb57459c6f4011b27bcecc -->

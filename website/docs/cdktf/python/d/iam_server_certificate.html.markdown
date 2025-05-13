@@ -46,6 +46,8 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `name_prefix` - prefix of cert to filter by
 * `path_prefix` - prefix of path to filter by
 * `name` - exact name of the cert to lookup
@@ -90,4 +92,4 @@ Using `terraform import`, import an IAM server certificate using `name`. For exa
 
 Import will read in the certificate body, certificate chain (if it exists), ID, name, path, and ARN. It will not retrieve the private key which is not available through the AWS API.
 
-<!-- cache-key: cdktf-0.20.8 input-15f20b097eebaf3145f26a098ba793c65fab18858f84e06d6eb664e0785a5cdd -->
+<!-- cache-key: cdktf-0.20.8 input-201645f41636ea48236891f9e6c8c0bac4ea665b9e718a9d06475759c36b4f06 -->

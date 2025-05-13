@@ -58,6 +58,8 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `secret_id` - (Required) Specifies the secret containing the version that you want to retrieve. You can specify either the ARN or the friendly name of the secret.
 * `version_id` - (Optional) Specifies the unique identifier of the version of the secret that you want to retrieve. Overrides `version_stage`.
 * `version_stage` - (Optional) Specifies the secret version that you want to retrieve by the staging label attached to the version. Defaults to `AWSCURRENT`.
@@ -73,4 +75,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `secret_binary` - Decrypted part of the protected secret information that was originally provided as a binary.
 * `version_id` - Unique identifier of this version of the secret.
 
-<!-- cache-key: cdktf-0.20.8 input-322d9ad507618dc64c644ff3d4dc1bac47d9b1734c3717d2a41f129b1fa96135 -->
+<!-- cache-key: cdktf-0.20.8 input-028e2639ebca683cf272f98469d9accde2862b05074b33eb6c31f49893f1e0e3 -->

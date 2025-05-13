@@ -80,6 +80,8 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `region` - (Optional) Name of the region whose AWS ELB account ID is desired.
   Defaults to the region from the AWS provider configuration.
 
@@ -90,4 +92,4 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - ID of the AWS ELB service account in the selected region.
 * `arn` - ARN of the AWS ELB service account in the selected region.
 
-<!-- cache-key: cdktf-0.20.8 input-5c1a0a2f00d960e1eac9847050597712fa9715a5b915ce4e9af9ffb2813ec3ab -->
+<!-- cache-key: cdktf-0.20.8 input-64a94a6942df7853525def2ee452a38e65c6060dbece598a35a77071499b6ade -->

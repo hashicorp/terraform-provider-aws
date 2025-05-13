@@ -54,14 +54,16 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available
-Key Pairs. The given filters must match exactly one Key Pair
-whose data will be exported as attributes.
+This data source supports the following arguments:
 
 * `keyPairId` - (Optional) Key Pair ID.
 * `keyName` - (Optional) Key Pair name.
 * `includePublicKey` - (Optional) Whether to include the public key material in the response.
 * `filter` -  (Optional) Custom filter block as described below.
+
+The arguments of this data source act as filters for querying the available
+Key Pairs. The given filters must match exactly one Key Pair
+whose data will be exported as attributes.
 
 ### filter Configuration Block
 
@@ -88,4 +90,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.8 input-0d9f224b71bac4257ab9450b7b4225c2db875e803084b43d495dc85927c709ee -->
+<!-- cache-key: cdktf-0.20.8 input-a3bf15d34602c90960a63e7ec13324611b0923f7896e7480d319d75caf986104 -->

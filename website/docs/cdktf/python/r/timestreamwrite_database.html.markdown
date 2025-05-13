@@ -99,4 +99,4 @@ Using `terraform import`, import Timestream databases using the `database_name`.
 % terraform import aws_timestreamwrite_database.example example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-f9e466cc597e77e2955216c4193bd02e93e398df89c5fb4b6c43b2048b014651 -->
+<!-- cache-key: cdktf-0.20.8 input-8f1ade9c079862aacb90dc0496e0651fecee5c9b08bcb46f6ba38092e76e1375 -->

@@ -62,6 +62,8 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `thingGroupIndexingConfiguration` - (Optional) Thing group indexing configuration. See below.
 * `thingIndexingConfiguration` - (Optional) Thing indexing configuration. See below.
 
@@ -102,4 +104,4 @@ The `filter` configuration block supports the following:
 
 This resource exports no additional attributes.
 
-<!-- cache-key: cdktf-0.20.8 input-632e1d902ca26f482ec035558f74be20583a22a0dee9c8e8349d7c76ef519f71 -->
+<!-- cache-key: cdktf-0.20.8 input-6817ab323f853d03108a11d3eb5375746e6274e4bd44f83bd5c18a4b9d3c943b -->

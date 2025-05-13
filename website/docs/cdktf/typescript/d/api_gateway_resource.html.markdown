@@ -42,6 +42,8 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `restApiId` - (Required) REST API id that owns the resource. If no REST API is found, an error will be returned.
 * `path` - (Required) Full path of the resource.  If no path is found, an error will be returned.
 
@@ -53,4 +55,4 @@ This data source exports the following attributes in addition to the arguments a
 * `parentId` - Set to the ID of the parent Resource.
 * `pathPart` - Set to the path relative to the parent Resource.
 
-<!-- cache-key: cdktf-0.20.8 input-de42d4fd9ee5838ea57bf49335869fd7bec10ba3cea3b7e525af92359ab7bd14 -->
+<!-- cache-key: cdktf-0.20.8 input-65c5f40a4d6f148d70e82fc3c5e43ac8ecca7f53b78599d837fe0d3d5377b4b4 -->

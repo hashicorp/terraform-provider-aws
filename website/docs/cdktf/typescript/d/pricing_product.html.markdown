@@ -97,6 +97,8 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `serviceCode` - (Required) Code of the service. Available service codes can be fetched using the DescribeServices pricing API call.
 * `filters` - (Required) List of filters. Passed directly to the API (see GetProducts API reference). These filters must describe a single product, this resource will fail if more than one product is returned by the API.
 
@@ -111,4 +113,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `result` - Set to the product returned from the API.
 
-<!-- cache-key: cdktf-0.20.8 input-7877cd39e468d078f53a2d4c542f1bf6ce9960ac9589794b8c81ab30b32ff42b -->
+<!-- cache-key: cdktf-0.20.8 input-3873f0b125c5919b6e48df5a83d7126f15c158554008b940888b428fe665186b -->
