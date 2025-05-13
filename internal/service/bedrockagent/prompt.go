@@ -7,14 +7,11 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent/document"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
-
-	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -29,7 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -39,12 +36,8 @@ import (
 
 // @FrameworkResource("aws_bedrockagent_prompt", name="Prompt")
 // @Tags(identifierAttribute="arn")
-func newResourcePrompt(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourcePrompt{}
-
-	r.SetDefaultCreateTimeout(5 * time.Minute)
-	r.SetDefaultUpdateTimeout(5 * time.Minute)
-	r.SetDefaultDeleteTimeout(5 * time.Minute)
+func newPromptResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &promptResource{}
 
 	return r, nil
 }
@@ -53,13 +46,13 @@ const (
 	ResNamePrompt = "Prompt"
 )
 
-type resourcePrompt struct {
+type promptResource struct {
 	framework.ResourceWithConfigure
-	framework.WithTimeouts
+	framework.WithImportByID
 }
 
-func (r *resourcePrompt) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *promptResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrID:  framework.IDAttribute(),
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
@@ -455,27 +448,22 @@ func (r *resourcePrompt) Schema(ctx context.Context, req resource.SchemaRequest,
 					},
 				},
 			},
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
-				Create: true,
-				Update: true,
-				Delete: true,
-			}),
 		},
 	}
 }
 
-func (r *resourcePrompt) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *promptResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	conn := r.Meta().BedrockAgentClient(ctx)
 
-	var plan resourcePromptModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
+	var plan promptResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
 	var input bedrockagent.CreatePromptInput
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(fwflex.Expand(ctx, plan, &input)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
@@ -484,78 +472,78 @@ func (r *resourcePrompt) Create(ctx context.Context, req resource.CreateRequest,
 
 	out, err := conn.CreatePrompt(ctx, &input)
 	if err != nil {
-		resp.Diagnostics.AddError(
+		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionCreating, ResNamePrompt, plan.Name.String(), err),
 			err.Error(),
 		)
 		return
 	}
 	if out == nil {
-		resp.Diagnostics.AddError(
+		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionCreating, ResNamePrompt, plan.Name.String(), nil),
 			errors.New("empty output").Error(),
 		)
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(fwflex.Flatten(ctx, out, &plan)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, plan)...)
 }
 
-func (r *resourcePrompt) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *promptResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	conn := r.Meta().BedrockAgentClient(ctx)
 
-	var state resourcePromptModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+	var state promptResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
 	out, err := findPromptByID(ctx, conn, state.ID.ValueString())
 	if tfresource.NotFound(err) {
-		resp.State.RemoveResource(ctx)
+		response.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
-		resp.Diagnostics.AddError(
+		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionSetting, ResNamePrompt, state.ID.String(), err),
 			err.Error(),
 		)
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(fwflex.Flatten(ctx, out, &state)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
 }
 
-func (r *resourcePrompt) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *promptResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	conn := r.Meta().BedrockAgentClient(ctx)
 
-	var plan, state resourcePromptModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+	var plan, state promptResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
+	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	diff, d := flex.Diff(ctx, plan, state)
-	resp.Diagnostics.Append(d...)
-	if resp.Diagnostics.HasError() {
+	diff, d := fwflex.Diff(ctx, plan, state)
+	response.Diagnostics.Append(d...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
 	if diff.HasChanges() {
 		var input bedrockagent.UpdatePromptInput
-		resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
-		if resp.Diagnostics.HasError() {
+		response.Diagnostics.Append(fwflex.Expand(ctx, plan, &input)...)
+		if response.Diagnostics.HasError() {
 			return
 		}
 
@@ -563,35 +551,35 @@ func (r *resourcePrompt) Update(ctx context.Context, req resource.UpdateRequest,
 
 		out, err := conn.UpdatePrompt(ctx, &input)
 		if err != nil {
-			resp.Diagnostics.AddError(
+			response.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionUpdating, ResNamePrompt, plan.ID.String(), err),
 				err.Error(),
 			)
 			return
 		}
 		if out == nil {
-			resp.Diagnostics.AddError(
+			response.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionUpdating, ResNamePrompt, plan.ID.String(), nil),
 				errors.New("empty output").Error(),
 			)
 			return
 		}
 
-		resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
-		if resp.Diagnostics.HasError() {
+		response.Diagnostics.Append(fwflex.Flatten(ctx, out, &plan)...)
+		if response.Diagnostics.HasError() {
 			return
 		}
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
 }
 
-func (r *resourcePrompt) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *promptResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	conn := r.Meta().BedrockAgentClient(ctx)
 
-	var state resourcePromptModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+	var state promptResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
@@ -605,7 +593,7 @@ func (r *resourcePrompt) Delete(ctx context.Context, req resource.DeleteRequest,
 			return
 		}
 
-		resp.Diagnostics.AddError(
+		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionDeleting, ResNamePrompt, state.ID.String(), err),
 			err.Error(),
 		)
@@ -613,35 +601,31 @@ func (r *resourcePrompt) Delete(ctx context.Context, req resource.DeleteRequest,
 	}
 }
 
-func (r *resourcePrompt) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
-}
-
 func findPromptByID(ctx context.Context, conn *bedrockagent.Client, id string) (*bedrockagent.GetPromptOutput, error) {
-	in := &bedrockagent.GetPromptInput{
+	input := bedrockagent.GetPromptInput{
 		PromptIdentifier: aws.String(id),
 	}
+	output, err := conn.GetPrompt(ctx, &input)
 
-	out, err := conn.GetPrompt(ctx, in)
-	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
 		}
+	}
 
+	if err != nil {
 		return nil, err
 	}
 
-	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return out, nil
+	return output, nil
 }
 
-type resourcePromptModel struct {
+type promptResourceModel struct {
 	ID                       types.String                                  `tfsdk:"id"`
 	ARN                      types.String                                  `tfsdk:"arn"`
 	Name                     types.String                                  `tfsdk:"name"`
@@ -652,7 +636,6 @@ type resourcePromptModel struct {
 	CreatedAt                timetypes.RFC3339                             `tfsdk:"created_at"`
 	UpdatedAt                timetypes.RFC3339                             `tfsdk:"updated_at"`
 	Variants                 fwtypes.ListNestedObjectValueOf[variantModel] `tfsdk:"variant"`
-	Timeouts                 timeouts.Value                                `tfsdk:"timeouts"`
 	Tags                     tftags.Map                                    `tfsdk:"tags"`
 	TagsAll                  tftags.Map                                    `tfsdk:"tags_all"`
 }
@@ -671,17 +654,17 @@ type variantModel struct {
 func (m *variantModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
 	t := v.(awstypes.PromptVariant)
 
-	diags.Append(flex.Flatten(ctx, t.Name, &m.Name)...)
-	diags.Append(flex.Flatten(ctx, t.ModelId, &m.ModelID)...)
-	diags.Append(flex.Flatten(ctx, t.TemplateType, &m.TemplateType)...)
-	diags.Append(flex.Flatten(ctx, t.Metadata, &m.Metadata)...)
+	diags.Append(fwflex.Flatten(ctx, t.Name, &m.Name)...)
+	diags.Append(fwflex.Flatten(ctx, t.ModelId, &m.ModelID)...)
+	diags.Append(fwflex.Flatten(ctx, t.TemplateType, &m.TemplateType)...)
+	diags.Append(fwflex.Flatten(ctx, t.Metadata, &m.Metadata)...)
 	if t.InferenceConfiguration != nil {
-		diags.Append(flex.Flatten(ctx, t.InferenceConfiguration, &m.InferenceConfiguration)...)
+		diags.Append(fwflex.Flatten(ctx, t.InferenceConfiguration, &m.InferenceConfiguration)...)
 	}
 	if t.GenAiResource != nil {
-		diags.Append(flex.Flatten(ctx, t.GenAiResource, &m.GenAIResource)...)
+		diags.Append(fwflex.Flatten(ctx, t.GenAiResource, &m.GenAIResource)...)
 	}
-	diags.Append(flex.Flatten(ctx, t.TemplateConfiguration, &m.TemplateConfiguration)...)
+	diags.Append(fwflex.Flatten(ctx, t.TemplateConfiguration, &m.TemplateConfiguration)...)
 	if diags.HasError() {
 		return diags
 	}
@@ -701,13 +684,13 @@ func (m *variantModel) Flatten(ctx context.Context, v any) (diags diag.Diagnosti
 
 func (m variantModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
 	var r awstypes.PromptVariant
-	diags.Append(flex.Expand(ctx, m.Name, &r.Name)...)
-	diags.Append(flex.Expand(ctx, m.ModelID, &r.ModelId)...)
-	diags.Append(flex.Expand(ctx, m.TemplateType, &r.TemplateType)...)
-	diags.Append(flex.Expand(ctx, m.Metadata, &r.Metadata)...)
-	diags.Append(flex.Expand(ctx, m.InferenceConfiguration, &r.InferenceConfiguration)...)
-	diags.Append(flex.Expand(ctx, m.GenAIResource, &r.GenAiResource)...)
-	diags.Append(flex.Expand(ctx, m.TemplateConfiguration, &r.TemplateConfiguration)...)
+	diags.Append(fwflex.Expand(ctx, m.Name, &r.Name)...)
+	diags.Append(fwflex.Expand(ctx, m.ModelID, &r.ModelId)...)
+	diags.Append(fwflex.Expand(ctx, m.TemplateType, &r.TemplateType)...)
+	diags.Append(fwflex.Expand(ctx, m.Metadata, &r.Metadata)...)
+	diags.Append(fwflex.Expand(ctx, m.InferenceConfiguration, &r.InferenceConfiguration)...)
+	diags.Append(fwflex.Expand(ctx, m.GenAIResource, &r.GenAiResource)...)
+	diags.Append(fwflex.Expand(ctx, m.TemplateConfiguration, &r.TemplateConfiguration)...)
 	if diags.HasError() {
 		return nil, diags
 	}
@@ -738,7 +721,7 @@ func (m *promptInferenceConfigurationModel) Flatten(ctx context.Context, v any) 
 	switch t := v.(type) {
 	case awstypes.PromptInferenceConfigurationMemberText:
 		var model promptInferenceConfigurationMemberText
-		d := flex.Flatten(ctx, t.Value, &model)
+		d := fwflex.Flatten(ctx, t.Value, &model)
 		diags.Append(d...)
 		if diags.HasError() {
 			return diags
@@ -762,7 +745,7 @@ func (m promptInferenceConfigurationModel) Expand(ctx context.Context) (result a
 		}
 
 		var r awstypes.PromptInferenceConfigurationMemberText
-		diags.Append(flex.Expand(ctx, promptInferenceConfigurationText, &r.Value)...)
+		diags.Append(fwflex.Expand(ctx, promptInferenceConfigurationText, &r.Value)...)
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -789,7 +772,7 @@ func (m *promptGenAiResourceModel) Flatten(ctx context.Context, v any) (diags di
 	switch t := v.(type) {
 	case awstypes.PromptGenAiResourceMemberAgent:
 		var model promptGenAiResourceMemberAgentModel
-		d := flex.Flatten(ctx, t.Value, &model)
+		d := fwflex.Flatten(ctx, t.Value, &model)
 		diags.Append(d...)
 		if diags.HasError() {
 			return diags
@@ -813,7 +796,7 @@ func (m promptGenAiResourceModel) Expand(ctx context.Context) (result any, diags
 		}
 
 		var r awstypes.PromptGenAiResourceMemberAgent
-		diags.Append(flex.Expand(ctx, promptGenAiResourceAgent, &r.Value)...)
+		diags.Append(fwflex.Expand(ctx, promptGenAiResourceAgent, &r.Value)...)
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -838,7 +821,7 @@ func (m *promptTemplateConfigurationModel) Flatten(ctx context.Context, v any) (
 	switch t := v.(type) {
 	case awstypes.PromptTemplateConfigurationMemberChat:
 		var model promptTemplateConfigurationMemberChatModel
-		d := flex.Flatten(ctx, t.Value, &model)
+		d := fwflex.Flatten(ctx, t.Value, &model)
 		diags.Append(d...)
 		if diags.HasError() {
 			return diags
@@ -849,7 +832,7 @@ func (m *promptTemplateConfigurationModel) Flatten(ctx context.Context, v any) (
 		return diags
 	case awstypes.PromptTemplateConfigurationMemberText:
 		var model promptTemplateConfigurationMemberTextModel
-		d := flex.Flatten(ctx, t.Value, &model)
+		d := fwflex.Flatten(ctx, t.Value, &model)
 		diags.Append(d...)
 		if diags.HasError() {
 			return diags
@@ -873,7 +856,7 @@ func (m promptTemplateConfigurationModel) Expand(ctx context.Context) (result an
 		}
 
 		var r awstypes.PromptTemplateConfigurationMemberChat
-		diags.Append(flex.Expand(ctx, promptTemplateConfigurationChat, &r.Value)...)
+		diags.Append(fwflex.Expand(ctx, promptTemplateConfigurationChat, &r.Value)...)
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -887,7 +870,7 @@ func (m promptTemplateConfigurationModel) Expand(ctx context.Context) (result an
 		}
 
 		var r awstypes.PromptTemplateConfigurationMemberText
-		diags.Append(flex.Expand(ctx, promptTemplateConfigurationText, &r.Value)...)
+		diags.Append(fwflex.Expand(ctx, promptTemplateConfigurationText, &r.Value)...)
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -920,7 +903,7 @@ func (m *contentBlockModel) Flatten(ctx context.Context, v any) (diags diag.Diag
 	switch t := v.(type) {
 	case awstypes.ContentBlockMemberCachePoint:
 		var model contentBlockMemberCachePointModel
-		d := flex.Flatten(ctx, t.Value, &model)
+		d := fwflex.Flatten(ctx, t.Value, &model)
 		diags.Append(d...)
 		if diags.HasError() {
 			return diags
@@ -947,7 +930,7 @@ func (m contentBlockModel) Expand(ctx context.Context) (result any, diags diag.D
 		}
 
 		var r awstypes.ContentBlockMemberCachePoint
-		diags.Append(flex.Expand(ctx, contentBlockCachePoint, &r.Value)...)
+		diags.Append(fwflex.Expand(ctx, contentBlockCachePoint, &r.Value)...)
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -961,7 +944,7 @@ func (m contentBlockModel) Expand(ctx context.Context) (result any, diags diag.D
 		}
 
 		var r awstypes.ContentBlockMemberText
-		diags.Append(flex.Expand(ctx, contentBlockText, &r.Value)...)
+		diags.Append(fwflex.Expand(ctx, contentBlockText, &r.Value)...)
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -990,7 +973,7 @@ func (m *systemContentBlockModel) Flatten(ctx context.Context, v any) (diags dia
 	switch t := v.(type) {
 	case awstypes.SystemContentBlockMemberCachePoint:
 		var model systemContentBlockMemberCachePointModel
-		d := flex.Flatten(ctx, t.Value, &model)
+		d := fwflex.Flatten(ctx, t.Value, &model)
 		diags.Append(d...)
 		if diags.HasError() {
 			return diags
@@ -1017,7 +1000,7 @@ func (m systemContentBlockModel) Expand(ctx context.Context) (result any, diags 
 		}
 
 		var r awstypes.SystemContentBlockMemberCachePoint
-		diags.Append(flex.Expand(ctx, systemContentBlockCachePoint, &r.Value)...)
+		diags.Append(fwflex.Expand(ctx, systemContentBlockCachePoint, &r.Value)...)
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -1031,7 +1014,7 @@ func (m systemContentBlockModel) Expand(ctx context.Context) (result any, diags 
 		}
 
 		var r awstypes.SystemContentBlockMemberText
-		diags.Append(flex.Expand(ctx, systemContentBlockText, &r.Value)...)
+		diags.Append(fwflex.Expand(ctx, systemContentBlockText, &r.Value)...)
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -1061,7 +1044,7 @@ func (m *toolModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics)
 	switch t := v.(type) {
 	case awstypes.ToolMemberCachePoint:
 		var model toolMemberCachePointModel
-		d := flex.Flatten(ctx, t.Value, &model)
+		d := fwflex.Flatten(ctx, t.Value, &model)
 		diags.Append(d...)
 		if diags.HasError() {
 			return diags
@@ -1072,7 +1055,7 @@ func (m *toolModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics)
 		return diags
 	case awstypes.ToolMemberToolSpec:
 		var model toolMemberToolSpecModel
-		d := flex.Flatten(ctx, t.Value, &model)
+		d := fwflex.Flatten(ctx, t.Value, &model)
 		diags.Append(d...)
 		if diags.HasError() {
 			return diags
@@ -1096,7 +1079,7 @@ func (m toolModel) Expand(ctx context.Context) (result any, diags diag.Diagnosti
 		}
 
 		var r awstypes.ToolMemberCachePoint
-		diags.Append(flex.Expand(ctx, toolCachePoint, &r.Value)...)
+		diags.Append(fwflex.Expand(ctx, toolCachePoint, &r.Value)...)
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -1110,7 +1093,7 @@ func (m toolModel) Expand(ctx context.Context) (result any, diags diag.Diagnosti
 		}
 
 		var r awstypes.ToolMemberToolSpec
-		diags.Append(flex.Expand(ctx, toolToolSpec, &r.Value)...)
+		diags.Append(fwflex.Expand(ctx, toolToolSpec, &r.Value)...)
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -1183,7 +1166,7 @@ func (m *toolChoiceModel) Flatten(ctx context.Context, v any) (diags diag.Diagno
 	switch t := v.(type) {
 	case awstypes.ToolChoiceMemberAny:
 		var model toolChoiceMemberAnyModel
-		d := flex.Flatten(ctx, t.Value, &model)
+		d := fwflex.Flatten(ctx, t.Value, &model)
 		diags.Append(d...)
 		if diags.HasError() {
 			return diags
@@ -1194,7 +1177,7 @@ func (m *toolChoiceModel) Flatten(ctx context.Context, v any) (diags diag.Diagno
 		return diags
 	case awstypes.ToolChoiceMemberAuto:
 		var model toolChoiceMemberAutoModel
-		d := flex.Flatten(ctx, t.Value, &model)
+		d := fwflex.Flatten(ctx, t.Value, &model)
 		diags.Append(d...)
 		if diags.HasError() {
 			return diags
@@ -1205,7 +1188,7 @@ func (m *toolChoiceModel) Flatten(ctx context.Context, v any) (diags diag.Diagno
 		return diags
 	case awstypes.ToolChoiceMemberTool:
 		var model toolChoiceMemberToolModel
-		d := flex.Flatten(ctx, t.Value, &model)
+		d := fwflex.Flatten(ctx, t.Value, &model)
 		diags.Append(d...)
 		if diags.HasError() {
 			return diags
@@ -1229,7 +1212,7 @@ func (m toolChoiceModel) Expand(ctx context.Context) (result any, diags diag.Dia
 		}
 
 		var r awstypes.ToolChoiceMemberAny
-		diags.Append(flex.Expand(ctx, toolChoiceAny, &r.Value)...)
+		diags.Append(fwflex.Expand(ctx, toolChoiceAny, &r.Value)...)
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -1243,7 +1226,7 @@ func (m toolChoiceModel) Expand(ctx context.Context) (result any, diags diag.Dia
 		}
 
 		var r awstypes.ToolChoiceMemberAuto
-		diags.Append(flex.Expand(ctx, toolChoiceAuto, &r.Value)...)
+		diags.Append(fwflex.Expand(ctx, toolChoiceAuto, &r.Value)...)
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -1257,7 +1240,7 @@ func (m toolChoiceModel) Expand(ctx context.Context) (result any, diags diag.Dia
 		}
 
 		var r awstypes.ToolChoiceMemberTool
-		diags.Append(flex.Expand(ctx, toolChoiceTool, &r.Value)...)
+		diags.Append(fwflex.Expand(ctx, toolChoiceTool, &r.Value)...)
 		if diags.HasError() {
 			return nil, diags
 		}

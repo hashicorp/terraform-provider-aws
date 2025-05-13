@@ -71,7 +71,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			},
 		},
 		{
-			Factory:  newResourcePrompt,
+			Factory:  newPromptResource,
 			TypeName: "aws_bedrockagent_prompt",
 			Name:     "Prompt",
 			Tags: &types.ServicePackageResourceTags{

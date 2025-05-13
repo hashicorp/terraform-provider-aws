@@ -12,7 +12,7 @@ var (
 	ResourceAgentKnowledgeBaseAssociation = newAgentKnowledgeBaseAssociationResource
 	ResourceDataSource                    = newDataSourceResource
 	ResourceKnowledgeBase                 = newKnowledgeBaseResource
-	ResourcePrompt                        = newResourcePrompt
+	ResourcePrompt                        = newPromptResource
 
 	FindAgentByID                                  = findAgentByID
 	FindAgentActionGroupByThreePartKey             = findAgentActionGroupByThreePartKey
