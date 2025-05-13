@@ -360,7 +360,7 @@ type signInOptionsModel struct {
 	Origin         fwtypes.StringEnum[awstypes.SignInOrigin] `tfsdk:"origin"`
 }
 
-func (w *applicationResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+func (r *applicationResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	_, err := arn.Parse(request.ID)
 	if err != nil {
 		response.Diagnostics.AddError(

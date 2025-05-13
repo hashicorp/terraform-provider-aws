@@ -214,7 +214,7 @@ func (data *resourcePolicyResourceModel) setID() {
 	data.ID = data.ResourceARN.StringValue
 }
 
-func (w *resourcePolicyResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+func (r *resourcePolicyResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	arnARN, err := arn.Parse(request.ID)
 	if err != nil {
 		response.Diagnostics.AddError(

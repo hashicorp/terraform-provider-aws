@@ -270,7 +270,7 @@ func (data *provisionedModelThroughputResourceModel) setID() {
 	data.ID = data.ProvisionedModelARN
 }
 
-func (w *provisionedModelThroughputResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+func (r *provisionedModelThroughputResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	arnARN, err := arn.Parse(request.ID)
 	if err != nil {
 		response.Diagnostics.AddError(

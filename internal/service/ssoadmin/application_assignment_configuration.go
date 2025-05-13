@@ -196,7 +196,7 @@ type applicationAssignmentConfigurationResourceModel struct {
 	ID                 types.String `tfsdk:"id"`
 }
 
-func (w *applicationAssignmentConfigurationResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+func (r *applicationAssignmentConfigurationResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	_, err := arn.Parse(request.ID)
 	if err != nil {
 		response.Diagnostics.AddError(

@@ -325,7 +325,7 @@ func (data *applicationLayerAutomaticResponseResourceModel) setID() {
 	data.ID = data.ResourceARN.StringValue
 }
 
-func (w *applicationLayerAutomaticResponseResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+func (r *applicationLayerAutomaticResponseResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	_, err := arn.Parse(request.ID)
 	if err != nil {
 		response.Diagnostics.AddError(

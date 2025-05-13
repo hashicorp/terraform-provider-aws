@@ -648,7 +648,7 @@ type vpcConfigModel struct {
 	SubnetIDs        fwtypes.SetOfString `tfsdk:"subnet_ids"`
 }
 
-func (w *customModelResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+func (r *customModelResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	arnARN, err := arn.Parse(request.ID)
 	if err != nil {
 		response.Diagnostics.AddError(

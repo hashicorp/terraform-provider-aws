@@ -502,7 +502,7 @@ type refreshCadenceData struct {
 	Frequency fwtypes.StringEnum[awstypes.FrequencyOption] `tfsdk:"frequency"`
 }
 
-func (w *exportResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+func (r *exportResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	_, err := arn.Parse(request.ID)
 	if err != nil {
 		response.Diagnostics.AddError(
