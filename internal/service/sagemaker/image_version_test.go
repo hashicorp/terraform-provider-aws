@@ -97,6 +97,9 @@ func TestAccSageMakerImageVersion_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "job_type", "TRAINING"),
 					resource.TestCheckResourceAttr(resourceName, "ml_framework", "TensorFlow 1.1"),
 					resource.TestCheckResourceAttr(resourceName, "programming_lang", "Python 3.8"),
+					resource.TestCheckResourceAttr(resourceName, "aliases.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "aliases.*", "latest"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "aliases.*", "stable"),
 				),
 			},
 			{
@@ -121,6 +124,9 @@ func TestAccSageMakerImageVersion_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "job_type", "TRAINING"),
 					resource.TestCheckResourceAttr(resourceName, "ml_framework", "TensorFlow 1.1"),
 					resource.TestCheckResourceAttr(resourceName, "programming_lang", "Python 3.8"),
+					resource.TestCheckResourceAttr(resourceName, "aliases.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "aliases.*", "latest"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "aliases.*", "stable"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -404,6 +410,7 @@ resource "aws_sagemaker_image_version" "test" {
   vendor_guidance  = "STABLE"
   ml_framework     = "TensorFlow 1.1"
   programming_lang = "Python 3.8"
+  aliases          = ["latest", "stable"]
 }
 `, baseImage, notes))
 }
