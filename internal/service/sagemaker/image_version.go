@@ -43,6 +43,13 @@ func resourceImageVersion() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"aliases": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 			"base_image": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -142,6 +149,14 @@ func resourceImageVersionCreate(ctx context.Context, d *schema.ResourceData, met
 		input.ProgrammingLang = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("aliases"); ok {
+		aliases := v.(*schema.Set).List()
+		input.Aliases = make([]string, len(aliases))
+		for i, alias := range aliases {
+			input.Aliases[i] = alias.(string)
+		}
+	}
+
 	_, err := conn.CreateImageVersion(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Image Version %s: %s", name, err)
@@ -220,6 +235,30 @@ func resourceImageVersionRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("ml_framework", image.MLFramework)
 	d.Set("programming_lang", image.ProgrammingLang)
 
+	// The AWS SDK doesn't have an Aliases field in DescribeImageVersionOutput
+	// We need to fetch aliases separately using ListAliases API
+	idParts := strings.Split(id, ":")
+	imageName := idParts[0]
+	versionStr := idParts[1]
+	versionNum, err := strconv.Atoi(versionStr)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "invalid version number in resource ID: %s", d.Id())
+	}
+
+	aliasesInput := &sagemaker.ListAliasesInput{
+		ImageName: aws.String(imageName),
+		Version:   aws.Int32(int32(versionNum)),
+	}
+
+	aliasesOutput, err := conn.ListAliases(ctx, aliasesInput)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "listing aliases for SageMaker AI Image Version (%s): %s", d.Id(), err)
+	}
+
+	if err := d.Set("aliases", aliasesOutput.SageMakerImageVersionAliases); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting aliases: %s", err)
+	}
+
 	return diags
 }
 
@@ -272,6 +311,52 @@ func resourceImageVersionUpdate(ctx context.Context, d *schema.ResourceData, met
 
 	if d.HasChange("programming_lang") {
 		input.ProgrammingLang = aws.String(d.Get("programming_lang").(string))
+	}
+
+	if d.HasChange("aliases") {
+		// For UpdateImageVersion, we need to use AliasesToAdd and AliasesToDelete
+		// instead of Aliases directly
+		oldAliasesSet, newAliasesSet := d.GetChange("aliases")
+		oldAliases := oldAliasesSet.(*schema.Set).List()
+		newAliases := newAliasesSet.(*schema.Set).List()
+
+		// Find aliases to add (in new but not in old)
+		var aliasesToAdd []string
+		for _, newAlias := range newAliases {
+			found := false
+			for _, oldAlias := range oldAliases {
+				if newAlias.(string) == oldAlias.(string) {
+					found = true
+					break
+				}
+			}
+			if !found {
+				aliasesToAdd = append(aliasesToAdd, newAlias.(string))
+			}
+		}
+
+		// Find aliases to delete (in old but not in new)
+		var aliasesToDelete []string
+		for _, oldAlias := range oldAliases {
+			found := false
+			for _, newAlias := range newAliases {
+				if oldAlias.(string) == newAlias.(string) {
+					found = true
+					break
+				}
+			}
+			if !found {
+				aliasesToDelete = append(aliasesToDelete, oldAlias.(string))
+			}
+		}
+
+		if len(aliasesToAdd) > 0 {
+			input.AliasesToAdd = aliasesToAdd
+		}
+
+		if len(aliasesToDelete) > 0 {
+			input.AliasesToDelete = aliasesToDelete
+		}
 	}
 
 	if _, err := conn.UpdateImageVersion(ctx, input); err != nil {

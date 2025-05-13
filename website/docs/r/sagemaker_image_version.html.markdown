@@ -21,12 +21,23 @@ resource "aws_sagemaker_image_version" "test" {
 }
 ```
 
+### With aliases
+
+```terraform
+resource "aws_sagemaker_image_version" "test" {
+  image_name = aws_sagemaker_image.test.id
+  base_image = "012345678912.dkr.ecr.us-west-2.amazonaws.com/image:latest"
+  aliases    = ["latest", "stable"]
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
 
 * `image_name` - (Required) The name of the image. Must be unique to your account.
 * `base_image` - (Required) The registry path of the container image on which this image version is based.
+* `aliases` - (Optional) A list of aliases for the image version.
 * `horovod` - (Optional) Indicates Horovod compatibility.
 * `job_type` - (Optional) Indicates SageMaker AI job type compatibility. Valid values are: `TRAINING`, `INFERENCE`, and `NOTEBOOK_KERNEL`.
 * `ml_framework` - (Optional) The machine learning framework vended in the image version.
