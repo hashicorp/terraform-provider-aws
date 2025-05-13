@@ -1,0 +1,6 @@
+```release-note:bug
+resource/aws_sagemaker_image_version: Read the correct image version after creation rather than always fetching the latest
+```
+```release-note:breaking-change
+resource/aws_sagemaker_image_version: `id` is now a comma-delimited string concatenating `image_name` and `version`
+```

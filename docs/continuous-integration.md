@@ -258,6 +258,10 @@ GoReleaser CI build-32-bit ensures that GoReleaser can build a 32-bit binary. Th
 
 This check ensures that code uses current idiomatic Go. Currently, the check is only run on a subset of services. To determine which services must have modern Go, check the `.github/workflows/modern_go.yml` file.
 
+### PR Target Check
+
+This check ensures that the `pull_request_target` event is only used in approved workflows. Unlike `pull_request`, which runs workflows against the pull request’s changes, `pull_request_target` runs against the base branch. This can cause issues to go undetected if the workflow is intended to validate the pull request itself. Restricting its use helps ensure that CI checks reflect the actual content of proposed changes.
+
 ### Provider Checks
 
 Provider checks are a suite of tests that ensure Go code functions and markdown is correct.
