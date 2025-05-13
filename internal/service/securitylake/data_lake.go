@@ -42,6 +42,7 @@ const dataLakeMutexKey = "aws_securitylake_data_lake"
 
 // @FrameworkResource("aws_securitylake_data_lake", name="Data Lake")
 // @Tags(identifierAttribute="arn")
+// @ArnIdentity
 func newDataLakeResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &dataLakeResource{}
 
@@ -54,7 +55,7 @@ func newDataLakeResource(context.Context) (resource.ResourceWithConfigure, error
 
 type dataLakeResource struct {
 	framework.ResourceWithModel[dataLakeResourceModel]
-	framework.WithImportByID
+	framework.WithImportByARN
 	framework.WithTimeouts
 }
 

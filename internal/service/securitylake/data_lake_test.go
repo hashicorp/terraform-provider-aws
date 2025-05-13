@@ -9,10 +9,14 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/securitylake/types"
+	"github.com/hashicorp/terraform-plugin-testing/compare"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsecuritylake "github.com/hashicorp/terraform-provider-aws/internal/service/securitylake"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -49,6 +53,86 @@ func testAccDataLake_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "s3_bucket_arn"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"meta_store_manager_role_arn"},
+			},
+		},
+	})
+}
+
+func TestAccDataLake_Identity_Basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	var datalake types.DataLakeResource
+	resourceName := "aws_securitylake_data_lake.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
+			// testAccPreCheck(ctx, t)
+			testAccDeleteGlueDatabase(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataLakeDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataLakeConfig_basic(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDataLakeExists(ctx, resourceName, &datalake),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.region", acctest.Region()),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNExact("securityhub", "data-lake/default")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"meta_store_manager_role_arn"},
+			},
+		},
+	})
+}
+
+func TestAccDataLake_Identity_RegionOverride(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	resourceName := "aws_securitylake_data_lake.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
+			testAccPreCheck(ctx, t)
+			testAccDeleteGlueDatabase(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataLakeDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataLakeConfig_regionOverride(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.region", acctest.AlternateRegion()),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNAlternateRegionExact("securityhub", "data-lake/default")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       acctest.CrossRegionImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"meta_store_manager_role_arn"},
 			},
 			{
 				ResourceName:            resourceName,
@@ -346,7 +430,55 @@ func testAccCheckDataLakeExists(ctx context.Context, n string, v *types.DataLake
 	}
 }
 
-const testAccDataLakeConfigConfig_base = `
+const testAccDataLakeConfigConfig_base = testAccDataLakeConfigConfig_base_iam + `
+resource "aws_kms_key" "test" {
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Id": "kms-tf-1",
+  "Statement": [{
+    "Sid": "Enable IAM User Permissions",
+    "Effect": "Allow",
+    "Principal": {"AWS": "*"},
+    "Action": "kms:*",
+    "Resource": "*"
+  }]
+}
+POLICY
+}
+`
+
+func testAccDataLakeConfigConfig_base_regionOverride() string {
+	return acctest.ConfigCompose(
+		testAccDataLakeConfigConfig_base_iam,
+		fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  region = %[1]q
+
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Id": "kms-tf-1",
+  "Statement": [{
+    "Sid": "Enable IAM User Permissions",
+    "Effect": "Allow",
+    "Principal": {"AWS": "*"},
+    "Action": "kms:*",
+    "Resource": "*"
+  }]
+}
+POLICY
+}
+`, acctest.AlternateRegion()))
+}
+
+const testAccDataLakeConfigConfig_base_iam = `
 data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
 
@@ -448,29 +580,12 @@ resource "aws_iam_role_policy" "datalake_s3_replication" {
 }
 POLICY
 }
-
-resource "aws_kms_key" "test" {
-  deletion_window_in_days = 7
-  enable_key_rotation     = true
-
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Id": "kms-tf-1",
-  "Statement": [{
-    "Sid": "Enable IAM User Permissions",
-    "Effect": "Allow",
-    "Principal": {"AWS": "*"},
-    "Action": "kms:*",
-    "Resource": "*"
-  }]
-}
-POLICY
-}
 `
 
 func testAccDataLakeConfig_basic() string {
-	return acctest.ConfigCompose(testAccDataLakeConfigConfig_base, fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccDataLakeConfigConfig_base,
+		fmt.Sprintf(`
 resource "aws_securitylake_data_lake" "test" {
   meta_store_manager_role_arn = aws_iam_role.meta_store_manager.arn
 
@@ -481,6 +596,24 @@ resource "aws_securitylake_data_lake" "test" {
   depends_on = [aws_iam_role_policy_attachment.datalake]
 }
 `, acctest.Region()))
+}
+
+func testAccDataLakeConfig_regionOverride() string {
+	return acctest.ConfigCompose(
+		testAccDataLakeConfigConfig_base_regionOverride(),
+		fmt.Sprintf(`
+resource "aws_securitylake_data_lake" "test" {
+  region = %[1]q
+
+  meta_store_manager_role_arn = aws_iam_role.meta_store_manager.arn
+
+  configuration {
+    region = %[1]q
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.datalake]
+}
+`, acctest.AlternateRegion()))
 }
 
 func testAccDataLakeConfig_tags1(tag1Key, tag1Value string) string {
