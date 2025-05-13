@@ -11,6 +11,17 @@ Terraform resource for managing an AWS Bedrock Agents Prompt.
 
 ## Example Usage
 
+### Basic Usage
+
+```terraform
+resource "aws_bedrockagent_prompt" "example" {
+  name        = "MyPrompt"
+  description = "My prompt description."
+}
+```
+
+### With Variants
+
 ```terraform
 resource "aws_bedrockagent_prompt" "example" {
   name            = "MakePlaylist"
@@ -41,15 +52,6 @@ resource "aws_bedrockagent_prompt" "example" {
       }
     }
   }
-}
-```
-
-### Basic Usage
-
-```terraform
-resource "aws_bedrockagent_prompt" "example" {
-  name            = "MyPrompt"
-  description     = "My prompt description."
 }
 ```
 
