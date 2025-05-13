@@ -453,7 +453,6 @@ func findExportByID(ctx context.Context, conn *bcmdataexports.Client, exportArn 
 }
 
 type exportResourceModel struct {
-	framework.WithRegionModel
 	Export   fwtypes.ListNestedObjectValueOf[exportData] `tfsdk:"export"`
 	ID       types.String                                `tfsdk:"id"`
 	Tags     tftags.Map                                  `tfsdk:"tags"`

@@ -515,11 +515,18 @@ The following regional resources and data sources had a top-level `region` prior
 All resources for the following services are considered _global_:
 
 * Account Management (`aws_account_*`)
+* Billing (`aws_billing_*`)
+* Billing and Cost Management Data Exports (`aws_bcmdataexports_*`)
+* Budgets (`aws_budgets_*`)
 * CloudFront (`aws_cloudfront_*` and `aws_cloudfrontkeyvaluestore_*`)
+* Cost Explorer (`aws_ce_*`)
+* Cost Optimization Hub (`aws_costoptimizationhub_*`)
+* Cost and Usage Report (`aws_cur_*`)
 * Global Accelerator (`aws_globalaccelerator_*`)
 * IAM (`aws_iam_*`, `aws_rolesanywhere_*` and `aws_caller_identity`)
 * Network Manager (`aws_networkmanager_*`)
 * Organizations (`aws_organizations_*`)
+* Price List (`aws_pricing_*`)
 * Route 53 (`aws_route53_*` and `aws_route53domains_*`)
 * Route 53 ARC (`aws_route53recoverycontrolconfig_*` and `aws_route53recoveryreadiness_*`)
 * Shield Advanced (`aws_shield_*`)
@@ -533,7 +540,6 @@ Some regional services have a subset of resources that are global:
 |---|---|---|
 | Audit Manager | Resource | `aws_auditmanager_organization_admin_account_registration` |
 | Backup | Resource | `aws_backup_global_settings` |
-| Billing | Data Source | `aws_billing_service_account` |
 | Chime SDK Voice | Resource | `aws_chimesdkvoice_global_settings` |
 | CloudTrail | Resource | `aws_cloudtrail_organization_delegated_admin_account` |
 | Detective | Resource | `aws_detective_organization_admin_account` |

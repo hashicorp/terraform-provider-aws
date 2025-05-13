@@ -248,7 +248,6 @@ func findEnrollmentStatus(ctx context.Context, conn *costoptimizationhub.Client)
 }
 
 type enrollmentStatusResourceModel struct {
-	framework.WithRegionModel
 	ID                    types.String `tfsdk:"id"`
 	Status                types.String `tfsdk:"status"`
 	IncludeMemberAccounts types.Bool   `tfsdk:"include_member_accounts"`

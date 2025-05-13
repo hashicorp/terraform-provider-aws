@@ -30,7 +30,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Factory:  dataSourceProduct,
 			TypeName: "aws_pricing_product",
 			Name:     "Product",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 	}
 }
