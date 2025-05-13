@@ -74,6 +74,68 @@ func TestAccDataExchangeRevisionAssets_S3Snapshot_ImportFromS3(t *testing.T) {
 	})
 }
 
+func TestAccDataExchangeRevisionAssets_finalized(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var revision dataexchange.GetRevisionOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_dataexchange_revision_assets.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.DataExchangeEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.DataExchangeServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRevisionAssetsDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRevisionAssetsConfig_finalized(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRevisionAssetsExists(ctx, resourceName, &revision),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dataexchange", "data-sets/{data_set_id}/revisions/{id}"),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrComment),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedAt),
+					resource.TestCheckResourceAttrPair(resourceName, "data_set_id", "aws_dataexchange_data_set.test", names.AttrID),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+					acctest.CheckResourceAttrRFC3339(resourceName, "updated_at"),
+					resource.TestCheckResourceAttr(resourceName, "finalized", "true"),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("asset"), knownvalue.SetExact([]knownvalue.Check{
+						checkAssetImportFromS3(rName, "test"),
+					})),
+
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
+				},
+			},
+			{
+				Config: testAccRevisionAssetsConfig_finalized(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRevisionAssetsExists(ctx, resourceName, &revision),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dataexchange", "data-sets/{data_set_id}/revisions/{id}"),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrComment),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedAt),
+					resource.TestCheckResourceAttrPair(resourceName, "data_set_id", "aws_dataexchange_data_set.test", names.AttrID),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+					acctest.CheckResourceAttrRFC3339(resourceName, "updated_at"),
+					resource.TestCheckResourceAttr(resourceName, "finalized", "false"),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("asset"), knownvalue.SetExact([]knownvalue.Check{
+						checkAssetImportFromS3(rName, "test"),
+					})),
+
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
+				},
+			},
+		},
+	})
+}
+
 func TestAccDataExchangeRevisionAssets_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -644,6 +706,42 @@ resource "aws_s3_object" "test" {
   content = "test"
 }
 `, rName)
+}
+
+func testAccRevisionAssetsConfig_finalized(rName string, finalized bool) string {
+	return fmt.Sprintf(`
+resource "aws_dataexchange_revision_assets" "test" {
+  data_set_id   = aws_dataexchange_data_set.test.id
+  finalized     = %[2]t
+  force_destroy = true
+
+  asset {
+    import_assets_from_s3 {
+      asset_source {
+        bucket = aws_s3_object.test.bucket
+        key    = aws_s3_object.test.key
+      }
+    }
+  }
+}
+
+resource "aws_dataexchange_data_set" "test" {
+  asset_type  = "S3_SNAPSHOT"
+  description = %[1]q
+  name        = %[1]q
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_s3_object" "test" {
+  bucket  = aws_s3_bucket.test.bucket
+  key     = "test"
+  content = "test"
+}
+`, rName, finalized)
 }
 
 func testAccRevisionAssetsConfig_s3SNapsht_importMultipleFromS3(rName string) string {
