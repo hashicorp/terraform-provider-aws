@@ -191,7 +191,7 @@ func testAccCheckImageVersionDestroy(ctx context.Context) resource.TestCheckFunc
 				continue
 			}
 
-			_, err := tfsagemaker.FindImageVersionByName(ctx, conn, rs.Primary.ID)
+			_, err := tfsagemaker.FindImageVersionByNameAndVersion(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -220,7 +220,7 @@ func testAccCheckImageVersionExists(ctx context.Context, n string, image *sagema
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
-		resp, err := tfsagemaker.FindImageVersionByName(ctx, conn, rs.Primary.ID)
+		resp, err := tfsagemaker.FindImageVersionByNameAndVersion(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}

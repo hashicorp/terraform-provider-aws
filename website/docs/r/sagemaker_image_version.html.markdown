@@ -39,24 +39,26 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The name of the Image.
+* `id` - The image name and version in the format `name:version`.
 * `arn` - The Amazon Resource Name (ARN) assigned by AWS to this Image Version.
 * `version`- The version of the image. If not specified, the latest version is described.
 * `container_image` - The registry path of the container image that contains this image version.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker AI Image Versions using the `name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker AI Image Versions using the `name:version` format. For example:
 
 ```terraform
 import {
   to = aws_sagemaker_image_version.test_image
-  id = "my-code-repo"
+  id = "my-image:1"
 }
 ```
 
-Using `terraform import`, import SageMaker AI Image Versions using the `name`. For example:
+Using `terraform import`, import SageMaker AI Image Versions using the `name:version` format. For example:
 
 ```console
-% terraform import aws_sagemaker_image_version.test_image my-code-repo
+% terraform import aws_sagemaker_image_version.test_image my-image:1
 ```
+
+For backward compatibility, importing using just the image name is still supported, but the resource ID will be automatically updated to the `name:version` format after import.

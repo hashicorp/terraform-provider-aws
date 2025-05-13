@@ -5,6 +5,7 @@ package sagemaker
 
 import (
 	"context"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
@@ -60,9 +61,19 @@ func statusImage(ctx context.Context, conn *sagemaker.Client, name string) retry
 	}
 }
 
-func statusImageVersion(ctx context.Context, conn *sagemaker.Client, name string) retry.StateRefreshFunc {
+func statusImageVersion(ctx context.Context, conn *sagemaker.Client, id string) retry.StateRefreshFunc {
 	return func() (any, string, error) {
-		output, err := findImageVersionByName(ctx, conn, name)
+		// Check if the ID contains a version (has a colon)
+		var output *sagemaker.DescribeImageVersionOutput
+		var err error
+
+		if strings.Contains(id, ":") {
+			// New format - use the new function
+			output, err = findImageVersionByNameAndVersion(ctx, conn, id)
+		} else {
+			// Legacy format - just the name
+			output, err = findImageVersionByName(ctx, conn, id)
+		}
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
