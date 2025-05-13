@@ -3,12 +3,12 @@ subcategory: "Data Exchange"
 layout: "aws"
 page_title: "AWS: aws_dataexchange_revision_assets"
 description: |-
-  Terraform resource for managing an AWS Data Exchange Revision Assets.
+  Terraform resource for managing AWS Data Exchange Revision Assets.
 ---
 
 # Resource: aws_dataexchange_revision_assets
 
-Terraform resource for managing an AWS Data Exchange Revision Assets.
+Terraform resource for managing AWS Data Exchange Revision Assets.
 
 ## Example Usage
 
