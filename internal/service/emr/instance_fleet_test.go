@@ -140,6 +140,7 @@ func TestAccEMRInstanceFleet_full(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "instance_type_configs.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "target_on_demand_capacity", "2"),
 					resource.TestCheckResourceAttr(resourceName, "target_spot_capacity", "2"),
+					resource.TestCheckResourceAttrSet(resourceName, "launch_specifications.0.on_demand_specification.0.capacity_reservation_options.0.capacity_reservation_resource_group_arn"),
 				),
 			},
 			{
@@ -287,6 +288,22 @@ resource "aws_iam_role_policy_attachment" "emr_service" {
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonElasticMapReduceRole"
 }
 
+resource "aws_iam_role_policy" "capacityreservations" {
+  role = aws_iam_role.emr_service.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+          "ec2:DescribeCapacityReservations",
+        ]
+        Effect   = "Allow"
+        Resource = "*"
+      },
+    ]
+  })
+}
+
 resource "aws_iam_instance_profile" "emr_instance_profile" {
   name = "%[1]s_profile"
   role = aws_iam_role.emr_instance_profile.name
@@ -368,6 +385,16 @@ resource "aws_emr_cluster" "test" {
   }
 
   core_instance_fleet {
+    launch_specifications {
+      on_demand_specification {
+        allocation_strategy = "prioritized"
+        capacity_reservation_options {
+          capacity_reservation_preference = "open"
+          usage_strategy                  = "use-capacity-reservations-first"
+        }
+      }
+    }
+
     instance_type_configs {
       bid_price_as_percentage_of_on_demand_price = 100
 
@@ -378,6 +405,7 @@ resource "aws_emr_cluster" "test" {
       }
 
       instance_type     = "m4.xlarge"
+      priority          = 1
       weighted_capacity = 1
     }
     name                      = "core fleet"
@@ -482,6 +510,37 @@ resource "aws_emr_instance_fleet" "task" {
 
 func testAccInstanceFleetConfig_full(rName string) string {
 	return acctest.ConfigCompose(testAccInstanceFleetConfig_base(rName), fmt.Sprintf(`
+# Hard to test "future" capacity reservations.
+# For fleets, EMR supports both open and targeted.
+resource "aws_ec2_capacity_reservation" "test" {
+  instance_type           = "m4.xlarge"
+  instance_platform       = "Linux/UNIX"
+  availability_zone       = aws_subnet.test.availability_zone
+  instance_match_criteria = "targeted"
+  instance_count          = 1
+}
+
+resource "aws_resourcegroups_group" "test" {
+  name = %[1]q
+
+  configuration {
+    type = "AWS::EC2::CapacityReservationPool"
+  }
+
+  configuration {
+    parameters {
+      name   = "allowed-resource-types"
+      values = ["AWS::EC2::CapacityReservation"]
+    }
+    type = "AWS::ResourceGroups::Generic"
+  }
+}
+
+resource "aws_resourcegroups_resource" "test" {
+  group_arn    = aws_resourcegroups_group.test.arn
+  resource_arn = aws_ec2_capacity_reservation.test.arn
+}
+
 resource "aws_emr_instance_fleet" "task" {
   cluster_id = aws_emr_cluster.test.id
 
@@ -517,6 +576,12 @@ resource "aws_emr_instance_fleet" "task" {
   }
 
   launch_specifications {
+    on_demand_specification {
+      allocation_strategy = "lowest-price"
+      capacity_reservation_options {
+        capacity_reservation_resource_group_arn = aws_resourcegroups_group.test.arn
+      }
+    }
     spot_specification {
       allocation_strategy      = "capacity-optimized"
       block_duration_minutes   = 0
