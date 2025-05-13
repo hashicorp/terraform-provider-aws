@@ -59,6 +59,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "aws_devopsguru_service_integration",
 			Name:     "Service Integration",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingletonIdentity(),
 		},
 	}
 }

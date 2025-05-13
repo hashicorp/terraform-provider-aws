@@ -26,6 +26,7 @@ import (
 )
 
 // @FrameworkResource("aws_devopsguru_service_integration", name="Service Integration")
+// @SingletonIdentity
 func newServiceIntegrationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &serviceIntegrationResource{}, nil
 }

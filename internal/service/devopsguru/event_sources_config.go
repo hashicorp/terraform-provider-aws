@@ -5,7 +5,6 @@ package devopsguru
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/service/devopsguru"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/devopsguru/types"
@@ -37,12 +36,13 @@ const (
 
 type eventSourcesConfigResource struct {
 	framework.ResourceWithModel[eventSourcesConfigResourceModel]
+	framework.WithImportRegionalSingleton
 }
 
 func (r *eventSourcesConfigResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrID: framework.IDAttribute(),
+			names.AttrID: framework.IDAttributeDeprecatedWithAlternate(path.Root(names.AttrRegion)),
 		},
 		Blocks: map[string]schema.Block{
 			"event_sources": schema.ListNestedBlock{
@@ -188,26 +188,4 @@ type eventSourcesData struct {
 
 type amazonCodeGuruProfilerData struct {
 	Status fwtypes.StringEnum[awstypes.EventSourceOptInStatus] `tfsdk:"status"`
-}
-
-func (r *eventSourcesConfigResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	var region types.String
-	response.Diagnostics.Append(response.State.GetAttribute(ctx, path.Root("region"), &region)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	if !region.IsNull() {
-		if region.ValueString() != request.ID {
-			response.Diagnostics.AddError(
-				"Invalid Resource Import ID Value",
-				fmt.Sprintf("The region passed for import, %q, does not match the region %q in the ID", region.ValueString(), request.ID),
-			)
-			return
-		}
-	} else {
-		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("region"), request.ID)...)
-	}
-
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), request.ID)...)
 }
