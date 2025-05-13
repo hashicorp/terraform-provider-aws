@@ -18,6 +18,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
@@ -53,6 +55,9 @@ func (r *promptResource) Schema(ctx context.Context, request resource.SchemaRequ
 			names.AttrCreatedAt: schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"customer_encryption_key_arn": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
@@ -497,10 +502,11 @@ func (r *promptResource) Create(ctx context.Context, request resource.CreateRequ
 	}
 
 	// Set values for unknowns.
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
+	data.ARN = fwflex.StringToFramework(ctx, output.Arn)
+	data.CreatedAt = timetypes.NewRFC3339TimePointerValue(output.CreatedAt)
+	data.ID = fwflex.StringToFramework(ctx, output.Id)
+	data.UpdatedAt = timetypes.NewRFC3339TimePointerValue(output.UpdatedAt)
+	data.Version = fwflex.StringToFramework(ctx, output.Version)
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
@@ -551,13 +557,11 @@ func (r *promptResource) Update(ctx context.Context, request resource.UpdateRequ
 
 	conn := r.Meta().BedrockAgentClient(ctx)
 
-	diff, d := fwflex.Diff(ctx, new, old)
-	response.Diagnostics.Append(d...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	if diff.HasChanges() {
+	if !new.CustomerEncryptionKeyARN.Equal(old.CustomerEncryptionKeyARN) ||
+		!new.DefaultVariant.Equal(old.DefaultVariant) ||
+		!new.Description.Equal(old.Description) ||
+		!new.Name.Equal(old.Name) ||
+		!new.Variants.Equal(old.Variants) {
 		var input bedrockagent.UpdatePromptInput
 		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
 		if response.Diagnostics.HasError() {
@@ -565,20 +569,22 @@ func (r *promptResource) Update(ctx context.Context, request resource.UpdateRequ
 		}
 
 		// Additional fields.
-		input.PromptIdentifier = old.ID.ValueStringPointer()
+		input.PromptIdentifier = fwflex.StringFromFramework(ctx, new.ID)
 
 		output, err := conn.UpdatePrompt(ctx, &input)
 
 		if err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("reading Bedrock Agent Prompt (%s)", new.ID.ValueString()), err.Error())
+			response.Diagnostics.AddError(fmt.Sprintf("updating Bedrock Agent Prompt (%s)", new.ID.ValueString()), err.Error())
 
 			return
 		}
 
-		response.Diagnostics.Append(fwflex.Flatten(ctx, output, &new)...)
-		if response.Diagnostics.HasError() {
-			return
-		}
+		// Set values for unknowns.
+		new.UpdatedAt = timetypes.NewRFC3339TimePointerValue(output.UpdatedAt)
+		new.Version = fwflex.StringToFramework(ctx, output.Version)
+	} else {
+		new.UpdatedAt = old.UpdatedAt
+		new.Version = old.Version
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
