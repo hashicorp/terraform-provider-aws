@@ -4,6 +4,8 @@ FEATURES:
 
 * **New Data Source:** `aws_account_primary_contact` ([#42526](https://github.com/hashicorp/terraform-provider-aws/issues/42526))
 * **New Data Source:** `aws_dynamodb_tables` ([#42339](https://github.com/hashicorp/terraform-provider-aws/issues/42339))
+* **New Resource:** `aws_cloudfrontkeyvaluestore_keys_exclusive` ([#42246](https://github.com/hashicorp/terraform-provider-aws/issues/42246))
+* **New Resource:** `aws_dataexchange_revision_assets` ([#42272](https://github.com/hashicorp/terraform-provider-aws/issues/42272))
 * **New Resource:** `aws_inspector2_filter` ([#42374](https://github.com/hashicorp/terraform-provider-aws/issues/42374))
 * **New Resource:** `aws_wafv2_api_key` ([#42525](https://github.com/hashicorp/terraform-provider-aws/issues/42525))
 
