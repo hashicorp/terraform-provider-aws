@@ -5,7 +5,6 @@ package bedrockagent
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -84,33 +83,52 @@ func (r *promptResource) Schema(ctx context.Context, request resource.SchemaRequ
 				CustomType: fwtypes.NewListNestedObjectTypeOf[promptVariantModel](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						names.AttrName: schema.StringAttribute{
-							Required: true,
+						"additional_model_request_fields": schema.StringAttribute{
+							CustomType: fwtypes.NewSmithyJSONType(ctx, document.NewLazyDocument),
+							Optional:   true,
+							Validators: []validator.String{
+								validators.JSON(),
+							},
 						},
 						"model_id": schema.StringAttribute{
 							Optional: true,
+						},
+						names.AttrName: schema.StringAttribute{
+							Required: true,
 						},
 						"template_type": schema.StringAttribute{
 							CustomType: fwtypes.StringEnumType[awstypes.PromptTemplateType](),
 							Required:   true,
 						},
-						"additional_model_request_fields": schema.StringAttribute{
-							Optional: true,
-							Validators: []validator.String{
-								validators.JSON(),
-							},
-						},
 					},
 					Blocks: map[string]schema.Block{
-						"metadata": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[promptMetadataEntryModel](ctx),
+						"gen_ai_resource": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[promptGenAiResourceModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+								listvalidator.ExactlyOneOf(
+									path.MatchRelative().AtParent().AtName("gen_ai_resource"),
+									path.MatchRelative().AtParent().AtName("model_id"),
+								),
+							},
 							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									names.AttrKey: schema.StringAttribute{
-										Required: true,
-									},
-									names.AttrValue: schema.StringAttribute{
-										Required: true,
+								Blocks: map[string]schema.Block{
+									"agent": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[promptAgentResourceModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+											listvalidator.ExactlyOneOf(
+												path.MatchRelative().AtParent().AtName("agent"),
+											),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"agent_identifier": schema.StringAttribute{
+													CustomType: fwtypes.ARNType,
+													Required:   true,
+												},
+											},
+										},
 									},
 								},
 							},
@@ -123,7 +141,7 @@ func (r *promptResource) Schema(ctx context.Context, request resource.SchemaRequ
 							NestedObject: schema.NestedBlockObject{
 								Blocks: map[string]schema.Block{
 									"text": schema.ListNestedBlock{
-										CustomType: fwtypes.NewListNestedObjectTypeOf[promptInferenceConfigurationMemberText](ctx),
+										CustomType: fwtypes.NewListNestedObjectTypeOf[promptModelInferenceConfigurationModel](ctx),
 										Validators: []validator.List{
 											listvalidator.SizeAtMost(1),
 											listvalidator.ExactlyOneOf(
@@ -136,6 +154,7 @@ func (r *promptResource) Schema(ctx context.Context, request resource.SchemaRequ
 													Optional: true,
 												},
 												"stop_sequences": schema.ListAttribute{
+													CustomType:  fwtypes.ListOfStringType,
 													ElementType: types.StringType,
 													Optional:    true,
 												},
@@ -151,31 +170,23 @@ func (r *promptResource) Schema(ctx context.Context, request resource.SchemaRequ
 								},
 							},
 						},
-						"gen_ai_resource": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[promptGenAiResourceModel](ctx),
+						"metadata": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[promptMetadataEntryModel](ctx),
 							Validators: []validator.List{
-								listvalidator.SizeAtMost(1),
-								listvalidator.ExactlyOneOf(
-									path.MatchRelative().AtParent().AtName("model_id"),
-									path.MatchRelative().AtParent().AtName("gen_ai_resource"),
-								),
+								listvalidator.SizeBetween(0, 50),
 							},
 							NestedObject: schema.NestedBlockObject{
-								Blocks: map[string]schema.Block{
-									"agent": schema.ListNestedBlock{
-										CustomType: fwtypes.NewListNestedObjectTypeOf[promptGenAiResourceMemberAgentModel](ctx),
-										Validators: []validator.List{
-											listvalidator.SizeAtMost(1),
-											listvalidator.ExactlyOneOf(
-												path.MatchRelative().AtParent().AtName("agent"),
-											),
+								Attributes: map[string]schema.Attribute{
+									names.AttrKey: schema.StringAttribute{
+										Required: true,
+										Validators: []validator.String{
+											stringvalidator.LengthBetween(1, 128),
 										},
-										NestedObject: schema.NestedBlockObject{
-											Attributes: map[string]schema.Attribute{
-												"agent_identifier": schema.StringAttribute{
-													Required: true,
-												},
-											},
+									},
+									names.AttrValue: schema.StringAttribute{
+										Required: true,
+										Validators: []validator.String{
+											stringvalidator.LengthBetween(0, 1024),
 										},
 									},
 								},
@@ -189,7 +200,7 @@ func (r *promptResource) Schema(ctx context.Context, request resource.SchemaRequ
 							NestedObject: schema.NestedBlockObject{
 								Blocks: map[string]schema.Block{
 									"chat": schema.ListNestedBlock{
-										CustomType: fwtypes.NewListNestedObjectTypeOf[promptTemplateConfigurationMemberChatModel](ctx),
+										CustomType: fwtypes.NewListNestedObjectTypeOf[chatPromptTemplateConfigurationModel](ctx),
 										Validators: []validator.List{
 											listvalidator.SizeAtMost(1),
 											listvalidator.ExactlyOneOf(
@@ -199,8 +210,25 @@ func (r *promptResource) Schema(ctx context.Context, request resource.SchemaRequ
 										},
 										NestedObject: schema.NestedBlockObject{
 											Blocks: map[string]schema.Block{
+												"input_variable": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[promptInputVariableModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeBetween(0, 20),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															names.AttrName: schema.StringAttribute{
+																Required: true,
+															},
+														},
+													},
+												},
 												"message": schema.ListNestedBlock{
 													CustomType: fwtypes.NewListNestedObjectTypeOf[messageModel](ctx),
+													Validators: []validator.List{
+														listvalidator.IsRequired(),
+														listvalidator.SizeAtLeast(1),
+													},
 													NestedObject: schema.NestedBlockObject{
 														Attributes: map[string]schema.Attribute{
 															"role": schema.StringAttribute{
@@ -222,7 +250,7 @@ func (r *promptResource) Schema(ctx context.Context, request resource.SchemaRequ
 																	},
 																	Blocks: map[string]schema.Block{
 																		"cache_point": schema.ListNestedBlock{
-																			CustomType: fwtypes.NewListNestedObjectTypeOf[contentBlockMemberCachePointModel](ctx),
+																			CustomType: fwtypes.NewListNestedObjectTypeOf[cachePointBlockModel](ctx),
 																			Validators: []validator.List{
 																				listvalidator.SizeAtMost(1),
 																				listvalidator.ExactlyOneOf(
@@ -245,16 +273,6 @@ func (r *promptResource) Schema(ctx context.Context, request resource.SchemaRequ
 														},
 													},
 												},
-												"input_variable": schema.ListNestedBlock{
-													CustomType: fwtypes.NewListNestedObjectTypeOf[promptInputVariableModel](ctx),
-													NestedObject: schema.NestedBlockObject{
-														Attributes: map[string]schema.Attribute{
-															names.AttrName: schema.StringAttribute{
-																Required: true,
-															},
-														},
-													},
-												},
 												"system": schema.ListNestedBlock{
 													CustomType: fwtypes.NewListNestedObjectTypeOf[systemContentBlockModel](ctx),
 													NestedObject: schema.NestedBlockObject{
@@ -265,7 +283,7 @@ func (r *promptResource) Schema(ctx context.Context, request resource.SchemaRequ
 														},
 														Blocks: map[string]schema.Block{
 															"cache_point": schema.ListNestedBlock{
-																CustomType: fwtypes.NewListNestedObjectTypeOf[systemContentBlockMemberCachePointModel](ctx),
+																CustomType: fwtypes.NewListNestedObjectTypeOf[cachePointBlockModel](ctx),
 																Validators: []validator.List{
 																	listvalidator.ExactlyOneOf(
 																		path.MatchRelative().AtParent().AtName("cache_point"),
@@ -297,7 +315,7 @@ func (r *promptResource) Schema(ctx context.Context, request resource.SchemaRequ
 																NestedObject: schema.NestedBlockObject{
 																	Blocks: map[string]schema.Block{
 																		"cache_point": schema.ListNestedBlock{
-																			CustomType: fwtypes.NewListNestedObjectTypeOf[toolMemberCachePointModel](ctx),
+																			CustomType: fwtypes.NewListNestedObjectTypeOf[cachePointBlockModel](ctx),
 																			Validators: []validator.List{
 																				listvalidator.SizeAtMost(1),
 																				listvalidator.ExactlyOneOf(
@@ -315,16 +333,16 @@ func (r *promptResource) Schema(ctx context.Context, request resource.SchemaRequ
 																			},
 																		},
 																		"tool_spec": schema.ListNestedBlock{
-																			CustomType: fwtypes.NewListNestedObjectTypeOf[toolMemberToolSpecModel](ctx),
+																			CustomType: fwtypes.NewListNestedObjectTypeOf[toolSpecificationModel](ctx),
 																			Validators: []validator.List{
 																				listvalidator.SizeAtMost(1),
 																			},
 																			NestedObject: schema.NestedBlockObject{
 																				Attributes: map[string]schema.Attribute{
-																					names.AttrName: schema.StringAttribute{
-																						Required: true,
-																					},
 																					names.AttrDescription: schema.StringAttribute{
+																						Optional: true,
+																					},
+																					names.AttrName: schema.StringAttribute{
 																						Required: true,
 																					},
 																				},
@@ -337,7 +355,8 @@ func (r *promptResource) Schema(ctx context.Context, request resource.SchemaRequ
 																						NestedObject: schema.NestedBlockObject{
 																							Attributes: map[string]schema.Attribute{
 																								"json": schema.StringAttribute{
-																									Optional: true,
+																									CustomType: fwtypes.NewSmithyJSONType(ctx, document.NewLazyDocument),
+																									Optional:   true,
 																									Validators: []validator.String{
 																										stringvalidator.ExactlyOneOf(
 																											path.MatchRelative().AtParent().AtName("json"),
@@ -362,7 +381,7 @@ func (r *promptResource) Schema(ctx context.Context, request resource.SchemaRequ
 																NestedObject: schema.NestedBlockObject{
 																	Blocks: map[string]schema.Block{
 																		"any": schema.ListNestedBlock{
-																			CustomType: fwtypes.NewListNestedObjectTypeOf[toolChoiceMemberAnyModel](ctx),
+																			CustomType: fwtypes.NewListNestedObjectTypeOf[anyToolChoiceModel](ctx),
 																			Validators: []validator.List{
 																				listvalidator.SizeAtMost(1),
 																				listvalidator.ExactlyOneOf(
@@ -373,13 +392,13 @@ func (r *promptResource) Schema(ctx context.Context, request resource.SchemaRequ
 																			},
 																		},
 																		"auto": schema.ListNestedBlock{
-																			CustomType: fwtypes.NewListNestedObjectTypeOf[toolChoiceMemberAutoModel](ctx),
+																			CustomType: fwtypes.NewListNestedObjectTypeOf[autoToolChoiceModel](ctx),
 																			Validators: []validator.List{
 																				listvalidator.SizeAtMost(1),
 																			},
 																		},
 																		"tool": schema.ListNestedBlock{
-																			CustomType: fwtypes.NewListNestedObjectTypeOf[toolChoiceMemberToolModel](ctx),
+																			CustomType: fwtypes.NewListNestedObjectTypeOf[specificToolChoiceModel](ctx),
 																			Validators: []validator.List{
 																				listvalidator.SizeAtMost(1),
 																			},
@@ -401,7 +420,7 @@ func (r *promptResource) Schema(ctx context.Context, request resource.SchemaRequ
 										},
 									},
 									"text": schema.ListNestedBlock{
-										CustomType: fwtypes.NewListNestedObjectTypeOf[promptTemplateConfigurationMemberTextModel](ctx),
+										CustomType: fwtypes.NewListNestedObjectTypeOf[textPromptTemplateConfigurationModel](ctx),
 										Validators: []validator.List{
 											listvalidator.SizeAtMost(1),
 										},
@@ -630,70 +649,125 @@ type promptResourceModel struct {
 }
 
 type promptVariantModel struct {
-	Name                         types.String                                                       `tfsdk:"name"`
-	ModelID                      types.String                                                       `tfsdk:"model_id"`
-	AdditionalModelRequestFields types.String                                                       `tfsdk:"additional_model_request_fields"`
-	TemplateType                 fwtypes.StringEnum[awstypes.PromptTemplateType]                    `tfsdk:"template_type"`
-	Metadata                     fwtypes.ListNestedObjectValueOf[promptMetadataEntryModel]          `tfsdk:"metadata"`
-	InferenceConfiguration       fwtypes.ListNestedObjectValueOf[promptInferenceConfigurationModel] `tfsdk:"inference_configuration"`
+	AdditionalModelRequestFields fwtypes.SmithyJSON[document.Interface]                             `tfsdk:"additional_model_request_fields"`
 	GenAIResource                fwtypes.ListNestedObjectValueOf[promptGenAiResourceModel]          `tfsdk:"gen_ai_resource"`
+	InferenceConfiguration       fwtypes.ListNestedObjectValueOf[promptInferenceConfigurationModel] `tfsdk:"inference_configuration"`
+	Metadata                     fwtypes.ListNestedObjectValueOf[promptMetadataEntryModel]          `tfsdk:"metadata"`
+	ModelID                      types.String                                                       `tfsdk:"model_id"`
+	Name                         types.String                                                       `tfsdk:"name"`
 	TemplateConfiguration        fwtypes.ListNestedObjectValueOf[promptTemplateConfigurationModel]  `tfsdk:"template_configuration"`
+	TemplateType                 fwtypes.StringEnum[awstypes.PromptTemplateType]                    `tfsdk:"template_type"`
 }
 
-func (m *promptVariantModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
-	t := v.(awstypes.PromptVariant)
+type promptGenAiResourceModel struct {
+	Agent fwtypes.ListNestedObjectValueOf[promptAgentResourceModel] `tfsdk:"agent"`
+}
 
-	diags.Append(fwflex.Flatten(ctx, t.Name, &m.Name)...)
-	diags.Append(fwflex.Flatten(ctx, t.ModelId, &m.ModelID)...)
-	diags.Append(fwflex.Flatten(ctx, t.TemplateType, &m.TemplateType)...)
-	diags.Append(fwflex.Flatten(ctx, t.Metadata, &m.Metadata)...)
-	if t.InferenceConfiguration != nil {
-		diags.Append(fwflex.Flatten(ctx, t.InferenceConfiguration, &m.InferenceConfiguration)...)
-	}
-	if t.GenAiResource != nil {
-		diags.Append(fwflex.Flatten(ctx, t.GenAiResource, &m.GenAIResource)...)
-	}
-	diags.Append(fwflex.Flatten(ctx, t.TemplateConfiguration, &m.TemplateConfiguration)...)
-	if diags.HasError() {
-		return diags
+var (
+	_ fwflex.Expander  = promptGenAiResourceModel{}
+	_ fwflex.Flattener = &promptGenAiResourceModel{}
+)
+
+func (m promptGenAiResourceModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var result any
+	var diags diag.Diagnostics
+
+	switch {
+	case !m.Agent.IsNull():
+		agent, d := m.Agent.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		var r awstypes.PromptGenAiResourceMemberAgent
+		diags.Append(fwflex.Expand(ctx, agent, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		result = &r
 	}
 
-	if t.AdditionalModelRequestFields != nil {
-		additionalFields, err := t.AdditionalModelRequestFields.MarshalSmithyDocument()
-		if err != nil {
-			diags.AddError("Marshalling additional model request fields", err.Error())
+	return result, diags
+}
+
+func (m *promptGenAiResourceModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	switch v := v.(type) {
+	case awstypes.PromptGenAiResourceMemberAgent:
+		var agent promptAgentResourceModel
+		diags.Append(fwflex.Flatten(ctx, v.Value, &agent)...)
+		if diags.HasError() {
 			return diags
 		}
 
-		m.AdditionalModelRequestFields = types.StringValue(string(additionalFields))
+		m.Agent = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &agent)
 	}
 
 	return diags
 }
 
-func (m promptVariantModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
-	var r awstypes.PromptVariant
-	diags.Append(fwflex.Expand(ctx, m.Name, &r.Name)...)
-	diags.Append(fwflex.Expand(ctx, m.ModelID, &r.ModelId)...)
-	diags.Append(fwflex.Expand(ctx, m.TemplateType, &r.TemplateType)...)
-	diags.Append(fwflex.Expand(ctx, m.Metadata, &r.Metadata)...)
-	diags.Append(fwflex.Expand(ctx, m.InferenceConfiguration, &r.InferenceConfiguration)...)
-	diags.Append(fwflex.Expand(ctx, m.GenAIResource, &r.GenAiResource)...)
-	diags.Append(fwflex.Expand(ctx, m.TemplateConfiguration, &r.TemplateConfiguration)...)
-	if diags.HasError() {
-		return nil, diags
-	}
+type promptAgentResourceModel struct {
+	AgentIdentifier fwtypes.ARN `tfsdk:"agent_identifier"`
+}
 
-	if !m.AdditionalModelRequestFields.IsNull() {
-		var doc any
-		if err := json.Unmarshal([]byte(m.AdditionalModelRequestFields.ValueString()), &doc); err != nil {
-			diags.AddError("Unmarshalling additional model request fields", err.Error())
+type promptInferenceConfigurationModel struct {
+	Text fwtypes.ListNestedObjectValueOf[promptModelInferenceConfigurationModel] `tfsdk:"text"`
+}
+
+var (
+	_ fwflex.Expander  = promptInferenceConfigurationModel{}
+	_ fwflex.Flattener = &promptInferenceConfigurationModel{}
+)
+
+func (m promptInferenceConfigurationModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var result any
+	var diags diag.Diagnostics
+
+	switch {
+	case !m.Text.IsNull():
+		text, d := m.Text.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
 			return nil, diags
 		}
-		r.AdditionalModelRequestFields = document.NewLazyDocument(doc)
+
+		var r awstypes.PromptInferenceConfigurationMemberText
+		diags.Append(fwflex.Expand(ctx, text, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		result = &r
 	}
 
-	return &r, diags
+	return result, diags
+}
+
+func (m *promptInferenceConfigurationModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	switch v := v.(type) {
+	case awstypes.PromptInferenceConfigurationMemberText:
+		var text promptModelInferenceConfigurationModel
+		diags.Append(fwflex.Flatten(ctx, v.Value, &text)...)
+		if diags.HasError() {
+			return diags
+		}
+
+		m.Text = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &text)
+	}
+
+	return diags
+}
+
+type promptModelInferenceConfigurationModel struct {
+	MaxTokens     types.Int32          `tfsdk:"max_tokens"`
+	StopSequences fwtypes.ListOfString `tfsdk:"stop_sequences"`
+	Temperature   types.Float32        `tfsdk:"temperature"`
+	TopP          types.Float32        `tfsdk:"top_p"`
 }
 
 type promptMetadataEntryModel struct {
@@ -701,180 +775,88 @@ type promptMetadataEntryModel struct {
 	Value types.String `tfsdk:"value"`
 }
 
-// Tagged union
-type promptInferenceConfigurationModel struct {
-	Text fwtypes.ListNestedObjectValueOf[promptInferenceConfigurationMemberText] `tfsdk:"text"`
-}
-
-func (m *promptInferenceConfigurationModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
-	switch t := v.(type) {
-	case awstypes.PromptInferenceConfigurationMemberText:
-		var model promptInferenceConfigurationMemberText
-		d := fwflex.Flatten(ctx, t.Value, &model)
-		diags.Append(d...)
-		if diags.HasError() {
-			return diags
-		}
-
-		m.Text = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
-
-		return diags
-	default:
-		return diags
-	}
-}
-
-func (m promptInferenceConfigurationModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
-	switch {
-	case !m.Text.IsNull():
-		promptInferenceConfigurationText, d := m.Text.ToPtr(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-
-		var r awstypes.PromptInferenceConfigurationMemberText
-		diags.Append(fwflex.Expand(ctx, promptInferenceConfigurationText, &r.Value)...)
-		if diags.HasError() {
-			return nil, diags
-		}
-
-		return &r, diags
-	}
-
-	return nil, diags
-}
-
-type promptInferenceConfigurationMemberText struct {
-	MaxTokens     types.Int32          `tfsdk:"max_tokens"`
-	StopSequences fwtypes.ListOfString `tfsdk:"stop_sequences"`
-	Temperature   types.Float32        `tfsdk:"temperature"`
-	TopP          types.Float32        `tfsdk:"top_p"`
-}
-
-// Tagged union
-type promptGenAiResourceModel struct {
-	Agent fwtypes.ListNestedObjectValueOf[promptGenAiResourceMemberAgentModel] `tfsdk:"agent"`
-}
-
-func (m *promptGenAiResourceModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
-	switch t := v.(type) {
-	case awstypes.PromptGenAiResourceMemberAgent:
-		var model promptGenAiResourceMemberAgentModel
-		d := fwflex.Flatten(ctx, t.Value, &model)
-		diags.Append(d...)
-		if diags.HasError() {
-			return diags
-		}
-
-		m.Agent = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
-
-		return diags
-	default:
-		return diags
-	}
-}
-
-func (m promptGenAiResourceModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
-	switch {
-	case !m.Agent.IsNull():
-		promptGenAiResourceAgent, d := m.Agent.ToPtr(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-
-		var r awstypes.PromptGenAiResourceMemberAgent
-		diags.Append(fwflex.Expand(ctx, promptGenAiResourceAgent, &r.Value)...)
-		if diags.HasError() {
-			return nil, diags
-		}
-
-		return &r, diags
-	}
-
-	return nil, diags
-}
-
-type promptGenAiResourceMemberAgentModel struct {
-	AgentIdentifier types.String `tfsdk:"agent_identifier"`
-}
-
-// Tagged union
 type promptTemplateConfigurationModel struct {
-	Chat fwtypes.ListNestedObjectValueOf[promptTemplateConfigurationMemberChatModel] `tfsdk:"chat"`
-	Text fwtypes.ListNestedObjectValueOf[promptTemplateConfigurationMemberTextModel] `tfsdk:"text"`
+	Chat fwtypes.ListNestedObjectValueOf[chatPromptTemplateConfigurationModel] `tfsdk:"chat"`
+	Text fwtypes.ListNestedObjectValueOf[textPromptTemplateConfigurationModel] `tfsdk:"text"`
 }
 
-func (m *promptTemplateConfigurationModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
-	switch t := v.(type) {
-	case awstypes.PromptTemplateConfigurationMemberChat:
-		var model promptTemplateConfigurationMemberChatModel
-		d := fwflex.Flatten(ctx, t.Value, &model)
-		diags.Append(d...)
-		if diags.HasError() {
-			return diags
-		}
+var (
+	_ fwflex.Expander  = promptTemplateConfigurationModel{}
+	_ fwflex.Flattener = &promptTemplateConfigurationModel{}
+)
 
-		m.Chat = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+func (m promptTemplateConfigurationModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var result any
+	var diags diag.Diagnostics
 
-		return diags
-	case awstypes.PromptTemplateConfigurationMemberText:
-		var model promptTemplateConfigurationMemberTextModel
-		d := fwflex.Flatten(ctx, t.Value, &model)
-		diags.Append(d...)
-		if diags.HasError() {
-			return diags
-		}
-
-		m.Text = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
-
-		return diags
-	default:
-		return diags
-	}
-}
-
-func (m promptTemplateConfigurationModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
 	switch {
 	case !m.Chat.IsNull():
-		promptTemplateConfigurationChat, d := m.Chat.ToPtr(ctx)
+		chat, d := m.Chat.ToPtr(ctx)
 		diags.Append(d...)
 		if diags.HasError() {
 			return nil, diags
 		}
 
 		var r awstypes.PromptTemplateConfigurationMemberChat
-		diags.Append(fwflex.Expand(ctx, promptTemplateConfigurationChat, &r.Value)...)
+		diags.Append(fwflex.Expand(ctx, chat, &r.Value)...)
 		if diags.HasError() {
 			return nil, diags
 		}
 
-		return &r, diags
+		result = &r
 	case !m.Text.IsNull():
-		promptTemplateConfigurationText, d := m.Text.ToPtr(ctx)
+		text, d := m.Text.ToPtr(ctx)
 		diags.Append(d...)
 		if diags.HasError() {
 			return nil, diags
 		}
 
 		var r awstypes.PromptTemplateConfigurationMemberText
-		diags.Append(fwflex.Expand(ctx, promptTemplateConfigurationText, &r.Value)...)
+		diags.Append(fwflex.Expand(ctx, text, &r.Value)...)
 		if diags.HasError() {
 			return nil, diags
 		}
 
-		return &r, diags
+		result = &r
 	}
 
-	return nil, diags
+	return result, diags
 }
 
-type promptTemplateConfigurationMemberChatModel struct {
-	Messages          fwtypes.ListNestedObjectValueOf[messageModel]             `tfsdk:"message"`
+func (m *promptTemplateConfigurationModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	switch v := v.(type) {
+	case awstypes.PromptTemplateConfigurationMemberChat:
+		var chat chatPromptTemplateConfigurationModel
+		diags.Append(fwflex.Flatten(ctx, v.Value, &chat)...)
+		if diags.HasError() {
+			return diags
+		}
+
+		m.Chat = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &chat)
+	case awstypes.PromptTemplateConfigurationMemberText:
+		var text textPromptTemplateConfigurationModel
+		diags.Append(fwflex.Flatten(ctx, v.Value, &text)...)
+		if diags.HasError() {
+			return diags
+		}
+
+		m.Text = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &text)
+	}
+
+	return diags
+}
+
+type chatPromptTemplateConfigurationModel struct {
 	InputVariables    fwtypes.ListNestedObjectValueOf[promptInputVariableModel] `tfsdk:"input_variable"`
+	Messages          fwtypes.ListNestedObjectValueOf[messageModel]             `tfsdk:"message"`
 	System            fwtypes.ListNestedObjectValueOf[systemContentBlockModel]  `tfsdk:"system"`
 	ToolConfiguration fwtypes.ListNestedObjectValueOf[toolConfigurationModel]   `tfsdk:"tool_configuration"`
+}
+
+type promptInputVariableModel struct {
+	Name types.String `tfsdk:"name"`
 }
 
 type messageModel struct {
@@ -882,140 +864,142 @@ type messageModel struct {
 	Role    fwtypes.StringEnum[awstypes.ConversationRole]      `tfsdk:"role"`
 }
 
-// Tagged union
 type contentBlockModel struct {
-	CachePoint fwtypes.ListNestedObjectValueOf[contentBlockMemberCachePointModel] `tfsdk:"cache_point"`
-	Text       types.String                                                       `tfsdk:"text"`
+	CachePoint fwtypes.ListNestedObjectValueOf[cachePointBlockModel] `tfsdk:"cache_point"`
+	Text       types.String                                          `tfsdk:"text"`
 }
 
-func (m *contentBlockModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
-	switch t := v.(type) {
-	case awstypes.ContentBlockMemberCachePoint:
-		var model contentBlockMemberCachePointModel
-		d := fwflex.Flatten(ctx, t.Value, &model)
-		diags.Append(d...)
-		if diags.HasError() {
-			return diags
-		}
+var (
+	_ fwflex.Expander  = contentBlockModel{}
+	_ fwflex.Flattener = &contentBlockModel{}
+)
 
-		m.CachePoint = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+func (m contentBlockModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var result any
+	var diags diag.Diagnostics
 
-		return diags
-	case awstypes.ContentBlockMemberText:
-		m.Text = types.StringValue(t.Value)
-		return diags
-	default:
-		return diags
-	}
-}
-
-func (m contentBlockModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
 	switch {
 	case !m.CachePoint.IsNull():
-		contentBlockCachePoint, d := m.CachePoint.ToPtr(ctx)
+		cachePoint, d := m.CachePoint.ToPtr(ctx)
 		diags.Append(d...)
 		if diags.HasError() {
 			return nil, diags
 		}
 
 		var r awstypes.ContentBlockMemberCachePoint
-		diags.Append(fwflex.Expand(ctx, contentBlockCachePoint, &r.Value)...)
+		diags.Append(fwflex.Expand(ctx, cachePoint, &r.Value)...)
 		if diags.HasError() {
 			return nil, diags
 		}
 
-		return &r, diags
+		result = &r
 	case !m.Text.IsNull():
-		contentBlockText, d := m.Text.ToStringValue(ctx)
+		text, d := m.Text.ToStringValue(ctx)
 		diags.Append(d...)
 		if diags.HasError() {
 			return nil, diags
 		}
 
 		var r awstypes.ContentBlockMemberText
-		diags.Append(fwflex.Expand(ctx, contentBlockText, &r.Value)...)
+		diags.Append(fwflex.Expand(ctx, text, &r.Value)...)
 		if diags.HasError() {
 			return nil, diags
 		}
 
-		return &r, diags
+		result = &r
 	}
 
-	return nil, diags
+	return result, diags
 }
 
-type contentBlockMemberCachePointModel struct {
-	Type fwtypes.StringEnum[awstypes.CachePointType] `tfsdk:"type"`
-}
+func (m *contentBlockModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
 
-type promptInputVariableModel struct {
-	Name types.String `tfsdk:"name"`
-}
-
-// Tagged union
-type systemContentBlockModel struct {
-	CachePoint fwtypes.ListNestedObjectValueOf[systemContentBlockMemberCachePointModel] `tfsdk:"cache_point"`
-	Text       types.String                                                             `tfsdk:"text"`
-}
-
-func (m *systemContentBlockModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
-	switch t := v.(type) {
-	case awstypes.SystemContentBlockMemberCachePoint:
-		var model systemContentBlockMemberCachePointModel
-		d := fwflex.Flatten(ctx, t.Value, &model)
-		diags.Append(d...)
+	switch v := v.(type) {
+	case awstypes.ContentBlockMemberCachePoint:
+		var cachePoint cachePointBlockModel
+		diags.Append(fwflex.Flatten(ctx, v.Value, &cachePoint)...)
 		if diags.HasError() {
 			return diags
 		}
 
-		m.CachePoint = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
-
-		return diags
-	case awstypes.SystemContentBlockMemberText:
-		m.Text = types.StringValue(t.Value)
-		return diags
-	default:
-		return diags
+		m.CachePoint = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &cachePoint)
+	case awstypes.ContentBlockMemberText:
+		m.Text = types.StringValue(v.Value)
 	}
+
+	return diags
 }
 
-func (m systemContentBlockModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
+type cachePointBlockModel struct {
+	Type fwtypes.StringEnum[awstypes.CachePointType] `tfsdk:"type"`
+}
+
+type systemContentBlockModel struct {
+	CachePoint fwtypes.ListNestedObjectValueOf[cachePointBlockModel] `tfsdk:"cache_point"`
+	Text       types.String                                          `tfsdk:"text"`
+}
+
+var (
+	_ fwflex.Expander  = systemContentBlockModel{}
+	_ fwflex.Flattener = &systemContentBlockModel{}
+)
+
+func (m systemContentBlockModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var result any
+	var diags diag.Diagnostics
+
 	switch {
 	case !m.CachePoint.IsNull():
-		systemContentBlockCachePoint, d := m.CachePoint.ToPtr(ctx)
+		cachePoint, d := m.CachePoint.ToPtr(ctx)
 		diags.Append(d...)
 		if diags.HasError() {
 			return nil, diags
 		}
 
 		var r awstypes.SystemContentBlockMemberCachePoint
-		diags.Append(fwflex.Expand(ctx, systemContentBlockCachePoint, &r.Value)...)
+		diags.Append(fwflex.Expand(ctx, cachePoint, &r.Value)...)
 		if diags.HasError() {
 			return nil, diags
 		}
 
-		return &r, diags
+		result = &r
 	case !m.Text.IsNull():
-		systemContentBlockText, d := m.Text.ToStringValue(ctx)
+		text, d := m.Text.ToStringValue(ctx)
 		diags.Append(d...)
 		if diags.HasError() {
 			return nil, diags
 		}
 
 		var r awstypes.SystemContentBlockMemberText
-		diags.Append(fwflex.Expand(ctx, systemContentBlockText, &r.Value)...)
+		diags.Append(fwflex.Expand(ctx, text, &r.Value)...)
 		if diags.HasError() {
 			return nil, diags
 		}
 
-		return &r, diags
+		result = &r
 	}
 
-	return nil, diags
+	return result, diags
 }
 
-type systemContentBlockMemberCachePointModel struct {
-	Type fwtypes.StringEnum[awstypes.CachePointType] `tfsdk:"type"`
+func (m *systemContentBlockModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	switch v := v.(type) {
+	case awstypes.SystemContentBlockMemberCachePoint:
+		var cachePoint cachePointBlockModel
+		diags.Append(fwflex.Flatten(ctx, v.Value, &cachePoint)...)
+		if diags.HasError() {
+			return diags
+		}
+
+		m.CachePoint = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &cachePoint)
+	case awstypes.SystemContentBlockMemberText:
+		m.Text = types.StringValue(v.Value)
+	}
+
+	return diags
 }
 
 type toolConfigurationModel struct {
@@ -1023,234 +1007,231 @@ type toolConfigurationModel struct {
 	ToolChoice fwtypes.ListNestedObjectValueOf[toolChoiceModel] `tfsdk:"tool_choice"`
 }
 
-// Tagged union
 type toolModel struct {
-	CachePoint fwtypes.ListNestedObjectValueOf[toolMemberCachePointModel] `tfsdk:"cache_point"`
-	ToolSpec   fwtypes.ListNestedObjectValueOf[toolMemberToolSpecModel]   `tfsdk:"tool_spec"`
+	CachePoint fwtypes.ListNestedObjectValueOf[cachePointBlockModel]   `tfsdk:"cache_point"`
+	ToolSpec   fwtypes.ListNestedObjectValueOf[toolSpecificationModel] `tfsdk:"tool_spec"`
 }
 
-func (m *toolModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
-	switch t := v.(type) {
-	case awstypes.ToolMemberCachePoint:
-		var model toolMemberCachePointModel
-		d := fwflex.Flatten(ctx, t.Value, &model)
-		diags.Append(d...)
-		if diags.HasError() {
-			return diags
-		}
+var (
+	_ fwflex.Expander  = toolModel{}
+	_ fwflex.Flattener = &toolModel{}
+)
 
-		m.CachePoint = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+func (m toolModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var result any
+	var diags diag.Diagnostics
 
-		return diags
-	case awstypes.ToolMemberToolSpec:
-		var model toolMemberToolSpecModel
-		d := fwflex.Flatten(ctx, t.Value, &model)
-		diags.Append(d...)
-		if diags.HasError() {
-			return diags
-		}
-
-		m.ToolSpec = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
-
-		return diags
-	default:
-		return diags
-	}
-}
-
-func (m toolModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
 	switch {
 	case !m.CachePoint.IsNull():
-		toolCachePoint, d := m.CachePoint.ToPtr(ctx)
+		cachePoint, d := m.CachePoint.ToPtr(ctx)
 		diags.Append(d...)
 		if diags.HasError() {
 			return nil, diags
 		}
 
 		var r awstypes.ToolMemberCachePoint
-		diags.Append(fwflex.Expand(ctx, toolCachePoint, &r.Value)...)
+		diags.Append(fwflex.Expand(ctx, cachePoint, &r.Value)...)
 		if diags.HasError() {
 			return nil, diags
 		}
 
-		return &r, diags
+		result = &r
 	case !m.ToolSpec.IsNull():
-		toolToolSpec, d := m.ToolSpec.ToPtr(ctx)
+		toolSpec, d := m.ToolSpec.ToPtr(ctx)
 		diags.Append(d...)
 		if diags.HasError() {
 			return nil, diags
 		}
 
 		var r awstypes.ToolMemberToolSpec
-		diags.Append(fwflex.Expand(ctx, toolToolSpec, &r.Value)...)
+		diags.Append(fwflex.Expand(ctx, toolSpec, &r.Value)...)
 		if diags.HasError() {
 			return nil, diags
 		}
 
-		return &r, diags
+		result = &r
 	}
 
-	return nil, diags
+	return result, diags
 }
 
-type toolMemberCachePointModel struct {
-	Type fwtypes.StringEnum[awstypes.CachePointType] `tfsdk:"type"`
+func (m *toolModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	switch v := v.(type) {
+	case awstypes.ToolMemberCachePoint:
+		var cachePoint cachePointBlockModel
+		diags.Append(fwflex.Flatten(ctx, v.Value, &cachePoint)...)
+		if diags.HasError() {
+			return diags
+		}
+
+		m.CachePoint = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &cachePoint)
+	case awstypes.ToolMemberToolSpec:
+		var toolSpec toolSpecificationModel
+		diags.Append(fwflex.Flatten(ctx, v.Value, &toolSpec)...)
+		if diags.HasError() {
+			return diags
+		}
+
+		m.ToolSpec = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &toolSpec)
+	}
+
+	return diags
 }
 
-type toolMemberToolSpecModel struct {
+type toolSpecificationModel struct {
+	Description types.String                                          `tfsdk:"description"`
 	InputSchema fwtypes.ListNestedObjectValueOf[toolInputSchemaModel] `tfsdk:"input_schema"`
 	Name        types.String                                          `tfsdk:"name"`
-	Description types.String                                          `tfsdk:"description"`
 }
 
-// Tagged union
 type toolInputSchemaModel struct {
-	Json types.String `tfsdk:"json"`
+	JSON fwtypes.SmithyJSON[document.Interface] `tfsdk:"json"`
 }
 
-func (m *toolInputSchemaModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
-	switch t := v.(type) {
-	case awstypes.ToolInputSchemaMemberJson:
-		if t.Value != nil {
-			inputSchema, err := t.Value.MarshalSmithyDocument()
-			if err != nil {
-				diags.AddError("Marshalling tool input schema", err.Error())
-				return diags
-			}
+var (
+	_ fwflex.Expander  = toolInputSchemaModel{}
+	_ fwflex.Flattener = &toolInputSchemaModel{}
+)
 
-			m.Json = types.StringValue(string(inputSchema))
-		}
+func (m toolInputSchemaModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var result any
+	var diags diag.Diagnostics
 
-		return diags
-	default:
-		return diags
-	}
-}
-
-func (m toolInputSchemaModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
 	switch {
-	case !m.Json.IsNull():
+	case !m.JSON.IsNull():
 		var r awstypes.ToolInputSchemaMemberJson
-		var doc any
-		if err := json.Unmarshal([]byte(m.Json.ValueString()), &doc); err != nil {
-			diags.AddError("Unmarshalling tool input schema", err.Error())
+		diags.Append(fwflex.Expand(ctx, m.JSON, &r.Value)...)
+		if diags.HasError() {
 			return nil, diags
 		}
-		r.Value = document.NewLazyDocument(doc)
 
-		return &r, diags
+		result = &r
 	}
 
-	return nil, diags
+	return result, diags
 }
 
-// Tagged union
+func (m *toolInputSchemaModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	switch v := v.(type) {
+	case awstypes.ToolInputSchemaMemberJson:
+		diags.Append(fwflex.Flatten(ctx, v.Value, &m.JSON)...)
+		if diags.HasError() {
+			return diags
+		}
+	}
+
+	return diags
+}
+
 type toolChoiceModel struct {
-	Any  fwtypes.ListNestedObjectValueOf[toolChoiceMemberAnyModel]  `tfsdk:"any"`
-	Auto fwtypes.ListNestedObjectValueOf[toolChoiceMemberAutoModel] `tfsdk:"auto"`
-	Tool fwtypes.ListNestedObjectValueOf[toolChoiceMemberToolModel] `tfsdk:"tool"`
+	Any  fwtypes.ListNestedObjectValueOf[anyToolChoiceModel]      `tfsdk:"any"`
+	Auto fwtypes.ListNestedObjectValueOf[autoToolChoiceModel]     `tfsdk:"auto"`
+	Tool fwtypes.ListNestedObjectValueOf[specificToolChoiceModel] `tfsdk:"tool"`
 }
 
-func (m *toolChoiceModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
-	switch t := v.(type) {
-	case awstypes.ToolChoiceMemberAny:
-		var model toolChoiceMemberAnyModel
-		d := fwflex.Flatten(ctx, t.Value, &model)
-		diags.Append(d...)
-		if diags.HasError() {
-			return diags
-		}
+var (
+	_ fwflex.Expander  = toolChoiceModel{}
+	_ fwflex.Flattener = &toolChoiceModel{}
+)
 
-		m.Any = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+func (m toolChoiceModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var result any
+	var diags diag.Diagnostics
 
-		return diags
-	case awstypes.ToolChoiceMemberAuto:
-		var model toolChoiceMemberAutoModel
-		d := fwflex.Flatten(ctx, t.Value, &model)
-		diags.Append(d...)
-		if diags.HasError() {
-			return diags
-		}
-
-		m.Auto = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
-
-		return diags
-	case awstypes.ToolChoiceMemberTool:
-		var model toolChoiceMemberToolModel
-		d := fwflex.Flatten(ctx, t.Value, &model)
-		diags.Append(d...)
-		if diags.HasError() {
-			return diags
-		}
-
-		m.Tool = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
-
-		return diags
-	default:
-		return diags
-	}
-}
-
-func (m toolChoiceModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
 	switch {
 	case !m.Any.IsNull():
-		toolChoiceAny, d := m.Any.ToPtr(ctx)
+		any, d := m.Any.ToPtr(ctx)
 		diags.Append(d...)
 		if diags.HasError() {
 			return nil, diags
 		}
 
 		var r awstypes.ToolChoiceMemberAny
-		diags.Append(fwflex.Expand(ctx, toolChoiceAny, &r.Value)...)
+		diags.Append(fwflex.Expand(ctx, any, &r.Value)...)
 		if diags.HasError() {
 			return nil, diags
 		}
 
-		return &r, diags
+		result = &r
 	case !m.Auto.IsNull():
-		toolChoiceAuto, d := m.Auto.ToPtr(ctx)
+		auto, d := m.Auto.ToPtr(ctx)
 		diags.Append(d...)
 		if diags.HasError() {
 			return nil, diags
 		}
 
 		var r awstypes.ToolChoiceMemberAuto
-		diags.Append(fwflex.Expand(ctx, toolChoiceAuto, &r.Value)...)
+		diags.Append(fwflex.Expand(ctx, auto, &r.Value)...)
 		if diags.HasError() {
 			return nil, diags
 		}
 
-		return &r, diags
+		result = &r
 	case !m.Tool.IsNull():
-		toolChoiceTool, d := m.Tool.ToPtr(ctx)
+		tool, d := m.Tool.ToPtr(ctx)
 		diags.Append(d...)
 		if diags.HasError() {
 			return nil, diags
 		}
 
 		var r awstypes.ToolChoiceMemberTool
-		diags.Append(fwflex.Expand(ctx, toolChoiceTool, &r.Value)...)
+		diags.Append(fwflex.Expand(ctx, tool, &r.Value)...)
 		if diags.HasError() {
 			return nil, diags
 		}
 
-		return &r, diags
+		result = &r
 	}
 
-	return nil, diags
+	return result, diags
 }
 
-type toolChoiceMemberAnyModel struct {
+func (m *toolChoiceModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	switch v := v.(type) {
+	case awstypes.ToolChoiceMemberAny:
+		var any anyToolChoiceModel
+		diags.Append(fwflex.Flatten(ctx, v.Value, &any)...)
+		if diags.HasError() {
+			return diags
+		}
+
+		m.Any = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &any)
+	case awstypes.ToolChoiceMemberAuto:
+		var auto autoToolChoiceModel
+		diags.Append(fwflex.Flatten(ctx, v.Value, &auto)...)
+		if diags.HasError() {
+			return diags
+		}
+
+		m.Auto = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &auto)
+	case awstypes.ToolChoiceMemberTool:
+		var tool specificToolChoiceModel
+		diags.Append(fwflex.Flatten(ctx, v.Value, &tool)...)
+		if diags.HasError() {
+			return diags
+		}
+
+		m.Tool = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tool)
+	}
+
+	return diags
 }
 
-type toolChoiceMemberAutoModel struct {
-}
+type anyToolChoiceModel struct{}
 
-type toolChoiceMemberToolModel struct {
+type autoToolChoiceModel struct{}
+
+type specificToolChoiceModel struct {
 	Name types.String `tfsdk:"name"`
 }
 
-type promptTemplateConfigurationMemberTextModel struct {
+type textPromptTemplateConfigurationModel struct {
 	Text           types.String                                              `tfsdk:"text"`
 	CachePoint     fwtypes.ListNestedObjectValueOf[cachePointModel]          `tfsdk:"cache_point"`
 	InputVariables fwtypes.ListNestedObjectValueOf[promptInputVariableModel] `tfsdk:"input_variable"`
