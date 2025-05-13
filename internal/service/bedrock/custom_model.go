@@ -680,6 +680,6 @@ func (w *customModelResource) ImportState(ctx context.Context, request resource.
 		}
 	}
 
-	resource.ImportStatePassthroughID(ctx, path.Root("job_arn"), request, response)
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), request.ID)...)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("job_arn"), request.ID)...)    // nosemgrep:ci.semgrep.framework.import-state-passthrough-id
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), request.ID)...) // nosemgrep:ci.semgrep.framework.import-state-passthrough-id
 }

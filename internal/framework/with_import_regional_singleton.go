@@ -33,8 +33,8 @@ func (w *WithImportRegionalSingleton) ImportState(ctx context.Context, request r
 			return
 		}
 	} else {
-		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("region"), request.ID)...)
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("region"), request.ID)...) // nosemgrep:ci.semgrep.framework.import-state-passthrough-id
 	}
 
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), request.ID)...)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), request.ID)...) // nosemgrep:ci.semgrep.framework.import-state-passthrough-id
 }

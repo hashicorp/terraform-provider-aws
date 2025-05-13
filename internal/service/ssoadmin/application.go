@@ -371,6 +371,6 @@ func (w *applicationResource) ImportState(ctx context.Context, request resource.
 		return
 	}
 
-	resource.ImportStatePassthroughID(ctx, path.Root("application_arn"), request, response)
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), request.ID)...)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("application_arn"), request.ID)...) // nosemgrep:ci.semgrep.framework.import-state-passthrough-id
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), request.ID)...)      // nosemgrep:ci.semgrep.framework.import-state-passthrough-id
 }

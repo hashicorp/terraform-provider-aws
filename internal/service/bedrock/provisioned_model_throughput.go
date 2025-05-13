@@ -302,6 +302,6 @@ func (w *provisionedModelThroughputResource) ImportState(ctx context.Context, re
 		}
 	}
 
-	resource.ImportStatePassthroughID(ctx, path.Root("provisioned_model_arn"), request, response)
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), request.ID)...)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("provisioned_model_arn"), request.ID)...) // nosemgrep:ci.semgrep.framework.import-state-passthrough-id
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), request.ID)...)            // nosemgrep:ci.semgrep.framework.import-state-passthrough-id
 }
