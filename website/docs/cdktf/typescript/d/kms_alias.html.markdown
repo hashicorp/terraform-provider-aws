@@ -38,6 +38,8 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `name` - (Required) Display name of the alias. The name must start with the word "alias" followed by a forward slash (alias/)
 
 ## Attribute Reference
@@ -51,4 +53,4 @@ This data source exports the following attributes in addition to the arguments a
 * `name` - Name of the alias
 * `namePrefix` - Prefix of the alias
 
-<!-- cache-key: cdktf-0.20.8 input-f0c72d32a5703f22842706c4ad41df917ac01904fa6128835963fb7e92acb28f -->
+<!-- cache-key: cdktf-0.20.8 input-73ea781bf2cec10c010d51fc1a6149e3689009c5244c09973810bdba869ef1f3 -->

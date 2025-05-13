@@ -78,6 +78,7 @@ Applicable for WebSocket APIs.
 * `disableExecuteApiEndpoint` - (Optional) Whether clients can invoke the API by using the default `execute-api` endpoint.
 By default, clients can invoke the API with the default `{api_id}.execute-api.{region}.amazonaws.com endpoint`.
 To require that clients use a custom domain name to invoke the API, disable the default endpoint.
+* `ipAddressType` - (Optional) The IP address types that can invoke the API. Valid values: `ipv4`, `dualstack`. Use `ipv4` to allow only IPv4 addresses to invoke your API, or use `dualstack` to allow both IPv4 and IPv6 addresses to invoke your API. Defaults to `ipv4`.
 * `routeKey` - (Optional) Part of _quick create_. Specifies any [route key](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-routes.html). Applicable for HTTP APIs.
 * `routeSelectionExpression` - (Optional) The [route selection expression](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api-selection-expressions.html#apigateway-websocket-api-route-selection-expressions) for the API.
 Defaults to `$request.method $request.path`.
@@ -145,4 +146,4 @@ Using `terraform import`, import `aws_apigatewayv2_api` using the API identifier
 % terraform import aws_apigatewayv2_api.example aabbccddee
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-aa8c33d1b4534c72e0765acdfd063cd72de93dec3553988cad57b268051e01d2 -->
+<!-- cache-key: cdktf-0.20.8 input-5937fe25e59e4f0b489f0ac096dfb790d69bf92f8804fa8f94094536f0c538fd -->

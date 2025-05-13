@@ -14,7 +14,7 @@ Provides a Timestream database resource.
 
 ### Basic usage
 
-```hcl
+```terraform
 resource "aws_timestreamwrite_database" "example" {
   database_name = "database-example"
 }
@@ -22,7 +22,7 @@ resource "aws_timestreamwrite_database" "example" {
 
 ### Full usage
 
-```hcl
+```terraform
 resource "aws_timestreamwrite_database" "example" {
   database_name = "database-example"
   kms_key_id    = aws_kms_key.example.arn

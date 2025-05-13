@@ -247,7 +247,12 @@ The following arguments are required in the `software_token_mfa_configuration` c
 
 ### user_pool_add_ons
 
+* `advanced_security_additional_flows` - (Optional) A block to specify the threat protection configuration options for additional authentication types in your user pool, including custom authentication. [Detailed below](#advanced_security_additional_flows).
 * `advanced_security_mode` - (Required) Mode for advanced security, must be one of `OFF`, `AUDIT` or `ENFORCED`.
+
+### advanced_security_additional_flows
+
+* `custom_auth_mode` - (Optional) Mode of threat protection operation in custom authentication. Valid values are `AUDIT` or `ENFORCED`. The default value is `AUDIT`.
 
 ### username_configuration
 

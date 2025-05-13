@@ -42,6 +42,8 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `name` - (Required) Name of the cluster.
 
 ## Attribute Reference
@@ -103,4 +105,4 @@ This data source exports the following attributes in addition to the arguments a
 * `zonalShiftConfig` - Contains Zonal Shift Configuration.
     * `enabled` - Whether zonal shift is enabled.
 
-<!-- cache-key: cdktf-0.20.8 input-bfc1820b5d496a8bf6afc407d9dfcf5fb0f38224aa1464b69a5f962e938f3448 -->
+<!-- cache-key: cdktf-0.20.8 input-195e893b592c28788a13a60e1e60bd2e5aa58e1c7ce92cd362030a7c1e1ed315 -->

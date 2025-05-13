@@ -33,7 +33,7 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `cluster_arn` - (Required) ARN of the cluster the nodes belong to.
 
@@ -52,4 +52,4 @@ This data source exports the following attributes in addition to the arguments a
 * `bootstrap_brokers_vpc_connectivity_sasl_scram` - A string containing one or more DNS names (or IP addresses) and SASL SCRAM port pairs for VPC connectivity.
 * `bootstrap_brokers_vpc_connectivity_tls` - A string containing one or more DNS names (or IP addresses) and TLS port pairs for VPC connectivity.
 
-<!-- cache-key: cdktf-0.20.8 input-3555206dae328005fc6c8e7006907b01e6fb47ecd0e0b5b4c01b42eb5258cfa0 -->
+<!-- cache-key: cdktf-0.20.8 input-866bd365f406fdf71bc6bc5581cb30c86191a3d5cdeb1cb737c16731094a7a37 -->

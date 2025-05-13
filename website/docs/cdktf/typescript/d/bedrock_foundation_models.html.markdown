@@ -58,7 +58,7 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are optional:
+This data source supports the following arguments:
 
 * `byCustomizationType` - (Optional) Customization type to filter on. Valid values are `FINE_TUNING`.
 * `byInferenceType` - (Optional) Inference type to filter on. Valid values are `ON_DEMAND` and `PROVISIONED`.
@@ -84,4 +84,4 @@ This data source exports the following attributes in addition to the arguments a
 * `providerName` - Model provider name.
 * `responseStreamingSupported` - Indicates whether the model supports streaming.
 
-<!-- cache-key: cdktf-0.20.8 input-3f6e267fa2515e62c2f529b7e5658b24518fe85ab5b45efa47bd33b5d6efa5a3 -->
+<!-- cache-key: cdktf-0.20.8 input-227a0115e2e4bd66dcfd4db719eba9ea0fe83af6d032b25579fd0d750d3c565a -->

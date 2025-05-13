@@ -34,7 +34,7 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-There are no arguments available for this data source.
+This data source does not support any arguments.
 
 ## Attribute Reference
 
@@ -42,4 +42,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `location_codes` - Code for the locations.
 
-<!-- cache-key: cdktf-0.20.8 input-edf9691bbd1000b72a448faca5fe847d9e9f887f6e0151e1dd14c6adec8f3ca6 -->
+<!-- cache-key: cdktf-0.20.8 input-d95ff1c893a005a06d1ec1ca53a9cafbf675f82c157c001419691209b1490c20 -->

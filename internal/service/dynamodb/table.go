@@ -262,6 +262,15 @@ func resourceTable() *schema.Resource {
 							Type:     schema.TypeBool,
 							Required: true,
 						},
+						"recovery_period_in_days": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.IntBetween(1, 35),
+							DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
+								return !d.Get("point_in_time_recovery.0.enabled").(bool)
+							},
+						},
 					},
 				},
 			},
@@ -809,7 +818,7 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	if d.Get("point_in_time_recovery.0.enabled").(bool) {
-		if err := updatePITR(ctx, conn, d.Id(), true, meta.(*conns.AWSClient).Region(ctx), d.Timeout(schema.TimeoutCreate)); err != nil {
+		if err := updatePITR(ctx, conn, d.Id(), true, aws.Int32(int32(d.Get("point_in_time_recovery.0.recovery_period_in_days").(int))), meta.(*conns.AWSClient).Region(ctx), d.Timeout(schema.TimeoutCreate)); err != nil {
 			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionCreating, resNameTable, d.Id(), fmt.Errorf("enabling point in time recovery: %w", err))
 		}
 	}
@@ -1256,7 +1265,7 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	if d.HasChange("point_in_time_recovery") {
-		if err := updatePITR(ctx, conn, d.Id(), d.Get("point_in_time_recovery.0.enabled").(bool), meta.(*conns.AWSClient).Region(ctx), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if err := updatePITR(ctx, conn, d.Id(), d.Get("point_in_time_recovery.0.enabled").(bool), aws.Int32(int32(d.Get("point_in_time_recovery.0.recovery_period_in_days").(int))), meta.(*conns.AWSClient).Region(ctx), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTable, d.Id(), err)
 		}
 	}
@@ -1441,7 +1450,7 @@ func createReplicas(ctx context.Context, conn *dynamodb.Client, tableName string
 		}
 
 		// pitr
-		if err = updatePITR(ctx, conn, tableName, tfMap["point_in_time_recovery"].(bool), tfMap["region_name"].(string), timeout); err != nil {
+		if err = updatePITR(ctx, conn, tableName, tfMap["point_in_time_recovery"].(bool), nil, tfMap["region_name"].(string), timeout); err != nil {
 			return fmt.Errorf("updating replica (%s) point in time recovery: %w", tfMap["region_name"].(string), err)
 		}
 	}
@@ -1511,7 +1520,7 @@ func updateTimeToLive(ctx context.Context, conn *dynamodb.Client, tableName stri
 	return nil
 }
 
-func updatePITR(ctx context.Context, conn *dynamodb.Client, tableName string, enabled bool, region string, timeout time.Duration) error {
+func updatePITR(ctx context.Context, conn *dynamodb.Client, tableName string, enabled bool, recoveryPeriodInDays *int32, region string, timeout time.Duration) error {
 	// pitr must be modified from region where the main/replica resides
 	log.Printf("[DEBUG] Updating DynamoDB point in time recovery status to %v (%s)", enabled, region)
 	input := &dynamodb.UpdateContinuousBackupsInput{
@@ -1519,6 +1528,9 @@ func updatePITR(ctx context.Context, conn *dynamodb.Client, tableName string, en
 		PointInTimeRecoverySpecification: &awstypes.PointInTimeRecoverySpecification{
 			PointInTimeRecoveryEnabled: aws.Bool(enabled),
 		},
+	}
+	if enabled && aws.ToInt32(recoveryPeriodInDays) > 0 {
+		input.PointInTimeRecoverySpecification.RecoveryPeriodInDays = recoveryPeriodInDays
 	}
 
 	optFn := func(o *dynamodb.Options) {
@@ -1619,7 +1631,7 @@ func updateReplica(ctx context.Context, conn *dynamodb.Client, d *schema.Resourc
 
 			// just update PITR
 			if ma["point_in_time_recovery"].(bool) != mr["point_in_time_recovery"].(bool) {
-				if err := updatePITR(ctx, conn, d.Id(), ma["point_in_time_recovery"].(bool), ma["region_name"].(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
+				if err := updatePITR(ctx, conn, d.Id(), ma["point_in_time_recovery"].(bool), nil, ma["region_name"].(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
 					return fmt.Errorf("updating replica (%s) point in time recovery: %w", ma["region_name"].(string), err)
 				}
 				break
@@ -2240,40 +2252,42 @@ func flattenReplicaDescriptions(apiObjects []awstypes.ReplicaDescription) []any 
 	return tfList
 }
 
-func flattenTTL(ttlOutput *dynamodb.DescribeTimeToLiveOutput) []any {
-	m := map[string]any{
+func flattenTTL(apiObject *dynamodb.DescribeTimeToLiveOutput) []any {
+	tfMap := map[string]any{
 		names.AttrEnabled: false,
 	}
 
-	if ttlOutput == nil || ttlOutput.TimeToLiveDescription == nil {
-		return []any{m}
+	if apiObject == nil || apiObject.TimeToLiveDescription == nil {
+		return []any{tfMap}
 	}
 
-	ttlDesc := ttlOutput.TimeToLiveDescription
+	ttlDesc := apiObject.TimeToLiveDescription
 
-	m["attribute_name"] = aws.ToString(ttlDesc.AttributeName)
-	m[names.AttrEnabled] = (ttlDesc.TimeToLiveStatus == awstypes.TimeToLiveStatusEnabled)
+	tfMap["attribute_name"] = aws.ToString(ttlDesc.AttributeName)
+	tfMap[names.AttrEnabled] = (ttlDesc.TimeToLiveStatus == awstypes.TimeToLiveStatusEnabled)
 
-	return []any{m}
+	return []any{tfMap}
 }
 
-func flattenPITR(pitrDesc *dynamodb.DescribeContinuousBackupsOutput) []any {
-	m := map[string]any{
+func flattenPITR(apiObject *dynamodb.DescribeContinuousBackupsOutput) []any {
+	tfMap := map[string]any{
 		names.AttrEnabled: false,
 	}
 
-	if pitrDesc == nil {
-		return []any{m}
+	if apiObject == nil {
+		return []any{tfMap}
 	}
 
-	if pitrDesc.ContinuousBackupsDescription != nil {
-		pitr := pitrDesc.ContinuousBackupsDescription.PointInTimeRecoveryDescription
-		if pitr != nil {
-			m[names.AttrEnabled] = (pitr.PointInTimeRecoveryStatus == awstypes.PointInTimeRecoveryStatusEnabled)
+	if apiObject.ContinuousBackupsDescription != nil {
+		if pitr := apiObject.ContinuousBackupsDescription.PointInTimeRecoveryDescription; pitr != nil {
+			tfMap[names.AttrEnabled] = (pitr.PointInTimeRecoveryStatus == awstypes.PointInTimeRecoveryStatusEnabled)
+			if pitr.PointInTimeRecoveryStatus == awstypes.PointInTimeRecoveryStatusEnabled {
+				tfMap["recovery_period_in_days"] = aws.ToInt32(pitr.RecoveryPeriodInDays)
+			}
 		}
 	}
 
-	return []any{m}
+	return []any{tfMap}
 }
 
 // TODO: Get rid of keySchemaM - the user should just explicitly define

@@ -16,7 +16,7 @@ Manages a Config Organization Conformance Pack. More information can be found in
 
 ### Using Template Body
 
-```hcl
+```terraform
 resource "aws_config_organization_conformance_pack" "example" {
   name = "example"
 
@@ -50,7 +50,7 @@ resource "aws_organizations_organization" "example" {
 
 ### Using Template S3 URI
 
-```hcl
+```terraform
 resource "aws_config_organization_conformance_pack" "example" {
   name            = "example"
   template_s3_uri = "s3://${aws_s3_bucket.example.bucket}/${aws_s3_object.example.key}"

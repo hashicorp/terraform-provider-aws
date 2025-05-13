@@ -139,6 +139,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `agent_id` - Unique identifier of the agent.
 * `agent_version` - Version of the agent.
 * `id` - Unique identifier of the agent.
+* `prepared_at` - Timestamp of when the agent was last prepared.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts

@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_rum_app_monitor: Add `domain_list` argument
+```
+
+```release-note:enhancement
+resource/aws_rum_app_monitor: Mark `domain` as Optional
+```

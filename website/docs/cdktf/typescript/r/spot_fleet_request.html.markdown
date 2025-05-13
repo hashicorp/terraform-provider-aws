@@ -289,8 +289,7 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-Most of these arguments directly correspond to the
-[official API](http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_SpotFleetRequestConfigData.html).
+This resource supports the following arguments:
 
 * `iamFleetRole` - (Required) Grants the Spot fleet permission to terminate
   Spot instances on your behalf when you cancel its Spot fleet request using
@@ -539,4 +538,4 @@ Using `terraform import`, import Spot Fleet Requests using `id`. For example:
 % terraform import aws_spot_fleet_request.fleet sfr-005e9ec8-5546-4c31-b317-31a62325411e
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-1ecd23c004a4840044b58f08e2d76b93455d0e78ffddfd4a1e1ae619c9c18174 -->
+<!-- cache-key: cdktf-0.20.8 input-e26359c3eceb469e6f1a81f4598b65761d0418d8c29d2c95a606f8e9bc02ea90 -->

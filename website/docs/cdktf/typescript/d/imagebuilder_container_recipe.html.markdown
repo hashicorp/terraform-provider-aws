@@ -36,7 +36,7 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
 * `arn` - (Required) ARN of the container recipe.
 
@@ -81,4 +81,4 @@ This data source exports the following attributes in addition to the arguments a
 * `version` - Version of the container recipe.
 * `workingDirectory` - Working directory used during build and test workflows.
 
-<!-- cache-key: cdktf-0.20.8 input-4e22e11f15936a7e4695ac2bfd8c64e0718ffb1c7fab1ad5ef07d652ffab46f0 -->
+<!-- cache-key: cdktf-0.20.8 input-e569a61653822a76ec6119978f91743770357b8c6cad1852a1100d4461e88a74 -->

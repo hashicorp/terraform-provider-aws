@@ -262,6 +262,14 @@ func resourceConnection() *schema.Resource {
 						},
 					},
 				},
+				"kms_key_identifier": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(0, 2048),
+						validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9_\-/:]*$`), ""),
+					),
+				},
 				names.AttrName: {
 					Type:     schema.TypeString,
 					Required: true,
@@ -285,7 +293,7 @@ func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	input := &eventbridge.CreateConnectionInput{
+	input := eventbridge.CreateConnectionInput{
 		AuthorizationType: types.ConnectionAuthorizationType(d.Get("authorization_type").(string)),
 		AuthParameters:    expandCreateConnectionAuthRequestParameters(d.Get("auth_parameters").([]any)),
 		Name:              aws.String(name),
@@ -299,7 +307,11 @@ func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.InvocationConnectivityParameters = expandConnectivityResourceParameters(v.([]any)[0].(map[string]any))
 	}
 
-	_, err := conn.CreateConnection(ctx, input)
+	if v, ok := d.GetOk("kms_key_identifier"); ok {
+		input.KmsKeyIdentifier = aws.String(v.(string))
+	}
+
+	_, err := conn.CreateConnection(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EventBridge Connection (%s): %s", name, err)
@@ -345,6 +357,7 @@ func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta an
 	} else {
 		d.Set("invocation_connectivity_parameters", nil)
 	}
+	d.Set("kms_key_identifier", output.KmsKeyIdentifier)
 	d.Set(names.AttrName, output.Name)
 	d.Set("secret_arn", output.SecretArn)
 
@@ -355,7 +368,7 @@ func resourceConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
-	input := &eventbridge.UpdateConnectionInput{
+	input := eventbridge.UpdateConnectionInput{
 		Name: aws.String(d.Id()),
 	}
 
@@ -375,7 +388,11 @@ func resourceConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		input.InvocationConnectivityParameters = expandConnectivityResourceParameters(v.([]any)[0].(map[string]any))
 	}
 
-	_, err := conn.UpdateConnection(ctx, input)
+	if v, ok := d.GetOk("kms_key_identifier"); ok {
+		input.KmsKeyIdentifier = aws.String(v.(string))
+	}
+
+	_, err := conn.UpdateConnection(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating EventBridge Connection (%s): %s", d.Id(), err)
@@ -393,9 +410,10 @@ func resourceConnectionDelete(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
 	log.Printf("[INFO] Deleting EventBridge Connection: %s", d.Id())
-	_, err := conn.DeleteConnection(ctx, &eventbridge.DeleteConnectionInput{
+	input := eventbridge.DeleteConnectionInput{
 		Name: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteConnection(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
@@ -413,11 +431,11 @@ func resourceConnectionDelete(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func findConnectionByName(ctx context.Context, conn *eventbridge.Client, name string) (*eventbridge.DescribeConnectionOutput, error) {
-	input := &eventbridge.DescribeConnectionInput{
+	input := eventbridge.DescribeConnectionInput{
 		Name: aws.String(name),
 	}
 
-	output, err := conn.DescribeConnection(ctx, input)
+	output, err := conn.DescribeConnection(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{

@@ -43,7 +43,7 @@ data "aws_route53_resolver_rules" "example" {
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available resolver rules in the current region.
+This data source supports the following arguments:
 
 * `name_regex` - (Optional) Regex string to filter resolver rule names.
   The filtering is done locally, so could have a performance impact if the result is large.

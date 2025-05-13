@@ -38,8 +38,9 @@ output "availability_zone_to_volume_id" {
 
 ## Argument Reference
 
-* `filter` - (Optional) Custom filter block as described below.
+This data source supports the following arguments:
 
+* `filter` - (Optional) Custom filter block as described below.
 * `tags` - (Optional) Map of tags, each pair of which must exactly match
   a pair on the desired volumes.
 

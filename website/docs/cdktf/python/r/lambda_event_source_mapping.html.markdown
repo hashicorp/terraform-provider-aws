@@ -101,8 +101,8 @@ class MyConvertedCode(TerraformStack):
         LambdaEventSourceMapping(self, "example",
             function_name=Token.as_string(aws_lambda_function_example.arn),
             provisioned_poller_config=LambdaEventSourceMappingProvisionedPollerConfig(
-                maximum_poller=80,
-                minimum_poller=10
+                maximum_pollers=80,
+                minimum_pollers=10
             ),
             self_managed_event_source=LambdaEventSourceMappingSelfManagedEventSource(
                 endpoints={
@@ -241,6 +241,8 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `amazon_managed_kafka_event_source_config` - (Optional) Additional configuration block for Amazon Managed Kafka sources. Incompatible with "self_managed_event_source" and "self_managed_kafka_event_source_config". Detailed below.
 * `batch_size` - (Optional) The largest number of records that Lambda will retrieve from your event source at the time of invocation. Defaults to `100` for DynamoDB, Kinesis, MQ and MSK, `10` for SQS.
 * `bisect_batch_on_function_error`: - (Optional) If the function returns an error, split the batch in two and retry. Only available for stream sources (DynamoDB and Kinesis). Defaults to `false`.
@@ -362,4 +364,4 @@ Using `terraform import`, import Lambda event source mappings using the `UUID` (
 % terraform import aws_lambda_event_source_mapping.event_source_mapping 12345kxodurf3443
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-9e0d3aa6b569a6f9fca1bf2161ad921c3f1baf63395b0b74d354d95186db63f0 -->
+<!-- cache-key: cdktf-0.20.8 input-2f4b8434c78b3a35089f70006197c9a8798c13c0f32b2520f0dc21c7965d5e2a -->

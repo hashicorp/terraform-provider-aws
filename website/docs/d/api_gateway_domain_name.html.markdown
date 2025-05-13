@@ -20,6 +20,8 @@ data "aws_api_gateway_domain_name" "example" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `domain_name` - (Required) Fully-qualified domain name to look up. If no domain name is found, an error will be returned.
 * `domain_name_id` - (Optional) The identifier for the domain name resource. Supported only for private custom domain names.
 
@@ -34,6 +36,7 @@ This data source exports the following attributes in addition to the arguments a
 * `cloudfront_domain_name` - Hostname created by Cloudfront to represent the distribution that implements this domain name mapping.
 * `cloudfront_zone_id` - For convenience, the hosted zone ID (`Z2FDTNDATAQYW2`) that can be used to create a Route53 alias record for the distribution.
 * `endpoint_configuration` - List of objects with the endpoint configuration of this domain name.
+    * `ip_address_type` - The IP address types that can invoke an API (RestApi).
     * `types` - List of endpoint types.
 * `policy` - A stringified JSON policy document that applies to the execute-api service for this DomainName regardless of the caller and Method configuration. Supported only for private custom domain names.
 * `regional_certificate_arn` - ARN for an AWS-managed certificate that is used for validating the regional domain name.

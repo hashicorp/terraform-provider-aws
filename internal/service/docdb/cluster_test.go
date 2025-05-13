@@ -958,6 +958,53 @@ func TestAccDocDBCluster_passwordWriteOnly(t *testing.T) {
 	})
 }
 
+func TestAccDocDBCluster_manageMasterUserPassword(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dbCluster awstypes.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_docdb_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DocDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_manageMasterUserPassword(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "manage_master_user_password", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "master_user_secret.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.secret_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.secret_status"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrAllowMajorVersionUpgrade,
+					names.AttrApplyImmediately,
+					names.AttrFinalSnapshotIdentifier,
+					"master_password",
+					"skip_final_snapshot",
+					"manage_master_user_password",
+				},
+			},
+			{
+				Config: testAccClusterConfig_manageMasterUserPassword(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "manage_master_user_password", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "master_password", "avoid-plaintext-passwords"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBClient(ctx)
@@ -1534,7 +1581,7 @@ resource "aws_docdb_cluster" "test" {
 `, rName, storageType))
 }
 
-func testAccClusterConfig_passwordWriteOnly(rName, password string, passworVersion int) string {
+func testAccClusterConfig_passwordWriteOnly(rName, password string, passwordVersion int) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_docdb_cluster" "test" {
   cluster_identifier = %[1]q
@@ -1555,5 +1602,36 @@ resource "aws_docdb_cluster" "test" {
     "profiler",
   ]
 }
-`, rName, password, passworVersion))
+`, rName, password, passwordVersion))
+}
+
+func testAccClusterConfig_manageMasterUserPassword(rName string, manageMasterUserPassword bool) string {
+	var passwordConfig string
+	if manageMasterUserPassword {
+		passwordConfig = `
+		manage_master_user_password = true
+		`
+	} else {
+		passwordConfig = `
+		master_password = "avoid-plaintext-passwords"
+		`
+	}
+
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+resource "aws_docdb_cluster" "test" {
+  cluster_identifier = %[1]q
+
+  availability_zones = [
+    data.aws_availability_zones.available.names[0],
+    data.aws_availability_zones.available.names[1],
+    data.aws_availability_zones.available.names[2]
+  ]
+
+  master_username = "tfacctest"
+
+  %[2]s
+
+  skip_final_snapshot = true
+}
+`, rName, passwordConfig))
 }

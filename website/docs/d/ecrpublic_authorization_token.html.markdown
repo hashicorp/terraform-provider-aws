@@ -19,6 +19,10 @@ data "aws_ecrpublic_authorization_token" "token" {
 }
 ```
 
+## Argument Reference
+
+This data source does not support any arguments.
+
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:

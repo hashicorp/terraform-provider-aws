@@ -65,12 +65,16 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `resolverQueryLogConfigId` - (Optional) ID of the Route53 Resolver Query Logging Configuration.
 * `filter` - (Optional) One or more name/value pairs to use as filters. There are
 several valid keys, for a full reference, check out
 [Route53resolver Filter value in the AWS API reference][1].
 
-In addition to all arguments above, the following attributes are exported:
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - The ID for the query logging configuration.
 * `arn` - Computed ARN of the Route53 Resolver Query Logging Configuration.
@@ -82,4 +86,4 @@ In addition to all arguments above, the following attributes are exported:
 
 [1]: https://docs.aws.amazon.com/Route53/latest/APIReference/API_route53resolver_Filter.html
 
-<!-- cache-key: cdktf-0.20.8 input-03aae9da90100bb44ba9ea973741cb3491b6e7ffca09d59a483c436ca965901e -->
+<!-- cache-key: cdktf-0.20.8 input-454b4a42651c01be7fb0161e4d0494dc9d45e0e98e63a2eea5579f897b7fa421 -->

@@ -6,7 +6,7 @@ description: |-
   Get information on SSM maintenance windows.
 ---
 
-# Data Source: ssm_maintenance_windows
+# Data Source: aws_ssm_maintenance_windows
 
 Use this data source to get the window IDs of SSM maintenance windows.
 
@@ -22,6 +22,8 @@ data "aws_ssm_maintenance_windows" "example" {
 ```
 
 ## Argument Reference
+
+This data source supports the following arguments:
 
 * `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
 

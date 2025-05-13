@@ -35,7 +35,7 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
 * `service_network_identifier` - (Required) Identifier of the service network.
 
@@ -52,4 +52,4 @@ This data source exports the following attributes in addition to the arguments a
 * `number_of_associated_services` - Number of services associated with this service network.
 * `number_of_associated_vpcs` - Number of VPCs associated with this service network.
 
-<!-- cache-key: cdktf-0.20.8 input-f4109a8ce33f12e8a0ef307b66a1c9cc873bcdc0d442d07fb6e1314973b2d72a -->
+<!-- cache-key: cdktf-0.20.8 input-c5a59dac1e7268599f0e6acda3ddb0fb6255e31f11816a2f2f97481c7e53c28d -->

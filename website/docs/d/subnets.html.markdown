@@ -58,16 +58,21 @@ resource "aws_instance" "app" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `filter` - (Optional) Custom filter block as described below.
 * `tags` - (Optional) Map of tags, each pair of which must exactly match
   a pair on the desired subnets.
 
-More complex filters can be expressed using one or more `filter` sub-blocks,
-which take the following arguments:
+### `filter`
+
+More complex filters can be expressed using one or more `filter` sub-blocks, which take the following arguments:
 
 * `name` - (Required) Name of the field to filter by, as defined by
   [the underlying AWS API](http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeSubnets.html).
   For example, if matching against tag `Name`, use:
+* `values` - (Required) Set of values that are accepted for the given field.
+  A Subnet will be selected if any one of the given values matches.
 
 ```terraform
 data "aws_subnets" "selected" {

@@ -47,7 +47,7 @@ resource "aws_backup_restore_testing_selection" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the backup restore testing selection.
 * `restore_testing_plan_name` - (Required) The name of the restore testing plan.

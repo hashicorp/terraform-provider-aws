@@ -175,4 +175,4 @@ Using `terraform import`, import Timestream tables using the `table_name` and `d
 % terraform import aws_timestreamwrite_table.example ExampleTable:ExampleDatabase
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-f3b0a12c378c166ac42527e7ddfa6ae43b71b326a2b2a3f2abcf892be6820171 -->
+<!-- cache-key: cdktf-0.20.8 input-401e2ed10fb181365b58e2daf6d613c9bfc39c8616f885c5576cd2b25650e48a -->

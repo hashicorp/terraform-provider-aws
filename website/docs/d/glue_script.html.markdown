@@ -218,6 +218,8 @@ output "scala_code" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `dag_edge` - (Required) List of the edges in the DAG. Defined below.
 * `dag_node` - (Required) List of the nodes in the DAG. Defined below.
 * `language` - (Optional) Programming language of the resulting code from the DAG. Defaults to `PYTHON`. Valid values are `PYTHON` and `SCALA`.

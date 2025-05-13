@@ -81,7 +81,7 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the backup restore testing selection.
 * `restoreTestingPlanName` - (Required) The name of the restore testing plan.
@@ -138,4 +138,4 @@ Using `terraform import`, import Backup Restore Testing Selection using `name:re
 % terraform import aws_backup_restore_testing_selection.example restore_testing_selection_12345678:restore_testing_plan_12345678
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-0b462169cc6dd60425a779d3182ec384b2e4a6c5af4616e9ea33d267cac37dff -->
+<!-- cache-key: cdktf-0.20.8 input-42b7186423f2dc6adfa8b07d472bf9174787ba95a5894b1d58fe22b8c5caa7c6 -->

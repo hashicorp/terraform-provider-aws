@@ -78,10 +78,11 @@ This resource supports the following arguments:
     made.
 * `global_cluster_identifier` - (Optional) The global cluster identifier specified on [`aws_docdb_global_cluster`](/docs/providers/aws/r/docdb_global_cluster.html).
 * `kms_key_id` - (Optional) The ARN for the KMS encryption key. When specifying `kms_key_id`, `storage_encrypted` needs to be set to true.
+* `manage_master_user_password` - (Optional) Set to `true` to allow Amazon DocumentDB to manage the master user password in AWS Secrets Manager. Cannot be set if `master_password` or `master_password_wo` is provided.
 * `master_password` - (Optional, required unless a `snapshot_identifier` or unless a `global_cluster_identifier` is provided when the cluster is the "secondary" cluster of a global database) Password for the master DB user. Note that this may
-    show up in logs, and it will be stored in the state file. Please refer to the DocumentDB Naming Constraints. Conflicts with `master_password_wo`.
+    show up in logs, and it will be stored in the state file. Please refer to the DocumentDB Naming Constraints. Conflicts with `master_password_wo` and `manage_master_user_password`.
 * `master_password_wo` - (Optional, Write-Only, required unless a `snapshot_identifier` or unless a `global_cluster_identifier` is provided when the cluster is the "secondary" cluster of a global database) Password for the master DB user. Note that this may
-  show up in logs. Please refer to the DocumentDB Naming Constraints. Conflicts with `master_password`.
+  show up in logs. Please refer to the DocumentDB Naming Constraints. Conflicts with `master_password` and `manage_master_user_password`.
 * `master_password_wo_version` - (Optional) Used together with `master_password_wo` to trigger an update. Increment this value when an update to the `master_password_wo` is required.
 * `master_username` - (Required unless a `snapshot_identifier` or unless a `global_cluster_identifier` is provided when the cluster is the "secondary" cluster of a global database) Username for the master DB user.
 * `port` - (Optional) The port on which the DB accepts connections
@@ -153,4 +154,4 @@ Using `terraform import`, import DocumentDB Clusters using the `cluster_identifi
 % terraform import aws_docdb_cluster.docdb_cluster docdb-prod-cluster
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-94dc28f4c731c3fea3b96e91a9c30b57b0b547714f0aa8f8d174f9d492b570e2 -->
+<!-- cache-key: cdktf-0.20.8 input-bfacc232c6d63cf63c32f1970792af4ab0d412fb761f6e2ffb21fefd9f20e505 -->

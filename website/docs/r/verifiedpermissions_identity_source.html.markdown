@@ -75,6 +75,8 @@ resource "aws_verifiedpermissions_identity_source" "example" {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `policy_store_id` - (Required) Specifies the ID of the policy store in which you want to store this identity source.
 * `configuration`- (Required) Specifies the details required to communicate with the identity provider (IdP) associated with this identity source. See [Configuration](#configuration) below.
 * `principal_entity_type`- (Optional) Specifies the namespace and data type of the principals generated for identities authenticated by the new identity source.
