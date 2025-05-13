@@ -223,7 +223,7 @@ func (r *promptResource) Schema(ctx context.Context, request resource.SchemaRequ
 														},
 													},
 												},
-												"message": schema.ListNestedBlock{
+												names.AttrMessage: schema.ListNestedBlock{
 													CustomType: fwtypes.NewListNestedObjectTypeOf[messageModel](ctx),
 													Validators: []validator.List{
 														listvalidator.IsRequired(),
@@ -231,13 +231,13 @@ func (r *promptResource) Schema(ctx context.Context, request resource.SchemaRequ
 													},
 													NestedObject: schema.NestedBlockObject{
 														Attributes: map[string]schema.Attribute{
-															"role": schema.StringAttribute{
+															names.AttrRole: schema.StringAttribute{
 																CustomType: fwtypes.StringEnumType[awstypes.ConversationRole](),
 																Required:   true,
 															},
 														},
 														Blocks: map[string]schema.Block{
-															"content": schema.ListNestedBlock{
+															names.AttrContent: schema.ListNestedBlock{
 																CustomType: fwtypes.NewListNestedObjectTypeOf[contentBlockModel](ctx),
 																Validators: []validator.List{
 																	listvalidator.SizeAtMost(1),
@@ -354,12 +354,12 @@ func (r *promptResource) Schema(ctx context.Context, request resource.SchemaRequ
 																						},
 																						NestedObject: schema.NestedBlockObject{
 																							Attributes: map[string]schema.Attribute{
-																								"json": schema.StringAttribute{
+																								names.AttrJSON: schema.StringAttribute{
 																									CustomType: fwtypes.NewSmithyJSONType(ctx, document.NewLazyDocument),
 																									Optional:   true,
 																									Validators: []validator.String{
 																										stringvalidator.ExactlyOneOf(
-																											path.MatchRelative().AtParent().AtName("json"),
+																											path.MatchRelative().AtParent().AtName(names.AttrJSON),
 																										),
 																										validators.JSON(),
 																									},

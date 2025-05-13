@@ -51,7 +51,7 @@ func TestAccBedrockAgentPrompt_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "updated_at"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrVersion),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "basic"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, acctest.CtBasic),
 				),
 			},
 			{
