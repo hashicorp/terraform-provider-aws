@@ -1251,10 +1251,11 @@ func waitNATGatewayAddressAssigned(ctx context.Context, conn *ec2.Client, natGat
 
 func waitNATGatewayAddressAssociated(ctx context.Context, conn *ec2.Client, natGatewayID, allocationID string, timeout time.Duration) (*awstypes.NatGatewayAddress, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.NatGatewayAddressStatusAssociating),
-		Target:  enum.Slice(awstypes.NatGatewayAddressStatusSucceeded),
-		Refresh: statusNATGatewayAddressByNATGatewayIDAndAllocationID(ctx, conn, natGatewayID, allocationID),
-		Timeout: timeout,
+		Pending:                   enum.Slice(awstypes.NatGatewayAddressStatusAssociating),
+		Target:                    enum.Slice(awstypes.NatGatewayAddressStatusSucceeded),
+		Refresh:                   statusNATGatewayAddressByNATGatewayIDAndAllocationID(ctx, conn, natGatewayID, allocationID),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -1272,10 +1273,11 @@ func waitNATGatewayAddressAssociated(ctx context.Context, conn *ec2.Client, natG
 
 func waitNATGatewayAddressDisassociated(ctx context.Context, conn *ec2.Client, natGatewayID, allocationID string, timeout time.Duration) (*awstypes.NatGatewayAddress, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.NatGatewayAddressStatusSucceeded, awstypes.NatGatewayAddressStatusDisassociating),
-		Target:  []string{},
-		Refresh: statusNATGatewayAddressByNATGatewayIDAndAllocationID(ctx, conn, natGatewayID, allocationID),
-		Timeout: timeout,
+		Pending:                   enum.Slice(awstypes.NatGatewayAddressStatusSucceeded, awstypes.NatGatewayAddressStatusDisassociating),
+		Target:                    []string{},
+		Refresh:                   statusNATGatewayAddressByNATGatewayIDAndAllocationID(ctx, conn, natGatewayID, allocationID),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
