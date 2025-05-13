@@ -42,6 +42,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "aws_auditmanager_account_registration",
 			Name:     "Account Registration",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingletonIdentity(),
 		},
 		{
 			Factory:  newAssessmentResource,
