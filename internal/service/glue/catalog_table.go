@@ -1161,7 +1161,8 @@ func flattenTableTargetTable(apiObject *awstypes.TableIdentifier) map[string]any
 
 func flattenNonManagedParameters(table *awstypes.Table) map[string]string {
 	allParameters := table.Parameters
-	if allParameters["table_type"] == "ICEBERG" {
+	tableTypeUpperCase := strings.ToUpper(allParameters["table_type"])
+	if tableTypeUpperCase == "ICEBERG" {
 		delete(allParameters, "table_type")
 		delete(allParameters, "metadata_location")
 	}
