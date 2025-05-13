@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -137,7 +138,7 @@ func (r *resourceNatGatewayEipAssociation) Read(ctx context.Context, req resourc
 		return
 	}
 
-	out, err := findNATGatewayAddressByNATGatewayIDAndAllocationID(ctx, conn, state.NatGatewayID.ValueString(), state.AllocationID.ValueString())
+	out, err := findNATGatewayAddressByNATGatewayIDAndAllocationIDSucceeded(ctx, conn, state.NatGatewayID.ValueString(), state.AllocationID.ValueString())
 	if tfresource.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
@@ -177,6 +178,10 @@ func (r *resourceNatGatewayEipAssociation) Delete(ctx context.Context, req resou
 	}
 
 	_, err := conn.DisassociateNatGatewayAddress(ctx, &input)
+
+	if tfawserr.ErrCodeEquals(err, "InvalidParameter") {
+		return
+	}
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.EC2, create.ErrActionDeleting, ResNameVpcNatGatewayEipAssociation, state.ID.String(), err),

@@ -92,7 +92,7 @@ func testAccCheckVpcNatGatewayEipAssociationDestroy(ctx context.Context) resourc
 				continue
 			}
 
-			_, err := tfec2.FindNATGatewayAddressByNATGatewayIDAndAllocationID(ctx, conn, rs.Primary.Attributes["nat_gateway_id"], rs.Primary.Attributes["allocation_id"])
+			_, err := tfec2.FindNATGatewayAddressByNATGatewayIDAndAllocationIDSucceeded(ctx, conn, rs.Primary.Attributes["nat_gateway_id"], rs.Primary.Attributes["allocation_id"])
 			if tfresource.NotFound(err) {
 				return nil
 			}
@@ -120,7 +120,7 @@ func testAccCheckVpcNatGatewayEipAssociationExists(ctx context.Context, name str
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		resp, err := tfec2.FindNATGatewayAddressByNATGatewayIDAndAllocationID(ctx, conn, rs.Primary.Attributes["nat_gateway_id"], rs.Primary.Attributes["allocation_id"])
+		resp, err := tfec2.FindNATGatewayAddressByNATGatewayIDAndAllocationIDSucceeded(ctx, conn, rs.Primary.Attributes["nat_gateway_id"], rs.Primary.Attributes["allocation_id"])
 		if err != nil {
 			return create.Error(names.EC2, create.ErrActionCheckingExistence, tfec2.ResNameVpcNatGatewayEipAssociation, rs.Primary.ID, err)
 		}
