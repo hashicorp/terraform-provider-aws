@@ -43,8 +43,10 @@ func TestAccDevOpsGuru_serial(t *testing.T) {
 			acctest.CtBasic: testAccResourceCollectionDataSource_basic,
 		},
 		"ServiceIntegration": {
-			acctest.CtBasic: testAccServiceIntegration_basic,
-			"kms":           testAccServiceIntegration_kms,
+			acctest.CtBasic:           testAccServiceIntegration_basic,
+			"kms":                     testAccServiceIntegration_kms,
+			"Identity_Basic":          testAccServiceIntegration_Identity_Basic,
+			"Identity_RegionOverride": testAccServiceIntegration_Identity_RegionOverride,
 		},
 	}
 

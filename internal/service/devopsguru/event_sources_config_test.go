@@ -114,8 +114,8 @@ func testAccDevOpsGuruEventSourcesConfig_Identity_RegionOverride(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
 				ImportState:       true,
+				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 			{

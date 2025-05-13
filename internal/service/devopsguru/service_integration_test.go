@@ -10,8 +10,12 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/devopsguru/types"
+	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -59,6 +63,75 @@ func testAccServiceIntegration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ops_center.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ops_center.0.opt_in_status", string(types.OptInStatusDisabled)),
 				),
+			},
+		},
+	})
+}
+
+func testAccServiceIntegration_Identity_Basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_devopsguru_service_integration.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.DevOpsGuruEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.DevOpsGuruServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceIntegrationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceIntegrationConfig_basic(string(types.OptInStatusEnabled)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceIntegrationExists(ctx, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrRegion), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccServiceIntegration_Identity_RegionOverride(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_devopsguru_service_integration.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.DevOpsGuruEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.DevOpsGuruServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceIntegrationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceIntegrationConfig_regionOverride(),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrRegion), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -173,6 +246,24 @@ resource "aws_devopsguru_service_integration" "test" {
   }
 }
 `, optInStatus)
+}
+
+func testAccServiceIntegrationConfig_regionOverride() string {
+	return fmt.Sprintf(`
+resource "aws_devopsguru_service_integration" "test" {
+  region = %[1]q
+
+  # Default to existing configured settings
+  kms_server_side_encryption {}
+
+  logs_anomaly_detection {
+    opt_in_status = "ENABLED"
+  }
+  ops_center {
+    opt_in_status = "ENABLED"
+  }
+}
+`, acctest.AlternateRegion())
 }
 
 func testAccServiceIntegrationConfig_kmsCustomerManaged() string {
