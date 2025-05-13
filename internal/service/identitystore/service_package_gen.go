@@ -22,19 +22,28 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Factory:  newGroupMembershipsDataSource,
 			TypeName: "aws_identitystore_group_memberships",
 			Name:     "Group Memberships",
-			Region:   unique.Make(inttypes.ServicePackageResourceRegion{}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
+			}),
 		},
 		{
 			Factory:  newGroupsDataSource,
 			TypeName: "aws_identitystore_groups",
 			Name:     "Groups",
-			Region:   unique.Make(inttypes.ServicePackageResourceRegion{}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
+			}),
 		},
 		{
 			Factory:  newUsersDataSource,
 			TypeName: "aws_identitystore_users",
 			Name:     "Users",
-			Region:   unique.Make(inttypes.ServicePackageResourceRegion{}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
+			}),
 		},
 	}
 }
@@ -49,13 +58,19 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Factory:  dataSourceGroup,
 			TypeName: "aws_identitystore_group",
 			Name:     "Group",
-			Region:   unique.Make(inttypes.ServicePackageResourceRegion{}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
+			}),
 		},
 		{
 			Factory:  dataSourceUser,
 			TypeName: "aws_identitystore_user",
 			Name:     "User",
-			Region:   unique.Make(inttypes.ServicePackageResourceRegion{}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
+			}),
 		},
 	}
 }
@@ -66,19 +81,28 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceGroup,
 			TypeName: "aws_identitystore_group",
 			Name:     "Group",
-			Region:   unique.Make(inttypes.ServicePackageResourceRegion{}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
+			}),
 		},
 		{
 			Factory:  resourceGroupMembership,
 			TypeName: "aws_identitystore_group_membership",
 			Name:     "Group Membership",
-			Region:   unique.Make(inttypes.ServicePackageResourceRegion{}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
+			}),
 		},
 		{
 			Factory:  resourceUser,
 			TypeName: "aws_identitystore_user",
 			Name:     "User",
-			Region:   unique.Make(inttypes.ServicePackageResourceRegion{}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
+			}),
 		},
 	}
 }

@@ -28,7 +28,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "aws_route53domains_delegation_signer_record",
 			Name:     "Delegation Signer Record",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideDisabled: true,
+				IsOverrideEnabled: false,
 			}),
 		},
 		{
@@ -39,7 +39,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				IdentifierAttribute: names.AttrDomainName,
 			}),
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideDisabled: true,
+				IsOverrideEnabled: false,
 			}),
 		},
 	}
@@ -59,7 +59,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IdentifierAttribute: names.AttrID,
 			}),
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideDisabled: true,
+				IsOverrideEnabled: false,
 			}),
 		},
 	}

@@ -19,7 +19,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			TypeName: "aws_arn",
 			Name:     "ARN",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideDisabled: true,
+				IsOverrideEnabled: false,
 			}),
 		},
 		{
@@ -27,7 +27,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			TypeName: "aws_default_tags",
 			Name:     "Default Tags",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideDisabled: true,
+				IsOverrideEnabled: false,
 			}),
 		},
 		{
@@ -35,7 +35,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			TypeName: "aws_ip_ranges",
 			Name:     "IP Ranges",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideDisabled: true,
+				IsOverrideEnabled: false,
 			}),
 		},
 		{
@@ -43,7 +43,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			TypeName: "aws_partition",
 			Name:     "Partition",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideDisabled: true,
+				IsOverrideEnabled: false,
 			}),
 		},
 		{
@@ -51,7 +51,8 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			TypeName: "aws_region",
 			Name:     "Region",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				DoNotValidateOverrideValue: true,
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: false,
 			}),
 		},
 		{
@@ -59,21 +60,25 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			TypeName: "aws_regions",
 			Name:     "Regions",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideDisabled: true,
+				IsOverrideEnabled: false,
 			}),
 		},
 		{
 			Factory:  newServiceDataSource,
 			TypeName: "aws_service",
 			Name:     "Service",
-			Region:   unique.Make(inttypes.ServicePackageResourceRegion{}),
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: true,
+			}),
 		},
 		{
 			Factory:  newServicePrincipalDataSource,
 			TypeName: "aws_service_principal",
 			Name:     "Service Principal",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				DoNotValidateOverrideValue: true,
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: false,
 			}),
 		},
 	}

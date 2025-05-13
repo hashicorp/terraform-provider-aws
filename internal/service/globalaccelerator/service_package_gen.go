@@ -24,7 +24,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			TypeName: "aws_globalaccelerator_accelerator",
 			Name:     "Accelerator",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideDisabled: true,
+				IsOverrideEnabled: false,
 			}),
 		},
 	}
@@ -40,7 +40,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				IdentifierAttribute: names.AttrID,
 			}),
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideDisabled: true,
+				IsOverrideEnabled: false,
 			}),
 		},
 	}
@@ -53,7 +53,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			TypeName: "aws_globalaccelerator_custom_routing_accelerator",
 			Name:     "Custom Routing Accelerator",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideDisabled: true,
+				IsOverrideEnabled: false,
 			}),
 		},
 	}
@@ -69,7 +69,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IdentifierAttribute: names.AttrID,
 			}),
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideDisabled: true,
+				IsOverrideEnabled: false,
 			}),
 		},
 		{
@@ -80,7 +80,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IdentifierAttribute: names.AttrID,
 			}),
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideDisabled: true,
+				IsOverrideEnabled: false,
 			}),
 		},
 		{
@@ -88,7 +88,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_globalaccelerator_custom_routing_endpoint_group",
 			Name:     "Custom Routing Endpoint Group",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideDisabled: true,
+				IsOverrideEnabled: false,
 			}),
 		},
 		{
@@ -96,7 +96,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_globalaccelerator_custom_routing_listener",
 			Name:     "Custom Routing Listener",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideDisabled: true,
+				IsOverrideEnabled: false,
 			}),
 		},
 		{
@@ -104,7 +104,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_globalaccelerator_endpoint_group",
 			Name:     "Endpoint Group",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideDisabled: true,
+				IsOverrideEnabled: false,
 			}),
 		},
 		{
@@ -112,7 +112,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_globalaccelerator_listener",
 			Name:     "Listener",
 			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideDisabled: true,
+				IsOverrideEnabled: false,
 			}),
 		},
 	}
