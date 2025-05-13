@@ -39,7 +39,7 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `cacheNodeType` - (Required) Node type for the reserved cache node.
   See AWS documentation for information on [supported node types for Redis](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/CacheNodes.SupportedTypes.html) and [guidance on selecting node types for Redis](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/nodes-select-size.html).
@@ -55,10 +55,10 @@ The following arguments are supported:
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - Unique identifier for the reservation. Same as `offeringId`.
 * `fixedPrice` - Fixed price charged for this reserved cache node.
 * `offeringId` - Unique identifier for the reservation.
 
-<!-- cache-key: cdktf-0.20.8 input-5295ba7c1a9cdc8e160feb33e78743925ce9e905a56917f4dc0ad1eb813e35c8 -->
+<!-- cache-key: cdktf-0.20.8 input-3b888c552a970ed8185d7c682adc57f804f8f6d2358a8d6f9d3c51783fcf5d6d -->

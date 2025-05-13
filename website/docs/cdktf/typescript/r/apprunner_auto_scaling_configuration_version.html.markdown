@@ -42,7 +42,7 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments supported:
+This resource supports the following arguments:
 
 * `autoScalingConfigurationName` - (Required, Forces new resource) Name of the auto scaling configuration.
 * `maxConcurrency` - (Optional, Forces new resource) Maximal number of concurrent requests that you want an instance to process. When the number of concurrent requests goes over this limit, App Runner scales up your service.
@@ -92,4 +92,4 @@ Using `terraform import`, import App Runner AutoScaling Configuration Versions u
 % terraform import aws_apprunner_auto_scaling_configuration_version.example "arn:aws:apprunner:us-east-1:1234567890:autoscalingconfiguration/example/1/69bdfe0115224b0db49398b7beb68e0f
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-7aac7f85f31408240e0b57ce4afb75ca1e0d9a5e1f5c9aa2ba1d6961146bc1ac -->
+<!-- cache-key: cdktf-0.20.8 input-b96b3575744742ca0beb4465736074a989301d2cfd12b3a0ead59076a88c6ac3 -->

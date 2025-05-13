@@ -20,6 +20,8 @@ data "aws_organizations_delegated_administrators" "example" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `service_principal` - (Optional) Specifies a service principal name. If specified, then the operation lists the delegated administrators only for the specified service. If you don't specify a service principal, the operation lists all delegated administrators for all services in your organization.
 
 ## Attribute Reference

@@ -117,6 +117,13 @@ func resourceAccountSettingDefaultDelete(ctx context.Context, d *schema.Resource
 		settingValue = fargateTaskRetirementWaitPeriodValue
 	}
 
+	if settingName == awstypes.SettingNameDefaultLogDriverMode {
+		const (
+			defaultLogDriverModeValue = "non-blocking"
+		)
+		settingValue = defaultLogDriverModeValue
+	}
+
 	log.Printf("[WARN] Deleting ECS Account Setting Default: %s", settingName)
 	input := &ecs.PutAccountSettingDefaultInput{
 		Name:  settingName,

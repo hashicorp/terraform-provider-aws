@@ -43,7 +43,7 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `auto_enable` - (Required) When this setting is enabled, all new accounts that are created in, or added to, the organization are added as a member accounts of the organization’s Detective delegated administrator and Detective is enabled in that AWS Region.
 * `graph_arn` - (Required) ARN of the behavior graph.
@@ -79,4 +79,4 @@ Using `terraform import`, import `aws_detective_organization_admin_account` usin
 % terraform import aws_detective_organization_configuration.example arn:aws:detective:us-east-1:123456789012:graph:00b00fd5aecc0ab60a708659477e9617
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-27018a7562806e525d51125613e34e66d93e194d72c44043029f97b3aae9d505 -->
+<!-- cache-key: cdktf-0.20.8 input-26598e0384cc441f9dbc868bde2a81ac4d750bc991020cb281cf57795050fc2c -->

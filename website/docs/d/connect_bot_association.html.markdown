@@ -36,3 +36,7 @@ The `lex_bot` configuration block supports the following:
 
 * `name` - (Required) Name of the Amazon Lex (V1) bot.
 * `lex_region` - (Optional) Region that the Amazon Lex (V1) bot was created in.
+
+## Attribute Reference
+
+This data source exports no additional attributes.

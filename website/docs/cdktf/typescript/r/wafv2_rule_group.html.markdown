@@ -588,7 +588,7 @@ The part of a web request that you want AWS WAF to inspect. Include the single `
 
 The `fieldToMatch` block supports the following arguments:
 
-~> **NOTE:** Only one of `allQueryArguments`, `body`, `cookies`, `headerOrder`, `headers`, `jsonBody`, `method`, `queryString`, `singleHeader`, `singleQueryArgument`, or `uriPath` can be specified.
+~> **NOTE:** Only one of `allQueryArguments`, `body`, `cookies`, `headerOrder`, `headers`, `jsonBody`, `method`, `queryString`, `singleHeader`, `singleQueryArgument`, `uri_fragment` or `uriPath` can be specified.
 An empty configuration block `{}` should be used when specifying `allQueryArguments`, `body`, `method`, or `queryString` attributes.
 
 * `allQueryArguments` - (Optional) Inspect all query arguments.
@@ -603,6 +603,7 @@ An empty configuration block `{}` should be used when specifying `allQueryArgume
 * `queryString` - (Optional) Inspect the query string. This is the part of a URL that appears after a `?` character, if any.
 * `singleHeader` - (Optional) Inspect a single header. See [Single Header](#single-header) below for details.
 * `singleQueryArgument` - (Optional) Inspect a single query argument. See [Single Query Argument](#single-query-argument) below for details.
+* `uri_fragment` - (Optional) Inspect the part of a URL that follows the "#" symbol, providing additional information about the resource. See [URI Fragment](#uri-fragment) below for details.
 * `uriPath` - (Optional) Inspect the request URI path. This is the part of a web request that identifies a resource, for example, `/images/daily-ad.jpg`.
 
 ### Forwarded IP Config
@@ -683,6 +684,14 @@ Inspect a single query argument. Provide the name of the query argument to inspe
 The `singleQueryArgument` block supports the following arguments:
 
 * `name` - (Optional) The name of the query header to inspect. This setting must be provided as lower case characters.
+
+### URI Fragment
+
+Inspect the part of a URL that follows the "#" symbol, providing additional information about the resource.
+
+The `uri_fragment` block supports the following arguments:
+
+* `fallbackBehavior` - (Optional) What AWS WAF should do if it fails to completely parse the JSON body. Valid values are `MATCH` (default) and `NO_MATCH`.
 
 ### Cookies
 
@@ -865,4 +874,4 @@ Using `terraform import`, import WAFv2 Rule Group using `ID/name/scope`. For exa
 % terraform import aws_wafv2_rule_group.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc/example/REGIONAL
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-0bc4b79ef3fbe5bab04817d1e55876bfde6f77fb3e43cadf546a00e9d75aa911 -->
+<!-- cache-key: cdktf-0.20.8 input-7c7b9eb43e6f799838ddf0e886c08a6b3fc93a87fc7cd03bc281e44f574cf7a0 -->

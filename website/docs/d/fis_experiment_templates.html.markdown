@@ -47,6 +47,8 @@ data "aws_iam_policy_document" "example" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `tags` - (Optional) Map of tags, each pair of which must exactly match
   a pair on the desired experiment templates.
 

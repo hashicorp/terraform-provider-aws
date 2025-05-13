@@ -60,7 +60,7 @@ data "aws_lakeformation_permissions" "test" {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
 * `principal` – (Required) Principal to be granted the permissions on the resource. Supported principals are IAM users or IAM roles.
 
@@ -160,7 +160,7 @@ The following arguments are optional:
 
 ## Attribute Reference
 
-In addition to the above arguments, the following attribute is exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `permissions` – List of permissions granted to the principal. For details on permissions, see [Lake Formation Permissions Reference](https://docs.aws.amazon.com/lake-formation/latest/dg/lf-permissions-reference.html).
 * `permissions_with_grant_option` - Subset of `permissions` which the principal can pass.

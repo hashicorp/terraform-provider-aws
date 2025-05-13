@@ -37,6 +37,8 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `globalNetworkId` - (Required) ID of the Global Network of the link to retrieve.
 * `linkId` - (Required) ID of the specific link to retrieve.
 
@@ -57,4 +59,4 @@ The `bandwidth` object supports the following:
 * `downloadSpeed` - Download speed in Mbps.
 * `uploadSpeed` - Upload speed in Mbps.
 
-<!-- cache-key: cdktf-0.20.8 input-1bb44c97d9c2c1eb71096f7293f01a1e8423d9ada68f26d6602f08c19b25554d -->
+<!-- cache-key: cdktf-0.20.8 input-9c15d334ed519748b2d0cbffb6b31f55dfd0a924a6a263913d8819723e223b29 -->

@@ -12,13 +12,13 @@ The App Mesh Mesh data source allows details of an App Mesh Mesh to be retrieved
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_appmesh_mesh" "simple" {
   name = "simpleapp"
 }
 ```
 
-```hcl
+```terraform
 data "aws_caller_identity" "current" {}
 
 data "aws_appmesh_mesh" "simple" {

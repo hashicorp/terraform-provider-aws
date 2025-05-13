@@ -52,6 +52,10 @@ class MyConvertedCode(TerraformStack):
         aws_inspector_assessment_template_assessment.override_logical_id("assessment")
 ```
 
+## Argument Reference
+
+This data source does not support any arguments.
+
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
@@ -59,4 +63,4 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - AWS Region.
 * `arns` - List of the Amazon Inspector Classic Rules Packages arns available in the AWS region.
 
-<!-- cache-key: cdktf-0.20.8 input-b55f49ddc9bd6ffd45988906833e0338e052589bc49023e7487f89772927ed30 -->
+<!-- cache-key: cdktf-0.20.8 input-c182e9e277d2ec382235167d902be2d9e850b75155eec48e9e3d5c39b60152fa -->

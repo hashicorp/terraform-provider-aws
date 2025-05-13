@@ -32,12 +32,13 @@ data "aws_vpc_ipam_pools" "test" {
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available
-IPAM Pools in the current region.
+This data source supports the following arguments:
 
 * `filter` - (Required) Custom filter block as described below.
 
-### filter
+The arguments of this data source act as filters for querying the available IPAM Pools in the current region.
+
+### `filter`
 
 * `name` - (Required) The name of the filter. Filter names are case-sensitive.
 * `values` - (Required) The filter values. Filter values are case-sensitive.

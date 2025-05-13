@@ -189,7 +189,7 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are available:
+This data source supports the following arguments:
 
 * `attachmentPolicies` (Optional) - In a core network, all attachments use the block argument `attachmentPolicies` section to map an attachment to a segment. Instead of manually associating a segment to each attachment, attachments use tags, and then the tags are used to associate the attachment to the specified segment. Detailed below.
 * `coreNetworkConfiguration` (Required) - The core network configuration section defines the Regions where a core network should operate. For AWS Regions that are defined in the policy, the core network creates a Core Network Edge where you can connect attachments. After it's created, each Core Network Edge is peered with every other defined Region and is configured with consistent segment and routing across all Regions. Regions cannot be removed until the associated attachments are deleted. Detailed below.
@@ -294,4 +294,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `json` - Standard JSON policy document rendered based on the arguments above.
 
-<!-- cache-key: cdktf-0.20.8 input-4c6cfeac554a14d39a0738c63e288695b2b0893217ff2d03c14216cf8f26cb04 -->
+<!-- cache-key: cdktf-0.20.8 input-4d6a79b81cf74c58e096b9cbab914bc148a764b64a942b0795e793291d1b2036 -->

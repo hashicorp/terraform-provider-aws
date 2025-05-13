@@ -23,6 +23,8 @@ resource "aws_iot_topic_rule_destination" "example" {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `enabled` - (Optional) Whether or not to enable the destination. Default: `true`.
 * `vpc_configuration` - (Required) Configuration of the virtual private cloud (VPC) connection. For more info, see the [AWS documentation](https://docs.aws.amazon.com/iot/latest/developerguide/vpc-rule-action.html).
 

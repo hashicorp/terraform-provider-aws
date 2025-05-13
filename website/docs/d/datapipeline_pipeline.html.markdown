@@ -6,7 +6,7 @@ description: |-
   Provides details about a specific DataPipeline.
 ---
 
-# Source: aws_datapipeline_pipeline
+# Data Source: aws_datapipeline_pipeline
 
 Provides details about a specific DataPipeline Pipeline.
 
@@ -20,7 +20,7 @@ data "aws_datapipeline_pipeline" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
 * `pipeline_id` - (Required) ID of the pipeline.
 

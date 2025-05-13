@@ -41,6 +41,8 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
 
 ### filter Configuration Block
@@ -56,4 +58,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `ids` - Set of instance IDs of the matched SSM managed instances.
 
-<!-- cache-key: cdktf-0.20.8 input-e0bf0a9c24b0fa03c969992656b33d964fe9479c4bd864151f5158999bb3211a -->
+<!-- cache-key: cdktf-0.20.8 input-2726b54e4befe6643db8d9c9f3afa0da20fc26beb167458a7412528ef15b0717 -->

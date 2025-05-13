@@ -30,10 +30,14 @@ class MyConvertedCode(TerraformStack):
         DataAwsPrometheusDefaultScraperConfiguration(self, "example")
 ```
 
+## Argument Reference
+
+This data source does not support any arguments.
+
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
 * `configuration` - The configuration file.
 
-<!-- cache-key: cdktf-0.20.8 input-9f09b460e61cc6d030f6f04148f8b36ed7619b123c1974b2dd648bedfaf1adf4 -->
+<!-- cache-key: cdktf-0.20.8 input-ec1f448b86562d8215325849e2b779b8a3b7155bbf69218cb308214dbad74947 -->

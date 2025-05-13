@@ -20,6 +20,8 @@ resource "aws_dataexchange_revision" "example" {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `data_set_id` - (Required) The dataset id.
 * `comment` - (Required) An optional comment about the revision.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.

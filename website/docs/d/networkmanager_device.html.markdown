@@ -21,6 +21,8 @@ data "aws_networkmanager_device" "example" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `device_id` - (Required) ID of the device.
 * `global_network_id` - (Required) ID of the global network.
 

@@ -45,4 +45,4 @@ This data source exports the following attributes in addition to the arguments a
 * `user_name` - User name of the user.
 * `access_string` - String for what access a user possesses within the associated ElastiCache replication groups or clusters.
 
-<!-- cache-key: cdktf-0.20.8 input-64eebcc31de3d79926a950f1207062bdd9ae37c2badee3ea0ae9ce16d2cd8d16 -->
+<!-- cache-key: cdktf-0.20.8 input-3135f5ab0ec3197a5a423e0725fc36f9674eac4fa196544671f1597f9880dfb9 -->

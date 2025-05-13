@@ -104,7 +104,7 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
 * `principal` – (Required) Principal to be granted the permissions on the resource. Supported principals are IAM users or IAM roles.
 
@@ -204,9 +204,9 @@ The following arguments are optional:
 
 ## Attribute Reference
 
-In addition to the above arguments, the following attribute is exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `permissions` – List of permissions granted to the principal. For details on permissions, see [Lake Formation Permissions Reference](https://docs.aws.amazon.com/lake-formation/latest/dg/lf-permissions-reference.html).
 * `permissionsWithGrantOption` - Subset of `permissions` which the principal can pass.
 
-<!-- cache-key: cdktf-0.20.8 input-bdc82a0c9860b14b7a8d059933d6d05e1dbb3719cb760f4005ac93629213036a -->
+<!-- cache-key: cdktf-0.20.8 input-08579124a17f5ef98c0a622a05d4d6a887e564e1d6af5ca07c17f5087d6b32df -->

@@ -47,10 +47,19 @@ The following arguments are required:
   Can consist of lowercase letters, numbers, and underscores, and must begin and end with a lowercase letter or number.
 * `table_bucket_arn` - (Required, Forces new resource) ARN referencing the Table Bucket that contains this Namespace.
 
-The following argument is optional:
+The following arguments are optional:
 
+* `encryption_configuration` - (Optional) A single table bucket encryption configuration object.
+  [See `encryption_configuration` below](#encryption_configuration).
 * `maintenance_configuration` - (Optional) A single table bucket maintenance configuration object.
   [See `maintenance_configuration` below](#maintenance_configuration).
+
+### `encryption_configuration`
+
+The `encryption_configuration` object supports the following arguments:
+
+* `kms_key_arn` - (Optional) The ARN of a KMS Key to be used with `aws:kms` `sse_algorithm`
+* `sse_algorithm` - (Required) One of `aws:kms` or `AES256`
 
 ### `maintenance_configuration`
 

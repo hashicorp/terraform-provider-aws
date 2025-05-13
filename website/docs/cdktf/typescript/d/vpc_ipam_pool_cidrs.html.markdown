@@ -102,21 +102,22 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available
-VPCs in the current region. The given filters must match exactly one
-VPC whose data will be exported as attributes.
+This data source supports the following arguments:
 
 * `ipamPoolId` - ID of the IPAM pool you would like the list of provisioned CIDRs.
 * `filter` - Custom filter block as described below.
 
+### `filter`
+
+More complex filters can be expressed using one or more `filter` sub-blocks, which take the following arguments:
+
+* `name` - (Required) Name of the field to filter by, as defined by
+  [the underlying AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_GetIpamPoolCidrs.html).
+* `values` - (Required) Set of values that are accepted for the given field.
+
 ## Attribute Reference
 
-All of the argument attributes except `filter` blocks are also exported as
-result attributes. This data source will complete the data by populating
-any fields that are not included in the configuration with the data for
-the selected IPAM Pool CIDRs.
-
-The following attribute is additionally exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `ipamPoolCidrs` - The CIDRs provisioned into the IPAM pool, described below.
 
@@ -131,4 +132,4 @@ The following attribute is additionally exported:
 
 - `read` - (Default `1m`)
 
-<!-- cache-key: cdktf-0.20.8 input-b9fe0569a3bb59535a5bd318b59bb8f37d4a198fb5bfa62af131cfaa8ffd8980 -->
+<!-- cache-key: cdktf-0.20.8 input-e6aeb2e0aaf75b93552763f30ce2969165ef5e2ba0b203aa62b11b342bc1609b -->

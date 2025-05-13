@@ -14,7 +14,7 @@ Retrieve information about a firewall.
 
 ### Find firewall policy by ARN
 
-```hcl
+```terraform
 data "aws_networkfirewall_firewall" "example" {
   arn = aws_networkfirewall_firewall.arn
 }
@@ -22,7 +22,7 @@ data "aws_networkfirewall_firewall" "example" {
 
 ### Find firewall policy by Name
 
-```hcl
+```terraform
 data "aws_networkfirewall_firewall" "example" {
   name = "Test"
 }
@@ -30,7 +30,7 @@ data "aws_networkfirewall_firewall" "example" {
 
 ### Find firewall policy by ARN and Name
 
-```hcl
+```terraform
 data "aws_networkfirewall_firewall" "example" {
   arn  = aws_networkfirewall_firewall.arn
   name = "Test"
@@ -39,10 +39,12 @@ data "aws_networkfirewall_firewall" "example" {
 
 ## Argument Reference
 
-One or more of the following arguments are required:
+This data source supports the following arguments:
 
 * `arn` - ARN of the firewall.
 * `name` - Descriptive name of the firewall.
+
+One or more of these arguments is required.
 
 ## Attribute Reference
 
@@ -51,6 +53,7 @@ This data source exports the following attributes in addition to the arguments a
 * `arn` - ARN of the firewall.
 * `delete_protection` - A flag indicating whether the firewall is protected against deletion.
 * `description` - Description of the firewall.
+* `enabled_analysis_types` - Set of types for which to collect analysis metrics.
 * `encryption_configuration` - AWS Key Management Service (AWS KMS) encryption settings for the firewall.
     * `key_id` - The ID of the AWS Key Management Service (AWS KMS) customer managed key.
     * `type` - The type of the AWS Key Management Service (AWS KMS) key use by the firewall.
