@@ -13,11 +13,15 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/paymentcryptography"
 	"github.com/aws/aws-sdk-go-v2/service/paymentcryptography/types"
+	"github.com/hashicorp/terraform-plugin-testing/compare"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -59,8 +63,89 @@ func TestAccPaymentCryptographyKey_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "key_attributes.0.key_modes_of_use.0.encrypt", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "key_attributes.0.key_modes_of_use.0.wrap", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "key_attributes.0.key_modes_of_use.0.unwrap", acctest.CtTrue),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "payment-cryptography", regexache.MustCompile(`key/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "payment-cryptography", regexache.MustCompile(`key/[0-9a-z]{16}$`)),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"deletion_window_in_days"},
+			},
+		},
+	})
+}
+
+func TestAccPaymentCryptographyKey_Identity_Basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var key paymentcryptography.GetKeyOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_paymentcryptography_key.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.PaymentCryptographyServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckKeyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKeyConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckKeyExists(ctx, resourceName, &key),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("payment-cryptography", regexache.MustCompile(`key/[0-9a-z]{16}`))),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"deletion_window_in_days"},
+			},
+		},
+	})
+}
+
+func TestAccPaymentCryptographyKey_Identity_RegionOverride(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_paymentcryptography_key.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.PaymentCryptographyServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKeyConfig_regionOverride(rName),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNAlternateRegionRegexp("payment-cryptography", regexache.MustCompile(`key/[0-9a-z]{16}`))),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       acctest.CrossRegionImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"deletion_window_in_days"},
 			},
 			{
 				ResourceName:            resourceName,
@@ -384,6 +469,27 @@ resource "aws_paymentcryptography_key" "test" {
   }
 }
 `, rName)
+}
+
+func testAccKeyConfig_regionOverride(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_paymentcryptography_key" "test" {
+  region = %[1]q
+
+  exportable = true
+  key_attributes {
+    key_algorithm = "TDES_3KEY"
+    key_class     = "SYMMETRIC_KEY"
+    key_usage     = "TR31_P0_PIN_ENCRYPTION_KEY"
+    key_modes_of_use {
+      decrypt = true
+      encrypt = true
+      wrap    = true
+      unwrap  = true
+    }
+  }
+}
+`, acctest.AlternateRegion())
 }
 
 func testAccKeyConfig_tags2(rName string) string {
