@@ -74,9 +74,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceStackSetInstance,
 			TypeName: "aws_cloudformation_stack_set_instance",
 			Name:     "Stack Set Instance",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
-			}),
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  resourceType,

@@ -79,9 +79,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Factory:  dataSourceDataProtectionPolicyDocument,
 			TypeName: "aws_cloudwatch_log_data_protection_policy_document",
 			Name:     "Data Protection Policy Document",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
-			}),
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  dataSourceGroup,

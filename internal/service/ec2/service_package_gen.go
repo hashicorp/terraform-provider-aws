@@ -662,9 +662,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			TypeName: "aws_vpc_endpoint_service",
 			Name:     "Endpoint Service",
 			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
-			}),
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  dataSourceIPAMPool,
@@ -696,9 +694,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			TypeName: "aws_vpc_peering_connection",
 			Name:     "VPC Peering Connection",
 			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
-			}),
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  dataSourceVPCPeeringConnections,
@@ -947,9 +943,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceImageBlockPublicAccess,
 			TypeName: "aws_ec2_image_block_public_access",
 			Name:     "Image Block Public Access",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
-			}),
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  resourceInstanceState,
@@ -1561,9 +1555,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceIPAMOrganizationAdminAccount,
 			TypeName: "aws_vpc_ipam_organization_admin_account",
 			Name:     "IPAM Organization Admin Account",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
-			}),
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  resourceIPAMPool,

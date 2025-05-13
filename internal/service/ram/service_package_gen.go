@@ -69,9 +69,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceSharingWithOrganization,
 			TypeName: "aws_ram_sharing_with_organization",
 			Name:     "Sharing With Organization",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
-			}),
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 	}
 }

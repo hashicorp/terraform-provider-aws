@@ -34,9 +34,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceDelegatedAdminAccount,
 			TypeName: "aws_inspector2_delegated_admin_account",
 			Name:     "Delegated Admin Account",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
-			}),
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  ResourceEnabler,

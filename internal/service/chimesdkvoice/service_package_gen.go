@@ -34,9 +34,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  ResourceGlobalSettings,
 			TypeName: "aws_chimesdkvoice_global_settings",
 			Name:     "Global Settings",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
-			}),
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  ResourceSipMediaApplication,

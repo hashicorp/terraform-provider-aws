@@ -110,9 +110,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceOrganizationAdminAccount,
 			TypeName: "aws_guardduty_organization_admin_account",
 			Name:     "Organization Admin Account",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
-			}),
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  resourceOrganizationConfiguration,

@@ -92,9 +92,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newOrganizationAdminAccountRegistrationResource,
 			TypeName: "aws_auditmanager_organization_admin_account_registration",
 			Name:     "Organization Admin Account Registration",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
-			}),
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 	}
 }

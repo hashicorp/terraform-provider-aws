@@ -22,9 +22,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Factory:  newLifecyclePolicyDocumentDataSource,
 			TypeName: "aws_ecr_lifecycle_policy_document",
 			Name:     "Lifecycle Policy Document",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
-			}),
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  newRepositoriesDataSource,

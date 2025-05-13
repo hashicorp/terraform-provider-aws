@@ -26,9 +26,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newOrganizationDelegatedAdminAccountResource,
 			TypeName: "aws_cloudtrail_organization_delegated_admin_account",
 			Name:     "Organization Delegated Admin Account",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
-			}),
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 	}
 }

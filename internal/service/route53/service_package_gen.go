@@ -23,17 +23,13 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Factory:  newRecordsDataSource,
 			TypeName: "aws_route53_records",
 			Name:     "Records",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
-			}),
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  newZonesDataSource,
 			TypeName: "aws_route53_zones",
 			Name:     "Zones",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
-			}),
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 	}
 }
@@ -44,25 +40,19 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newCIDRCollectionResource,
 			TypeName: "aws_route53_cidr_collection",
 			Name:     "CIDR Collection",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
-			}),
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  newCIDRLocationResource,
 			TypeName: "aws_route53_cidr_location",
 			Name:     "CIDR Location",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
-			}),
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  newRecordsExclusiveResource,
 			TypeName: "aws_route53_records_exclusive",
 			Name:     "Records Exclusive",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
-			}),
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 	}
 }
@@ -73,25 +63,19 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Factory:  dataSourceDelegationSet,
 			TypeName: "aws_route53_delegation_set",
 			Name:     "Reusable Delegation Set",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
-			}),
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  dataSourceTrafficPolicyDocument,
 			TypeName: "aws_route53_traffic_policy_document",
 			Name:     "Traffic Policy Document",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
-			}),
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  dataSourceZone,
 			TypeName: "aws_route53_zone",
 			Name:     "Hosted Zone",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
-			}),
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 	}
 }
@@ -102,9 +86,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceDelegationSet,
 			TypeName: "aws_route53_delegation_set",
 			Name:     "Reusable Delegation Set",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
-			}),
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  resourceHealthCheck,
@@ -114,65 +96,49 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IdentifierAttribute: names.AttrID,
 				ResourceType:        "healthcheck",
 			}),
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
-			}),
+			Region: unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  resourceHostedZoneDNSSEC,
 			TypeName: "aws_route53_hosted_zone_dnssec",
 			Name:     "Hosted Zone DNSSEC",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
-			}),
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  resourceKeySigningKey,
 			TypeName: "aws_route53_key_signing_key",
 			Name:     "Key Signing Key",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
-			}),
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  resourceQueryLog,
 			TypeName: "aws_route53_query_log",
 			Name:     "Query Logging Config",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
-			}),
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  resourceRecord,
 			TypeName: "aws_route53_record",
 			Name:     "Record",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
-			}),
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  resourceTrafficPolicy,
 			TypeName: "aws_route53_traffic_policy",
 			Name:     "Traffic Policy",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
-			}),
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  resourceTrafficPolicyInstance,
 			TypeName: "aws_route53_traffic_policy_instance",
 			Name:     "Traffic Policy Instance",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
-			}),
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  resourceVPCAssociationAuthorization,
 			TypeName: "aws_route53_vpc_association_authorization",
 			Name:     "VPC Association Authorization",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
-			}),
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  resourceZone,
@@ -182,17 +148,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IdentifierAttribute: "zone_id",
 				ResourceType:        "hostedzone",
 			}),
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
-			}),
+			Region: unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  resourceZoneAssociation,
 			TypeName: "aws_route53_zone_association",
 			Name:     "Zone Association",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
-			}),
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 	}
 }

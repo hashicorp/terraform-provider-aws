@@ -23,9 +23,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Factory:  newAcceleratorDataSource,
 			TypeName: "aws_globalaccelerator_accelerator",
 			Name:     "Accelerator",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
-			}),
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 	}
 }
@@ -39,9 +37,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			}),
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
-			}),
+			Region: unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 	}
 }
@@ -52,9 +48,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Factory:  dataSourceCustomRoutingAccelerator,
 			TypeName: "aws_globalaccelerator_custom_routing_accelerator",
 			Name:     "Custom Routing Accelerator",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
-			}),
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 	}
 }
@@ -68,9 +62,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			}),
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
-			}),
+			Region: unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  resourceCustomRoutingAccelerator,
@@ -79,41 +71,31 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			}),
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
-			}),
+			Region: unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  resourceCustomRoutingEndpointGroup,
 			TypeName: "aws_globalaccelerator_custom_routing_endpoint_group",
 			Name:     "Custom Routing Endpoint Group",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
-			}),
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  resourceCustomRoutingListener,
 			TypeName: "aws_globalaccelerator_custom_routing_listener",
 			Name:     "Custom Routing Listener",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
-			}),
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  resourceEndpointGroup,
 			TypeName: "aws_globalaccelerator_endpoint_group",
 			Name:     "Endpoint Group",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
-			}),
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  resourceListener,
 			TypeName: "aws_globalaccelerator_listener",
 			Name:     "Listener",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
-			}),
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 	}
 }

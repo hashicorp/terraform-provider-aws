@@ -58,9 +58,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Factory:  dataSourceAccountPublicAccessBlock,
 			TypeName: "aws_s3_account_public_access_block",
 			Name:     "Account Public Access Block",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
-			}),
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  dataSourceMultiRegionAccessPoint,
@@ -83,9 +81,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceAccountPublicAccessBlock,
 			TypeName: "aws_s3_account_public_access_block",
 			Name:     "Account Public Access Block",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
-			}),
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  resourceAccessPointPolicy,
