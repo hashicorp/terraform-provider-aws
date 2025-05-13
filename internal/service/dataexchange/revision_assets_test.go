@@ -100,7 +100,7 @@ func TestAccDataExchangeRevisionAssets_finalized(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "data_set_id", "aws_dataexchange_data_set.test", names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					acctest.CheckResourceAttrRFC3339(resourceName, "updated_at"),
-					resource.TestCheckResourceAttr(resourceName, "finalized", "true"),
+					resource.TestCheckResourceAttr(resourceName, "finalized", acctest.CtTrue),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("asset"), knownvalue.SetExact([]knownvalue.Check{
@@ -121,7 +121,7 @@ func TestAccDataExchangeRevisionAssets_finalized(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "data_set_id", "aws_dataexchange_data_set.test", names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					acctest.CheckResourceAttrRFC3339(resourceName, "updated_at"),
-					resource.TestCheckResourceAttr(resourceName, "finalized", "false"),
+					resource.TestCheckResourceAttr(resourceName, "finalized", acctest.CtFalse),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("asset"), knownvalue.SetExact([]knownvalue.Check{

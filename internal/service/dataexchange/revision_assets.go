@@ -813,7 +813,7 @@ func (r *resourceRevisionAssets) ModifyPlan(ctx context.Context, req resource.Mo
 	// check if resource is being destroyed
 	if req.Plan.Raw.IsNull() {
 		var forceDestroy, finalized types.Bool
-		resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("force_destroy"), &forceDestroy)...)
+		resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root(names.AttrForceDestroy), &forceDestroy)...)
 		resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("finalized"), &finalized)...)
 		if resp.Diagnostics.HasError() {
 			return
