@@ -27,8 +27,8 @@ import (
 
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource("aws_nat_gateway_eip_association", name="VPC NAT Gateway EIP Association")
-func newResourceNatGatewayEipAssociation(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceNatGatewayEipAssociation{}
+func newResourceNATGatewayEIPAssociation(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &resourceNATGatewayEIPAssociation{}
 
 	r.SetDefaultCreateTimeout(10 * time.Minute)
 	r.SetDefaultUpdateTimeout(10 * time.Minute)
@@ -38,15 +38,15 @@ func newResourceNatGatewayEipAssociation(_ context.Context) (resource.ResourceWi
 }
 
 const (
-	ResNameVpcNatGatewayEipAssociation = "VPC NAT Gateway EIP Association"
+	ResNameVPCNATGatewayEIPAssociation = "VPC NAT Gateway EIP Association"
 )
 
-type resourceNatGatewayEipAssociation struct {
+type resourceNATGatewayEIPAssociation struct {
 	framework.ResourceWithConfigure
 	framework.WithTimeouts
 }
 
-func (r *resourceNatGatewayEipAssociation) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *resourceNATGatewayEIPAssociation) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"allocation_id": schema.StringAttribute{
@@ -76,10 +76,10 @@ func (r *resourceNatGatewayEipAssociation) Schema(ctx context.Context, req resou
 	}
 }
 
-func (r *resourceNatGatewayEipAssociation) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *resourceNATGatewayEIPAssociation) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().EC2Client(ctx)
 
-	var plan resourceVpcNatGatewayEipAssociationModel
+	var plan resourceVPCNATGatewayEIPAssociationModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -88,7 +88,7 @@ func (r *resourceNatGatewayEipAssociation) Create(ctx context.Context, req resou
 	id, err := plan.setID()
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionCreating, ResNameVpcNatGatewayEipAssociation, "", err),
+			create.ProblemStandardMessage(names.EC2, create.ErrActionCreating, ResNameVPCNATGatewayEIPAssociation, "", err),
 			err.Error(),
 		)
 		return
@@ -96,24 +96,24 @@ func (r *resourceNatGatewayEipAssociation) Create(ctx context.Context, req resou
 	plan.ID = types.StringValue(id)
 
 	input := ec2.AssociateNatGatewayAddressInput{
-		NatGatewayId:  plan.NatGatewayID.ValueStringPointer(),
+		NatGatewayId:  plan.NATGatewayID.ValueStringPointer(),
 		AllocationIds: []string{plan.AllocationID.ValueString()},
 	}
 
 	_, err = conn.AssociateNatGatewayAddress(ctx, &input)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionCreating, ResNameVpcNatGatewayEipAssociation, plan.ID.String(), err),
+			create.ProblemStandardMessage(names.EC2, create.ErrActionCreating, ResNameVPCNATGatewayEIPAssociation, plan.ID.String(), err),
 			err.Error(),
 		)
 		return
 	}
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	out, err := waitNATGatewayAddressAssociated(ctx, conn, plan.NatGatewayID.ValueString(), plan.AllocationID.ValueString(), createTimeout)
+	out, err := waitNATGatewayAddressAssociated(ctx, conn, plan.NATGatewayID.ValueString(), plan.AllocationID.ValueString(), createTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionWaitingForCreation, ResNameVpcNatGatewayEipAssociation, plan.ID.String(), err),
+			create.ProblemStandardMessage(names.EC2, create.ErrActionWaitingForCreation, ResNameVPCNATGatewayEIPAssociation, plan.ID.String(), err),
 			err.Error(),
 		)
 		return
@@ -124,10 +124,10 @@ func (r *resourceNatGatewayEipAssociation) Create(ctx context.Context, req resou
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceNatGatewayEipAssociation) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *resourceNATGatewayEIPAssociation) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().EC2Client(ctx)
 
-	var state resourceVpcNatGatewayEipAssociationModel
+	var state resourceVPCNATGatewayEIPAssociationModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -138,7 +138,7 @@ func (r *resourceNatGatewayEipAssociation) Read(ctx context.Context, req resourc
 		return
 	}
 
-	out, err := findNATGatewayAddressByNATGatewayIDAndAllocationIDSucceeded(ctx, conn, state.NatGatewayID.ValueString(), state.AllocationID.ValueString())
+	out, err := findNATGatewayAddressByNATGatewayIDAndAllocationIDSucceeded(ctx, conn, state.NATGatewayID.ValueString(), state.AllocationID.ValueString())
 	if tfresource.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
@@ -146,7 +146,7 @@ func (r *resourceNatGatewayEipAssociation) Read(ctx context.Context, req resourc
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionReading, ResNameVpcNatGatewayEipAssociation, state.ID.String(), err),
+			create.ProblemStandardMessage(names.EC2, create.ErrActionReading, ResNameVPCNATGatewayEIPAssociation, state.ID.String(), err),
 			err.Error(),
 		)
 		return
@@ -160,20 +160,20 @@ func (r *resourceNatGatewayEipAssociation) Read(ctx context.Context, req resourc
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceNatGatewayEipAssociation) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *resourceNATGatewayEIPAssociation) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 }
 
-func (r *resourceNatGatewayEipAssociation) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *resourceNATGatewayEIPAssociation) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().EC2Client(ctx)
 
-	var state resourceVpcNatGatewayEipAssociationModel
+	var state resourceVPCNATGatewayEIPAssociationModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	input := ec2.DisassociateNatGatewayAddressInput{
-		NatGatewayId:   state.NatGatewayID.ValueStringPointer(),
+		NatGatewayId:   state.NATGatewayID.ValueStringPointer(),
 		AssociationIds: []string{state.AssociationID.ValueString()},
 	}
 
@@ -184,32 +184,32 @@ func (r *resourceNatGatewayEipAssociation) Delete(ctx context.Context, req resou
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionDeleting, ResNameVpcNatGatewayEipAssociation, state.ID.String(), err),
+			create.ProblemStandardMessage(names.EC2, create.ErrActionDeleting, ResNameVPCNATGatewayEIPAssociation, state.ID.String(), err),
 			err.Error(),
 		)
 		return
 	}
 
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitNATGatewayAddressDisassociated(ctx, conn, state.NatGatewayID.ValueString(), state.AllocationID.ValueString(), deleteTimeout)
+	_, err = waitNATGatewayAddressDisassociated(ctx, conn, state.NATGatewayID.ValueString(), state.AllocationID.ValueString(), deleteTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionWaitingForDeletion, ResNameVpcNatGatewayEipAssociation, state.ID.String(), err),
+			create.ProblemStandardMessage(names.EC2, create.ErrActionWaitingForDeletion, ResNameVPCNATGatewayEIPAssociation, state.ID.String(), err),
 			err.Error(),
 		)
 		return
 	}
 }
 
-func (r *resourceNatGatewayEipAssociation) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *resourceNATGatewayEIPAssociation) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
-type resourceVpcNatGatewayEipAssociationModel struct {
+type resourceVPCNATGatewayEIPAssociationModel struct {
 	AllocationID  types.String   `tfsdk:"allocation_id"`
 	AssociationID types.String   `tfsdk:"association_id"`
 	ID            types.String   `tfsdk:"id"`
-	NatGatewayID  types.String   `tfsdk:"nat_gateway_id"`
+	NATGatewayID  types.String   `tfsdk:"nat_gateway_id"`
 	Timeouts      timeouts.Value `tfsdk:"timeouts"`
 }
 
@@ -217,7 +217,7 @@ const (
 	natGatewayEIPAssociationParts = 2
 )
 
-func (m *resourceVpcNatGatewayEipAssociationModel) InitFromID() error {
+func (m *resourceVPCNATGatewayEIPAssociationModel) InitFromID() error {
 	id := m.ID.ValueString()
 	parts, err := fwflex.ExpandResourceId(id, natGatewayEIPAssociationParts, false)
 
@@ -225,15 +225,15 @@ func (m *resourceVpcNatGatewayEipAssociationModel) InitFromID() error {
 		return err
 	}
 
-	m.NatGatewayID = types.StringValue(parts[0])
+	m.NATGatewayID = types.StringValue(parts[0])
 	m.AllocationID = types.StringValue(parts[1])
 
 	return nil
 }
 
-func (m resourceVpcNatGatewayEipAssociationModel) setID() (string, error) {
+func (m resourceVPCNATGatewayEIPAssociationModel) setID() (string, error) {
 	parts := []string{
-		m.NatGatewayID.ValueString(),
+		m.NATGatewayID.ValueString(),
 		m.AllocationID.ValueString(),
 	}
 
