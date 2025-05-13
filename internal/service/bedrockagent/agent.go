@@ -134,7 +134,7 @@ func (r *agentResource) Schema(ctx context.Context, request resource.SchemaReque
 					stringplanmodifier.UseStateForUnknown(),
 				},
 				Validators: []validator.String{
-					stringvalidator.UTF8LengthBetween(40, 8000),
+					stringvalidator.UTF8LengthBetween(40, 20000),
 				},
 			},
 			"memory_configuration":          framework.ResourceOptionalComputedListOfObjectsAttribute[memoryConfigurationModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
