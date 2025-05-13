@@ -10,6 +10,8 @@ description: |-
 
 Terraform resource for managing AWS Data Exchange Revision Assets.
 
+~> Note: This resource creates a new revision and adds associated assets. Destroying this resource will delete the revision and all associated assets.
+
 ## Example Usage
 
 ### Basic Usage
