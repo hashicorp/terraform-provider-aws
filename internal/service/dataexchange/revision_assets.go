@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
@@ -70,7 +71,6 @@ const (
 type resourceRevisionAssets struct {
 	framework.ResourceWithConfigure
 	framework.WithTimeouts
-	framework.WithNoOpUpdate[resourceRevisionAssetsModel]
 }
 
 func (r *resourceRevisionAssets) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -81,9 +81,6 @@ func (r *resourceRevisionAssets) Schema(ctx context.Context, req resource.Schema
 				Optional: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(0, 16_348),
-				},
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			names.AttrCreatedAt: schema.StringAttribute{
@@ -113,9 +110,6 @@ func (r *resourceRevisionAssets) Schema(ctx context.Context, req resource.Schema
 			"updated_at": schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
 			},
 
 			names.AttrTags:    tftags.TagsAttribute(),
@@ -283,6 +277,7 @@ func (r *resourceRevisionAssets) Create(ctx context.Context, req resource.Create
 		return
 	}
 
+	finalized := plan.Finalized.ValueBool()
 	var input dataexchange.CreateRevisionInput
 	resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
 	if resp.Diagnostics.HasError() {
@@ -672,8 +667,8 @@ func (r *resourceRevisionAssets) Create(ctx context.Context, req resource.Create
 	plan.Assets = assetsVal
 
 	// finalize asset if requested
-	if plan.Finalized.ValueBool() {
-		err = finalizeAsset(ctx, conn, plan.DataSetID.ValueString(), plan.ID.ValueString(), plan.Finalized.ValueBool())
+	if finalized {
+		err = finalizeAsset(ctx, conn, plan.DataSetID.ValueString(), plan.ID.ValueString(), finalized)
 		if err != nil {
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameRevisionAssets, revisionID, err),
@@ -681,6 +676,7 @@ func (r *resourceRevisionAssets) Create(ctx context.Context, req resource.Create
 			)
 			return
 		}
+		plan.Finalized = types.BoolValue(finalized)
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
@@ -719,6 +715,61 @@ func (r *resourceRevisionAssets) Read(ctx context.Context, req resource.ReadRequ
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
+func (r *resourceRevisionAssets) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	conn := r.Meta().DataExchangeClient(ctx)
+
+	var plan, state resourceRevisionAssetsModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	diff, d := flex.Diff(ctx, plan, state, flex.WithIgnoredField("ForceDestroy"))
+	resp.Diagnostics.Append(d...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if diff.HasChanges() {
+		input := dataexchange.UpdateRevisionInput{
+			DataSetId:  plan.DataSetID.ValueStringPointer(),
+			RevisionId: plan.ID.ValueStringPointer(),
+		}
+		resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		if !plan.Comment.Equal(state.Comment) && state.Finalized.ValueBool() {
+			err := finalizeAsset(ctx, conn, plan.DataSetID.ValueString(), plan.ID.ValueString(), false)
+			if err != nil {
+				resp.Diagnostics.AddError(
+					create.ProblemStandardMessage(names.DataExchange, create.ErrActionUpdating, ResNameRevisionAssets, plan.ID.String(), err),
+					err.Error(),
+				)
+				return
+			}
+		}
+
+		out, err := conn.UpdateRevision(ctx, &input)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.DataExchange, create.ErrActionUpdating, ResNameRevisionAssets, plan.ID.String(), err),
+				err.Error(),
+			)
+			return
+		}
+
+		resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+}
+
 func (r *resourceRevisionAssets) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().DataExchangeClient(ctx)
 
@@ -755,6 +806,23 @@ func (r *resourceRevisionAssets) Delete(ctx context.Context, req resource.Delete
 			err.Error(),
 		)
 		return
+	}
+}
+
+func (r *resourceRevisionAssets) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	if !req.Plan.Raw.IsNull() && !req.State.Raw.IsNull() {
+		var plan, state resourceRevisionAssetsModel
+		resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+		resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		if !plan.Comment.Equal(state.Comment) || !plan.Finalized.Equal(state.Finalized) {
+			resp.Plan.SetAttribute(ctx, path.Root("updated_at"), timetypes.NewRFC3339Unknown())
+		} else {
+			resp.Plan.SetAttribute(ctx, path.Root("updated_at"), state.UpdatedAt)
+		}
 	}
 }
 
