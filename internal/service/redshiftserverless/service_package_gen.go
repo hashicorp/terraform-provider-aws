@@ -26,10 +26,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newCustomDomainAssociationResource,
 			TypeName: "aws_redshiftserverless_custom_domain_association",
 			Name:     "Custom Domain Association",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 	}
 }
@@ -40,28 +37,19 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Factory:  dataSourceCredentials,
 			TypeName: "aws_redshiftserverless_credentials",
 			Name:     "Credentials",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceNamespace,
 			TypeName: "aws_redshiftserverless_namespace",
 			Name:     "Namespace",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceWorkgroup,
 			TypeName: "aws_redshiftserverless_workgroup",
 			Name:     "Workgroup",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 	}
 }
@@ -72,10 +60,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceEndpointAccess,
 			TypeName: "aws_redshiftserverless_endpoint_access",
 			Name:     "Endpoint Access",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceNamespace,
@@ -84,37 +69,25 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceResourcePolicy,
 			TypeName: "aws_redshiftserverless_resource_policy",
 			Name:     "Resource Policy",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceSnapshot,
 			TypeName: "aws_redshiftserverless_snapshot",
 			Name:     "Snapshot",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceUsageLimit,
 			TypeName: "aws_redshiftserverless_usage_limit",
 			Name:     "Usage Limit",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceWorkgroup,
@@ -123,10 +96,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 	}
 }

@@ -47,10 +47,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceAppImageConfig,
@@ -59,10 +56,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceCodeRepository,
@@ -71,10 +65,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceDataQualityJobDefinition,
@@ -83,19 +74,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceDevice,
 			TypeName: "aws_sagemaker_device",
 			Name:     "Device",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceDeviceFleet,
@@ -104,10 +89,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceDomain,
@@ -116,10 +98,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceEndpoint,
@@ -128,10 +107,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceEndpointConfiguration,
@@ -140,10 +116,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceFeatureGroup,
@@ -152,10 +125,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceFlowDefinition,
@@ -164,10 +134,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceHub,
@@ -176,10 +143,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceHumanTaskUI,
@@ -188,10 +152,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceImage,
@@ -200,19 +161,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceImageVersion,
 			TypeName: "aws_sagemaker_image_version",
 			Name:     "Image Version",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceMlflowTrackingServer,
@@ -221,10 +176,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceModel,
@@ -233,10 +185,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceModelPackageGroup,
@@ -245,19 +194,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceModelPackageGroupPolicy,
 			TypeName: "aws_sagemaker_model_package_group_policy",
 			Name:     "Model Package Group Policy",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceMonitoringSchedule,
@@ -266,10 +209,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceNotebookInstance,
@@ -278,10 +218,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceNotebookInstanceLifeCycleConfiguration,
@@ -290,10 +227,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourcePipeline,
@@ -302,10 +236,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceProject,
@@ -314,19 +245,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceServicecatalogPortfolioStatus,
 			TypeName: "aws_sagemaker_servicecatalog_portfolio_status",
 			Name:     "Servicecatalog Portfolio Status",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceSpace,
@@ -335,10 +260,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceStudioLifecycleConfig,
@@ -347,10 +269,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceUserProfile,
@@ -359,19 +278,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceWorkforce,
 			TypeName: "aws_sagemaker_workforce",
 			Name:     "Workforce",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceWorkteam,
@@ -380,10 +293,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 	}
 }

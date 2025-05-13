@@ -26,19 +26,13 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newAWSLogSourceResource,
 			TypeName: "aws_securitylake_aws_log_source",
 			Name:     "AWS Log Source",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  newCustomLogSourceResource,
 			TypeName: "aws_securitylake_custom_log_source",
 			Name:     "Custom Log Source",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  newDataLakeResource,
@@ -47,10 +41,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  newSubscriberResource,
@@ -59,19 +50,13 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  newSubscriberNotificationResource,
 			TypeName: "aws_securitylake_subscriber_notification",
 			Name:     "Subscriber Notification",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 	}
 }

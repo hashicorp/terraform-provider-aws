@@ -26,10 +26,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newResourcePolicyResource,
 			TypeName: "aws_kinesis_resource_policy",
 			Name:     "Resource Policy",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 	}
 }
@@ -40,19 +37,13 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Factory:  DataSourceStream,
 			TypeName: "aws_kinesis_stream",
 			Name:     "Stream",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceStreamConsumer,
 			TypeName: "aws_kinesis_stream_consumer",
 			Name:     "Stream Consumer",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 	}
 }
@@ -66,19 +57,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrName,
 			}),
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceStreamConsumer,
 			TypeName: "aws_kinesis_stream_consumer",
 			Name:     "Stream Consumer",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: true,
-			}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 	}
 }

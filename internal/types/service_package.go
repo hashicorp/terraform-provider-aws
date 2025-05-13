@@ -19,6 +19,20 @@ type ServicePackageResourceRegion struct {
 	IsValidateOverrideInPartition bool // Is the per-resource Region override value validated againt the configured partition?
 }
 
+// ResourceRegionDefault returns the default resource region configuration.
+// The default is to enable per-resource Region override and validate the override value.
+func ResourceRegionDefault() ServicePackageResourceRegion {
+	return ServicePackageResourceRegion{
+		IsOverrideEnabled:             true,
+		IsValidateOverrideInPartition: true,
+	}
+}
+
+// ResourceRegionDisabled returns the resource region configuration indicating that there is no per-resource Region override.
+func ResourceRegionDisabled() ServicePackageResourceRegion {
+	return ServicePackageResourceRegion{}
+}
+
 // ServicePackageResourceTags represents resource-level tagging information.
 type ServicePackageResourceTags struct {
 	IdentifierAttribute string // The attribute for the identifier for UpdateTags etc.
