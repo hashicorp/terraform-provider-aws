@@ -5,9 +5,7 @@ package cloudfrontkeyvaluestore
 
 import (
 	"context"
-	"fmt"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfrontkeyvaluestore"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfrontkeyvaluestore/types"
@@ -31,11 +29,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+const (
+	ResNameKeysExclusive = "Keys Exclusive"
+	ResNameKeyValueStore = "Key Value Store"
+)
+
 // @FrameworkResource("aws_cloudfrontkeyvaluestore_keys_exclusive", name="Keys  Exclusive")
 func newResourceKeysExclusive(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceKeysExclusive{}
-
-	return r, nil
+	return &resourceKeysExclusive{}, nil
 }
 
 type resourceKeysExclusive struct {
@@ -105,10 +106,10 @@ func (r *resourceKeysExclusive) syncKeyValuePairs(ctx context.Context, plan *res
 		return diags
 	}
 
-	put, delete, _ := intflex.DiffSlices(have, want, resourceKeyValuePairEqual)
+	put, del, _ := intflex.DiffSlices(have, want, resourceKeyValuePairEqual)
 
 	putRequired := len(put) > 0
-	deleteRequired := len(delete) > 0
+	deleteRequired := len(del) > 0
 
 	if putRequired || deleteRequired {
 		input := cloudfrontkeyvaluestore.UpdateKeysInput{
@@ -121,7 +122,7 @@ func (r *resourceKeysExclusive) syncKeyValuePairs(ctx context.Context, plan *res
 		}
 
 		if deleteRequired {
-			input.Deletes = expandDeleteKeyRequestListItem(delete)
+			input.Deletes = expandDeleteKeyRequestListItem(del)
 		}
 
 		out, err := conn.UpdateKeys(ctx, &input)
@@ -138,6 +139,7 @@ func (r *resourceKeysExclusive) syncKeyValuePairs(ctx context.Context, plan *res
 	} else {
 		plan.TotalSizeInBytes = flex.Int64ToFramework(ctx, kvs.TotalSizeInBytes)
 	}
+
 	return diags
 }
 
@@ -164,26 +166,26 @@ func (r *resourceKeysExclusive) Read(ctx context.Context, request resource.ReadR
 	}
 
 	conn := r.Meta().CloudFrontKeyValueStoreClient(ctx)
-
 	kvs, keyPairs, err := FindResourceKeyValuePairsForKeyValueStore(ctx, conn, data.KvsARN.ValueString())
 
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
-
 		return
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading CloudFront KeyValueStore Keys (%s)", data.KvsARN.ValueString()), err.Error())
-
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.CloudFrontKeyValueStore, create.ErrActionReading, ResNameKeysExclusive, data.KvsARN.String(), err),
+			err.Error(),
+		)
 		return
 	}
 
 	data.KvsARN = fwtypes.ARNValue(aws.ToString(kvs.KvsARN))
 	data.TotalSizeInBytes = types.Int64Value(aws.ToInt64(kvs.TotalSizeInBytes))
-	response.Diagnostics.Append(flex.Flatten(ctx, keyPairs, &data.ResourceKeyValuePair)...)
 
+	response.Diagnostics.Append(flex.Flatten(ctx, keyPairs, &data.ResourceKeyValuePair)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -217,7 +219,12 @@ func FindKeyValueStoreByARN(ctx context.Context, conn *cloudfrontkeyvaluestore.C
 
 	output, err := conn.DescribeKeyValueStore(ctx, input)
 
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) ||
+		// Attempting to describe a deleted keyvaluestore produces a ConflictException
+		// rather than a ResourceNotFoundError. e.g.
+		//
+		// ConflictException: Key-Value-Store was not in expected state
+		errs.IsAErrorMessageContains[*awstypes.ConflictException](err, "was not in expected state") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -225,14 +232,6 @@ func FindKeyValueStoreByARN(ctx context.Context, conn *cloudfrontkeyvaluestore.C
 	}
 
 	if err != nil {
-		// Attempting to describe a deleted keyvaluestore produces the following error instead of a ResourceNotFoundError
-		regex := regexache.MustCompile(`Key-Value-Store was not in expected state`)
-		if regex.MatchString(err.Error()) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
-			}
-		}
 		return nil, err
 	}
 
@@ -279,6 +278,7 @@ func expandPutKeyRequestListItem(put []awstypes.ListKeysResponseListItem) []awst
 			Value: r.Value,
 		})
 	}
+
 	return out
 }
 
@@ -288,6 +288,7 @@ func expandDeleteKeyRequestListItem(delete []awstypes.ListKeysResponseListItem) 
 		out = append(out, awstypes.DeleteKeyRequestListItem{
 			Key: r.Key})
 	}
+
 	return out
 }
 
@@ -301,8 +302,3 @@ type resourceKeysExclusiveModel struct {
 	KvsARN               fwtypes.ARN                                               `tfsdk:"key_value_store_arn"`
 	TotalSizeInBytes     types.Int64                                               `tfsdk:"total_size_in_bytes"`
 }
-
-const (
-	ResNameKeysExclusive = "Keys Exclusive"
-	ResNameKeyValueStore = "Key Value Store"
-)
