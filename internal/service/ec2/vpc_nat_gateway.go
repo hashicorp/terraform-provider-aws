@@ -82,6 +82,7 @@ func resourceNATGateway() *schema.Resource {
 			"secondary_allocation_ids": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"secondary_private_ip_address_count": {
@@ -258,7 +259,7 @@ func resourceNATGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta 
 			}
 		}
 	case awstypes.ConnectivityTypePublic:
-		if d.HasChanges("secondary_allocation_ids") {
+		if !d.GetRawConfig().GetAttr("secondary_allocation_ids").IsNull() && d.HasChanges("secondary_allocation_ids") {
 			o, n := d.GetChange("secondary_allocation_ids")
 			os, ns := o.(*schema.Set), n.(*schema.Set)
 

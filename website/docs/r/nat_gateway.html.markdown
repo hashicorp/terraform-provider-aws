@@ -10,6 +10,8 @@ description: |-
 
 Provides a resource to create a VPC NAT Gateway.
 
+!> **WARNING:** You should not use the `aws_nat_gateway` resource that has `secondary_allocation_ids` in conjunction with an [`aws_nat_gateway_eip_association`](nat_gateway_eip_association.html) resource. Doing so may cause perpetual differences, and result in associations being overwritten.
+
 ## Example Usage
 
 ### Public NAT

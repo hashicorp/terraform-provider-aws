@@ -55,6 +55,7 @@ var (
 	ResourceManagedPrefixList                             = resourceManagedPrefixList
 	ResourceManagedPrefixListEntry                        = resourceManagedPrefixListEntry
 	ResourceNATGateway                                    = resourceNATGateway
+	ResourceNatGatewayEipAssociation                      = newResourceNatGatewayEipAssociation
 	ResourceNetworkACL                                    = resourceNetworkACL
 	ResourceNetworkACLAssociation                         = resourceNetworkACLAssociation
 	ResourceNetworkACLRule                                = resourceNetworkACLRule
@@ -177,6 +178,7 @@ var (
 	FindManagedPrefixListByID                                  = findManagedPrefixListByID
 	FindManagedPrefixListEntryByIDAndCIDR                      = findManagedPrefixListEntryByIDAndCIDR
 	FindNATGatewayByID                                         = findNATGatewayByID
+	FindNATGatewayAddressByNATGatewayIDAndAllocationID         = findNATGatewayAddressByNATGatewayIDAndAllocationID
 	FindNetworkACLAssociationByID                              = findNetworkACLAssociationByID
 	FindNetworkACLByID                                         = findNetworkACLByID
 	FindNetworkACLEntryByThreePartKey                          = findNetworkACLEntryByThreePartKey

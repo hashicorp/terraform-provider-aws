@@ -104,6 +104,11 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Name:     "EIP Domain Name",
 		},
 		{
+			Factory:  newResourceNatGatewayEipAssociation,
+			TypeName: "aws_nat_gateway_eip_association",
+			Name:     "VPC NAT Gateway EIP Association",
+		},
+		{
 			Factory:  newNetworkInterfacePermissionResource,
 			TypeName: "aws_network_interface_permission",
 			Name:     "Network Interface Permission",
