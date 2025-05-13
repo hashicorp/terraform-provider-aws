@@ -1144,14 +1144,14 @@ func (m toolChoiceModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
 
 	switch {
 	case !m.Any.IsNull():
-		any, d := m.Any.ToPtr(ctx)
+		any_, d := m.Any.ToPtr(ctx)
 		diags.Append(d...)
 		if diags.HasError() {
 			return nil, diags
 		}
 
 		var r awstypes.ToolChoiceMemberAny
-		diags.Append(fwflex.Expand(ctx, any, &r.Value)...)
+		diags.Append(fwflex.Expand(ctx, any_, &r.Value)...)
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -1195,13 +1195,13 @@ func (m *toolChoiceModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
 
 	switch v := v.(type) {
 	case awstypes.ToolChoiceMemberAny:
-		var any anyToolChoiceModel
-		diags.Append(fwflex.Flatten(ctx, v.Value, &any)...)
+		var any_ anyToolChoiceModel
+		diags.Append(fwflex.Flatten(ctx, v.Value, &any_)...)
 		if diags.HasError() {
 			return diags
 		}
 
-		m.Any = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &any)
+		m.Any = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &any_)
 	case awstypes.ToolChoiceMemberAuto:
 		var auto autoToolChoiceModel
 		diags.Append(fwflex.Flatten(ctx, v.Value, &auto)...)
