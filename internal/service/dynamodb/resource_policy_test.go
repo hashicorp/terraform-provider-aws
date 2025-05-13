@@ -71,8 +71,8 @@ func TestAccDynamoDBResourcePolicy_Identity_Basic(t *testing.T) {
 					testAccCheckResourcePolicyExists(ctx, resourceName, &resourcepolicy),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("resource_arn"), tfknownvalue.RegionalARNExact("dynamodb", "table/"+rName)),
-					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New("resource_arn"), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrResourceARN), tfknownvalue.RegionalARNExact("dynamodb", "table/"+rName)),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrResourceARN), compare.ValuesSame()),
 				},
 			},
 			{
@@ -100,8 +100,8 @@ func TestAccDynamoDBResourcePolicy_Identity_OverrideRegion(t *testing.T) {
 			{
 				Config: testAccResourcePolicyConfig_regionOverride(rName),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("resource_arn"), tfknownvalue.RegionalARNAlternateRegionExact("dynamodb", "table/"+rName)),
-					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New("resource_arn"), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrResourceARN), tfknownvalue.RegionalARNAlternateRegionExact("dynamodb", "table/"+rName)),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrResourceARN), compare.ValuesSame()),
 				},
 			},
 			{

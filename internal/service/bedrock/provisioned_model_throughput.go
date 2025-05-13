@@ -282,7 +282,7 @@ func (w *provisionedModelThroughputResource) ImportState(ctx context.Context, re
 	}
 
 	var region types.String
-	response.Diagnostics.Append(response.State.GetAttribute(ctx, path.Root("region"), &region)...)
+	response.Diagnostics.Append(response.State.GetAttribute(ctx, path.Root(names.AttrRegion), &region)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -296,7 +296,7 @@ func (w *provisionedModelThroughputResource) ImportState(ctx context.Context, re
 			return
 		}
 	} else {
-		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("region"), arnARN.Region)...)
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrRegion), arnARN.Region)...)
 		if response.Diagnostics.HasError() {
 			return
 		}

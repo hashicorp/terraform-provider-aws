@@ -67,8 +67,8 @@ func TestAccKinesisResourcePolicy_Identity_Basic(t *testing.T) {
 					testAccCheckResourcePolicyExists(ctx, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("resource_arn"), tfknownvalue.RegionalARNExact("kinesis", ("stream/"+rName))),
-					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New("resource_arn"), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrResourceARN), tfknownvalue.RegionalARNExact("kinesis", ("stream/"+rName))),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrResourceARN), compare.ValuesSame()),
 				},
 			},
 			{
@@ -95,8 +95,8 @@ func TestAccKinesisResourcePolicy_Identity_RegionOverride(t *testing.T) {
 			{
 				Config: testAccResourcePolicyConfig_regionOverride(rName),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("resource_arn"), tfknownvalue.RegionalARNAlternateRegionExact("kinesis", ("stream/"+rName))),
-					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New("resource_arn"), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrResourceARN), tfknownvalue.RegionalARNAlternateRegionExact("kinesis", ("stream/"+rName))),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrResourceARN), compare.ValuesSame()),
 				},
 			},
 			{

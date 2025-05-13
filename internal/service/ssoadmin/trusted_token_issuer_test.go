@@ -79,8 +79,8 @@ func TestAccSSOAdminTrustedTokenIssuer_Identity_Basic(t *testing.T) {
 					testAccCheckTrustedTokenIssuerExists(ctx, resourceName, &application),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("arn"), tfknownvalue.GlobalARNRegexp("sso", regexache.MustCompile(`trustedTokenIssuer/ssoins-[0-9a-z]{16}/tti-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}`))),
-					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New("arn"), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.GlobalARNRegexp("sso", regexache.MustCompile(`trustedTokenIssuer/ssoins-[0-9a-z]{16}/tti-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}`))),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
 				},
 			},
 			{
@@ -110,8 +110,8 @@ func TestAccSSOAdminTrustedTokenIssuer_Identity_RegionOverride(t *testing.T) {
 			{
 				Config: testAccTrustedTokenIssuerConfigBase_regionOverride(rName),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("arn"), tfknownvalue.GlobalARNRegexp("sso", regexache.MustCompile(`trustedTokenIssuer/ssoins-[0-9a-z]{16}/tti-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}`))),
-					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New("arn"), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.GlobalARNRegexp("sso", regexache.MustCompile(`trustedTokenIssuer/ssoins-[0-9a-z]{16}/tti-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}`))),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
 				},
 			},
 			{

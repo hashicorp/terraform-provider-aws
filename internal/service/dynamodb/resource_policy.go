@@ -248,7 +248,7 @@ func (w *resourcePolicyResource) ImportState(ctx context.Context, request resour
 	}
 
 	var region types.String
-	response.Diagnostics.Append(response.State.GetAttribute(ctx, path.Root("region"), &region)...)
+	response.Diagnostics.Append(response.State.GetAttribute(ctx, path.Root(names.AttrRegion), &region)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -262,12 +262,12 @@ func (w *resourcePolicyResource) ImportState(ctx context.Context, request resour
 			return
 		}
 	} else {
-		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("region"), arnARN.Region)...)
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrRegion), arnARN.Region)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
 	}
 
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("resource_arn"), request.ID)...) // nosemgrep:ci.semgrep.framework.import-state-passthrough-id
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), request.ID)...)   // nosemgrep:ci.semgrep.framework.import-state-passthrough-id
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrResourceARN), request.ID)...) // nosemgrep:ci.semgrep.framework.import-state-passthrough-id
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), request.ID)...)          // nosemgrep:ci.semgrep.framework.import-state-passthrough-id
 }
