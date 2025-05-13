@@ -12,7 +12,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfrontkeyvaluestore"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfrontkeyvaluestore/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -25,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	tfcloudfront "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
 	tfcloudfrontkeyvaluestore "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfrontkeyvaluestore"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -40,6 +40,7 @@ func TestAccCloudFrontKeyValueStoreKeysExclusive_basic(t *testing.T) {
 		values = append(values, sdkacctest.RandomWithPrefix(acctest.ResourcePrefix))
 	}
 	resourceName := "aws_cloudfrontkeyvaluestore_keys_exclusive.test"
+	kvsResourceName := "aws_cloudfront_key_value_store.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -54,7 +55,7 @@ func TestAccCloudFrontKeyValueStoreKeysExclusive_basic(t *testing.T) {
 				Config: testAccKeysExclusiveConfig_basic(keys, values, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeysExclusiveExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "key_value_store_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "key_value_store_arn", kvsResourceName, "arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "total_size_in_bytes"),
 					testCheckMultipleKeyValuePairs(keys, values, resourceName),
 				),
@@ -62,7 +63,7 @@ func TestAccCloudFrontKeyValueStoreKeysExclusive_basic(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccKeysExclusiveImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "key_value_store_arn"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "key_value_store_arn",
 			},
@@ -76,6 +77,7 @@ func TestAccCloudFrontKeyValueStoreKeysExclusive_disappears_KeyValueStore(t *tes
 	key := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	value := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudfrontkeyvaluestore_keys_exclusive.test"
+	kvsResourceName := "aws_cloudfront_key_value_store.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -90,15 +92,21 @@ func TestAccCloudFrontKeyValueStoreKeysExclusive_disappears_KeyValueStore(t *tes
 				Config: testAccKeysExclusiveConfig_basic([]string{key}, []string{value}, rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckKeysExclusiveExists(ctx, resourceName),
-					testAccCheckStoreDestroy(ctx, resourceName, rName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfcloudfront.ResourceKeyValueStore, kvsResourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(kvsResourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
 }
 
-// A record key value pair added out of band should be removed
+// A key value pair added out of band should be removed
 func TestAccCloudFrontKeyValueStoreKeysExclusive_outOfBandAddition(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -106,7 +114,7 @@ func TestAccCloudFrontKeyValueStoreKeysExclusive_outOfBandAddition(t *testing.T)
 	value := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudfrontkeyvaluestore_keys_exclusive.test"
 
-	// add an additional random key our of band
+	// add an additional random key out of band
 	putKeys := []types.PutKeyRequestListItem{
 		{
 			Key:   aws.String(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)),
@@ -147,7 +155,7 @@ func TestAccCloudFrontKeyValueStoreKeysExclusive_outOfBandAddition(t *testing.T)
 	})
 }
 
-// A record key value pair removed out of band should be re-created
+// A key value pair removed out of band should be re-created
 func TestAccCloudFrontKeyValueStoreKeysExclusive_outOfBandRemoval(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -155,7 +163,7 @@ func TestAccCloudFrontKeyValueStoreKeysExclusive_outOfBandRemoval(t *testing.T) 
 	value := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudfrontkeyvaluestore_keys_exclusive.test"
 
-	// remove the key created in out test
+	// remove the key created in our test
 	deleteKeys := []types.DeleteKeyRequestListItem{
 		{
 			Key: aws.String(key),
@@ -220,8 +228,6 @@ func TestAccCloudFrontKeyValueStoreKeysExclusive_value(t *testing.T) {
 				Config: testAccKeysExclusiveConfig_basic([]string{keys[0], keys[1]}, []string{values[0], values[0]}, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeysExclusiveExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "key_value_store_arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "total_size_in_bytes"),
 					testCheckMultipleKeyValuePairs([]string{keys[0], keys[1]}, []string{values[0], values[0]}, resourceName),
 				),
 			},
@@ -229,8 +235,6 @@ func TestAccCloudFrontKeyValueStoreKeysExclusive_value(t *testing.T) {
 				Config: testAccKeysExclusiveConfig_basic([]string{keys[0], keys[2]}, []string{values[0], values[2]}, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeysExclusiveExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "key_value_store_arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "total_size_in_bytes"),
 					testCheckMultipleKeyValuePairs([]string{keys[0], keys[2]}, []string{values[0], values[2]}, resourceName),
 				),
 			},
@@ -333,46 +337,6 @@ func testAccCheckKeysExclusiveExists(ctx context.Context, n string) resource.Tes
 	}
 }
 
-func testAccCheckStoreDestroy(ctx context.Context, n, rName string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		// reach out and DELETE the key value store
-		// As resource functions are private and only exported to tests for the same package
-		// we cannot use acctest.CheckResourceDisappears and must write our own function
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontClient(ctx)
-
-		kvsARN := rs.Primary.Attributes["key_value_store_arn"]
-		mutexKey := kvsARN
-		conns.GlobalMutexKV.Lock(mutexKey)
-		defer conns.GlobalMutexKV.Unlock(mutexKey)
-
-		inputDescribe := &cloudfront.DescribeKeyValueStoreInput{Name: aws.String(rName)}
-
-		resp, err := conn.DescribeKeyValueStore(ctx, inputDescribe)
-
-		if err != nil {
-			return fmt.Errorf("error finding Cloudfront KeyValueStore in disappear test")
-		}
-
-		input := &cloudfront.DeleteKeyValueStoreInput{
-			Name:    aws.String(rName),
-			IfMatch: resp.ETag,
-		}
-
-		_, err = conn.DeleteKeyValueStore(ctx, input)
-
-		if err != nil {
-			return fmt.Errorf("error deleting Cloudfront KeyValueStore in disappear test: %s", err)
-		}
-
-		return nil
-	}
-}
-
 func testAccCheckKeyValueStoreKeysExclusiveUpdate(ctx context.Context, n string, deletes []types.DeleteKeyRequestListItem, puts []types.PutKeyRequestListItem) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -405,17 +369,6 @@ func testAccCheckKeyValueStoreKeysExclusiveUpdate(ctx context.Context, n string,
 	}
 }
 
-func testAccKeysExclusiveImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		return rs.Primary.Attributes["key_value_store_arn"], nil
-	}
-}
-
 func testCheckMultipleKeyValuePairs(keys, values []string, resourceName string) resource.TestCheckFunc {
 	for i := range keys {
 		return resource.TestCheckTypeSetElemNestedAttrs(resourceName, "resource_key_value_pair.*", map[string]string{
@@ -423,6 +376,7 @@ func testCheckMultipleKeyValuePairs(keys, values []string, resourceName string) 
 			names.AttrValue: values[i],
 		})
 	}
+
 	return nil
 }
 
