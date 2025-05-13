@@ -387,8 +387,8 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 func testAccPromptConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_bedrockagent_prompt" "test" {
-  name            = %[1]q
-  description     = "basic"
+  name        = %[1]q
+  description = "basic"
 }
 `, rName)
 }
@@ -410,7 +410,7 @@ resource "aws_bedrockagent_prompt" "test" {
 func testAccPromptConfig_tags1(rName, tag1Key, tag1Value string) string {
 	return fmt.Sprintf(`
 resource "aws_bedrockagent_prompt" "test" {
-  name            = %[1]q
+  name = %[1]q
 
   tags = {
     %[2]q = %[3]q
@@ -422,7 +422,7 @@ resource "aws_bedrockagent_prompt" "test" {
 func testAccPromptConfig_tags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
 	return fmt.Sprintf(`
 resource "aws_bedrockagent_prompt" "test" {
-  name            = %[1]q
+  name = %[1]q
 
   tags = {
     %[2]q = %[3]q
@@ -439,67 +439,67 @@ resource "aws_bedrockagent_prompt" "test" {
   default_variant = "text-variant"
 
   variant {
-     name                            = "text-variant"
-     model_id                        = %[2]q
+    name          = "text-variant"
+    model_id      = %[2]q
+    template_type = "TEXT"
 
-     template_type = "TEXT"
-     template_configuration {
-       text {
-         text = "{{prompt}}"
+    template_configuration {
+      text {
+        text = "{{prompt}}"
 
-         input_variable {
-           name = "prompt"
-         }
-       }
-     }
-   }
+        input_variable {
+          name = "prompt"
+        }
+      }
+    }
+  }
 
-   variant {
-     name     = "chat-variant"
-     model_id = %[2]q
+  variant {
+    name          = "chat-variant"
+    model_id      = %[2]q
+    template_type = "CHAT"
 
-     template_type = "CHAT"
-     template_configuration {
-       chat {
-         system {
-           text = "test"
-         }
+    template_configuration {
+      chat {
+        system {
+          text = "test"
+        }
 
-         message {
-           role = "user"
+        message {
+          role = "user"
 
-           content {
-             text = "test"
-           }
-         }
+          content {
+            text = "test"
+          }
+        }
 
-         message {
-           role = "assistant"
+        message {
+          role = "assistant"
 
-           content {
-             text = "test"
-           }
-         }
+          content {
+            text = "test"
+          }
+        }
 
-         tool_configuration {
-           tool_choice {
-             auto {}
-           }
+        tool_configuration {
+          tool_choice {
+            auto {}
+          }
 
-           tool {
-             tool_spec {
-               name        = "test"
-               description = "test"
+          tool {
+            tool_spec {
+              name        = "test"
+              description = "test"
 
-               input_schema {
-                 json = jsonencode({ "Key1" = "Value1" })
-               }
-             }
-           }
-         }
-       }
-     }
-   }
+              input_schema {
+                json = jsonencode({ "Key1" = "Value1" })
+              }
+            }
+          }
+        }
+      }
+    }
+  }
 }
 `, rName, model)
 }
@@ -539,41 +539,41 @@ resource "aws_bedrockagent_prompt" "test" {
   default_variant = "test"
 
   variant {
-     name                            = "test"
-     additional_model_request_fields = jsonencode({ "Key1" = "Value1" })
+    name                            = "test"
+    additional_model_request_fields = jsonencode({ "Key1" = "Value1" })
 
-     inference_configuration {
-       text {
-         max_tokens     = 2048
-         stop_sequences = ["User:"]
-         top_p          = 0.8999999761581421
-         temperature    = 0
-       }
-     }
+    inference_configuration {
+      text {
+        max_tokens     = 2048
+        stop_sequences = ["User:"]
+        top_p          = 0.8999999761581421
+        temperature    = 0
+      }
+    }
 
-     metadata {
-       key   = "Key1"
-       value = "Value1"
-     }
+    metadata {
+      key   = "Key1"
+      value = "Value1"
+    }
 
-     metadata {
-       key   = "Key2"
-       value = "Value2"
-     }
+    metadata {
+      key   = "Key2"
+      value = "Value2"
+    }
 
-     gen_ai_resource {
-       agent {
-         agent_identifier = aws_bedrockagent_agent_alias.test.agent_alias_arn
-       }
-     }
+    gen_ai_resource {
+      agent {
+        agent_identifier = aws_bedrockagent_agent_alias.test.agent_alias_arn
+      }
+    }
 
-     template_type = "TEXT"
-     template_configuration {
-       text {
-         text = "test"
-       }
-     }
-   }
+    template_type = "TEXT"
+    template_configuration {
+      text {
+        text = "test"
+      }
+    }
+  }
 }
 `, rName, model)
 }
