@@ -55,7 +55,7 @@ func (r *resourceNATGatewayEIPAssociation) Schema(ctx context.Context, req resou
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"association_id": schema.StringAttribute{
+			names.AttrAssociationID: schema.StringAttribute{
 				Computed: true,
 			},
 			names.AttrID: framework.IDAttribute(),
