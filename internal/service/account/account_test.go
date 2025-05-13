@@ -19,7 +19,9 @@ func TestAccAccount_serial(t *testing.T) {
 			"AccountID":          testAccAlternateContact_accountID,
 		},
 		"PrimaryContact": {
-			acctest.CtBasic: testAccPrimaryContact_basic,
+			acctest.CtBasic:       testAccPrimaryContact_basic,
+			"dataSourceBasic":     testAccPrimaryContactDataSource_basic,
+			"dataSourceAccountID": testAccPrimaryContactDataSource_accountID,
 		},
 		"Region": {
 			acctest.CtBasic: testAccRegion_basic,
