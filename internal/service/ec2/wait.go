@@ -1255,7 +1255,7 @@ func waitNATGatewayAddressAssociated(ctx context.Context, conn *ec2.Client, natG
 		Target:                    enum.Slice(awstypes.NatGatewayAddressStatusSucceeded),
 		Refresh:                   statusNATGatewayAddressByNATGatewayIDAndAllocationID(ctx, conn, natGatewayID, allocationID),
 		Timeout:                   timeout,
-		ContinuousTargetOccurence: 2,
+		ContinuousTargetOccurence: 5,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -1277,7 +1277,7 @@ func waitNATGatewayAddressDisassociated(ctx context.Context, conn *ec2.Client, n
 		Target:                    []string{},
 		Refresh:                   statusNATGatewayAddressByNATGatewayIDAndAllocationID(ctx, conn, natGatewayID, allocationID),
 		Timeout:                   timeout,
-		ContinuousTargetOccurence: 2,
+		ContinuousTargetOccurence: 5,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
