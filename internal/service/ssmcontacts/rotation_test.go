@@ -14,13 +14,18 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/ssmcontacts"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfssmcontacts "github.com/hashicorp/terraform-provider-aws/internal/service/ssmcontacts"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -71,6 +76,89 @@ func testAccRotation_basic(t *testing.T) {
 				// the replication set will destroy all other resources.
 				Config: testAccRotationConfig_replicationSetBase(),
 				Check:  testAccCheckRotationDestroy(ctx),
+			},
+		},
+	})
+}
+
+func TestAccRotation_Identity_Basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ssmcontacts_rotation.test"
+
+	timeZoneId := "Australia/Sydney"
+	recurrenceMultiplier := 1
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRotationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRotationConfig_basic(rName, recurrenceMultiplier, timeZoneId),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRotationExists(ctx, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("ssm-contacts", regexache.MustCompile("rotation/"+verify.UUIDRegexPattern))),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccRotation_Identity_RegionOverride(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ssmcontacts_rotation.test"
+
+	timeZoneId := "Australia/Sydney"
+	recurrenceMultiplier := 1
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 2),
+		CheckDestroy:             testAccCheckRotationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRotationConfig_regionOverride(rName, recurrenceMultiplier, timeZoneId),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNAlternateRegionRegexp("ssm-contacts", regexache.MustCompile("rotation/"+verify.UUIDRegexPattern))),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -434,6 +522,18 @@ resource "aws_ssmincidents_replication_set" "test" {
 `, acctest.Region())
 }
 
+func testAccRotationConfig_replicationSetBase_regionOverride() string {
+	return fmt.Sprintf(`
+resource "aws_ssmincidents_replication_set" "test" {
+  provider = awsalternate
+
+  region {
+    name = %[1]q
+  }
+}
+`, acctest.AlternateRegion())
+}
+
 func testAccRotationConfig_base(alias string, contactCount int) string {
 	return acctest.ConfigCompose(
 		testAccRotationConfig_replicationSetBase(),
@@ -446,6 +546,22 @@ resource "aws_ssmcontacts_contact" "test" {
   depends_on = [aws_ssmincidents_replication_set.test]
 }
 `, alias, contactCount))
+}
+
+func testAccRotationConfig_base_regionOverride(alias string, contactCount int) string {
+	return acctest.ConfigCompose(
+		testAccRotationConfig_replicationSetBase_regionOverride(),
+		fmt.Sprintf(`
+resource "aws_ssmcontacts_contact" "test" {
+  region = %[3]q
+
+  count = %[2]d
+  alias = "%[1]s-${count.index}"
+  type  = "PERSONAL"
+
+  depends_on = [aws_ssmincidents_replication_set.test]
+}
+`, alias, contactCount, acctest.AlternateRegion()))
 }
 
 func testAccRotationConfig_basic(rName string, recurrenceMultiplier int, timeZoneId string) string {
@@ -470,6 +586,33 @@ resource "aws_ssmcontacts_rotation" "test" {
 
   depends_on = [aws_ssmincidents_replication_set.test]
 }`, rName, recurrenceMultiplier, timeZoneId))
+}
+
+func testAccRotationConfig_regionOverride(rName string, recurrenceMultiplier int, timeZoneId string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(2),
+		testAccRotationConfig_base_regionOverride(rName, 1),
+		fmt.Sprintf(`
+resource "aws_ssmcontacts_rotation" "test" {
+  region = %[4]q
+
+  contact_ids = aws_ssmcontacts_contact.test[*].arn
+
+  name = %[1]q
+
+  recurrence {
+    number_of_on_calls    = 1
+    recurrence_multiplier = %[2]d
+    daily_settings {
+      hour_of_day    = 1
+      minute_of_hour = 00
+    }
+  }
+
+  time_zone_id = %[3]q
+
+  depends_on = [aws_ssmincidents_replication_set.test]
+}`, rName, recurrenceMultiplier, timeZoneId, acctest.AlternateRegion()))
 }
 
 func testAccRotationConfig_startTime(rName, startTime string) string {

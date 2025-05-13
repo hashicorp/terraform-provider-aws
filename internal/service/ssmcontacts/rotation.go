@@ -37,6 +37,7 @@ const (
 
 // @FrameworkResource("aws_ssmcontacts_rotation", name="Rotation")
 // @Tags(identifierAttribute="arn")
+// @ArnIdentity
 // @Testing(skipEmptyTags=true, skipNullTags=true)
 // @Testing(serialize=true)
 func newRotationResource(context.Context) (resource.ResourceWithConfigure, error) {
@@ -47,7 +48,7 @@ func newRotationResource(context.Context) (resource.ResourceWithConfigure, error
 
 type rotationResource struct {
 	framework.ResourceWithModel[rotationResourceModel]
-	framework.WithImportByID
+	framework.WithImportByARN
 }
 
 func (r *rotationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
