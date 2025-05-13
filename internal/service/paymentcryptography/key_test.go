@@ -121,7 +121,6 @@ func TestAccPaymentCryptographyKey_Identity_RegionOverride(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_paymentcryptography_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -134,7 +133,7 @@ func TestAccPaymentCryptographyKey_Identity_RegionOverride(t *testing.T) {
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKeyConfig_regionOverride(rName),
+				Config: testAccKeyConfig_regionOverride(),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNAlternateRegionRegexp("payment-cryptography", regexache.MustCompile(`key/[0-9a-z]{16}`))),
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
@@ -471,7 +470,7 @@ resource "aws_paymentcryptography_key" "test" {
 `, rName)
 }
 
-func testAccKeyConfig_regionOverride(rName string) string {
+func testAccKeyConfig_regionOverride() string {
 	return fmt.Sprintf(`
 resource "aws_paymentcryptography_key" "test" {
   region = %[1]q
