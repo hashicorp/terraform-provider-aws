@@ -102,7 +102,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `cluster_resource_id` - The DocumentDB Cluster Resource ID
 * `endpoint` - The DNS address of the DocumentDB instance
 * `hosted_zone_id` - The Route53 Hosted Zone ID of the endpoint
-* `id` - The DocumentDB Cluster Identifier
+* `id` - (**Deprecated**) Amazon Resource Name (ARN) of cluster
 * `reader_endpoint` - A read-only endpoint for the DocumentDB cluster, automatically load-balanced across replicas
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
