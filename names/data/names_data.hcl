@@ -861,6 +861,8 @@ service "bcmdataexports" {
   provider_package_correct = "bcmdataexports"
   doc_prefix               = ["bcmdataexports_"]
   brand                    = "AWS"
+
+  is_global = true
 }
 
 service "billing" {
@@ -2334,6 +2336,8 @@ service "costoptimizationhub" {
   provider_package_correct = "costoptimizationhub"
   doc_prefix               = ["costoptimizationhub_"]
   brand                    = "AWS"
+
+  is_global = true
 }
 
 service "cur" {
@@ -2366,6 +2370,8 @@ service "cur" {
   provider_package_correct = "cur"
   doc_prefix               = ["cur_"]
   brand                    = "AWS"
+
+  is_global = true
 }
 
 service "dataexchange" {
@@ -6198,6 +6204,8 @@ service "pricing" {
   provider_package_correct = "pricing"
   doc_prefix               = ["pricing_"]
   brand                    = "AWS"
+
+  is_global = true
 }
 
 service "proton" {
@@ -8353,6 +8361,8 @@ service "budgets" {
   provider_package_correct = "budgets"
   doc_prefix               = ["budgets_"]
   brand                    = "AWS"
+
+  is_global = true
 }
 
 service "wellarchitected" {
