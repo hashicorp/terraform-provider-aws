@@ -261,8 +261,6 @@ func (r *resourceRevisionAssets) Schema(ctx context.Context, req resource.Schema
 			},
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
-				Update: true,
-				Delete: true,
 			}),
 		},
 	}
