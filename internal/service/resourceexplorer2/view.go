@@ -169,7 +169,7 @@ func (r *viewResource) Read(ctx context.Context, request resource.ReadRequest, r
 		return
 	}
 
-	if err := data.InitFromID(); err != nil {
+	if err := data.initFromID(); err != nil {
 		response.Diagnostics.AddError("parsing resource ID", err.Error())
 
 		return
@@ -328,7 +328,7 @@ type viewResourceModel struct {
 	ViewName           types.String                                           `tfsdk:"name"`
 }
 
-func (data *viewResourceModel) InitFromID() error {
+func (data *viewResourceModel) initFromID() error {
 	data.ViewARN = data.ID
 	arn, err := arn.Parse(data.ViewARN.ValueString())
 	if err != nil {
