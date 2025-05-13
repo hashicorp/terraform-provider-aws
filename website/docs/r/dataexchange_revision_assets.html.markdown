@@ -42,6 +42,8 @@ The following arguments are required:
 The following arguments are optional:
 
 * `comment` - (Optional) A comment for the revision. Maximum length is 16,348 characters.
+* `finalize` - (Optional) Finalized a revision. Defaults to `false`.
+* `force_destoy` - (Optional) Force destroy the revision. Defaults to `false`.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### asset
