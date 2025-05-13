@@ -15,8 +15,8 @@ import (
 
 // ServicePackageResourceRegion represents resource-level Region information.
 type ServicePackageResourceRegion struct {
-	IsOverrideDisabled         bool // Is per-resource Region override disabled?
-	DoNotValidateOverrideValue bool // Is the per-resource Region override value validated against the configured partition?
+	IsOverrideEnabled             bool // Is per-resource Region override supported?
+	IsValidateOverrideInPartition bool // Is the per-resource Region override value validated againt the configured partition?
 }
 
 // ServicePackageResourceTags represents resource-level tagging information.

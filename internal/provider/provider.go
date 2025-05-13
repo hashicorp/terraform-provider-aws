@@ -341,7 +341,7 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 			}
 
 			var isRegionOverrideEnabled bool
-			if v := v.Region; !tfunique.IsHandleNil(v) && !v.Value().IsOverrideDisabled {
+			if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
 				isRegionOverrideEnabled = true
 			}
 
@@ -371,7 +371,7 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 					}
 				}
 
-				if !v.DoNotValidateOverrideValue {
+				if v.IsValidateOverrideInPartition {
 					interceptors = append(interceptors, interceptorInvocation{
 						when:        Before,
 						why:         Read,
@@ -447,7 +447,7 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 			}
 
 			var isRegionOverrideEnabled bool
-			if v := v.Region; !tfunique.IsHandleNil(v) && !v.Value().IsOverrideDisabled {
+			if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
 				isRegionOverrideEnabled = true
 			}
 
@@ -481,7 +481,7 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 					}
 				}
 
-				if !v.DoNotValidateOverrideValue {
+				if v.IsValidateOverrideInPartition {
 					interceptors = append(interceptors, interceptorInvocation{
 						when:        Before,
 						why:         CustomizeDiff,
@@ -566,7 +566,7 @@ func validateResourceSchemas(ctx context.Context) error {
 			r := v.Factory()
 			s := r.SchemaMap()
 
-			if v := v.Region; !tfunique.IsHandleNil(v) && !v.Value().IsOverrideDisabled {
+			if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
 				if _, ok := s[names.AttrRegion]; ok {
 					errs = append(errs, fmt.Errorf("`%s` attribute is defined: %s data source", names.AttrRegion, typeName))
 					continue
@@ -593,7 +593,7 @@ func validateResourceSchemas(ctx context.Context) error {
 			r := v.Factory()
 			s := r.SchemaMap()
 
-			if v := v.Region; !tfunique.IsHandleNil(v) && !v.Value().IsOverrideDisabled {
+			if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
 				if _, ok := s[names.AttrRegion]; ok {
 					errs = append(errs, fmt.Errorf("`%s` attribute is defined: %s resource", names.AttrRegion, typeName))
 					continue
