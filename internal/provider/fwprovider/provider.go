@@ -404,9 +404,9 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 				continue
 			}
 
-			isRegionOverrideEnabled := true
-			if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideDisabled {
-				isRegionOverrideEnabled = false
+			var isRegionOverrideEnabled bool
+			if v := v.Region; !tfunique.IsHandleNil(v) && !v.Value().IsOverrideDisabled {
+				isRegionOverrideEnabled = true
 			}
 
 			var interceptors interceptorInvocations
@@ -468,9 +468,9 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 					continue
 				}
 
-				isRegionOverrideEnabled := true
-				if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideDisabled {
-					isRegionOverrideEnabled = false
+				var isRegionOverrideEnabled bool
+				if v := v.Region; !tfunique.IsHandleNil(v) && !v.Value().IsOverrideDisabled {
+					isRegionOverrideEnabled = true
 				}
 
 				var interceptors interceptorInvocations
@@ -527,9 +527,9 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 				continue
 			}
 
-			isRegionOverrideEnabled := true
-			if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideDisabled {
-				isRegionOverrideEnabled = false
+			var isRegionOverrideEnabled bool
+			if v := v.Region; !tfunique.IsHandleNil(v) && !v.Value().IsOverrideDisabled {
+				isRegionOverrideEnabled = true
 			}
 
 			var interceptors interceptorInvocations
@@ -605,12 +605,7 @@ func (p *fwprovider) validateResourceSchemas(ctx context.Context) error {
 			schemaResponse := datasource.SchemaResponse{}
 			ds.Schema(ctx, datasource.SchemaRequest{}, &schemaResponse)
 
-			isRegionOverrideEnabled := true
-			if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideDisabled {
-				isRegionOverrideEnabled = false
-			}
-
-			if isRegionOverrideEnabled {
+			if v := v.Region; !tfunique.IsHandleNil(v) && !v.Value().IsOverrideDisabled {
 				if _, ok := schemaResponse.Schema.Attributes[names.AttrRegion]; ok {
 					errs = append(errs, fmt.Errorf("`%s` attribute is defined: %s data source", names.AttrRegion, typeName))
 					continue
@@ -645,12 +640,7 @@ func (p *fwprovider) validateResourceSchemas(ctx context.Context) error {
 				schemaResponse := ephemeral.SchemaResponse{}
 				er.Schema(ctx, ephemeral.SchemaRequest{}, &schemaResponse)
 
-				isRegionOverrideEnabled := true
-				if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideDisabled {
-					isRegionOverrideEnabled = false
-				}
-
-				if isRegionOverrideEnabled {
+				if v := v.Region; !tfunique.IsHandleNil(v) && !v.Value().IsOverrideDisabled {
 					if _, ok := schemaResponse.Schema.Attributes[names.AttrRegion]; ok {
 						errs = append(errs, fmt.Errorf("`%s` attribute is defined: %s ephemeral resource", names.AttrRegion, typeName))
 						continue
@@ -671,12 +661,7 @@ func (p *fwprovider) validateResourceSchemas(ctx context.Context) error {
 			schemaResponse := resource.SchemaResponse{}
 			r.Schema(ctx, resource.SchemaRequest{}, &schemaResponse)
 
-			isRegionOverrideEnabled := true
-			if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideDisabled {
-				isRegionOverrideEnabled = false
-			}
-
-			if isRegionOverrideEnabled {
+			if v := v.Region; !tfunique.IsHandleNil(v) && !v.Value().IsOverrideDisabled {
 				if _, ok := schemaResponse.Schema.Attributes[names.AttrRegion]; ok {
 					errs = append(errs, fmt.Errorf("`%s` attribute is defined: %s resource", names.AttrRegion, typeName))
 					continue
