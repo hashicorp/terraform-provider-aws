@@ -37,14 +37,15 @@ import (
 )
 
 // @FrameworkResource("aws_resourceexplorer2_view", name="View")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn")
+// @ArnIdentity
 func newViewResource(context.Context) (resource.ResourceWithConfigure, error) {
 	return &viewResource{}, nil
 }
 
 type viewResource struct {
 	framework.ResourceWithModel[viewResourceModel]
-	framework.WithImportByID
+	framework.WithImportByARN
 }
 
 func (r *viewResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
