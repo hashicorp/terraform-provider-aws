@@ -317,7 +317,7 @@ func resourceDistributionConfiguration() *schema.Resource {
 									"parameter_name": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validation.StringLenBetween(1, 1024),
+										ValidateFunc: validation.StringLenBetween(1, 1011),
 									},
 									"account_id": {
 										Type:         schema.TypeString,
