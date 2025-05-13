@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -82,9 +81,6 @@ func (r *agentAliasResource) Schema(ctx context.Context, request resource.Schema
 				CustomType: fwtypes.NewListNestedObjectTypeOf[agentAliasRoutingConfigurationListItemModel](ctx),
 				Optional:   true,
 				Computed:   true,
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.UseStateForUnknown(),
-				},
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
@@ -231,9 +227,16 @@ func (r *agentAliasResource) Update(ctx context.Context, request resource.Update
 			return
 		}
 
-		if _, err := waitAgentAliasUpdated(ctx, conn, new.AgentAliasID.ValueString(), new.AgentID.ValueString(), r.CreateTimeout(ctx, new.Timeouts)); err != nil {
+		out, err := waitAgentAliasUpdated(ctx, conn, new.AgentAliasID.ValueString(), new.AgentID.ValueString(), r.CreateTimeout(ctx, new.Timeouts))
+
+		if err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("waiting for Bedrock Agent Alias (%s) update", new.ID.ValueString()), err.Error())
 
+			return
+		}
+
+		response.Diagnostics.Append(fwflex.Flatten(ctx, out, &new)...)
+		if response.Diagnostics.HasError() {
 			return
 		}
 	}
