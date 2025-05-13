@@ -28,6 +28,11 @@ func ResourceRegionDefault() ServicePackageResourceRegion {
 	}
 }
 
+// ResourceRegionDisabled returns the resource region configuration indicating that there is no per-resource Region override.
+func ResourceRegionDisabled() ServicePackageResourceRegion {
+	return ServicePackageResourceRegion{}
+}
+
 // ServicePackageResourceTags represents resource-level tagging information.
 type ServicePackageResourceTags struct {
 	IdentifierAttribute string // The attribute for the identifier for UpdateTags etc.
