@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/shield"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/shield/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -43,6 +44,7 @@ func (applicationLayerAutomaticResponseAction) Values() []applicationLayerAutoma
 }
 
 // @FrameworkResource("aws_shield_application_layer_automatic_response", name="Application Layer Automatic Response")
+// @ArnIdentity
 func newApplicationLayerAutomaticResponseResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &applicationLayerAutomaticResponseResource{}
 
@@ -55,7 +57,6 @@ func newApplicationLayerAutomaticResponseResource(context.Context) (resource.Res
 
 type applicationLayerAutomaticResponseResource struct {
 	framework.ResourceWithModel[applicationLayerAutomaticResponseResourceModel]
-	framework.WithImportByID
 	framework.WithTimeouts
 }
 
@@ -66,7 +67,7 @@ func (r *applicationLayerAutomaticResponseResource) Schema(ctx context.Context, 
 				CustomType: fwtypes.StringEnumType[applicationLayerAutomaticResponseAction](),
 				Required:   true,
 			},
-			names.AttrID: framework.IDAttribute(),
+			names.AttrID: framework.IDAttributeDeprecatedWithAlternate(path.Root(names.AttrResourceARN)),
 			names.AttrResourceARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
@@ -134,13 +135,6 @@ func (r *applicationLayerAutomaticResponseResource) Read(ctx context.Context, re
 	if response.Diagnostics.HasError() {
 		return
 	}
-
-	if err := data.InitFromID(); err != nil {
-		response.Diagnostics.AddError("parsing resource ID", err.Error())
-
-		return
-	}
-
 	conn := r.Meta().ShieldClient(ctx)
 
 	resourceARN := data.ID.ValueString()
@@ -327,17 +321,21 @@ type applicationLayerAutomaticResponseResourceModel struct {
 	Timeouts    timeouts.Value                                              `tfsdk:"timeouts"`
 }
 
-func (data *applicationLayerAutomaticResponseResourceModel) InitFromID() error {
-	_, err := arn.Parse(data.ID.ValueString())
-	if err != nil {
-		return err
-	}
-
-	data.ResourceARN = fwtypes.ARNValue(data.ID.ValueString())
-
-	return nil
-}
-
 func (data *applicationLayerAutomaticResponseResourceModel) setID() {
 	data.ID = data.ResourceARN.StringValue
+}
+
+func (w *applicationLayerAutomaticResponseResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	_, err := arn.Parse(request.ID)
+	if err != nil {
+		response.Diagnostics.AddError(
+			"Invalid Resource Import ID Value",
+			"The import ID could not be parsed as an ARN.\n\n"+
+				fmt.Sprintf("Value: %q\nError: %s", request.ID, err),
+		)
+		return
+	}
+
+	resource.ImportStatePassthroughID(ctx, path.Root("resource_arn"), request, response)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), request.ID)...)
 }
