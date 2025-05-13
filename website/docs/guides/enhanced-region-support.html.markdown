@@ -519,6 +519,7 @@ All resources for the following services are considered _global_:
 * Billing and Cost Management Data Exports (`aws_bcmdataexports_*`)
 * Budgets (`aws_budgets_*`)
 * CloudFront (`aws_cloudfront_*` and `aws_cloudfrontkeyvaluestore_*`)
+* Cost Explorer (`aws_ce_*`)
 * Cost Optimization Hub (`aws_costoptimizationhub_*`)
 * Cost and Usage Report (`aws_cur_*`)
 * Global Accelerator (`aws_globalaccelerator_*`)

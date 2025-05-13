@@ -965,6 +965,8 @@ service "ce" {
   provider_package_correct = "ce"
   doc_prefix               = ["ce_"]
   brand                    = "AWS"
+
+  is_global = true
 }
 
 service "chatbot" {
