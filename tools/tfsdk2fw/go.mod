@@ -200,6 +200,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.47.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/networkmanager v1.34.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/networkmonitor v1.8.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/notifications v1.2.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/notificationscontacts v1.1.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/oam v1.17.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/opensearch v1.46.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.19.2 // indirect
