@@ -810,6 +810,24 @@ func (r *resourceRevisionAssets) Delete(ctx context.Context, req resource.Delete
 }
 
 func (r *resourceRevisionAssets) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	// check if resource is being destroyed
+	if req.Plan.Raw.IsNull() {
+		var forceDestroy, finalized types.Bool
+		resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("force_destroy"), &forceDestroy)...)
+		resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("finalized"), &finalized)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		if !forceDestroy.ValueBool() && finalized.ValueBool() {
+			resp.Diagnostics.AddError(
+				"Unable to destroy a finalized revision",
+				"Cannot destroy a finalized revision without setting `force_destroy` to `true`",
+			)
+			return
+		}
+	}
+
 	if !req.Plan.Raw.IsNull() && !req.State.Raw.IsNull() {
 		var plan, state resourceRevisionAssetsModel
 		resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
