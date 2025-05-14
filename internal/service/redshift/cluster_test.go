@@ -928,7 +928,7 @@ func TestAccRedshiftCluster_availabilityZoneRelocation_publiclyAccessible(t *tes
 func TestAccRedshiftCluster_restoreFromSnapshot_Identifier(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Cluster
-	resourceName := "aws_redshift_cluster.test2"
+	resourceName := "aws_redshift_cluster.restored"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -963,7 +963,7 @@ func TestAccRedshiftCluster_restoreFromSnapshot_Identifier(t *testing.T) {
 func TestAccRedshiftCluster_restoreFromSnapshot_ARN(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Cluster
-	resourceName := "aws_redshift_cluster.test2"
+	resourceName := "aws_redshift_cluster.restored"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1724,8 +1724,8 @@ resource "aws_redshift_cluster_snapshot" "test" {
   snapshot_identifier = %[1]q
 }
 
-resource "aws_redshift_cluster" "test2" {
-  cluster_identifier  = "%[1]s-2"
+resource "aws_redshift_cluster" "restored" {
+  cluster_identifier  = "%[1]s-restored"
   snapshot_identifier = aws_redshift_cluster_snapshot.test.id
   availability_zone   = data.aws_availability_zones.available.names[0]
   database_name       = "mydb"
@@ -1745,8 +1745,8 @@ resource "aws_redshift_cluster_snapshot" "test" {
   snapshot_identifier = %[1]q
 }
 
-resource "aws_redshift_cluster" "test2" {
-  cluster_identifier  = "%[1]s-2"
+resource "aws_redshift_cluster" "restored" {
+  cluster_identifier  = "%[1]s-restored"
   snapshot_arn        = aws_redshift_cluster_snapshot.test.arn
   availability_zone   = data.aws_availability_zones.available.names[0]
   database_name       = "mydb"
