@@ -15,8 +15,10 @@ import (
 	"github.com/hashicorp/go-version"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -45,6 +47,7 @@ func TestAccRedshiftCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cluster_nodes.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "cluster_nodes.0.public_ip_address"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_type", "single-node"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPubliclyAccessible, acctest.CtFalse),
 					resource.TestMatchResourceAttr(resourceName, names.AttrDNSName, regexache.MustCompile(fmt.Sprintf("^%s.*\\.redshift\\..*", rName))),
 					resource.TestCheckResourceAttr(resourceName, "availability_zone_relocation_enabled", acctest.CtFalse),
@@ -53,6 +56,7 @@ func TestAccRedshiftCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "manual_snapshot_retention_period", "-1"),
 					resource.TestCheckResourceAttr(resourceName, "multi_az", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "iam_roles.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, "AWS_OWNED_KMS_KEY"),
 					resource.TestCheckResourceAttr(resourceName, "tags.#", "0"),
 				),
 			},
@@ -642,7 +646,7 @@ func TestAccRedshiftCluster_changeAvailabilityZone_availabilityZoneRelocationNot
 	})
 }
 
-func TestAccRedshiftCluster_changeEncryption1(t *testing.T) {
+func TestAccRedshiftCluster_changeEncryption_unsetToFalse(t *testing.T) {
 	ctx := acctest.Context(t)
 	var cluster1, cluster2 awstypes.Cluster
 	resourceName := "aws_redshift_cluster.test"
@@ -670,6 +674,7 @@ func TestAccRedshiftCluster_changeEncryption1(t *testing.T) {
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEncrypted), knownvalue.StringExact("false")),
 					},
 				},
 			},
@@ -677,7 +682,42 @@ func TestAccRedshiftCluster_changeEncryption1(t *testing.T) {
 	})
 }
 
-func TestAccRedshiftCluster_changeEncryption2(t *testing.T) {
+func TestAccRedshiftCluster_changeEncryption_unsetToTrue(t *testing.T) {
+	ctx := acctest.Context(t)
+	var cluster1, cluster2 awstypes.Cluster
+	resourceName := "aws_redshift_cluster.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtTrue),
+				),
+			},
+			{
+				Config: testAccClusterConfig_encrypted(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtTrue),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccRedshiftCluster_changeEncryption_trueToFalse(t *testing.T) {
 	ctx := acctest.Context(t)
 	var cluster1, cluster2 awstypes.Cluster
 	resourceName := "aws_redshift_cluster.test"
@@ -705,6 +745,42 @@ func TestAccRedshiftCluster_changeEncryption2(t *testing.T) {
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEncrypted), knownvalue.StringExact("false")),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccRedshiftCluster_changeEncryption_trueToUnset(t *testing.T) {
+	ctx := acctest.Context(t)
+	var cluster1, cluster2 awstypes.Cluster
+	resourceName := "aws_redshift_cluster.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_encrypted(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtTrue),
+				),
+			},
+			{
+				Config: testAccClusterConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtTrue),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 				},
 			},
@@ -1093,10 +1169,8 @@ resource "aws_redshift_cluster" "test" {
   cluster_identifier                  = %[1]q
   availability_zone                   = data.aws_availability_zones.available.names[0]
   database_name                       = "mydb"
-  encrypted                           = true
   master_username                     = "foo_test"
   master_password                     = "Mustbe8characters"
-  multi_az                            = false
   node_type                           = "dc2.large"
   automated_snapshot_retention_period = 0
   allow_version_upgrade               = false
@@ -1126,31 +1200,6 @@ resource "aws_redshift_cluster" "test" {
 
 func testAccClusterConfig_encrypted(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
-resource "aws_kms_key" "test" {
-  description             = %[1]q
-  deletion_window_in_days = 7
-  enable_key_rotation     = true
-
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Id": "kms-tf-1",
-  "Statement": [
-    {
-      "Sid": "Enable IAM User Permissions",
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "*"
-      },
-      "Action": "kms:*",
-      "Resource": "*"
-    }
-  ]
-}
-	POLICY
-
-}
-
 resource "aws_redshift_cluster" "test" {
   cluster_identifier                  = %[1]q
   availability_zone                   = data.aws_availability_zones.available.names[0]
@@ -1161,52 +1210,26 @@ resource "aws_redshift_cluster" "test" {
   automated_snapshot_retention_period = 0
   allow_version_upgrade               = false
   skip_final_snapshot                 = true
-  encrypted                           = true
-  kms_key_id                          = aws_kms_key.test.arn
+
+  encrypted = true
 }
 `, rName))
 }
 
 func testAccClusterConfig_unencrypted(rName string) string {
-	// This is used along with the terraform config created testAccClusterConfig_encrypted, to test removal of encryption.
-	//Removing the kms key here causes the key to be deleted before the redshift cluster is unencrypted, resulting in an unstable cluster. This is to be kept for the time-being unti we find a better way to handle this.
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
-resource "aws_kms_key" "test" {
-  description             = %[1]q
-  deletion_window_in_days = 7
-  enable_key_rotation     = true
-
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Id": "kms-tf-1",
-  "Statement": [
-    {
-      "Sid": "Enable IAM User Permissions",
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "*"
-      },
-      "Action": "kms:*",
-      "Resource": "*"
-    }
-  ]
-}
-	POLICY
-
-}
-
 resource "aws_redshift_cluster" "test" {
   cluster_identifier                  = %[1]q
   availability_zone                   = data.aws_availability_zones.available.names[0]
   database_name                       = "mydb"
-  encrypted                           = false
   master_username                     = "foo_test"
   master_password                     = "Mustbe8characters"
   node_type                           = "dc2.large"
   automated_snapshot_retention_period = 0
   allow_version_upgrade               = false
   skip_final_snapshot                 = true
+
+  encrypted = false
 }
 `, rName))
 }

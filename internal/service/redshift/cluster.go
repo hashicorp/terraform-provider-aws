@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 	"time"
 
@@ -26,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -182,9 +184,10 @@ func resourceCluster() *schema.Resource {
 				Optional: true,
 			},
 			names.AttrEncrypted: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
+				Type:         nullable.TypeNullableBool,
+				Optional:     true,
+				Default:      "true",
+				ValidateFunc: nullable.ValidateTypeStringNullableBool,
 			},
 			names.AttrEndpoint: {
 				Type:     schema.TypeString,
@@ -452,8 +455,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 	}
 
 	if v, ok := d.GetOk(names.AttrEncrypted); ok {
-		inputC.Encrypted = aws.Bool(v.(bool)) // encryption is true by default
-		inputR.Encrypted = aws.Bool(v.(bool))
+		if v, null, _ := nullable.Bool(v.(string)).ValueBool(); !null {
+			inputC.Encrypted = aws.Bool(v)
+			inputR.Encrypted = aws.Bool(v)
+		}
 	}
 
 	if v, ok := d.GetOk("enhanced_vpc_routing"); ok {
@@ -633,7 +638,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	d.Set("cluster_version", rsc.ClusterVersion)
 	d.Set(names.AttrDatabaseName, rsc.DBName)
 	d.Set("default_iam_role_arn", rsc.DefaultIamRoleArn)
-	d.Set(names.AttrEncrypted, rsc.Encrypted)
+	d.Set(names.AttrEncrypted, strconv.FormatBool(aws.ToBool(rsc.Encrypted)))
 	d.Set("enhanced_vpc_routing", rsc.EnhancedVpcRouting)
 	d.Set("iam_roles", tfslices.ApplyToAll(rsc.IamRoles, func(v awstypes.ClusterIamRole) string {
 		return aws.ToString(v.IamRoleArn)
@@ -727,15 +732,21 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			input.ClusterVersion = aws.String(d.Get("cluster_version").(string))
 		}
 
+		var isEncrypted bool
+		v := d.Get(names.AttrEncrypted)
+		if v, null, _ := nullable.Bool(v.(string)).ValueBool(); !null {
+			isEncrypted = v
+		}
+
 		if d.HasChange(names.AttrEncrypted) {
-			input.Encrypted = aws.Bool(d.Get(names.AttrEncrypted).(bool))
+			input.Encrypted = aws.Bool(isEncrypted)
 		}
 
 		if d.HasChange("enhanced_vpc_routing") {
 			input.EnhancedVpcRouting = aws.Bool(d.Get("enhanced_vpc_routing").(bool))
 		}
 
-		if d.Get(names.AttrEncrypted).(bool) && d.HasChange(names.AttrKMSKeyID) {
+		if isEncrypted && d.HasChange(names.AttrKMSKeyID) {
 			input.KmsKeyId = aws.String(d.Get(names.AttrKMSKeyID).(string))
 		}
 
