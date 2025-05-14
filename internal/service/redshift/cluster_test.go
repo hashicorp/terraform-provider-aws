@@ -674,7 +674,7 @@ func TestAccRedshiftCluster_changeEncryption_unsetToFalse(t *testing.T) {
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEncrypted), knownvalue.StringExact("false")),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEncrypted), knownvalue.StringExact(acctest.CtFalse)),
 					},
 				},
 			},
@@ -745,7 +745,7 @@ func TestAccRedshiftCluster_changeEncryption_trueToFalse(t *testing.T) {
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEncrypted), knownvalue.StringExact("false")),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEncrypted), knownvalue.StringExact(acctest.CtFalse)),
 					},
 				},
 			},
@@ -781,7 +781,7 @@ func TestAccRedshiftCluster_changeEncryption_falseToTrue(t *testing.T) {
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEncrypted), knownvalue.StringExact("true")),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEncrypted), knownvalue.StringExact(acctest.CtTrue)),
 					},
 				},
 			},
@@ -817,7 +817,7 @@ func TestAccRedshiftCluster_changeEncryption_falseToUnset(t *testing.T) {
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEncrypted), knownvalue.StringExact("true")),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEncrypted), knownvalue.StringExact(acctest.CtTrue)),
 					},
 				},
 			},
