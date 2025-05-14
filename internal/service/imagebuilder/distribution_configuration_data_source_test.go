@@ -129,8 +129,8 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
       s3_prefix         = "prefix/"
     }
 
-	ssm_parameter_configuration {
-	  parameter_name = "/test/ami-id"
+    ssm_parameter_configuration {
+      parameter_name = "/test/ami-id"
       account_id     = data.aws_caller_identity.current.account_id
       data_type      = "aws:ec2:image"
     }	
