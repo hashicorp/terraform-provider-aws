@@ -1191,7 +1191,6 @@ func TestAccImageBuilderDistributionConfiguration_ssmParameterConfiguration(t *t
 			},
 		},
 	})
-
 }
 
 func TestAccImageBuilderDistributionConfiguration_tags(t *testing.T) {
