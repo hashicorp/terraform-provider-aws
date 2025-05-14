@@ -1061,21 +1061,34 @@ func md5Reader(src io.Reader) (string, error) {
 }
 
 func sweepRevisions(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	input := dataexchange.ListDataSetRevisionsInput{}
 	conn := client.DataExchangeClient(ctx)
 	var sweepResources []sweep.Sweepable
 
-	pages := dataexchange.NewListDataSetRevisionsPaginator(conn, &input)
+	input := dataexchange.ListDataSetsInput{}
+	pages := dataexchange.NewListDataSetsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 		if err != nil {
 			return nil, err
 		}
 
-		for _, v := range page.Revisions {
-			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newResourceRevisionAssets, client,
-				sweepfw.NewAttribute(names.AttrID, aws.ToString(v.Id))),
-			)
+		for _, v := range page.DataSets {
+			input := dataexchange.ListDataSetRevisionsInput{
+				DataSetId: v.Id,
+			}
+			pages := dataexchange.NewListDataSetRevisionsPaginator(conn, &input)
+			for pages.HasMorePages() {
+				page, err := pages.NextPage(ctx)
+				if err != nil {
+					return nil, err
+				}
+
+				for _, v := range page.Revisions {
+					sweepResources = append(sweepResources, sweepfw.NewSweepResource(newResourceRevisionAssets, client,
+						sweepfw.NewAttribute(names.AttrID, aws.ToString(v.Id))),
+					)
+				}
+			}
 		}
 	}
 
