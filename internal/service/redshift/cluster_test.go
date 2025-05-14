@@ -1775,6 +1775,7 @@ resource "aws_redshift_cluster" "test" {
 
 func testAccClusterConfig_availabilityZoneRelocationPubliclyAccessible(rName string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
 		fmt.Sprintf(`
 resource "aws_redshift_cluster" "test" {
   cluster_identifier                  = %[1]q
@@ -1789,6 +1790,40 @@ resource "aws_redshift_cluster" "test" {
 
   publicly_accessible                  = true
   availability_zone_relocation_enabled = true
+  cluster_subnet_group_name            = aws_redshift_subnet_group.test.name
+
+  depends_on = [aws_internet_gateway.test]
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+}
+
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+}
+
+resource "aws_subnet" "test1" {
+  cidr_block        = "10.1.1.0/24"
+  availability_zone = data.aws_availability_zones.available.names[0]
+  vpc_id            = aws_vpc.test.id
+}
+
+resource "aws_subnet" "test2" {
+  cidr_block        = "10.1.2.0/24"
+  availability_zone = data.aws_availability_zones.available.names[1]
+  vpc_id            = aws_vpc.test.id
+}
+
+resource "aws_subnet" "test3" {
+  cidr_block        = "10.1.3.0/24"
+  availability_zone = data.aws_availability_zones.available.names[2]
+  vpc_id            = aws_vpc.test.id
+}
+
+resource "aws_redshift_subnet_group" "test" {
+  name       = %[1]q
+  subnet_ids = [aws_subnet.test1.id, aws_subnet.test2.id, aws_subnet.test3.id]
 }
 `, rName))
 }
