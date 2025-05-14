@@ -925,7 +925,7 @@ func TestAccRedshiftCluster_availabilityZoneRelocation_publiclyAccessible(t *tes
 	})
 }
 
-func TestAccRedshiftCluster_restoreFromSnapshot(t *testing.T) {
+func TestAccRedshiftCluster_restoreFromSnapshot_Identifier(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Cluster
 	resourceName := "aws_redshift_cluster.test2"
@@ -938,7 +938,7 @@ func TestAccRedshiftCluster_restoreFromSnapshot(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterSnapshotDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_restoreFromSnapshot(rName),
+				Config: testAccClusterConfig_restoreFromSnapshot_Identifier(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "snapshot_identifier", "aws_redshift_cluster_snapshot.test", names.AttrID),
@@ -960,7 +960,7 @@ func TestAccRedshiftCluster_restoreFromSnapshot(t *testing.T) {
 	})
 }
 
-func TestAccRedshiftCluster_restoreFromSnapshotARN(t *testing.T) {
+func TestAccRedshiftCluster_restoreFromSnapshot_ARN(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Cluster
 	resourceName := "aws_redshift_cluster.test2"
@@ -973,7 +973,7 @@ func TestAccRedshiftCluster_restoreFromSnapshotARN(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterSnapshotDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_restoreFromSnapshotARN(rName),
+				Config: testAccClusterConfig_restoreFromSnapshot_ARN(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "snapshot_arn", "aws_redshift_cluster_snapshot.test", names.AttrARN),
@@ -1717,7 +1717,7 @@ resource "aws_redshift_cluster" "test" {
 `, rName))
 }
 
-func testAccClusterConfig_restoreFromSnapshot(rName string) string {
+func testAccClusterConfig_restoreFromSnapshot_Identifier(rName string) string {
 	return acctest.ConfigCompose(testAccClusterConfig_basic(rName), fmt.Sprintf(`
 resource "aws_redshift_cluster_snapshot" "test" {
   cluster_identifier  = aws_redshift_cluster.test.cluster_identifier
@@ -1738,7 +1738,7 @@ resource "aws_redshift_cluster" "test2" {
 `, rName))
 }
 
-func testAccClusterConfig_restoreFromSnapshotARN(rName string) string {
+func testAccClusterConfig_restoreFromSnapshot_ARN(rName string) string {
 	return acctest.ConfigCompose(testAccClusterConfig_basic(rName), fmt.Sprintf(`
 resource "aws_redshift_cluster_snapshot" "test" {
   cluster_identifier  = aws_redshift_cluster.test.cluster_identifier
