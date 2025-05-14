@@ -259,7 +259,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.31.0
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.45.0
 	github.com/aws/aws-sdk-go-v2/service/transfer v1.60.1
-	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.23.0
+	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.24.0
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.14.2
 	github.com/aws/aws-sdk-go-v2/service/waf v1.26.2
 	github.com/aws/aws-sdk-go-v2/service/wafregional v1.26.2
