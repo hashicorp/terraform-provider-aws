@@ -32,6 +32,13 @@ const (
 )
 
 const (
+	clusterRestoreStatusStarting  = "starting"
+	clusterRestoreStatusRestoring = "restoring"
+	clusterRestoreStatusCompleted = "completed"
+	clusterRestoreStatusFailed    = "failed"
+)
+
+const (
 	clusterTypeMultiNode  = "multi-node"
 	clusterTypeSingleNode = "single-node"
 )

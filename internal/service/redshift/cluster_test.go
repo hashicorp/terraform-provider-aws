@@ -995,6 +995,82 @@ func TestAccRedshiftCluster_restoreFromSnapshot_ARN(t *testing.T) {
 	})
 }
 
+func TestAccRedshiftCluster_restoreFromSnapshot_ChangeEncryption_trueToFalse(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.Cluster
+	resourceName := "aws_redshift_cluster.restored"
+	sourceResourceName := "aws_redshift_cluster.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterSnapshotDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_restoreFromSnapshot_ChangeEncryption(rName, true, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(sourceResourceName, names.AttrEncrypted, acctest.CtTrue),
+
+					testAccCheckClusterExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtFalse),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrFinalSnapshotIdentifier,
+					"master_password",
+					"skip_final_snapshot",
+					"snapshot_identifier",
+					names.AttrApplyImmediately,
+				},
+			},
+		},
+	})
+}
+
+func TestAccRedshiftCluster_restoreFromSnapshot_ChangeEncryption_falseToTrue(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.Cluster
+	resourceName := "aws_redshift_cluster.restored"
+	sourceResourceName := "aws_redshift_cluster.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterSnapshotDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_restoreFromSnapshot_ChangeEncryption(rName, false, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(sourceResourceName, names.AttrEncrypted, acctest.CtFalse),
+
+					testAccCheckClusterExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrFinalSnapshotIdentifier,
+					"master_password",
+					"skip_final_snapshot",
+					"snapshot_identifier",
+					names.AttrApplyImmediately,
+				},
+			},
+		},
+	})
+}
+
 func TestAccRedshiftCluster_manageMasterPassword(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Cluster
@@ -1718,7 +1794,9 @@ resource "aws_redshift_cluster" "test" {
 }
 
 func testAccClusterConfig_restoreFromSnapshot_Identifier(rName string) string {
-	return acctest.ConfigCompose(testAccClusterConfig_basic(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccClusterConfig_basic(rName),
+		fmt.Sprintf(`
 resource "aws_redshift_cluster_snapshot" "test" {
   cluster_identifier  = aws_redshift_cluster.test.cluster_identifier
   snapshot_identifier = %[1]q
@@ -1739,7 +1817,9 @@ resource "aws_redshift_cluster" "restored" {
 }
 
 func testAccClusterConfig_restoreFromSnapshot_ARN(rName string) string {
-	return acctest.ConfigCompose(testAccClusterConfig_basic(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccClusterConfig_basic(rName),
+		fmt.Sprintf(`
 resource "aws_redshift_cluster_snapshot" "test" {
   cluster_identifier  = aws_redshift_cluster.test.cluster_identifier
   snapshot_identifier = %[1]q
@@ -1757,6 +1837,30 @@ resource "aws_redshift_cluster" "restored" {
   skip_final_snapshot = true
 }
 `, rName))
+}
+
+func testAccClusterConfig_restoreFromSnapshot_ChangeEncryption(rName string, sourceEncrypted, restoreEncrypted bool) string {
+	return acctest.ConfigCompose(
+		testAccClusterConfig_encrypted(rName, sourceEncrypted),
+		fmt.Sprintf(`
+resource "aws_redshift_cluster_snapshot" "test" {
+  cluster_identifier  = aws_redshift_cluster.test.cluster_identifier
+  snapshot_identifier = %[1]q
+}
+
+resource "aws_redshift_cluster" "restored" {
+  cluster_identifier  = "%[1]s-restored"
+  snapshot_identifier = aws_redshift_cluster_snapshot.test.id
+  availability_zone   = data.aws_availability_zones.available.names[0]
+  database_name       = "mydb"
+  master_username     = "foo_test"
+  master_password     = "Mustbe8characters"
+  node_type           = "dc2.large"
+  skip_final_snapshot = true
+
+  encrypted = %[2]t
+}
+`, rName, restoreEncrypted))
 }
 
 func testAccClusterConfig_manageMasterPassword(rName string) string {
