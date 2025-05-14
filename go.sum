@@ -281,8 +281,8 @@ github.com/aws/aws-sdk-go-v2/service/iam v1.42.0 h1:G6+UzGvubaet9QOh0664E9JeT+b6
 github.com/aws/aws-sdk-go-v2/service/iam v1.42.0/go.mod h1:mPJkGQzeCoPs82ElNILor2JzZgYENr4UaSKUT8K27+c=
 github.com/aws/aws-sdk-go-v2/service/identitystore v1.28.3 h1:zQMIlYXYHFzrurTKozpXFTGs0M5kwWgG8jL8EKGp8xg=
 github.com/aws/aws-sdk-go-v2/service/identitystore v1.28.3/go.mod h1:7nGvrQXBNp7k5yYpwpmxGucYTPY39d0cxjmANAeWwYE=
-github.com/aws/aws-sdk-go-v2/service/imagebuilder v1.42.0 h1:nDfEmJSJmHPLoQxdd9psJKCXQKZ2Tj0u89uZSkuezNU=
-github.com/aws/aws-sdk-go-v2/service/imagebuilder v1.42.0/go.mod h1:YUAfy2RTn0rtvZT7oSDXE5yamhX9zCCcBqqfz8d7Wbc=
+github.com/aws/aws-sdk-go-v2/service/imagebuilder v1.42.1 h1:Equ6xACJUYXgLBQc7uCuQpZ4W3hgG6fEGKpLkwjs7Uc=
+github.com/aws/aws-sdk-go-v2/service/imagebuilder v1.42.1/go.mod h1:YUAfy2RTn0rtvZT7oSDXE5yamhX9zCCcBqqfz8d7Wbc=
 github.com/aws/aws-sdk-go-v2/service/inspector v1.26.2 h1:ok1ktm0OpWm1TsXTW3tDqgnf4oZLCXkMS5ZjBLd7PW4=
 github.com/aws/aws-sdk-go-v2/service/inspector v1.26.2/go.mod h1:J8ZDkDoEAR+mLFmI2gXOZ+kUdry4Mkx3FKbNSCV6M/U=
 github.com/aws/aws-sdk-go-v2/service/inspector2 v1.36.1 h1:aAR6SFuJMfJvX05Vm4SEelFsVxjSpFg37THFLF8jCCI=
