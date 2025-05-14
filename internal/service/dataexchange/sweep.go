@@ -32,7 +32,7 @@ func sweepDataSets(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepa
 	conn := client.DataExchangeClient(ctx)
 
 	var sweepResources []sweep.Sweepable
-	r := ResourceDataSet()
+	r := resourceDataSet()
 
 	input := dataexchange.ListDataSetsInput{}
 

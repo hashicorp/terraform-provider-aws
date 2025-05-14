@@ -43,7 +43,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceDataSet,
+			Factory:  resourceDataSet,
 			TypeName: "aws_dataexchange_data_set",
 			Name:     "Data Set",
 			Tags: &types.ServicePackageResourceTags{
