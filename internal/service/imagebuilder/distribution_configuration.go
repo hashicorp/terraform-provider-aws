@@ -319,7 +319,7 @@ func resourceDistributionConfiguration() *schema.Resource {
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(1, 1011),
 									},
-									"account_id": {
+									names.AttrAccountID: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: verify.ValidAccountID,
@@ -600,7 +600,7 @@ func expandssmParameterConfiguration(tfMap map[string]any) *awstypes.SsmParamete
 		apiObject.ParameterName = aws.String(v)
 	}
 
-	if v, ok := tfMap["account_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrAccountID].(string); ok && v != "" {
 		apiObject.AmiAccountId = aws.String(v)
 	}
 
@@ -1168,7 +1168,7 @@ func flattenSSMParameterConfiguration(apiObject awstypes.SsmParameterConfigurati
 	}
 
 	if v := apiObject.AmiAccountId; v != nil {
-		tfMap["account_id"] = aws.ToString(v)
+		tfMap[names.AttrAccountID] = aws.ToString(v)
 	}
 
 	if v := apiObject.DataType; string(v) != "" {

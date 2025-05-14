@@ -260,7 +260,7 @@ func dataSourceDistributionConfiguration() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"account_id": {
+									names.AttrAccountID: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
