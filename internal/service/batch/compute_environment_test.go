@@ -1806,6 +1806,25 @@ func TestAccBatchComputeEnvironment_updateEC2(t *testing.T) {
 }
 
 // Test plan time errors...
+
+func TestAccBatchComputeEnvironment_createEC2WithoutComputeResources(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckComputeEnvironmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccComputeEnvironmentConfig_ec2NoResources(rName),
+				ExpectError: regexache.MustCompile(`computeResources must be provided for a MANAGED compute environment`),
+			},
+		},
+	})
+}
+
 // TestAccBatchComputeEnvironment_unmanagedVCPUs tests the unmanaged_v_cpus parameter
 func TestAccBatchComputeEnvironment_unmanagedVCPUs(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -1849,24 +1868,6 @@ func TestAccBatchComputeEnvironment_unmanagedVCPUs(t *testing.T) {
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &ce),
 					resource.TestCheckResourceAttr(resourceName, "unmanaged_v_cpus", "8"),
 				),
-			},
-		},
-	})
-}
-
-func TestAccBatchComputeEnvironment_createEC2WithoutComputeResources(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckComputeEnvironmentDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccComputeEnvironmentConfig_ec2NoResources(rName),
-				ExpectError: regexache.MustCompile(`computeResources must be provided for a MANAGED compute environment`),
 			},
 		},
 	})
