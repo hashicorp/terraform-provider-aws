@@ -132,7 +132,7 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
 	ssm_parameter_configuration {
 	  parameter_name = "/test/ami-id"
       account_id     = data.aws_caller_identity.current.account_id
-      data_type = "aws:ec2:image"
+      data_type      = "aws:ec2:image"
     }	
 
 

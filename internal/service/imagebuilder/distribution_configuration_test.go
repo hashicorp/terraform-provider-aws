@@ -1963,8 +1963,8 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
   name = %[1]q
   distribution {
     ssm_parameter_configuration {
-      parameter_name    = %[2]q
-      data_type         = %[3]q
+      parameter_name = %[2]q
+      data_type      = %[3]q
     }
     region = data.aws_region.current.name
   }
