@@ -37,17 +37,21 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `filter` - (Optional) Custom filter block as described below.
 * `tags` - (Optional) Map of tags, each pair of which must exactly match
   a pair on the desired security group rule.
 
-More complex filters can be expressed using one or more `filter` sub-blocks,
-which take the following arguments:
+### `filter`
+
+More complex filters can be expressed using one or more `filter` sub-blocks, which take the following arguments:
 
 * `name` - (Required) Name of the field to filter by, as defined by
   [the underlying AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeSecurityGroupRules.html).
 * `values` - (Required) Set of values that are accepted for the given field.
-  Security group rule IDs will be selected if any one of the given values match.
+
+Security group rule IDs will be selected if any one of the given values match.
 
 ## Attribute Reference
 
@@ -55,4 +59,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `ids` - List of all the security group rule IDs found.
 
-<!-- cache-key: cdktf-0.20.8 input-87719c79ae2f1f4c5613b3ccab85a172f42cc7b1318d60caecef6a1733d22344 -->
+<!-- cache-key: cdktf-0.20.8 input-dd5ebbdf59ac8828eecfae871dc446b416b34f7711dab733d57136b5eb75f20e -->

@@ -41,6 +41,8 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `deviceId` - (Required) ID of the device.
 * `globalNetworkId` - (Required) ID of the global network.
 
@@ -70,4 +72,4 @@ The `location` object supports the following:
 * `latitude` - Latitude.
 * `longitude` - Longitude.
 
-<!-- cache-key: cdktf-0.20.8 input-76a048bd410df03a668e6600981e43b447b543ed4c21486482b217e2964dea85 -->
+<!-- cache-key: cdktf-0.20.8 input-d1cb80c13f9bd69a8b74ead25e6e43707e55356a4464eb814c3140258de20cf2 -->

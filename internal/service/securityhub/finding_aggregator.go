@@ -24,6 +24,7 @@ const (
 	linkingModeAllRegions                = "ALL_REGIONS"
 	linkingModeAllRegionsExceptSpecified = "ALL_REGIONS_EXCEPT_SPECIFIED"
 	linkingModeSpecifiedRegions          = "SPECIFIED_REGIONS"
+	linkingModeNoRegions                 = "NO_REGIONS"
 )
 
 func linkingMode_Values() []string {
@@ -31,6 +32,7 @@ func linkingMode_Values() []string {
 		linkingModeAllRegions,
 		linkingModeAllRegionsExceptSpecified,
 		linkingModeSpecifiedRegions,
+		linkingModeNoRegions,
 	}
 }
 

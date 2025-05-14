@@ -24,13 +24,12 @@ from cdktf import TerraformStack
 #
 from imports.aws.glue_partition import GluePartition
 class MyConvertedCode(TerraformStack):
-    def __init__(self, scope, name, *, partitionValues):
+    def __init__(self, scope, name):
         super().__init__(scope, name)
         GluePartition(self, "example",
             database_name="some-database",
-            table_name="some-table",
-            values=["some-value"],
-            partition_values=partition_values
+            partition_values=["some-value"],
+            table_name="some-table"
         )
 ```
 
@@ -117,4 +116,4 @@ Using `terraform import`, import Glue Partitions using the catalog ID (usually A
 % terraform import aws_glue_partition.part 123456789012:MyDatabase:MyTable:val1#val2
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-462112b62aec7925ebd6737afdabe9d69a387daa4715f683073541c4130b403b -->
+<!-- cache-key: cdktf-0.20.8 input-4f1cd549f374095304ccdeaac691997cd6969f91350fa6eb91221e08599f5fb9 -->

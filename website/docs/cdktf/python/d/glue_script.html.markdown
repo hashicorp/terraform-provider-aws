@@ -220,6 +220,8 @@ output "scala_code" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `dag_edge` - (Required) List of the edges in the DAG. Defined below.
 * `dag_node` - (Required) List of the nodes in the DAG. Defined below.
 * `language` - (Optional) Programming language of the resulting code from the DAG. Defaults to `PYTHON`. Valid values are `PYTHON` and `SCALA`.
@@ -251,4 +253,4 @@ This data source exports the following attributes in addition to the arguments a
 * `python_script` - Python script generated from the DAG when the `language` argument is set to `PYTHON`.
 * `scala_code` - Scala code generated from the DAG when the `language` argument is set to `SCALA`.
 
-<!-- cache-key: cdktf-0.20.8 input-be24758996e8a89722ff26b1265bf9700176ddfdb291cd62471cea079785dce2 -->
+<!-- cache-key: cdktf-0.20.8 input-44d12a35fded8f7a195eda086ed25220b159c6d65cd78c456d311fde0a8d4780 -->

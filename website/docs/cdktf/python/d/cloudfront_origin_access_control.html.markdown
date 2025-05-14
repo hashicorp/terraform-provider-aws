@@ -35,6 +35,8 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `id` (Required) -  The identifier for the origin access control settings. For example: `E2T5VTFBZJ3BJB`.
 
 ## Attribute Reference
@@ -49,4 +51,4 @@ This data source exports the following attributes in addition to the arguments a
 * `signing_behavior` - Specifies which requests CloudFront signs.
 * `signing_protocol` - The signing protocol of the origin access control, which determines how CloudFront signs (authenticates) requests.
 
-<!-- cache-key: cdktf-0.20.8 input-ef4cd6cd4f6def17dafefee526d15ff5890f454c03734fc370573bb379f89bf2 -->
+<!-- cache-key: cdktf-0.20.8 input-fd1d85f23cc9e9eb5f59a994884187b885d4a31d99715b2293deb94928e6c5a0 -->

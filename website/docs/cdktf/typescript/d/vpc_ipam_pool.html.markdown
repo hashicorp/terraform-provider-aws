@@ -60,26 +60,19 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available
-VPCs in the current region. The given filters must match exactly one
-VPC whose data will be exported as attributes.
+This data source supports the following arguments:
 
 * `ipamPoolId` - (Optional) ID of the IPAM pool you would like information on.
 * `filter` - (Optional) Custom filter block as described below.
 
-### filter
+### `filter`
 
 * `name` - (Required) The name of the filter. Filter names are case-sensitive.
 * `values` - (Required) The filter values. Filter values are case-sensitive.
 
 ## Attribute Reference
 
-All of the argument attributes except `filter` blocks are also exported as
-result attributes. This data source will complete the data by populating
-any fields that are not included in the configuration with the data for
-the selected VPC.
-
-The following attribute is additionally exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `addressFamily` - IP protocol assigned to this pool.
 * `allocationDefaultNetmaskLength` - A default netmask length for allocations added to this pool. If, for example, the CIDR assigned to this pool is `10.0.0.0/8` and you enter 16 here, new allocations will default to `10.0.0.0/16`.
@@ -103,4 +96,4 @@ The following attribute is additionally exported:
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.8 input-14e0ec5a45dd1fac68d4e842a7b8f6c07c038a22e839fecb94a749a7d96d7a4e -->
+<!-- cache-key: cdktf-0.20.8 input-7fa43d1926bb56b90cd7a7d2945bf4e174e020e72a90123ee570dce358d6052f -->

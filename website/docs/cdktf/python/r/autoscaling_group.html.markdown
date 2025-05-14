@@ -503,6 +503,7 @@ This resource supports the following arguments:
   (See also [Waiting for Capacity](#waiting-for-capacity) below.)
 - `availability_zones` - (Optional) A list of Availability Zones where instances in the Auto Scaling group can be created. Used for launching into the default VPC subnet in each Availability Zone when not using the `vpc_zone_identifier` attribute, or for attaching a network interface when an existing network interface ID is specified in a launch template. Conflicts with `vpc_zone_identifier`.
 - `availability_zone_distribution` (Optional) The instance capacity distribution across Availability Zones. See [Availability Zone Distribution](#availability_zone_distribution) below for more details.
+- `capacity_reservation_specification` (Optional) The capacity reservation specification for the Auto Scaling group allows you to prioritize launching into On-Demand Capacity Reservations. See [Capacity Reservation Specification](#capacity_reservation_specification) below for more details.
 - `capacity_rebalance` - (Optional) Whether capacity rebalance is enabled. Otherwise, capacity rebalance is disabled.
 - `context` - (Optional) Reserved.
 - `default_cooldown` - (Optional) Amount of time, in seconds, after a scaling activity completes before another scaling activity can start.
@@ -573,6 +574,18 @@ This resource supports the following arguments:
 ### availability_zone_distribution
 
 - `capacity_distribution_strategy` - (Required) The strategy to use for distributing capacity across the Availability Zones. Valid values are `balanced-only` and `balanced-best-effort`. Default is `balanced-best-effort`.
+
+### capacity_reservation_specification
+
+- `capacity_reservation_preference` - (Required) Capacity Reservation preference helps you use Capacity Reservations efficiently by prioritizing reserved capacity in a Capacity Reservation before using On-Demand capacity. Valid values are `default`, `capacity-reservations-only`, `capacity-reservations-first` and `none`. Default is `default`.
+- `capacity_reservation_target` - (Optional) Describes a target Capacity Reservation or Capacity Reservation resource group.
+
+#### capacity_reservation_specification capacity_reservation_target
+
+This configuration block supports the following:
+
+- `capacity_reservation_ids` - (Optional) List of On-Demand Capacity Reservation Ids. Conflicts with `capacity_reservation_resource_group_arns`.
+- `capacity_reservation_resource_group_arns` - (Optional) List of On-Demand Capacity Reservation Resource Group Arns. Conflicts with `capacity_reservation_ids`.
 
 ### launch_template
 
@@ -939,4 +952,4 @@ Using `terraform import`, import Auto Scaling Groups using the `name`. For examp
 % terraform import aws_autoscaling_group.web web-asg
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-21f5299d25ae04839c346d7d0a5013fcf19c4d24a82449631f3586dda584cbde -->
+<!-- cache-key: cdktf-0.20.8 input-497fe7df85b659754b74b4611df7f014874b9e7d8de6a012c7566d26a239b355 -->
