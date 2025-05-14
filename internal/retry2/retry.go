@@ -102,7 +102,7 @@ func SDKv2HelperRetryCompatibleDelay(initialDelay, pollInterval, minTimeout time
 // DefaultSDKv2HelperRetryCompatibleDelay returns a Terraform Plugin SDK v2 helper/retry-compatible delay
 // with default values (from the `RetryContext` function).
 func DefaultSDKv2HelperRetryCompatibleDelay() DelayFunc {
-	return SDKv2HelperRetryCompatibleDelay(0, 0, 500*time.Millisecond)
+	return SDKv2HelperRetryCompatibleDelay(0, 0, 500*time.Millisecond) //nolint:mnd // 500ms is the Plugin SDKv2 default
 }
 
 // Config configures a retry loop.
