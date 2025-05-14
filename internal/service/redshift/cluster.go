@@ -454,11 +454,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 		inputC.ElasticIp = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrEncrypted); ok {
-		if v, null, _ := nullable.Bool(v.(string)).ValueBool(); !null {
-			inputC.Encrypted = aws.Bool(v)
-			inputR.Encrypted = aws.Bool(v)
-		}
+	isEncrypted := true
+	v := d.Get(names.AttrEncrypted)
+	if v, null, _ := nullable.Bool(v.(string)).ValueBool(); !null {
+		isEncrypted = v
 	}
 
 	if v, ok := d.GetOk("enhanced_vpc_routing"); ok {
@@ -581,6 +580,23 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 	if _, err := waitClusterRelocationStatusResolved(ctx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Redshift Cluster (%s): waiting for relocation: %s", d.Id(), err)
+	}
+
+	if inputR.SnapshotArn == nil && inputR.SnapshotIdentifier == nil {
+		if !isEncrypted {
+			modifyInput := redshift.ModifyClusterInput{
+				ClusterIdentifier: aws.String(d.Id()),
+				Encrypted:         aws.Bool(isEncrypted),
+			}
+			_, err := conn.ModifyCluster(ctx, &modifyInput)
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "creating Redshift Cluster (%s): disabling encryption: %s", d.Id(), err)
+			}
+
+			if _, err := waitClusterUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "creating Redshift Cluster (%s): disabling encryption: %s", d.Id(), err)
+			}
+		}
 	}
 
 	return append(diags, resourceClusterRead(ctx, d, meta)...)
