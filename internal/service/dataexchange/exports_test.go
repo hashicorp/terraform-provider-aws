@@ -7,6 +7,7 @@ package dataexchange
 var (
 	ResourceDataSet        = resourceDataSet
 	ResourceEventAction    = newEventActionResource
+	ResourceRevision       = resourceRevision
 	ResourceRevisionAssets = newResourceRevisionAssets
 
 	FindDataSetByID     = findDataSetByID

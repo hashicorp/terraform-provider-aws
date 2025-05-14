@@ -51,7 +51,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceRevision,
+			Factory:  resourceRevision,
 			TypeName: "aws_dataexchange_revision",
 			Name:     "Revision",
 			Tags: &types.ServicePackageResourceTags{
