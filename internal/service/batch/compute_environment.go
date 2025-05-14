@@ -252,7 +252,7 @@ func resourceComputeEnvironment() *schema.Resource {
 				StateFunc:        sdkv2.ToUpperSchemaStateFunc,
 				ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.CEType](),
 			},
-			"unmanagedv_cpus": {
+			"unmanaged_v_cpus": {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
@@ -303,7 +303,7 @@ func resourceComputeEnvironmentCreate(ctx context.Context, d *schema.ResourceDat
 		input.State = awstypes.CEState(v.(string))
 	}
 
-	if v, ok := d.GetOk("unmanagedv_cpus"); ok {
+	if v, ok := d.GetOk("unmanaged_v_cpus"); ok {
 		input.UnmanagedvCpus = aws.Int32(int32(v.(int)))
 	}
 
@@ -380,7 +380,7 @@ func resourceComputeEnvironmentRead(ctx context.Context, d *schema.ResourceData,
 	d.Set(names.AttrStatusReason, computeEnvironment.StatusReason)
 	d.Set(names.AttrType, computeEnvironment.Type)
 	if computeEnvironment.UnmanagedvCpus != nil {
-		d.Set("unmanagedv_cpus", aws.ToInt32(computeEnvironment.UnmanagedvCpus))
+		d.Set("unmanaged_v_cpus", aws.ToInt32(computeEnvironment.UnmanagedvCpus))
 	}
 	if err := d.Set("update_policy", flattenComputeEnvironmentUpdatePolicy(computeEnvironment.UpdatePolicy)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting update_policy: %s", err)
@@ -408,8 +408,8 @@ func resourceComputeEnvironmentUpdate(ctx context.Context, d *schema.ResourceDat
 			input.State = awstypes.CEState(d.Get(names.AttrState).(string))
 		}
 
-		if d.HasChange("unmanagedv_cpus") {
-			if v, ok := d.GetOk("unmanagedv_cpus"); ok {
+		if d.HasChange("unmanaged_v_cpus") {
+			if v, ok := d.GetOk("unmanaged_v_cpus"); ok {
 				input.UnmanagedvCpus = aws.Int32(int32(v.(int)))
 			}
 		}
@@ -587,8 +587,8 @@ func resourceComputeEnvironmentCustomizeDiff(_ context.Context, diff *schema.Res
 		}
 	} else {
 		// Only UNMANAGED compute environments can use UnmanagedvCpus.
-		if _, ok := diff.GetOk("unmanagedv_cpus"); ok {
-			return fmt.Errorf("`unmanagedv_cpus` can only be specified when `type` is %q", string(awstypes.CETypeUnmanaged))
+		if _, ok := diff.GetOk("unmanaged_v_cpus"); ok {
+			return fmt.Errorf("`unmanaged_v_cpus` can only be specified when `type` is %q", string(awstypes.CETypeUnmanaged))
 		}
 	}
 
