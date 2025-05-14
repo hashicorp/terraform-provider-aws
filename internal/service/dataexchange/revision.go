@@ -26,12 +26,13 @@ import (
 // @SDKResource("aws_dataexchange_revision", name="Revision")
 // @Tags(identifierAttribute="arn")
 // @Testing(tagsTest=false)
-func ResourceRevision() *schema.Resource {
+func resourceRevision() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRevisionCreate,
 		ReadWithoutTimeout:   resourceRevisionRead,
 		UpdateWithoutTimeout: resourceRevisionUpdate,
 		DeleteWithoutTimeout: resourceRevisionDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
