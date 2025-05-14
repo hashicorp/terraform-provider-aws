@@ -336,7 +336,7 @@ func TestAccRedshiftCluster_publiclyAccessible_default(t *testing.T) {
 						VersionConstraint: "5.92.0",
 					},
 				},
-				Config: testAccClusterConfig_basic(rName),
+				Config: testAccClusterConfig_publiclyAccessible_default(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPubliclyAccessible, acctest.CtTrue),
@@ -345,13 +345,13 @@ func TestAccRedshiftCluster_publiclyAccessible_default(t *testing.T) {
 			{
 				// plan should not empty because the default value has changed and will for an update unless explicitly set
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				Config:                   testAccClusterConfig_basic(rName),
+				Config:                   testAccClusterConfig_publiclyAccessible_default(rName),
 				PlanOnly:                 true,
 				ExpectNonEmptyPlan:       true,
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				Config:                   testAccClusterConfig_basic(rName),
+				Config:                   testAccClusterConfig_publiclyAccessible_default(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPubliclyAccessible, acctest.CtFalse),
@@ -1573,6 +1573,59 @@ resource "aws_redshift_cluster" "test" {
   depends_on = [aws_internet_gateway.test]
 }
 `, rName, publiclyAccessible))
+}
+
+func testAccClusterConfig_publiclyAccessible_default(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
+		fmt.Sprintf(`
+resource "aws_redshift_cluster" "test" {
+  cluster_identifier                  = %[1]q
+  database_name                       = "mydb"
+  encrypted                           = true # required for v5.92.0
+  master_username                     = "foo_test"
+  master_password                     = "Mustbe8characters"
+  node_type                           = "dc2.large"
+  automated_snapshot_retention_period = 0
+  allow_version_upgrade               = false
+  skip_final_snapshot                 = true
+
+  cluster_subnet_group_name = aws_redshift_subnet_group.test.name
+
+  depends_on = [aws_internet_gateway.test]
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+}
+
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+}
+
+resource "aws_subnet" "test1" {
+  cidr_block        = "10.1.1.0/24"
+  availability_zone = data.aws_availability_zones.available.names[0]
+  vpc_id            = aws_vpc.test.id
+}
+
+resource "aws_subnet" "test2" {
+  cidr_block        = "10.1.2.0/24"
+  availability_zone = data.aws_availability_zones.available.names[1]
+  vpc_id            = aws_vpc.test.id
+}
+
+resource "aws_subnet" "test3" {
+  cidr_block        = "10.1.3.0/24"
+  availability_zone = data.aws_availability_zones.available.names[2]
+  vpc_id            = aws_vpc.test.id
+}
+
+resource "aws_redshift_subnet_group" "test" {
+  name       = %[1]q
+  subnet_ids = [aws_subnet.test1.id, aws_subnet.test2.id, aws_subnet.test3.id]
+}
+`, rName))
 }
 
 func testAccClusterConfig_iamRoles(rName string) string {
