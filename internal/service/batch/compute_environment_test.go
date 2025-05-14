@@ -1805,6 +1805,7 @@ func TestAccBatchComputeEnvironment_updateEC2(t *testing.T) {
 	})
 }
 
+// Test plan time errors...
 // TestAccBatchComputeEnvironment_unmanagedVCPUs tests the unmanaged_v_cpus parameter
 func TestAccBatchComputeEnvironment_unmanagedVCPUs(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -1853,7 +1854,6 @@ func TestAccBatchComputeEnvironment_unmanagedVCPUs(t *testing.T) {
 	})
 }
 
-// Test plan time errors...
 func TestAccBatchComputeEnvironment_createEC2WithoutComputeResources(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
