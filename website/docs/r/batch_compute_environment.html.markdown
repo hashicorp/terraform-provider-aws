@@ -197,6 +197,7 @@ This resource supports the following arguments:
 * `state` - (Optional) The state of the compute environment. If the state is `ENABLED`, then the compute environment accepts jobs from a queue and can scale out automatically based on queues. Valid items are `ENABLED` or `DISABLED`. Defaults to `ENABLED`.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `type` - (Required) The type of the compute environment. Valid items are `MANAGED` or `UNMANAGED`.
+* `unmanagedv_cpus` - (Optional) The maximum number of allowed vCPUs for the Batch compute environment. This parameter can only be specified when `type` is `UNMANAGED`.
 * `update_policy` - (Optional) Specifies the infrastructure update policy for the compute environment. See details below.
 
 ### compute_resources

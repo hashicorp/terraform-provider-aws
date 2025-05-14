@@ -1872,6 +1872,56 @@ func TestAccBatchComputeEnvironment_createEC2WithoutComputeResources(t *testing.
 	})
 }
 
+// TestAccBatchComputeEnvironment_unmanagedVCPUsWithManaged tests that unmanagedv_cpus parameter cannot be used with MANAGED type
+func TestAccBatchComputeEnvironment_unmanagedVCPUsWithManaged(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckComputeEnvironmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccComputeEnvironmentConfig_managedWithUnmanagedVCPUs(rName, 4),
+				ExpectError: regexache.MustCompile("`unmanagedv_cpus` can only be specified when `type` is \"UNMANAGED\""),
+			},
+		},
+	})
+}
+
+// testAccComputeEnvironmentConfig_managedWithUnmanagedVCPUs tests that unmanagedv_cpus parameter cannot be used with MANAGED type
+func testAccComputeEnvironmentConfig_managedWithUnmanagedVCPUs(rName string, unmanagedVCPUs int) string {
+	return fmt.Sprintf(`
+%s
+
+resource "aws_batch_compute_environment" "test" {
+  compute_environment_name = %[2]q
+
+  compute_resources {
+    instance_role = aws_iam_instance_profile.ecs_instance.arn
+    instance_type = ["optimal"]
+    max_vcpus     = 16
+    min_vcpus     = 0
+    security_group_ids = [
+      aws_security_group.test.id
+    ]
+    subnets = [
+      aws_subnet.test.id
+    ]
+    type = "EC2"
+  }
+
+  service_role   = aws_iam_role.batch_service.arn
+  type           = "MANAGED"
+  unmanagedv_cpus = %[3]d
+
+  depends_on = [aws_iam_role_policy_attachment.batch_service]
+}
+`, testAccComputeEnvironmentConfig_base(rName), rName, unmanagedVCPUs)
+}
+
 func testAccCheckComputeEnvironmentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchClient(ctx)
