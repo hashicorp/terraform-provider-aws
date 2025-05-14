@@ -972,7 +972,7 @@ func flattenDistribution(apiObject awstypes.Distribution) map[string]any {
 	}
 
 	if v := apiObject.SsmParameterConfigurations; v != nil {
-		tfMap["ssm_parameter_configuration"] = flattenSsmParameterConfigurations(v)
+		tfMap["ssm_parameter_configuration"] = flattenSSMParameterConfigurations(v)
 	}
 
 	return tfMap
@@ -1148,19 +1148,19 @@ func flattenS3ExportConfiguration(apiObject *awstypes.S3ExportConfiguration) map
 	return tfMap
 }
 
-func flattenSsmParameterConfigurations(apiObjects []awstypes.SsmParameterConfiguration) []any {
+func flattenSSMParameterConfigurations(apiObjects []awstypes.SsmParameterConfiguration) []any {
 	if apiObjects == nil {
 		return nil
 	}
 
 	var tfList []any
 	for _, apiObject := range apiObjects {
-		tfList = append(tfList, flattenSsmParameterConfiguration(apiObject))
+		tfList = append(tfList, flattenSSMParameterConfiguration(apiObject))
 	}
 	return tfList
 }
 
-func flattenSsmParameterConfiguration(apiObject awstypes.SsmParameterConfiguration) map[string]any {
+func flattenSSMParameterConfiguration(apiObject awstypes.SsmParameterConfiguration) map[string]any {
 	tfMap := map[string]any{}
 
 	if v := apiObject.ParameterName; v != nil {
