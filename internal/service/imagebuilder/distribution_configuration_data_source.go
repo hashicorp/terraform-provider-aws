@@ -251,6 +251,26 @@ func dataSourceDistributionConfiguration() *schema.Resource {
 								},
 							},
 						},
+						"ssm_parameter_configuration": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"parameter_name": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"account_id": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"data_type": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
 					},
 				},
 			},
