@@ -43,7 +43,7 @@ func TestAccRedshiftCluster_basic(t *testing.T) {
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrAvailabilityZone, "data.aws_availability_zones.available", "names.0"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttr(resourceName, "cluster_nodes.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "cluster_nodes.0.public_ip_address"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_type", "single-node"),
@@ -1253,7 +1253,6 @@ func TestAccRedshiftCluster_manageMasterPassword(t *testing.T) {
 				Config: testAccClusterConfig_manageMasterPassword(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrAvailabilityZone, "data.aws_availability_zones.available", "names.0"),
 					resource.TestCheckResourceAttr(resourceName, "manage_master_password", acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, "master_password_secret_arn"),
 				),
@@ -1441,10 +1440,9 @@ func testAccCheckClusterMasterUsername(c *awstypes.Cluster, value string) resour
 }
 
 func testAccClusterConfig_updateNodeCount(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_redshift_cluster" "test" {
   cluster_identifier                  = %[1]q
-  availability_zone                   = data.aws_availability_zones.available.names[0]
   database_name                       = "mydb"
   encrypted                           = true
   master_username                     = "foo_test"
@@ -1455,14 +1453,13 @@ resource "aws_redshift_cluster" "test" {
   number_of_nodes                     = 2
   skip_final_snapshot                 = true
 }
-`, rName))
+`, rName)
 }
 
 func testAccClusterConfig_updateNodeType(rName, nodeType string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_redshift_cluster" "test" {
   cluster_identifier                  = %[1]q
-  availability_zone                   = data.aws_availability_zones.available.names[0]
   database_name                       = "mydb"
   encrypted                           = true
   master_username                     = "foo_test"
@@ -1473,15 +1470,13 @@ resource "aws_redshift_cluster" "test" {
   number_of_nodes                     = 2
   skip_final_snapshot                 = true
 }
-`, rName, nodeType))
+`, rName, nodeType)
 }
 
 func testAccClusterConfig_basic(rName string) string {
-	// "InvalidVPCNetworkStateFault: The requested AZ us-west-2a is not a valid AZ."
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_redshift_cluster" "test" {
   cluster_identifier                  = %[1]q
-  availability_zone                   = data.aws_availability_zones.available.names[0]
   database_name                       = "mydb"
   master_username                     = "foo_test"
   master_password                     = "Mustbe8characters"
@@ -1490,14 +1485,13 @@ resource "aws_redshift_cluster" "test" {
   allow_version_upgrade               = false
   skip_final_snapshot                 = true
 }
-`, rName))
+`, rName)
 }
 
 func testAccClusterConfig_aqua(rName, status string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_redshift_cluster" "test" {
   cluster_identifier                  = %[1]q
-  availability_zone                   = data.aws_availability_zones.available.names[0]
   database_name                       = "mydb"
   encrypted                           = true
   master_username                     = "foo_test"
@@ -1509,14 +1503,13 @@ resource "aws_redshift_cluster" "test" {
   aqua_configuration_status           = %[2]q
   apply_immediately                   = true
 }
-`, rName, status))
+`, rName, status)
 }
 
 func testAccClusterConfig_encrypted(rName string, encrypted bool) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_redshift_cluster" "test" {
   cluster_identifier                  = %[1]q
-  availability_zone                   = data.aws_availability_zones.available.names[0]
   database_name                       = "mydb"
   master_username                     = "foo_test"
   master_password                     = "Mustbe8characters"
@@ -1528,14 +1521,13 @@ resource "aws_redshift_cluster" "test" {
 
   encrypted = %[2]t
 }
-`, rName, encrypted))
+`, rName, encrypted)
 }
 
 func testAccClusterConfig_encrypted_default(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_redshift_cluster" "test" {
   cluster_identifier                  = %[1]q
-  availability_zone                   = data.aws_availability_zones.available.names[0]
   database_name                       = "mydb"
   master_username                     = "foo_test"
   master_password                     = "Mustbe8characters"
@@ -1545,14 +1537,13 @@ resource "aws_redshift_cluster" "test" {
   skip_final_snapshot                 = true
   publicly_accessible                 = false
 }
-`, rName))
+`, rName)
 }
 
 func testAccClusterConfig_finalSnapshot(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_redshift_cluster" "test" {
   cluster_identifier                  = %[1]q
-  availability_zone                   = data.aws_availability_zones.available.names[0]
   database_name                       = "mydb"
   encrypted                           = true
   master_username                     = "foo_test"
@@ -1563,11 +1554,11 @@ resource "aws_redshift_cluster" "test" {
   skip_final_snapshot                 = false
   final_snapshot_identifier           = %[1]q
 }
-`, rName))
+`, rName)
 }
 
 func testAccClusterConfig_kmsKey(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
@@ -1594,7 +1585,6 @@ POLICY
 
 resource "aws_redshift_cluster" "test" {
   cluster_identifier                  = %[1]q
-  availability_zone                   = data.aws_availability_zones.available.names[0]
   database_name                       = "mydb"
   master_username                     = "foo_test"
   master_password                     = "Mustbe8characters"
@@ -1605,14 +1595,13 @@ resource "aws_redshift_cluster" "test" {
   encrypted                           = true
   skip_final_snapshot                 = true
 }
-`, rName))
+`, rName)
 }
 
 func testAccClusterConfig_enhancedVPCRoutingEnabled(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_redshift_cluster" "test" {
   cluster_identifier                  = %[1]q
-  availability_zone                   = data.aws_availability_zones.available.names[0]
   database_name                       = "mydb"
   encrypted                           = true
   master_username                     = "foo_test"
@@ -1623,14 +1612,13 @@ resource "aws_redshift_cluster" "test" {
   enhanced_vpc_routing                = true
   skip_final_snapshot                 = true
 }
-`, rName))
+`, rName)
 }
 
 func testAccClusterConfig_enhancedVPCRoutingDisabled(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_redshift_cluster" "test" {
   cluster_identifier                  = %[1]q
-  availability_zone                   = data.aws_availability_zones.available.names[0]
   database_name                       = "mydb"
   encrypted                           = true
   master_username                     = "foo_test"
@@ -1641,14 +1629,13 @@ resource "aws_redshift_cluster" "test" {
   enhanced_vpc_routing                = false
   skip_final_snapshot                 = true
 }
-`, rName))
+`, rName)
 }
 
 func testAccClusterConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_redshift_cluster" "test" {
   cluster_identifier                  = %[1]q
-  availability_zone                   = data.aws_availability_zones.available.names[0]
   database_name                       = "mydb"
   encrypted                           = true
   master_username                     = "foo"
@@ -1662,14 +1649,13 @@ resource "aws_redshift_cluster" "test" {
     %[2]q = %[3]q
   }
 }
-`, rName, tagKey1, tagValue1))
+`, rName, tagKey1, tagValue1)
 }
 
 func testAccClusterConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_redshift_cluster" "test" {
   cluster_identifier                  = %[1]q
-  availability_zone                   = data.aws_availability_zones.available.names[0]
   database_name                       = "mydb"
   encrypted                           = true
   master_username                     = "foo"
@@ -1684,7 +1670,7 @@ resource "aws_redshift_cluster" "test" {
     %[4]q = %[5]q
   }
 }
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
 func testAccClusterConfig_publiclyAccessible(rName string, publiclyAccessible bool) string {
@@ -1693,7 +1679,6 @@ func testAccClusterConfig_publiclyAccessible(rName string, publiclyAccessible bo
 		fmt.Sprintf(`
 resource "aws_redshift_cluster" "test" {
   cluster_identifier                  = %[1]q
-  availability_zone                   = data.aws_availability_zones.available.names[0]
   database_name                       = "mydb"
   encrypted                           = true
   master_username                     = "foo"
@@ -1751,7 +1736,7 @@ resource "aws_redshift_subnet_group" "test" {
 }
 
 func testAccClusterConfig_iamRoles(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_iam_role" "ec2" {
   name = "%[1]s-ec2"
   path = "/"
@@ -1802,7 +1787,6 @@ EOF
 
 resource "aws_redshift_cluster" "test" {
   cluster_identifier                  = %[1]q
-  availability_zone                   = data.aws_availability_zones.available.names[0]
   database_name                       = "mydb"
   encrypted                           = true
   master_username                     = "foo_test"
@@ -1813,11 +1797,11 @@ resource "aws_redshift_cluster" "test" {
   iam_roles                           = [aws_iam_role.ec2.arn, aws_iam_role.lambda.arn]
   skip_final_snapshot                 = true
 }
-`, rName))
+`, rName)
 }
 
 func testAccClusterConfig_updateIAMRoles(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_iam_role" "ec2" {
   name = "%[1]s-ec2"
   path = "/"
@@ -1868,7 +1852,6 @@ EOF
 
 resource "aws_redshift_cluster" "test" {
   cluster_identifier                  = %[1]q
-  availability_zone                   = data.aws_availability_zones.available.names[0]
   database_name                       = "mydb"
   encrypted                           = true
   master_username                     = "foo_test"
@@ -1879,12 +1862,12 @@ resource "aws_redshift_cluster" "test" {
   iam_roles                           = [aws_iam_role.ec2.arn]
   skip_final_snapshot                 = true
 }
-`, rName))
+`, rName)
 }
 
 func testAccClusterConfig_updateAvailabilityZone(rName string, regionIndex int) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"),
+		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
 		fmt.Sprintf(`
 resource "aws_redshift_cluster" "test" {
   cluster_identifier                  = %[1]q
@@ -1906,7 +1889,7 @@ resource "aws_redshift_cluster" "test" {
 
 func testAccClusterConfig_updateAvailabilityZoneAvailabilityZoneRelocationNotSet(rName string, regionIndex int) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"),
+		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
 		fmt.Sprintf(`
 resource "aws_redshift_cluster" "test" {
   cluster_identifier                  = %[1]q
@@ -1993,7 +1976,6 @@ resource "aws_redshift_cluster_snapshot" "test" {
 resource "aws_redshift_cluster" "restored" {
   cluster_identifier  = "%[1]s-restored"
   snapshot_identifier = aws_redshift_cluster_snapshot.test.id
-  availability_zone   = data.aws_availability_zones.available.names[0]
   database_name       = "mydb"
   encrypted           = true
   master_username     = "foo_test"
@@ -2016,7 +1998,6 @@ resource "aws_redshift_cluster_snapshot" "test" {
 resource "aws_redshift_cluster" "restored" {
   cluster_identifier  = "%[1]s-restored"
   snapshot_arn        = aws_redshift_cluster_snapshot.test.arn
-  availability_zone   = data.aws_availability_zones.available.names[0]
   database_name       = "mydb"
   encrypted           = true
   master_username     = "foo_test"
@@ -2039,7 +2020,6 @@ resource "aws_redshift_cluster_snapshot" "test" {
 resource "aws_redshift_cluster" "restored" {
   cluster_identifier  = "%[1]s-restored"
   snapshot_identifier = aws_redshift_cluster_snapshot.test.id
-  availability_zone   = data.aws_availability_zones.available.names[0]
   database_name       = "mydb"
   master_username     = "foo_test"
   master_password     = "Mustbe8characters"
@@ -2052,11 +2032,9 @@ resource "aws_redshift_cluster" "restored" {
 }
 
 func testAccClusterConfig_manageMasterPassword(rName string) string {
-	// "InvalidVPCNetworkStateFault: The requested AZ us-west-2a is not a valid AZ."
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_redshift_cluster" "test" {
   cluster_identifier                  = %[1]q
-  availability_zone                   = data.aws_availability_zones.available.names[0]
   database_name                       = "mydb"
   encrypted                           = true
   master_username                     = "foo_test"
@@ -2066,7 +2044,7 @@ resource "aws_redshift_cluster" "test" {
   allow_version_upgrade               = false
   skip_final_snapshot                 = true
 }
-`, rName))
+`, rName)
 }
 
 func testAccClusterConfig_multiAZ(rName string, enabled bool) string {
@@ -2118,11 +2096,9 @@ resource "aws_redshift_cluster" "test" {
 }
 
 func testAccClusterConfig_passwordWriteOnly(rName, password string, passwordVersion int) string {
-	// "InvalidVPCNetworkStateFault: The requested AZ us-west-2a is not a valid AZ."
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_redshift_cluster" "test" {
   cluster_identifier                  = %[1]q
-  availability_zone                   = data.aws_availability_zones.available.names[0]
   database_name                       = "mydb"
   encrypted                           = true
   master_username                     = "foo_test"
@@ -2134,14 +2110,13 @@ resource "aws_redshift_cluster" "test" {
   allow_version_upgrade               = false
   skip_final_snapshot                 = true
 }
-`, rName, password, passwordVersion))
+`, rName, password, passwordVersion)
 }
 
 func testAccClusterConfig_masterUsername(rName, username string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_redshift_cluster" "test" {
   cluster_identifier                  = %[1]q
-  availability_zone                   = data.aws_availability_zones.available.names[0]
   database_name                       = "mydb"
   encrypted                           = true
   master_username                     = %[2]q
@@ -2152,5 +2127,5 @@ resource "aws_redshift_cluster" "test" {
   allow_version_upgrade               = false
   skip_final_snapshot                 = true
 }
-`, rName, username))
+`, rName, username)
 }
