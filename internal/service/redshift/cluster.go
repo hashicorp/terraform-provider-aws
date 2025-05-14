@@ -581,11 +581,12 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 		}
 	}
 
-	if _, err := waitClusterRelocationStatusResolved(ctx, conn, d.Id()); err != nil {
+	cluster, err := waitClusterRelocationStatusResolved(ctx, conn, d.Id())
+	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Redshift Cluster (%s): waiting for relocation: %s", d.Id(), err)
 	}
 
-	if !isEncrypted {
+	if isEncrypted != aws.ToBool(cluster.Encrypted) {
 		modifyInput := redshift.ModifyClusterInput{
 			ClusterIdentifier: aws.String(d.Id()),
 			Encrypted:         aws.Bool(isEncrypted),
