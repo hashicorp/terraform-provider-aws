@@ -186,9 +186,9 @@ func Begin(timeout time.Duration) *RetryWithTimeout {
 
 // Continue sleeps between retry attempts.
 // It returns false if the timeout has been exceeded.
-// The first call does not sleep.
+// The deadline is not checked on the first call to Continue.
 func (r *RetryWithTimeout) Continue(ctx context.Context) bool {
-	if r.deadline.Remaining() == 0 {
+	if r.attempt != 0 && r.deadline.Remaining() == 0 {
 		if r.config.gracePeriod == 0 {
 			r.timedOut = true
 			return false
