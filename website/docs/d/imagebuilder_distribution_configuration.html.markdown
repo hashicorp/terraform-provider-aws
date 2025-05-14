@@ -71,7 +71,7 @@ This data source exports the following attributes in addition to the arguments a
         * `s3_prefix` - The prefix for the exported image.
     * `ssm_parameter_configuration` - Nested list of SSM parameter configuration.
         * `parameter_name` - Name of the SSM parameter used to store the AMI ID after distribution.
-        * `account_id` - The AWS account ID that own the parameter in the given region.
+        * `ami_account_id` - The AWS account ID that own the parameter in the given region.
         * `data_type` - The data type of the SSM parameter.
 * `name` - Name of the distribution configuration.
 * `tags` - Key-value map of resource tags for the distribution configuration.

@@ -314,20 +314,20 @@ func resourceDistributionConfiguration() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"parameter_name": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringLenBetween(1, 1011),
-									},
-									names.AttrAccountID: {
+									"ami_account_id": {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: verify.ValidAccountID,
 									},
 									"data_type": {
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.SsmParameterDataType](),
+									},
+									"parameter_name": {
 										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringInSlice([]string{"text", "aws:ec2:image"}, false),
+										Required:     true,
+										ValidateFunc: validation.StringLenBetween(1, 1011),
 									},
 								},
 							},
@@ -563,7 +563,7 @@ func expandLaunchTemplateConfigurations(tfList []any) []awstypes.LaunchTemplateC
 	return apiObjects
 }
 
-func expandssmParameterConfigurations(tfList []any) []awstypes.SsmParameterConfiguration {
+func expandSSMParameterConfigurations(tfList []any) []awstypes.SsmParameterConfiguration {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -577,7 +577,7 @@ func expandssmParameterConfigurations(tfList []any) []awstypes.SsmParameterConfi
 			continue
 		}
 
-		apiObject := expandssmParameterConfiguration(tfMap)
+		apiObject := expandSSMParameterConfiguration(tfMap)
 
 		if apiObject == nil {
 			continue
@@ -589,23 +589,23 @@ func expandssmParameterConfigurations(tfList []any) []awstypes.SsmParameterConfi
 	return apiObjects
 }
 
-func expandssmParameterConfiguration(tfMap map[string]any) *awstypes.SsmParameterConfiguration {
+func expandSSMParameterConfiguration(tfMap map[string]any) *awstypes.SsmParameterConfiguration {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.SsmParameterConfiguration{}
 
-	if v, ok := tfMap["parameter_name"].(string); ok && v != "" {
-		apiObject.ParameterName = aws.String(v)
-	}
-
-	if v, ok := tfMap[names.AttrAccountID].(string); ok && v != "" {
+	if v, ok := tfMap["ami_account_id"].(string); ok && v != "" {
 		apiObject.AmiAccountId = aws.String(v)
 	}
 
 	if v, ok := tfMap["data_type"].(string); ok && v != "" {
 		apiObject.DataType = awstypes.SsmParameterDataType(v)
+	}
+
+	if v, ok := tfMap["parameter_name"].(string); ok && v != "" {
+		apiObject.ParameterName = aws.String(v)
 	}
 
 	return apiObject
@@ -647,7 +647,7 @@ func expandDistribution(tfMap map[string]any) *awstypes.Distribution {
 	}
 
 	if v, ok := tfMap["ssm_parameter_configuration"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.SsmParameterConfigurations = expandssmParameterConfigurations(v.List())
+		apiObject.SsmParameterConfigurations = expandSSMParameterConfigurations(v.List())
 	}
 
 	return apiObject
@@ -1154,25 +1154,27 @@ func flattenSSMParameterConfigurations(apiObjects []awstypes.SsmParameterConfigu
 	}
 
 	var tfList []any
+
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenSSMParameterConfiguration(apiObject))
 	}
+
 	return tfList
 }
 
 func flattenSSMParameterConfiguration(apiObject awstypes.SsmParameterConfiguration) map[string]any {
 	tfMap := map[string]any{}
 
-	if v := apiObject.ParameterName; v != nil {
-		tfMap["parameter_name"] = aws.ToString(v)
-	}
-
 	if v := apiObject.AmiAccountId; v != nil {
-		tfMap[names.AttrAccountID] = aws.ToString(v)
+		tfMap["ami_account_id"] = aws.ToString(v)
 	}
 
 	if v := apiObject.DataType; string(v) != "" {
 		tfMap["data_type"] = string(v)
+	}
+
+	if v := apiObject.ParameterName; v != nil {
+		tfMap["parameter_name"] = aws.ToString(v)
 	}
 
 	return tfMap

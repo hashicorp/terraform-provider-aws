@@ -1959,6 +1959,7 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
 func testAccDistributionConfigurationConfig_ssmParameterConfiguration(rName string, parameterName string, dataType string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
+
 resource "aws_imagebuilder_distribution_configuration" "test" {
   name = %[1]q
   distribution {

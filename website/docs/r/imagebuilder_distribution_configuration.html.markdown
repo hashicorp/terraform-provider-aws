@@ -131,7 +131,7 @@ The following arguments are optional:
 ### ssm_parameter_configuration
 
 * `parameter_name` - (Required) Name of the SSM parameter that will store the AMI ID after distribution.
-* `account_id` - (Optional) AWS account ID that will own the parameter in the given region. This account must be specified as a target account in the distribution settings.
+* `ami_account_id` - (Optional) AWS account ID that will own the parameter in the given region. This account must be specified as a target account in the distribution settings.
 * `data_type` - (Optional) Data type of the SSM parameter. Valid values are `text` and `aws:ec2:image`. AWS recommends using `aws:ec2:image`.
 
 ## Attribute Reference

@@ -256,15 +256,15 @@ func dataSourceDistributionConfiguration() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"parameter_name": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									names.AttrAccountID: {
+									"ami_account_id": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
 									"data_type": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"parameter_name": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
