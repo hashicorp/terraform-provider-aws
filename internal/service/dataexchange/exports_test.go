@@ -8,7 +8,7 @@ var (
 	ResourceDataSet        = resourceDataSet
 	ResourceEventAction    = newEventActionResource
 	ResourceRevision       = resourceRevision
-	ResourceRevisionAssets = newResourceRevisionAssets
+	ResourceRevisionAssets = newRevisionAssetsResource
 
 	FindDataSetByID     = findDataSetByID
 	FindEventActionByID = findEventActionByID

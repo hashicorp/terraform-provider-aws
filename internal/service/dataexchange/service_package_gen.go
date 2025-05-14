@@ -26,7 +26,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Name:     "Event Action",
 		},
 		{
-			Factory:  newResourceRevisionAssets,
+			Factory:  newRevisionAssetsResource,
 			TypeName: "aws_dataexchange_revision_assets",
 			Name:     "Revision Assets",
 			Tags: &types.ServicePackageResourceTags{
