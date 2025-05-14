@@ -666,7 +666,7 @@ func TestAccRedshiftCluster_changeEncryption_unsetToFalse(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccClusterConfig_unencrypted(rName),
+				Config: testAccClusterConfig_encrypted(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtFalse),
@@ -702,7 +702,7 @@ func TestAccRedshiftCluster_changeEncryption_unsetToTrue(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccClusterConfig_encrypted(rName),
+				Config: testAccClusterConfig_encrypted(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtTrue),
@@ -730,14 +730,14 @@ func TestAccRedshiftCluster_changeEncryption_trueToFalse(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_encrypted(rName),
+				Config: testAccClusterConfig_encrypted(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtTrue),
 				),
 			},
 			{
-				Config: testAccClusterConfig_unencrypted(rName),
+				Config: testAccClusterConfig_encrypted(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtFalse),
@@ -766,14 +766,14 @@ func TestAccRedshiftCluster_changeEncryption_falseToTrue(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_unencrypted(rName),
+				Config: testAccClusterConfig_encrypted(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtFalse),
 				),
 			},
 			{
-				Config: testAccClusterConfig_encrypted(rName),
+				Config: testAccClusterConfig_encrypted(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtTrue),
@@ -802,7 +802,7 @@ func TestAccRedshiftCluster_changeEncryption_falseToUnset(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_unencrypted(rName),
+				Config: testAccClusterConfig_encrypted(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtFalse),
@@ -838,7 +838,7 @@ func TestAccRedshiftCluster_changeEncryption_trueToUnset(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_encrypted(rName),
+				Config: testAccClusterConfig_encrypted(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtTrue),
@@ -1270,7 +1270,7 @@ resource "aws_redshift_cluster" "test" {
 `, rName, status))
 }
 
-func testAccClusterConfig_encrypted(rName string) string {
+func testAccClusterConfig_encrypted(rName string, encrypted bool) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
 resource "aws_redshift_cluster" "test" {
   cluster_identifier                  = %[1]q
@@ -1283,27 +1283,9 @@ resource "aws_redshift_cluster" "test" {
   allow_version_upgrade               = false
   skip_final_snapshot                 = true
 
-  encrypted = true
+  encrypted = %[2]t
 }
-`, rName))
-}
-
-func testAccClusterConfig_unencrypted(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
-resource "aws_redshift_cluster" "test" {
-  cluster_identifier                  = %[1]q
-  availability_zone                   = data.aws_availability_zones.available.names[0]
-  database_name                       = "mydb"
-  master_username                     = "foo_test"
-  master_password                     = "Mustbe8characters"
-  node_type                           = "dc2.large"
-  automated_snapshot_retention_period = 0
-  allow_version_upgrade               = false
-  skip_final_snapshot                 = true
-
-  encrypted = false
-}
-`, rName))
+`, rName, encrypted))
 }
 
 func testAccClusterConfig_finalSnapshot(rName string) string {
