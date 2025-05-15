@@ -337,14 +337,11 @@ modern-fix: prereq-go ## [CI] Fix checks for modern Go code (best run in individ
 
 pr-target-check: ## [CI] Check for pull request target
 	@echo "make: Checking for pull request target..."
-	@files_with_pull_request_target=$$(grep -rl 'pull_request_target' ./.github/workflows/*.yml || true); \
-	if [ -n "$$files_with_pull_request_target" ]; then \
-		for file in $$files_with_pull_request_target; do \
-			if [ "$$file" != "./.github/workflows/maintainer_helpers.yml" ] && [ "$$file" != "./.github/workflows/triage.yml" ]; then \
-				echo "Error: 'pull_request_target' found in disallowed file: $$file"; \
-				exit 1; \
-			fi; \
-		done; \
+	@disallowed_files=$$(grep -rl 'pull_request_target' ./.github/workflows/*.yml | grep -vE './.github/workflows/(maintainer_helpers|triage|closed_items|community_note|readiness_comment).yml' || true); \
+	if [ -n "$$disallowed_files" ]; then \
+		echo "Error: 'pull_request_target' found in disallowed files:"; \
+		echo "$$disallowed_files"; \
+		exit 1; \
 	fi
 	@echo "make: pull_request_target check passed."
 
