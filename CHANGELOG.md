@@ -59,6 +59,7 @@ BUG FIXES:
 * resource/aws_controltower_control: Fix handling `ResourceNotFound` exceptions during delete ([#42494](https://github.com/hashicorp/terraform-provider-aws/issues/42494))
 * resource/aws_controltower_control: Fix handling of `parameters` block removal ([#42494](https://github.com/hashicorp/terraform-provider-aws/issues/42494))
 * resource/aws_ec2_network_insights_path: Fix failure when `filter_at_source.source_address` is unspecified. ([#42369](https://github.com/hashicorp/terraform-provider-aws/issues/42369))
+* resource/aws_instance: Fix `InvalidNetworkInterface.InUse` errors on Create ([#42623](https://github.com/hashicorp/terraform-provider-aws/issues/42623))
 * resource/aws_lb_listener: Don't send zero value (`false`, `0` or `""`) for unconfigured listener attributes on Create ([#41846](https://github.com/hashicorp/terraform-provider-aws/issues/41846))
 * resource/aws_rds_cluster_parameter_group: Fix `InvalidParameterValue: collation_server '..' is not valid for character_set '...'` errors on Create ([#42559](https://github.com/hashicorp/terraform-provider-aws/issues/42559))
 
