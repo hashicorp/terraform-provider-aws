@@ -20,7 +20,7 @@ type Timer interface {
 // DelayFunc returns the duration to wait before the next retry attempt.
 type DelayFunc func(uint) time.Duration
 
-// FixedDelay returns a delay that is the same through all iterations except the firts (when it is 0).
+// FixedDelay returns a delay that is the same through all iterations except the first (when it is 0).
 func FixedDelay(delay time.Duration) DelayFunc {
 	return func(n uint) time.Duration {
 		if n == 0 {
@@ -102,7 +102,7 @@ func SDKv2HelperRetryCompatibleDelay(initialDelay, pollInterval, minTimeout time
 // DefaultSDKv2HelperRetryCompatibleDelay returns a Terraform Plugin SDK v2 helper/retry-compatible delay
 // with default values (from the `RetryContext` function).
 func DefaultSDKv2HelperRetryCompatibleDelay() DelayFunc {
-	return SDKv2HelperRetryCompatibleDelay(0, 0, 500*time.Millisecond)
+	return SDKv2HelperRetryCompatibleDelay(0, 0, 500*time.Millisecond) //nolint:mnd // 500ms is the Plugin SDKv2 default
 }
 
 // Config configures a retry loop.
