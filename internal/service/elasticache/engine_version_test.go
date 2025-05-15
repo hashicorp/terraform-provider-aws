@@ -514,7 +514,7 @@ func (d *mockForceNewDiffer) Get(key string) any {
 }
 
 func (d *mockForceNewDiffer) GetOk(key string) (any, bool) {
-	return d.old, d.old != ""
+	return "", false
 }
 
 func (d *mockForceNewDiffer) HasChange(key string) bool {
