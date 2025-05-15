@@ -123,6 +123,14 @@ To further understand the necessary data conversions used throughout the Terrafo
 
     Conceptually, the first and second items above are the most problematic in the Terraform AWS Provider codebase. The first item because non-pointer types in Go cannot implement the concept of no value (`nil`). The [Zero Value Mapping section](#zero-value-mapping) will go into more detail about the implications of this limitation. The second item because it can be confusing to always handle a structure ("object") type as a list.
 
+### Default Values
+
+If an AWS API sets a default value on the server side, no default should be set on the provider side.
+Instead, the argument should be marked as `Optional` and `Computed`.
+This avoids potential future conflicts if a server side default value changes.
+
+As a general rule, provider side default values should be avoided unless strictly necessary for a resource to function properly.
+
 ### Zero Value Mapping
 
 !!! note
