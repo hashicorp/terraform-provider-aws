@@ -191,7 +191,7 @@ When using `aws_iam_principal_policy_simulation` to test the effect of a policy 
 
 ## Argument Reference
 
-The following arguments are required for any principal policy simulation:
+This data source supports the following arguments:
 
 * `actionNames` (Required) - A set of IAM action names to run simulations for. Each entry in this set adds an additional hypothetical request to the simulation.
 
@@ -265,4 +265,4 @@ This data source exports the following attributes in addition to the arguments a
 
     * `missing_context_keys` - A set of context keys (or condition keys) that were needed by some of the policies contributing to this result but not specified using a `context` block in the configuration. Missing or incorrect context keys will typically cause a simulated request to be disallowed.
 
-<!-- cache-key: cdktf-0.20.8 input-6271bf4e5593c485a454ee1fc263b036e5a42e08cc910da3ee1ceb0f0495dce4 -->
+<!-- cache-key: cdktf-0.20.8 input-1ffa5a526bf49a8385588dd77ec1fae1af1cbcbf2effb55e74e04acd29a4e578 -->

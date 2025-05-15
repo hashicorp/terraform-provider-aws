@@ -73,32 +73,41 @@ The following arguments are required:
   Can consist of lowercase letters, numbers, and underscores, and must begin and end with a lowercase letter or number.
 * `tableBucketArn` - (Required, Forces new resource) ARN referencing the Table Bucket that contains this Namespace.
 
-The following argument is optional:
+The following arguments are optional:
 
-* `maintenanceConfiguration` - (Optional) A single table bucket maintenance configuration block.
+* `encryptionConfiguration` - (Optional) A single table bucket encryption configuration object.
+  [See `encryptionConfiguration` below](#encryption_configuration).
+* `maintenanceConfiguration` - (Optional) A single table bucket maintenance configuration object.
   [See `maintenanceConfiguration` below](#maintenance_configuration).
+
+### `encryptionConfiguration`
+
+The `encryptionConfiguration` object supports the following arguments:
+
+* `kmsKeyArn` - (Optional) The ARN of a KMS Key to be used with `aws:kms` `sseAlgorithm`
+* `sseAlgorithm` - (Required) One of `aws:kms` or `AES256`
 
 ### `maintenanceConfiguration`
 
-The `maintenanceConfiguration` configuration block supports the following arguments:
+The `maintenanceConfiguration` object supports the following arguments:
 
-* `iceberg_compaction` - (Required) A single Iceberg compaction settings block.
+* `iceberg_compaction` - (Required) A single Iceberg compaction settings object.
   [See `iceberg_compaction` below](#iceberg_compaction).
-* `iceberg_snapshot_management` - (Required) A single Iceberg snapshot management settings block.
+* `iceberg_snapshot_management` - (Required) A single Iceberg snapshot management settings object.
   [See `iceberg_snapshot_management` below](#iceberg_snapshot_management).
 
 ### `iceberg_compaction`
 
-The `iceberg_compaction` configuration block supports the following arguments:
+The `iceberg_compaction` object supports the following arguments:
 
-* `settings` - (Required) Settings for compaction.
+* `settings` - (Required) Settings object for compaction.
   [See `iceberg_compaction.settings` below](#iceberg_compactionsettings).
 * `status` - (Required) Whether the configuration is enabled.
   Valid values are `enabled` and `disabled`.
 
 ### `iceberg_compaction.settings`
 
-The `iceberg_compaction.settings` configuration block supports the following argument:
+The `iceberg_compaction.settings` object supports the following argument:
 
 * `target_file_size_mb` - (Required) Data objects smaller than this size may be combined with others to improve query performance.
   Must be between `64` and `512`.
@@ -107,14 +116,14 @@ The `iceberg_compaction.settings` configuration block supports the following arg
 
 The `iceberg_snapshot_management` configuration block supports the following arguments:
 
-* `settings` - (Required) Settings for snapshot management.
+* `settings` - (Required) Settings object for snapshot management.
   [See `iceberg_snapshot_management.settings` below](#iceberg_snapshot_managementsettings).
 * `status` - (Required) Whether the configuration is enabled.
   Valid values are `enabled` and `disabled`.
 
 ### `iceberg_snapshot_management.settings`
 
-The `iceberg_snapshot_management.settings` configuration block supports the following argument:
+The `iceberg_snapshot_management.settings` object supports the following argument:
 
 * `max_snapshot_age_hours` - (Required) Snapshots older than this will be marked for deletiion.
   Must be at least `1`.
@@ -169,4 +178,4 @@ Using `terraform import`, import S3 Tables Table using the `tableBucketArn`, the
 % terraform import aws_s3tables_table.example 'arn:aws:s3tables:us-west-2:123456789012:bucket/example-bucket;example-namespace;example-table'
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-1b0334bf078537baac156fabb7f8bff27cbf2351a1e4db60cfa59ebb04a9a318 -->
+<!-- cache-key: cdktf-0.20.8 input-a23e8dc822ca9df49432f86028589e4f3640480f7074f385e59b6a968cc08cbf -->

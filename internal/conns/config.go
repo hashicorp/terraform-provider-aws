@@ -213,6 +213,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	client.region = c.Region
 	client.SetHTTPClient(ctx, session.Config.HTTPClient) // Must be called while client.Session is nil.
 	client.session = session
+	client.terraformVersion = c.TerraformVersion
 
 	// Used for lazy-loading AWS API clients.
 	client.awsConfig = &cfg

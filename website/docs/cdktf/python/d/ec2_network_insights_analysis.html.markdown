@@ -33,12 +33,14 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available
-Network Insights Analyzes. The given filters must match exactly one Network Insights Analysis
-whose data will be exported as attributes.
+This data source supports the following arguments:
 
 * `network_insights_analysis_id` - (Optional) ID of the Network Insights Analysis to select.
 * `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
+
+The arguments of this data source act as filters for querying the available
+Network Insights Analyzes. The given filters must match exactly one Network Insights Analysis
+whose data will be exported as attributes.
 
 ### filter Configuration Block
 
@@ -64,4 +66,4 @@ This data source exports the following attributes in addition to the arguments a
 * `status_message` - Message to provide more context when the `status` is `failed`.
 * `warning_message` - Warning message.
 
-<!-- cache-key: cdktf-0.20.8 input-26c7829b95f95f394f42a3629a3aea17947021816c7b47b26fed9730bc8e7faa -->
+<!-- cache-key: cdktf-0.20.8 input-e982dfa441992316cd5a9a78e234f9f428d9657d01c681994334db5b6f9da52d -->

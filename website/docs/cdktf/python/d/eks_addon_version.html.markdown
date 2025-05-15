@@ -55,6 +55,8 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `addon_name` – (Required) Name of the EKS add-on. The name must match one of
   the names returned by [list-addon](https://docs.aws.amazon.com/cli/latest/reference/eks/list-addons.html).
 * `kubernetes_version` – (Required) Version of the EKS Cluster. Must be between 1-100 characters in length. Must begin with an alphanumeric character, and must only contain alphanumeric characters, dashes and underscores (`^[0-9A-Za-z][A-Za-z0-9\-_]+$`).
@@ -67,4 +69,4 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - Name of the add-on
 * `version` - Version of the EKS add-on.
 
-<!-- cache-key: cdktf-0.20.8 input-6bea559fed867c091f7f8ce8ca24a017cb6af1e256023fe4160201c7d3a8800c -->
+<!-- cache-key: cdktf-0.20.8 input-7c6f3385681241f89ada51ee4c5d85e4e13250c68f32fe30e511ca8a29a53eed -->

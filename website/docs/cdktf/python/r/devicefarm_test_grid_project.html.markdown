@@ -41,6 +41,8 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `name` - (Required) The name of the Selenium testing project.
 * `description` - (Optional) Human-readable description of the project.
 * `vpc_config` - (Required) The VPC security groups and subnets that are attached to a project. See [VPC Config](#vpc-config) below.
@@ -84,4 +86,4 @@ Using `terraform import`, import DeviceFarm Test Grid Projects using their ARN. 
 % terraform import aws_devicefarm_test_grid_project.example arn:aws:devicefarm:us-west-2:123456789012:testgrid-project:4fa784c7-ccb4-4dbf-ba4f-02198320daa1
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-2f5eb3ada6471cdbf41632a80ae508f4c526e15908f83a9d3ac70cb7c05f37b2 -->
+<!-- cache-key: cdktf-0.20.8 input-313e1fd84ca7bbe05e1339436e4a7d800d9f213722e60f3f4384d19648e491fd -->

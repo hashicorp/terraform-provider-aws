@@ -31,7 +31,7 @@ resource "aws_apprunner_vpc_ingress_connection" "example" {
 
 ## Argument Reference
 
-The following arguments supported:
+This resource supports the following arguments:
 
 * `name` - (Required) A name for the VPC Ingress Connection resource. It must be unique across all the active VPC Ingress Connections in your AWS account in the AWS Region.
 * `service_arn` - (Required) The Amazon Resource Name (ARN) for this App Runner service that is used to create the VPC Ingress Connection resource.

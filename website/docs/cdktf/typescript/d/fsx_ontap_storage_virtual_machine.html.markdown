@@ -65,12 +65,12 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available ONTAP Storage Virtual Machines in the current region. The given filters must match exactly one Storage Virtual Machine whose data will be exported as attributes.
-
-The following arguments are optional:
+This data source supports the following arguments:
 
 * `filter` - (Optional) Configuration block. Detailed below.
 * `id` - (Optional) Identifier of the storage virtual machine (e.g. `svm-12345678`).
+
+The arguments of this data source act as filters for querying the available ONTAP Storage Virtual Machines in the current region. The given filters must match exactly one Storage Virtual Machine whose data will be exported as attributes.
 
 ### filter
 
@@ -81,9 +81,9 @@ The following arguments are required:
 * `name` - (Required) Name of the field to filter by, as defined by [the underlying AWS API](https://docs.aws.amazon.com/fsx/latest/APIReference/API_StorageVirtualMachineFilter.html).
 * `values` - (Required) Set of values that are accepted for the given field. An SVM will be selected if any one of the given values matches.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name of the SVM.
 * `activeDirectoryConfiguration` - The Microsoft Active Directory configuration to which the SVM is joined, if applicable. See [Active Directory Configuration](#active-directory-configuration) below.
@@ -128,4 +128,4 @@ The following arguments are supported for `activeDirectoryConfiguration` configu
 * `DNSName` - The file system's DNS name. You can mount your file system using its DNS name.
 * `IpAddresses` - The SVM endpoint's IP addresses.
 
-<!-- cache-key: cdktf-0.20.8 input-f6cea127fecc9fef03f1751e79c3dcabeee15d54d55425580842b9e868758d48 -->
+<!-- cache-key: cdktf-0.20.8 input-91d451d892bb70658b217941bc02ea03faec4f281854ab47b47b62384ee8061d -->

@@ -31,6 +31,8 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `region` - (Optional) Region you'd like the zone for. By default, fetches the current region.
 
 ## Attribute Reference
@@ -41,4 +43,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `region` - Region of the hosted zone.
 
-<!-- cache-key: cdktf-0.20.8 input-289a7d0916600ca4fb2e9823e5d274b3fded6da1f72c678b3ea3c8ecc0af826c -->
+<!-- cache-key: cdktf-0.20.8 input-60bd6d6f4532d452cc6f6a807c5908969f5a210ed64bd11e96de30770dfc1b8b -->

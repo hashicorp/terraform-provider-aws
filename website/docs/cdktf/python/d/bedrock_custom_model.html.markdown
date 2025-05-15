@@ -33,6 +33,8 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `model_id` – (Required) Name or ARN of the custom model.
 
 ## Attribute Reference
@@ -61,4 +63,4 @@ This data source exports the following attributes in addition to the arguments a
 * `validation_metrics` - The loss metric for each validator that you provided.
     * `validation_loss` - The validation loss associated with the validator.
   
-<!-- cache-key: cdktf-0.20.8 input-a690dde54b43034f963fb882a55edf456a82a6fff0d72e2dd7e489d45c4e07cb -->
+<!-- cache-key: cdktf-0.20.8 input-84352a928e1fffb3197ae9bcd4e534307bff12270925c87131a9716427d13095 -->

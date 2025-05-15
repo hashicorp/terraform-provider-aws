@@ -553,7 +553,7 @@ The part of a web request that you want AWS WAF to inspect. Include the single `
 
 The `field_to_match` block supports the following arguments:
 
-~> **NOTE:** Only one of `all_query_arguments`, `body`, `cookies`, `header_order`, `headers`, `json_body`, `method`, `query_string`, `single_header`, `single_query_argument`, or `uri_path` can be specified.
+~> **NOTE:** Only one of `all_query_arguments`, `body`, `cookies`, `header_order`, `headers`, `json_body`, `method`, `query_string`, `single_header`, `single_query_argument`, `uri_fragment` or `uri_path` can be specified.
 An empty configuration block `{}` should be used when specifying `all_query_arguments`, `body`, `method`, or `query_string` attributes.
 
 * `all_query_arguments` - (Optional) Inspect all query arguments.
@@ -562,12 +562,13 @@ An empty configuration block `{}` should be used when specifying `all_query_argu
 * `header_order` - (Optional) Inspect the request headers. See [Header Order](#header-order) below for details.
 * `headers` - (Optional) Inspect the request headers. See [Headers](#headers) below for details.
 * `ja3_fingerprint` - (Optional) Inspect the JA3 fingerprint. See [`ja3_fingerprint`](#ja3_fingerprint-block) below for details.
-* `ja4_fingerprint` - (Optional) Inspect the JA3 fingerprint. See [`ja4_fingerprint`](#ja3_fingerprint-block) below for details.
+* `ja4_fingerprint` - (Optional) Inspect the JA4 fingerprint. See [`ja4_fingerprint`](#ja4_fingerprint-block) below for details.
 * `json_body` - (Optional) Inspect the request body as JSON. See [JSON Body](#json-body) for details.
 * `method` - (Optional) Inspect the HTTP method. The method indicates the type of operation that the request is asking the origin to perform.
 * `query_string` - (Optional) Inspect the query string. This is the part of a URL that appears after a `?` character, if any.
 * `single_header` - (Optional) Inspect a single header. See [Single Header](#single-header) below for details.
 * `single_query_argument` - (Optional) Inspect a single query argument. See [Single Query Argument](#single-query-argument) below for details.
+* `uri_fragment` - (Optional) Inspect the part of a URL that follows the "#" symbol, providing additional information about the resource. See [URI Fragment](#uri-fragment) below for details.
 * `uri_path` - (Optional) Inspect the request URI path. This is the part of a web request that identifies a resource, for example, `/images/daily-ad.jpg`.
 
 ### Forwarded IP Config
@@ -648,6 +649,14 @@ Inspect a single query argument. Provide the name of the query argument to inspe
 The `single_query_argument` block supports the following arguments:
 
 * `name` - (Optional) The name of the query header to inspect. This setting must be provided as lower case characters.
+
+### URI Fragment
+
+Inspect the part of a URL that follows the "#" symbol, providing additional information about the resource.
+
+The `uri_fragment` block supports the following arguments:
+
+* `fallback_behavior` - (Optional) What AWS WAF should do if it fails to completely parse the JSON body. Valid values are `MATCH` (default) and `NO_MATCH`.
 
 ### Cookies
 
@@ -823,4 +832,4 @@ Using `terraform import`, import WAFv2 Rule Group using `ID/name/scope`. For exa
 % terraform import aws_wafv2_rule_group.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc/example/REGIONAL
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-a50d54772ae56512590c28e71c2356aa1728f90aa1c1efae53567684bd111df7 -->
+<!-- cache-key: cdktf-0.20.8 input-7c7b9eb43e6f799838ddf0e886c08a6b3fc93a87fc7cd03bc281e44f574cf7a0 -->

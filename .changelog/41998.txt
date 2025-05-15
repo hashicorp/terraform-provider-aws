@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_ecs_service: Fix missing `volume_configuration` and `service_connect_configurations` values from state read/refresh
+```
+
+```release-note:bug
+resource/aws_ecs_service: Mark `service_connect_configuration.service.discovery_name` and `service_connect_configuration.service.client_alias.dns_name` as Computed
+```

@@ -24,7 +24,7 @@ resource "aws_eks_cluster" "example" {
     authentication_mode = "API"
   }
 
-  role_arn = aws_iam_role.example.arn
+  role_arn = aws_iam_role.cluster.arn
   version  = "1.31"
 
   vpc_config {
@@ -275,7 +275,7 @@ resource "aws_eks_cluster" "example" {
     authentication_mode = "CONFIG_MAP"
   }
 
-  role_arn = aws_iam_role.example.arn
+  role_arn = aws_iam_role.cluster.arn
   version  = "1.31"
 
   vpc_config {
@@ -349,6 +349,7 @@ The following arguments are optional:
 * `compute_config` - (Optional) Configuration block with compute configuration for EKS Auto Mode. [Detailed](#compute_config) below.
 * `enabled_cluster_log_types` - (Optional) List of the desired control plane logging to enable. For more information, see [Amazon EKS Control Plane Logging](https://docs.aws.amazon.com/eks/latest/userguide/control-plane-logs.html).
 * `encryption_config` - (Optional) Configuration block with encryption configuration for the cluster. [Detailed](#encryption_config) below.
+* `force_update_version` - (Optional) Force version update by overriding upgrade-blocking readiness checks when updating a cluster.
 * `kubernetes_network_config` - (Optional) Configuration block with kubernetes network configuration for the cluster. [Detailed](#kubernetes_network_config) below. If removed, Terraform will only perform drift detection if a configuration value is provided.
 * `outpost_config` - (Optional) Configuration block representing the configuration of your local Amazon EKS cluster on an AWS Outpost. This block isn't available for creating Amazon EKS clusters on the AWS cloud.
 * `remote_network_config` - (Optional) Configuration block with remote network configuration for EKS Hybrid Nodes. [Detailed](#remote_network_config) below.

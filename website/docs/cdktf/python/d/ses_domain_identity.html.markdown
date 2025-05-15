@@ -31,6 +31,10 @@ class MyConvertedCode(TerraformStack):
         )
 ```
 
+## Argument Reference
+
+This data source does not support any arguments.
+
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
@@ -39,4 +43,4 @@ This data source exports the following attributes in addition to the arguments a
 * `domain` - Name of the domain
 * `verification_token` - Code which when added to the domain as a TXT record will signal to SES that the owner of the domain has authorized SES to act on their behalf.
 
-<!-- cache-key: cdktf-0.20.8 input-c92b09c53a734f66fe357db2ededfa5c3680d8cf83576766510fba91783213fc -->
+<!-- cache-key: cdktf-0.20.8 input-404c7386e9e9fbee38bf2c5ac7369c49b4b11951a49f93ab6292151a160fa414 -->

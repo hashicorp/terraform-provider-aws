@@ -26,6 +26,8 @@ data "aws_securityhub_standards_control_associations" "test" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `security_control_id` - (Required) The identifier of the control (identified with `SecurityControlId`, `SecurityControlArn`, or a mix of both parameters).
 
 ## Attribute Reference

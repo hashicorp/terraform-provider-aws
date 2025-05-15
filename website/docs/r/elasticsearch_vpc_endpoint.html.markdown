@@ -28,7 +28,7 @@ resource "aws_elasticsearch_vpc_endpoint" "foo" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `domain_arn` - (Required, Forces new resource) Specifies the Amazon Resource Name (ARN) of the domain to create the endpoint for
 * `vpc_options` - (Required) Options to specify the subnets and security groups for the endpoint.

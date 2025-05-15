@@ -82,6 +82,7 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the serverless cluster.
+* `bootstrapBrokersSaslIam` - One or more DNS names (or IP addresses) and SASL IAM port pairs. For example, `boot-abcdefg.c2.kafka-serverless.eu-central-1.amazonaws.com:9098`. The resource sorts the list alphabetically. AWS may not always return all endpoints so the values may not be stable across applies.
 * `clusterUuid` - UUID of the serverless cluster, for use in IAM policies.
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
@@ -124,4 +125,4 @@ Using `terraform import`, import MSK serverless clusters using the cluster `arn`
 % terraform import aws_msk_serverless_cluster.example arn:aws:kafka:us-west-2:123456789012:cluster/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-e874f0cb80a0744435c987dbba0dd6d2b31f5d0aeda927db3722774f9b044561 -->
+<!-- cache-key: cdktf-0.20.8 input-0e63850be18ceb3cb19274ea88d7ecf4b527eca1086a9168e6fa968187285fd0 -->

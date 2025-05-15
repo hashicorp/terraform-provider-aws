@@ -140,6 +140,7 @@ The following arguments are optional:
 * `logout_urls` - (Optional) List of allowed logout URLs for the identity providers. `allowed_oauth_flows_user_pool_client` must be set to `true` before you can configure this option.
 * `prevent_user_existence_errors` - (Optional) Setting determines the errors and responses returned by Cognito APIs when a user does not exist in the user pool during authentication, account confirmation, and password recovery.
 * `read_attributes` - (Optional) List of user pool attributes that the application client can read from.
+* `refresh_token_rotation` - (Optional) A block that specifies the configuration of refresh token rotation. [Detailed below](#refresh_token_rotation).
 * `refresh_token_validity` - (Optional) Time limit, between 60 minutes and 10 years, after which the refresh token is no longer valid and cannot be used. By default, the unit is days. The unit can be overridden by a value in `token_validity_units.refresh_token`.
 * `supported_identity_providers` - (Optional) List of provider names for the identity providers that are supported on this client. It uses the `provider_name` attribute of the `aws_cognito_identity_provider` resource(s), or the equivalent string(s).
 * `token_validity_units` - (Optional) Configuration block for representing the validity times in units. See details below. [Detailed below](#token_validity_units).
@@ -154,6 +155,11 @@ Either `application_arn` or `application_id` is required for this configuration 
 * `external_id` - (Optional) ID for the Analytics Configuration and conflicts with `application_arn`.
 * `role_arn` - (Optional) ARN of an IAM role that authorizes Amazon Cognito to publish events to Amazon Pinpoint analytics. It conflicts with `application_arn`.
 * `user_data_shared` - (Optional) If `user_data_shared` is set to `true`, Amazon Cognito will include user data in the events it publishes to Amazon Pinpoint analytics.
+
+### refresh_token_rotation
+
+* `feature` - (Required) The state of refresh token rotation for the current app client. Valid values are `ENABLED` or `DISABLED`.
+* `retry_grace_period_seconds` - (Optional) A period of time in seconds that the user has to use the old refresh token before it is invalidated. Valid values are between `0` and `60`.
 
 ### token_validity_units
 

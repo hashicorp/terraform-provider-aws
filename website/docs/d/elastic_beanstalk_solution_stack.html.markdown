@@ -22,9 +22,10 @@ data "aws_elastic_beanstalk_solution_stack" "multi_docker" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `most_recent` - (Optional) If more than one result is returned, use the most
 recent solution stack.
-
 * `name_regex` - Regex string to apply to the solution stack list returned
 by AWS. See [Elastic Beanstalk Supported Platforms][beanstalk-platforms] from
 AWS documentation for reference solution stack names.

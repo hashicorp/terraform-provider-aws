@@ -21,6 +21,8 @@ data "aws_eks_node_group" "example" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `cluster_name` - (Required) Name of the cluster.
 * `node_group_name` - (Required) Name of the node group.
 

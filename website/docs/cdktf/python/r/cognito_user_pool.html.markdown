@@ -288,7 +288,12 @@ The following arguments are required in the `software_token_mfa_configuration` c
 
 ### user_pool_add_ons
 
+* `advanced_security_additional_flows` - (Optional) A block to specify the threat protection configuration options for additional authentication types in your user pool, including custom authentication. [Detailed below](#advanced_security_additional_flows).
 * `advanced_security_mode` - (Required) Mode for advanced security, must be one of `OFF`, `AUDIT` or `ENFORCED`.
+
+### advanced_security_additional_flows
+
+* `custom_auth_mode` - (Optional) Mode of threat protection operation in custom authentication. Valid values are `AUDIT` or `ENFORCED`. The default value is `AUDIT`.
 
 ### username_configuration
 
@@ -342,4 +347,4 @@ Using `terraform import`, import Cognito User Pools using the `id`. For example:
 % terraform import aws_cognito_user_pool.pool us-west-2_abc123
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-1de089d90b5bc7a6d3a592c8987de03ad29aa1c45f9f1fa7b61945e93c3552b1 -->
+<!-- cache-key: cdktf-0.20.8 input-65516b082518b79af3f585f164931e6ed17b5b5d4f086966c6f5daef6291ea82 -->

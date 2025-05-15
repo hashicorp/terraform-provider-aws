@@ -29,6 +29,10 @@ class MyConvertedCode(TerraformStack):
         DataAwsEbsEncryptionByDefault(self, "current")
 ```
 
+## Argument Reference
+
+This data source does not support any arguments.
+
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
@@ -42,4 +46,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.8 input-2606f9f1f57c452981b17146b7983251b10e31c6aeb74dfd9e1ac4d8fab6d7ad -->
+<!-- cache-key: cdktf-0.20.8 input-ab85d4e798f0e9787c27a400724b8cc0461c394f9055ab5ed2e272e7c116a4e7 -->

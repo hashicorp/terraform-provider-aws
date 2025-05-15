@@ -26,6 +26,8 @@ data "aws_api_gateway_resource" "my_resource" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `rest_api_id` - (Required) REST API id that owns the resource. If no REST API is found, an error will be returned.
 * `path` - (Required) Full path of the resource.  If no path is found, an error will be returned.
 

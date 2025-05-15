@@ -43,8 +43,7 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available VPC endpoints.
-The given filters must match exactly one VPC endpoint whose data will be exported as attributes.
+This data source supports the following arguments:
 
 * `filter` - (Optional) Custom filter block as described below.
 * `id` - (Optional) ID of the specific VPC Endpoint to retrieve.
@@ -54,8 +53,12 @@ The given filters must match exactly one VPC endpoint whose data will be exporte
   a pair on the specific VPC Endpoint to retrieve.
 * `vpcId` - (Optional) ID of the VPC in which the specific VPC Endpoint is used.
 
-More complex filters can be expressed using one or more `filter` sub-blocks,
-which take the following arguments:
+The arguments of this data source act as filters for querying the available VPC endpoints.
+The given filters must match exactly one VPC endpoint whose data will be exported as attributes.
+
+### `filter`
+
+More complex filters can be expressed using one or more `filter` sub-blocks, which take the following arguments:
 
 * `name` - (Required) Name of the field to filter by, as defined by
   [the underlying AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeVpcEndpoints.html).
@@ -64,7 +67,7 @@ which take the following arguments:
 
 ## Attribute Reference
 
-In addition to all arguments above except `filter`, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the VPC endpoint.
 * `cidrBlocks` - List of CIDR blocks for the exposed AWS service. Applicable for endpoints of type `Gateway`.
@@ -102,4 +105,4 @@ DNS options (for `dnsOptions`) support the following attributes:
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.8 input-98e29977e2149b3dfef0df54a69ee6043ad07505b5918db102c1f781bff48695 -->
+<!-- cache-key: cdktf-0.20.8 input-56935e7a0435d6765a401fa5191c954fcbfe6c8041bf5971023fcb60a88357f5 -->

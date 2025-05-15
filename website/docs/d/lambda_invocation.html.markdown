@@ -37,6 +37,8 @@ output "result_entry" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `function_name` - (Required) Name of the lambda function.
 * `input` - (Required) String in JSON format that is passed as payload to the lambda function.
 * `qualifier` - (Optional) Qualifier (a.k.a version) of the lambda function. Defaults

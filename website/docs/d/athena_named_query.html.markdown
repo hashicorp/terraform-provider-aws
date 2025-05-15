@@ -12,7 +12,7 @@ Provides an Athena Named Query data source.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_athena_named_query" "example" {
   name = "athenaQueryName"
 }
