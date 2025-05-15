@@ -29,6 +29,10 @@ class MyConvertedCode(TerraformStack):
         DataAwsSesActiveReceiptRuleSet(self, "main")
 ```
 
+## Argument Reference
+
+This data source does not support any arguments.
+
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
@@ -36,4 +40,4 @@ This data source exports the following attributes in addition to the arguments a
 * `arn` - SES receipt rule set ARN.
 * `rule_set_name` - Name of the rule set
 
-<!-- cache-key: cdktf-0.20.8 input-7e5511881f5e55ae7c44bb058232594f1824f28cdd4358ee38cec88c0c71d14b -->
+<!-- cache-key: cdktf-0.20.8 input-2cf5633a2377aef251ee723039aa4a31c70e16ba5418ecb65daea62b14e5b3bf -->

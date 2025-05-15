@@ -12,6 +12,7 @@ var (
 	ResourceAgentKnowledgeBaseAssociation = newAgentKnowledgeBaseAssociationResource
 	ResourceDataSource                    = newDataSourceResource
 	ResourceKnowledgeBase                 = newKnowledgeBaseResource
+	ResourcePrompt                        = newPromptResource
 
 	FindAgentByID                                  = findAgentByID
 	FindAgentActionGroupByThreePartKey             = findAgentActionGroupByThreePartKey
@@ -20,4 +21,5 @@ var (
 	FindAgentKnowledgeBaseAssociationByThreePartID = findAgentKnowledgeBaseAssociationByThreePartKey
 	FindDataSourceByTwoPartKey                     = findDataSourceByTwoPartKey
 	FindKnowledgeBaseByID                          = findKnowledgeBaseByID
+	FindPromptByID                                 = findPromptByID
 )

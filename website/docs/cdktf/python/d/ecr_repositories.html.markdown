@@ -33,13 +33,13 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-There are no arguments available for this data source.
+This data source does not support any arguments.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - AWS Region.
 * `names` - A list if AWS Elastic Container Registries for the region.
 
-<!-- cache-key: cdktf-0.20.8 input-7e428cb2cac4231451f996e2bdd793475d82b45ae5da0ffb3316ff18dd2de336 -->
+<!-- cache-key: cdktf-0.20.8 input-eb5beff7f44054362324d03e57bc31451600ce4c220d3e421ee95c6c6547873f -->

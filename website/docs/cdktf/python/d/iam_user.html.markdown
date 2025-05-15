@@ -35,6 +35,8 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `user_name` - (Required) Friendly IAM user name to match.
 
 ## Attribute Reference
@@ -49,4 +51,4 @@ This data source exports the following attributes in addition to the arguments a
 * `user_name` - Name associated to this User
 * `tags` - Map of key-value pairs associated with the user.
 
-<!-- cache-key: cdktf-0.20.8 input-6fc236e4096e564d16a3b9afdadc3ab5361ca85cbec9e92427faf10567dd0bee -->
+<!-- cache-key: cdktf-0.20.8 input-8df9c6e13bb781b376dc22243957609d8aa6c9f6491a910a92212113d62c538f -->

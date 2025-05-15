@@ -33,6 +33,8 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `id` - (Required) Concatenation of the catalog ID and connection name. For example, if your account ID is
 `123456789123` and the connection name is `conn` then the ID is `123456789123:conn`.
 
@@ -51,4 +53,4 @@ This data source exports the following attributes in addition to the arguments a
 * `physical_connection_requirements` - A map of physical connection requirements, such as VPC and SecurityGroup.
 * `tags` - Tags assigned to the resource
 
-<!-- cache-key: cdktf-0.20.8 input-a6eb1794558192738dcc44efa8f0407d2e444e8bca872cff8ad1588b9239c752 -->
+<!-- cache-key: cdktf-0.20.8 input-44925c5409cf1c31debaa3a1c11ba7184d6c77073b3179c783d94aa33ed96416 -->

@@ -38,6 +38,8 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `owner` - (Optional) Owner of the image recipes. Valid values are `Self`, `Shared`, `Amazon` and `ThirdParty`. Defaults to `Self`.
 * `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
 
@@ -55,4 +57,4 @@ This data source exports the following attributes in addition to the arguments a
 * `arns` - Set of ARNs of the matched Image Builder Components.
 * `names` - Set of names of the matched Image Builder Components.
 
-<!-- cache-key: cdktf-0.20.8 input-a6e2ed0b567dbc9f2a9860c621245b1e296adcc5e958bfacc614bae759a05b04 -->
+<!-- cache-key: cdktf-0.20.8 input-727574326ce142640af712416b63aa97baa82883ac14bec3a237c1e99c619276 -->

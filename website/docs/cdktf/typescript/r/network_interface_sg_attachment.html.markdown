@@ -115,6 +115,8 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `securityGroupId` - (Required) The ID of the security group.
 * `networkInterfaceId` - (Required) The ID of the network interface to attach to.
 
@@ -162,4 +164,4 @@ Using `terraform import`, import Network Interface Security Group attachments us
 % terraform import aws_network_interface_sg_attachment.sg_attachment eni-1234567890abcdef0_sg-1234567890abcdef0
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-0320c62534ccc3510c781ee7478886cd1645618e9047560ebb40061c84f69576 -->
+<!-- cache-key: cdktf-0.20.8 input-d2ff01d05487920320dbc99203a6716d31749f4c7ad12ba1533ec53600b1abd9 -->

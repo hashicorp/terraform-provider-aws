@@ -46,6 +46,8 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `rule_name` - (Required) The name of the sampling rule.
 * `resource_arn` - (Required) Matches the ARN of the AWS resource on which the service runs.
 * `priority` - (Required) The priority of the sampling rule.
@@ -93,4 +95,4 @@ Using `terraform import`, import XRay Sampling Rules using the name. For example
 % terraform import aws_xray_sampling_rule.example example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-3ca0f87f60b2af282993155f8f46c69e0703d25d278651c0017302f1714b4c23 -->
+<!-- cache-key: cdktf-0.20.8 input-7221290c8d35ced135b0938fa4968ccc53459fc34a2439bf697749fca293fdbe -->

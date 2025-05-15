@@ -41,7 +41,7 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments supported:
+This resource supports the following arguments:
 
 * `name` - (Required) A name for the VPC Ingress Connection resource. It must be unique across all the active VPC Ingress Connections in your AWS account in the AWS Region.
 * `service_arn` - (Required) The Amazon Resource Name (ARN) for this App Runner service that is used to create the VPC Ingress Connection resource.
@@ -89,4 +89,4 @@ Using `terraform import`, import App Runner VPC Ingress Connection using the `ar
 % terraform import aws_apprunner_vpc_ingress_connection.example "arn:aws:apprunner:us-west-2:837424938642:vpcingressconnection/example/b379f86381d74825832c2e82080342fa"
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-5ca4eb20c816b4fc2b57f0cfd6bbd31dc7537e74b1368f2c8074afd614895b23 -->
+<!-- cache-key: cdktf-0.20.8 input-3f0d7000764932841708a779959d7e14bc38fb74ef10b85223c1434d7c1eecc9 -->

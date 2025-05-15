@@ -64,14 +64,14 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
 * `groupId` - (Required) The identifier for a group in the Identity Store.
 * `identityStoreId` - (Required) Identity Store ID associated with the Single Sign-On Instance.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `groupMemberships` - A list of group membership objects. See [`groupMemberships`](#group_memberships) below.
 
@@ -86,4 +86,4 @@ In addition to all arguments above, the following attributes are exported:
 
 * `userId` - User identifier of the group member.
 
-<!-- cache-key: cdktf-0.20.8 input-410b9973cafc4aa97001b03758404197a0fa1dee0788f62a3e13f785569469fb -->
+<!-- cache-key: cdktf-0.20.8 input-c134d694c955fb553b8516ce79cad078242e966507a3509f77227e372e89cdd0 -->

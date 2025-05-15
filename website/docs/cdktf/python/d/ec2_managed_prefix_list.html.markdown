@@ -61,13 +61,15 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available
-prefix lists. The given filters must match exactly one prefix list
-whose data will be exported as attributes.
+This data source supports the following arguments:
 
 * `id` - (Optional) ID of the prefix list to select.
 * `name` - (Optional) Name of the prefix list to select.
 * `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
+
+The arguments of this data source act as filters for querying the available
+prefix lists. The given filters must match exactly one prefix list
+whose data will be exported as attributes.
 
 ### filter Configuration Block
 
@@ -95,4 +97,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.8 input-cdbf4a9d93a044622eb9a1f8a3e9a7b0a043366fdd2b0bae53faf5879d45c641 -->
+<!-- cache-key: cdktf-0.20.8 input-791f129b21e61fc1580e1d68e3c36b7cd05aa8b7b599fa43a75a0556fe9e9f3d -->
