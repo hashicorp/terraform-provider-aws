@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -20,7 +19,6 @@ import (
 
 func testAccAccountSettings_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_quicksight_account_settings.test"
 
 	resource.Test(t, resource.TestCase{
@@ -30,7 +28,7 @@ func testAccAccountSettings_basic(t *testing.T) {
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccountSettingsConfig_basic(rName, false),
+				Config: testAccAccountSettingsConfig_basic(false),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
@@ -56,7 +54,7 @@ func testAccAccountSettings_basic(t *testing.T) {
 				ImportStateVerifyIdentifierAttribute: names.AttrAWSAccountID,
 			},
 			{
-				Config: testAccAccountSettingsConfig_basic(rName, true),
+				Config: testAccAccountSettingsConfig_basic(true),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
@@ -87,7 +85,7 @@ func testAccAccountSettingsImportStateIDFunc(n string) resource.ImportStateIdFun
 	}
 }
 
-func testAccAccountSettingsConfig_basic(rName string, terminationProtectionEnabled bool) string {
+func testAccAccountSettingsConfig_basic(terminationProtectionEnabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_quicksight_account_settings" "test" {
   termination_protection_enabled = %[1]t
