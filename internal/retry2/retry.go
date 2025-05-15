@@ -175,7 +175,7 @@ func BeginWithOptions(timeout time.Duration, opts ...Option) *RetryWithTimeout {
 
 	return &RetryWithTimeout{
 		config:   config,
-		deadline: NewDeadline(timeout),
+		deadline: NewDeadline(timeout + config.gracePeriod),
 	}
 }
 
@@ -189,13 +189,9 @@ func Begin(timeout time.Duration) *RetryWithTimeout {
 // The deadline is not checked on the first call to Continue.
 func (r *RetryWithTimeout) Continue(ctx context.Context) bool {
 	if r.attempt != 0 && r.deadline.Remaining() == 0 {
-		if r.config.gracePeriod == 0 {
-			r.timedOut = true
-			return false
-		}
+		r.timedOut = true
 
-		r.deadline = NewDeadline(r.config.gracePeriod)
-		r.config.gracePeriod = 0
+		return false
 	}
 
 	r.sleep(ctx, r.config.delay(r.attempt))
