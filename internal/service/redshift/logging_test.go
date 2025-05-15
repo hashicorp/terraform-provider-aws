@@ -221,13 +221,9 @@ func testAccCheckLoggingExists(ctx context.Context, name string, log *redshift.D
 }
 
 func testAccLoggingConfigBase(rName string) string {
-	return acctest.ConfigCompose(
-		// "InvalidVPCNetworkStateFault: The requested AZ us-west-2a is not a valid AZ."
-		acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"),
-		fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_redshift_cluster" "test" {
   cluster_identifier                  = %[1]q
-  availability_zone                   = data.aws_availability_zones.available.names[0]
   database_name                       = "mydb"
   master_username                     = "foo_test"
   master_password                     = "Mustbe8characters"
@@ -237,7 +233,7 @@ resource "aws_redshift_cluster" "test" {
   allow_version_upgrade               = false
   skip_final_snapshot                 = true
 }
-`, rName))
+`, rName)
 }
 
 func testAccLoggingConfig_basic(rName string) string {
@@ -245,7 +241,7 @@ func testAccLoggingConfig_basic(rName string) string {
 		testAccLoggingConfigBase(rName),
 		`
 resource "aws_redshift_logging" "test" {
-  cluster_identifier   = aws_redshift_cluster.test.id
+  cluster_identifier   = aws_redshift_cluster.test.cluster_identifier
   log_destination_type = "cloudwatch"
   log_exports          = ["connectionlog", "useractivitylog", "userlog"]
 }
@@ -293,8 +289,8 @@ EOF
 resource "aws_redshift_logging" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
-  cluster_identifier   = aws_redshift_cluster.test.id
-  bucket_name          = aws_s3_bucket.test.id
+  cluster_identifier   = aws_redshift_cluster.test.cluster_identifier
+  bucket_name          = aws_s3_bucket.test.bucket
   s3_key_prefix        = "testprefix/"
   log_destination_type = "s3"
 }
