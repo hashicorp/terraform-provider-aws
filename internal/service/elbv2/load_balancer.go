@@ -252,6 +252,20 @@ func resourceLoadBalancer() *schema.Resource {
 				Default:          awstypes.LoadBalancerTypeEnumApplication,
 				ValidateDiagFunc: enum.Validate[awstypes.LoadBalancerTypeEnum](),
 			},
+			"minimum_load_balancer_capacity": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: suppressIfLBTypeNot(awstypes.LoadBalancerTypeEnumApplication, awstypes.LoadBalancerTypeEnumNetwork),
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"capacity_units": {
+							Type:     schema.TypeInt,
+							Required: true,
+						},
+					},
+				},
+			},
 			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -445,6 +459,7 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	var attributes []awstypes.LoadBalancerAttribute
+	var minCapacity *awstypes.MinimumLoadBalancerCapacity
 
 	if lbType == awstypes.LoadBalancerTypeEnumApplication || lbType == awstypes.LoadBalancerTypeEnumNetwork {
 		if v, ok := d.GetOk("access_logs"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
@@ -454,6 +469,9 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 				Key:   aws.String(loadBalancerAttributeAccessLogsS3Enabled),
 				Value: flex.BoolValueToString(false),
 			})
+		}
+		if v, ok := d.GetOk("minimum_load_balancer_capacity"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			minCapacity = expandCapacity(v.([]any))
 		}
 	}
 
@@ -469,6 +487,15 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	attributes = append(attributes, loadBalancerAttributes.expand(d, lbType, false)...)
+
+	if minCapacity != nil {
+		if err := modifyCapacityReservation(ctx, conn, d.Id(), minCapacity); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+		if err := waitForModifyCapacityReservationToComplete(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for ELBv2 Load Balancer (%s) create: %s", d.Id(), err)
+		}
+	}
 
 	wait := false
 	if len(attributes) > 0 {
@@ -563,6 +590,18 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	loadBalancerAttributes.flatten(d, attributes)
+
+	if lb.Type == awstypes.LoadBalancerTypeEnumApplication || lb.Type == awstypes.LoadBalancerTypeEnumNetwork {
+		capacity, err := findLoadBalancerCapacityByARN(ctx, conn, d.Id())
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading ELBv2 Load Balancer (%s) capacity: %s", d.Id(), err)
+		}
+
+		if err := d.Set("minimum_load_balancer_capacity", flattenCapacity(capacity.MinimumLoadBalancerCapacity)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting minimum_load_balancer_capacity: %s", err)
+		}
+	}
 
 	return diags
 }
@@ -677,6 +716,16 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 	}
 
+	if d.HasChange("minimum_load_balancer_capacity") {
+		minCapacity := expandCapacity(d.Get("minimum_load_balancer_capacity").([]any))
+		if err := modifyCapacityReservation(ctx, conn, d.Id(), minCapacity); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+		if err := waitForModifyCapacityReservationToComplete(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for ELBv2 Load Balancer (%s) update capacity reservation: %s", d.Id(), err)
+		}
+	}
+
 	if _, err := waitLoadBalancerActive(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for ELBv2 Load Balancer (%s) update: %s", d.Id(), err)
 	}
@@ -748,6 +797,27 @@ func modifyLoadBalancerAttributes(ctx context.Context, conn *elasticloadbalancin
 
 		return nil
 	}
+}
+
+func modifyCapacityReservation(ctx context.Context, conn *elasticloadbalancingv2.Client, arn string, minCapacity *awstypes.MinimumLoadBalancerCapacity) error {
+	resetCapacityReservation := false
+	if minCapacity == nil {
+		resetCapacityReservation = true
+	} else if minCapacity.CapacityUnits == nil {
+		resetCapacityReservation = true
+	}
+	input := &elasticloadbalancingv2.ModifyCapacityReservationInput{
+		MinimumLoadBalancerCapacity: minCapacity,
+		LoadBalancerArn:             aws.String(arn),
+		ResetCapacityReservation:    aws.Bool(resetCapacityReservation),
+	}
+
+	_, err := conn.ModifyCapacityReservation(ctx, input)
+
+	if err != nil {
+		return fmt.Errorf("modifying ELBv2 Load Balancer (%s) capacity reservation: %w", arn, err)
+	}
+	return nil
 }
 
 type loadBalancerAttributeInfo struct {
@@ -974,6 +1044,31 @@ func findLoadBalancerAttributesByARN(ctx context.Context, conn *elasticloadbalan
 	return output.Attributes, nil
 }
 
+func findLoadBalancerCapacityByARN(ctx context.Context, conn *elasticloadbalancingv2.Client, arn string) (*elasticloadbalancingv2.DescribeCapacityReservationOutput, error) {
+	input := &elasticloadbalancingv2.DescribeCapacityReservationInput{
+		LoadBalancerArn: aws.String(arn),
+	}
+
+	output, err := conn.DescribeCapacityReservation(ctx, input)
+
+	if errs.IsA[*awstypes.LoadBalancerNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
 func statusLoadBalancer(ctx context.Context, conn *elasticloadbalancingv2.Client, arn string) retry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findLoadBalancerByARN(ctx, conn, arn)
@@ -987,6 +1082,29 @@ func statusLoadBalancer(ctx context.Context, conn *elasticloadbalancingv2.Client
 		}
 
 		return output, string(output.State.Code), nil
+	}
+}
+
+func statusCapacityReservation(ctx context.Context, conn *elasticloadbalancingv2.Client, arn string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findLoadBalancerCapacityByARN(ctx, conn, arn)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		overallState := awstypes.CapacityReservationStateEnumProvisioned
+		for _, rs := range output.CapacityReservationState {
+			if rs.State.Code != awstypes.CapacityReservationStateEnumProvisioned {
+				overallState = rs.State.Code
+			}
+		}
+
+		return output, string(overallState), nil
 	}
 }
 
@@ -1072,6 +1190,27 @@ func waitForNLBNetworkInterfacesToDetach(ctx context.Context, conn *ec2.Client, 
 
 		return len(networkInterfaces), nil
 	})
+
+	return err
+}
+
+func waitForModifyCapacityReservationToComplete(ctx context.Context, conn *elasticloadbalancingv2.Client, lbArn string, timeout time.Duration) error {
+	stateConf := &retry.StateChangeConf{
+		Pending:    enum.Slice(awstypes.CapacityReservationStateEnumPending, awstypes.CapacityReservationStateEnumFailed, awstypes.CapacityReservationStateEnumRebalancing),
+		Target:     enum.Slice(awstypes.CapacityReservationStateEnumProvisioned),
+		Refresh:    statusCapacityReservation(ctx, conn, lbArn),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.LoadBalancer); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.State.Reason)))
+
+		return err
+	}
 
 	return err
 }
@@ -1464,6 +1603,28 @@ func expandIPAMPools(tfList []any) *awstypes.IpamPools {
 	return &apiObject
 }
 
+func expandCapacity(tfList []any) *awstypes.MinimumLoadBalancerCapacity {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObject awstypes.MinimumLoadBalancerCapacity
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+
+		if !ok {
+			continue
+		}
+
+		if v, ok := tfMap["capacity_units"].(int); ok && v != 0 {
+			apiObject.CapacityUnits = aws.Int32(int32(v))
+		}
+	}
+
+	return &apiObject
+}
+
 func flattenIPAMPools(ipamPools *awstypes.IpamPools) []any {
 	if ipamPools == nil {
 		return nil
@@ -1471,6 +1632,18 @@ func flattenIPAMPools(ipamPools *awstypes.IpamPools) []any {
 
 	tfMap := map[string]any{
 		"ipv4_ipam_pool_id": aws.ToString(ipamPools.Ipv4IpamPoolId),
+	}
+
+	return []any{tfMap}
+}
+
+func flattenCapacity(minLoadBalancerCapacity *awstypes.MinimumLoadBalancerCapacity) []any {
+	if minLoadBalancerCapacity == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		"capacity_units": aws.ToInt32(minLoadBalancerCapacity.CapacityUnits),
 	}
 
 	return []any{tfMap}

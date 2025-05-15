@@ -121,6 +121,7 @@ This resource supports the following arguments:
 * `ip_address_type` - (Optional) Type of IP addresses used by the subnets for your load balancer. The possible values depend upon the load balancer type: `ipv4` (all load balancer types), `dualstack` (all load balancer types), and `dualstack-without-public-ipv4` (type `application` only).
 * `ipam_pools` (Optional). The IPAM pools to use with the load balancer.  Only valid for Load Balancers of type `application`. See [ipam_pools](#ipam_pools) for more information.
 * `load_balancer_type` - (Optional) Type of load balancer to create. Possible values are `application`, `gateway`, or `network`. The default value is `application`.
+* `minimum_load_balancer_capacity` - (Optional) Minimum capacity for a load balancer. Only valid for Load Balancers of type `application` or `network`.
 * `name` - (Optional) Name of the LB. This name must be unique within your AWS account, can have a maximum of 32 characters, must contain only alphanumeric characters or hyphens, and must not begin or end with a hyphen. If not specified, Terraform will autogenerate a name beginning with `tf-lb`.
 * `name_prefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `security_groups` - (Optional) List of security group IDs to assign to the LB. Only valid for Load Balancers of type `application` or `network`. For load balancers of type `network` security groups cannot be added if none are currently present, and cannot all be removed once added. If either of these conditions are met, this will force a recreation of the resource.
@@ -145,6 +146,10 @@ This resource supports the following arguments:
 ### ipam_pools
 
 * `ipv4_ipam_pool_id` - (Required) The ID of the IPv4 IPAM pool.
+
+### minimum_load_balancer_capacity
+
+* `capacity_units` - (Required) The number of capacity units.
 
 ### subnet_mapping
 
