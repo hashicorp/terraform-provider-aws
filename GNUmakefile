@@ -343,7 +343,7 @@ pr-target-check: ## [CI] Check for pull request target
 		echo "$$disallowed_files"; \
 		exit 1; \
 	fi
-	@echo "make: pull_request_target check passed."
+	@echo "make: pr-target-check check passed."
 
 prereq-go: ## If $(GO_VER) is not installed, install it
 	@if ! type "$(GO_VER)" > /dev/null 2>&1 ; then \
