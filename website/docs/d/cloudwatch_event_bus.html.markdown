@@ -31,6 +31,8 @@ This data source supports the following arguments:
 This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the event bus.
+* `dead_letter_config` - Configuration details of the Amazon SQS queue for EventBridge to use as a dead-letter queue (DLQ). This block has the following arguments:
+    * `arn` - The ARN of the SQS queue specified as the target for the dead-letter queue.
 * `description` - Event bus description.
 * `id` - Name of the event bus.
 * `kms_key_identifier` - Identifier of the AWS KMS customer managed key for EventBridge to use to encrypt events on this event bus, if one has been specified.

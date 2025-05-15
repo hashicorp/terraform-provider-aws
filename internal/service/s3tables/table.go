@@ -66,6 +66,15 @@ func (r *tableResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
+			names.AttrEncryptionConfiguration: schema.ObjectAttribute{
+				CustomType: fwtypes.NewObjectTypeOf[encryptionConfigurationModel](ctx),
+				Optional:   true,
+				Computed:   true,
+				PlanModifiers: []planmodifier.Object{
+					objectplanmodifier.UseStateForUnknown(),
+					objectplanmodifier.RequiresReplace(),
+				},
+			},
 			names.AttrFormat: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.OpenTableFormat](),
 				Required:   true,
@@ -256,6 +265,31 @@ func (r *tableResource) Create(ctx context.Context, req resource.CreateRequest, 
 	}
 	plan.MaintenanceConfiguration = maintenanceConfiguration
 
+	awsEncryptionConfig, err := conn.GetTableEncryption(ctx, &s3tables.GetTableEncryptionInput{
+		Name:           plan.Name.ValueStringPointer(),
+		Namespace:      plan.Namespace.ValueStringPointer(),
+		TableBucketARN: plan.TableBucketARN.ValueStringPointer(),
+	})
+	switch {
+	case errs.IsA[*awstypes.NotFoundException](err):
+	case err != nil:
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.S3Tables, create.ErrActionReading, resNameTableBucket, plan.Name.String(), err),
+			err.Error(),
+		)
+	default:
+		var encryptionConfiguration encryptionConfigurationModel
+		resp.Diagnostics.Append(flex.Flatten(ctx, awsEncryptionConfig.EncryptionConfiguration, &encryptionConfiguration)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		plan.EncryptionConfiguration, d = fwtypes.NewObjectValueOf(ctx, &encryptionConfiguration)
+		resp.Diagnostics.Append(d...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	}
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
@@ -304,6 +338,31 @@ func (r *tableResource) Read(ctx context.Context, req resource.ReadRequest, resp
 		return
 	}
 	state.MaintenanceConfiguration = maintenanceConfiguration
+
+	awsEncryptionConfig, err := conn.GetTableEncryption(ctx, &s3tables.GetTableEncryptionInput{
+		Name:           state.Name.ValueStringPointer(),
+		Namespace:      state.Namespace.ValueStringPointer(),
+		TableBucketARN: state.TableBucketARN.ValueStringPointer(),
+	})
+	if err != nil {
+		if !errs.IsA[*awstypes.NotFoundException](err) {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.S3Tables, create.ErrActionReading, resNameTableBucket, state.Name.String(), err),
+				err.Error(),
+			)
+		}
+	} else {
+		var encryptionConfiguration encryptionConfigurationModel
+		resp.Diagnostics.Append(flex.Flatten(ctx, awsEncryptionConfig.EncryptionConfiguration, &encryptionConfiguration)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		state.EncryptionConfiguration, d = fwtypes.NewObjectValueOf(ctx, &encryptionConfiguration)
+		resp.Diagnostics.Append(d...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -516,6 +575,7 @@ type tableResourceModel struct {
 	ARN                      types.String                                              `tfsdk:"arn"`
 	CreatedAt                timetypes.RFC3339                                         `tfsdk:"created_at"`
 	CreatedBy                types.String                                              `tfsdk:"created_by"`
+	EncryptionConfiguration  fwtypes.ObjectValueOf[encryptionConfigurationModel]       `tfsdk:"encryption_configuration"`
 	Format                   fwtypes.StringEnum[awstypes.OpenTableFormat]              `tfsdk:"format"`
 	MaintenanceConfiguration fwtypes.ObjectValueOf[tableMaintenanceConfigurationModel] `tfsdk:"maintenance_configuration" autoflex:"-"`
 	MetadataLocation         types.String                                              `tfsdk:"metadata_location"`

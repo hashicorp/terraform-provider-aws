@@ -16,10 +16,21 @@ Provides an ECS default account setting for a specific ECS Resource name within 
 
 ## Example Usage
 
+### Enable the long task ARN format
+
 ```terraform
 resource "aws_ecs_account_setting_default" "test" {
   name  = "taskLongArnFormat"
   value = "enabled"
+}
+```
+
+### Set the default log driver mode to non-blocking
+
+```terraform
+resource "aws_ecs_account_setting_default" "test" {
+  name  = "defaultLogDriverMode"
+  value = "non-blocking"
 }
 ```
 

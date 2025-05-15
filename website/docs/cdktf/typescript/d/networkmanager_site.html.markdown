@@ -37,6 +37,8 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `globalNetworkId` - (Required) ID of the Global Network of the site to retrieve.
 * `siteId` - (Required) ID of the specific site to retrieve.
 
@@ -55,4 +57,4 @@ The `location` object supports the following:
 * `latitude` - Latitude of the location.
 * `longitude` - Longitude of the location.
 
-<!-- cache-key: cdktf-0.20.8 input-2cbfc4283cdeeff2ae18f90ca3f052f344762564bd54bf48bd929558cd8d2825 -->
+<!-- cache-key: cdktf-0.20.8 input-4a539fee8d033deb6206c132874c31fb597aff27151daa40cbb477c17a8aefdc -->

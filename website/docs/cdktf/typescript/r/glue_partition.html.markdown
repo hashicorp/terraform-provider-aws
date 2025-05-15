@@ -23,17 +23,13 @@ import { TerraformStack } from "cdktf";
  * See https://cdk.tf/provider-generation for more details.
  */
 import { GluePartition } from "./.gen/providers/aws/glue-partition";
-interface MyConfig {
-  partitionValues: any;
-}
 class MyConvertedCode extends TerraformStack {
-  constructor(scope: Construct, name: string, config: MyConfig) {
+  constructor(scope: Construct, name: string) {
     super(scope, name);
     new GluePartition(this, "example", {
       databaseName: "some-database",
+      partitionValues: ["some-value"],
       tableName: "some-table",
-      values: ["some-value"],
-      partitionValues: config.partitionValues,
     });
   }
 }
@@ -130,4 +126,4 @@ Using `terraform import`, import Glue Partitions using the catalog ID (usually A
 % terraform import aws_glue_partition.part 123456789012:MyDatabase:MyTable:val1#val2
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-462112b62aec7925ebd6737afdabe9d69a387daa4715f683073541c4130b403b -->
+<!-- cache-key: cdktf-0.20.8 input-4f1cd549f374095304ccdeaac691997cd6969f91350fa6eb91221e08599f5fb9 -->

@@ -53,6 +53,8 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `endpoint_type` - (Optional) Endpoint type. Valid values: `iot:CredentialProvider`, `iot:Data`, `iot:Data-ATS`, `iot:Jobs`.
 
 ## Attribute Reference
@@ -66,4 +68,4 @@ This data source exports the following attributes in addition to the arguments a
     * `iot:Data-ATS`: `IDENTIFIER-ats.iot.REGION.amazonaws.com`
     * `iot:Jobs`: `IDENTIFIER.jobs.iot.REGION.amazonaws.com`
 
-<!-- cache-key: cdktf-0.20.8 input-56c8383801b044a75be3c89aa515472690d24408a38b21081a32c8735b9a3414 -->
+<!-- cache-key: cdktf-0.20.8 input-66c4bf1dd6cab8ef1ea0abf8fd9be070d2e9e04cc26120f4ca2685dad68d760e -->

@@ -36,6 +36,8 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `arn` - (Required) ARN of the distribution configuration.
 
 ## Attribute Reference
@@ -86,4 +88,4 @@ This data source exports the following attributes in addition to the arguments a
 * `name` - Name of the distribution configuration.
 * `tags` - Key-value map of resource tags for the distribution configuration.
 
-<!-- cache-key: cdktf-0.20.8 input-27043e8beeb3a02079037fbea9c18071b0ec510211018945923139dc9ffa9f6e -->
+<!-- cache-key: cdktf-0.20.8 input-83f0acbb707f41c32025046dfe676b1233def3cdae09264d113c3926125191a8 -->

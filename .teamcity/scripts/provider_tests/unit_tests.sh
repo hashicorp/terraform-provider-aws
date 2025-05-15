@@ -7,6 +7,7 @@ set -euo pipefail
 go test \
     ./internal/acctest/... \
     ./internal/attrmap/... \
+    ./internal/backoff/... \
     ./internal/conns/... \
     ./internal/create/... \
     ./internal/dns/... \
@@ -19,6 +20,7 @@ go test \
     ./internal/function/... \
     ./internal/generate/... \
     ./internal/io/... \
+    ./internal/iters/... \
     ./internal/json/... \
     ./internal/logging/... \
     ./internal/maps/... \

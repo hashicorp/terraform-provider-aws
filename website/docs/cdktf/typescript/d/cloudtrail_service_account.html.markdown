@@ -88,6 +88,8 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `region` - (Optional) Name of the region whose AWS CloudTrail account ID is desired.
 Defaults to the region from the AWS provider configuration.
 
@@ -98,4 +100,4 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - ID of the AWS CloudTrail service account in the selected region.
 * `arn` - ARN of the AWS CloudTrail service account in the selected region.
 
-<!-- cache-key: cdktf-0.20.8 input-3998e4f635a042ba272505edd7920f0a7d81b9494779e6ebad66cb92fc74ee17 -->
+<!-- cache-key: cdktf-0.20.8 input-131d004592287048f9ca3dd037666ffd828983ea67893fe19d8a2894980f03ad -->

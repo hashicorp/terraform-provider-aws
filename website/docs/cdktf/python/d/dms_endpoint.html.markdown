@@ -35,12 +35,14 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
 * `endpoint_id` - (Required) Database endpoint identifier. Identifiers must contain from 1 to 255 alphanumeric characters or hyphens, begin with a letter, contain only ASCII letters, digits, and hyphens, not end with a hyphen, and not contain two consecutive hyphens.
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 See the [`aws_dms_endpoint` resource](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/dms_endpoint) for details on the returned attributes - they are identical.
 
-<!-- cache-key: cdktf-0.20.8 input-998a5893daed445684f6f9e1f26e5c03b27e3ac275e8cdebccf3ef05a470a1a7 -->
+<!-- cache-key: cdktf-0.20.8 input-e85ccd8df45c69d274b89ac52de1cf353f2eaca02b6b6c8da68b790844a0ec1e -->

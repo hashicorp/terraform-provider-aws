@@ -2778,9 +2778,10 @@ func flattenBucketSSEKMSEncryptedObjects(apiObject *types.SseKmsEncryptedObjects
 
 	tfMap := make(map[string]any)
 
-	if apiObject.Status == types.SseKmsEncryptedObjectsStatusEnabled {
+	switch apiObject.Status {
+	case types.SseKmsEncryptedObjectsStatusEnabled:
 		tfMap[names.AttrEnabled] = true
-	} else if apiObject.Status == types.SseKmsEncryptedObjectsStatusDisabled {
+	case types.SseKmsEncryptedObjectsStatusDisabled:
 		tfMap[names.AttrEnabled] = false
 	}
 

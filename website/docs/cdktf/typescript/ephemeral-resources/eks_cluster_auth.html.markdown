@@ -60,6 +60,8 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `name` - (Required) Name of the EKS cluster.
 
 ## Attribute Reference
@@ -68,4 +70,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `token` - Token to use to authenticate with the cluster.
 
-<!-- cache-key: cdktf-0.20.8 input-30681549af1329e50d52db4c601bf417c3246d2c4b884340bda2fffaa12b4025 -->
+<!-- cache-key: cdktf-0.20.8 input-5916bbc303c26cf499afb36c9cc05e568cc4eedf6c791f738264aa569db2c7e9 -->

@@ -53,6 +53,8 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `name` - (Required) Name of the cognito user pools. Name is not a unique attribute for cognito user pool, so multiple pools might be returned with given name. If the pool name is expected to be unique, you can reference the pool id via ```tolist(data.aws_cognito_user_pools.selected.ids)[0]```
 
 ## Attribute Reference
@@ -62,4 +64,4 @@ This data source exports the following attributes in addition to the arguments a
 * `ids` - Set of cognito user pool ids.
 * `arns` - Set of cognito user pool Amazon Resource Names (ARNs).
 
-<!-- cache-key: cdktf-0.20.8 input-75e710379276dd4b4879fdf870f90225a6aad57dec06cd592a215bcaab891f06 -->
+<!-- cache-key: cdktf-0.20.8 input-295203eaae34be19b7f146e66971a44a0aa3edd7425bb302c1a22bbfbd232152 -->

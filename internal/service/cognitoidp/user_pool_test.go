@@ -301,6 +301,44 @@ func TestAccCognitoIDPUserPool_withAdvancedSecurityMode(t *testing.T) {
 	})
 }
 
+func TestAccCognitoIDPUserPool_withAdvancedSecurityAdditionalFlows(t *testing.T) {
+	ctx := acctest.Context(t)
+	var pool awstypes.UserPoolType
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cognito_user_pool.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserPoolDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserPoolConfig_advancedSecurityAdditionalFlows(rName, "ENFORCED", "ENFORCED"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserPoolExists(ctx, resourceName, &pool),
+					resource.TestCheckResourceAttr(resourceName, "user_pool_add_ons.0.advanced_security_mode", "ENFORCED"),
+					resource.TestCheckResourceAttr(resourceName, "user_pool_add_ons.0.advanced_security_additional_flows.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "user_pool_add_ons.0.advanced_security_additional_flows.0.custom_auth_mode", "ENFORCED"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccUserPoolConfig_advancedSecurityAdditionalFlows(rName, "AUDIT", "AUDIT"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "user_pool_add_ons.0.advanced_security_mode", "AUDIT"),
+					resource.TestCheckResourceAttr(resourceName, "user_pool_add_ons.0.advanced_security_additional_flows.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "user_pool_add_ons.0.advanced_security_additional_flows.0.custom_auth_mode", "AUDIT"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccCognitoIDPUserPool_withDevice(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pool awstypes.UserPoolType
@@ -2215,6 +2253,22 @@ resource "aws_cognito_user_pool" "test" {
   }
 }
 `, rName, advancedSecurityMode)
+}
+
+func testAccUserPoolConfig_advancedSecurityAdditionalFlows(rName, advancedSecurityMode, customAuthMode string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+  name           = %[1]q
+  user_pool_tier = "PLUS"
+
+  user_pool_add_ons {
+    advanced_security_mode = %[2]q
+    advanced_security_additional_flows {
+      custom_auth_mode = %[3]q
+    }
+  }
+}
+`, rName, advancedSecurityMode, customAuthMode)
 }
 
 func testAccUserPoolConfig_deviceConfiguration(rName string) string {

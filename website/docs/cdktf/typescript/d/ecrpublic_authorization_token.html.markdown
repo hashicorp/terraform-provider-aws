@@ -34,6 +34,10 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
+## Argument Reference
+
+This data source does not support any arguments.
+
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
@@ -44,4 +48,4 @@ This data source exports the following attributes in addition to the arguments a
 * `password` - Password decoded from the authorization token.
 * `userName` - User name decoded from the authorization token.
 
-<!-- cache-key: cdktf-0.20.8 input-fc553185b1ad0893b42035538b008c8015883bff0b2f28b28094a5ed72a8fc63 -->
+<!-- cache-key: cdktf-0.20.8 input-405142b3fcbfcb7d78b40aadc780f14dd06a37b96d4181b4650c2ff388624bad -->

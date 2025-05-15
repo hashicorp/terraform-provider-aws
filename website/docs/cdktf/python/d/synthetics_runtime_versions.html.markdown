@@ -33,7 +33,7 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-There are no arguments available for this data source.
+This data source does not support any arguments.
 
 ## Attribute Reference
 
@@ -50,4 +50,4 @@ This data source exports the following attributes in addition to the arguments a
 * `version_name` - Name of the runtime version.
 For a list of valid runtime versions, see [Canary Runtime Versions](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Synthetics_Canaries_Library.html).
 
-<!-- cache-key: cdktf-0.20.8 input-e31363e80a8a71110dc91fea7ecab71b42bfd0014d1558a514d35963c2da5885 -->
+<!-- cache-key: cdktf-0.20.8 input-72eb5486645f6fcf955bd6e4edfc6e9824e2e31c7685073770930dba7737560f -->

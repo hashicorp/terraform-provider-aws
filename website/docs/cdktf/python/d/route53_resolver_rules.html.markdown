@@ -78,7 +78,7 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available resolver rules in the current region.
+This data source supports the following arguments:
 
 * `name_regex` - (Optional) Regex string to filter resolver rule names.
   The filtering is done locally, so could have a performance impact if the result is large.
@@ -95,4 +95,4 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - AWS Region.
 * `resolver_rule_ids` - IDs of the matched resolver rules.
 
-<!-- cache-key: cdktf-0.20.8 input-9b0c7f44fbc4c3e685d8f6ce94f95d724eb10dbce507d5f4308b0a1bf1da3367 -->
+<!-- cache-key: cdktf-0.20.8 input-a4e1f853ffb95bfc2adc873c75dcfdd2e771ab2d5495b7225051e465c09220df -->

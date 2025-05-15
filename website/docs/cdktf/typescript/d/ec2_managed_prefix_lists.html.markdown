@@ -60,6 +60,8 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `filter` - (Optional) Custom filter block as described below.
 * `tags` - (Optional) Map of tags, each pair of which must exactly match
   a pair on the desired .
@@ -85,4 +87,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.8 input-145158f6b1f653afe1f39eba16c020b3a0c007043249f21a1109df310923bf6a -->
+<!-- cache-key: cdktf-0.20.8 input-22b25affbdf546809e0b3eaa5f0c99a0588ae5b3bbfc8054ee3862299155cc0e -->
