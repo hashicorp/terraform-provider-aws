@@ -332,7 +332,7 @@ func resourceGlobalReplicationGroupCreate(ctx context.Context, d *schema.Resourc
 		} else {
 			version := d.Get(names.AttrEngineVersion).(string)
 			p := d.Get(names.AttrParameterGroupName).(string)
-			if err := updateGlobalReplicationGroup(ctx, conn, d.Id(), globalReplicationGroupEngineVersionMajorUpdater(e.(string), version, p), "engine", d.Timeout(schema.TimeoutUpdate)); err != nil {
+			if err := updateGlobalReplicationGroup(ctx, conn, d.Id(), globalReplicationGroupEngineVersionMajorUpdater(e.(string), version, p), names.AttrEngine, d.Timeout(schema.TimeoutUpdate)); err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
 			}
 		}
