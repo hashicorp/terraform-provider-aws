@@ -45,7 +45,6 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
-	tfstringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -194,6 +193,15 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 								listvalidator.SizeAtMost(1),
 							},
 							NestedObject: schema.NestedBlockObject{
+								Validators: []validator.Object{
+									tfobjectvalidator.WarnAtMostOneOfChildren(
+										path.MatchRelative().AtName("object_size_greater_than"),
+										path.MatchRelative().AtName("object_size_less_than"),
+										path.MatchRelative().AtName(names.AttrPrefix),
+										path.MatchRelative().AtName("and"),
+										path.MatchRelative().AtName("tag"),
+									),
+								},
 								Attributes: map[string]schema.Attribute{
 									"object_size_greater_than": schema.Int64Attribute{
 										Optional: true,
@@ -216,14 +224,6 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 										Computed: true, // Because of Legacy value handling
 										PlanModifiers: []planmodifier.String{
 											ruleFilterPrefixForUnknown(),
-										},
-										Validators: []validator.String{
-											tfstringvalidator.WarnExactlyOneOf(
-												path.MatchRelative().AtParent().AtName("object_size_greater_than"),
-												path.MatchRelative().AtParent().AtName("object_size_less_than"),
-												path.MatchRelative().AtParent().AtName("and"),
-												path.MatchRelative().AtParent().AtName("tag"),
-											),
 										},
 									},
 								},
