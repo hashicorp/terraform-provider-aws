@@ -2036,6 +2036,43 @@ func TestAccCognitoIDPUserPool_userPoolTier(t *testing.T) {
 	})
 }
 
+func TestAccCognitoIDPUserPool_nameUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var pool1, pool2 awstypes.UserPoolType
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cognito_user_pool.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserPoolDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserPoolConfig_name(rName + "-test1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserPoolExists(ctx, resourceName, &pool1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName+"-test1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccUserPoolConfig_name(rName + "-test2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserPoolExists(ctx, resourceName, &pool2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName+"-test2"),
+					// check that the user pool was not recreated
+					testAccCheckUserPoolIdEqual(&pool1, &pool2),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckUserPoolDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPClient(ctx)
@@ -2097,6 +2134,18 @@ func testAccCheckUserPoolNotRecreated(pool1, pool2 *awstypes.UserPoolType) resou
 func testAccPreCheckIdentityProvider(ctx context.Context, t *testing.T) {
 	t.Helper()
 	acctest.PreCheckCognitoIdentityProvider(ctx, t)
+}
+
+func testAccCheckUserPoolIdEqual(pool1 *awstypes.UserPoolType, pool2 *awstypes.UserPoolType) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if pool1.Id == nil || pool2.Id == nil {
+			return fmt.Errorf("user pool ID is nil")
+		}
+		if aws.ToString(pool1.Id) != aws.ToString(pool2.Id) {
+			return fmt.Errorf("user pool %s should not have been replaced with %s", aws.ToString(pool1.Id), aws.ToString(pool2.Id))
+		}
+		return nil
+	}
 }
 
 func testAccUserPoolSMSConfigurationConfig_base(rName string, externalID string) string {
