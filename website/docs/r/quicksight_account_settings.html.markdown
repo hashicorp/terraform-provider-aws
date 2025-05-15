@@ -10,7 +10,7 @@ description: |-
 
 Terraform resource for managing an AWS QuickSight Account Settings.
 
-~> Due to the collision of the `notification_email` attribute of the [`aws_quicksight_account_subscription`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/quicksight_account_subscription) resource and the [`UpdateAccountSettings`](https://docs.aws.amazon.com/quicksight/latest/APIReference/API_UpdateAccountSettings.html) API does not support updating the default namespace, this resource does not support their management.
+~> Deletion of this resource will not modify any settings, only remove the resource from state.
 
 ## Example Usage
 
@@ -34,15 +34,12 @@ resource "aws_quicksight_account_settings" "example" {
 The following arguments are required:
 
 * `termination_protection_enabled` - (Optional) A boolean value that determines whether or not an Amazon QuickSight account can be deleted. If `true`, it does not allow the account to be deleted and results in an error message if a user tries to make a DeleteAccountSubscription request. If `false`, it will allow the account to be deleted.
-* `reset_on_delete` - (Optional) If `true`, destroying the resource will reset the TerminationProtectionEnabled account settings to default of `true`, otherwise account settings are not modified.
-  Defaults to `false`.
-  Will be removed in a future major version of the provider.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `default_namespace` - The default namespace for this Amazon Web Services account. Currently, the default is default.
+* `default_namespace` - The default namespace for this Amazon Web Services account. Currently, the default is `default`.
 
 ## Import
 

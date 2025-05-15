@@ -11,11 +11,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/quicksight"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -34,7 +32,6 @@ func newAccountSettingsResource(_ context.Context) (resource.ResourceWithConfigu
 
 	r.SetDefaultCreateTimeout(5 * time.Minute)
 	r.SetDefaultUpdateTimeout(5 * time.Minute)
-	r.SetDefaultDeleteTimeout(5 * time.Minute)
 
 	return r, nil
 }
@@ -45,6 +42,7 @@ const (
 
 type accountSettingsResource struct {
 	framework.ResourceWithConfigure
+	framework.WithNoOpDelete
 	framework.WithTimeouts
 	framework.WithImportByID
 }
@@ -59,13 +57,6 @@ func (r *accountSettingsResource) Schema(ctx context.Context, request resource.S
 				},
 			},
 			names.AttrID: framework.IDAttributeDeprecatedNoReplacement(),
-			"reset_on_delete": schema.BoolAttribute{
-				Optional: true,
-				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.UseStateForUnknown(),
-				},
-				DeprecationMessage: `The "reset_on_delete" attribute will be removed in a future version of the provider`,
-			},
 			"termination_protection_enabled": schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
@@ -76,7 +67,7 @@ func (r *accountSettingsResource) Schema(ctx context.Context, request resource.S
 		Blocks: map[string]schema.Block{
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
-				Delete: true,
+				Update: true,
 			}),
 		},
 	}
@@ -266,56 +257,6 @@ func (r *accountSettingsResource) Update(ctx context.Context, request resource.U
 	response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
 }
 
-func (r *accountSettingsResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
-	var state accountSettingsResourceModel
-	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	if state.ResetOnDelete.ValueBool() {
-		conn := r.Meta().QuickSightClient(ctx)
-		awsAccountID := r.Meta().AccountID(ctx)
-		input := quicksight.UpdateAccountSettingsInput{
-			AwsAccountId:                 &awsAccountID,
-			TerminationProtectionEnabled: true,
-			DefaultNamespace:             aws.String("default"),
-		}
-
-		_, err := conn.UpdateAccountSettings(ctx, &input)
-		if err != nil {
-			response.Diagnostics.AddError("resetting Quicksight Account Settings", err.Error())
-			return
-		}
-	} else {
-		response.Diagnostics.AddWarning(
-			"Resource Destruction",
-			"This resource has only been removed from Terraform state. "+
-				"Manually use the AWS Console to fully destroy this resource. "+
-				"Setting the attribute \"reset_on_delete\" will also fully destroy resources of this type.",
-		)
-	}
-}
-
-func (r *accountSettingsResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	if req.Plan.Raw.IsNull() {
-		var resetOnDelete types.Bool
-		resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("reset_on_delete"), &resetOnDelete)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-
-		if !resetOnDelete.ValueBool() {
-			resp.Diagnostics.AddWarning(
-				"Resource Destruction",
-				"Applying this resource destruction will only remove the resource from Terraform state and will not reset account settings. "+
-					"Either manually use the AWS Console to fully destroy this resource or "+
-					"update the resource with \"reset_on_delete\" set to true.",
-			)
-		}
-	}
-}
-
 func findAccountSettingsByID(ctx context.Context, conn *quicksight.Client, id string) (*awstypes.AccountSettings, error) {
 	input := quicksight.DescribeAccountSettingsInput{
 		AwsAccountId: aws.String(id),
@@ -343,7 +284,6 @@ func findAccountSettingsByID(ctx context.Context, conn *quicksight.Client, id st
 type accountSettingsResourceModel struct {
 	DefaultNamespace             types.String   `tfsdk:"default_namespace"`
 	ID                           types.String   `tfsdk:"id"`
-	ResetOnDelete                types.Bool     `tfsdk:"reset_on_delete"`
 	TerminationProtectionEnabled types.Bool     `tfsdk:"termination_protection_enabled"`
 	Timeouts                     timeouts.Value `tfsdk:"timeouts"`
 }
