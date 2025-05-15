@@ -5,7 +5,7 @@ package quicksight
 
 // Exports for use in tests only.
 var (
-	ResourceAccountSettings     = newResourceAccountSettings
+	ResourceAccountSettings     = newAccountSettingsResource
 	ResourceAccountSubscription = resourceAccountSubscription
 	ResourceAnalysis            = resourceAnalysis
 	ResourceDashboard           = resourceDashboard

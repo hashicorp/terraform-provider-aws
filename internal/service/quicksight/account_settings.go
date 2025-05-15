@@ -29,8 +29,8 @@ import (
 )
 
 // @FrameworkResource("aws_quicksight_account_settings", name="Account Settings")
-func newResourceAccountSettings(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceAccountSettings{}
+func newAccountSettingsResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &accountSettingsResource{}
 
 	r.SetDefaultCreateTimeout(5 * time.Minute)
 	r.SetDefaultUpdateTimeout(5 * time.Minute)
@@ -43,13 +43,14 @@ const (
 	ResNameAccountSettings = "Account Settings"
 )
 
-type resourceAccountSettings struct {
+type accountSettingsResource struct {
 	framework.ResourceWithConfigure
 	framework.WithTimeouts
+	framework.WithImportByID
 }
 
-func (r *resourceAccountSettings) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *accountSettingsResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"default_namespace": schema.StringAttribute{
 				Computed: true,
@@ -81,13 +82,13 @@ func (r *resourceAccountSettings) Schema(ctx context.Context, req resource.Schem
 	}
 }
 
-func (r *resourceAccountSettings) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *accountSettingsResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	conn := r.Meta().QuickSightClient(ctx)
 	awsAccountID := r.Meta().AccountID(ctx)
-	var plan resourceAccountSettingsModel
+	var plan accountSettingsResourceModel
 
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
@@ -138,65 +139,65 @@ func (r *resourceAccountSettings) Create(ctx context.Context, req resource.Creat
 		},
 	)
 	if err != nil {
-		resp.Diagnostics.AddError("creating Quicksight Account", err.Error())
+		response.Diagnostics.AddError("creating Quicksight Account", err.Error())
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, output.AccountSettings, &plan)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(flex.Flatten(ctx, output.AccountSettings, &plan)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
 	plan.ID = types.StringValue(awsAccountID)
 	plan.DefaultNamespace = types.StringValue("default")
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, plan)...)
 }
 
-func (r *resourceAccountSettings) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *accountSettingsResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	conn := r.Meta().QuickSightClient(ctx)
 	awsAccountID := r.Meta().AccountID(ctx)
-	var state resourceAccountSettingsModel
+	var state accountSettingsResourceModel
 
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
 	out, err := findAccountSettingsByID(ctx, conn, awsAccountID)
 	if tfresource.NotFound(err) {
-		resp.State.RemoveResource(ctx)
+		response.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
-		resp.Diagnostics.AddError(
+		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.QuickSight, create.ErrActionSetting, ResNameAccountSettings, state.ID.String(), err),
 			err.Error(),
 		)
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
 }
 
-func (r *resourceAccountSettings) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *accountSettingsResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	conn := r.Meta().QuickSightClient(ctx)
-	var plan, state resourceAccountSettingsModel
+	var plan, state accountSettingsResourceModel
 
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
+	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
 	diff, d := flex.Diff(ctx, plan, state)
-	resp.Diagnostics.Append(d...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(d...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
@@ -207,7 +208,7 @@ func (r *resourceAccountSettings) Update(ctx context.Context, req resource.Updat
 			// API currently does not support overriding default namespace, but requires for API call
 			DefaultNamespace: aws.String("default"),
 		}
-		if resp.Diagnostics.HasError() {
+		if response.Diagnostics.HasError() {
 			return
 		}
 
@@ -252,23 +253,23 @@ func (r *resourceAccountSettings) Update(ctx context.Context, req resource.Updat
 			},
 		)
 		if err != nil {
-			resp.Diagnostics.AddError("creating Quicksight Account", err.Error())
+			response.Diagnostics.AddError("creating Quicksight Account", err.Error())
 			return
 		}
 
-		resp.Diagnostics.Append(flex.Flatten(ctx, output.AccountSettings, &plan)...)
-		if resp.Diagnostics.HasError() {
+		response.Diagnostics.Append(flex.Flatten(ctx, output.AccountSettings, &plan)...)
+		if response.Diagnostics.HasError() {
 			return
 		}
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceAccountSettings) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state resourceAccountSettingsModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *accountSettingsResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var state accountSettingsResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
@@ -283,11 +284,11 @@ func (r *resourceAccountSettings) Delete(ctx context.Context, req resource.Delet
 
 		_, err := conn.UpdateAccountSettings(ctx, &input)
 		if err != nil {
-			resp.Diagnostics.AddError("resetting Quicksight Account Settings", err.Error())
+			response.Diagnostics.AddError("resetting Quicksight Account Settings", err.Error())
 			return
 		}
 	} else {
-		resp.Diagnostics.AddWarning(
+		response.Diagnostics.AddWarning(
 			"Resource Destruction",
 			"This resource has only been removed from Terraform state. "+
 				"Manually use the AWS Console to fully destroy this resource. "+
@@ -296,7 +297,7 @@ func (r *resourceAccountSettings) Delete(ctx context.Context, req resource.Delet
 	}
 }
 
-func (r *resourceAccountSettings) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+func (r *accountSettingsResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
 	if req.Plan.Raw.IsNull() {
 		var resetOnDelete types.Bool
 		resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("reset_on_delete"), &resetOnDelete)...)
@@ -313,10 +314,6 @@ func (r *resourceAccountSettings) ModifyPlan(ctx context.Context, req resource.M
 			)
 		}
 	}
-}
-
-func (r *resourceAccountSettings) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func findAccountSettingsByID(ctx context.Context, conn *quicksight.Client, id string) (*awstypes.AccountSettings, error) {
@@ -343,7 +340,7 @@ func findAccountSettingsByID(ctx context.Context, conn *quicksight.Client, id st
 	return out.AccountSettings, nil
 }
 
-type resourceAccountSettingsModel struct {
+type accountSettingsResourceModel struct {
 	DefaultNamespace             types.String   `tfsdk:"default_namespace"`
 	ID                           types.String   `tfsdk:"id"`
 	ResetOnDelete                types.Bool     `tfsdk:"reset_on_delete"`
