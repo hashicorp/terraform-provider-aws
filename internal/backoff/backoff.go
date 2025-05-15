@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package retry2
+package backoff
 
 import (
 	"context"
@@ -20,7 +20,7 @@ type Timer interface {
 // DelayFunc returns the duration to wait before the next retry attempt.
 type DelayFunc func(uint) time.Duration
 
-// FixedDelay returns a delay that is the same through all iterations except the first (when it is 0).
+// FixedDelay returns a delay. The first retry attempt has no delay (0), and subsequent attempts use the fixed delay.
 func FixedDelay(delay time.Duration) DelayFunc {
 	return func(n uint) time.Duration {
 		if n == 0 {
@@ -35,19 +35,22 @@ func FixedDelay(delay time.Duration) DelayFunc {
 // to pick the same deterministic random sequence.
 var rng = rand.New(rand.NewSource(time.Now().UnixNano()))
 
-// ExponentialBackoffWithJitterDelay returns a duration of backoffMinDuration * backoffMultiplier**n, with added jitter.
-func ExponentialBackoffWithJitterDelay(backoffMinDuration time.Duration, backoffMultiplier float64) DelayFunc {
+// ExponentialJitterBackoff returns a duration of backoffMinDuration * backoffMultiplier**n, with added jitter.
+func ExponentialJitterBackoff(backoffMinDuration time.Duration, backoffMultiplier float64) DelayFunc {
 	return func(n uint) time.Duration {
 		if n == 0 {
 			return 0
 		}
 
 		mult := math.Pow(backoffMultiplier, float64(n))
-		d := time.Duration(float64(backoffMinDuration) * mult)
-		const jitter = 0.4
-		mult = 1 - jitter*rng.Float64() // Subtract up to 40%.
-		return time.Duration(float64(d) * mult)
+		return applyJitter(time.Duration(float64(backoffMinDuration) * mult))
 	}
+}
+
+func applyJitter(base time.Duration) time.Duration {
+	const jitterFactor = 0.4
+	jitter := 1 - jitterFactor*rng.Float64() // Subtract up to 40%.
+	return time.Duration(float64(base) * jitter)
 }
 
 type sdkv2HelperRetryCompatibleDelay struct {
@@ -105,20 +108,20 @@ func DefaultSDKv2HelperRetryCompatibleDelay() DelayFunc {
 	return SDKv2HelperRetryCompatibleDelay(0, 0, 500*time.Millisecond) //nolint:mnd // 500ms is the Plugin SDKv2 default
 }
 
-// Config configures a retry loop.
-type Config struct {
+// RetryConfig configures a retry loop.
+type RetryConfig struct {
 	delay       DelayFunc
 	gracePeriod time.Duration
 	timer       Timer
 }
 
 // Option represents an option for retry.
-type Option func(*Config)
+type Option func(*RetryConfig)
 
-func emptyOption(c *Config) {}
+func emptyOption(c *RetryConfig) {}
 
 func WithGracePeriod(d time.Duration) Option {
-	return func(c *Config) {
+	return func(c *RetryConfig) {
 		c.gracePeriod = d
 	}
 }
@@ -128,7 +131,7 @@ func WithDelay(d DelayFunc) Option {
 		return emptyOption
 	}
 
-	return func(c *Config) {
+	return func(c *RetryConfig) {
 		c.delay = d
 	}
 }
@@ -137,7 +140,7 @@ func WithDelay(d DelayFunc) Option {
 // This primarily is useful for mocking/testing, where you may not want to explicitly wait for a set duration
 // for retries.
 func WithTimer(t Timer) Option {
-	return func(c *Config) {
+	return func(c *RetryConfig) {
 		c.timer = t
 	}
 }
@@ -149,53 +152,49 @@ func (t *timerImpl) After(d time.Duration) <-chan time.Time {
 	return time.After(d)
 }
 
-// The default Config is backwards compatible with github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry.
-func defaultConfig() Config {
-	return Config{
+// The default RetryConfig is backwards compatible with github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry.
+func defaultRetryConfig() RetryConfig {
+	return RetryConfig{
 		delay:       DefaultSDKv2HelperRetryCompatibleDelay(),
 		gracePeriod: 30 * time.Second,
 		timer:       &timerImpl{},
 	}
 }
 
-// RetryWithTimeout holds state for managing retry loops with a timeout.
-type RetryWithTimeout struct {
+// RetryLoop holds state for managing retry loops with a timeout.
+type RetryLoop struct {
 	attempt  uint
-	config   Config
+	config   RetryConfig
 	deadline deadline
 	timedOut bool
 }
 
-// BeginWithOptions returns a new retry loop configured with the provided options.
-func BeginWithOptions(timeout time.Duration, opts ...Option) *RetryWithTimeout {
-	config := defaultConfig()
+// NewRetryLoopWithOptions returns a new retry loop configured with the provided options.
+func NewRetryLoopWithOptions(timeout time.Duration, opts ...Option) *RetryLoop {
+	config := defaultRetryConfig()
 	for _, opt := range opts {
 		opt(&config)
 	}
 
-	return &RetryWithTimeout{
+	return &RetryLoop{
 		config:   config,
-		deadline: NewDeadline(timeout),
+		deadline: NewDeadline(timeout + config.gracePeriod),
 	}
 }
 
-// Begin returns a new retry loop configured with the default options.
-func Begin(timeout time.Duration) *RetryWithTimeout {
-	return BeginWithOptions(timeout)
+// NewRetryLoop returns a new retry loop configured with the default options.
+func NewRetryLoop(timeout time.Duration) *RetryLoop {
+	return NewRetryLoopWithOptions(timeout)
 }
 
 // Continue sleeps between retry attempts.
 // It returns false if the timeout has been exceeded.
 // The deadline is not checked on the first call to Continue.
-func (r *RetryWithTimeout) Continue(ctx context.Context) bool {
+func (r *RetryLoop) Continue(ctx context.Context) bool {
 	if r.attempt != 0 && r.deadline.Remaining() == 0 {
-		if r.config.gracePeriod == 0 {
-			r.timedOut = true
-			return false
-		}
+		r.timedOut = true
 
-		r.deadline = NewDeadline(r.config.gracePeriod)
-		r.config.gracePeriod = 0
+		return false
 	}
 
 	r.sleep(ctx, r.config.delay(r.attempt))
@@ -204,18 +203,18 @@ func (r *RetryWithTimeout) Continue(ctx context.Context) bool {
 	return true
 }
 
-// Reset resets a RetryWithTimeout to its initial state.
-func (r *RetryWithTimeout) Reset() {
+// Reset resets a RetryLoop to its initial state.
+func (r *RetryLoop) Reset() {
 	r.attempt = 0
 }
 
 // TimedOut return whether the retry timed out.
-func (r *RetryWithTimeout) TimedOut() bool {
+func (r *RetryLoop) TimedOut() bool {
 	return r.timedOut
 }
 
-// Sleeps for the specified duration or until context is done, whichever occurs first.
-func (r *RetryWithTimeout) sleep(ctx context.Context, d time.Duration) {
+// sleep sleeps for the specified duration or until the context is canceled, whichever occurs first.
+func (r *RetryLoop) sleep(ctx context.Context, d time.Duration) {
 	if d == 0 {
 		return
 	}

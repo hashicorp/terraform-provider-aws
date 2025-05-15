@@ -55,7 +55,7 @@ TF_ACC=1 go test \
     ./internal/provider/... \
     ./internal/reflect/... \
     ./internal/retry/... \
-    ./internal/retry2/... \
+    ./internal/backoff/... \
     ./internal/sdkv2/... \
     ./internal/semver/... \
     ./internal/slices/... \
