@@ -18,6 +18,7 @@ ENHANCEMENTS:
 * data-source/aws_cognitoidp_user_pool: Add `user_pool_add_ons` attribute ([#42470](https://github.com/hashicorp/terraform-provider-aws/issues/42470))
 * data-source/aws_dynamodb_table: Add `point_in_time_recovery.recovery_period_in_days` attribute ([#41484](https://github.com/hashicorp/terraform-provider-aws/issues/41484))
 * data-source/aws_ec2_client_vpn_endpoint: Add `client_route_enforcement_options` attribute ([#42424](https://github.com/hashicorp/terraform-provider-aws/issues/42424))
+* data-source/aws_imagebuilder_distribution_configuration: Add `distribution.ssm_parameter_configuration` attribute ([#42604](https://github.com/hashicorp/terraform-provider-aws/issues/42604))
 * data-source/aws_redshiftserverless_workgroup: Add `track_name` attribute ([#42451](https://github.com/hashicorp/terraform-provider-aws/issues/42451))
 * data-source/aws_workspaces_directory: Add `active_directory_config`, `user_identity_type`, `workspace_directory_description`, `workspace_directory_name`, and `workspace_type` attributes ([#42330](https://github.com/hashicorp/terraform-provider-aws/issues/42330))
 * resource/aws_appflow_flow: Add `destination_flow_config.destination_connector_properties.salesforce.data_transfer_api` argument ([#42479](https://github.com/hashicorp/terraform-provider-aws/issues/42479))
@@ -33,6 +34,7 @@ ENHANCEMENTS:
 * resource/aws_dynamodb_table: Add `point_in_time_recovery.recovery_period_in_days` argument ([#41484](https://github.com/hashicorp/terraform-provider-aws/issues/41484))
 * resource/aws_ec2_client_vpn_endpoint: Add `client_route_enforcement_options` argument ([#42424](https://github.com/hashicorp/terraform-provider-aws/issues/42424))
 * resource/aws_ecs_account_setting_default: Add support for `defaultLogDriverMode` value in `Name` argument ([#42418](https://github.com/hashicorp/terraform-provider-aws/issues/42418))
+* resource/aws_imagebuilder_distribution_configuration: Add `distribution.ssm_parameter_configuration` argument ([#42604](https://github.com/hashicorp/terraform-provider-aws/issues/42604))
 * resource/aws_iot_domain_configuration: Add `application_protocol` and `authentication_type` arguments ([#42534](https://github.com/hashicorp/terraform-provider-aws/issues/42534))
 * resource/aws_msk_serverless_cluster: Add `bootstrap_brokers_sasl_iam` attribute. This functionality requires the `kafka:GetBootstrapBrokers` IAM permission ([#42148](https://github.com/hashicorp/terraform-provider-aws/issues/42148))
 * resource/aws_redshiftserverless_workgroup: Add `track_name` argument ([#42451](https://github.com/hashicorp/terraform-provider-aws/issues/42451))
@@ -52,6 +54,7 @@ BUG FIXES:
 
 * aws_sagemaker_mlflow_tracking_server: Fix `ValidationException: The provided MLflow version is not supported` errors ([#42435](https://github.com/hashicorp/terraform-provider-aws/issues/42435))
 * data-source/aws_networkfirewall_firewall_policy: Add `firewall_policy.policy_variables` configuration block ([#42473](https://github.com/hashicorp/terraform-provider-aws/issues/42473))
+* resource/aws_bedrockagent_agent_alias: Stop using state for unknown on `routing_configuration` so we only send it on update when explicility configured. This allows updates to aliases to create new versions. ([#42603](https://github.com/hashicorp/terraform-provider-aws/issues/42603))
 * resource/aws_cloudwatch_metric_alarm: Support `20` as a valid value for `metric_query.metric.period`, `metric_query.period`, and `period` ([#42390](https://github.com/hashicorp/terraform-provider-aws/issues/42390))
 * resource/aws_controltower_control: Fix handling `ResourceNotFound` exceptions during delete ([#42494](https://github.com/hashicorp/terraform-provider-aws/issues/42494))
 * resource/aws_controltower_control: Fix handling of `parameters` block removal ([#42494](https://github.com/hashicorp/terraform-provider-aws/issues/42494))
