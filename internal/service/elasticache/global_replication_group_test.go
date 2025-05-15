@@ -1558,7 +1558,7 @@ func TestAccElastiCacheGlobalReplicationGroup_SetEngineOnCreate_ValkeyUpgrade(t 
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(primaryReplicationGroupResourceName, names.AttrEngine, "valkey"),
 					resource.TestCheckResourceAttr(primaryReplicationGroupResourceName, names.AttrEngineVersion, "8.0"),
-					resource.TestMatchResourceAttr(primaryReplicationGroupResourceName, "parameter_group_name", regexache.MustCompile(`^global-datastore-.+$`)),
+					resource.TestMatchResourceAttr(primaryReplicationGroupResourceName, names.AttrParameterGroupName, regexache.MustCompile(`^global-datastore-.+$`)),
 					resource.TestCheckResourceAttrPair(primaryReplicationGroupResourceName, "global_replication_group_id", resourceName, "global_replication_group_id"),
 				),
 			},
@@ -1606,7 +1606,7 @@ func TestAccElastiCacheGlobalReplicationGroup_SetEngineOnUpdate_ValkeyUpgrade(t 
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(primaryReplicationGroupResourceName, names.AttrEngine, "redis"),
 					resource.TestCheckResourceAttr(primaryReplicationGroupResourceName, names.AttrEngineVersion, "7.1"),
-					resource.TestMatchResourceAttr(primaryReplicationGroupResourceName, "parameter_group_name", regexache.MustCompile(`^global-datastore-.+$`)),
+					resource.TestMatchResourceAttr(primaryReplicationGroupResourceName, names.AttrParameterGroupName, regexache.MustCompile(`^global-datastore-.+$`)),
 					resource.TestCheckResourceAttrPair(primaryReplicationGroupResourceName, "global_replication_group_id", resourceName, "global_replication_group_id"),
 				),
 			},
@@ -1631,7 +1631,7 @@ func TestAccElastiCacheGlobalReplicationGroup_SetEngineOnUpdate_ValkeyUpgrade(t 
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(primaryReplicationGroupResourceName, names.AttrEngine, "valkey"),
 					resource.TestCheckResourceAttr(primaryReplicationGroupResourceName, names.AttrEngineVersion, "7.2"),
-					resource.TestMatchResourceAttr(primaryReplicationGroupResourceName, "parameter_group_name", regexache.MustCompile(`^global-datastore-.+$`)),
+					resource.TestMatchResourceAttr(primaryReplicationGroupResourceName, names.AttrParameterGroupName, regexache.MustCompile(`^global-datastore-.+$`)),
 					resource.TestCheckResourceAttrPair(primaryReplicationGroupResourceName, "global_replication_group_id", resourceName, "global_replication_group_id"),
 				),
 			},
@@ -1678,12 +1678,12 @@ func TestAccElastiCacheGlobalReplicationGroup_InheritValkeyEngine_SecondaryRepli
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(primaryReplicationGroupResourceName, names.AttrEngine, "valkey"),
 					resource.TestCheckResourceAttr(primaryReplicationGroupResourceName, names.AttrEngineVersion, "8.0"),
-					resource.TestMatchResourceAttr(primaryReplicationGroupResourceName, "parameter_group_name", regexache.MustCompile(`^global-datastore-.+$`)),
+					resource.TestMatchResourceAttr(primaryReplicationGroupResourceName, names.AttrParameterGroupName, regexache.MustCompile(`^global-datastore-.+$`)),
 					resource.TestCheckResourceAttrPair(primaryReplicationGroupResourceName, "global_replication_group_id", resourceName, "global_replication_group_id"),
 
 					resource.TestCheckResourceAttr(secondaryReplicationGroupResourceName, names.AttrEngine, "valkey"),
 					resource.TestCheckResourceAttr(secondaryReplicationGroupResourceName, names.AttrEngineVersion, "8.0"),
-					resource.TestMatchResourceAttr(secondaryReplicationGroupResourceName, "parameter_group_name", regexache.MustCompile(`^global-datastore-.+$`)),
+					resource.TestMatchResourceAttr(secondaryReplicationGroupResourceName, names.AttrParameterGroupName, regexache.MustCompile(`^global-datastore-.+$`)),
 					resource.TestCheckResourceAttrPair(secondaryReplicationGroupResourceName, "global_replication_group_id", resourceName, "global_replication_group_id"),
 				),
 			},
