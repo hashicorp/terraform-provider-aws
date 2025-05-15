@@ -35,6 +35,7 @@ fi
 TF_ACC=1 go test \
     ./internal/acctest/... \
     ./internal/attrmap/... \
+    ./internal/backoff/... \
     ./internal/conns/... \
     ./internal/create/... \
     ./internal/dns/... \
@@ -55,7 +56,6 @@ TF_ACC=1 go test \
     ./internal/provider/... \
     ./internal/reflect/... \
     ./internal/retry/... \
-    ./internal/backoff/... \
     ./internal/sdkv2/... \
     ./internal/semver/... \
     ./internal/slices/... \
