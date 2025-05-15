@@ -254,7 +254,7 @@ gen: prereq-go ## Run all Go generators
 	@echo "make: Running Go generators..."
 	$(GO_VER) generate ./...
 	# Generate service package lists last as they may depend on output of earlier generators.
-	$(GO_VER) generate ./internal/provider
+	$(GO_VER) generate ./internal/provider/...
 	$(GO_VER) generate ./internal/sweep
 
 gen-check: gen ## [CI] Provider Checks / go_generate
@@ -334,6 +334,19 @@ modern-check: prereq-go ## [CI] Check for modern Go code (best run in individual
 modern-fix: prereq-go ## [CI] Fix checks for modern Go code (best run in individual services)
 	@echo "make: Fixing checks for modern Go code..."
 	@$(GO_VER) run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@latest -fix -test $(TEST)
+
+pr-target-check: ## [CI] Check for pull request target
+	@echo "make: Checking for pull request target..."
+	@files_with_pull_request_target=$$(grep -rl 'pull_request_target' ./.github/workflows/*.yml || true); \
+	if [ -n "$$files_with_pull_request_target" ]; then \
+		for file in $$files_with_pull_request_target; do \
+			if [ "$$file" != "./.github/workflows/maintainer_helpers.yml" ] && [ "$$file" != "./.github/workflows/triage.yml" ]; then \
+				echo "Error: 'pull_request_target' found in disallowed file: $$file"; \
+				exit 1; \
+			fi; \
+		done; \
+	fi
+	@echo "make: pull_request_target check passed."
 
 prereq-go: ## If $(GO_VER) is not installed, install it
 	@if ! type "$(GO_VER)" > /dev/null 2>&1 ; then \
@@ -900,6 +913,7 @@ yamllint: ## [CI] YAML Linting / yamllint
 	misspell \
 	modern-check \
 	modern-fix \
+	pr-target-check \
 	prereq-go \
 	provider-lint \
 	provider-markdown-lint \
