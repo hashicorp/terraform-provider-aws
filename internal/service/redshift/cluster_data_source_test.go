@@ -252,9 +252,9 @@ resource "aws_redshift_cluster" "test" {
 }
 
 resource "aws_redshift_logging" "test" {
-  cluster_identifier   = aws_redshift_cluster.test.cluster_identifier
-  bucket_name          = aws_s3_bucket.test.bucket
-  s3_key_prefix        = "cluster-logging/"
+  cluster_identifier = aws_redshift_cluster.test.cluster_identifier
+  bucket_name        = aws_s3_bucket.test.bucket
+  s3_key_prefix      = "cluster-logging/"
 }
 
 data "aws_redshift_cluster" "test" {
