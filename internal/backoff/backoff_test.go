@@ -85,7 +85,7 @@ func TestRetryWithTimeoutDefaultGracePeriod(t *testing.T) {
 	ctx := context.Background()
 
 	var n int
-	for r := BeginWithOptions(1*time.Minute, WithDelay(FixedDelay(1*time.Second))); r.Continue(ctx); {
+	for r := NewRetryLoopWithOptions(1*time.Minute, WithDelay(FixedDelay(1*time.Second))); r.Continue(ctx); {
 		time.Sleep(35 * time.Second)
 		n++
 	}
@@ -102,7 +102,7 @@ func TestRetryWithTimeoutNoGracePeriod(t *testing.T) {
 	ctx := context.Background()
 
 	var n int
-	for r := BeginWithOptions(1*time.Minute, WithDelay(FixedDelay(1*time.Second)), WithGracePeriod(0)); r.Continue(ctx); {
+	for r := NewRetryLoopWithOptions(1*time.Minute, WithDelay(FixedDelay(1*time.Second)), WithGracePeriod(0)); r.Continue(ctx); {
 		time.Sleep(35 * time.Second)
 		n++
 	}
