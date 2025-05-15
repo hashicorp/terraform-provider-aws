@@ -42,7 +42,7 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `account_id` - (Required) AWS account identifier to designate as a delegated administrator for Detective.
 
@@ -71,4 +71,4 @@ Using `terraform import`, import `aws_detective_organization_admin_account` usin
 % terraform import aws_detective_organization_admin_account.example 123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-780ffda473384073f83f5f613539908079196f4002299af4677d3d4bf560d48a -->
+<!-- cache-key: cdktf-0.20.8 input-005a48c4d4a7a2435df026152f5a680d903e435d7c96215744943ee90b41117a -->

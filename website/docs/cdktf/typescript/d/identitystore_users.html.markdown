@@ -48,13 +48,13 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
 * `identityStoreId` - (Required) Identity Store ID associated with the Single Sign-On Instance.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `users` - List of Identity Store Users
     * `addresses` - List of details about the user's address.
@@ -95,4 +95,4 @@ In addition to all arguments above, the following attributes are exported:
     * `userName` - User's user name value.
     * `userType` - User type.
 
-<!-- cache-key: cdktf-0.20.8 input-edecf42dff3889e29df62cc02d99026abdf61572ac1ae6dcb79ab38a6e67632f -->
+<!-- cache-key: cdktf-0.20.8 input-4194e4956350a0cb28fd4320bba1a4d1eb7550f8f3a7d47e7087f46b2b54b0f7 -->

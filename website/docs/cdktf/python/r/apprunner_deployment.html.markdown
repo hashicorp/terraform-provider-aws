@@ -33,7 +33,7 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments supported:
+This resource supports the following arguments:
 
 * `service_arn` - (Required) The Amazon Resource Name (ARN) of the App Runner service to start the deployment for.
 
@@ -45,4 +45,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `operation_id` - The unique ID of the operation associated with deployment.
 * `status` - The current status of the App Runner service deployment.
 
-<!-- cache-key: cdktf-0.20.8 input-174062645567df0484bd1555e61467931d5bd1e9d2d2ce98910c2f2f8399d118 -->
+<!-- cache-key: cdktf-0.20.8 input-a13038d814347c3685d866ad731efaf6bc6b36de248f20c972f749d6793460e2 -->

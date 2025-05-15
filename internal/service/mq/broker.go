@@ -31,12 +31,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
+	"github.com/hashicorp/terraform-provider-aws/internal/semver"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/mitchellh/copystructure"
-	"golang.org/x/mod/semver"
 )
 
 // @SDKResource("aws_mq_broker", name="Broker")
@@ -929,9 +929,8 @@ func DiffBrokerUsers(bId string, oldUsers, newUsers []any) (cr []*mq.CreateUserI
 // version is returned unmodified.
 //
 // Ref: https://docs.aws.amazon.com/amazon-mq/latest/developer-guide/upgrading-brokers.html
-// func normalizeEngineVersion(output *mq.DescribeBrokerOutput) string {
 func normalizeEngineVersion(engineType string, engineVersion string, autoMinorVersionUpgrade bool) string {
-	majorMinor := semver.MajorMinor("v" + engineVersion)
+	majorMinor, _ := semver.MajorMinor(engineVersion)
 
 	// initial versions where `auto_minor_version_upgrade` triggers automatic
 	// patch updates, and only the major/minor should be supplied to the update API
@@ -942,9 +941,9 @@ func normalizeEngineVersion(engineType string, engineVersion string, autoMinorVe
 		return engineVersion
 	}
 
-	if (strings.EqualFold(engineType, string(types.EngineTypeRabbitmq)) && semver.Compare(majorMinor, minRabbit) >= 0) ||
-		(strings.EqualFold(engineType, string(types.EngineTypeActivemq)) && semver.Compare(majorMinor, minActive) >= 0) {
-		return majorMinor[1:]
+	if (strings.EqualFold(engineType, string(types.EngineTypeRabbitmq)) && semver.GreaterThanOrEqual(majorMinor, minRabbit)) ||
+		(strings.EqualFold(engineType, string(types.EngineTypeActivemq)) && semver.GreaterThanOrEqual(majorMinor, minActive)) {
+		return majorMinor
 	}
 
 	return engineVersion

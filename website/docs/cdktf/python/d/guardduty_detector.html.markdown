@@ -31,6 +31,8 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `id` - (Optional) ID of the detector.
 
 ## Attribute Reference
@@ -49,4 +51,4 @@ This data source exports the following attributes in addition to the arguments a
 * `status` - Current status of the detector.
 * `tags` - Map of tags for the resource.
 
-<!-- cache-key: cdktf-0.20.8 input-de509741a4fa567a4a9a05208c725a17ed0ab4cdf9a3e3170aed16bc108bed25 -->
+<!-- cache-key: cdktf-0.20.8 input-b61efde9a82a553e9e55f67e03dfe94b7bd766a31f5940940033eb0c3839e97a -->

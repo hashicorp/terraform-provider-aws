@@ -37,10 +37,14 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `service_name` - (Required) Name of the service you want to generate a Service Principal Name for.
 * `region` - (Optional) Region you'd like the SPN for. By default, uses the current region.
 
 ## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - Identifier of the current Service Principal (compound of service, region and suffix). (e.g. `logs.us-east-1.amazonaws.com`in AWS Commercial, `logs.cn-north-1.amazonaws.com.cn` in AWS China).
 * `name` - Service Principal Name (e.g., `logs.amazonaws.com` in AWS Commercial, `logs.amazonaws.com.cn` in AWS China).
@@ -48,4 +52,4 @@ class MyConvertedCode(TerraformStack):
 * `suffix` - Suffix of the SPN (e.g., `amazonaws.com` in AWS Commercial, `amazonaws.com.cn` in AWS China).
 *`region` - Region identifier of the generated SPN (e.g., `us-east-1` in AWS Commercial, `cn-north-1` in AWS China).
 
-<!-- cache-key: cdktf-0.20.8 input-3932e93e1c5f672775c843713c238fe3bfcb06a182cf1d9ffe2c0b830c2001d4 -->
+<!-- cache-key: cdktf-0.20.8 input-130e8849ea612b6eaef90056aa7f784e0b20c3e5b7b922db9d444e700118fd73 -->

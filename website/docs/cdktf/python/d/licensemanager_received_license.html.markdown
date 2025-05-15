@@ -35,6 +35,8 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `license_arn` - (Required) The ARN of the received license you want data for.
 
 ## Attribute Reference
@@ -118,4 +120,4 @@ A list with a single map.
 * `begin` - Start of the validity time range.
 * `end` - End of the validity time range.
 
-<!-- cache-key: cdktf-0.20.8 input-8e7789e1a13e838a8446f36566c96cb32c65c9068530cd596b7f17f7e9d88382 -->
+<!-- cache-key: cdktf-0.20.8 input-1f77cb569239ead33cc90466f12490aa33c8f28be59141c825fd51f43a4a3446 -->

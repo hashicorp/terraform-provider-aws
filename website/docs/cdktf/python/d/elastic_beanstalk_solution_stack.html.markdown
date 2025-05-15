@@ -34,9 +34,10 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `most_recent` - (Optional) If more than one result is returned, use the most
 recent solution stack.
-
 * `name_regex` - Regex string to apply to the solution stack list returned
 by AWS. See [Elastic Beanstalk Supported Platforms][beanstalk-platforms] from
 AWS documentation for reference solution stack names.
@@ -53,4 +54,4 @@ This data source exports the following attributes in addition to the arguments a
 
 [beanstalk-platforms]: http://docs.aws.amazon.com/elasticbeanstalk/latest/dg/concepts.platforms.html "AWS Elastic Beanstalk Supported Platforms documentation"
 
-<!-- cache-key: cdktf-0.20.8 input-bc5855ffbad2c3da05d523f3dafaef60d18324e30f798e90fe32639ded015eeb -->
+<!-- cache-key: cdktf-0.20.8 input-493c4f53a8a45a8b22faec5c74c428d909a941b677d4f2783db21dc54606fc9b -->

@@ -65,6 +65,8 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `name` - (Required) Name of the cluster
 
 ## Attribute Reference
@@ -74,4 +76,4 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - Name of the cluster.
 * `token` - Token to use to authenticate with the cluster.
 
-<!-- cache-key: cdktf-0.20.8 input-45d83dddba9412e716f03bde08f7185de087e8a46407d442260f7b0e6e29f02a -->
+<!-- cache-key: cdktf-0.20.8 input-2ee4c4b3d187fab2d178b971fd6fdd68c62248b57053b509e8bce5978b46db2c -->

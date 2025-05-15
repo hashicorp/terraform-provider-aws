@@ -36,11 +36,11 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-There are no arguments available for this data source.
+This data source does not support any arguments.
 
 ## Attribute Reference
 
-This data source exports the following attributes:
+This data source exports the following attributes in addition to the arguments above:
 
 * `profiles` - List of Profiles.
     * `arn` - ARN of the Profile.
@@ -48,4 +48,4 @@ This data source exports the following attributes:
     * `name` - Name of the Profile.
     * `shareStatus` - Share status of the Profile. Valid values [AWS docs](https://docs.aws.amazon.com/Route53/latest/APIReference/API_route53profiles_Profile.html)
 
-<!-- cache-key: cdktf-0.20.8 input-4a75fe60b2525291c9a1401f0837662c3c2aa13ba372aa6fd9147aaa53548f2a -->
+<!-- cache-key: cdktf-0.20.8 input-6405142ebc44a22a61f321722604c6e02cf285d589d79c069793a3d9170c1f07 -->

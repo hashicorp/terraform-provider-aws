@@ -48,20 +48,17 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-* `owners` - (Optional) List of AMI owners to limit search. Valid values: an AWS account ID, `self` (the current account), or an AWS owner alias (e.g., `amazon`, `aws-marketplace`, `microsoft`).
+This data source supports the following arguments:
 
+* `owners` - (Optional) List of AMI owners to limit search. Valid values: an AWS account ID, `self` (the current account), or an AWS owner alias (e.g., `amazon`, `aws-marketplace`, `microsoft`).
 * `most_recent` - (Optional) If more than one result is returned, use the most
 recent AMI.
-
 * `executable_users` - (Optional) Limit search to users with *explicit* launch permission on
  the image. Valid items are the numeric account ID or `self`.
-
 * `include_deprecated` - (Optional) If true, all deprecated AMIs are included in the response. If false, no deprecated AMIs are included in the response. If no value is specified, the default value is false.
-
 * `filter` - (Optional) One or more name/value pairs to filter off of. There are
 several valid keys, for a full reference, check out
 [describe-images in the AWS CLI reference][1].
-
 * `name_regex` - (Optional) Regex string to apply to the AMI list returned
 by AWS. This allows more advanced filtering not supported from the AWS API. This
 filtering is done locally on what AWS returns, and could have a performance
@@ -75,12 +72,9 @@ you want to match multiple AMIs, use the `aws_ami_ids` data source instead.
 
 ## Attribute Reference
 
-`id` is set to the ID of the found AMI. In addition, the following attributes
-are exported:
+This data source exports the following attributes in addition to the arguments above:
 
-~> **NOTE:** Some values are not always set and may not be available for
-interpolation.
-
+* `id` - ID of the AMI.
 * `arn` - ARN of the AMI.
 * `architecture` - OS architecture of the AMI (ie: `i386` or `x86_64`).
 * `boot_mode` - Boot mode of the image.
@@ -140,6 +134,9 @@ interpolation.
 * `platform_details` - Platform details associated with the billing code of the AMI.
 * `ena_support` - Whether enhanced networking with ENA is enabled.
 
+~> **NOTE:** Some values are not always set and may not be available for
+interpolation.
+
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
@@ -148,4 +145,4 @@ interpolation.
 
 [1]: http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-images.html
 
-<!-- cache-key: cdktf-0.20.8 input-001f6f9d65f91435da56c242347f43a07ad28c6093d0f3fa2f0d69e7e6053d8f -->
+<!-- cache-key: cdktf-0.20.8 input-20e01b0a74f9ac0f7e51fa71d8bb9b456d55fab280e87e7630b32a84f2e95273 -->

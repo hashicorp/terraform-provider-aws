@@ -54,6 +54,8 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `comments` (Optional) - Filter origin access identities by comment.
 
 ## Attribute Reference
@@ -64,4 +66,4 @@ This data source exports the following attributes in addition to the arguments a
 * `ids` - Set of ids of the matched origin access identities.
 * `s3_canonical_user_ids` - Set of S3 canonical user IDs of the matched origin access identities.
 
-<!-- cache-key: cdktf-0.20.8 input-34f1ec8ef8003291bf6fbe0ad774299d58060f6ff187f903aecfd73ee7ad4efc -->
+<!-- cache-key: cdktf-0.20.8 input-fa14fb933387ceae51497b14c4d2fca13ed703ecb2e9a3e1365ae6f8575bfd37 -->

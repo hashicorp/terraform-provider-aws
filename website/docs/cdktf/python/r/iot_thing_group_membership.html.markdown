@@ -35,6 +35,8 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `thing_name` - (Required) The name of the thing to add to a group.
 * `thing_group_name` - (Required) The name of the group to which you are adding a thing.
 * `override_dynamic_group` - (Optional) Override dynamic thing groups with static thing groups when 10-group limit is reached. If a thing belongs to 10 thing groups, and one or more of those groups are dynamic thing groups, adding a thing to a static group removes the thing from the last dynamic group.
@@ -70,4 +72,4 @@ Using `terraform import`, import IoT Thing Group Membership using the thing grou
 % terraform import aws_iot_thing_group_membership.example thing_group_name/thing_name
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-ad3a10105917dc5ba26af081c3974b83c7083d781b1a90314ae4c28a7e5779f5 -->
+<!-- cache-key: cdktf-0.20.8 input-e2d16dd780dca918e6d58cd378469987c897a60c29e3263b0918bd5f1a27e384 -->
