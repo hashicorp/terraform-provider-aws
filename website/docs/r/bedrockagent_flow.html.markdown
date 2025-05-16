@@ -10,9 +10,19 @@ description: |-
 
 Terraform resource for managing an AWS Bedrock Agents Flow.
 
+### Basic Usage
+
+```terraform
+resource "aws_bedrockagent_flow" "example" {
+  name               = "example-flow"
+  execution_role_arn = aws_iam_role.example.arn
+}
+```
+
 ## Example Usage
 
 The default definition:
+
 ```terraform
 resource "aws_bedrockagent_flow" "example" {
   name               = "example"
@@ -121,15 +131,6 @@ resource "aws_bedrockagent_flow" "example" {
 }
 ```
 
-### Basic Usage
-
-```terraform
-resource "aws_bedrockagent_flow" "example" {
-  name               = "example-flow"
-  execution_role_arn = aws_iam_role.example.arn
-}
-```
-
 ## Argument Reference
 
 The following arguments are required:
@@ -186,6 +187,7 @@ The following arguments are optional:
 * `expression` - (Required) An expression that formats the input for the node. For an explanation of how to create expressions, see [Expressions in Prompt flows in Amazon Bedrock](https://docs.aws.amazon.com/bedrock/latest/userguide/flows-expressions.html).
 
 ### Node Output
+
 * `name` - (Required) A name for the output that you can reference.
 * `type` - (Required) The data type of the output. If the output doesn’t match this type at runtime, a validation error will be thrown.
 
