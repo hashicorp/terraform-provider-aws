@@ -16,6 +16,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/acm"
 	"github.com/aws/aws-sdk-go-v2/service/acm/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -55,6 +56,7 @@ const (
 
 // @SDKResource("aws_acm_certificate", name="Certificate")
 // @Tags(identifierAttribute="arn")
+// @ArnIdentity
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/acm/types;types.CertificateDetail", tlsKey=true, importIgnore="certificate_body;private_key, generator=false)
 func resourceCertificate() *schema.Resource {
 	return &schema.Resource{
@@ -64,7 +66,22 @@ func resourceCertificate() *schema.Resource {
 		DeleteWithoutTimeout: resourceCertificateDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				arnARN, err := arn.Parse(rd.Id())
+				if err != nil {
+					return nil, fmt.Errorf("could not parse import ID %q as ARN: %s", rd.Id(), err)
+				}
+
+				if region, ok := rd.GetOk(names.AttrRegion); ok {
+					if region != arnARN.Region {
+						return nil, fmt.Errorf("the region passed for import %q does not match the region %q in the ARN %q", region, arnARN.Region, rd.Id())
+					}
+				} else {
+					rd.Set(names.AttrRegion, arnARN.Region)
+				}
+
+				return []*schema.ResourceData{rd}, nil
+			},
 		},
 
 		Schema: map[string]*schema.Schema{
