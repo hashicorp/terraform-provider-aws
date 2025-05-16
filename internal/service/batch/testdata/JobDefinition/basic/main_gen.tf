@@ -1,5 +1,7 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 resource "aws_batch_job_definition" "test" {
-{{- template "region" }}
   name = var.rName
   type = "container"
   container_properties = jsonencode({
@@ -8,5 +10,10 @@ resource "aws_batch_job_definition" "test" {
     memory  = 128
     vcpus   = 1
   })
-{{- template "tags" . }}
+}
+
+variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
 }

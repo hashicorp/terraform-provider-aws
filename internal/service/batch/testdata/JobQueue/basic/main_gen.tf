@@ -1,5 +1,7 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 resource "aws_batch_job_queue" "test" {
-{{- template "region" }}
   name     = var.rName
   priority = 1
   state    = "DISABLED"
@@ -8,12 +10,9 @@ resource "aws_batch_job_queue" "test" {
     compute_environment = aws_batch_compute_environment.test.arn
     order               = 1
   }
-
-{{- template "tags" . }}
 }
 
 resource "aws_batch_compute_environment" "test" {
-{{- template "region" }}
   name         = var.rName
   service_role = aws_iam_role.batch_service.arn
   type         = "UNMANAGED"
@@ -74,4 +73,10 @@ resource "aws_iam_role_policy_attachment" "ecs_instance" {
 resource "aws_iam_instance_profile" "ecs_instance" {
   name = aws_iam_role.ecs_instance.name
   role = aws_iam_role_policy_attachment.ecs_instance.role
+}
+
+variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
 }
