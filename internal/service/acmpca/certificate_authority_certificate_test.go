@@ -8,12 +8,18 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/acmpca"
+	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfacmpca "github.com/hashicorp/terraform-provider-aws/internal/service/acmpca"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -37,6 +43,71 @@ func TestAccACMPCACertificateAuthorityCertificate_rootCA(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrCertificate, "aws_acmpca_certificate.test", names.AttrCertificate),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrCertificateChain, "aws_acmpca_certificate.test", names.AttrCertificateChain),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccACMPCACertificateAuthorityCertificate_Identity_Basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v acmpca.GetCertificateAuthorityCertificateOutput
+	resourceName := "aws_acmpca_certificate_authority_certificate.test"
+	commonName := acctest.RandomDomainName()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ACMPCAServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCertificateAuthorityCertificateConfig_rootCA(commonName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCertificateAuthorityCertificateExists(ctx, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("certificate_authority_arn"), tfknownvalue.RegionalARNRegexp("acm-pca", regexache.MustCompile("certificate-authority/"+verify.UUIDRegexPattern))),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New("certificate_authority_arn"), compare.ValuesSame()),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccACMPCACertificateAuthorityCertificate_Identity_RegionOverride(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	resourceName := "aws_acmpca_certificate_authority_certificate.test"
+	commonName := acctest.RandomDomainName()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ACMPCAServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCertificateAuthorityCertificateConfig_rootCA_regionOverride(commonName),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("certificate_authority_arn"), tfknownvalue.RegionalARNAlternateRegionRegexp("acm-pca", regexache.MustCompile("certificate-authority/"+verify.UUIDRegexPattern))),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New("certificate_authority_arn"), compare.ValuesSame()),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
 			},
 			{
 				ResourceName:      resourceName,
@@ -171,6 +242,52 @@ resource "aws_acmpca_certificate_authority" "test" {
 
 data "aws_partition" "current" {}
 `, commonName)
+}
+
+func testAccCertificateAuthorityCertificateConfig_rootCA_regionOverride(commonName string) string {
+	return fmt.Sprintf(`
+resource "aws_acmpca_certificate_authority_certificate" "test" {
+  region = %[2]q
+
+  certificate_authority_arn = aws_acmpca_certificate_authority.test.arn
+
+  certificate       = aws_acmpca_certificate.test.certificate
+  certificate_chain = aws_acmpca_certificate.test.certificate_chain
+}
+
+resource "aws_acmpca_certificate" "test" {
+  region = %[2]q
+
+  certificate_authority_arn   = aws_acmpca_certificate_authority.test.arn
+  certificate_signing_request = aws_acmpca_certificate_authority.test.certificate_signing_request
+  signing_algorithm           = "SHA512WITHRSA"
+
+  template_arn = "arn:${data.aws_partition.current.partition}:acm-pca:::template/RootCACertificate/V1"
+
+  validity {
+    type  = "YEARS"
+    value = 1
+  }
+}
+
+resource "aws_acmpca_certificate_authority" "test" {
+  region = %[2]q
+
+  permanent_deletion_time_in_days = 7
+  type                            = "ROOT"
+
+  certificate_authority_configuration {
+    key_algorithm     = "RSA_4096"
+    signing_algorithm = "SHA512WITHRSA"
+
+    subject {
+      common_name = %[1]q
+    }
+  }
+}
+
+data "aws_partition" "current" {}
+`, commonName, acctest.AlternateRegion())
 }
 
 func testAccCertificateAuthorityCertificateConfig_updateRootCA(commonName string) string {

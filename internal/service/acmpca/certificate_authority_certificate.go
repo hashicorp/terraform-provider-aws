@@ -23,15 +23,13 @@ import (
 )
 
 // @SDKResource("aws_acmpca_certificate_authority_certificate", name="Certificate Authority Certificate")
+// @ArnIdentity
+// @WrappedImport
 func resourceCertificateAuthorityCertificate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCertificateAuthorityCertificateCreate,
 		ReadWithoutTimeout:   resourceCertificateAuthorityCertificateRead,
 		DeleteWithoutTimeout: schema.NoopContext,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrCertificate: {
