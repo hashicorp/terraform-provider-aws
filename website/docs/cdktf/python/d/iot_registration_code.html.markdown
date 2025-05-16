@@ -48,12 +48,12 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-This data source has no arguments.
+This data source does not support any arguments.
 
-## Attributes Reference
+## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
 * `registration_code` - The CA certificate registration code.
 
-<!-- cache-key: cdktf-0.20.8 input-b213f9c9bddd9fab0b19c645c2e52d06180f1dd3b0e3c621c70d2cd75e42ddc7 -->
+<!-- cache-key: cdktf-0.20.8 input-e8f82e88468477036fa61618f12ef1722cdb0e86b7acedda53ef3d4faffdd5a6 -->

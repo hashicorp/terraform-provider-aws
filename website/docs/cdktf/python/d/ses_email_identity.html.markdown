@@ -31,6 +31,10 @@ class MyConvertedCode(TerraformStack):
         )
 ```
 
+## Argument Reference
+
+This data source does not support any arguments.
+
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
@@ -38,4 +42,4 @@ This data source exports the following attributes in addition to the arguments a
 * `arn` -  The ARN of the email identity.
 * `email` - Email identity.
 
-<!-- cache-key: cdktf-0.20.8 input-8b3c7c5e4c1d6197b2c76516866374779af6bd8d12e2ceda7f1a749b93b9a39e -->
+<!-- cache-key: cdktf-0.20.8 input-17637fee33e97e7351d1f2592658c48b8fed61ab062d762ef2b7b2ec819d7e7c -->

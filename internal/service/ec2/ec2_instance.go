@@ -31,6 +31,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/backoff"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -305,8 +306,8 @@ func resourceInstance() *schema.Resource {
 				Set: func(v any) int {
 					var buf bytes.Buffer
 					m := v.(map[string]any)
-					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrDeviceName].(string)))
-					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrSnapshotID].(string)))
+					fmt.Fprintf(&buf, "%s-", m[names.AttrDeviceName].(string))
+					fmt.Fprintf(&buf, "%s-", m[names.AttrSnapshotID].(string))
 					return create.StringHashcode(buf.String())
 				},
 			},
@@ -361,10 +362,10 @@ func resourceInstance() *schema.Resource {
 				Set: func(v any) int {
 					var buf bytes.Buffer
 					m := v.(map[string]any)
-					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrDeviceName].(string)))
-					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrVirtualName].(string)))
+					fmt.Fprintf(&buf, "%s-", m[names.AttrDeviceName].(string))
+					fmt.Fprintf(&buf, "%s-", m[names.AttrVirtualName].(string))
 					if v, ok := m["no_device"].(bool); ok && v {
-						buf.WriteString(fmt.Sprintf("%t-", v))
+						fmt.Fprintf(&buf, "%t-", v)
 					}
 					return create.StringHashcode(buf.String())
 				},
@@ -1049,34 +1050,30 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 		input.DisableApiStop = instanceOpts.DisableAPIStop
 	}
 
-	log.Printf("[DEBUG] Creating EC2 Instance: %s", d.Id())
-	outputRaw, err := tfresource.RetryWhen(ctx, iamPropagationTimeout,
-		func() (any, error) {
-			return conn.RunInstances(ctx, &input)
-		},
-		func(err error) (bool, error) {
-			// IAM instance profiles can take ~10 seconds to propagate in AWS:
-			// http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html#launch-instance-with-role-console
-			if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "Invalid IAM Instance Profile") {
-				return true, err
-			}
+	var output *ec2.RunInstancesOutput
+	for r := backoff.NewRetryLoop(iamPropagationTimeout); r.Continue(ctx); {
+		output, err = conn.RunInstances(ctx, &input)
 
-			// IAM roles can also take time to propagate in AWS:
-			if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, " has no associated IAM Roles") {
-				return true, err
-			}
+		// IAM instance profiles can take ~10 seconds to propagate in AWS:
+		// http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html#launch-instance-with-role-console
+		if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "Invalid IAM Instance Profile") {
+			continue
+		}
 
-			return false, err
-		},
-	)
+		// IAM roles can also take time to propagate in AWS:
+		if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, " has no associated IAM Roles") {
+			continue
+		}
+
+		break
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Instance: %s", err)
 	}
 
-	instanceId := outputRaw.(*ec2.RunInstancesOutput).Instances[0].InstanceId
-
-	d.SetId(aws.ToString(instanceId))
+	instanceID := output.Instances[0].InstanceId
+	d.SetId(aws.ToString(instanceID))
 
 	instance, err := waitInstanceCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 

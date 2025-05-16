@@ -34,6 +34,10 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
+## Argument Reference
+
+This data source does not support any arguments.
+
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
@@ -41,4 +45,4 @@ This data source exports the following attributes in addition to the arguments a
 * `bucket` - The name of the Amazon S3 bucket where the spot instance data feed is located.
 * `prefix` - The prefix for the data feed files.
 
-<!-- cache-key: cdktf-0.20.8 input-f231709e414cb2b084c8f726dda58b101b775c84880328bfce777fc17ccd706e -->
+<!-- cache-key: cdktf-0.20.8 input-7d8190100094684a197248827a3c9ae57b4564b95742f9b0a19dac0665d40219 -->

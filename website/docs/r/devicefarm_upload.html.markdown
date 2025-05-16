@@ -28,6 +28,8 @@ resource "aws_devicefarm_upload" "example" {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `content_type` - (Optional) The upload's content type (for example, application/octet-stream).
 * `name` - (Required) The upload's file name. The name should not contain any forward slashes (/). If you are uploading an iOS app, the file name must end with the .ipa extension. If you are uploading an Android app, the file name must end with the .apk extension. For all others, the file name must end with the .zip file extension.
 * `project_arn` - (Required) The ARN of the project for the upload.

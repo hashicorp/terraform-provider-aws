@@ -227,6 +227,8 @@ resource "aws_lambda_permission" "logging" {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `action` - (Required) The AWS Lambda action you want to allow in this statement. (e.g., `lambda:InvokeFunction`)
 * `event_source_token` - (Optional) The Event Source Token to validate.  Used with [Alexa Skills][1].
 * `function_name` - (Required) Name of the Lambda function whose resource policy you are updating

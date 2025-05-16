@@ -38,6 +38,10 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
+## Argument Reference
+
+This data source does not support any arguments.
+
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
@@ -51,4 +55,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.8 input-2ea61958e162ad0b2b3b242ab8cd3395fe46d2bce086890134212bd6f12284d6 -->
+<!-- cache-key: cdktf-0.20.8 input-9aa00797d408e029dd469252a30b2c21fac5c12ced3bf8535f68237e397c0397 -->

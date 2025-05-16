@@ -39,6 +39,8 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `name` - (Required) Name of the REST API to look up. If no REST API is found with this name, an error will be returned. If multiple REST APIs are found with this name, an error will be returned.
 
 ## Attribute Reference
@@ -50,6 +52,9 @@ This data source exports the following attributes in addition to the arguments a
 * `binaryMediaTypes` - List of binary media types supported by the REST API.
 * `description` - Description of the REST API.
 * `endpointConfiguration` - The endpoint configuration of this RestApi showing the endpoint types of the API.
+    * `ipAddressType` - The IP address types that can invoke an API (RestApi).
+    * `types` - List of endpoint types.
+    * `vpcEndpointIds` - Set of VPC Endpoint identifiers.
 * `executionArn` - Execution ARN part to be used in [`lambda_permission`](/docs/providers/aws/r/lambda_permission.html)'s `sourceArn` when allowing API Gateway to invoke a Lambda function, e.g., `arn:aws:execute-api:eu-west-2:123456789012:z4675bid1j`, which can be concatenated with allowed stage, method and resource path.
 * `id` - Set to the ID of the found REST API.
 * `minimumCompressionSize` - Minimum response size to compress for the REST API.
@@ -57,4 +62,4 @@ This data source exports the following attributes in addition to the arguments a
 * `rootResourceId` - Set to the ID of the API Gateway Resource on the found REST API where the route matches '/'.
 * `tags` - Key-value map of resource tags.
 
-<!-- cache-key: cdktf-0.20.8 input-f58dd0e8318def3e704471e581c407920560534f1c0b60ba367ee144e50a3888 -->
+<!-- cache-key: cdktf-0.20.8 input-a3a1228d278d7b01dc901689f079a37e7c3ed5d226c4538b954fa68113900d32 -->

@@ -46,7 +46,9 @@ This data source supports the following arguments:
 * `name` - (Required) Name of the parameter.
 * `withDecryption` - (Optional) Whether to return decrypted `SecureString` value. Defaults to `true`.
 
-In addition to all arguments above, the following attributes are exported:
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the parameter.
 * `name` - Name of the parameter.
@@ -55,4 +57,4 @@ In addition to all arguments above, the following attributes are exported:
 * `insecureValue` - Value of the parameter. **Use caution:** This value is never marked as sensitive.
 * `version` - Version of the parameter.
 
-<!-- cache-key: cdktf-0.20.8 input-89a145f5b43a3c824da664ca5cd8985b70d4cc516d350f4aa2411cd727cc5e4b -->
+<!-- cache-key: cdktf-0.20.8 input-5c84ac66c2a544d42b2fce0f70efc5f0798d1af9c4090df9b9b68e5e48e4ec9b -->

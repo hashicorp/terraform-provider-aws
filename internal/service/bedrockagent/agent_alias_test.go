@@ -120,7 +120,7 @@ func TestAccBedrockAgentAgentAlias_update(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "agent_id"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, descriptionNew),
 					resource.TestCheckResourceAttr(resourceName, "routing_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "routing_configuration.0.agent_version", "1"),
+					resource.TestCheckResourceAttr(resourceName, "routing_configuration.0.agent_version", "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},

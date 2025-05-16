@@ -13,6 +13,7 @@ var (
 	ResourceDataSource                    = newDataSourceResource
 	ResourceFlow                          = newResourceFlow
 	ResourceKnowledgeBase                 = newKnowledgeBaseResource
+	ResourcePrompt                        = newPromptResource
 
 	FindAgentByID                                  = findAgentByID
 	FindAgentActionGroupByThreePartKey             = findAgentActionGroupByThreePartKey
@@ -22,4 +23,5 @@ var (
 	FindDataSourceByTwoPartKey                     = findDataSourceByTwoPartKey
 	FindFlowByID                                   = findFlowByID
 	FindKnowledgeBaseByID                          = findKnowledgeBaseByID
+	FindPromptByID                                 = findPromptByID
 )

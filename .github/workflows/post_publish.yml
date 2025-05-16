@@ -37,7 +37,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Tidy Jira
-        uses: breathingdust/github-jira-tidy@b503407f09af5564fd806924bdf4495510d848b6 # v0.10.0
+        uses: breathingdust/github-jira-tidy@a64b76479e0021bf2ea7b2066b7496e0d365f929 # v0.11.0
         with:
           jira_host: 'hashicorp.atlassian.net'
           jira_username: 'sdavis@hashicorp.com'
@@ -113,7 +113,7 @@ jobs:
 
       - name: Send Slack Notification Upon Failure
         if: ${{ failure() }}
-        uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d # v2.0.0
+        uses: slackapi/slack-github-action@b0fa283ad8fea605de13dc3f449259339835fc52 # v2.1.0
         with:
           method: chat.postMessage
           token: ${{ secrets.SLACK_BOT_TOKEN }}

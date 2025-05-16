@@ -37,9 +37,13 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `firewall_rule_group_association_id` - (Required) The identifier for the association.
 
-The following attribute is additionally exported:
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) of the firewall rule group association.
 * `creation_time` - The date and time that the association was created, in Unix time format and Coordinated Universal Time (UTC).
@@ -54,4 +58,4 @@ The following attribute is additionally exported:
 * `status_message` - Additional information about the status of the response, if available.
 * `vpc_id` - The unique identifier of the VPC that is associated with the rule group.
 
-<!-- cache-key: cdktf-0.20.8 input-96baaccea7a8993bc2b43ff8bcd9ea43595994e4407fb3bc1d20edf090565dd8 -->
+<!-- cache-key: cdktf-0.20.8 input-ab972e5cfa067e69247ea1dc1924d16f07473be0d200ffddb92498346ff8d402 -->

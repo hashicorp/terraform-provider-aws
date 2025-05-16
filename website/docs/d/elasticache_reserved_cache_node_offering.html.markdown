@@ -23,7 +23,7 @@ data "aws_elasticache_reserved_cache_node_offering" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `cache_node_type` - (Required) Node type for the reserved cache node.
   See AWS documentation for information on [supported node types for Redis](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/CacheNodes.SupportedTypes.html) and [guidance on selecting node types for Redis](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/nodes-select-size.html).
@@ -39,7 +39,7 @@ The following arguments are supported:
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - Unique identifier for the reservation. Same as `offering_id`.
 * `fixed_price` - Fixed price charged for this reserved cache node.

@@ -32,6 +32,8 @@ resource "aws_iot_authorizer" "example" {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `authorizer_function_arn` - (Required) The ARN of the authorizer's Lambda function.
 * `enable_caching_for_http`  - (Optional) Specifies whether the HTTP caching is enabled or not. Default: `false`.
 * `name` - (Required) The name of the authorizer.

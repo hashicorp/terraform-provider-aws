@@ -52,6 +52,7 @@ This resource supports the following arguments:
 * `client_cidr_block` - (Required) The IPv4 address range, in CIDR notation, from which to assign client IP addresses. The address range cannot overlap with the local CIDR of the VPC in which the associated subnet is located, or the routes that you add manually. The address range cannot be changed after the Client VPN endpoint has been created. The CIDR block should be /22 or greater.
 * `client_connect_options` - (Optional) The options for managing connection authorization for new client connections.
 * `client_login_banner_options` - (Optional) Options for enabling a customizable text banner that will be displayed on AWS provided clients when a VPN session is established.
+* `client_route_enforcement_options` - (Optional) Options for enforce administrator defined routes on devices connected through the VPN.
 * `connection_log_options` - (Required) Information about the client connection logging options.
 * `description` - (Optional) A brief description of the Client VPN endpoint.
 * `disconnect_on_session_timeout` - (Optional) Indicates whether the client VPN session is disconnected after the maximum `session_timeout_hours` is reached. If `true`, users are prompted to reconnect client VPN. If `false`, client VPN attempts to reconnect automatically. The default value is `false`.
@@ -85,6 +86,10 @@ One of the following arguments must be supplied:
 
 * `banner_text` - (Optional) Customizable text that will be displayed in a banner on AWS provided clients when a VPN session is established. UTF-8 encoded characters only. Maximum of 1400 characters.
 * `enabled` - (Optional) Enable or disable a customizable text banner that will be displayed on AWS provided clients when a VPN session is established. The default is `false` (not enabled).
+
+### `client_route_enforcement_options` Argument reference
+
+* `enforced` - (Optional) Enable or disable Client Route Enforcement. The default is `false` (not enabled).
 
 ### `connection_log_options` Argument Reference
 
@@ -129,4 +134,4 @@ Using `terraform import`, import AWS Client VPN endpoints using the `id` value f
 % terraform import aws_ec2_client_vpn_endpoint.example cvpn-endpoint-0ac3a1abbccddd666
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-a7b30641f97381b4cc31aa8e291cc15302c0eb2873ac8be3a779ddd0a525f188 -->
+<!-- cache-key: cdktf-0.20.8 input-3cdf7a65526b369b2d6d3d686a098dfb47424642114e1bb372d8f66136272387 -->

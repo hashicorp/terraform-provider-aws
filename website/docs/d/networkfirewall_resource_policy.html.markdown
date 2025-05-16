@@ -20,6 +20,8 @@ data "aws_networkfirewall_resource_policy" "example" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `resource_arn` - (Required) The Amazon Resource Name (ARN) that identifies the resource policy.
 
 ## Attribute Reference

@@ -25,10 +25,14 @@ data "aws_service_principal" "test" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `service_name` - (Required) Name of the service you want to generate a Service Principal Name for.
 * `region` - (Optional) Region you'd like the SPN for. By default, uses the current region.
 
 ## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - Identifier of the current Service Principal (compound of service, region and suffix). (e.g. `logs.us-east-1.amazonaws.com`in AWS Commercial, `logs.cn-north-1.amazonaws.com.cn` in AWS China).
 * `name` - Service Principal Name (e.g., `logs.amazonaws.com` in AWS Commercial, `logs.amazonaws.com.cn` in AWS China).

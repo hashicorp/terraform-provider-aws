@@ -56,13 +56,16 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `filter` - (Optional) Custom filter block as described below.
 * `vpcId` - (Optional) VPC ID that you want to filter from.
 * `tags` - (Optional) Map of tags, each pair of which must exactly match
   a pair on the desired NAT Gateways.
 
-More complex filters can be expressed using one or more `filter` sub-blocks,
-which take the following arguments:
+### `filter`
+
+More complex filters can be expressed using one or more `filter` sub-blocks, which take the following arguments:
 
 * `name` - (Required) Name of the field to filter by, as defined by
   [the underlying AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeNatGateways.html).
@@ -82,4 +85,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.8 input-3dfcb9644adaffbf7b3a6ffb1c20821b6b1308407d55040b08b25e3a1307ee56 -->
+<!-- cache-key: cdktf-0.20.8 input-e8744e7c39ca075aceed9e1d6f88ee262d6e83d0813804d6524993fdb856a56b -->

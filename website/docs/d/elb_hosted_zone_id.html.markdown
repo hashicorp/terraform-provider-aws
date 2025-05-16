@@ -31,6 +31,8 @@ resource "aws_route53_record" "www" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `region` - (Optional) Name of the region whose AWS ELB HostedZoneId is desired.
   Defaults to the region from the AWS provider configuration.
 
