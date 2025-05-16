@@ -5,7 +5,6 @@ package bedrockagent
 
 import (
 	"context"
-	"encoding/json"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -31,6 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	smithyjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -1516,13 +1516,17 @@ func (m *promptFlowNodeSourceConfigurationModel) Flatten(ctx context.Context, v 
 		}
 
 		if t.Value.AdditionalModelRequestFields != nil {
-			additionalFields, err := t.Value.AdditionalModelRequestFields.MarshalSmithyDocument()
+			json, err := smithyjson.SmithyDocumentToString(t.Value.AdditionalModelRequestFields)
 			if err != nil {
-				diags.AddError("Marshalling additional model request fields", err.Error())
+				diags.Append(diag.NewErrorDiagnostic(
+					"Encoding JSON",
+					err.Error(),
+				))
+
 				return diags
 			}
 
-			model.AdditionalModelRequestFields = types.StringValue(string(additionalFields))
+			model.AdditionalModelRequestFields = jsontypes.NewNormalizedValue(json)
 		}
 
 		m.Inline = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
@@ -1561,13 +1565,17 @@ func (m promptFlowNodeSourceConfigurationModel) Expand(ctx context.Context) (res
 
 		additionalFields := promptFlowNodeSourceConfigurationInline.AdditionalModelRequestFields
 		if !additionalFields.IsNull() {
-			var doc any
-			if err := json.Unmarshal([]byte(additionalFields.ValueString()), &doc); err != nil {
-				diags.AddError("Unmarshalling additional model request fields", err.Error())
+			json, err := smithyjson.SmithyDocumentFromString(flex.StringValueFromFramework(ctx, additionalFields), document.NewLazyDocument)
+			if err != nil {
+				diags.Append(diag.NewErrorDiagnostic(
+					"Decoding JSON",
+					err.Error(),
+				))
+
 				return nil, diags
 			}
 
-			r.Value.AdditionalModelRequestFields = document.NewLazyDocument(doc)
+			r.Value.AdditionalModelRequestFields = json
 		}
 
 		return &r, diags
@@ -1594,7 +1602,7 @@ type promptFlowNodeSourceConfigurationMemberInlineModel struct {
 	ModelID                      types.String                                                       `tfsdk:"model_id"`
 	TemplateConfiguration        fwtypes.ListNestedObjectValueOf[promptTemplateConfigurationModel]  `tfsdk:"template_configuration"`
 	TemplateType                 fwtypes.StringEnum[awstypes.PromptTemplateType]                    `tfsdk:"template_type"`
-	AdditionalModelRequestFields types.String                                                       `tfsdk:"additional_model_request_fields"`
+	AdditionalModelRequestFields jsontypes.Normalized                                               `tfsdk:"additional_model_request_fields"  autoflex:"-"`
 	InferenceConfiguration       fwtypes.ListNestedObjectValueOf[promptInferenceConfigurationModel] `tfsdk:"inference_configuration"`
 }
 
