@@ -88,6 +88,7 @@ type ServicePackageSDKResource struct {
 	Tags     unique.Handle[ServicePackageResourceTags]
 	Region   unique.Handle[ServicePackageResourceRegion]
 	Identity Identity
+	Import   Import
 }
 
 type Identity struct {
@@ -107,4 +108,8 @@ func ARNIdentity() Identity {
 	return Identity{
 		ARN: true,
 	}
+}
+
+type Import struct {
+	WrappedImport bool
 }
