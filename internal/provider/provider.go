@@ -526,6 +526,17 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 				})
 			}
 
+			if resource.Import.WrappedImport {
+				if r.Importer != nil && r.Importer.StateContext != nil {
+					errs = append(errs, fmt.Errorf("resource type %s: uses WrappedImport but defines an import function", typeName))
+					continue
+				}
+
+				if resource.Identity.ARN {
+					r.Importer = arnIdentityResourceImporter()
+				}
+			}
+
 			opts := wrappedResourceOptions{
 				// bootstrapContext is run on all wrapped methods before any interceptors.
 				bootstrapContext: func(ctx context.Context, getAttribute getAttributeFunc, meta any) (context.Context, error) {
