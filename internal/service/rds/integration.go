@@ -34,6 +34,7 @@ import (
 
 // @FrameworkResource("aws_rds_integration", name="Integration")
 // @Tags(identifierAttribute="arn")
+// @ArnIdentity
 // @Testing(tagsTest=false)
 func newIntegrationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &integrationResource{}
@@ -57,7 +58,7 @@ const (
 type integrationResource struct {
 	framework.ResourceWithModel[integrationResourceModel]
 	framework.WithNoOpUpdate[integrationResourceModel]
-	framework.WithImportByID
+	framework.WithImportByARN
 	framework.WithTimeouts
 }
 

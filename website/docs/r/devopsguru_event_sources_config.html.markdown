@@ -49,7 +49,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DevOps Guru Event Sources Config using the `id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DevOps Guru Event Sources Config using the region. For example:
 
 ```terraform
 import {
@@ -58,7 +58,7 @@ import {
 }
 ```
 
-Using `terraform import`, import DevOps Guru Event Sources Config using the `id`. For example:
+Using `terraform import`, import DevOps Guru Event Sources Config using the region. For example:
 
 ```console
 % terraform import aws_devopsguru_event_sources_config.example us-east-1

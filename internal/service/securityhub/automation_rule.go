@@ -34,13 +34,14 @@ import (
 
 // @FrameworkResource("aws_securityhub_automation_rule", name="Automation Rule")
 // @Tags(identifierAttribute="arn")
+// @ArnIdentity
 func newAutomationRuleResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &automationRuleResource{}, nil
 }
 
 type automationRuleResource struct {
 	framework.ResourceWithModel[automationRuleResourceModel]
-	framework.WithImportByID
+	framework.WithImportByARN
 }
 
 func (r *automationRuleResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {

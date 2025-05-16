@@ -11,10 +11,14 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
 	"github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
+	"github.com/hashicorp/terraform-plugin-testing/compare"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfssoadmin "github.com/hashicorp/terraform-provider-aws/internal/service/ssoadmin"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -53,6 +57,74 @@ func TestAccSSOAdminApplication_basic(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccSSOAdminApplication_Identity_Basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	var application ssoadmin.DescribeApplicationOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ssoadmin_application.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.SSOAdminEndpointID)
+			acctest.PreCheckSSOAdminInstances(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccApplicationConfig_basic(rName, testAccApplicationProviderARN),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckApplicationExists(ctx, resourceName, &application),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("application_arn"), tfknownvalue.GlobalARNRegexp("sso", regexache.MustCompile(`application/ssoins-[0-9a-z]{16}/apl-[0-9a-z]{16}`))),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New("application_arn"), compare.ValuesSame()),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccSSOAdminApplication_Identity_RegionOverride(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ssoadmin_application.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.SSOAdminEndpointID)
+			acctest.PreCheckSSOAdminInstancesWithRegion(ctx, t, acctest.AlternateRegion())
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccApplicationConfig_regionOverride(rName, testAccApplicationProviderARN),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("application_arn"), tfknownvalue.GlobalARNRegexp("sso", regexache.MustCompile(`application/ssoins-[0-9a-z]{16}/apl-[0-9a-z]{16}`))),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New("application_arn"), compare.ValuesSame()),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -340,6 +412,22 @@ resource "aws_ssoadmin_application" "test" {
   instance_arn             = tolist(data.aws_ssoadmin_instances.test.arns)[0]
 }
 `, rName, applicationProviderARN)
+}
+
+func testAccApplicationConfig_regionOverride(rName, applicationProviderARN string) string {
+	return fmt.Sprintf(`
+data "aws_ssoadmin_instances" "test" {
+  region = %[3]q
+}
+
+resource "aws_ssoadmin_application" "test" {
+  region = %[3]q
+
+  name                     = %[1]q
+  application_provider_arn = %[2]q
+  instance_arn             = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+}
+`, rName, applicationProviderARN, acctest.AlternateRegion())
 }
 
 func testAccApplicationConfig_description(rName, applicationProviderARN, description string) string {

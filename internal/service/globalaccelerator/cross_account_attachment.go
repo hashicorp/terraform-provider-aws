@@ -31,7 +31,8 @@ import (
 )
 
 // @FrameworkResource("aws_globalaccelerator_cross_account_attachment", name="Cross-account Attachment")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn")
+// @ArnIdentity
 func newCrossAccountAttachmentResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &crossAccountAttachmentResource{}
 
@@ -40,7 +41,7 @@ func newCrossAccountAttachmentResource(_ context.Context) (resource.ResourceWith
 
 type crossAccountAttachmentResource struct {
 	framework.ResourceWithModel[crossAccountAttachmentResourceModel]
-	framework.WithImportByID
+	framework.WithImportByGlobalARN
 }
 
 func (r *crossAccountAttachmentResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {

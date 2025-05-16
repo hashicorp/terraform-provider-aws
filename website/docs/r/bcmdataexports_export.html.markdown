@@ -95,7 +95,8 @@ The following arguments are required:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `export_arn` - Amazon Resource Name (ARN) for this export.
+* `arn` - Amazon Resource Name (ARN) for this export.
+* `export[0].export_arn` - Amazon Resource Name (ARN) for this export.
 
 ## Timeouts
 

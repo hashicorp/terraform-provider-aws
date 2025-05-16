@@ -36,9 +36,9 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The codeconnections connection ARN.
 * `arn` - The codeconnections connection ARN.
 * `connection_status` - The codeconnections connection status. Possible values are `PENDING`, `AVAILABLE` and `ERROR`.
+* `id` - (**Deprecated**) The codeconnections connection ARN.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import

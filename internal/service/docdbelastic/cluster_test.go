@@ -12,10 +12,14 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/docdbelastic"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/docdbelastic/types"
+	"github.com/hashicorp/terraform-plugin-testing/compare"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfdocdbelastic "github.com/hashicorp/terraform-provider-aws/internal/service/docdbelastic"
@@ -60,6 +64,95 @@ func TestAccDocDBElasticCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPreferredMaintenanceWindow, "Tue:04:00-Tue:04:30"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"admin_user_password",
+				},
+			},
+		},
+	})
+}
+
+func TestAccDocDBElasticCluster_Identity_Basic(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var cluster awstypes.Cluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_docdbelastic_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.DocDBElasticServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("docdb-elastic", regexache.MustCompile(`cluster/`+verify.UUIDRegexPattern))),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"admin_user_password",
+				},
+			},
+		},
+	})
+}
+
+func TestAccDocDBElasticCluster_Identity_RegionOverride(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_docdbelastic_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.DocDBElasticServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_regionOverride(rName),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNAlternateRegionRegexp("docdb-elastic", regexache.MustCompile(`cluster/`+verify.UUIDRegexPattern))),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
+				ImportStateVerifyIgnore: []string{
+					"admin_user_password",
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -304,6 +397,20 @@ resource "aws_security_group" "test" {
 	)
 }
 
+func testAccClusterBaseConfig_regionOverride(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets_RegionOverride(rName, 2, acctest.AlternateRegion()),
+		fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  region = %[2]q
+
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+}
+`, rName, acctest.AlternateRegion()),
+	)
+}
+
 func testAccClusterConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccClusterBaseConfig(rName),
@@ -329,6 +436,35 @@ resource "aws_docdbelastic_cluster" "test" {
   ]
 }
 `, rName))
+}
+
+func testAccClusterConfig_regionOverride(rName string) string {
+	return acctest.ConfigCompose(
+		testAccClusterBaseConfig_regionOverride(rName),
+		fmt.Sprintf(`
+resource "aws_docdbelastic_cluster" "test" {
+  region = %[2]q
+
+  name           = %[1]q
+  shard_capacity = 2
+  shard_count    = 1
+
+  admin_user_name     = "testuser"
+  admin_user_password = "testpassword"
+  auth_type           = "PLAIN_TEXT"
+
+  preferred_maintenance_window = "Tue:04:00-Tue:04:30"
+
+  vpc_security_group_ids = [
+    aws_security_group.test.id
+  ]
+
+  subnet_ids = [
+    aws_subnet.test[0].id,
+    aws_subnet.test[1].id
+  ]
+}
+`, rName, acctest.AlternateRegion()))
 }
 
 func testAccClusterConfig_update(rName string, shardCapacity, backupRetentionPeriod int) string {
