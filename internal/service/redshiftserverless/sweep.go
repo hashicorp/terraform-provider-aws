@@ -12,6 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
@@ -58,11 +60,9 @@ func sweepNamespaces(region string) error {
 		}
 
 		for _, v := range page.Namespaces {
-			r := resourceNamespace()
-			d := r.Data(nil)
-			d.SetId(aws.ToString(v.NamespaceName))
-
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceNamespace, client,
+				framework.NewAttribute(names.AttrID, aws.ToString(v.NamespaceName)),
+			))
 		}
 	}
 
