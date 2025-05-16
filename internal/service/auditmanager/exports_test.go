@@ -14,8 +14,9 @@ var (
 	ResourceFramework                            = newFrameworkResource
 	ResourceFrameworkShare                       = newFrameworkShareResource
 
-	FindAccountRegistration = findAccountRegistration
-	FindAssessmentByID      = findAssessmentByID
-	FindControlByID         = findControlByID
-	FindFrameworkByID       = findFrameworkByID
+	FindAccountRegistration                = findAccountRegistration
+	FindAssessmentByID                     = findAssessmentByID
+	FindAssessmentDelegationByThreePartKey = findAssessmentDelegationByThreePartKey
+	FindControlByID                        = findControlByID
+	FindFrameworkByID                      = findFrameworkByID
 )
