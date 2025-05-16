@@ -94,6 +94,9 @@ func TestAccSageMakerImageVersion_full(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "job_type", "TRAINING"),
 					resource.TestCheckResourceAttr(resourceName, "ml_framework", "TensorFlow 1.1"),
 					resource.TestCheckResourceAttr(resourceName, "programming_lang", "Python 3.8"),
+					resource.TestCheckResourceAttr(resourceName, "aliases.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "aliases.*", "latest"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "aliases.*", "stable"),
 				),
 			},
 			{
@@ -118,6 +121,9 @@ func TestAccSageMakerImageVersion_full(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "job_type", "TRAINING"),
 					resource.TestCheckResourceAttr(resourceName, "ml_framework", "TensorFlow 1.1"),
 					resource.TestCheckResourceAttr(resourceName, "programming_lang", "Python 3.8"),
+					resource.TestCheckResourceAttr(resourceName, "aliases.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "aliases.*", "latest"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "aliases.*", "stable"),
 				),
 			},
 		},
@@ -191,7 +197,7 @@ func testAccCheckImageVersionDestroy(ctx context.Context) resource.TestCheckFunc
 				continue
 			}
 
-			_, err := tfsagemaker.FindImageVersionByName(ctx, conn, rs.Primary.ID)
+			_, err := tfsagemaker.FindImageVersionByNameAndVersion(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -220,7 +226,7 @@ func testAccCheckImageVersionExists(ctx context.Context, n string, image *sagema
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
-		resp, err := tfsagemaker.FindImageVersionByName(ctx, conn, rs.Primary.ID)
+		resp, err := tfsagemaker.FindImageVersionByNameAndVersion(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -285,6 +291,7 @@ resource "aws_sagemaker_image_version" "test" {
   vendor_guidance  = "STABLE"
   ml_framework     = "TensorFlow 1.1"
   programming_lang = "Python 3.8"
+  aliases          = ["latest", "stable"]
 }
 `, baseImage, notes)
 }
