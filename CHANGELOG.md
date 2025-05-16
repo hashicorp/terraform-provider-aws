@@ -1,5 +1,11 @@
 ## 5.98.0 (Unreleased)
 
+BUG FIXES:
+
+* resource/aws_s3_bucket_lifecycle_configuration: No longer returns warning on empty `rule.filter`. ([#42624](https://github.com/hashicorp/terraform-provider-aws/issues/42624))
+
+## 5.98.0 (Unreleased)
+
 FEATURES:
 
 * **New Data Source:** `aws_account_primary_contact` ([#42526](https://github.com/hashicorp/terraform-provider-aws/issues/42526))
