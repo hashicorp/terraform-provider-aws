@@ -23,8 +23,7 @@ data "aws_route53_resolver_rule" "example" {
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available resolver rules in the current region.
-The given filters must match exactly one resolver rule whose data will be exported as attributes.
+This data source supports the following arguments:
 
 * `domain_name` - (Optional) Domain name the desired resolver rule forwards DNS queries for. Conflicts with `resolver_rule_id`.
 * `name` - (Optional) Friendly name of the desired resolver rule. Conflicts with `resolver_rule_id`.

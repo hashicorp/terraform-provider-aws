@@ -14,7 +14,7 @@ Provides details about a specific Amazon Connect Vocabulary.
 
 By `name`
 
-```hcl
+```terraform
 data "aws_connect_vocabulary" "example" {
   instance_id = "aaaaaaaa-bbbb-cccc-dddd-111111111111"
   name        = "Example"
@@ -23,7 +23,7 @@ data "aws_connect_vocabulary" "example" {
 
 By `vocabulary_id`
 
-```hcl
+```terraform
 data "aws_connect_vocabulary" "example" {
   instance_id   = "aaaaaaaa-bbbb-cccc-dddd-111111111111"
   vocabulary_id = "cccccccc-bbbb-cccc-dddd-111111111111"

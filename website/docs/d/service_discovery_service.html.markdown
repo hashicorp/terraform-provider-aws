@@ -12,7 +12,7 @@ Retrieves information about a Service Discovery Service.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_service_discovery_service" "test" {
   name         = "example"
   namespace_id = "NAMESPACE_ID_VALUE"

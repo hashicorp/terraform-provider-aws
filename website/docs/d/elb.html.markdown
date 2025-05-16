@@ -6,7 +6,7 @@ description: |-
   Provides a classic Elastic Load Balancer data source.
 ---
 
-# aws_elb
+# Data Source: aws_elb
 
 Provides information about a "classic" Elastic Load Balancer (ELB).
 See [LB Data Source](/docs/providers/aws/d/lb.html) if you are looking for "v2"
@@ -36,6 +36,8 @@ This data source supports the following arguments:
 * `name` - (Required) Unique name of the load balancer.
 
 ## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 See the [ELB Resource](/docs/providers/aws/r/elb.html) for details on the
 returned attributes - they are identical.

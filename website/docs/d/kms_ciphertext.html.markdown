@@ -46,7 +46,7 @@ This data source supports the following arguments:
 
 ## Attribute Reference
 
-All of the argument attributes are also exported as result attributes.
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - Globally unique key ID for the customer master key.
 * `ciphertext_blob` - Base64 encoded ciphertext

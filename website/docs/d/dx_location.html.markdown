@@ -15,13 +15,15 @@ These are the locations that can be specified when configuring [`aws_dx_connecti
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_dx_location" "example" {
   location_code = "CS32A-24FL"
 }
 ```
 
 ## Argument Reference
+
+This data source supports the following arguments:
 
 * `location_code` - (Required) Code for the location to retrieve.
 

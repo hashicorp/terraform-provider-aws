@@ -59,8 +59,8 @@ resource "aws_lambda_event_source_mapping" "example" {
   starting_position = "TRIM_HORIZON"
 
   provisioned_poller_config {
-    maximum_poller = 80
-    minimum_poller = 10
+    maximum_pollers = 80
+    minimum_pollers = 10
   }
 
   self_managed_event_source {
@@ -155,6 +155,8 @@ resource "aws_lambda_event_source_mapping" "example" {
 ```
 
 ## Argument Reference
+
+This resource supports the following arguments:
 
 * `amazon_managed_kafka_event_source_config` - (Optional) Additional configuration block for Amazon Managed Kafka sources. Incompatible with "self_managed_event_source" and "self_managed_kafka_event_source_config". Detailed below.
 * `batch_size` - (Optional) The largest number of records that Lambda will retrieve from your event source at the time of invocation. Defaults to `100` for DynamoDB, Kinesis, MQ and MSK, `10` for SQS.

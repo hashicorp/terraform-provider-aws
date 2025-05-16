@@ -41,5 +41,7 @@ This data source supports the following arguments:
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 See the [`aws_mq_broker` resource](/docs/providers/aws/r/mq_broker.html) for details on the returned attributes.
 They are identical except for user password, which is not returned when describing broker.

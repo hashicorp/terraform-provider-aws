@@ -28,9 +28,11 @@ class MyConvertedCode extends TerraformStack {
     super(scope, name);
     new IotBillingGroup(this, "example", {
       name: "example",
-      properties: {
-        description: "This is my billing group",
-      },
+      properties: [
+        {
+          description: "This is my billing group",
+        },
+      ],
       tags: {
         terraform: "true",
       },
@@ -41,6 +43,8 @@ class MyConvertedCode extends TerraformStack {
 ```
 
 ## Argument Reference
+
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the Billing Group.
 * `properties` - (Optional) The Billing Group properties. Defined below.
@@ -86,4 +90,4 @@ Using `terraform import`, import IoT Billing Groups using the name. For example:
 % terraform import aws_iot_billing_group.example example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-9c7d425266ee0d22b75f66601e87869fbffa73cef615eccf2a0373970c04de22 -->
+<!-- cache-key: cdktf-0.20.8 input-dab27541300c49c7b325d16500be60de674e0e66417b90b7bc7f76b19ed33b6d -->

@@ -2897,6 +2897,7 @@ func testAccBucketConfig_defaultEncryptionKMSMasterKey(bucketName string) string
 resource "aws_kms_key" "test" {
   description             = "KMS Key for Bucket %[1]s"
   deletion_window_in_days = 10
+  enable_key_rotation     = true
 }
 
 resource "aws_s3_bucket" "test" {
@@ -2919,6 +2920,7 @@ func testAccBucketConfig_defaultEncryptionKeyEnabledKMSMasterKey(bucketName stri
 resource "aws_kms_key" "test" {
   description             = "KMS Key for Bucket %[1]s"
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_s3_bucket" "test" {
@@ -3546,6 +3548,7 @@ resource "aws_kms_key" "replica" {
   provider                = "awsalternate"
   description             = "TF Acceptance Test S3 repl KMS key"
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_s3_bucket" "source" {
@@ -3590,6 +3593,7 @@ resource "aws_kms_key" "replica" {
   provider                = "awsalternate"
   description             = "TF Acceptance Test S3 repl KMS key"
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_s3_bucket" "source" {

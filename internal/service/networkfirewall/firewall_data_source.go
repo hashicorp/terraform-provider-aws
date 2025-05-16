@@ -42,6 +42,11 @@ func dataSourceFirewall() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"enabled_analysis_types": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			names.AttrEncryptionConfiguration: {
 				Type:     schema.TypeSet,
 				Computed: true,
@@ -168,7 +173,7 @@ func dataSourceFirewall() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						names.AttrSubnetID: {
 							Type:     schema.TypeString,
-							Required: true,
+							Computed: true,
 						},
 					},
 				},
@@ -190,7 +195,7 @@ func dataSourceFirewallResourceRead(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NetworkFirewallClient(ctx)
 
-	input := &networkfirewall.DescribeFirewallInput{}
+	var input networkfirewall.DescribeFirewallInput
 	if v, ok := d.GetOk(names.AttrARN); ok {
 		input.FirewallArn = aws.String(v.(string))
 	}
@@ -198,7 +203,7 @@ func dataSourceFirewallResourceRead(ctx context.Context, d *schema.ResourceData,
 		input.FirewallName = aws.String(v.(string))
 	}
 
-	output, err := findFirewall(ctx, conn, input)
+	output, err := findFirewall(ctx, conn, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading NetworkFirewall Firewall: %s", err)
@@ -209,6 +214,7 @@ func dataSourceFirewallResourceRead(ctx context.Context, d *schema.ResourceData,
 	d.Set(names.AttrARN, firewall.FirewallArn)
 	d.Set("delete_protection", firewall.DeleteProtection)
 	d.Set(names.AttrDescription, firewall.Description)
+	d.Set("enabled_analysis_types", firewall.EnabledAnalysisTypes)
 	if err := d.Set(names.AttrEncryptionConfiguration, flattenDataSourceEncryptionConfiguration(firewall.EncryptionConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting encryption_configuration: %s", err)
 	}

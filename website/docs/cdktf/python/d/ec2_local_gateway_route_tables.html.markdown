@@ -38,9 +38,10 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `tags` - (Optional) Mapping of tags, each pair of which must exactly match
   a pair on the desired local gateway route table.
-
 * `filter` - (Optional) Custom filter block as described below.
 
 More complex filters can be expressed using one or more `filter` sub-blocks,
@@ -65,4 +66,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.8 input-a7fa07e5df9221f1a1960ea3ec891c58f8a438a9471e6be0d1a428fa3ee9bed1 -->
+<!-- cache-key: cdktf-0.20.8 input-4d1aab04bf9ab05160b81120c776d7089fe44725b8bc48c85aa376228d45eed8 -->

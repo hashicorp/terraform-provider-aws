@@ -12,14 +12,14 @@ The App Mesh Virtual Service data source allows details of an App Mesh Virtual S
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_appmesh_virtual_service" "test" {
   name      = "example.mesh.local"
   mesh_name = "example-mesh"
 }
 ```
 
-```hcl
+```terraform
 data "aws_caller_identity" "current" {}
 
 data "aws_appmesh_virtual_service" "test" {

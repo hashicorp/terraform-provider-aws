@@ -53,3 +53,20 @@ The following arguments are required:
 ## Attribute Reference
 
 This resource exports no additional attributes.
+
+## Import
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import a Cognito Group User using a comma-delimited string concatenating the `user_pool_id`, `group_name`, and `username` arguments. For example:
+
+```terraform
+import {
+  to = aws_cognito_user_in_group.example
+  id = "us-east-1_vG78M4goG,example-group,example-user"
+}
+```
+
+Using `terraform import`, import a Cognito Group User using a comma-delimited string concatenating the `user_pool_id`, `group_name`, and `username` arguments. For example:
+
+```console
+% terraform import aws_cognito_user_in_group.example us-east-1_vG78M4goG,example-group,example-user
+```

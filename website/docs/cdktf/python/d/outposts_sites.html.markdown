@@ -31,7 +31,7 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-There are no arguments available for this data source.
+This data source does not support any arguments.
 
 ## Attribute Reference
 
@@ -40,4 +40,4 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - AWS Region.
 * `ids` - Set of Outposts Site identifiers.
 
-<!-- cache-key: cdktf-0.20.8 input-33f8249a08c1a9e061aad127e234ad70eb79b16ee48652025b3daa5b7b81e2c1 -->
+<!-- cache-key: cdktf-0.20.8 input-452f88553cea143c45d013bf85d307e86e53bda69c08a1a58d76f71ace708f59 -->

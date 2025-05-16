@@ -6,7 +6,7 @@ description: |-
   Get information on a AWS Key Management Service (KMS) Key
 ---
 
-# aws_kms_key
+# Data Source: aws_kms_key
 
 Use this data source to get detailed information about
 the specified KMS Key with flexible key id input.
@@ -34,6 +34,8 @@ data "aws_kms_key" "by_key_arn" {
 ```
 
 ## Argument Reference
+
+This data source supports the following arguments:
 
 * `key_id` - (Required) Key identifier which can be one of the following format:
     * Key ID. E.g: `1234abcd-12ab-34cd-56ef-1234567890ab`

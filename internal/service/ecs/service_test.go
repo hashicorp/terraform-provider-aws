@@ -5162,6 +5162,7 @@ func testAccServiceConfig_serviceConnectAllAttributes(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
   policy                  = data.aws_iam_policy_document.test.json
 }
 
@@ -5342,6 +5343,7 @@ func testAccServiceConfig_serviceConnect_tls_with_empty_timeout_block(rName stri
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
   policy                  = data.aws_iam_policy_document.test.json
 }
 

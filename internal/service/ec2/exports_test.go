@@ -142,6 +142,7 @@ var (
 	FindClientVPNRouteByThreePartKey                           = findClientVPNRouteByThreePartKey
 	FindCreateSnapshotCreateVolumePermissionByTwoPartKey       = findCreateSnapshotCreateVolumePermissionByTwoPartKey
 	FindCustomerGatewayByID                                    = findCustomerGatewayByID
+	FindDefaultCreditSpecificationByInstanceFamily             = findDefaultCreditSpecificationByInstanceFamily
 	FindDHCPOptionsByID                                        = findDHCPOptionsByID
 	FindEBSVolumeAttachment                                    = findVolumeAttachment
 	FindEBSVolumeByID                                          = findEBSVolumeByID

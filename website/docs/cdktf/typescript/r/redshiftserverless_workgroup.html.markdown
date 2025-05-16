@@ -53,6 +53,7 @@ The following arguments are optional:
 * `publiclyAccessible` - (Optional) A value that specifies whether the workgroup can be accessed from a public network.
 * `securityGroupIds` - (Optional) An array of security group IDs to associate with the workgroup.
 * `subnetIds` - (Optional) An array of VPC subnet IDs to associate with the workgroup. When set, must contain at least three subnets spanning three Availability Zones. A minimum number of IP addresses is required and scales with the Base Capacity. For more information, see the following [AWS document](https://docs.aws.amazon.com/redshift/latest/mgmt/serverless-known-issues.html).
+* `track_name` - (Optional) The name of the track for the workgroup. If it is `current`, you get the most up-to-date certified release version with the latest features, security updates, and performance enhancements. If it is `trailing`, you will be on the previous certified release. For more information, see the following [AWS document](https://docs.aws.amazon.com/redshift/latest/mgmt/tracks.html).
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Price Performance Target
@@ -134,4 +135,4 @@ Using `terraform import`, import Redshift Serverless Workgroups using the `workg
 % terraform import aws_redshiftserverless_workgroup.example example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-0472f866d4b7955463a27b58a4bf965c15494ca11493ec76ac8dcb93878cc8b9 -->
+<!-- cache-key: cdktf-0.20.8 input-ecde67a05bc334d3a173c0fb7df74dd26055492a6c86192a882e24aeb5cd5c16 -->

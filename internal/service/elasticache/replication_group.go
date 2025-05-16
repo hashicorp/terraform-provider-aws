@@ -124,10 +124,18 @@ func resourceReplicationGroup() *schema.Resource {
 				ValidateFunc: validation.StringIsNotEmpty,
 			},
 			names.AttrEngine: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      engineRedis,
-				ValidateFunc: validation.StringInSlice([]string{engineRedis, engineValkey}, true),
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  engineRedis,
+				ValidateDiagFunc: validation.AllDiag(
+					validation.ToDiagFunc(validation.StringInSlice([]string{engineRedis, engineValkey}, true)),
+					// While the existing validator makes it technically possible to provide an
+					// uppercase engine value, the absence of a diff suppression function makes
+					// it impractical to do so (a persistent diff will be present). To be
+					// conservative we will still run the deprecation validator to notify
+					// practitioners that stricter validation will be enforced in v7.0.0.
+					verify.CaseInsensitiveMatchDeprecation([]string{engineRedis, engineValkey}),
+				),
 			},
 			names.AttrEngineVersion: {
 				Type:     schema.TypeString,

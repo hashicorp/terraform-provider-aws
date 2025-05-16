@@ -14,7 +14,7 @@ Provides details about a specific Amazon Connect Security Profile.
 
 By `name`
 
-```hcl
+```terraform
 data "aws_connect_security_profile" "example" {
   instance_id = "aaaaaaaa-bbbb-cccc-dddd-111111111111"
   name        = "Example"
@@ -23,7 +23,7 @@ data "aws_connect_security_profile" "example" {
 
 By `security_profile_id`
 
-```hcl
+```terraform
 data "aws_connect_security_profile" "example" {
   instance_id         = "aaaaaaaa-bbbb-cccc-dddd-111111111111"
   security_profile_id = "cccccccc-bbbb-cccc-dddd-111111111111"

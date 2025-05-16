@@ -31,7 +31,7 @@ func TestAccBatchJobQueueDataSource_basic(t *testing.T) {
 				Config: testAccJobQueueDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(dataSourceName, "compute_environment_order.#", resourceName, "compute_environments.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "compute_environment_order.#", resourceName, "compute_environment_order.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrPriority, resourceName, names.AttrPriority),
 					// resource.TestCheckResourceAttrPair(dataSourceName, "scheduling_policy_arn", resourceName, "scheduling_policy_arn"),
@@ -62,7 +62,7 @@ func TestAccBatchJobQueueDataSource_schedulingPolicy(t *testing.T) {
 				Config: testAccJobQueueDataSourceConfig_schedulingPolicy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(dataSourceName, "compute_environment_order.#", resourceName, "compute_environments.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "compute_environment_order.#", resourceName, "compute_environment_order.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "job_state_time_limit_action.#", resourceName, "job_state_time_limit_action.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrPriority, resourceName, names.AttrPriority),
@@ -82,17 +82,24 @@ func testAccJobQueueDataSourceConfig_basic(rName string) string {
 		testAccJobQueueConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_batch_job_queue" "test" {
-  name                 = "%[1]s"
-  state                = "ENABLED"
-  priority             = 1
-  compute_environments = [aws_batch_compute_environment.test.arn]
+  name     = "%[1]s"
+  state    = "ENABLED"
+  priority = 1
+  compute_environment_order {
+    compute_environment = aws_batch_compute_environment.test.arn
+    order               = 1
+  }
 }
 
 resource "aws_batch_job_queue" "wrong" {
-  name                 = "%[1]s_wrong"
-  state                = "ENABLED"
-  priority             = 2
-  compute_environments = [aws_batch_compute_environment.test.arn]
+  name     = "%[1]s_wrong"
+  state    = "ENABLED"
+  priority = 2
+  compute_environment_order {
+    compute_environment = aws_batch_compute_environment.test.arn
+    order               = 1
+  }
+
 }
 
 data "aws_batch_job_queue" "by_name" {
@@ -124,7 +131,11 @@ resource "aws_batch_job_queue" "test" {
   scheduling_policy_arn = aws_batch_scheduling_policy.test.arn
   state                 = "ENABLED"
   priority              = 1
-  compute_environments  = [aws_batch_compute_environment.test.arn]
+  compute_environment_order {
+    compute_environment = aws_batch_compute_environment.test.arn
+    order               = 1
+  }
+
 
   job_state_time_limit_action {
     action           = "CANCEL"

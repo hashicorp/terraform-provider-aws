@@ -14,7 +14,7 @@ Provides details about a specific Amazon Connect Quick Connect.
 
 By `name`
 
-```hcl
+```terraform
 data "aws_connect_quick_connect" "example" {
   instance_id = "aaaaaaaa-bbbb-cccc-dddd-111111111111"
   name        = "Example"
@@ -23,7 +23,7 @@ data "aws_connect_quick_connect" "example" {
 
 By `quick_connect_id`
 
-```hcl
+```terraform
 data "aws_connect_quick_connect" "example" {
   instance_id      = "aaaaaaaa-bbbb-cccc-dddd-111111111111"
   quick_connect_id = "cccccccc-bbbb-cccc-dddd-111111111111"

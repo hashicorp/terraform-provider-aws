@@ -14,7 +14,7 @@ Use this data source to compose and decompose AWS service DNS names.
 
 ### Get Service DNS Name
 
-```hcl
+```terraform
 data "aws_region" "current" {}
 
 data "aws_service" "test" {
@@ -25,7 +25,7 @@ data "aws_service" "test" {
 
 ### Use Service Reverse DNS Name to Get Components
 
-```hcl
+```terraform
 data "aws_service" "s3" {
   reverse_dns_name = "cn.com.amazonaws.cn-north-1.s3"
 }
@@ -33,7 +33,7 @@ data "aws_service" "s3" {
 
 ### Determine Regional Support for a Service
 
-```hcl
+```terraform
 data "aws_service" "s3" {
   reverse_dns_name = "com.amazonaws.us-gov-west-1.waf"
 }

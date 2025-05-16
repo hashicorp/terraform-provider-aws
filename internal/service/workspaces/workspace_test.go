@@ -437,7 +437,7 @@ func testAccCheckWorkspaceExists(ctx context.Context, n string, v *types.Workspa
 
 func testAccWorkspaceConfig_Prerequisites(rName, domain string) string {
 	return acctest.ConfigCompose(
-		testAccDirectoryConfig_Prerequisites(rName, domain),
+		testAccDirectoryConfig_base(rName, domain),
 		fmt.Sprintf(`
 data "aws_workspaces_bundle" "test" {
   bundle_id = "wsb-bh8rsxt14" # Value with Windows 10 (English)

@@ -243,7 +243,7 @@ func (r *securityGroupRuleResource) Create(ctx context.Context, request resource
 		return
 	}
 
-	securityGroupRuleID, err := r.securityGroupRule.create(ctx, &data)
+	securityGroupRuleID, err := r.create(ctx, &data)
 
 	if err != nil {
 		response.Diagnostics.AddError("creating VPC Security Group Rule", err.Error())
@@ -272,7 +272,7 @@ func (r *securityGroupRuleResource) Read(ctx context.Context, request resource.R
 		return
 	}
 
-	output, err := r.securityGroupRule.findByID(ctx, data.ID.ValueString())
+	output, err := r.findByID(ctx, data.ID.ValueString())
 
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -365,7 +365,7 @@ func (r *securityGroupRuleResource) Delete(ctx context.Context, request resource
 	tflog.Debug(ctx, "deleting VPC Security Group Rule", map[string]any{
 		names.AttrID: data.ID.ValueString(),
 	})
-	err := r.securityGroupRule.delete(ctx, &data)
+	err := r.delete(ctx, &data)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidGroupNotFound, errCodeInvalidSecurityGroupRuleIdNotFound) {
 		return

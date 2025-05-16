@@ -134,6 +134,7 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | `misspell`<sup>M</sup> | Run all CI misspell checks | ✔️ |  |  |
 | `modern-check` | Check for modern Go | ✔️ |  | `TEST` |
 | `modern-fix` | Fix checks for modern Go | ✔️ |  | `TEST` |
+| `pr-target-check` | Pull Request Target Check | ✔️ |  |  |
 | `prereq-go` | Install the project's Go version |  |  | `GO_VER` |
 | `provider-lint` | ProviderLint Checks / providerlint | ✔️ |  | `K`, `PKG`, `SVC_DIR` |
 | `provider-markdown-lint` | Provider Check / markdown-lint | ✔️ |  |  |

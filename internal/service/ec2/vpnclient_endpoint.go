@@ -133,6 +133,21 @@ func resourceClientVPNEndpoint() *schema.Resource {
 					},
 				},
 			},
+			"client_route_enforcement_options": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enforced": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"connection_log_options": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -260,6 +275,10 @@ func resourceClientVPNEndpointCreate(ctx context.Context, d *schema.ResourceData
 		input.ClientLoginBannerOptions = expandClientLoginBannerOptions(v.([]any)[0].(map[string]any))
 	}
 
+	if v, ok := d.GetOk("client_route_enforcement_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.ClientRouteEnforcementOptions = expandClientRouteEnforcementOptions(v.([]any)[0].(map[string]any))
+	}
+
 	if v, ok := d.GetOk("connection_log_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		input.ConnectionLogOptions = expandConnectionLogOptions(v.([]any)[0].(map[string]any))
 	}
@@ -345,6 +364,13 @@ func resourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData, 
 	} else {
 		d.Set("client_login_banner_options", nil)
 	}
+	if ep.ClientRouteEnforcementOptions != nil {
+		if err := d.Set("client_route_enforcement_options", []any{flattenClientRouteEnforcementOptions(ep.ClientRouteEnforcementOptions)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting client_route_enforcement_options: %s", err)
+		}
+	} else {
+		d.Set("client_route_enforcement_options", nil)
+	}
 	if ep.ConnectionLogOptions != nil {
 		if err := d.Set("connection_log_options", []any{flattenConnectionLogResponseOptions(ep.ConnectionLogOptions)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting connection_log_options: %s", err)
@@ -396,6 +422,12 @@ func resourceClientVPNEndpointUpdate(ctx context.Context, d *schema.ResourceData
 		if d.HasChange("client_login_banner_options") {
 			if v, ok := d.GetOk("client_login_banner_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 				input.ClientLoginBannerOptions = expandClientLoginBannerOptions(v.([]any)[0].(map[string]any))
+			}
+		}
+
+		if d.HasChange("client_route_enforcement_options") {
+			if v, ok := d.GetOk("client_route_enforcement_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.ClientRouteEnforcementOptions = expandClientRouteEnforcementOptions(v.([]any)[0].(map[string]any))
 			}
 		}
 
@@ -728,6 +760,34 @@ func flattenConnectionLogResponseOptions(apiObject *awstypes.ConnectionLogRespon
 
 	if v := apiObject.Enabled; v != nil {
 		tfMap[names.AttrEnabled] = v
+	}
+
+	return tfMap
+}
+
+func expandClientRouteEnforcementOptions(tfMap map[string]any) *awstypes.ClientRouteEnforcementOptions {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.ClientRouteEnforcementOptions{}
+
+	if v, ok := tfMap["enforced"].(bool); ok {
+		apiObject.Enforced = aws.Bool(v)
+	}
+
+	return apiObject
+}
+
+func flattenClientRouteEnforcementOptions(apiObject *awstypes.ClientRouteEnforcementResponseOptions) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.Enforced; v != nil {
+		tfMap["enforced"] = v
 	}
 
 	return tfMap

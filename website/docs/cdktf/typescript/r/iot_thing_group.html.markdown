@@ -52,6 +52,8 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `name` - (Required) The name of the Thing Group.
 * `parentGroupName` - (Optional) The name of the parent Thing Group.
 * `properties` - (Optional) The Thing Group properties. Defined below.
@@ -102,4 +104,4 @@ Using `terraform import`, import IoT Things Groups using the name. For example:
 % terraform import aws_iot_thing_group.example example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-d40a8b9d3295130dee82fc924f5a78064a2bcbc1d9fdc3faf7a58c297c82b090 -->
+<!-- cache-key: cdktf-0.20.8 input-d12afc077f82fc30217acabd2d1b4a6ab18d777977facc6daf434f523da5663a -->

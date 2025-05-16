@@ -36,14 +36,14 @@ data "aws_identitystore_group_memberships" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
 * `group_id` - (Required) The identifier for a group in the Identity Store.
 * `identity_store_id` - (Required) Identity Store ID associated with the Single Sign-On Instance.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `group_memberships` - A list of group membership objects. See [`group_memberships`](#group_memberships) below.
 

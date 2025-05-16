@@ -14,7 +14,7 @@ Provides details about a specific Amazon Connect Instance.
 
 By instance_alias
 
-```hcl
+```terraform
 data "aws_connect_instance" "foo" {
   instance_alias = "foo"
 }
@@ -22,7 +22,7 @@ data "aws_connect_instance" "foo" {
 
 By instance_id
 
-```hcl
+```terraform
 data "aws_connect_instance" "foo" {
   instance_id = "97afc98d-101a-ba98-ab97-ae114fc115ec"
 }

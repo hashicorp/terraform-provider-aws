@@ -6,7 +6,7 @@ description: |-
   Get information on a KMS public key
 ---
 
-# aws_kms_public_key
+# Data Source: aws_kms_public_key
 
 Use this data source to get the public key about the specified KMS Key with flexible key id input. This can be useful to reference key alias without having to hard code the ARN as input.
 

@@ -39,6 +39,8 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `name` - (Required) The name of the thing.
 * `attributes` - (Optional) Map of attributes of the thing.
 * `thingTypeName` - (Optional) The thing type name.
@@ -79,4 +81,4 @@ Using `terraform import`, import IOT Things using the name. For example:
 % terraform import aws_iot_thing.example example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-80ff616de83aba8dd5b8102e42172cd6cc340818bf3135b58cdb41c17424b73b -->
+<!-- cache-key: cdktf-0.20.8 input-6a474f82e70cff5931f96150e895fa63f7054fead1a17adf451f8532e75e4b3e -->

@@ -39,6 +39,8 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `authorizerConfig` - (Optional) An object that specifies the authorization service for a domain. See the [`authorizerConfig` Block](#authorizer_config-block) below for details.
 * `domainName` - (Optional) Fully-qualified domain name.
 * `name` - (Required) The name of the domain configuration. This value must be unique to a region.
@@ -99,4 +101,4 @@ Using `terraform import`, import domain configurations using the name. For examp
 % terraform import aws_iot_domain_configuration.example example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-04f3616f1c859dbd5767c590de0b217a193898e5e8c076850c9f607bb1d4c226 -->
+<!-- cache-key: cdktf-0.20.8 input-431706adf7574d0bf9119037b4b5822e671d6c319f9c51713854b75d1a8cc2fb -->

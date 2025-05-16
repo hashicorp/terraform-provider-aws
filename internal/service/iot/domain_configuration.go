@@ -43,6 +43,18 @@ func resourceDomainConfiguration() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"application_protocol": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.ApplicationProtocol](),
+			},
+			"authentication_type": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.AuthenticationType](),
+			},
 			"authorizer_config": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -129,9 +141,17 @@ func resourceDomainConfigurationCreate(ctx context.Context, d *schema.ResourceDa
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	input := &iot.CreateDomainConfigurationInput{
+	input := iot.CreateDomainConfigurationInput{
 		DomainConfigurationName: aws.String(name),
 		Tags:                    getTagsIn(ctx),
+	}
+
+	if v, ok := d.GetOk("application_protocol"); ok {
+		input.ApplicationProtocol = awstypes.ApplicationProtocol(v.(string))
+	}
+
+	if v, ok := d.GetOk("authentication_type"); ok {
+		input.AuthenticationType = awstypes.AuthenticationType(v.(string))
 	}
 
 	if v, ok := d.GetOk("authorizer_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
@@ -158,7 +178,7 @@ func resourceDomainConfigurationCreate(ctx context.Context, d *schema.ResourceDa
 		input.ValidationCertificateArn = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateDomainConfiguration(ctx, input)
+	output, err := conn.CreateDomainConfiguration(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating IoT Domain Configuration (%s): %s", name, err)
@@ -185,7 +205,9 @@ func resourceDomainConfigurationRead(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "reading IoT Domain Configuration (%s): %s", d.Id(), err)
 	}
 
+	d.Set("application_protocol", output.ApplicationProtocol)
 	d.Set(names.AttrARN, output.DomainConfigurationArn)
+	d.Set("authentication_type", output.AuthenticationType)
 	if output.AuthorizerConfig != nil {
 		if err := d.Set("authorizer_config", []any{flattenAuthorizerConfig(output.AuthorizerConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting authorizer_config: %s", err)
@@ -218,8 +240,16 @@ func resourceDomainConfigurationUpdate(ctx context.Context, d *schema.ResourceDa
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		input := &iot.UpdateDomainConfigurationInput{
+		input := iot.UpdateDomainConfigurationInput{
 			DomainConfigurationName: aws.String(d.Id()),
+		}
+
+		if d.HasChange("application_protocol") {
+			input.ApplicationProtocol = awstypes.ApplicationProtocol(d.Get("application_protocol").(string))
+		}
+
+		if d.HasChange("authentication_type") {
+			input.AuthenticationType = awstypes.AuthenticationType(d.Get("authentication_type").(string))
 		}
 
 		if d.HasChange("authorizer_config") {
@@ -240,7 +270,7 @@ func resourceDomainConfigurationUpdate(ctx context.Context, d *schema.ResourceDa
 			}
 		}
 
-		_, err := conn.UpdateDomainConfiguration(ctx, input)
+		_, err := conn.UpdateDomainConfiguration(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating IoT Domain Configuration (%s): %s", d.Id(), err)
@@ -255,10 +285,11 @@ func resourceDomainConfigurationDelete(ctx context.Context, d *schema.ResourceDa
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
 	if d.Get(names.AttrStatus).(string) == string(awstypes.DomainConfigurationStatusEnabled) {
-		_, err := conn.UpdateDomainConfiguration(ctx, &iot.UpdateDomainConfigurationInput{
+		input := iot.UpdateDomainConfigurationInput{
 			DomainConfigurationName:   aws.String(d.Id()),
 			DomainConfigurationStatus: awstypes.DomainConfigurationStatusDisabled,
-		})
+		}
+		_, err := conn.UpdateDomainConfiguration(ctx, &input)
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return diags
@@ -270,9 +301,10 @@ func resourceDomainConfigurationDelete(ctx context.Context, d *schema.ResourceDa
 	}
 
 	log.Printf("[DEBUG] Deleting IoT Domain Configuration: %s", d.Id())
-	_, err := conn.DeleteDomainConfiguration(ctx, &iot.DeleteDomainConfigurationInput{
+	input := iot.DeleteDomainConfigurationInput{
 		DomainConfigurationName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteDomainConfiguration(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
@@ -286,11 +318,11 @@ func resourceDomainConfigurationDelete(ctx context.Context, d *schema.ResourceDa
 }
 
 func findDomainConfigurationByName(ctx context.Context, conn *iot.Client, name string) (*iot.DescribeDomainConfigurationOutput, error) {
-	input := &iot.DescribeDomainConfigurationInput{
+	input := iot.DescribeDomainConfigurationInput{
 		DomainConfigurationName: aws.String(name),
 	}
 
-	output, err := conn.DescribeDomainConfiguration(ctx, input)
+	output, err := conn.DescribeDomainConfiguration(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{

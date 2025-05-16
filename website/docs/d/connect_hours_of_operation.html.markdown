@@ -14,7 +14,7 @@ Provides details about a specific Amazon Connect Hours of Operation.
 
 By `name`
 
-```hcl
+```terraform
 data "aws_connect_hours_of_operation" "test" {
   instance_id = "aaaaaaaa-bbbb-cccc-dddd-111111111111"
   name        = "Test"
@@ -23,7 +23,7 @@ data "aws_connect_hours_of_operation" "test" {
 
 By `hours_of_operation_id`
 
-```hcl
+```terraform
 data "aws_connect_hours_of_operation" "test" {
   instance_id           = "aaaaaaaa-bbbb-cccc-dddd-111111111111"
   hours_of_operation_id = "cccccccc-bbbb-cccc-dddd-111111111111"

@@ -37,6 +37,8 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `id` - (Required) ID of the API Key to look up.
 
 ## Attribute Reference
@@ -53,4 +55,4 @@ This data source exports the following attributes in addition to the arguments a
 * `enabled` - Whether the API Key is enabled.
 * `tags` - Map of tags for the resource.
 
-<!-- cache-key: cdktf-0.20.8 input-a00d9aabc0922f53098450b1d3c7279484b52526cb4756e4cbbf4ebf71cc4ed2 -->
+<!-- cache-key: cdktf-0.20.8 input-38216c75bc2aa5a9ec12b28f2406bad73f0d362932ea3cbbe14eca0dd149d824 -->

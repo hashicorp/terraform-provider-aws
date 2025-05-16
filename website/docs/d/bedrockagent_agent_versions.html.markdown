@@ -22,7 +22,7 @@ data "aws_bedrockagent_agent_versions" "test" {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
 * `agent_id` - (Required) Unique identifier of the agent.
 

@@ -14,12 +14,17 @@ import (
 )
 
 // @SDKDataSource("aws_cloudfront_log_delivery_canonical_user_id", name="Log Delivery Canonical User ID")
-// @Region(validateOverrideInPartition=false)
 func dataSourceLogDeliveryCanonicalUserID() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceLogDeliveryCanonicalUserIDRead,
 
-		Schema: map[string]*schema.Schema{},
+		Schema: map[string]*schema.Schema{
+			// As the CloudFront service is global we define our own region attribute.
+			names.AttrRegion: {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+		},
 	}
 }
 
@@ -34,7 +39,11 @@ func dataSourceLogDeliveryCanonicalUserIDRead(ctx context.Context, d *schema.Res
 		cnLogDeliveryCanonicalUserID = "a52cb28745c0c06e84ec548334e44bfa7fc2a85c54af20cd59e4969344b7af56"
 	)
 	canonicalUserID := defaultLogDeliveryCanonicalUserID
-	if v := names.PartitionForRegion(meta.(*conns.AWSClient).Region(ctx)); v.ID() == endpoints.AwsCnPartitionID {
+	region := d.Get(names.AttrRegion).(string)
+	if region == "" {
+		region = meta.(*conns.AWSClient).Region(ctx)
+	}
+	if v := names.PartitionForRegion(region); v.ID() == endpoints.AwsCnPartitionID {
 		canonicalUserID = cnLogDeliveryCanonicalUserID
 	}
 

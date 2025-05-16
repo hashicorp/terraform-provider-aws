@@ -1529,6 +1529,19 @@ func CheckWithNamedProviders(f TestCheckWithProviderFunc, providers map[string]*
 	}
 }
 
+type TestCheckWithRegionFunc func(*terraform.State, string) error
+
+func CheckWithRegions(f TestCheckWithRegionFunc, regions ...string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		for _, region := range regions {
+			if err := f(s, region); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+}
+
 func ErrorCheckSequence(funcs ...resource.ErrorCheckFunc) resource.ErrorCheckFunc {
 	return func(err error) error {
 		for _, f := range funcs {

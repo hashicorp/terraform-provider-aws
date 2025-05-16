@@ -31,7 +31,7 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-There are no arguments available for this data source.
+This data source does not support any arguments.
 
 ## Attribute Reference
 
@@ -40,4 +40,4 @@ This data source exports the following attributes in addition to the arguments a
 * `arns` - Bucket ARNs.
 * `buckets` - Buckets names.
 
-<!-- cache-key: cdktf-0.20.8 input-03cc051377d3e56810bf0fa41f5b4edbdf60d4b31b9736a6a776b016266e00c9 -->
+<!-- cache-key: cdktf-0.20.8 input-88615b0b038fe00bf04de2436fab347f79697969d6b9074c80d8598c9813bed6 -->

@@ -37,6 +37,8 @@ provider "kubernetes" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `name` - (Required) Name of the cluster
 
 ## Attribute Reference

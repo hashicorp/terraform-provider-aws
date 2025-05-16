@@ -18,7 +18,7 @@ Provides a resource to create an EventBridge resource policy to support cross-ac
 
 ### Account Access
 
-```hcl
+```terraform
 data "aws_iam_policy_document" "test" {
   statement {
     sid    = "DevAccountAccess"
@@ -45,7 +45,7 @@ resource "aws_cloudwatch_event_bus_policy" "test" {
 
 ### Organization Access
 
-```hcl
+```terraform
 data "aws_iam_policy_document" "test" {
   statement {
     sid    = "OrganizationAccess"
@@ -82,7 +82,7 @@ resource "aws_cloudwatch_event_bus_policy" "test" {
 
 ### Multiple Statements
 
-```hcl
+```terraform
 data "aws_iam_policy_document" "test" {
 
   statement {

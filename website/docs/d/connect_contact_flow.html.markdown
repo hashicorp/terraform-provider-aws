@@ -14,7 +14,7 @@ Provides details about a specific Amazon Connect Contact Flow.
 
 By name
 
-```hcl
+```terraform
 data "aws_connect_contact_flow" "test" {
   instance_id = "aaaaaaaa-bbbb-cccc-dddd-111111111111"
   name        = "Test"
@@ -23,7 +23,7 @@ data "aws_connect_contact_flow" "test" {
 
 By contact_flow_id
 
-```hcl
+```terraform
 data "aws_connect_contact_flow" "test" {
   instance_id     = "aaaaaaaa-bbbb-cccc-dddd-111111111111"
   contact_flow_id = "cccccccc-bbbb-cccc-dddd-111111111111"
