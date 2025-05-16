@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent/document"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
 
+	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
@@ -31,7 +32,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -362,10 +362,8 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 																						Required:   true,
 																					},
 																					"additional_model_request_fields": schema.StringAttribute{
-																						Optional: true,
-																						Validators: []validator.String{
-																							validators.JSON(),
-																						},
+																						CustomType: jsontypes.NormalizedType{},
+																						Optional:   true,
 																					},
 																				},
 																				Blocks: map[string]schema.Block{
@@ -387,17 +385,34 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 																									},
 																									NestedObject: schema.NestedBlockObject{
 																										Blocks: map[string]schema.Block{
-																											"message": schema.ListNestedBlock{
-																												CustomType: fwtypes.NewListNestedObjectTypeOf[messageModel](ctx),
+																											"input_variable": schema.ListNestedBlock{
+																												CustomType: fwtypes.NewListNestedObjectTypeOf[promptInputVariableModel](ctx),
+																												Validators: []validator.List{
+																													listvalidator.SizeBetween(0, 20),
+																												},
 																												NestedObject: schema.NestedBlockObject{
 																													Attributes: map[string]schema.Attribute{
-																														"role": schema.StringAttribute{
+																														names.AttrName: schema.StringAttribute{
+																															Required: true,
+																														},
+																													},
+																												},
+																											},
+																											names.AttrMessage: schema.ListNestedBlock{
+																												CustomType: fwtypes.NewListNestedObjectTypeOf[messageModel](ctx),
+																												Validators: []validator.List{
+																													listvalidator.IsRequired(),
+																													listvalidator.SizeAtLeast(1),
+																												},
+																												NestedObject: schema.NestedBlockObject{
+																													Attributes: map[string]schema.Attribute{
+																														names.AttrRole: schema.StringAttribute{
 																															CustomType: fwtypes.StringEnumType[awstypes.ConversationRole](),
 																															Required:   true,
 																														},
 																													},
 																													Blocks: map[string]schema.Block{
-																														"content": schema.ListNestedBlock{
+																														names.AttrContent: schema.ListNestedBlock{
 																															CustomType: fwtypes.NewListNestedObjectTypeOf[contentBlockModel](ctx),
 																															Validators: []validator.List{
 																																listvalidator.SizeAtMost(1),
@@ -420,7 +435,7 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 																																		},
 																																		NestedObject: schema.NestedBlockObject{
 																																			Attributes: map[string]schema.Attribute{
-																																				"type": schema.StringAttribute{
+																																				names.AttrType: schema.StringAttribute{
 																																					CustomType: fwtypes.StringEnumType[awstypes.CachePointType](),
 																																					Required:   true,
 																																				},
@@ -429,16 +444,6 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 																																	},
 																																},
 																															},
-																														},
-																													},
-																												},
-																											},
-																											"input_variable": schema.ListNestedBlock{
-																												CustomType: fwtypes.NewListNestedObjectTypeOf[promptInputVariableModel](ctx),
-																												NestedObject: schema.NestedBlockObject{
-																													Attributes: map[string]schema.Attribute{
-																														"name": schema.StringAttribute{
-																															Required: true,
 																														},
 																													},
 																												},
@@ -463,7 +468,7 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 																															},
 																															NestedObject: schema.NestedBlockObject{
 																																Attributes: map[string]schema.Attribute{
-																																	"type": schema.StringAttribute{
+																																	names.AttrType: schema.StringAttribute{
 																																		CustomType: fwtypes.StringEnumType[awstypes.CachePointType](),
 																																		Required:   true,
 																																	},
@@ -495,7 +500,7 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 																																		},
 																																		NestedObject: schema.NestedBlockObject{
 																																			Attributes: map[string]schema.Attribute{
-																																				"type": schema.StringAttribute{
+																																				names.AttrType: schema.StringAttribute{
 																																					CustomType: fwtypes.StringEnumType[awstypes.CachePointType](),
 																																					Required:   true,
 																																				},
@@ -509,10 +514,10 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 																																		},
 																																		NestedObject: schema.NestedBlockObject{
 																																			Attributes: map[string]schema.Attribute{
-																																				"name": schema.StringAttribute{
-																																					Required: true,
+																																				names.AttrDescription: schema.StringAttribute{
+																																					Optional: true,
 																																				},
-																																				"description": schema.StringAttribute{
+																																				names.AttrName: schema.StringAttribute{
 																																					Required: true,
 																																				},
 																																			},
@@ -524,13 +529,13 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 																																					},
 																																					NestedObject: schema.NestedBlockObject{
 																																						Attributes: map[string]schema.Attribute{
-																																							"json": schema.StringAttribute{
-																																								Optional: true,
+																																							names.AttrJSON: schema.StringAttribute{
+																																								CustomType: jsontypes.NormalizedType{},
+																																								Optional:   true,
 																																								Validators: []validator.String{
 																																									stringvalidator.ExactlyOneOf(
-																																										path.MatchRelative().AtParent().AtName("json"),
+																																										path.MatchRelative().AtParent().AtName(names.AttrJSON),
 																																									),
-																																									validators.JSON(),
 																																								},
 																																							},
 																																						},
@@ -573,7 +578,7 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 																																		},
 																																		NestedObject: schema.NestedBlockObject{
 																																			Attributes: map[string]schema.Attribute{
-																																				"name": schema.StringAttribute{
+																																				names.AttrName: schema.StringAttribute{
 																																					Required: true,
 																																				},
 																																			},
@@ -607,7 +612,7 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 																												},
 																												NestedObject: schema.NestedBlockObject{
 																													Attributes: map[string]schema.Attribute{
-																														"type": schema.StringAttribute{
+																														names.AttrType: schema.StringAttribute{
 																															CustomType: fwtypes.StringEnumType[awstypes.CachePointType](),
 																															Required:   true,
 																														},
@@ -618,7 +623,7 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 																												CustomType: fwtypes.NewListNestedObjectTypeOf[promptInputVariableModel](ctx),
 																												NestedObject: schema.NestedBlockObject{
 																													Attributes: map[string]schema.Attribute{
-																														"name": schema.StringAttribute{
+																														names.AttrName: schema.StringAttribute{
 																															Required: true,
 																														},
 																													},
@@ -651,6 +656,7 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 																												Optional: true,
 																											},
 																											"stop_sequences": schema.ListAttribute{
+																												CustomType:  fwtypes.ListOfStringType,
 																												ElementType: types.StringType,
 																												Optional:    true,
 																											},
