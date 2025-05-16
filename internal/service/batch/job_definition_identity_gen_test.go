@@ -76,8 +76,8 @@ func TestAccBatchJobDefinition_Identity_RegionOverride(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/JobDefinition/region_override/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:  config.StringVariable(rName),
-					names.AttrRegion: config.StringVariable(acctest.AlternateRegion()),
+					acctest.CtRName: config.StringVariable(rName),
+					"region":        config.StringVariable(acctest.AlternateRegion()),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectRegionalARNAlternateRegionFormat(resourceName, tfjsonpath.New(names.AttrARN), "batch", "job-definition/{name}:{revision}"),
@@ -90,8 +90,8 @@ func TestAccBatchJobDefinition_Identity_RegionOverride(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/JobDefinition/region_override/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:  config.StringVariable(rName),
-					names.AttrRegion: config.StringVariable(acctest.AlternateRegion()),
+					acctest.CtRName: config.StringVariable(rName),
+					"region":        config.StringVariable(acctest.AlternateRegion()),
 				},
 				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
 				ResourceName:      resourceName,
@@ -106,8 +106,8 @@ func TestAccBatchJobDefinition_Identity_RegionOverride(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/JobDefinition/region_override/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:  config.StringVariable(rName),
-					names.AttrRegion: config.StringVariable(acctest.AlternateRegion()),
+					acctest.CtRName: config.StringVariable(rName),
+					"region":        config.StringVariable(acctest.AlternateRegion()),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
