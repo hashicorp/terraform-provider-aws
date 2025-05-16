@@ -23,7 +23,7 @@ import (
 )
 
 // @SDKResource("aws_macie2_organization_admin_account", name="Organization Admin Account")
-// @Region(overrideEnabled=false)
+// @Region(global=true)
 func resourceOrganizationAdminAccount() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOrganizationAdminAccountCreate,

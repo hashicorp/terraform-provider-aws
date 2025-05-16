@@ -27,7 +27,7 @@ import (
 )
 
 // @SDKResource("aws_inspector2_delegated_admin_account", name="Delegated Admin Account")
-// @Region(overrideEnabled=false)
+// @Region(global=true)
 func resourceDelegatedAdminAccount() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDelegatedAdminAccountCreate,

@@ -19,7 +19,7 @@ import (
 )
 
 // @FrameworkResource("aws_auditmanager_organization_admin_account_registration", name="Organization Admin Account Registration")
-// @Region(overrideEnabled=false)
+// @Region(global=true)
 func newOrganizationAdminAccountRegistrationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &organizationAdminAccountRegistrationResource{}, nil
 }

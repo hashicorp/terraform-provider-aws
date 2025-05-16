@@ -22,7 +22,7 @@ import (
 )
 
 // @SDKResource("aws_ec2_image_block_public_access", name="Image Block Public Access")
-// @Region(overrideEnabled=false)
+// @Region(global=true)
 func resourceImageBlockPublicAccess() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceImageBlockPublicAccessPut,

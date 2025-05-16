@@ -20,7 +20,7 @@ import (
 )
 
 // @FrameworkResource("aws_macie2_organization_configuration", name="Organization Configuration")
-// @Region(overrideEnabled=false)
+// @Region(global=true)
 func newOrganizationConfigurationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &organizationConfigurationResource{}
 	return r, nil
