@@ -6,9 +6,9 @@ package bedrockagent
 import (
 	"context"
 	"encoding/json"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent/document"
@@ -67,11 +67,11 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 				Validators: []validator.String{
 					stringvalidator.All(
 						stringvalidator.LengthBetween(1, 50),
-						stringvalidator.RegexMatches(regexp.MustCompile(`^[0-9A-Za-z-_]+$`), "must only contain alphanumeric characters, hyphens and underscores"),
+						stringvalidator.RegexMatches(regexache.MustCompile(`^[0-9A-Za-z-_]+$`), "must only contain alphanumeric characters, hyphens and underscores"),
 					),
 				},
 			},
-			"execution_role_arn": schema.StringAttribute{
+			names.AttrExecutionRoleARN: schema.StringAttribute{
 				Required: true,
 			},
 			"customer_encryption_key_arn": schema.StringAttribute{
@@ -110,22 +110,22 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 							CustomType: fwtypes.NewListNestedObjectTypeOf[flowConnectionModel](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"name": schema.StringAttribute{
+									names.AttrName: schema.StringAttribute{
 										Required: true,
 									},
-									"source": schema.StringAttribute{
+									names.AttrSource: schema.StringAttribute{
 										Required: true,
 									},
-									"target": schema.StringAttribute{
+									names.AttrTarget: schema.StringAttribute{
 										Required: true,
 									},
-									"type": schema.StringAttribute{
+									names.AttrType: schema.StringAttribute{
 										CustomType: fwtypes.StringEnumType[awstypes.FlowConnectionType](),
 										Required:   true,
 									},
 								},
 								Blocks: map[string]schema.Block{
-									"configuration": schema.ListNestedBlock{
+									names.AttrConfiguration: schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[flowConnectionConfigurationModel](ctx),
 										Validators: []validator.List{
 											listvalidator.SizeAtMost(1),
@@ -159,7 +159,7 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 													},
 													NestedObject: schema.NestedBlockObject{
 														Attributes: map[string]schema.Attribute{
-															"condition": schema.StringAttribute{
+															names.AttrCondition: schema.StringAttribute{
 																Required: true,
 															},
 														},
@@ -175,16 +175,16 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 							CustomType: fwtypes.NewListNestedObjectTypeOf[flowNodeModel](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"name": schema.StringAttribute{
+									names.AttrName: schema.StringAttribute{
 										Required: true,
 									},
-									"type": schema.StringAttribute{
+									names.AttrType: schema.StringAttribute{
 										CustomType: fwtypes.StringEnumType[awstypes.FlowNodeType](),
 										Required:   true,
 									},
 								},
 								Blocks: map[string]schema.Block{
-									"configuration": schema.ListNestedBlock{
+									names.AttrConfiguration: schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[flowNodeConfigurationModel](ctx),
 										Validators: []validator.List{
 											listvalidator.SizeAtMost(1),
@@ -198,7 +198,7 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 														listvalidator.ExactlyOneOf(
 															path.MatchRelative().AtParent().AtName("agent"),
 															path.MatchRelative().AtParent().AtName("collector"),
-															path.MatchRelative().AtParent().AtName("condition"),
+															path.MatchRelative().AtParent().AtName(names.AttrCondition),
 															path.MatchRelative().AtParent().AtName("input"),
 															path.MatchRelative().AtParent().AtName("iterator"),
 															path.MatchRelative().AtParent().AtName("knowledge_base"),
@@ -224,21 +224,21 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 														listvalidator.SizeAtMost(1),
 													},
 												},
-												"condition": schema.ListNestedBlock{
+												names.AttrCondition: schema.ListNestedBlock{
 													CustomType: fwtypes.NewListNestedObjectTypeOf[flowNodeConfigurationMemberConditionModel](ctx),
 													Validators: []validator.List{
 														listvalidator.SizeAtMost(1),
 													},
 													NestedObject: schema.NestedBlockObject{
 														Blocks: map[string]schema.Block{
-															"condition": schema.ListNestedBlock{
+															names.AttrCondition: schema.ListNestedBlock{
 																CustomType: fwtypes.NewListNestedObjectTypeOf[flowConditionModel](ctx),
 																NestedObject: schema.NestedBlockObject{
 																	Attributes: map[string]schema.Attribute{
-																		"name": schema.StringAttribute{
+																		names.AttrName: schema.StringAttribute{
 																			Required: true,
 																		},
-																		"expression": schema.StringAttribute{
+																		names.AttrExpression: schema.StringAttribute{
 																			Optional: true,
 																		},
 																	},
@@ -681,7 +681,7 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 																			},
 																			NestedObject: schema.NestedBlockObject{
 																				Attributes: map[string]schema.Attribute{
-																					"resource_arn": schema.StringAttribute{
+																					names.AttrResourceARN: schema.StringAttribute{
 																						Required: true,
 																					},
 																				},
@@ -733,7 +733,7 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 																			},
 																			NestedObject: schema.NestedBlockObject{
 																				Attributes: map[string]schema.Attribute{
-																					"bucket_name": schema.StringAttribute{
+																					names.AttrBucketName: schema.StringAttribute{
 																						Required: true,
 																					},
 																				},
@@ -769,7 +769,7 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 																			},
 																			NestedObject: schema.NestedBlockObject{
 																				Attributes: map[string]schema.Attribute{
-																					"bucket_name": schema.StringAttribute{
+																					names.AttrBucketName: schema.StringAttribute{
 																						Required: true,
 																					},
 																				},
@@ -788,13 +788,13 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 										CustomType: fwtypes.NewListNestedObjectTypeOf[flowNodeInputModel](ctx),
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
-												"expression": schema.StringAttribute{
+												names.AttrExpression: schema.StringAttribute{
 													Required: true,
 												},
-												"name": schema.StringAttribute{
+												names.AttrName: schema.StringAttribute{
 													Required: true,
 												},
-												"type": schema.StringAttribute{
+												names.AttrType: schema.StringAttribute{
 													CustomType: fwtypes.StringEnumType[awstypes.FlowNodeIODataType](),
 													Required:   true,
 												},
@@ -805,10 +805,10 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 										CustomType: fwtypes.NewListNestedObjectTypeOf[flowNodeOutputModel](ctx),
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
-												"name": schema.StringAttribute{
+												names.AttrName: schema.StringAttribute{
 													Required: true,
 												},
-												"type": schema.StringAttribute{
+												names.AttrType: schema.StringAttribute{
 													CustomType: fwtypes.StringEnumType[awstypes.FlowNodeIODataType](),
 													Required:   true,
 												},
@@ -820,7 +820,7 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 					},
 				},
 			},
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,
@@ -976,7 +976,7 @@ func (r *resourceFlow) Delete(ctx context.Context, req resource.DeleteRequest, r
 }
 
 func (r *resourceFlow) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func findFlowByID(ctx context.Context, conn *bedrockagent.Client, id string) (*bedrockagent.GetFlowOutput, error) {
