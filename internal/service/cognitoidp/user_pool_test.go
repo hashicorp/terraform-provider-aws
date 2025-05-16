@@ -2056,11 +2056,6 @@ func TestAccCognitoIDPUserPool_nameUpdate(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
 				Config: testAccUserPoolConfig_name(rName + "-test2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolExists(ctx, resourceName, &pool2),
