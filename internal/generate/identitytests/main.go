@@ -156,12 +156,26 @@ func main() {
 				g.Fatalf("parsing config template %q: %s", configTmplFile, err)
 			}
 
+			_, err = tfTemplates.New("region").Parse("")
+			if err != nil {
+				g.Fatalf("parsing config template: %s", err)
+			}
+
 			common := commonConfig{
 				AdditionalTfVars: additionalTfVars,
 				WithRName:        (resource.Generator != ""),
 			}
 
 			generateTestConfig(g, testDirPath, "basic", tfTemplates, common)
+
+			_, err = tfTemplates.New("region").Parse("\n  region = var.region\n")
+			if err != nil {
+				g.Fatalf("parsing config template: %s", err)
+			}
+
+			common.WithRegion = true
+
+			generateTestConfig(g, testDirPath, "region_override", tfTemplates, common)
 		}
 	}
 
@@ -263,6 +277,7 @@ type ResourceDatum struct {
 	OverrideResourceType        string
 	ARNService                  string
 	ARNFormat                   string
+	IsGlobal                    bool
 }
 
 func (d ResourceDatum) AdditionalTfVars() map[string]string {
@@ -307,6 +322,7 @@ type codeBlock struct {
 type commonConfig struct {
 	AdditionalTfVars []string
 	WithRName        bool
+	WithRegion       bool
 }
 
 type ConfigDatum struct {
@@ -381,6 +397,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 	d := ResourceDatum{
 		FileName:         v.fileName,
 		additionalTfVars: make(map[string]string),
+		IsGlobal:         false,
 	}
 	hasIdentity := false
 	skip := false

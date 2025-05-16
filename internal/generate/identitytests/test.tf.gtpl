@@ -21,3 +21,10 @@ variable "{{ . }}" {
 }
 
 {{ end -}}
+{{ if .WithRegion }}
+variable "region" {
+  description = "Region to deploy resource in"
+  type        = string
+  nullable    = false
+}
+{{ end -}}
