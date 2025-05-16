@@ -49,6 +49,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			}),
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 			Identity: inttypes.ARNIdentity(),
+			Import: inttypes.Import{
+				WrappedImport: true,
+			},
 		},
 		{
 			Factory:  resourceCertificateValidation,
