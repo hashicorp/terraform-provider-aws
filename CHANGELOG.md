@@ -1,5 +1,9 @@
 ## 5.99.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_quicksight_account_settings` ([#42185](https://github.com/hashicorp/terraform-provider-aws/issues/42185))
+
 BUG FIXES:
 
 * resource/aws_s3_bucket_lifecycle_configuration: No longer returns warning on empty `rule.filter`. ([#42624](https://github.com/hashicorp/terraform-provider-aws/issues/42624))
