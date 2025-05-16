@@ -71,11 +71,8 @@ This data source exports the following attributes in addition to the arguments a
 * `ipv6_cidr_block_set` - List of objects with IPv6 CIDR blocks of the requester VPC.
 * `peer_cidr_block_set` - List of objects with IPv4 CIDR blocks of the accepter VPC.
 * `peer_ipv6_cidr_block_set` - List of objects with IPv6 CIDR blocks of the accepter VPC.
-<<<<<<< HEAD
 * `peer_region` - Region of the accepter VPC.
 * `region` - (**Deprecated**) Region of the requester VPC. Use `requester_region` instead.
-=======
->>>>>>> v5.98.0
 * `requester` - Configuration block that describes [VPC Peering Connection]
 (https://docs.aws.amazon.com/vpc/latest/peering/what-is-vpc-peering.html) options set for the requester VPC.
 * `requester_region` - Region of the requester VPC.
