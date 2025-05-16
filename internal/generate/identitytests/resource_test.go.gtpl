@@ -81,7 +81,7 @@ plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), know
 {{ end }}
 {{- end }}
 
-{{ define "ImportBody" }}
+{{ define "ImportCommandWithIDBody" }}
 {{ template "CommonImportBody" . -}}
 {{- if gt (len .ImportIgnore) 0 -}}
 	ImportStateVerifyIgnore: []string{
@@ -164,7 +164,7 @@ func {{ template "testname" . }}_Identity_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
 					{{ template "AdditionalTfVars" . }}
 				},
-				{{- template "ImportBody" . -}}
+				{{- template "ImportCommandWithIDBody" . -}}
 			},
 			{{- end }}
 		},
@@ -186,18 +186,18 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 					names.AttrRegion: config.StringVariable(acctest.AlternateRegion()),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
+					{{ if ne .ARNFormat "" -}}
+						tfstatecheck.ExpectRegionalARNAlternateRegionFormat(resourceName, tfjsonpath.New(names.AttrARN), "{{ .ARNService }}", "{{ .ARNFormat }}"),
+					{{ end -}}
 					{{ if .HasIDAttrDuplicates -}}
 						statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New({{ .IDAttrDuplicates }}), compare.ValuesSame()),
 					{{ end -}}
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
-					{{ if not .MutableIdentity -}}
-						{{ if .ArnIdentity -}}
-							tfstatecheck.ExpectIdentityRegionalARNAlternateRegionFormat(ctx, resourceName, "{{ .ARNService }}", "{{ .ARNFormat }}"),
-						{{ end -}}
-					{{ end -}}
 				},
 			},
-			{{ if not .NoImport -}}
+			{{ if not .NoImport }}
+
+			// Import with appended "@<region>"
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/region_override/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -208,6 +208,8 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
 				{{- template "ImportCommandWithIDBody" . -}}
 			},
+
+			// Import without appended "@<region>"
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/region_override/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -215,38 +217,8 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 					{{ template "AdditionalTfVars" . }}
 					names.AttrRegion: config.StringVariable(acctest.AlternateRegion()),
 				},
-				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
-				{{- template "ImportBlockWithIDBody" . -}}
-				ImportPlanChecks: resource.ImportPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						{{ if .ArnIdentity -}}
-							plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
-							plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
-						{{ end -}}
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
-					},
-				},
+				{{- template "ImportCommandWithIDBody" . -}}
 			},
-			{{ if not .MutableIdentity -}}
-			{
-				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/region_override/"),
-				ConfigVariables: config.Variables{ {{ if .Generator }}
-					acctest.CtRName: config.StringVariable(rName),{{ end }}
-					{{ template "AdditionalTfVars" . }}
-					names.AttrRegion: config.StringVariable(acctest.AlternateRegion()),
-				},
-				{{- template "ImportBlockWithResourceIdentityBody" . -}}
-				ImportPlanChecks: resource.ImportPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						{{ if .ArnIdentity -}}
-							plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
-							plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
-						{{ end -}}
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
-					},
-				},
-			},
-			{{ end }}
 			{{- end }}
 		},
 	})
