@@ -59,6 +59,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/docdb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/docdbelastic"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ds"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/dsql"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/dynamodb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ecr"
@@ -235,6 +236,7 @@ func registerSweepers() {
 	docdb.RegisterSweepers()
 	docdbelastic.RegisterSweepers()
 	ds.RegisterSweepers()
+	dsql.RegisterSweepers()
 	dynamodb.RegisterSweepers()
 	ec2.RegisterSweepers()
 	ecr.RegisterSweepers()
