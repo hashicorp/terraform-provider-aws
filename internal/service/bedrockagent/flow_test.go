@@ -426,8 +426,8 @@ data "aws_iam_policy_document" "test_permissions" {
     resources = ["*"]
   }
   statement {
-    actions   = ["bedrock:InvokeModel"]
-    effect    = "Allow"
+    actions = ["bedrock:InvokeModel"]
+    effect  = "Allow"
     resources = [
       "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}::foundation-model/%[1]s",
     ]
