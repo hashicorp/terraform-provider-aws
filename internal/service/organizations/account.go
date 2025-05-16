@@ -94,7 +94,7 @@ func resourceAccount() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 50),
 			},
-			"parent_id": {
+			names.AttrParentID: {
 				Type:         schema.TypeString,
 				Computed:     true,
 				Optional:     true,
@@ -184,7 +184,7 @@ func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta any
 	d.SetId(aws.ToString(output.AccountId))
 	d.Set("govcloud_id", output.GovCloudAccountId)
 
-	if v, ok := d.GetOk("parent_id"); ok {
+	if v, ok := d.GetOk(names.AttrParentID); ok {
 		oldParentAccountID, err := findParentAccountID(ctx, conn, d.Id())
 
 		if err != nil {
@@ -236,7 +236,7 @@ func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	d.Set("joined_method", account.JoinedMethod)
 	d.Set("joined_timestamp", aws.ToTime(account.JoinedTimestamp).Format(time.RFC3339))
 	d.Set(names.AttrName, account.Name)
-	d.Set("parent_id", parentAccountID)
+	d.Set(names.AttrParentID, parentAccountID)
 	d.Set(names.AttrStatus, account.Status)
 
 	return diags
@@ -246,8 +246,8 @@ func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta any
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
-	if d.HasChange("parent_id") {
-		o, n := d.GetChange("parent_id")
+	if d.HasChange(names.AttrParentID) {
+		o, n := d.GetChange(names.AttrParentID)
 
 		input := &organizations.MoveAccountInput{
 			AccountId:           aws.String(d.Id()),

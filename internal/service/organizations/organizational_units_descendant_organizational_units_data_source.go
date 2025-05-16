@@ -42,7 +42,7 @@ func dataSourceOrganizationalUnitDescendantOrganizationalUnits() *schema.Resourc
 					},
 				},
 			},
-			"parent_id": {
+			names.AttrParentID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -54,7 +54,7 @@ func dataSourceOrganizationalUnitDescendantOrganizationalUnitsRead(ctx context.C
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
-	parentID := d.Get("parent_id").(string)
+	parentID := d.Get(names.AttrParentID).(string)
 	organizationUnits, err := findAllOrganizationalUnitsForParentAndBelow(ctx, conn, parentID)
 
 	if err != nil {

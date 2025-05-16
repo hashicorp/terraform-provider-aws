@@ -70,7 +70,7 @@ func resourceOrganizationalUnit() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 128),
 			},
-			"parent_id": {
+			names.AttrParentID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -89,7 +89,7 @@ func resourceOrganizationalUnitCreate(ctx context.Context, d *schema.ResourceDat
 	name := d.Get(names.AttrName).(string)
 	input := &organizations.CreateOrganizationalUnitInput{
 		Name:     aws.String(name),
-		ParentId: aws.String(d.Get("parent_id").(string)),
+		ParentId: aws.String(d.Get(names.AttrParentID).(string)),
 		Tags:     getTagsIn(ctx),
 	}
 
@@ -139,7 +139,7 @@ func resourceOrganizationalUnitRead(ctx context.Context, d *schema.ResourceData,
 	}
 	d.Set(names.AttrARN, ou.Arn)
 	d.Set(names.AttrName, ou.Name)
-	d.Set("parent_id", parentAccountID)
+	d.Set(names.AttrParentID, parentAccountID)
 
 	return diags
 }
