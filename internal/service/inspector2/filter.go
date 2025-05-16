@@ -39,7 +39,7 @@ func newFilterResource(_ context.Context) (resource.ResourceWithConfigure, error
 }
 
 type filterResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[filterResourceModel]
 }
 
 func (r *filterResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -546,6 +546,7 @@ func findFilters(ctx context.Context, conn *inspector2.Client, input *inspector2
 }
 
 type filterResourceModel struct {
+	framework.WithRegionModel
 	Action         fwtypes.StringEnum[awstypes.FilterAction]            `tfsdk:"action"`
 	ARN            types.String                                         `tfsdk:"arn"`
 	Description    types.String                                         `tfsdk:"description"`

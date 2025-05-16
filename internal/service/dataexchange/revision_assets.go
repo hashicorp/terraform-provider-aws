@@ -66,7 +66,7 @@ const (
 )
 
 type revisionAssetsResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[revisionAssetsResourceModel]
 	framework.WithTimeouts
 }
 
@@ -894,6 +894,7 @@ func finalizeAsset(ctx context.Context, conn *dataexchange.Client, datasetId, re
 }
 
 type revisionAssetsResourceModel struct {
+	framework.WithRegionModel
 	ARN          types.String                               `tfsdk:"arn"`
 	Assets       fwtypes.SetNestedObjectValueOf[assetModel] `tfsdk:"asset"`
 	Comment      types.String                               `tfsdk:"comment"`
