@@ -35,7 +35,7 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following argument is required:
+The following arguments are required:
 
 * `account_id` - (Required) ID of the account to associate
 
@@ -72,4 +72,4 @@ Using `terraform import`, import Amazon Inspector Member Association using the `
 % terraform import aws_inspector2_member_association.example 123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-82d5942e4f4d61c9c5edbed4e78715cf0ac4b5f18beb3ce13b9684e5cadbbf9d -->
+<!-- cache-key: cdktf-0.20.8 input-d8a22f23dfef6eaaf44526f13fa173a0a008d3075cc57ee80df79206dbe0250c -->

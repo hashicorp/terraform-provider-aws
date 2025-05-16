@@ -33,12 +33,13 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `name` - Specify the exact name of the desired autoscaling group.
 
 ## Attribute Reference
 
-~> **NOTE:** Some values are not always set and may not be available for
-interpolation.
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Auto Scaling group.
 * `availability_zones` - One or more Availability Zones for the group.
@@ -145,4 +146,7 @@ interpolation.
     * `pool_state` - Instance state to transition to after the lifecycle actions are complete.
 * `warm_pool_size` - Current size of the warm pool.
 
-<!-- cache-key: cdktf-0.20.8 input-ebf8888e7d02b248dc689ab89018f2682fdfa4054d736231065c99862872c406 -->
+~> **NOTE:** Some values are not always set and may not be available for
+interpolation.
+
+<!-- cache-key: cdktf-0.20.8 input-99279721d61a0d3e30f5066b1062cf8bd8e12200a2f7c5468101f8804d45205e -->

@@ -46,6 +46,8 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `principal` - (Required) The AWS IoT Certificate ARN or Amazon Cognito Identity ID.
 * `thing` - (Required) The name of the thing.
 
@@ -53,4 +55,4 @@ class MyConvertedCode extends TerraformStack {
 
 This resource exports no additional attributes.
 
-<!-- cache-key: cdktf-0.20.8 input-c6b7343797508d980834fbffd7cd03e2ab8c65b3b6b1f437fd026a32bf4c5c8e -->
+<!-- cache-key: cdktf-0.20.8 input-b0462449e9fdc6df8ebb2a2cf5b82883e26b0516f1c27cc221fd586965a756fb -->

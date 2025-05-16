@@ -43,6 +43,8 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `filter` - (Optional) Configuration block. Detailed below.
 
 ### filter
@@ -54,8 +56,10 @@ The following arguments are required:
 * `name` - (Required) Name of the field to filter by, as defined by [the underlying AWS API](https://docs.aws.amazon.com/fsx/latest/APIReference/API_StorageVirtualMachineFilter.html).
 * `values` - (Required) Set of values that are accepted for the given field. An SVM will be selected if any one of the given values matches.
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `ids` - List of all SVM IDs found.
 
-<!-- cache-key: cdktf-0.20.8 input-fe65afdf53d4c09b7ace920dfb5af1c86aa9ada3e1dee3a6a467d53273829e75 -->
+<!-- cache-key: cdktf-0.20.8 input-53b212544455e4cfb98558724cef634288eed6acbc0ade17b88f9d178b4f8b16 -->

@@ -537,11 +537,12 @@ func documentClassifierPublishVersion(ctx context.Context, conn *comprehend.Clie
 	})
 
 	var tobe string
-	if action == create.ErrActionCreating {
+	switch action {
+	case create.ErrActionCreating:
 		tobe = "to be created"
-	} else if action == create.ErrActionUpdating {
+	case create.ErrActionUpdating:
 		tobe = "to be updated"
-	} else {
+	default:
 		tobe = "to complete action"
 	}
 

@@ -47,6 +47,8 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `domain` - (Optional) Domain of the certificate to look up. If set and no certificate is found with this name, an error will be returned.
 * `keyTypes` - (Optional) List of key algorithms to filter certificates. By default, ACM does not return all certificate types when searching. See the [ACM API Reference](https://docs.aws.amazon.com/acm/latest/APIReference/API_CertificateDetail.html#ACM-Type-CertificateDetail-KeyAlgorithm) for supported key algorithms.
 * `statuses` - (Optional) List of statuses on which to filter the returned list. Valid values are `PENDING_VALIDATION`, `ISSUED`,
@@ -67,4 +69,4 @@ This data source exports the following attributes in addition to the arguments a
 * `certificateChain` - Certificates forming the requested ACM-issued certificate's chain of trust. The chain consists of the certificate of the issuing CA and the intermediate certificates of any other subordinate CAs.
 * `tags` - Mapping of tags for the resource.
 
-<!-- cache-key: cdktf-0.20.8 input-96a7dcde6213ce97cb9609786e41d50a53017448d4bbff7e905095220a7aeb48 -->
+<!-- cache-key: cdktf-0.20.8 input-5456c417e61396cd78701aa387af16f84cd88cf177623eddff75437511aa525f -->

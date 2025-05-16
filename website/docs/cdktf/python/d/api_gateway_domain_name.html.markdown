@@ -33,6 +33,8 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `domain_name` - (Required) Fully-qualified domain name to look up. If no domain name is found, an error will be returned.
 * `domain_name_id` - (Optional) The identifier for the domain name resource. Supported only for private custom domain names.
 
@@ -57,4 +59,4 @@ This data source exports the following attributes in addition to the arguments a
 * `security_policy` - Security policy for the domain name.
 * `tags` - Key-value map of tags for the resource.
 
-<!-- cache-key: cdktf-0.20.8 input-d63635151fd0bbd2eaa5b04842db5559465f6233dacdf1ccd8e41ed738503281 -->
+<!-- cache-key: cdktf-0.20.8 input-b1d4411ef59b05824a042c0653a8dd7961011e7d97a61114194a099903fb5e88 -->

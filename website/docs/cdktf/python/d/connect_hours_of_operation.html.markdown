@@ -93,4 +93,4 @@ A `start_time` block supports the following arguments:
 * `hours` - Hour of opening.
 * `minutes` - Minute of opening.
 
-<!-- cache-key: cdktf-0.20.8 input-86439a7339e655a280f3361f3160fa22a502fdea3b251d553d7e684d0a1b53cd -->
+<!-- cache-key: cdktf-0.20.8 input-6f2a52ab2ba722462f36a954c93d57ebaee82efc88707ea2bf7eb5fff2ff80b7 -->

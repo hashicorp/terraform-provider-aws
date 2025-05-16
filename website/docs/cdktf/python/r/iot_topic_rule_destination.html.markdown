@@ -36,6 +36,8 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `enabled` - (Optional) Whether or not to enable the destination. Default: `true`.
 * `vpc_configuration` - (Required) Configuration of the virtual private cloud (VPC) connection. For more info, see the [AWS documentation](https://docs.aws.amazon.com/iot/latest/developerguide/vpc-rule-action.html).
 
@@ -77,4 +79,4 @@ Using `terraform import`, import IoT topic rule destinations using the `arn`. Fo
 % terraform import aws_iot_topic_rule_destination.example arn:aws:iot:us-west-2:123456789012:ruledestination/vpc/2ce781c8-68a6-4c52-9c62-63fe489ecc60
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-84135101ecf33d388c99e663b26ee9c967e1ad73d124159690f4b098fc269b2c -->
+<!-- cache-key: cdktf-0.20.8 input-9e7af5831b0fed9d08e5545847587663d53ced2dc62a528f5450253c08bf5079 -->
