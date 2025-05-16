@@ -49,7 +49,7 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Identifier of the source cluster.
+* `id` - (**Deprecated**, use `cluster_identifier` instead) Identifier of the source cluster.
 
 ## Import
 

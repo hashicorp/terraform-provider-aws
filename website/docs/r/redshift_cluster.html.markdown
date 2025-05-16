@@ -98,6 +98,7 @@ This resource supports the following arguments:
 * `number_of_nodes` - (Optional) The number of compute nodes in the cluster. This parameter is required when the ClusterType parameter is specified as multi-node. Default is 1.
 * `publicly_accessible` - (Optional) If true, the cluster can be accessed from a public network. Default is `false`.
 * `encrypted` - (Optional) If true , the data in the cluster is encrypted at rest.
+  Default is `true`.
 * `enhanced_vpc_routing` - (Optional) If true , enhanced VPC routing is enabled.
 * `kms_key_id` - (Optional) The ARN for the KMS encryption key. When specifying `kms_key_id`, `encrypted` needs to be set to true.
 * `elastic_ip` - (Optional) The Elastic IP (EIP) address for the cluster.

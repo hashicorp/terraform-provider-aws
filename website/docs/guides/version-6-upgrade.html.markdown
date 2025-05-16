@@ -606,6 +606,7 @@ Treat the `key_attributes` and `key_attributes.key_modes_of_use` as lists of nes
 
 ## Resource `aws_redshift_cluster`
 
+* `encrypted` now defaults to `true`.
 * `publicly_accessible` now defaults to `false`.
 * Remove `snapshot_copy`—it is no longer supported. Use the `aws_redshift_snapshot_copy` resource instead.
 * Remove `logging`—it is no longer supported. Use the `aws_redshift_logging` resource instead.
