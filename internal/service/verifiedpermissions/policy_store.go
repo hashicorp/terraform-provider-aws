@@ -25,11 +25,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_verifiedpermissions_policy_store", name="Policy Store")
+// @Tags(identifierAttribute="arn")
 func newResourcePolicyStore(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourcePolicyStore{}
 
@@ -58,6 +60,8 @@ func (r *resourcePolicyStore) Schema(ctx context.Context, request resource.Schem
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
 			"validation_settings": schema.ListNestedBlock{
@@ -100,6 +104,7 @@ func (r *resourcePolicyStore) Create(ctx context.Context, request resource.Creat
 
 	clientToken := id.UniqueId()
 	input.ClientToken = aws.String(clientToken)
+	input.Tags = getTagsIn(ctx)
 
 	output, err := conn.CreatePolicyStore(ctx, input)
 
@@ -239,6 +244,8 @@ type resourcePolicyStoreData struct {
 	Description        types.String                                        `tfsdk:"description"`
 	ID                 types.String                                        `tfsdk:"id"`
 	PolicyStoreID      types.String                                        `tfsdk:"policy_store_id"`
+	Tags               tftags.Map                                          `tfsdk:"tags"`
+	TagsAll            tftags.Map                                          `tfsdk:"tags_all"`
 	ValidationSettings fwtypes.ListNestedObjectValueOf[validationSettings] `tfsdk:"validation_settings"`
 }
 
