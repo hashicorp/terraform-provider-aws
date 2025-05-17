@@ -467,6 +467,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				} else {
 					d.ARNAttribute = args.Positional[0]
 				}
+				d.idAttrDuplicates = d.ARNAttribute
 
 			case "ArnFormat":
 				args := common.ParseArgs(m[3])
@@ -531,14 +532,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				}
 				if attr, ok := args.Keyword["idAttrDuplicates"]; ok {
 					d.idAttrDuplicates = attr
-					d.GoImports = append(d.GoImports,
-						goImport{
-							Path: "github.com/hashicorp/terraform-plugin-testing/config",
-						},
-						goImport{
-							Path: "github.com/hashicorp/terraform-plugin-testing/tfjsonpath",
-						},
-					)
 				}
 				if attr, ok := args.Keyword["importIgnore"]; ok {
 					d.ImportIgnore = strings.Split(attr, ";")
@@ -652,6 +645,16 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 	if hasIdentity {
 		if !skip {
+			if d.idAttrDuplicates != "" {
+				d.GoImports = append(d.GoImports,
+					goImport{
+						Path: "github.com/hashicorp/terraform-plugin-testing/config",
+					},
+					goImport{
+						Path: "github.com/hashicorp/terraform-plugin-testing/tfjsonpath",
+					},
+				)
+			}
 			if d.Name == "" {
 				v.errs = append(v.errs, fmt.Errorf("no name parameter set: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				return
