@@ -78,6 +78,14 @@ func resourceGroup() *schema.Resource {
 				Optional:     true,
 				Default:      0,
 				ValidateFunc: validation.IntInSlice([]int{0, 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1096, 1827, 2192, 2557, 2922, 3288, 3653}),
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if v, ok := d.GetOk("log_group_class"); ok {
+						if awstypes.LogGroupClass(v.(string)) == awstypes.LogGroupClassDelivery {
+							return true
+						}
+					}
+					return false
+				},
 			},
 			names.AttrSkipDestroy: {
 				Type:     schema.TypeBool,
@@ -113,7 +121,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	d.SetId(name)
 
-	if v, ok := d.GetOk("retention_in_days"); ok {
+	if v, ok := d.GetOk("retention_in_days"); ok && input.LogGroupClass != awstypes.LogGroupClassDelivery {
 		input := &cloudwatchlogs.PutRetentionPolicyInput{
 			LogGroupName:    aws.String(d.Id()),
 			RetentionInDays: aws.Int32(int32(v.(int))),
