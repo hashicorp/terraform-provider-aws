@@ -68,7 +68,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_acmpca_certificate_authority_certificate",
 			Name:     "Certificate Authority Certificate",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
-			Identity: inttypes.ARNIdentity(),
+			Identity: inttypes.ARNIdentityNamed("certificate_authority_arn"),
 			Import: inttypes.Import{
 				WrappedImport: true,
 			},
@@ -84,7 +84,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_acmpca_policy",
 			Name:     "Policy",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
-			Identity: inttypes.ARNIdentity(),
+			Identity: inttypes.ARNIdentityNamed(names.AttrResourceARN),
 			Import: inttypes.Import{
 				WrappedImport: true,
 			},

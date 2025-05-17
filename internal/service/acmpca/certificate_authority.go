@@ -51,7 +51,7 @@ func resourceCertificateAuthority() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				if err := importer.ARN(ctx, d); err != nil {
+				if err := importer.ARN(ctx, d, names.AttrARN); err != nil {
 					return nil, err
 				}
 
