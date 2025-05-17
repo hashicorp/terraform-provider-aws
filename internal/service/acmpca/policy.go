@@ -25,7 +25,6 @@ import (
 
 // @SDKResource("aws_acmpca_policy", name="Policy")
 // @ArnIdentity
-// @WrappedImport
 // @Testing(idAttrDuplicates="resource_arn")
 // @Testing(generator=false)
 func resourcePolicy() *schema.Resource {

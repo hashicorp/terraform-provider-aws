@@ -38,13 +38,6 @@ import (
 	cryptobyte_asn1 "golang.org/x/crypto/cryptobyte/asn1"
 )
 
-/*
-- [ ] Add boolean parameter to @WrappedImport, default is true (for now)
-- [ ] @ArnIdentity should default to setting WrappedImport
-- [ ] Add optional attributeName parameter to @ArnIdentity, default is `arn`
-- [ ] @ArnIdentity should default to setting idAttrDuplicates to identity attributeName
-*/
-
 // @SDKResource("aws_acmpca_certificate", name="Certificate")
 // @ArnIdentity
 // @WrappedImport(false)
