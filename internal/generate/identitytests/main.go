@@ -291,6 +291,7 @@ type ResourceDatum struct {
 	OverrideResourceType        string
 	ARNService                  string
 	ARNFormat                   string
+	ARNAttribute                string
 	IsGlobal                    bool
 }
 
@@ -460,6 +461,12 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 			case "ArnIdentity":
 				hasIdentity = true
+				args := common.ParseArgs(m[3])
+				if len(args.Positional) == 0 {
+					d.ARNAttribute = "arn"
+				} else {
+					d.ARNAttribute = args.Positional[0]
+				}
 
 			case "ArnFormat":
 				args := common.ParseArgs(m[3])
