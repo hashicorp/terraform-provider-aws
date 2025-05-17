@@ -533,7 +533,7 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 				}
 
 				if resource.Identity.ARN {
-					r.Importer = arnIdentityResourceImporter()
+					r.Importer = arnIdentityResourceImporter(resource.Identity.ARNAttribute)
 				}
 			}
 

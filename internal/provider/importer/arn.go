@@ -11,11 +11,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func ARN(ctx context.Context, rd *schema.ResourceData) error {
+func ARN(ctx context.Context, rd *schema.ResourceData, attrName string) error {
 	arnARN, err := arn.Parse(rd.Id())
 	if err != nil {
 		return fmt.Errorf("could not parse import ID %q as ARN: %s", rd.Id(), err)
 	}
+	rd.Set(attrName, rd.Id())
 
 	if region, ok := rd.GetOk("region"); ok {
 		if region != arnARN.Region {
