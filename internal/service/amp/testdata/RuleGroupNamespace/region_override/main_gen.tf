@@ -1,12 +1,16 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 resource "aws_prometheus_workspace" "test" {
-{{- template "region" }}
+  region = var.region
+
 }
 
 resource "aws_prometheus_rule_group_namespace" "test" {
-{{- template "region" }}
+  region = var.region
+
   name         = var.rName
   workspace_id = aws_prometheus_workspace.test.id
-{{- template "tags" . }}
   data = <<EOF
 groups:
   - name: test
@@ -14,4 +18,16 @@ groups:
     - record: metric:recording_rule
       expr: avg(rate(container_cpu_usage_seconds_total[5m]))
 EOF
+}
+
+variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
+}
+
+variable "region" {
+  description = "Region to deploy resource in"
+  type        = string
+  nullable    = false
 }
