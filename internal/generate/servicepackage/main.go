@@ -251,7 +251,17 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				}
 
 			case "WrappedImport":
-				d.WrappedImport = true
+				if len(args.Positional) == 0 {
+					d.WrappedImport = true
+				} else {
+					attr := args.Positional[0]
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid WrappedImport value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					} else {
+						d.WrappedImport = b
+					}
+				}
 
 			case "ArnIdentity":
 				d.ARNIdentity = true
