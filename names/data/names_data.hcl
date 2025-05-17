@@ -393,8 +393,9 @@ service "appconfigdata" {
 
 service "appflow" {
   sdk {
-    id = "Appflow"
-  }
+    id          = "Appflow"
+    arn_service = "appflow"
+}
 
   names {
     provider_name_upper = "AppFlow"
