@@ -51,7 +51,8 @@ service "account" {
 
 service "acm" {
   sdk {
-    id = "ACM"
+    id          = "ACM"
+    arn_service = "acm"
   }
 
   names {
@@ -79,7 +80,8 @@ service "acmpca" {
   }
 
   sdk {
-    id = "ACM PCA"
+    id          = "ACM PCA"
+    arn_service = "acm-pca"
   }
 
   names {
