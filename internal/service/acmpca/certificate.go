@@ -47,6 +47,7 @@ import (
 
 // @SDKResource("aws_acmpca_certificate", name="Certificate")
 // @ArnIdentity
+// @WrappedImport(false)
 // @Testing(importIgnore="certificate_signing_request;signing_algorithm;template_arn;validity")
 func resourceCertificate() *schema.Resource {
 	return &schema.Resource{
