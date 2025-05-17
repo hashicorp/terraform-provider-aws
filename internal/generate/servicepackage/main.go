@@ -265,6 +265,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 			case "ArnIdentity":
 				d.ARNIdentity = true
+				d.WrappedImport = true
 
 			case "SingletonIdentity":
 				d.SingletonIdentity = true
