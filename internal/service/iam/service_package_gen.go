@@ -120,6 +120,11 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
+			Factory:  dataSourceRoles,
+			TypeName: "aws_iam_roles",
+			Name:     "Roles",
+		},
+		{
 			Factory:  dataSourceSAMLProvider,
 			TypeName: "aws_iam_saml_provider",
 			Name:     "SAML Provider",

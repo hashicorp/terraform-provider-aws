@@ -117,7 +117,7 @@ func (d *dataSourceServiceLinkedRole) Read(ctx context.Context, request datasour
 				response.Diagnostics.AddError(fmt.Sprintf("creating IAM Service Linked Role (%s)", awsServiceName), err.Error())
 				return
 			}
-			role = output.Role // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-assignment
+			role = output.Role
 		} else {
 			response.Diagnostics.AddError(fmt.Sprintf("reading IAM Service Linked Role (%s)", awsServiceName), "Role was not found.")
 			return
