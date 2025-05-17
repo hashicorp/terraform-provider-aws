@@ -17,12 +17,9 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newDataSourceRoles,
-			Name:    "Roles",
-		},
-		{
-			Factory: newDataSourceServiceLinkedRole,
-			Name:    "Service Linked Role",
+			Factory:  newDataSourceServiceLinkedRole,
+			TypeName: "aws_iam_service_linked_role",
+			Name:     "Service Linked Role",
 		},
 	}
 }

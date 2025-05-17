@@ -37,10 +37,10 @@ func TestAccIAMServiceLinkedRoleDataSource_basic(t *testing.T) {
 					// Remove existing if possible
 					client := acctest.Provider.Meta().(*conns.AWSClient)
 					arn := arn.ARN{
-						Partition: client.Partition,
+						Partition: client.Partition(ctx),
 						Service:   "iam",
-						Region:    client.Region,
-						AccountID: client.AccountID,
+						Region:    client.Region(ctx),
+						AccountID: client.AccountID(ctx),
 						Resource:  arnResource,
 					}.String()
 					r := tfiam.ResourceServiceLinkedRole()
@@ -61,7 +61,7 @@ func TestAccIAMServiceLinkedRoleDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrPath, resourceName, names.AttrPath),
-					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 		},
@@ -89,7 +89,7 @@ func TestAccIAMServiceLinkedRoleDataSource_customSuffix(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "custom_suffix", resourceName, "custom_suffix"),
 					acctest.CheckResourceAttrRFC3339(dataSourceName, "create_date"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "unique_id", resourceName, "unique_id"),
-					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 		},
@@ -116,10 +116,10 @@ func TestAccIAMServiceLinkedRoleDataSource_createIfMissing(t *testing.T) {
 					// Remove existing if possible
 					client := acctest.Provider.Meta().(*conns.AWSClient)
 					arn := arn.ARN{
-						Partition: client.Partition,
+						Partition: client.Partition(ctx),
 						Service:   "iam",
-						Region:    client.Region,
-						AccountID: client.AccountID,
+						Region:    client.Region(ctx),
+						AccountID: client.AccountID(ctx),
 						Resource:  arnResource,
 					}.String()
 					r := tfiam.ResourceServiceLinkedRole()
@@ -141,7 +141,7 @@ func TestAccIAMServiceLinkedRoleDataSource_createIfMissing(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "aws_service_name", awsServiceName),
 					acctest.CheckResourceAttrRFC3339(dataSourceName, "create_date"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "unique_id"),
-					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 		},

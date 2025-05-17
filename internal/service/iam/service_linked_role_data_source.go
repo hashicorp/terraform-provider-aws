@@ -25,9 +25,7 @@ import (
 
 // @FrameworkDataSource("aws_iam_service_linked_role",name="Service Linked Role")
 func newDataSourceServiceLinkedRole(context.Context) (datasource.DataSourceWithConfigure, error) {
-	d := &dataSourceServiceLinkedRole{}
-
-	return d, nil
+	return &dataSourceServiceLinkedRole{}, nil
 }
 
 type dataSourceServiceLinkedRole struct {
@@ -83,7 +81,7 @@ func (d *dataSourceServiceLinkedRole) Read(ctx context.Context, request datasour
 		return
 	}
 
-	var role awstypes.Role
+	var role *awstypes.Role
 	conn := d.Meta().IAMClient(ctx)
 
 	//AWS API does not provide a Get/List method for Service Linked Roles.
@@ -119,17 +117,17 @@ func (d *dataSourceServiceLinkedRole) Read(ctx context.Context, request datasour
 				response.Diagnostics.AddError(fmt.Sprintf("creating IAM Service Linked Role (%s)", awsServiceName), err.Error())
 				return
 			}
-			role = (*output.Role) // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-assignment
+			role = output.Role // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-assignment
 		} else {
 			response.Diagnostics.AddError(fmt.Sprintf("reading IAM Service Linked Role (%s)", awsServiceName), "Role was not found.")
 			return
 		}
 	case 1:
-		role = roles[0]
+		role = &roles[0]
 	default:
 		response.Diagnostics.AddError(fmt.Sprintf("reading IAM Service Linked Role (%s)", awsServiceName), "More than one role was returned.")
 	}
-	response.Diagnostics.Append(fwflex.Flatten(ctx, &role, &data)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, role, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}

@@ -24,13 +24,15 @@ data "aws_iam_service_linked_role" "example" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `aws_service_name` - (Required) The AWS service to which this role is attached. You use a string similar to a URL but without the `http://` in front. For example: `elasticbeanstalk.amazonaws.com`. To find the full list of services that support service-linked roles, check [the docs](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_aws-services-that-work-with-iam.html).
 * `custom_suffix` - (Optional) Additional string appended to the role name. Not all AWS services support custom suffixes.
 * `create_if_missing` - (Optional) This will create the service linked role if it does not exists. Default value is `false`
 
 ## Attribute Reference
 
-This resource exports the following attributes in addition to the arguments above:
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - The Amazon Resource Name (ARN) of the role.
 * `arn` - The Amazon Resource Name (ARN) specifying the role.
