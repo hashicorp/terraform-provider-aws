@@ -549,7 +549,8 @@ func sweepServiceLinkedRoles(ctx context.Context, client *conns.AWSClient) ([]sw
 	// include generic service role names created by:
 	// TestAccIAMServiceLinkedRole_basic
 	// TestAccIAMServiceLinkedRole_CustomSuffix_diffSuppressFunc
-	customSuffixRegex := regexache.MustCompile(`_?(tf-acc-test-\d+|ServiceRoleForApplicationAutoScaling_CustomResource)$`)
+	// TestAccIAMServiceLinkedRoleDataSource_createIfMissing
+	customSuffixRegex := regexache.MustCompile(`_?(tf-acc-test-\d+|ServiceRoleForApplicationAutoScaling_CustomResource|AWSServiceRoleForAutoScaling_ServiceLinkedRoleDataSource)$`)
 	pages := iam.NewListRolesPaginator(conn, input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)

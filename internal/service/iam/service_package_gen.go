@@ -15,7 +15,16 @@ import (
 type servicePackage struct{}
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
-	return []*types.ServicePackageFrameworkDataSource{}
+	return []*types.ServicePackageFrameworkDataSource{
+		{
+			Factory: newDataSourceRoles,
+			Name:    "Roles",
+		},
+		{
+			Factory: newDataSourceServiceLinkedRole,
+			Name:    "Service Linked Role",
+		},
+	}
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
@@ -112,11 +121,6 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_iam_role",
 			Name:     "Role",
 			Tags:     &types.ServicePackageResourceTags{},
-		},
-		{
-			Factory:  dataSourceRoles,
-			TypeName: "aws_iam_roles",
-			Name:     "Roles",
 		},
 		{
 			Factory:  dataSourceSAMLProvider,
