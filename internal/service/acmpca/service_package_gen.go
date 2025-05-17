@@ -51,6 +51,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_acmpca_certificate",
 			Name:     "Certificate",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.ARNIdentity(),
 		},
 		{
 			Factory:  resourceCertificateAuthority,
