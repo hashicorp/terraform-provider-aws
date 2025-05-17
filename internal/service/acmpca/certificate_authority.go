@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/importer"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -34,8 +35,11 @@ const (
 )
 
 // @SDKResource("aws_acmpca_certificate_authority", name="Certificate Authority")
-// @Tags(identifierAttribute="id")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/acmpca/types;types.CertificateAuthority", generator="acctest.RandomDomainName()", importIgnore="permanent_deletion_time_in_days")
+// @Tags(identifierAttribute="arn")
+// @ArnIdentity
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/acmpca/types;types.CertificateAuthority")
+// @Testing(generator="acctest.RandomDomainName()")
+// @Testing(importIgnore="permanent_deletion_time_in_days")
 func resourceCertificateAuthority() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -46,6 +50,10 @@ func resourceCertificateAuthority() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				if err := importer.ARN(ctx, d); err != nil {
+					return nil, err
+				}
+
 				d.Set("permanent_deletion_time_in_days", certificateAuthorityPermanentDeletionTimeInDaysDefault)
 
 				return []*schema.ResourceData{d}, nil

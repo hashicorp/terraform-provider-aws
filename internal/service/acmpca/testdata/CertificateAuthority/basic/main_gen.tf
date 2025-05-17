@@ -1,5 +1,7 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 resource "aws_acmpca_certificate_authority" "test" {
-{{- template "region" }}
   permanent_deletion_time_in_days = 7
   usage_mode                      = "SHORT_LIVED_CERTIFICATE"
 
@@ -11,5 +13,10 @@ resource "aws_acmpca_certificate_authority" "test" {
       common_name = var.rName
     }
   }
-{{- template "tags" . }}
+}
+
+variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
 }
