@@ -6,7 +6,6 @@ package iam
 import (
 	"context"
 	"fmt"
-	"reflect"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -35,6 +34,9 @@ type dataSourceServiceLinkedRole struct {
 func (d *dataSourceServiceLinkedRole) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			names.AttrARN: schema.StringAttribute{
+				Computed: true,
+			},
 			"aws_service_name": schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
@@ -63,9 +65,6 @@ func (d *dataSourceServiceLinkedRole) Schema(ctx context.Context, request dataso
 			names.AttrPath: schema.StringAttribute{
 				Computed: true,
 			},
-			names.AttrARN: schema.StringAttribute{
-				Computed: true,
-			},
 			"unique_id": schema.StringAttribute{
 				Computed: true,
 			},
@@ -88,44 +87,41 @@ func (d *dataSourceServiceLinkedRole) Read(ctx context.Context, request datasour
 	//Matching the role path prefix and role name using regex is the only option to find Service Linked roles
 	var nameRegex string
 	pathPrefix := fmt.Sprintf("/aws-service-role/%s", data.AWSServiceName.ValueString())
-	customSuffix := data.CustomSuffix.ValueString()
-	awsServiceName := data.AWSServiceName.ValueString()
-	if customSuffix == "" {
+	if data.CustomSuffix.ValueString() == "" {
 		//regex to match AWSServiceRole prefix and 1 or more characters exluding _ (underscore)
 		nameRegex = `AWSServiceRole[^_]+$`
 	} else {
 		//regex to match AWSServiceRole prefix and any role name, _ (underscore) and the provided suffix
-		nameRegex = fmt.Sprintf(`AWSServiceRole[0-9A-Za-z]+_%s$`, customSuffix)
+		nameRegex = fmt.Sprintf(`AWSServiceRole[0-9A-Za-z]+_%s$`, data.CustomSuffix.ValueString())
 	}
 	roles, err := findRoles(ctx, conn, pathPrefix, nameRegex)
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading IAM Service Linked Role (%s)", awsServiceName), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading IAM Service Linked Role (%s)", data.AWSServiceName.ValueString()), err.Error())
 		return
 	}
 	switch len(roles) {
 	case 0:
 		if data.CreateIfMissing.ValueBool() {
 			input := &iam.CreateServiceLinkedRoleInput{
-				AWSServiceName: &awsServiceName,
+				AWSServiceName: data.AWSServiceName.ValueStringPointer(),
 			}
-			if customSuffix != "" {
-				input.CustomSuffix = &customSuffix
+			if data.CustomSuffix.ValueString() != "" {
+				input.CustomSuffix = data.CustomSuffix.ValueStringPointer()
 			}
-
 			output, err := conn.CreateServiceLinkedRole(ctx, input)
 			if err != nil {
-				response.Diagnostics.AddError(fmt.Sprintf("creating IAM Service Linked Role (%s)", awsServiceName), err.Error())
+				response.Diagnostics.AddError(fmt.Sprintf("creating IAM Service Linked Role (%s)", data.AWSServiceName.ValueString()), err.Error())
 				return
 			}
 			role = output.Role
 		} else {
-			response.Diagnostics.AddError(fmt.Sprintf("reading IAM Service Linked Role (%s)", awsServiceName), "Role was not found.")
+			response.Diagnostics.AddError(fmt.Sprintf("reading IAM Service Linked Role (%s)", data.AWSServiceName.ValueString()), "Role was not found.")
 			return
 		}
 	case 1:
 		role = &roles[0]
 	default:
-		response.Diagnostics.AddError(fmt.Sprintf("reading IAM Service Linked Role (%s)", awsServiceName), "More than one role was returned.")
+		response.Diagnostics.AddError(fmt.Sprintf("reading IAM Service Linked Role (%s)", data.AWSServiceName.ValueString()), "More than one role was returned.")
 	}
 	response.Diagnostics.Append(fwflex.Flatten(ctx, role, &data)...)
 	if response.Diagnostics.HasError() {
@@ -160,17 +156,11 @@ func findRoles(ctx context.Context, conn *iam.Client, pathPrefix string, nameReg
 		if err != nil {
 			return nil, fmt.Errorf("reading IAM roles: %s", err)
 		}
-
 		for _, role := range page.Roles {
-			if reflect.ValueOf(role).IsZero() {
-				continue
-			}
-
 			if nameRegex != "" && !regexache.MustCompile(nameRegex).MatchString(aws.ToString(role.RoleName)) {
 				continue
 			}
-
-			results = append((results), role)
+			results = append(results, role)
 		}
 	}
 	return results, nil

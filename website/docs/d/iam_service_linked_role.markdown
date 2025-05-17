@@ -37,7 +37,7 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - The Amazon Resource Name (ARN) of the role.
 * `arn` - The Amazon Resource Name (ARN) specifying the role.
 * `create_date` - The creation date of the IAM role.
+* `description` - The description of the role.
 * `name` - The name of the role.
 * `path` - The path of the role.
-* `unique_id` - The stable and unique string identifying the role.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).

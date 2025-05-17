@@ -58,7 +58,6 @@ func TestAccIAMServiceLinkedRoleDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "aws_service_name", resourceName, "aws_service_name"),
 					acctest.CheckResourceAttrRFC3339(dataSourceName, "create_date"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "unique_id", resourceName, "unique_id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrPath, resourceName, names.AttrPath),
 					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, "0"),
@@ -74,6 +73,7 @@ func TestAccIAMServiceLinkedRoleDataSource_customSuffix(t *testing.T) {
 	resourceName := "aws_iam_service_linked_role.test"
 	awsServiceName := "autoscaling.amazonaws.com"
 	rCustomSufix := sdkacctest.RandString(10)
+	rDescription := "This is a service linked role"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -82,11 +82,12 @@ func TestAccIAMServiceLinkedRoleDataSource_customSuffix(t *testing.T) {
 		Steps: []resource.TestStep{
 
 			{
-				Config: testAccServiceLinkedRoleDataSourceConfig_customSuffix(awsServiceName, rCustomSufix),
+				Config: testAccServiceLinkedRoleDataSourceConfig_customSuffix(awsServiceName, rCustomSufix, rDescription),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "aws_service_name", resourceName, "aws_service_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "custom_suffix", resourceName, "custom_suffix"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
 					acctest.CheckResourceAttrRFC3339(dataSourceName, "create_date"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "unique_id", resourceName, "unique_id"),
 					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, "0"),
@@ -137,7 +138,6 @@ func TestAccIAMServiceLinkedRoleDataSource_createIfMissing(t *testing.T) {
 			{
 				Config: testAccServiceLinkedRoleDataSourceConfig_createIfMissing(awsServiceName, customSuffix, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(dataSourceName, "aws_service_name", awsServiceName),
 					acctest.CheckResourceAttrRFC3339(dataSourceName, "create_date"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "unique_id"),
@@ -161,18 +161,19 @@ data "aws_iam_service_linked_role" "test" {
 `, awsServiceName)
 }
 
-func testAccServiceLinkedRoleDataSourceConfig_customSuffix(awsServiceName string, customSuffix string) string {
+func testAccServiceLinkedRoleDataSourceConfig_customSuffix(awsServiceName string, customSuffix string, description string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_service_linked_role" "test" {
   aws_service_name = %[1]q
   custom_suffix    = %[2]q
+  description      = %[3]q
 }
 
 data "aws_iam_service_linked_role" "test" {
   aws_service_name = aws_iam_service_linked_role.test.aws_service_name
   custom_suffix    = aws_iam_service_linked_role.test.custom_suffix
 }
-`, awsServiceName, customSuffix)
+`, awsServiceName, customSuffix, description)
 }
 
 func testAccServiceLinkedRoleDataSourceConfig_createIfMissing(awsServiceName string, customSufix string, createIfMissing bool) string {
