@@ -5,10 +5,9 @@ package provider
 
 import (
 	"context"
-	"fmt"
 
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/importer"
 )
 
 func arnIdentityResourceImporter() *schema.ResourceImporter {
@@ -18,17 +17,8 @@ func arnIdentityResourceImporter() *schema.ResourceImporter {
 var (
 	_arnIdentityResourceImporter = schema.ResourceImporter{
 		StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-			arnARN, err := arn.Parse(rd.Id())
-			if err != nil {
-				return nil, fmt.Errorf("could not parse import ID %q as ARN: %s", rd.Id(), err)
-			}
-
-			if region, ok := rd.GetOk("region"); ok {
-				if region != arnARN.Region {
-					return nil, fmt.Errorf("the region passed for import %q does not match the region %q in the ARN %q", region, arnARN.Region, rd.Id())
-				}
-			} else {
-				rd.Set("region", arnARN.Region)
+			if err := importer.ARN(ctx, rd); err != nil {
+				return nil, err
 			}
 
 			return []*schema.ResourceData{rd}, nil
