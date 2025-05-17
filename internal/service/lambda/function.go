@@ -1560,7 +1560,7 @@ func suppressLoggingConfigUnspecifiedLogLevels(k, old, new string, d *schema.Res
 	return suppressLoggingConfigUnspecifiedLogLevelsPrimitive(k, old, new, d.HasChanges("logging_config.0.log_format"))
 }
 
-func suppressLoggingConfigUnspecifiedLogLevelsPrimitive(k, old, new string, logFormatHasChanges bool) bool {
+func suppressLoggingConfigUnspecifiedLogLevelsPrimitive(k, old, new string, logFormatHasChanges bool) bool { //nolint:unparam
 	if logFormatHasChanges {
 		return false
 	}
