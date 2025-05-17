@@ -181,7 +181,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			}),
 	{{- end }}
 			{{- if $value.ARNIdentity }}
+				{{- if $value.HasARNAttribute }}
+				Identity: inttypes.ARNIdentityNamed({{ $value.ARNAttribute }}),
+				{{- else }}
 				Identity: inttypes.ARNIdentity(),
+				{{- end }}
 			{{- else if $value.SingletonIdentity }}
 				Identity: inttypes.RegionalSingletonIdentity(),
 			{{- end }}

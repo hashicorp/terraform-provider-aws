@@ -125,8 +125,17 @@ type ResourceDatum struct {
 	TagsResourceType                  string
 	ValidateRegionOverrideInPartition bool
 	ARNIdentity                       bool
+	arnAttribute                      string
 	SingletonIdentity                 bool
 	WrappedImport                     bool
+}
+
+func (r ResourceDatum) HasARNAttribute() bool {
+	return r.arnAttribute != "" && r.arnAttribute != "arn"
+}
+
+func (r ResourceDatum) ARNAttribute() string {
+	return namesgen.ConstOrQuote(r.arnAttribute)
 }
 
 type ServiceDatum struct {
@@ -266,6 +275,12 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			case "ArnIdentity":
 				d.ARNIdentity = true
 				d.WrappedImport = true
+				args := common.ParseArgs(m[3])
+				if len(args.Positional) == 0 {
+					d.arnAttribute = "arn"
+				} else {
+					d.arnAttribute = args.Positional[0]
+				}
 
 			case "SingletonIdentity":
 				d.SingletonIdentity = true
