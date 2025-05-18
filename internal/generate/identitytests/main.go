@@ -325,6 +325,10 @@ func (d ResourceDatum) OverrideIdentifierAttribute() string {
 	return namesgen.ConstOrQuote(d.overrideIdentifierAttribute)
 }
 
+func (d ResourceDatum) IsARNIdentity() bool {
+	return d.ARNAttribute != ""
+}
+
 type goImport struct {
 	Path  string
 	Alias string

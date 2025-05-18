@@ -196,29 +196,31 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 				},
 			},
 			{{ if not .NoImport }}
-
-			// Import with appended "@<region>"
-			{
-				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/region_override/"),
-				ConfigVariables: config.Variables{ {{ if .Generator }}
-					acctest.CtRName: config.StringVariable(rName),{{ end }}
-					{{ template "AdditionalTfVars" . -}}
-					"region": config.StringVariable(acctest.AlternateRegion()),
+				{{ if .IsARNIdentity }}
+				// Import with appended "@<region>"
+				{{ end -}}
+				{
+					ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/region_override/"),
+					ConfigVariables: config.Variables{ {{ if .Generator }}
+						acctest.CtRName: config.StringVariable(rName),{{ end }}
+						{{ template "AdditionalTfVars" . -}}
+						"region": config.StringVariable(acctest.AlternateRegion()),
+					},
+					ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
+					{{- template "ImportCommandWithIDBody" . -}}
 				},
-				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
-				{{- template "ImportCommandWithIDBody" . -}}
-			},
-
-			// Import without appended "@<region>"
-			{
-				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/region_override/"),
-				ConfigVariables: config.Variables{ {{ if .Generator }}
-					acctest.CtRName: config.StringVariable(rName),{{ end }}
-					{{ template "AdditionalTfVars" . -}}
-					"region": config.StringVariable(acctest.AlternateRegion()),
+				{{ if .IsARNIdentity }}
+				// Import without appended "@<region>"
+				{
+					ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/region_override/"),
+					ConfigVariables: config.Variables{ {{ if .Generator }}
+						acctest.CtRName: config.StringVariable(rName),{{ end }}
+						{{ template "AdditionalTfVars" . -}}
+						"region": config.StringVariable(acctest.AlternateRegion()),
+					},
+					{{- template "ImportCommandWithIDBody" . -}}
 				},
-				{{- template "ImportCommandWithIDBody" . -}}
-			},
+				{{ end }}
 			{{- end }}
 		},
 	})
