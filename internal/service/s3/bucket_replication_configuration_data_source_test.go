@@ -41,13 +41,18 @@ func TestAccS3BucketReplicationConfigurationDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrRole, iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(dataSourceName, acctest.CtRulePound, "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "rule.*", map[string]string{
-						names.AttrID:                                        "rule1",
-						names.AttrPriority:                                  "1",
-						"filter.#":                                          "1",
-						"filter.0.prefix":                                   "foo",
-						names.AttrStatus:                                    string(types.ReplicationRuleStatusEnabled),
-						"delete_marker_replication.#":                       "1",
-						"delete_marker_replication.0.status":                string(types.DeleteMarkerReplicationStatusEnabled),
+						names.AttrID:                         "rule1",
+						names.AttrPriority:                   "1",
+						"filter.#":                           "1",
+						"filter.0.prefix":                    "foo",
+						names.AttrStatus:                     string(types.ReplicationRuleStatusEnabled),
+						"delete_marker_replication.#":        "1",
+						"delete_marker_replication.0.status": string(types.DeleteMarkerReplicationStatusEnabled),
+						"source_selection_criteria.#":        "1",
+						"source_selection_criteria.0.replica_modifications.#":            "1",
+						"source_selection_criteria.0.replica_modifications.0.status":     string(types.ReplicaModificationsStatusEnabled),
+						"source_selection_criteria.0.sse_kms_encrypted_objects.#":        "1",
+						"source_selection_criteria.0.sse_kms_encrypted_objects.0.status": string(types.SseKmsEncryptedObjectsStatusEnabled),
 						"destination.#":                                     "1",
 						"destination.0.storage_class":                       string(types.StorageClassStandard),
 						"destination.0.replication_time.#":                  "1",
@@ -58,6 +63,7 @@ func TestAccS3BucketReplicationConfigurationDataSource_basic(t *testing.T) {
 						"destination.0.metrics.0.status":                    string(types.MetricsStatusEnabled),
 						"destination.0.metrics.0.event_threshold.#":         "1",
 						"destination.0.metrics.0.event_threshold.0.minutes": "15",
+						"destination.0.encryption_configuration.#":          "1",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "rule.*", map[string]string{
 						names.AttrID:                                        "rule2",
@@ -112,6 +118,12 @@ func TestAccS3BucketReplicationConfigurationDataSource_basic(t *testing.T) {
 
 func testAccBucketReplicationConfigurationDataSourceConfig_basic(rName, storageClass string) string {
 	return acctest.ConfigCompose(testAccBucketReplicationConfigurationConfig_base(rName), fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  provider                = "awsalternate"
+  description             = "TF Acceptance Test S3 repl KMS key"
+  deletion_window_in_days = 7
+}
+
 resource "aws_s3_bucket_replication_configuration" "test" {
   depends_on = [
     aws_s3_bucket_versioning.source,
@@ -131,9 +143,20 @@ resource "aws_s3_bucket_replication_configuration" "test" {
     delete_marker_replication {
       status = "Enabled"
     }
+    source_selection_criteria {
+      replica_modifications {
+        status = "Enabled"
+      }
+      sse_kms_encrypted_objects {
+        status = "Enabled"
+      }
+    }
     destination {
       bucket        = aws_s3_bucket.destination.arn
       storage_class = %[1]q
+      encryption_configuration {
+        replica_kms_key_id = aws_kms_key.test.arn
+      }
       replication_time {
         status = "Enabled"
         time {
