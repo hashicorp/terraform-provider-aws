@@ -79,6 +79,9 @@ func resourceGroup() *schema.Resource {
 				Default:      0,
 				ValidateFunc: validation.IntInSlice([]int{0, 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1096, 1827, 2192, 2557, 2922, 3288, 3653}),
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if d.HasChange("log_group_class") {
+						return false
+					}
 					if v, ok := d.GetOk("log_group_class"); ok {
 						if awstypes.LogGroupClass(v.(string)) == awstypes.LogGroupClassDelivery {
 							return true
