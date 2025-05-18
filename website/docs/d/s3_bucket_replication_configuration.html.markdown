@@ -20,6 +20,12 @@ data "aws_s3_bucket_replication_configuration" "example" {
 }
 ```
 
+## Argument Reference
+
+This data source supports the following arguments:
+
+* `bucket` - (Required) The name of the bucket to get the replication configuration for.
+
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
@@ -34,5 +40,5 @@ See the [`aws_s3_replication_configuration`](../r/s3_bucket_replication_configur
 * `prefix` – The object key name prefix that identifies the subset of objects to which the rule applies.
 * `tag` – An unordered list of tags that identify a subset of objects to which the rule applies.
   
-  * `key` – The key of the tag.
-  * `value` – The value of the tag.
+    * `key` – The key of the tag.
+    * `value` – The value of the tag.

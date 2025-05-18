@@ -66,8 +66,8 @@ func TestAccS3BucketReplicationConfigurationDataSource_basic(t *testing.T) {
 						"filter.0.and.#":                                    "1",
 						"filter.0.and.0.prefix":                             "bar",
 						"filter.0.and.0.tag.#":                              "1",
-						"filter.0.and.0.tag.0.key":                          "key1",
-						"filter.0.and.0.tag.0.value":                        "value1",
+						"filter.0.and.0.tag.0.key":                          acctest.CtKey1,
+						"filter.0.and.0.tag.0.value":                        acctest.CtValue1,
 						names.AttrStatus:                                    string(types.ReplicationRuleStatusEnabled),
 						"delete_marker_replication.#":                       "1",
 						"delete_marker_replication.0.status":                string(types.DeleteMarkerReplicationStatusDisabled),
@@ -122,7 +122,7 @@ resource "aws_s3_bucket_replication_configuration" "test" {
   role   = aws_iam_role.test.arn
 
   rule {
-    id = "rule1"
+    id       = "rule1"
     priority = 1
     filter {
       prefix = "foo"
@@ -132,7 +132,7 @@ resource "aws_s3_bucket_replication_configuration" "test" {
       status = "Enabled"
     }
     destination {
-      bucket = aws_s3_bucket.destination.arn
+      bucket        = aws_s3_bucket.destination.arn
       storage_class = %[1]q
       replication_time {
         status = "Enabled"
@@ -150,7 +150,7 @@ resource "aws_s3_bucket_replication_configuration" "test" {
   }
 
   rule {
-    id = "rule2"
+    id       = "rule2"
     priority = 2
     filter {
       and {
@@ -165,7 +165,7 @@ resource "aws_s3_bucket_replication_configuration" "test" {
       status = "Disabled"
     }
     destination {
-      bucket = aws_s3_bucket.destination.arn
+      bucket        = aws_s3_bucket.destination.arn
       storage_class = %[1]q
       replication_time {
         status = "Disabled"
@@ -182,7 +182,7 @@ resource "aws_s3_bucket_replication_configuration" "test" {
     }
   }
   rule {
-    id = "rule3"
+    id       = "rule3"
     priority = 3
     filter {
       tag {
@@ -195,7 +195,7 @@ resource "aws_s3_bucket_replication_configuration" "test" {
       status = "Disabled"
     }
     destination {
-      bucket = aws_s3_bucket.destination.arn
+      bucket        = aws_s3_bucket.destination.arn
       storage_class = %[1]q
       replication_time {
         status = "Disabled"
@@ -220,6 +220,5 @@ data "aws_s3_bucket_replication_configuration" "test" {
     aws_s3_bucket_replication_configuration.test,
   ]
 }
-
 `, storageClass))
 }

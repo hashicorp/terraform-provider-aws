@@ -71,7 +71,7 @@ func (d *dataSourceBucketReplicationConfiguration) Schema(ctx context.Context, r
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"status": schema.StringAttribute{
+									names.AttrStatus: schema.StringAttribute{
 										Computed: true,
 									},
 								},
@@ -87,7 +87,7 @@ func (d *dataSourceBucketReplicationConfiguration) Schema(ctx context.Context, r
 									"account": schema.StringAttribute{
 										Computed: true,
 									},
-									"bucket": schema.StringAttribute{
+									names.AttrBucket: schema.StringAttribute{
 										Computed: true,
 									},
 									names.AttrStorageClass: schema.StringAttribute{
@@ -102,7 +102,7 @@ func (d *dataSourceBucketReplicationConfiguration) Schema(ctx context.Context, r
 										},
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
-												"owner": schema.StringAttribute{
+												names.AttrOwner: schema.StringAttribute{
 													Computed: true,
 												},
 											},
