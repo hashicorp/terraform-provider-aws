@@ -31,7 +31,10 @@ import (
 
 // @SDKResource("aws_appflow_flow", name="Flow")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("name")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appflow;appflow.DescribeFlowOutput")
+// @Testing(idAttrDuplicates="name")
+// @Testing(identityTest=true)
 func resourceFlow() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFlowCreate,

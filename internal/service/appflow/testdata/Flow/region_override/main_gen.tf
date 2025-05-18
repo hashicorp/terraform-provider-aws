@@ -1,5 +1,9 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 resource "aws_appflow_flow" "test" {
-{{- template "region" }}
+  region = var.region
+
   name = var.rName
 
   source_flow_config {
@@ -40,19 +44,19 @@ resource "aws_appflow_flow" "test" {
   trigger_config {
     trigger_type = "OnDemand"
   }
-
-{{- template "tags" . }}
 }
 
 data "aws_partition" "current" {}
 
 resource "aws_s3_bucket" "test_source" {
-{{- template "region" }}
+  region = var.region
+
   bucket = "${var.rName}-source"
 }
 
 resource "aws_s3_bucket_policy" "test_source" {
-{{- template "region" }}
+  region = var.region
+
   bucket = aws_s3_bucket.test_source.bucket
   policy = <<EOF
 {
@@ -79,19 +83,22 @@ EOF
 }
 
 resource "aws_s3_object" "test" {
-{{- template "region" }}
+  region = var.region
+
   bucket = aws_s3_bucket.test_source.bucket
   key    = "flow_source.csv"
   source = "test-fixtures/flow_source.csv"
 }
 
 resource "aws_s3_bucket" "test_destination" {
-{{- template "region" }}
+  region = var.region
+
   bucket = "${var.rName}-destination"
 }
 
 resource "aws_s3_bucket_policy" "test_destination" {
-{{- template "region" }}
+  region = var.region
+
   bucket = aws_s3_bucket.test_destination.bucket
   policy = <<EOF
 
@@ -120,4 +127,16 @@ resource "aws_s3_bucket_policy" "test_destination" {
 	"Version": "2012-10-17"
 }
 EOF
+}
+
+variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
+}
+
+variable "region" {
+  description = "Region to deploy resource in"
+  type        = string
+  nullable    = false
 }
