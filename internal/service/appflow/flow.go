@@ -7,12 +7,10 @@ import (
 	"context"
 	"log"
 	"slices"
-	"strings"
 	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/appflow"
 	"github.com/aws/aws-sdk-go-v2/service/appflow/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -43,12 +41,7 @@ func resourceFlow() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				p, err := arn.Parse(d.Id())
-				if err != nil {
-					return nil, err
-				}
-				name := strings.TrimPrefix(p.Resource, "flow/")
-				d.Set(names.AttrName, name)
+				d.Set(names.AttrName, d.Id())
 
 				return []*schema.ResourceData{d}, nil
 			},
@@ -1373,13 +1366,12 @@ func resourceFlowCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 		input.KmsArn = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateFlow(ctx, input)
-
+	_, err := conn.CreateFlow(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating AppFlow Flow (%s): %s", name, err)
 	}
 
-	d.SetId(aws.ToString(output.FlowArn))
+	d.SetId(name)
 
 	return append(diags, resourceFlowRead(ctx, d, meta)...)
 }
