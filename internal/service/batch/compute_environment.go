@@ -380,7 +380,7 @@ func resourceComputeEnvironmentRead(ctx context.Context, d *schema.ResourceData,
 	d.Set(names.AttrStatusReason, computeEnvironment.StatusReason)
 	d.Set(names.AttrType, computeEnvironment.Type)
 	if computeEnvironment.UnmanagedvCpus != nil {
-		d.Set("unmanaged_v_cpus", aws.ToInt32(computeEnvironment.UnmanagedvCpus))
+		d.Set("unmanaged_v_cpus", computeEnvironment.UnmanagedvCpus)
 	}
 	if err := d.Set("update_policy", flattenComputeEnvironmentUpdatePolicy(computeEnvironment.UpdatePolicy)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting update_policy: %s", err)
