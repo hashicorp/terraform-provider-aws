@@ -128,7 +128,8 @@ resource "aws_subnet" "test" {
 # acctest.ConfigAvailableAZsNoOptInDefaultExclude
 
 data "aws_availability_zones" "available" {
-  state = "available"
+  exclude_zone_ids = ["usw2-az4", "usgw1-az2"]
+  state            = "available"
 
   filter {
     name   = "opt-in-status"

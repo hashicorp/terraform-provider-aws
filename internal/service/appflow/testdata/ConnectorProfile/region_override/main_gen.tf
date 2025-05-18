@@ -150,7 +150,8 @@ resource "aws_subnet" "test" {
 data "aws_availability_zones" "available" {
   region = var.region
 
-  state = "available"
+  exclude_zone_ids = ["usw2-az4", "usgw1-az2"]
+  state            = "available"
 
   filter {
     name   = "opt-in-status"
