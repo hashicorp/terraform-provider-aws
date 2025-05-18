@@ -417,17 +417,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AppFlow flows using the `arn`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AppFlow flows using the `name`. For example:
 
 ```terraform
 import {
   to = aws_appflow_flow.example
-  id = "arn:aws:appflow:us-west-2:123456789012:flow/example-flow"
+  id = "example-flow"
 }
 ```
 
-Using `terraform import`, import AppFlow flows using the `arn`. For example:
+Using `terraform import`, import AppFlow flows using the `name`. For example:
 
 ```console
-% terraform import aws_appflow_flow.example arn:aws:appflow:us-west-2:123456789012:flow/example-flow
+% terraform import example-flow
 ```
