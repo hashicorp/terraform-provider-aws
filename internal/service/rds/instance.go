@@ -424,6 +424,11 @@ func resourceInstance() *schema.Resource {
 				Optional:      true,
 				ConflictsWith: []string{names.AttrPassword, "password_wo"},
 			},
+			"disable_master_user_password_rotation": {
+				Type:         schema.TypeBool,
+				Optional:     true,
+				RequiredWith: []string{"manage_master_user_password"},
+			},
 			"master_user_secret": {
 				Type:     schema.TypeList,
 				Computed: true,
