@@ -698,7 +698,8 @@ tfproviderdocs: go-build ## [CI] Provider Checks / tfproviderdocs
 		-provider-source registry.terraform.io/hashicorp/aws \
 		-providers-schema-json terraform-providers-schema/schema.json \
 		-require-resource-subcategory \
-		-ignore-cdktf-missing-files
+		-ignore-cdktf-missing-files \
+		-ignore-enhanced-region-check-subcategories-file website/ignore-enhanced-region-check-subcategories.txt
 
 tfsdk2fw: prereq-go ## Install tfsdk2fw
 	@echo "make: Installing tfsdk2fw..."
