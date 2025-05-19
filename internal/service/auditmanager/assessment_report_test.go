@@ -244,9 +244,6 @@ resource "aws_auditmanager_assessment" "test" {
     aws_accounts {
       id = data.aws_caller_identity.current.account_id
     }
-    aws_services {
-      service_name = "S3"
-    }
   }
 }
 `, rName)
