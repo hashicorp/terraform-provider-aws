@@ -71,5 +71,5 @@ func main() {
 	}
 }
 
-//go:embed file.tmpl
+//go:embed allowsubcats.tmpl
 var tmpl string
