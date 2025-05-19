@@ -22,9 +22,6 @@ import (
 
 func TestAccDSQLCluster_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 
 	var cluster dsql.GetClusterOutput
 	resourceName := "aws_dsql_cluster.test"
@@ -61,9 +58,6 @@ func TestAccDSQLCluster_basic(t *testing.T) {
 
 func TestAccDSQLCluster_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 
 	var cluster dsql.GetClusterOutput
 	resourceName := "aws_dsql_cluster.test"
@@ -100,15 +94,15 @@ func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfdsql.FindClusterByID(ctx, conn, rs.Primary.ID)
+			_, err := tfdsql.FindClusterByID(ctx, conn, rs.Primary.Attributes[names.AttrIdentifier])
 			if tfresource.NotFound(err) {
 				return nil
 			}
 			if err != nil {
-				return create.Error(names.DSQL, create.ErrActionCheckingDestroyed, tfdsql.ResNameCluster, rs.Primary.ID, err)
+				return create.Error(names.DSQL, create.ErrActionCheckingDestroyed, tfdsql.ResNameCluster, rs.Primary.Attributes[names.AttrIdentifier], err)
 			}
 
-			return create.Error(names.DSQL, create.ErrActionCheckingDestroyed, tfdsql.ResNameCluster, rs.Primary.ID, errors.New("not destroyed"))
+			return create.Error(names.DSQL, create.ErrActionCheckingDestroyed, tfdsql.ResNameCluster, rs.Primary.Attributes[names.AttrIdentifier], errors.New("not destroyed"))
 		}
 
 		return nil
@@ -122,15 +116,15 @@ func testAccCheckClusterExists(ctx context.Context, name string, cluster *dsql.G
 			return create.Error(names.DSQL, create.ErrActionCheckingExistence, tfdsql.ResNameCluster, name, errors.New("not found"))
 		}
 
-		if rs.Primary.ID == "" {
+		if rs.Primary.Attributes[names.AttrIdentifier] == "" {
 			return create.Error(names.DSQL, create.ErrActionCheckingExistence, tfdsql.ResNameCluster, name, errors.New("not set"))
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DSQLClient(ctx)
 
-		resp, err := tfdsql.FindClusterByID(ctx, conn, rs.Primary.ID)
+		resp, err := tfdsql.FindClusterByID(ctx, conn, rs.Primary.Attributes[names.AttrIdentifier])
 		if err != nil {
-			return create.Error(names.DSQL, create.ErrActionCheckingExistence, tfdsql.ResNameCluster, rs.Primary.ID, err)
+			return create.Error(names.DSQL, create.ErrActionCheckingExistence, tfdsql.ResNameCluster, rs.Primary.Attributes[names.AttrIdentifier], err)
 		}
 
 		*cluster = *resp

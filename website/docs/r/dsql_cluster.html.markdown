@@ -41,7 +41,7 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Cluster.
-* `id` - Cluster Identifier.
+* `identifier` - Cluster Identifier.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Timeouts
@@ -54,7 +54,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DSQL Cluster using the `example_id_arg`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DSQL Cluster using the `identifier`. For example:
 
 ```terraform
 import {
@@ -63,7 +63,7 @@ import {
 }
 ```
 
-Using `terraform import`, import DSQL Cluster using the `id`. For example:
+Using `terraform import`, import DSQL Cluster using the `identifier`. For example:
 
 ```console
 % terraform import aws_dsql_cluster.example abcde1f234ghijklmnop5qr6st
