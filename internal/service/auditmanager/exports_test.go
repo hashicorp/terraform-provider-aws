@@ -20,4 +20,5 @@ var (
 	FindAssessmentReportByID               = findAssessmentReportByID
 	FindControlByID                        = findControlByID
 	FindFrameworkByID                      = findFrameworkByID
+	FindFrameworkShareByID                 = findFrameworkShareByID
 )
