@@ -3485,3 +3485,201 @@ resource "aws_kendra_data_source" "test" {
 }
 `, rName10, rName11, selectLambdaARN))
 }
+
+func TestAccKendraDataSource_VPCConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName4 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName5 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName6 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	resourceName := "aws_kendra_data_source.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceConfig_vpcConfiguration(rName, rName2, rName3, rName4, rName5, rName6),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataSourceExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVPCConfiguration+".#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVPCConfiguration+".0."+names.AttrSecurityGroupIDs+".#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCConfiguration+".0."+names.AttrSecurityGroupIDs+".0", "aws_security_group.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVPCConfiguration+".0."+names.AttrSubnetIDs+".#", "2"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCConfiguration+".0."+names.AttrSubnetIDs+".0", "aws_subnet.test.0", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCConfiguration+".0."+names.AttrSubnetIDs+".1", "aws_subnet.test.1", names.AttrID),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDataSourceConfig_vpcConfigurationUpdated(rName, rName2, rName3, rName4, rName5, rName6),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataSourceExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVPCConfiguration+".#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVPCConfiguration+".0."+names.AttrSecurityGroupIDs+".#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCConfiguration+".0."+names.AttrSecurityGroupIDs+".0", "aws_security_group.test2", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVPCConfiguration+".0."+names.AttrSubnetIDs+".#", "2"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCConfiguration+".0."+names.AttrSubnetIDs+".0", "aws_subnet.test2.0", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCConfiguration+".0."+names.AttrSubnetIDs+".1", "aws_subnet.test2.1", names.AttrID),
+				),
+			},
+		},
+	})
+}
+
+func testAccDataSourceConfig_vpcConfiguration(rName, rName2, rName3, rName4, rName5, rName6 string) string {
+	return acctest.ConfigCompose(
+		testAccDataSourceConfigBase(rName, rName2, rName3),
+		testAccDataSourceConfigS3Base(rName4, rName5),
+		fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  count = 2
+
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
+resource "aws_kendra_data_source" "test" {
+  index_id = aws_kendra_index.test.id
+  name     = %[2]q
+  type     = "S3"
+  role_arn = aws_iam_role.test_data_source.arn
+
+  vpc_configuration {
+    security_group_ids = [aws_security_group.test.id]
+    subnet_ids         = aws_subnet.test[*].id
+  }
+
+  configuration {
+    s3_configuration {
+      bucket_name = aws_s3_bucket.test.id
+    }
+  }
+}
+`, rName, rName6))
+}
+
+func testAccDataSourceConfig_vpcConfigurationUpdated(rName, rName2, rName3, rName4, rName5, rName6 string) string {
+	return acctest.ConfigCompose(
+		testAccDataSourceConfigBase(rName, rName2, rName3),
+		testAccDataSourceConfigS3Base(rName4, rName5),
+		fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc" "test2" {
+  cidr_block = "172.16.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  count = 2
+
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test2" {
+  count = 2
+
+  vpc_id            = aws_vpc.test2.id
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = cidrsubnet(aws_vpc.test2.cidr_block, 8, count.index)
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_security_group" "test2" {
+  name   = "%[1]s-2"
+  vpc_id = aws_vpc.test2.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
+resource "aws_kendra_data_source" "test" {
+  index_id = aws_kendra_index.test.id
+  name     = %[2]q
+  type     = "S3"
+  role_arn = aws_iam_role.test_data_source.arn
+
+  vpc_configuration {
+    security_group_ids = [aws_security_group.test2.id]
+    subnet_ids         = aws_subnet.test2[*].id
+  }
+
+  configuration {
+    s3_configuration {
+      bucket_name = aws_s3_bucket.test.id
+    }
+  }
+}
+`, rName, rName6))
+}
