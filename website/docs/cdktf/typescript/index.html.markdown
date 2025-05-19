@@ -16,9 +16,11 @@ with the proper credentials before you can use it.
 Use the navigation to the left to read about the available resources. There are currently 1500 resources and 606 data sources available in the provider.
 
 To learn the basics of Terraform using this provider, follow the
-hands-on [get started tutorials](https://learn.hashicorp.com/tutorials/terraform/infrastructure-as-code?in=terraform/aws-get-started&utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS). Interact with AWS services,
+hands-on [get started tutorials](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/infrastructure-as-code?in=terraform/aws-get-started&utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS). Interact with AWS services,
 including Lambda, RDS, and IAM by following the [AWS services
-tutorials](https://learn.hashicorp.com/collections/terraform/aws?utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS).
+tutorials](https://developer.hashicorp.com/terraform/tutorials/aws?utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS).
+
+Some AWS services do not support IPv6. As a result, the provider may not be able to interact with AWS APIs using IPv6 addresses.
 
 ## Example Usage
 
@@ -949,4 +951,4 @@ Approaches differ per authentication providers:
       There used to be no better way to get account ID out of the API
       when using the federated account until `sts:GetCallerIdentity` was introduced.
 
-<!-- cache-key: cdktf-0.20.8 input-2456e3a2082d8cab9a84b945f107489bc906df93da1488da76b8d384ba422ade -->
+<!-- cache-key: cdktf-0.20.8 input-a8f738463f4b7ae9df8ff08da044fc2845f43556fd1f9e8137111ded4396b35a -->
