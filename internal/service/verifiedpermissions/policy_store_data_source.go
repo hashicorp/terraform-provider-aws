@@ -15,10 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkDataSource("aws_verifiedpermissions_policy_store", name="Policy Store")
+// @Tags(identifierAttribute="arn")
 func newDataSourcePolicyStore(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourcePolicyStore{}, nil
 }
@@ -49,6 +51,7 @@ func (d *dataSourcePolicyStore) Schema(ctx context.Context, req datasource.Schem
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
 			},
+			names.AttrTags: tftags.TagsAttributeComputedOnly(),
 			"validation_settings": schema.ListAttribute{
 				CustomType:  fwtypes.NewListNestedObjectTypeOf[validationSettingsDataSource](ctx),
 				ElementType: fwtypes.NewObjectTypeOf[validationSettingsDataSource](ctx),
@@ -91,6 +94,7 @@ type dataSourcePolicyStoreData struct {
 	Description        types.String                                                  `tfsdk:"description"`
 	ID                 types.String                                                  `tfsdk:"id"`
 	LastUpdatedDate    timetypes.RFC3339                                             `tfsdk:"last_updated_date"`
+	Tags               tftags.Map                                                    `tfsdk:"tags"`
 	ValidationSettings fwtypes.ListNestedObjectValueOf[validationSettingsDataSource] `tfsdk:"validation_settings"`
 }
 
