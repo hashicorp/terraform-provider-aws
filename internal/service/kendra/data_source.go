@@ -1793,12 +1793,12 @@ func flattenDocumentAttributeValue(apiObject *types.DocumentAttributeValue) []an
 	return []any{tfMap}
 }
 
-func expandVPCConfiguration(vVpcConfiguration []any) *awstypes.VpcConfiguration {
+func expandVPCConfiguration(vVpcConfiguration []any) *types.DataSourceVpcConfiguration {
 	if len(vVpcConfiguration) == 0 || vVpcConfiguration[0] == nil {
 		return nil
 	}
 
-	vpcConfiguration := &awstypes.VpcConfiguration{}
+	vpcConfiguration := &types.DataSourceVpcConfiguration{}
 
 	mVpcConfiguration := vVpcConfiguration[0].(map[string]any)
 
@@ -1813,7 +1813,7 @@ func expandVPCConfiguration(vVpcConfiguration []any) *awstypes.VpcConfiguration 
 	return vpcConfiguration
 }
 
-func flattenVPCConfiguration(apiObject *types.VpcConfiguration) []any {
+func flattenVPCConfiguration(apiObject *types.DataSourceVpcConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
