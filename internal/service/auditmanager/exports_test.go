@@ -21,4 +21,5 @@ var (
 	FindControlByID                        = findControlByID
 	FindFrameworkByID                      = findFrameworkByID
 	FindFrameworkShareByID                 = findFrameworkShareByID
+	FindOrganizationAdminAccount           = findOrganizationAdminAccount
 )

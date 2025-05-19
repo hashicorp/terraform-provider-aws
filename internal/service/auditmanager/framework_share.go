@@ -152,39 +152,52 @@ func (r *frameworkShareResource) Delete(ctx context.Context, request resource.De
 	conn := r.Meta().AuditManagerClient(ctx)
 
 	// Framework share requests in certain statuses must be revoked before deletion.
+	id := fwflex.StringValueFromFramework(ctx, data.ID)
+	output, err := findFrameworkShareByID(ctx, conn, id)
+
+	if tfresource.NotFound(err) {
+		return
+	}
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("reading Audit Manager Framework Share (%s)", id), err.Error())
+
+		return
+	}
+
 	nonRevokable := []awstypes.ShareRequestStatus{
 		awstypes.ShareRequestStatusDeclined,
 		awstypes.ShareRequestStatusExpired,
 		awstypes.ShareRequestStatusFailed,
 		awstypes.ShareRequestStatusRevoked,
 	}
-	if !slices.Contains(nonRevokable, data.Status.ValueEnum()) {
+	if !slices.Contains(nonRevokable, output.Status) {
 		input := auditmanager.UpdateAssessmentFrameworkShareInput{
-			RequestId:   fwflex.StringFromFramework(ctx, data.ID),
+			RequestId:   aws.String(id),
 			RequestType: awstypes.ShareRequestTypeSent,
 			Action:      awstypes.ShareRequestActionRevoke,
 		}
 		_, err := conn.UpdateAssessmentFrameworkShare(ctx, &input)
 
 		if err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("revoking Audit Manager Framework Share (%s)", data.ID.ValueString()), err.Error())
+			response.Diagnostics.AddError(fmt.Sprintf("revoking Audit Manager Framework Share (%s)", id), err.Error())
 
 			return
 		}
 	}
 
 	input := auditmanager.DeleteAssessmentFrameworkShareInput{
-		RequestId:   fwflex.StringFromFramework(ctx, data.ID),
+		RequestId:   aws.String(id),
 		RequestType: awstypes.ShareRequestTypeSent,
 	}
-	_, err := conn.DeleteAssessmentFrameworkShare(ctx, &input)
+	_, err = conn.DeleteAssessmentFrameworkShare(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("deleting Audit Manager Framework Share (%s)", data.ID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("deleting Audit Manager Framework Share (%s)", id), err.Error())
 
 		return
 	}
