@@ -88,5 +88,5 @@ func main() {
 	}
 }
 
-//go:embed file.gtpl
+//go:embed customends.gtpl
 var tmpl string
