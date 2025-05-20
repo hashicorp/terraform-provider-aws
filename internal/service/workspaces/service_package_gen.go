@@ -62,6 +62,14 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
+			Factory:  dataSourcePool,
+			TypeName: "aws_workspaces_pool",
+			Name:     "Pool",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			},
+		},
+		{
 			Factory:  dataSourceWorkspace,
 			TypeName: "aws_workspaces_workspace",
 			Name:     "Workspace",
