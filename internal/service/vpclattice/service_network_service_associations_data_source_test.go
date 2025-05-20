@@ -97,11 +97,11 @@ data "aws_partition" "current" {}
 data "aws_caller_identity" "current" {}
 
 resource "aws_vpclattice_service_network" "test_sn_1" {
-  name               = "%[1]s-sn-1"
+  name = "%[1]s-sn-1"
 }
 
 resource "aws_vpclattice_service_network" "test_sn_2" {
-  name               = "%[1]s-sn-2"
+  name = "%[1]s-sn-2"
 }
 
 resource "aws_vpclattice_service" "test_svc_1" {
@@ -141,20 +141,17 @@ resource "aws_vpclattice_service_network_service_association" "test_sn_2_svc_3" 
 
 data "aws_vpclattice_service_network_service_associations" "test_sn_1" {
   service_network_identifier = aws_vpclattice_service_network.test_sn_1.id
-  depends_on                 = [aws_vpclattice_service_network_service_association.test_sn_1_svc_1, 
-      							aws_vpclattice_service_network_service_association.test_sn_1_svc_2]
+  depends_on                 = [aws_vpclattice_service_network_service_association.test_sn_1_svc_1, aws_vpclattice_service_network_service_association.test_sn_1_svc_2]
 }
 
 data "aws_vpclattice_service_network_service_associations" "test_sn_2" {
   service_network_identifier = aws_vpclattice_service_network.test_sn_2.arn
-  depends_on                 = [aws_vpclattice_service_network_service_association.test_sn_2_svc_1, 
-      							aws_vpclattice_service_network_service_association.test_sn_2_svc_3]
+  depends_on                 = [aws_vpclattice_service_network_service_association.test_sn_2_svc_1, aws_vpclattice_service_network_service_association.test_sn_2_svc_3]
 }
 
 data "aws_vpclattice_service_network_service_associations" "test_svc_1" {
   service_identifier = aws_vpclattice_service.test_svc_1.id
-  depends_on         = [aws_vpclattice_service_network_service_association.test_sn_1_svc_1, 
-      					aws_vpclattice_service_network_service_association.test_sn_2_svc_1]
+  depends_on         = [aws_vpclattice_service_network_service_association.test_sn_1_svc_1, aws_vpclattice_service_network_service_association.test_sn_2_svc_1]
 }
 
 data "aws_vpclattice_service_network_service_associations" "test_svc_2" {
