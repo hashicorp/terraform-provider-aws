@@ -101,6 +101,12 @@ func resourceLaunchConfiguration() *schema.Resource {
 							Computed: true,
 							ForceNew: true,
 						},
+						names.AttrVolumeInitializationRate: {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Computed: true,
+							ForceNew: true,
+						},
 						names.AttrVolumeSize: {
 							Type:     schema.TypeInt,
 							Optional: true,
@@ -260,6 +266,12 @@ func resourceLaunchConfiguration() *schema.Resource {
 							Computed: true,
 							ForceNew: true,
 						},
+						names.AttrVolumeInitializationRate: {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Computed: true,
+							ForceNew: true,
+						},
 						names.AttrVolumeSize: {
 							Type:     schema.TypeInt,
 							Optional: true,
@@ -366,7 +378,6 @@ func resourceLaunchConfigurationCreate(ctx context.Context, d *schema.ResourceDa
 
 	// We'll use this to detect if we're declaring it incorrectly as an ebs_block_device.
 	rootDeviceName, err := findImageRootDeviceName(ctx, ec2conn, d.Get("image_id").(string))
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Auto Scaling Launch Configuration (%s): %s", lcName, err)
 	}
@@ -416,7 +427,6 @@ func resourceLaunchConfigurationCreate(ctx context.Context, d *schema.ResourceDa
 
 			return false, err
 		})
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Auto Scaling Launch Configuration (%s): %s", lcName, err)
 	}
@@ -785,7 +795,6 @@ func userDataHashSum(userData string) string {
 
 func findLaunchConfiguration(ctx context.Context, conn *autoscaling.Client, input *autoscaling.DescribeLaunchConfigurationsInput) (*awstypes.LaunchConfiguration, error) {
 	output, err := findLaunchConfigurations(ctx, conn, input)
-
 	if err != nil {
 		return nil, err
 	}
@@ -800,7 +809,6 @@ func findLaunchConfigurations(ctx context.Context, conn *autoscaling.Client, inp
 
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
-
 		if err != nil {
 			return nil, err
 		}
@@ -817,7 +825,6 @@ func findLaunchConfigurationByName(ctx context.Context, conn *autoscaling.Client
 	}
 
 	output, err := findLaunchConfiguration(ctx, conn, input)
-
 	if err != nil {
 		return nil, err
 	}
@@ -834,7 +841,6 @@ func findLaunchConfigurationByName(ctx context.Context, conn *autoscaling.Client
 
 func findImageRootDeviceName(ctx context.Context, conn *ec2.Client, imageID string) (string, error) {
 	image, err := tfec2.FindImageByID(ctx, conn, imageID)
-
 	if err != nil {
 		return "", err
 	}
