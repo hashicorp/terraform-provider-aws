@@ -160,12 +160,18 @@ func {{ template "testname" . }}_Identity_Basic(t *testing.T) {
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					{{ if ne .ARNFormat "" -}}
-						tfstatecheck.ExpectRegionalARNFormat(resourceName, tfjsonpath.New(names.AttrARN), "{{ .ARNService }}", "{{ .ARNFormat }}"),
+						{{ if .IsGlobal -}}
+							tfstatecheck.ExpectGlobalARNFormat(resourceName, tfjsonpath.New(names.AttrARN), "{{ .ARNService }}", "{{ .ARNFormat }}"),
+						{{ else -}}
+							tfstatecheck.ExpectRegionalARNFormat(resourceName, tfjsonpath.New(names.AttrARN), "{{ .ARNService }}", "{{ .ARNFormat }}"),
+						{{ end -}}
 					{{ end -}}
 					{{ if .HasIDAttrDuplicates -}}
 						statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New({{ .IDAttrDuplicates }}), compare.ValuesSame()),
 					{{ end -}}
+					{{ if not .IsGlobal -}}
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+					{{ end -}}
 				},
 			},
 			{{ if not .NoImport -}}
