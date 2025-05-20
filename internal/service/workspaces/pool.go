@@ -309,8 +309,11 @@ func resourcePoolDelete(ctx context.Context, d *schema.ResourceData, meta any) d
 	log.Printf("[DEBUG] Deleting WorkSpaces Pool (%s)", d.Id())
 
 	pool, err := findPoolByID(ctx, conn, d.Id())
-	if tfresource.NotFound(err) {
-		return diags
+	if err != nil {
+		if tfresource.NotFound(err) {
+			return diags
+		}
+		return create.AppendDiagError(diags, names.WorkSpaces, create.ErrActionReading, ResNamePool, d.Id(), err)
 	}
 	if pool.State != types.WorkspacesPoolStateStopped {
 		return create.AppendDiagError(diags, names.WorkSpaces, create.ErrActionUpdating, ResNamePool, d.Id(), fmt.Errorf("pool must be stopped to delete"))
@@ -505,13 +508,20 @@ func flattenApplicationSettings(apiObject *types.ApplicationSettingsResponse) []
 	if apiObject == nil {
 		return nil
 	}
-	return []any{
-		map[string]any{
-			names.AttrS3BucketName: string(*apiObject.S3BucketName),
-			names.AttrStatus:       string(apiObject.Status),
-			"settings_group":       aws.ToString(apiObject.SettingsGroup),
-		},
+
+	m := map[string]any{
+		names.AttrStatus: string(apiObject.Status),
 	}
+
+	if apiObject.S3BucketName != nil {
+		m[names.AttrS3BucketName] = aws.ToString(apiObject.S3BucketName)
+	}
+
+	if apiObject.SettingsGroup != nil {
+		m["settings_group"] = aws.ToString(apiObject.SettingsGroup)
+	}
+
+	return []any{m}
 }
 
 func flattenCapacity(apiObject *types.CapacityStatus) []any {
