@@ -548,7 +548,6 @@ Some regional services have a subset of resources that are global:
 | EC2 | Resource | `aws_ec2_image_block_public_access` |
 | Firewall Manager | Resource | `aws_fms_admin_account` |
 | Guard Duty | Resource | `aws_guardduty_organization_admin_account` |
-| Inspector | Resource | `aws_inspector2_delegated_admin_account` |
 | IPAM | Resource | `aws_vpc_ipam_organization_admin_account` |
 | Macie | Resource | `aws_macie2_organization_admin_account` |
 | Macie | Resource | `aws_macie2_organization_configuration` |
