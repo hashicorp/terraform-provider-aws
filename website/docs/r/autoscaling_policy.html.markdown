@@ -176,6 +176,8 @@ resource "aws_autoscaling_policy" "example" {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `name` - (Required) Name of the policy.
 * `autoscaling_group_name` - (Required) Name of the autoscaling group.
 * `adjustment_type` - (Optional) Whether the adjustment is an absolute number or a percentage of the current capacity. Valid values are `ChangeInCapacity`, `ExactCapacity`, and `PercentChangeInCapacity`.
