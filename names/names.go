@@ -144,6 +144,7 @@ const (
 	VerifiedPermissionsEndpointID          = "verifiedpermissions"
 	WAFEndpointID                          = "waf"
 	WAFRegionalEndpointID                  = "waf-regional"
+	WorkSpacesWebEndpointID                = "workspaces-web"
 )
 
 // PartitionForRegion returns the partition for the given Region.
