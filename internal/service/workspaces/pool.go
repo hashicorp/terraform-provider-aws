@@ -58,8 +58,7 @@ func ResourcePool() *schema.Resource {
 						},
 						names.AttrStatus: {
 							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      false,
+							Required:     true,
 							ValidateFunc: validation.StringInSlice(enum.Slice(types.ApplicationSettingsStatusEnumEnabled, types.ApplicationSettingsStatusEnumDisabled), false),
 						},
 						"settings_group": {
@@ -84,18 +83,6 @@ func ResourcePool() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"available_user_sessions": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"actual_user_sessions": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"active_user_sessions": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
 						"desired_user_sessions": {
 							Type:     schema.TypeInt,
 							Required: true,
@@ -115,7 +102,7 @@ func ResourcePool() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"pool_name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -130,26 +117,27 @@ func ResourcePool() *schema.Resource {
 			"timeout_settings": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"max_user_duration_in_seconds": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      54000,
-							ValidateFunc: validation.IntBetween(1, 43200),
-						},
 						"disconnect_timeout_in_seconds": {
 							Type:         schema.TypeInt,
 							Optional:     true,
-							Default:      900,
+							Computed:     true,
 							ValidateFunc: validation.IntBetween(1, 36000),
 						},
 						"idle_disconnect_timeout_in_seconds": {
 							Type:         schema.TypeInt,
 							Optional:     true,
-							Default:      900,
+							Computed:     true,
 							ValidateFunc: validation.IntBetween(1, 36000),
+						},
+						"max_user_duration_in_seconds": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.IntBetween(1, 432000),
 						},
 					},
 				},
@@ -170,14 +158,16 @@ func resourcePoolCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 		BundleId:    aws.String(d.Get("bundle_id").(string)),
 		Description: aws.String(d.Get(names.AttrDescription).(string)),
 		DirectoryId: aws.String(d.Get("directory_id").(string)),
-		PoolName:    aws.String(d.Get("pool_name").(string)),
+		PoolName:    aws.String(d.Get(names.AttrName).(string)),
 		Tags:        getTagsIn(ctx),
 	}
 	if v, ok := d.GetOk("application_settings"); ok {
 		in.ApplicationSettings = expandApplicationSettings(v.([]any))
 	}
 	if v, ok := d.GetOk("capacity"); ok {
-		in.Capacity.DesiredUserSessions = expandCapacity(v.([]any)).DesiredUserSessions
+		in.Capacity = &types.Capacity{
+			DesiredUserSessions: expandCapacity(v.([]any)).DesiredUserSessions,
+		}
 	}
 	if v, ok := d.GetOk("timeout_settings"); ok {
 		in.TimeoutSettings = expandTimeoutSettings(v.([]any))
@@ -185,17 +175,13 @@ func resourcePoolCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	out, err := conn.CreateWorkspacesPool(ctx, in)
 	if err != nil {
-		return create.AppendDiagError(diags, names.WorkSpaces, create.ErrActionCreating, ResNamePool, d.Get("pool_name").(string), err)
+		return create.AppendDiagError(diags, names.WorkSpaces, create.ErrActionCreating, ResNamePool, d.Get(names.AttrName).(string), err)
 	}
 
 	d.SetId(aws.ToString(out.WorkspacesPool.PoolId))
 
 	if _, err := waitPoolCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return create.AppendDiagError(diags, names.WorkSpaces, create.ErrActionCreating, ResNamePool, d.Get("pool_name").(string), err)
-	}
-
-	if err := startPool(ctx, conn, d.Id()); err != nil {
-		return create.AppendDiagError(diags, names.WorkSpaces, create.ErrActionCreating, ResNamePool, d.Get("pool_name").(string), err)
+		return create.AppendDiagError(diags, names.WorkSpaces, create.ErrActionCreating, ResNamePool, d.Get(names.AttrName).(string), err)
 	}
 
 	return append(diags, resourcePoolRead(ctx, d, meta)...)
@@ -228,7 +214,7 @@ func resourcePoolRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 	d.Set(names.AttrDescription, out.Description)
 	d.Set("directory_id", out.DirectoryId)
 	d.Set(names.AttrID, out.PoolId)
-	d.Set("pool_name", out.PoolName)
+	d.Set(names.AttrName, out.PoolName)
 	d.Set(names.AttrState, out.State)
 	if err := d.Set("timeout_settings", flattenTimeoutSettings(out.TimeoutSettings)); err != nil {
 		return create.AppendDiagError(diags, names.WorkSpaces, create.ErrActionSetting, ResNamePool, d.Id(), err)
@@ -273,33 +259,30 @@ func resourcePoolUpdate(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	if d.HasChange("timeout_settings") {
 		timeoutSettings := expandTimeoutSettings(d.Get("timeout_settings").([]any))
-		timeoutSettingsRequest := &types.TimeoutSettings{}
 
 		old, new := d.GetChange("timeout_settings")
 		oldSettings := old.([]any)
 		newSettings := new.([]any)
 
 		if len(oldSettings) > 0 && len(newSettings) > 0 {
-			oldMaxUserDuration := oldSettings[0].(map[string]any)["max_user_duration_in_seconds"].(int)
-			newMaxUserDuration := newSettings[0].(map[string]any)["max_user_duration_in_seconds"].(int)
+			oldMap := oldSettings[0].(map[string]any)
+			newMap := newSettings[0].(map[string]any)
 
-			if oldMaxUserDuration != newMaxUserDuration {
-				log.Printf("[DEBUG] max_user_duration_in_seconds changed from %d to %d", oldMaxUserDuration, newMaxUserDuration)
+			oldVal, oldOk := oldMap["max_user_duration_in_seconds"].(int)
+			newVal, newOk := newMap["max_user_duration_in_seconds"].(int)
+
+			if oldOk && newOk && oldVal != newVal {
+				log.Printf("[DEBUG] max_user_duration_in_seconds changed from %d to %d", oldVal, newVal)
 				shouldStop = true
-				timeoutSettingsRequest.MaxUserDurationInSeconds = timeoutSettings.MaxUserDurationInSeconds
 			}
 		}
 
-		timeoutSettingsRequest.DisconnectTimeoutInSeconds = timeoutSettings.DisconnectTimeoutInSeconds
-		timeoutSettingsRequest.IdleDisconnectTimeoutInSeconds = timeoutSettings.IdleDisconnectTimeoutInSeconds
-		in.TimeoutSettings = timeoutSettingsRequest
+		in.TimeoutSettings = timeoutSettings
 		update = true
 	}
 
 	if shouldStop && currentState != string(types.WorkspacesPoolStateStopped) {
-		if err := stopPool(ctx, conn, d.Id()); err != nil {
-			return create.AppendDiagError(diags, names.WorkSpaces, create.ErrActionUpdating, ResNamePool, d.Id(), err)
-		}
+		return create.AppendDiagError(diags, names.WorkSpaces, create.ErrActionUpdating, ResNamePool, d.Id(), fmt.Errorf("pool must be stopped to apply changes"))
 	}
 
 	if !update {
@@ -316,14 +299,6 @@ func resourcePoolUpdate(ctx context.Context, d *schema.ResourceData, meta any) d
 		return create.AppendDiagError(diags, names.WorkSpaces, create.ErrActionUpdating, ResNamePool, d.Id(), err)
 	}
 
-	// If the pool was stopped, we need to start it again
-	if shouldStop && currentState != string(types.WorkspacesPoolStateStopped) {
-		log.Printf("[DEBUG] Starting WorkSpaces Pool (%s)", d.Id())
-		if err := startPool(ctx, conn, d.Id()); err != nil {
-			return create.AppendDiagError(diags, names.WorkSpaces, create.ErrActionUpdating, ResNamePool, d.Id(), err)
-		}
-	}
-
 	return append(diags, resourcePoolRead(ctx, d, meta)...)
 }
 
@@ -333,8 +308,12 @@ func resourcePoolDelete(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	log.Printf("[DEBUG] Deleting WorkSpaces Pool (%s)", d.Id())
 
-	if err := stopPool(ctx, conn, d.Id()); err != nil {
-		return create.AppendDiagError(diags, names.WorkSpaces, create.ErrActionDeleting, ResNamePool, d.Id(), err)
+	pool, err := findPoolByID(ctx, conn, d.Id())
+	if tfresource.NotFound(err) {
+		return diags
+	}
+	if pool.State != types.WorkspacesPoolStateStopped {
+		return create.AppendDiagError(diags, names.WorkSpaces, create.ErrActionUpdating, ResNamePool, d.Id(), fmt.Errorf("pool must be stopped to delete"))
 	}
 
 	input := &workspaces.TerminateWorkspacesPoolInput{
@@ -342,12 +321,15 @@ func resourcePoolDelete(ctx context.Context, d *schema.ResourceData, meta any) d
 	}
 
 	if _, err := conn.TerminateWorkspacesPool(ctx, input); err != nil {
-		return create.AppendDiagError(diags, names.WorkSpaces, create.ErrActionDeleting, ResNamePool, d.Id(), err)
+		if !tfresource.NotFound(err) {
+			return create.AppendDiagError(diags, names.WorkSpaces, create.ErrActionDeleting+" [2]", ResNamePool, d.Id(), err)
+		}
+		return diags
 	}
 
-	_, err := waitPoolDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete))
-	if err != nil {
-		return create.AppendDiagError(diags, names.WorkSpaces, create.ErrActionDeleting, ResNamePool, d.Id(), err)
+	_, err = waitPoolDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete))
+	if err != nil && !tfresource.NotFound(err) {
+		return create.AppendDiagError(diags, names.WorkSpaces, create.ErrActionDeleting+" [3]", ResNamePool, d.Id(), err)
 	}
 
 	return diags
@@ -385,20 +367,6 @@ func waitPoolUpdated(ctx context.Context, conn *workspaces.Client, id string, ti
 	return nil, err
 }
 
-func waitPoolStopped(ctx context.Context, conn *workspaces.Client, id string, timeout time.Duration) (*types.WorkspacesPool, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(types.WorkspacesPoolStateStopping),
-		Target:  enum.Slice(types.WorkspacesPoolStateStopped),
-		Refresh: statusPool(ctx, conn, id),
-		Timeout: timeout,
-	}
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*types.WorkspacesPool); ok {
-		return out, err
-	}
-	return nil, err
-}
-
 func waitPoolDeleted(ctx context.Context, conn *workspaces.Client, id string, timeout time.Duration) (*types.WorkspacesPool, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.WorkspacesPoolStateDeleting),
@@ -406,10 +374,13 @@ func waitPoolDeleted(ctx context.Context, conn *workspaces.Client, id string, ti
 		Refresh: statusPool(ctx, conn, id),
 		Timeout: timeout,
 	}
+
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
 	if out, ok := outputRaw.(*types.WorkspacesPool); ok {
 		return out, err
 	}
+
 	return nil, err
 }
 
@@ -459,10 +430,10 @@ func expandApplicationSettings(tfList []any) *types.ApplicationSettingsRequest {
 	}
 	tfMap := tfList[0].(map[string]any)
 	apiObject := &types.ApplicationSettingsRequest{}
-	if tfMap[names.AttrStatus] != nil {
+	if tfMap[names.AttrStatus] != "" {
 		apiObject.Status = types.ApplicationSettingsStatusEnum(tfMap[names.AttrStatus].(string))
 	}
-	if tfMap["settings_group"] != nil {
+	if tfMap["settings_group"] != "" {
 		settingsGroup := tfMap["settings_group"].(string)
 		apiObject.SettingsGroup = &settingsGroup
 	}
@@ -490,17 +461,17 @@ func expandTimeoutSettings(tfList []any) *types.TimeoutSettings {
 	tfMap := tfList[0].(map[string]any)
 	apiObject := &types.TimeoutSettings{}
 
-	if tfMap["max_user_duration_in_seconds"] != nil {
-		maxUserDurationInSeconds := int32(tfMap["max_user_duration_in_seconds"].(int))
-		apiObject.MaxUserDurationInSeconds = &maxUserDurationInSeconds
-	}
-	if tfMap["disconnect_timeout_in_seconds"] != nil {
+	if tfMap["disconnect_timeout_in_seconds"] != 0 {
 		disconnectTimeoutInSeconds := int32(tfMap["disconnect_timeout_in_seconds"].(int))
 		apiObject.DisconnectTimeoutInSeconds = &disconnectTimeoutInSeconds
 	}
-	if tfMap["idle_disconnect_timeout_in_seconds"] != nil {
+	if tfMap["idle_disconnect_timeout_in_seconds"] != 0 {
 		idleDisconnectTimeoutInSeconds := int32(tfMap["idle_disconnect_timeout_in_seconds"].(int))
 		apiObject.IdleDisconnectTimeoutInSeconds = &idleDisconnectTimeoutInSeconds
+	}
+	if tfMap["max_user_duration_in_seconds"] != 0 {
+		maxUserDurationInSeconds := int32(tfMap["max_user_duration_in_seconds"].(int))
+		apiObject.MaxUserDurationInSeconds = &maxUserDurationInSeconds
 	}
 	return apiObject
 }
@@ -512,7 +483,7 @@ func flattenApplicationSettings(apiObject *types.ApplicationSettingsResponse) []
 	return []any{
 		map[string]any{
 			names.AttrStatus: string(apiObject.Status),
-			"settings_group": *apiObject.SettingsGroup,
+			"settings_group": aws.ToString(apiObject.SettingsGroup),
 		},
 	}
 }
@@ -523,10 +494,7 @@ func flattenCapacity(apiObject *types.CapacityStatus) []any {
 	}
 	return []any{
 		map[string]any{
-			"available_user_sessions": apiObject.AvailableUserSessions,
-			"actual_user_sessions":    apiObject.ActualUserSessions,
-			"active_user_sessions":    apiObject.ActiveUserSessions,
-			"desired_user_sessions":   apiObject.DesiredUserSessions,
+			"desired_user_sessions": apiObject.DesiredUserSessions,
 		},
 	}
 }
@@ -542,32 +510,4 @@ func flattenTimeoutSettings(apiObject *types.TimeoutSettings) []any {
 			"idle_disconnect_timeout_in_seconds": apiObject.IdleDisconnectTimeoutInSeconds,
 		},
 	}
-}
-
-func stopPool(ctx context.Context, conn *workspaces.Client, id string) error {
-	input := &workspaces.StopWorkspacesPoolInput{
-		PoolId: aws.String(id),
-	}
-
-	if _, err := conn.StopWorkspacesPool(ctx, input); err != nil {
-		return fmt.Errorf("stopping WorkSpaces Pool (%s): %w", id, err)
-	}
-
-	if _, err := waitPoolStopped(ctx, conn, id, 15*time.Minute); err != nil {
-		return fmt.Errorf("waiting for WorkSpaces Pool (%s) to stop: %w", id, err)
-	}
-
-	return nil
-}
-
-func startPool(ctx context.Context, conn *workspaces.Client, id string) error {
-	input := &workspaces.StartWorkspacesPoolInput{
-		PoolId: aws.String(id),
-	}
-
-	if _, err := conn.StartWorkspacesPool(ctx, input); err != nil {
-		return fmt.Errorf("starting WorkSpaces Pool (%s): %w", id, err)
-	}
-
-	return nil
 }
