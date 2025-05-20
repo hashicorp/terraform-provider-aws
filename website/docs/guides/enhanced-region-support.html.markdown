@@ -24,7 +24,7 @@ Version 6.0.0 of the Terraform AWS Provider adds `region` to most resources maki
 
 ## What's new
 
-As of v6.0.0, most existing resources, data sources, and ephemeral resources are now [Region-aware](#nonregion-aware-resources), meaning they support a new top-level `region`. This allows you to manage a resource in a Region different from the one specified in the provider configuration—without requiring multiple provider blocks. See [How `region` works](#how-region-works) for details.
+As of v6.0.0, most existing resources, data sources, and ephemeral resources are now [Region-aware](#nonregion-aware-resources), meaning they support a new top-level `region`. This allows you to manage a resource in a Region different from the one specified in the provider configuration without requiring multiple provider blocks. See [How `region` works](#how-region-works) for details.
 
 For example, if your provider is configured for `us-east-1`, you can now manage a VPC in `us-west-2` without defining an additional provider block:
 

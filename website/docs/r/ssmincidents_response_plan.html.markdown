@@ -10,6 +10,8 @@ description: |-
 
 Provides a Terraform resource to manage response plans in AWS Systems Manager Incident Manager.
 
+~> NOTE: A response plan implicitly depends on a replication set. If you configured your replication set in Terraform, we recommend you add it to the `depends_on` argument for the Terraform ResponsePlan Resource.
+
 ## Example Usage
 
 ### Basic Usage
@@ -100,9 +102,6 @@ resource "aws_ssmincidents_response_plan" "example" {
 ```
 
 ## Argument Reference
-
-~> NOTE: A response plan implicitly depends on a replication set. If you configured your replication set in Terraform,
-we recommend you add it to the `depends_on` argument for the Terraform ResponsePlan Resource.
 
 The following arguments are required:
 
