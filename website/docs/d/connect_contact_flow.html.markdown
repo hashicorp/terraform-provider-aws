@@ -32,13 +32,13 @@ data "aws_connect_contact_flow" "test" {
 
 ## Argument Reference
 
-~> **NOTE:** `instance_id` and one of either `name` or `contact_flow_id` is required.
-
 This data source supports the following arguments:
 
 * `contact_flow_id` - (Optional) Returns information on a specific Contact Flow by contact flow id
 * `instance_id` - (Required) Reference to the hosting Amazon Connect Instance
 * `name` - (Optional) Returns information on a specific Contact Flow by name
+
+~> **NOTE:** `instance_id` and one of either `name` or `contact_flow_id` is required.
 
 ## Attribute Reference
 

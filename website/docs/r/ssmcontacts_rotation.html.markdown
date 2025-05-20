@@ -10,6 +10,8 @@ description: |-
 
 Provides a Terraform resource for managing a Contacts Rotation in AWS Systems Manager Incident Manager.
 
+~> **NOTE:** A rotation implicitly depends on a replication set. If you configured your replication set in Terraform, we recommend you add it to the `depends_on` argument for the Terraform Contact Resource.
+
 ## Example Usage
 
 ### Basic Usage
@@ -130,8 +132,6 @@ resource "aws_ssmcontacts_rotation" "example" {
 ```
 
 ## Argument Reference
-
-~> **NOTE:** A rotation implicitly depends on a replication set. If you configured your replication set in Terraform, we recommend you add it to the `depends_on` argument for the Terraform Contact Resource.
 
 The following arguments are required:
 

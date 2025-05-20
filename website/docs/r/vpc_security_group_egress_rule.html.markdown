@@ -31,8 +31,6 @@ resource "aws_vpc_security_group_egress_rule" "example" {
 
 ## Argument Reference
 
-~> **Note** Although `cidr_ipv4`, `cidr_ipv6`, `prefix_list_id`, and `referenced_security_group_id` are all marked as optional, you *must* provide one of them in order to configure the destination of the traffic. The `from_port` and `to_port` arguments are required unless `ip_protocol` is set to `-1` or `icmpv6`.
-
 This resource supports the following arguments:
 
 * `cidr_ipv4` - (Optional) The destination IPv4 CIDR range.
@@ -45,6 +43,8 @@ This resource supports the following arguments:
 * `security_group_id` - (Required) The ID of the security group.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `to_port` - (Optional) The end of port range for the TCP and UDP protocols, or an ICMP/ICMPv6 code.
+
+~> **Note** Although `cidr_ipv4`, `cidr_ipv6`, `prefix_list_id`, and `referenced_security_group_id` are all marked as optional, you *must* provide one of them in order to configure the destination of the traffic. The `from_port` and `to_port` arguments are required unless `ip_protocol` is set to `-1` or `icmpv6`.
 
 ## Attribute Reference
 
