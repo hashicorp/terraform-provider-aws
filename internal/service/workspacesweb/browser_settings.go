@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -48,6 +49,10 @@ func (r *browserSettingsResource) Schema(ctx context.Context, request resource.S
 			"associated_portal_arns": schema.ListAttribute{
 				ElementType: types.StringType,
 				Computed:    true,
+				Optional:    true,
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"browser_policy": schema.StringAttribute{
 				Required: true,
@@ -122,7 +127,6 @@ func (r *browserSettingsResource) Read(ctx context.Context, request resource.Rea
 	conn := r.Meta().WorkSpacesWebClient(ctx)
 
 	output, err := findBrowserSettingsByARN(ctx, conn, data.BrowserSettingsARN.ValueString())
-
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
@@ -138,8 +142,6 @@ func (r *browserSettingsResource) Read(ctx context.Context, request resource.Rea
 	if response.Diagnostics.HasError() {
 		return
 	}
-
-	setTagsOut(ctx, nil) // Browser settings don't support tags in the GetBrowserSettings response
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
