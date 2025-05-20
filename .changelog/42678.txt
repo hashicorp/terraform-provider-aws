@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_workspaces_pool
+```
+
+```release-note:new-data-source
+aws_workspaces_pool
+```
