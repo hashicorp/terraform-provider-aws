@@ -3637,7 +3637,7 @@ resource "aws_lb" "test" {
 
   idle_timeout               = 30
   enable_deletion_protection = false
-  
+
   minimum_load_balancer_capacity {
     capacity_units = %[2]d
   }
