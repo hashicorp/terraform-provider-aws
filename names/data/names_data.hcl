@@ -1682,7 +1682,8 @@ service "codeartifact" {
 
 service "codebuild" {
   sdk {
-    id = "CodeBuild"
+    id          = "CodeBuild"
+    arn_service = "codebuild"
   }
 
   names {
