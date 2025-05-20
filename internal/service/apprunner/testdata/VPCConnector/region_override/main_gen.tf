@@ -1,26 +1,19 @@
 # Copyright (c) HashiCorp, Inc.
 # SPDX-License-Identifier: MPL-2.0
 
-provider "aws" {
-  default_tags {
-    tags = var.provider_tags
-  }
-  ignore_tags {
-    keys = var.ignore_tag_keys
-  }
-}
-
 resource "aws_apprunner_vpc_connector" "test" {
+  region = var.region
+
   vpc_connector_name = var.rName
   subnets            = aws_subnet.test[*].id
   security_groups    = [aws_security_group.test.id]
-
-  tags = var.resource_tags
 }
 
 # testAccVPCConnectorConfig_base
 
 resource "aws_security_group" "test" {
+  region = var.region
+
   vpc_id = aws_vpc.test.id
   name   = var.rName
 }
@@ -28,10 +21,14 @@ resource "aws_security_group" "test" {
 # acctest.ConfigVPCWithSubnets(rName, 1)
 
 resource "aws_vpc" "test" {
+  region = var.region
+
   cidr_block = "10.0.0.0/16"
 }
 
 resource "aws_subnet" "test" {
+  region = var.region
+
   count = 1
 
   vpc_id            = aws_vpc.test.id
@@ -42,6 +39,8 @@ resource "aws_subnet" "test" {
 # acctest.ConfigAvailableAZsNoOptInDefaultExclude()
 
 data "aws_availability_zones" "available" {
+  region = var.region
+
   exclude_zone_ids = local.default_exclude_zone_ids
   state            = "available"
 
@@ -61,20 +60,8 @@ variable "rName" {
   nullable    = false
 }
 
-variable "resource_tags" {
-  description = "Tags to set on resource. To specify no tags, set to `null`"
-  # Not setting a default, so that this must explicitly be set to `null` to specify no tags
-  type     = map(string)
-  nullable = true
-}
-
-variable "provider_tags" {
-  type     = map(string)
-  nullable = true
-  default  = null
-}
-
-variable "ignore_tag_keys" {
-  type     = set(string)
-  nullable = false
+variable "region" {
+  description = "Region to deploy resource in"
+  type        = string
+  nullable    = false
 }

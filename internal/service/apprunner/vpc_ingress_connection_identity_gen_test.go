@@ -16,24 +16,24 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccAppRunnerAutoScalingConfigurationVersion_Identity_Basic(t *testing.T) {
+func TestAccAppRunnerVPCIngressConnection_Identity_Basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "aws_apprunner_auto_scaling_configuration_version.test"
+	resourceName := "aws_apprunner_vpc_ingress_connection.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppRunnerServiceID),
-		CheckDestroy:             testAccCheckAutoScalingConfigurationVersionDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCIngressConnectionDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/AutoScalingConfigurationVersion/basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/VPCIngressConnection/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAutoScalingConfigurationVersionExists(ctx, resourceName),
+					testAccCheckVPCIngressConnectionExists(ctx, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
@@ -41,7 +41,7 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_Identity_Basic(t *testing.T
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/AutoScalingConfigurationVersion/basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/VPCIngressConnection/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
@@ -53,10 +53,10 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_Identity_Basic(t *testing.T
 	})
 }
 
-func TestAccAppRunnerAutoScalingConfigurationVersion_Identity_RegionOverride(t *testing.T) {
+func TestAccAppRunnerVPCIngressConnection_Identity_RegionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	resourceName := "aws_apprunner_auto_scaling_configuration_version.test"
+	resourceName := "aws_apprunner_vpc_ingress_connection.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -66,7 +66,7 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_Identity_RegionOverride(t *
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/AutoScalingConfigurationVersion/region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/VPCIngressConnection/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
@@ -79,7 +79,7 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_Identity_RegionOverride(t *
 
 			// Import with appended "@<region>"
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/AutoScalingConfigurationVersion/region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/VPCIngressConnection/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
@@ -92,7 +92,7 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_Identity_RegionOverride(t *
 
 			// Import without appended "@<region>"
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/AutoScalingConfigurationVersion/region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/VPCIngressConnection/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),

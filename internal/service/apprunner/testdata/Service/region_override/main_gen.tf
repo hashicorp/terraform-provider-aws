@@ -1,5 +1,9 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 resource "aws_apprunner_service" "test" {
-{{- template "region" }}
+  region = var.region
+
   service_name = var.rName
   source_configuration {
     auto_deployments_enabled = false
@@ -11,6 +15,16 @@ resource "aws_apprunner_service" "test" {
       image_repository_type = "ECR_PUBLIC"
     }
   }
+}
 
-{{- template "tags" . }}
+variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
+}
+
+variable "region" {
+  description = "Region to deploy resource in"
+  type        = string
+  nullable    = false
 }
