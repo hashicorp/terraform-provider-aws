@@ -59,7 +59,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Name:     "Application",
 			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
-			Identity: inttypes.ARNIdentity(),
+			Identity: inttypes.RegionalARNIdentity(),
 		},
 		{
 			Factory:  newApplicationAccessScopeResource,
@@ -78,7 +78,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "aws_ssoadmin_application_assignment_configuration",
 			Name:     "Application Assignment Configuration",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
-			Identity: inttypes.ARNIdentity(),
+			Identity: inttypes.RegionalARNIdentity(),
 		},
 		{
 			Factory:  newTrustedTokenIssuerResource,
@@ -86,7 +86,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Name:     "Trusted Token Issuer",
 			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
-			Identity: inttypes.ARNIdentity(),
+			Identity: inttypes.RegionalARNIdentity(),
 		},
 	}
 }

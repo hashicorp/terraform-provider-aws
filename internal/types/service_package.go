@@ -105,12 +105,21 @@ func RegionalSingletonIdentity() Identity {
 	}
 }
 
-func ARNIdentity() Identity {
-	return ARNIdentityNamed("arn")
+func GlobalARNIdentity() Identity {
+	return arnIdentity(true, "arn")
 }
 
-func ARNIdentityNamed(name string) Identity {
+func RegionalARNIdentity() Identity {
+	return RegionalARNIdentityNamed("arn")
+}
+
+func RegionalARNIdentityNamed(name string) Identity {
+	return arnIdentity(false, name)
+}
+
+func arnIdentity(isGlobal bool, name string) Identity {
 	return Identity{
+		Global:       isGlobal,
 		ARN:          true,
 		ARNAttribute: name,
 	}

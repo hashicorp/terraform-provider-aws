@@ -37,7 +37,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
-			Identity: inttypes.ARNIdentity(),
+			Identity: inttypes.RegionalARNIdentity(),
 		},
 		{
 			Factory:  newStandardsControlAssociationResource,

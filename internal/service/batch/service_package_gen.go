@@ -38,7 +38,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
-			Identity: inttypes.ARNIdentity(),
+			Identity: inttypes.RegionalARNIdentity(),
 		},
 	}
 }
@@ -88,7 +88,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
-			Identity: inttypes.ARNIdentity(),
+			Identity: inttypes.RegionalARNIdentity(),
 			Import: inttypes.Import{
 				WrappedImport: true,
 			},

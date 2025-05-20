@@ -67,7 +67,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				IdentifierAttribute: "job_arn",
 			}),
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
-			Identity: inttypes.ARNIdentity(),
+			Identity: inttypes.RegionalARNIdentity(),
 		},
 		{
 			Factory:  newGuardrailResource,
@@ -108,7 +108,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				IdentifierAttribute: "provisioned_model_arn",
 			}),
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
-			Identity: inttypes.ARNIdentity(),
+			Identity: inttypes.RegionalARNIdentity(),
 		},
 	}
 }
