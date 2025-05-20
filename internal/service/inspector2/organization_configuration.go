@@ -21,7 +21,6 @@ import (
 )
 
 // @SDKResource("aws_inspector2_organization_configuration", name="Organization Configuration")
-// @Region(global=true)
 func resourceOrganizationConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOrganizationConfigurationCreate,
