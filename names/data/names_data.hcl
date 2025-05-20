@@ -5702,6 +5702,8 @@ service "notifications" {
   provider_package_correct = "notifications"
   doc_prefix               = ["notifications_"]
   brand                    = "AWS"
+
+  is_global = true
 }
 
 service "notificationscontacts" {
