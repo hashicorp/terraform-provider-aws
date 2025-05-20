@@ -182,7 +182,7 @@ resource "aws_iam_role" "example" {
 
 ## Argument Reference
 
-The following argument is required:
+The following arguments are required:
 
 * `assume_role_policy` - (Required) Policy that grants an entity permission to assume the role.
 
