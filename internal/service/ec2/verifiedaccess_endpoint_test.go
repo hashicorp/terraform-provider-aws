@@ -347,6 +347,56 @@ func testAccVerifiedAccessEndpoint_cidr(t *testing.T, semaphore tfsync.Semaphore
 	})
 }
 
+func testAccVerifiedAccessEndpoint_tcpProtocol(t *testing.T, semaphore tfsync.Semaphore) {
+	ctx := acctest.Context(t)
+	var v types.VerifiedAccessEndpoint
+	resourceName := "aws_verifiedaccess_endpoint.test"
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckVerifiedAccessSynchronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckVerifiedAccess(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVerifiedAccessEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVerifiedAccessEndpointConfig_tcpProtocol(rName, acctest.TLSPEMEscapeNewlines(key), acctest.TLSPEMEscapeNewlines(certificate)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVerifiedAccessEndpointExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, "application_domain"),
+					resource.TestCheckResourceAttr(resourceName, "attachment_type", "vpc"),
+					resource.TestCheckResourceAttrSet(resourceName, "domain_certificate_arn"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_domain_prefix", "example"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "load-balancer"),
+					resource.TestCheckResourceAttrSet(resourceName, "load_balancer_options.0.load_balancer_arn"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.protocol", "tcp"),
+					resource.TestCheckNoResourceAttr(resourceName, "load_balancer_options.0.port_range"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.port_range.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.port_range.0.from_port", "443"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.port_range.0.to_port", "443"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.subnet_ids.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "security_group_ids.0"),
+					resource.TestCheckResourceAttrSet(resourceName, "verified_access_group_id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"endpoint_domain_prefix",
+				},
+			},
+		},
+	})
+}
+
 func testAccVerifiedAccessEndpoint_rds(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var v types.VerifiedAccessEndpoint
@@ -648,6 +698,59 @@ resource "aws_verifiedaccess_endpoint" "test" {
     protocol             = "https"
   }
   security_group_ids       = [aws_security_group.test.id]
+  verified_access_group_id = aws_verifiedaccess_group.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccVerifiedAccessEndpointConfig_tcpProtocol(rName, key, certificate string) string {
+	return acctest.ConfigCompose(
+		testAccVerifiedAccessEndpointConfig_baseTCP(rName, key, certificate, 1),
+		fmt.Sprintf(`
+resource "aws_lb" "test" {
+  name               = %[1]q
+  internal           = true
+  load_balancer_type = "network"
+  subnets            = aws_subnet.test[*].id
+}
+
+resource "aws_lb_target_group" "test" {
+  name     = %[1]q
+  port     = 443
+  protocol = "TCP"
+  vpc_id   = aws_vpc.test.id
+}
+
+resource "aws_lb_listener" "test" {
+  load_balancer_arn = aws_lb.test.arn
+  port              = "443"
+  protocol          = "TCP"
+
+  default_action {
+    target_group_arn = aws_lb_target_group.test.arn
+    type             = "forward"
+  }
+}
+
+resource "aws_verifiedaccess_endpoint" "test" {
+  attachment_type = "vpc"
+  endpoint_type = "load-balancer"
+  load_balancer_options {
+    load_balancer_arn = aws_lb.test.arn
+    protocol          = "tcp"
+    port_range {
+      from_port = 443
+      to_port   = 443
+    }
+    subnet_ids        = [aws_subnet.test[0].id]
+  }
+  security_group_ids = [
+    aws_security_group.test.id
+  ]
   verified_access_group_id = aws_verifiedaccess_group.test.id
 
   tags = {
