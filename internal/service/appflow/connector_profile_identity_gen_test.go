@@ -41,7 +41,7 @@ func TestAccAppFlowConnectorProfile_Identity_Basic(t *testing.T) {
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectRegionalARNFormat(resourceName, tfjsonpath.New(names.AttrARN), "appflow", "connectorprofile/{name}"),
-					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrName), compare.ValuesSame()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 				},
 			},
@@ -81,12 +81,11 @@ func TestAccAppFlowConnectorProfile_Identity_RegionOverride(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectRegionalARNAlternateRegionFormat(resourceName, tfjsonpath.New(names.AttrARN), "appflow", "connectorprofile/{name}"),
-					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrName), compare.ValuesSame()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
 				},
 			},
 
-			// Import with appended "@<region>"
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ConnectorProfile/region_override/"),
 				ConfigVariables: config.Variables{
@@ -94,21 +93,6 @@ func TestAccAppFlowConnectorProfile_Identity_RegionOverride(t *testing.T) {
 					"region":        config.StringVariable(acctest.AlternateRegion()),
 				},
 				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"connector_profile_config.0.connector_profile_credentials",
-				},
-			},
-
-			// Import without appended "@<region>"
-			{
-				ConfigDirectory: config.StaticDirectory("testdata/ConnectorProfile/region_override/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"region":        config.StringVariable(acctest.AlternateRegion()),
-				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
