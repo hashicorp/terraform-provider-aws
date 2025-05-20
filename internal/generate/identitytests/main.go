@@ -109,6 +109,10 @@ func main() {
 		resource.ProviderPackage = servicePackage
 		resource.ARNService = svc.ARNService()
 
+		if svc.primary.IsGlobal() {
+			resource.IsGlobal = true
+		}
+
 		filename := fmt.Sprintf("%s_identity_gen_test.go", sourceName)
 
 		d := g.NewGoFileDestination(filename)
