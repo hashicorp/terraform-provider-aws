@@ -30,9 +30,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource("aws_globalaccelerator_cross_account_attachment", name="Cross-account Attachment")
+// @FrameworkResource("aws_globalaccelerator_cross_account_attachment", name="Cross-Account Attachment")
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/globalaccelerator/types;awstypes;awstypes.Attachment")
 func newCrossAccountAttachmentResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &crossAccountAttachmentResource{}
 

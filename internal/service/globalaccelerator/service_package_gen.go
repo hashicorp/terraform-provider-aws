@@ -33,12 +33,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 		{
 			Factory:  newCrossAccountAttachmentResource,
 			TypeName: "aws_globalaccelerator_cross_account_attachment",
-			Name:     "Cross-account Attachment",
+			Name:     "Cross-Account Attachment",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
-			Identity: inttypes.ARNIdentity(),
+			Identity: inttypes.GlobalARNIdentity(),
 		},
 	}
 }

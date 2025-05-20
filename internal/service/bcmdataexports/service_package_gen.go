@@ -30,7 +30,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				IdentifierAttribute: names.AttrID,
 			}),
 			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
-			Identity: inttypes.ARNIdentity(),
+			Identity: inttypes.GlobalARNIdentity(),
 		},
 	}
 }
