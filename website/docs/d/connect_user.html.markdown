@@ -32,13 +32,13 @@ data "aws_connect_user" "example" {
 
 ## Argument Reference
 
-~> **NOTE:** `instance_id` and one of either `name` or `user_id` is required.
-
 This data source supports the following arguments:
 
 * `instance_id` - (Required) Reference to the hosting Amazon Connect Instance
 * `name` - (Optional) Returns information on a specific User by name
 * `user_id` - (Optional) Returns information on a specific User by User id
+
+~> **NOTE:** `instance_id` and one of either `name` or `user_id` is required.
 
 ## Attribute Reference
 
