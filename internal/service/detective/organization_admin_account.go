@@ -24,7 +24,6 @@ import (
 )
 
 // @SDKResource("aws_detective_organization_admin_account", name="Organization Admin Account")
-// @Region(global=true)
 func ResourceOrganizationAdminAccount() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOrganizationAdminAccountCreate,

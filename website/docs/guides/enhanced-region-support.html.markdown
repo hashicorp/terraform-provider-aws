@@ -542,7 +542,6 @@ Some regional services have a subset of resources that are global:
 | Backup | Resource | `aws_backup_global_settings` |
 | Chime SDK Voice | Resource | `aws_chimesdkvoice_global_settings` |
 | CloudTrail | Resource | `aws_cloudtrail_organization_delegated_admin_account` |
-| Detective | Resource | `aws_detective_organization_admin_account` |
 | Direct Connect | Resource | `aws_dx_gateway` |
 | Direct Connect | Data Source | `aws_dx_gateway` |
 | EC2 | Resource | `aws_ec2_image_block_public_access` |
