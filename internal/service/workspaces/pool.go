@@ -56,15 +56,15 @@ func ResourcePool() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrStatus: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(enum.Slice(types.ApplicationSettingsStatusEnumEnabled, types.ApplicationSettingsStatusEnumDisabled), false),
-						},
 						"settings_group": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(1, 255),
+						},
+						names.AttrStatus: {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(enum.Slice(types.ApplicationSettingsStatusEnumEnabled, types.ApplicationSettingsStatusEnumDisabled), false),
 						},
 					},
 				},
@@ -227,8 +227,8 @@ func resourcePoolUpdate(ctx context.Context, d *schema.ResourceData, meta any) d
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WorkSpacesClient(ctx)
 
-	update := false
-	shouldStop := false
+	update := false     // whether we need to update the pool
+	shouldStop := false // Check if the pool needs to be stopped before updating
 	currentState := d.Get(names.AttrState).(string)
 
 	in := &workspaces.UpdateWorkspacesPoolInput{
@@ -424,6 +424,31 @@ func findPoolByID(ctx context.Context, conn *workspaces.Client, id string) (*typ
 	return &output.WorkspacesPools[0], nil
 }
 
+func findPoolByName(ctx context.Context, conn *workspaces.Client, name string) (*types.WorkspacesPool, error) {
+	input := &workspaces.DescribeWorkspacesPoolsInput{}
+	var result *types.WorkspacesPool
+
+	output, err := conn.DescribeWorkspacesPools(ctx, input)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, pool := range output.WorkspacesPools {
+		if aws.ToString(pool.PoolName) == name {
+			result = &pool
+			break
+		}
+	}
+
+	if result == nil {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return result, nil
+}
+
 func expandApplicationSettings(tfList []any) *types.ApplicationSettingsRequest {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
@@ -482,8 +507,9 @@ func flattenApplicationSettings(apiObject *types.ApplicationSettingsResponse) []
 	}
 	return []any{
 		map[string]any{
-			names.AttrStatus: string(apiObject.Status),
-			"settings_group": aws.ToString(apiObject.SettingsGroup),
+			names.AttrS3BucketName: string(*apiObject.S3BucketName),
+			names.AttrStatus:       string(apiObject.Status),
+			"settings_group":       aws.ToString(apiObject.SettingsGroup),
 		},
 	}
 }

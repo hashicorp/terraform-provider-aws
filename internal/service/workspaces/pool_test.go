@@ -293,11 +293,6 @@ resource "aws_subnet" "secondary" {
   }
 }
 
-resource "aws_security_group" "test" {
-  vpc_id = aws_vpc.test.id
-  name   = "tf-acctest-%[1]s"
-}
-
 resource "aws_workspaces_directory" "test" {
   subnet_ids                      = [aws_subnet.primary.id, aws_subnet.secondary.id]
   workspace_type                  = "POOLS"
