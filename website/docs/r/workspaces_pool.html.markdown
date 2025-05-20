@@ -35,7 +35,7 @@ resource "aws_workspaces_pool" "example" {
   name         = "example-pool"
   description  = "Example WorkSpaces Pool"
   directory_id = aws_workspaces_directory.example.directory_id
-  
+
   capacity {
     desired_user_sessions = 10
   }
@@ -50,13 +50,13 @@ resource "aws_workspaces_pool" "example" {
   name         = "example-pool"
   description  = "Example WorkSpaces Pool with Application Settings"
   directory_id = aws_workspaces_directory.example.directory_id
-  
+
   capacity {
     desired_user_sessions = 10
   }
-  
+
   application_settings {
-    status        = "ENABLED"
+    status         = "ENABLED"
     settings_group = "my-settings-group"
   }
 }
@@ -70,11 +70,11 @@ resource "aws_workspaces_pool" "example" {
   name         = "example-pool"
   description  = "Example WorkSpaces Pool with Timeout Settings"
   directory_id = aws_workspaces_directory.example.directory_id
-  
+
   capacity {
     desired_user_sessions = 10
   }
-  
+
   timeout_settings {
     disconnect_timeout_in_seconds      = 900
     idle_disconnect_timeout_in_seconds = 900

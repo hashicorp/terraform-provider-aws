@@ -47,11 +47,11 @@ func testAccWorkSpacesPool_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPoolExists(ctx, resourceName, &pool),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(resourceName, "bundle_id", resourceBundleName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "bundle_id", resourceBundleName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "capacity.0.desired_user_sessions", "1"),
-					resource.TestCheckResourceAttr(resourceName, "description", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "directory_id", resourceDirectory, "directory_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrState),
 				),
@@ -60,7 +60,7 @@ func testAccWorkSpacesPool_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
 			},
 		},
 	})
@@ -318,7 +318,7 @@ resource "aws_workspaces_pool" "test" {
   }
   description  = %[1]q
   directory_id = aws_workspaces_directory.test.directory_id
-  name    = %[1]q
+  name         = %[1]q
 }
 `, rName))
 }
@@ -328,17 +328,17 @@ func testAccPoolConfig_ApplicationSettings(rName string) string {
 		testAccPoolConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_workspaces_pool" "test" {
-	application_settings {
-		status = "ENABLED"
-		settings_group = "test"
-	}
+  application_settings {
+    status         = "ENABLED"
+    settings_group = "test"
+  }
   bundle_id = data.aws_workspaces_bundle.standard.id
   capacity {
     desired_user_sessions = 1
   }
   description  = %[1]q
   directory_id = aws_workspaces_directory.test.directory_id
-  name    = %[1]q
+  name         = %[1]q
 }
 `, rName))
 }
@@ -354,12 +354,12 @@ resource "aws_workspaces_pool" "test" {
   }
   description  = %[1]q
   directory_id = aws_workspaces_directory.test.directory_id
-  name    = %[1]q
-	timeout_settings {
-		disconnect_timeout_in_seconds 		 = 2000
-		idle_disconnect_timeout_in_seconds = 2000 
-		max_user_duration_in_seconds 			 = 2000
-	}
+  name         = %[1]q
+  timeout_settings {
+    disconnect_timeout_in_seconds      = 2000
+    idle_disconnect_timeout_in_seconds = 2000
+    max_user_duration_in_seconds       = 2000
+  }
 }
 `, rName))
 }
@@ -375,10 +375,10 @@ resource "aws_workspaces_pool" "test" {
   }
   description  = %[1]q
   directory_id = aws_workspaces_directory.test.directory_id
-  name    = %[1]q
-	timeout_settings {
-		max_user_duration_in_seconds 			 = 2000
-	}
+  name         = %[1]q
+  timeout_settings {
+    max_user_duration_in_seconds = 2000
+  }
 }
 `, rName))
 }
