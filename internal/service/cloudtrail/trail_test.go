@@ -966,7 +966,7 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_s3_bucket_policy" "test" {
-  bucket = aws_s3_bucket.test.id
+  bucket = aws_s3_bucket.test.bucket
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -1012,7 +1012,7 @@ resource "aws_cloudtrail" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
   name           = %[1]q
-  s3_bucket_name = aws_s3_bucket.test.id
+  s3_bucket_name = aws_s3_bucket.test.bucket
 }
 `, rName))
 }
@@ -1024,7 +1024,7 @@ resource "aws_cloudtrail" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
   name                          = %[1]q
-  s3_bucket_name                = aws_s3_bucket.test.id
+  s3_bucket_name                = aws_s3_bucket.test.bucket
   s3_key_prefix                 = "prefix"
   include_global_service_events = false
 }
@@ -1038,7 +1038,7 @@ resource "aws_cloudtrail" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
   name                          = %[1]q
-  s3_bucket_name                = aws_s3_bucket.test.id
+  s3_bucket_name                = aws_s3_bucket.test.bucket
   s3_key_prefix                 = "prefix"
   include_global_service_events = false
   enable_logging                = %[2]t
@@ -1053,7 +1053,7 @@ resource "aws_cloudtrail" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
   name           = %[1]q
-  s3_bucket_name = aws_s3_bucket.test.id
+  s3_bucket_name = aws_s3_bucket.test.bucket
 
   cloud_watch_logs_group_arn = "${aws_cloudwatch_log_group.test.arn}:*"
   cloud_watch_logs_role_arn  = aws_iam_role.test.arn
@@ -1110,7 +1110,7 @@ resource "aws_cloudtrail" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
   name           = %[1]q
-  s3_bucket_name = aws_s3_bucket.test.id
+  s3_bucket_name = aws_s3_bucket.test.bucket
 
   cloud_watch_logs_group_arn = "${aws_cloudwatch_log_group.test2.arn}:*"
   cloud_watch_logs_role_arn  = aws_iam_role.test.arn
@@ -1171,7 +1171,7 @@ resource "aws_cloudtrail" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
   name                  = %[1]q
-  s3_bucket_name        = aws_s3_bucket.test.id
+  s3_bucket_name        = aws_s3_bucket.test.bucket
   is_multi_region_trail = true
 }
 `, rName))
@@ -1185,7 +1185,7 @@ resource "aws_cloudtrail" "test" {
 
   is_organization_trail = true
   name                  = %[1]q
-  s3_bucket_name        = aws_s3_bucket.test.id
+  s3_bucket_name        = aws_s3_bucket.test.bucket
 }
 `, rName))
 }
@@ -1197,7 +1197,7 @@ resource "aws_cloudtrail" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
   name                          = %[1]q
-  s3_bucket_name                = aws_s3_bucket.test.id
+  s3_bucket_name                = aws_s3_bucket.test.bucket
   is_multi_region_trail         = true
   include_global_service_events = true
   enable_log_file_validation    = true
@@ -1212,7 +1212,7 @@ resource "aws_cloudtrail" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
   name                          = %[1]q
-  s3_bucket_name                = aws_s3_bucket.test.id
+  s3_bucket_name                = aws_s3_bucket.test.bucket
   include_global_service_events = true
 }
 `, rName))
@@ -1246,7 +1246,7 @@ resource "aws_cloudtrail" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
   name                          = %[1]q
-  s3_bucket_name                = aws_s3_bucket.test.id
+  s3_bucket_name                = aws_s3_bucket.test.bucket
   include_global_service_events = true
   kms_key_id                    = aws_kms_key.test.arn
 }
@@ -1296,7 +1296,7 @@ resource "aws_cloudtrail" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
   name           = %[1]q
-  s3_bucket_name = aws_s3_bucket.test.id
+  s3_bucket_name = aws_s3_bucket.test.bucket
   sns_topic_name = %[2]q
 }
 
@@ -1331,7 +1331,7 @@ resource "aws_cloudtrail" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
   name           = %[1]q
-  s3_bucket_name = aws_s3_bucket.test.id
+  s3_bucket_name = aws_s3_bucket.test.bucket
   sns_topic_name = aws_sns_topic.test.arn
 }
 
@@ -1345,7 +1345,7 @@ resource "aws_cloudtrail" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
   name                          = %[1]q
-  s3_bucket_name                = aws_s3_bucket.test.id
+  s3_bucket_name                = aws_s3_bucket.test.bucket
   include_global_service_events = false
 }
 `, rName))
@@ -1358,7 +1358,7 @@ resource "aws_cloudtrail" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
   name           = %[1]q
-  s3_bucket_name = aws_s3_bucket.test.id
+  s3_bucket_name = aws_s3_bucket.test.bucket
 
   tags = {
     %[2]q = %[3]q
@@ -1374,7 +1374,7 @@ resource "aws_cloudtrail" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
   name           = %[1]q
-  s3_bucket_name = aws_s3_bucket.test.id
+  s3_bucket_name = aws_s3_bucket.test.bucket
 
   tags = {
     %[2]q = %[3]q
@@ -1391,7 +1391,7 @@ resource "aws_cloudtrail" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
   name           = %[1]q
-  s3_bucket_name = aws_s3_bucket.test.id
+  s3_bucket_name = aws_s3_bucket.test.bucket
 
   event_selector {
     read_write_type           = "ReadOnly"
@@ -1422,7 +1422,7 @@ resource "aws_cloudtrail" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
   name           = %[1]q
-  s3_bucket_name = aws_s3_bucket.test.id
+  s3_bucket_name = aws_s3_bucket.test.bucket
 
   event_selector {
     read_write_type           = "WriteOnly"
@@ -1439,7 +1439,7 @@ resource "aws_cloudtrail" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
   name           = %[1]q
-  s3_bucket_name = aws_s3_bucket.test.id
+  s3_bucket_name = aws_s3_bucket.test.bucket
 
   event_selector {
     read_write_type           = "ReadOnly"
@@ -1518,7 +1518,7 @@ resource "aws_cloudtrail" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
   name           = %[1]q
-  s3_bucket_name = aws_s3_bucket.test.id
+  s3_bucket_name = aws_s3_bucket.test.bucket
 }
 `, rName))
 }
@@ -1530,7 +1530,7 @@ resource "aws_cloudtrail" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
   name           = %[1]q
-  s3_bucket_name = aws_s3_bucket.test.id
+  s3_bucket_name = aws_s3_bucket.test.bucket
 
   event_selector {
     read_write_type           = "All"
@@ -1569,7 +1569,7 @@ resource "aws_cloudtrail" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
   name           = %[1]q
-  s3_bucket_name = aws_s3_bucket.test.id
+  s3_bucket_name = aws_s3_bucket.test.bucket
 
   event_selector {
     exclude_management_event_sources = ["kms.${data.aws_partition.current.dns_suffix}"]
@@ -1587,7 +1587,7 @@ resource "aws_cloudtrail" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
   name           = %[1]q
-  s3_bucket_name = aws_s3_bucket.test.id
+  s3_bucket_name = aws_s3_bucket.test.bucket
 
   event_selector {
     exclude_management_event_sources = [
@@ -1606,7 +1606,7 @@ resource "aws_cloudtrail" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
   name           = %[1]q
-  s3_bucket_name = aws_s3_bucket.test.id
+  s3_bucket_name = aws_s3_bucket.test.bucket
 
 
   insight_selector {
@@ -1623,7 +1623,7 @@ resource "aws_cloudtrail" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
   name           = %[1]q
-  s3_bucket_name = aws_s3_bucket.test.id
+  s3_bucket_name = aws_s3_bucket.test.bucket
 
 
   insight_selector {
@@ -1644,7 +1644,7 @@ resource "aws_cloudtrail" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
   name           = %[1]q
-  s3_bucket_name = aws_s3_bucket.test.id
+  s3_bucket_name = aws_s3_bucket.test.bucket
 
   advanced_event_selector {
     name = "s3Custom"
