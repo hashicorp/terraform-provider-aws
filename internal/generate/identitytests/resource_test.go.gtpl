@@ -44,6 +44,17 @@ ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 	CheckDestroy: {{ if .CheckDestroyNoop }}acctest.CheckDestroyNoop{{ else }}testAccCheck{{ .Name }}Destroy(ctx{{ if .DestroyTakesT }}, t{{ end }}){{ end }},
 {{- end }}
 
+{{ define "TestCaseSetupRegionOverride" -}}
+PreCheck:     func() { acctest.PreCheck(ctx, t)
+	{{- range .PreChecks }}
+	{{ .Code }}
+	{{ end -}}
+},
+ErrorCheck:   acctest.ErrorCheck(t, names.{{ .PackageProviderNameUpper }}ServiceID),
+CheckDestroy: acctest.CheckDestroyNoop,
+ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+{{- end }}
+
 {{ define "TagsKnownValueForNull" -}}
 {{ if eq .Implementation "framework" -}}
 knownvalue.Null()
@@ -176,7 +187,7 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 	{{- template "InitRegionOverride" . }}
 
 	{{ template "Test" . }}(t, resource.TestCase{
-		{{ template "TestCaseSetup" . }}
+		{{ template "TestCaseSetupRegionOverride" . }}
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/region_override/"),
