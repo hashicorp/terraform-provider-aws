@@ -30,7 +30,7 @@ data "aws_vpclattice_service_network_service_associations" "test_svc" {
 
 ## Argument Reference
 
-One, and only one of the following arguments is required:
+The following arguments are required:
 
 * `service_network_identifier` - (Optional) This is the Id or ARN of the VPC Lattice Service Network for which you want to list the Service Network Service Associations. Use either `service_network_identifier` or `service_identifier` but not both.
 
