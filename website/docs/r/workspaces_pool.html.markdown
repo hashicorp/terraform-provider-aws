@@ -14,6 +14,22 @@ Provides a WorkSpaces Pool in AWS WorkSpaces Service.
 ### Basic Usage
 
 ```terraform
+data "aws_workspaces_bundle" "example" {
+  owner = "AMAZON"
+  name  = "Standard with Windows 10 (Server 2022 based) (WSP)"
+}
+
+resource "aws_workspaces_directory" "example" {
+  subnet_ids = [
+    aws_subnet.example_c.id,
+    aws_subnet.example_d.id
+  ]
+  workspace_type                  = "POOLS"
+  workspace_directory_name        = "example-directory"
+  workspace_directory_description = "Example WorkSpaces Directory for Pools"
+  user_identity_type              = "CUSTOMER_MANAGED"
+}
+
 resource "aws_workspaces_pool" "example" {
   bundle_id    = data.aws_workspaces_bundle.example.id
   name         = "example-pool"
