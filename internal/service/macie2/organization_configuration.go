@@ -20,7 +20,6 @@ import (
 )
 
 // @FrameworkResource("aws_macie2_organization_configuration", name="Organization Configuration")
-// @Region(global=true)
 func newOrganizationConfigurationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &organizationConfigurationResource{}
 	return r, nil
@@ -161,5 +160,6 @@ func isOrganizationConfigurationNotFoundError(err error) bool {
 }
 
 type organizationConfigurationResourceModel struct {
+	framework.WithRegionModel
 	AutoEnable types.Bool `tfsdk:"auto_enable"`
 }
