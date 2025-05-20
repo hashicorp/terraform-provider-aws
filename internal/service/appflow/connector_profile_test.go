@@ -117,7 +117,7 @@ func testAccCheckConnectorProfileDestroy(ctx context.Context) resource.TestCheck
 				continue
 			}
 
-			_, err := tfappflow.FindConnectorProfileByARN(ctx, conn, rs.Primary.ID)
+			_, err := tfappflow.FindConnectorProfileByName(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -143,7 +143,7 @@ func testAccCheckConnectorProfileExists(ctx context.Context, n string, v *types.
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppFlowClient(ctx)
 
-		output, err := tfappflow.FindConnectorProfileByARN(ctx, conn, rs.Primary.ID)
+		output, err := tfappflow.FindConnectorProfileByName(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
