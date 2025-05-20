@@ -20,17 +20,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource("aws_notifications_notification_hub", name="Notification Hub")
 func newResourceNotificationHub(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceNotificationHub{}
@@ -41,20 +40,16 @@ func newResourceNotificationHub(_ context.Context) (resource.ResourceWithConfigu
 	return r, nil
 }
 
-const (
-	ResNameNotificationHub = "Notification Hub"
-)
-
 type resourceNotificationHub struct {
 	framework.ResourceWithConfigure
 	framework.WithTimeouts
 	framework.WithNoUpdate
 }
 
-func (r *resourceNotificationHub) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *resourceNotificationHub) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrRegion: schema.StringAttribute{
+			"notification_hub_region": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -70,164 +65,162 @@ func (r *resourceNotificationHub) Schema(ctx context.Context, req resource.Schem
 	}
 }
 
-func (r *resourceNotificationHub) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *resourceNotificationHub) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data resourceNotificationHubModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().NotificationsClient(ctx)
 
-	var plan resourceNotificationHubModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
+	region := fwflex.StringValueFromFramework(ctx, data.NotificationHubRegion)
+	input := notifications.RegisterNotificationHubInput{
+		NotificationHubRegion: aws.String(region),
 	}
+	_, err := conn.RegisterNotificationHub(ctx, &input)
 
-	var input notifications.RegisterNotificationHubInput
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("NotificationHub"))...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	out, err := conn.RegisterNotificationHub(ctx, &input)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Notifications, create.ErrActionCreating, ResNameNotificationHub, plan.Region.String(), err),
-			err.Error(),
-		)
-		return
-	}
-	if out == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Notifications, create.ErrActionCreating, ResNameNotificationHub, plan.Region.String(), nil),
-			errors.New("empty output").Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("registering User Notifications Notification Hub (%s)", region), err.Error())
+
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
-	if resp.Diagnostics.HasError() {
+	if _, err := waitNotificationHubCreated(ctx, conn, region, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for User Notifications Notification Hub (%s) create", region), err.Error())
+
 		return
 	}
 
-	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	_, err = waitNotificationHubCreated(ctx, conn, plan.Region.ValueString(), createTimeout)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Notifications, create.ErrActionWaitingForCreation, ResNameNotificationHub, plan.Region.String(), err),
-			err.Error(),
-		)
-		return
-	}
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-func (r *resourceNotificationHub) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().NotificationsClient(ctx)
-
-	var state resourceNotificationHubModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *resourceNotificationHub) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data resourceNotificationHubModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := findNotificationHubByRegion(ctx, conn, state.Region.ValueString())
+	conn := r.Meta().NotificationsClient(ctx)
+
+	_, err := findNotificationHubByRegion(ctx, conn, data.NotificationHubRegion.ValueString())
+
 	if tfresource.NotFound(err) {
-		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
-		resp.State.RemoveResource(ctx)
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+
 		return
 	}
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Notifications, create.ErrActionReading, ResNameNotificationHub, state.Region.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("reading User Notifications Notification Hub (%s)", data.NotificationHubRegion.ValueString()), err.Error())
+
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceNotificationHub) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().NotificationsClient(ctx)
-
-	var state resourceNotificationHubModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *resourceNotificationHub) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data resourceNotificationHubModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
+	conn := r.Meta().NotificationsClient(ctx)
+
+	region := fwflex.StringValueFromFramework(ctx, data.NotificationHubRegion)
 	input := notifications.DeregisterNotificationHubInput{
-		NotificationHubRegion: state.Region.ValueStringPointer(),
+		NotificationHubRegion: aws.String(region),
+	}
+	_, err := conn.DeregisterNotificationHub(ctx, &input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return
 	}
 
-	_, err := conn.DeregisterNotificationHub(ctx, &input)
+	if errs.IsAErrorMessageContains[*awstypes.ConflictException](err, "Cannot deregister last ACTIVE notification hub") {
+		return
+	}
+
 	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("deregistering User Notifications Notification Hub (%s)", region), err.Error())
+
+		return
+	}
+
+	if _, err := waitNotificationHubDeleted(ctx, conn, region, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for User Notifications Notification Hub (%s) delete", region), err.Error())
+
+		return
+	}
+}
+
+func (r *resourceNotificationHub) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("notification_hub_region"), request, response)
+}
+
+func findNotificationHubByRegion(ctx context.Context, conn *notifications.Client, region string) (*awstypes.NotificationHubOverview, error) {
+	var input notifications.ListNotificationHubsInput
+	output, err := findNotificationHub(ctx, conn, &input, func(v *awstypes.NotificationHubOverview) bool {
+		return aws.ToString(v.NotificationHubRegion) == region
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output.StatusSummary == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func findNotificationHub(ctx context.Context, conn *notifications.Client, input *notifications.ListNotificationHubsInput, filter tfslices.Predicate[*awstypes.NotificationHubOverview]) (*awstypes.NotificationHubOverview, error) {
+	output, err := findNotificationHubs(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findNotificationHubs(ctx context.Context, conn *notifications.Client, input *notifications.ListNotificationHubsInput, filter tfslices.Predicate[*awstypes.NotificationHubOverview]) ([]awstypes.NotificationHubOverview, error) {
+	var output []awstypes.NotificationHubOverview
+
+	pages := notifications.NewListNotificationHubsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
 		}
 
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Notifications, create.ErrActionDeleting, ResNameNotificationHub, state.Region.String(), err),
-			err.Error(),
-		)
-		return
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.NotificationHubs {
+			if filter(&v) {
+				output = append(output, v)
+			}
+		}
 	}
 
-	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitNotificationHubDeleted(ctx, conn, state.Region.ValueString(), deleteTimeout)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Notifications, create.ErrActionWaitingForDeletion, ResNameNotificationHub, state.Region.String(), err),
-			err.Error(),
-		)
-		return
-	}
+	return output, nil
 }
 
-func (r *resourceNotificationHub) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrRegion), req, resp)
-}
-
-func waitNotificationHubCreated(ctx context.Context, conn *notifications.Client, id string, timeout time.Duration) (*awstypes.NotificationHubOverview, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(awstypes.NotificationHubStatusRegistering),
-		Target:                    enum.Slice(awstypes.NotificationHubStatusActive),
-		Refresh:                   statusNotificationHub(ctx, conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awstypes.NotificationHubOverview); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-func waitNotificationHubDeleted(ctx context.Context, conn *notifications.Client, id string, timeout time.Duration) (*awstypes.NotificationHubOverview, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.NotificationHubStatusDeregistering),
-		Target:  []string{},
-		Refresh: statusNotificationHub(ctx, conn, id),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awstypes.NotificationHubOverview); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-func statusNotificationHub(ctx context.Context, conn *notifications.Client, id string) retry.StateRefreshFunc {
+func statusNotificationHub(ctx context.Context, conn *notifications.Client, region string) retry.StateRefreshFunc {
 	return func() (any, string, error) {
-		out, err := findNotificationHubByRegion(ctx, conn, id)
+		output, err := findNotificationHubByRegion(ctx, conn, region)
+
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -236,41 +229,50 @@ func statusNotificationHub(ctx context.Context, conn *notifications.Client, id s
 			return nil, "", err
 		}
 
-		return out, string(out.StatusSummary.Status), nil
+		return output, string(output.StatusSummary.Status), nil
 	}
 }
 
-func findNotificationHubByRegion(ctx context.Context, conn *notifications.Client, region string) (*awstypes.NotificationHubOverview, error) {
-	var input notifications.ListNotificationHubsInput
-
-	out, err := conn.ListNotificationHubs(ctx, &input)
-	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: &input,
-			}
-		}
-		return nil, err
+func waitNotificationHubCreated(ctx context.Context, conn *notifications.Client, region string, timeout time.Duration) (*awstypes.NotificationHubOverview, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   enum.Slice(awstypes.NotificationHubStatusRegistering),
+		Target:                    enum.Slice(awstypes.NotificationHubStatusActive),
+		Refresh:                   statusNotificationHub(ctx, conn, region),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
 	}
 
-	if out == nil || out.NotificationHubs == nil {
-		return nil, tfresource.NewEmptyResultError(&input)
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.NotificationHubOverview); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusSummary.Reason)))
+
+		return output, err
 	}
 
-	for _, hub := range out.NotificationHubs {
-		if aws.ToString(hub.NotificationHubRegion) == region {
-			return &hub, nil
-		}
+	return nil, err
+}
+
+func waitNotificationHubDeleted(ctx context.Context, conn *notifications.Client, region string, timeout time.Duration) (*awstypes.NotificationHubOverview, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.NotificationHubStatusDeregistering),
+		Target:  []string{},
+		Refresh: statusNotificationHub(ctx, conn, region),
+		Timeout: timeout,
 	}
 
-	return nil, &retry.NotFoundError{
-		LastError:   fmt.Errorf("notification Hub for region %q not found", region),
-		LastRequest: &input,
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.NotificationHubOverview); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusSummary.Reason)))
+
+		return output, err
 	}
+
+	return nil, err
 }
 
 type resourceNotificationHubModel struct {
-	Region   types.String   `tfsdk:"region"`
-	Timeouts timeouts.Value `tfsdk:"timeouts"`
+	NotificationHubRegion types.String   `tfsdk:"notification_hub_region"`
+	Timeouts              timeouts.Value `tfsdk:"timeouts"`
 }

@@ -5,7 +5,6 @@ package notifications_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
@@ -16,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfnotifications "github.com/hashicorp/terraform-provider-aws/internal/service/notifications"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -24,10 +22,6 @@ import (
 
 func TestAccNotificationsNotificationHub_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var notificationhub awstypes.NotificationHubOverview
 	resourceName := "aws_notifications_notification_hub.test"
 
@@ -47,7 +41,6 @@ func TestAccNotificationsNotificationHub_basic(t *testing.T) {
 				Config: testAccNotificationHubConfig_basic(rRegion),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNotificationHubExists(ctx, resourceName, &notificationhub),
-					resource.TestCheckResourceAttr(resourceName, names.AttrRegion, rRegion),
 				),
 			},
 			{
@@ -55,7 +48,7 @@ func TestAccNotificationsNotificationHub_basic(t *testing.T) {
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateId:                        rRegion,
-				ImportStateVerifyIdentifierAttribute: names.AttrRegion,
+				ImportStateVerifyIdentifierAttribute: "notification_hub_region",
 			},
 		},
 	})
@@ -63,12 +56,7 @@ func TestAccNotificationsNotificationHub_basic(t *testing.T) {
 
 func TestAccNotificationsNotificationHub_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var notificationhub awstypes.NotificationHubOverview
-
 	//lintignore:AWSAT003
 	rRegion := "eu-west-1"
 	resourceName := "aws_notifications_notification_hub.test"
@@ -109,36 +97,39 @@ func testAccCheckNotificationHubDestroy(ctx context.Context) resource.TestCheckF
 				continue
 			}
 
-			_, err := tfnotifications.FindNotificationHubByRegion(ctx, conn, rs.Primary.Attributes[names.AttrRegion])
+			_, err := tfnotifications.FindNotificationHubByRegion(ctx, conn, rs.Primary.Attributes["notification_hub_region"])
+
 			if tfresource.NotFound(err) {
-				return nil
-			}
-			if err != nil {
-				return create.Error(names.Notifications, create.ErrActionCheckingDestroyed, tfnotifications.ResNameNotificationHub, rs.Primary.Attributes[names.AttrRegion], err)
+				continue
 			}
 
-			return create.Error(names.Notifications, create.ErrActionCheckingDestroyed, tfnotifications.ResNameNotificationHub, rs.Primary.Attributes[names.AttrRegion], errors.New("not destroyed"))
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("User Notifications Notification Hub %s still exists", rs.Primary.Attributes["notification_hub_region"])
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckNotificationHubExists(ctx context.Context, name string, notificationhub *awstypes.NotificationHubOverview) resource.TestCheckFunc {
+func testAccCheckNotificationHubExists(ctx context.Context, n string, v *awstypes.NotificationHubOverview) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.Notifications, create.ErrActionCheckingExistence, tfnotifications.ResNameNotificationHub, name, errors.New("not found"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).NotificationsClient(ctx)
 
-		resp, err := tfnotifications.FindNotificationHubByRegion(ctx, conn, rs.Primary.Attributes[names.AttrRegion])
+		output, err := tfnotifications.FindNotificationHubByRegion(ctx, conn, rs.Primary.Attributes["notification_hub_region"])
+
 		if err != nil {
-			return create.Error(names.Notifications, create.ErrActionCheckingExistence, tfnotifications.ResNameNotificationHub, rs.Primary.Attributes[names.AttrRegion], err)
+			return err
 		}
 
-		*notificationhub = *resp
+		*v = *output
 
 		return nil
 	}
@@ -162,7 +153,7 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 func testAccNotificationHubConfig_basic(rRegion string) string {
 	return fmt.Sprintf(`
 resource "aws_notifications_notification_hub" "test" {
-  region = %[1]q
+  notification_hub_region = %[1]q
 }
 `, rRegion)
 }

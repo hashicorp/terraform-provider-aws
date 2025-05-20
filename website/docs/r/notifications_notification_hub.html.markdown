@@ -15,7 +15,7 @@ Terraform resource for managing an AWS User Notifications Notification Hub.
 
 ```terraform
 resource "aws_notifications_notification_hub" "example" {
-  region = "us-west-2"
+  notification_hub_region = "us-west-2"
 }
 ```
 
@@ -23,7 +23,7 @@ resource "aws_notifications_notification_hub" "example" {
 
 The following arguments are required:
 
-* `region` - Notification Hub region.
+* `notification_hub_region` - Notification Hub region.
 
 ## Attribute Reference
 
@@ -31,7 +31,7 @@ This resource exports no additional attributes.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import User Notifications Notification Hub using the `region`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import User Notifications Notification Hub using the `notification_hub_region`. For example:
 
 ```terraform
 import {
