@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"slices"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -17,6 +18,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -83,6 +86,9 @@ func (r *resourceCluster) Schema(ctx context.Context, req resource.SchemaRequest
 						},
 						"witness_region": schema.StringAttribute{
 							Optional: true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
 						},
 					},
 				},
@@ -180,14 +186,13 @@ func (r *resourceCluster) Read(ctx context.Context, req resource.ReadRequest, re
 
 	if sourceClusterARN := out.Arn; sourceClusterARN != nil && out.MultiRegionProperties != nil {
 		// Remove the current cluster from the list of clusters in the multi-region properties
-		// if it exists
-		// This is needed because the ARN of the cluster in the multi-region properties is
-		// the same as the ARN of the cluster in the state, and we need to remove it from the
+		// This is needed because one of the ARNs of the clusters in the multi-region properties is
+		// the same as the ARN of this specific cluster, and we need to remove it from the
 		// list of clusters to avoid a conflict when updating the resource
 
 		clusters := out.MultiRegionProperties.Clusters
 		clusters = slices.DeleteFunc(clusters, func(s string) bool {
-			return s == *sourceClusterARN
+			return strings.EqualFold(s, aws.ToString(sourceClusterARN))
 		})
 		out.MultiRegionProperties.Clusters = clusters
 	}

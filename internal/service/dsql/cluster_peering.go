@@ -10,13 +10,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dsql"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dsql/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -128,18 +128,8 @@ func (r *resourceClusterPeering) Create(ctx context.Context, req resource.Create
 		return
 	}
 
-	properties := *result.MultiRegionProperties
-	if len(properties.Clusters) > 0 {
-		clusters := properties.Clusters
-		if sourceClusterARN := out.Arn; sourceClusterARN != nil {
-			clusters = slices.DeleteFunc(clusters, func(s string) bool {
-				return strings.EqualFold(s, *sourceClusterARN)
-			})
-		}
-		properties.Clusters = clusters
-	}
-
-	resp.Diagnostics.Append(flex.Flatten(ctx, properties, &plan)...)
+	properties := prepareMultiRegionProperties(result)
+	resp.Diagnostics.Append(flex.Flatten(ctx, &properties, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -177,17 +167,8 @@ func (r *resourceClusterPeering) Read(ctx context.Context, req resource.ReadRequ
 		)
 		return
 	}
-	properties := *out.MultiRegionProperties
-	if len(properties.Clusters) > 0 {
-		clusters := properties.Clusters
-		if sourceClusterARN := out.Arn; sourceClusterARN != nil {
-			clusters = slices.DeleteFunc(clusters, func(s string) bool {
-				return strings.EqualFold(s, *sourceClusterARN)
-			})
-		}
-		properties.Clusters = clusters
-	}
 
+	properties := prepareMultiRegionProperties(out)
 	resp.Diagnostics.Append(flex.Flatten(ctx, &properties, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -353,4 +334,21 @@ type resourceClusterPeeringModel struct {
 	Clusters      fwtypes.SetOfString `tfsdk:"clusters"`
 	WitnessRegion types.String        `tfsdk:"witness_region"`
 	Timeouts      timeouts.Value      `tfsdk:"timeouts"`
+}
+
+func prepareMultiRegionProperties(out *dsql.GetClusterOutput) (properties awstypes.MultiRegionProperties) {
+	if out == nil || out.MultiRegionProperties == nil {
+		return properties
+	}
+	properties = *out.MultiRegionProperties // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-assignment
+	if len(properties.Clusters) > 0 {
+		clusters := properties.Clusters
+		if sourceClusterARN := out.Arn; sourceClusterARN != nil {
+			clusters = slices.DeleteFunc(clusters, func(s string) bool {
+				return strings.EqualFold(s, aws.ToString(sourceClusterARN))
+			})
+		}
+		properties.Clusters = clusters
+	}
+	return properties
 }

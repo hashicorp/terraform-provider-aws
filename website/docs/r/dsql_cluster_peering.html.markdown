@@ -16,22 +16,31 @@ Terraform resource for managing an AWS DSQL Cluster Peering.
 
 ```terraform
 resource "aws_dsql_cluster" "example_1" {
+  multi_region_properties {
+    witness_region = "us-west-2"
+  }
 }
 
 resource "aws_dsql_cluster" "example_2" {
   provider = aws.alternate
+
+  multi_region_properties {
+    witness_region = "us-west-2"
+  }
 }
 
 resource "aws_dsql_cluster_peering" "example_1" {
-  identifier = aws_dsql_cluster.example_1.identifier
-  clusters = [aws_dsql_cluster.example_2.arn]
+  identifier     = aws_dsql_cluster.example_1.identifier
+  clusters       = [aws_dsql_cluster.example_2.arn]
+  witness_region = aws_dsql_cluster.example_1.multi_region_properties[0].witness_region
 }
 
 resource "aws_dsql_cluster_peering" "example_2" {
   provider = aws.alternate
 
-  identifier = aws_dsql_cluster.example_2.identifier
-  clusters = [aws_dsql_cluster.example_1.arn]
+  identifier     = aws_dsql_cluster.example_2.identifier
+  clusters       = [aws_dsql_cluster.example_1.arn]
+  witness_region = aws_dsql_cluster.example_2.multi_region_properties[0].witness_region
 }
 ```
 
@@ -39,9 +48,9 @@ resource "aws_dsql_cluster_peering" "example_2" {
 
 The following arguments are required:
 
-* `identifier` - (Required) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-* `clusters` - (Required) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-* `witness_region` - (Required) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `identifier` - (Required) DSQL Cluster Identifier.
+* `clusters` - (Required) List of DSQL Cluster ARNs to be peered to this cluster.
+* `witness_region` - (Required) Witness region for a multi-region cluster.
 
 ## Attribute Reference
 

@@ -34,6 +34,8 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `multi_region_properties` - (Optional) Multi-region properties of the DSQL Cluster.
+    * `witness_region` - (Required) Witness region for the multi-region clusters. Setting this makes this cluster a multi-region cluster. Changing it recreates the resource.
 * `tags` - (Optional) Set of tags to be associated with the AWS DSQL Cluster resource.
 
 ## Attribute Reference
@@ -42,6 +44,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of the Cluster.
 * `identifier` - Cluster Identifier.
+* `multi_region_properties` - (Optional) Multi-region properties of the DSQL Cluster.
+    * `clusters` - List of DSQL Cluster ARNs peered to this cluster.
+    * `witness_region` - Witness region for the multi-region clusters.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Timeouts

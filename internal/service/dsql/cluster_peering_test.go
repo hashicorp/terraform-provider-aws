@@ -4,6 +4,7 @@
 package dsql_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -30,6 +31,10 @@ func TestAccDSQLClusterPeering_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			// Because dsql is in preview, we need to skip the precheck
 			// acctest.PreCheckPartitionHasService(t, names.DSQLEndpointID)
+			// PreCheck for the region configuration as long as DSQL is in preview
+			acctest.PreCheckRegion(t, "us-east-1", "us-east-2")          //lintignore:AWSAT003
+			acctest.PreCheckAlternateRegion(t, "us-east-2", "us-east-1") //lintignore:AWSAT003
+			acctest.PreCheckThirdRegion(t, "us-west-2")                  //lintignore:AWSAT003
 			testAccPreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
@@ -38,17 +43,17 @@ func TestAccDSQLClusterPeering_basic(t *testing.T) {
 		// CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterPeeringConfig_basicPrep(),
+				Config: testAccClusterPeeringConfig_basicPrep(acctest.ThirdRegion()),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceNameCluster, &cluster),
 				),
 			},
 			{
-				Config: testAccClusterPeeringConfig_basic(),
+				Config: testAccClusterPeeringConfig_basic(acctest.ThirdRegion()),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceNameCluster, &cluster),
-					acctest.MatchResourceAttrRegionalARNRegion(ctx, resourceName, "clusters.0", "dsql", "us-east-2", regexache.MustCompile(`cluster/.+$`)),
-					acctest.MatchResourceAttrRegionalARNRegion(ctx, resourceName2, "clusters.0", "dsql", "us-east-1", regexache.MustCompile(`cluster/.+$`)),
+					acctest.MatchResourceAttrRegionalARNRegion(ctx, resourceName, "clusters.0", "dsql", acctest.AlternateRegion(), regexache.MustCompile(`cluster/.+$`)),
+					acctest.MatchResourceAttrRegionalARNRegion(ctx, resourceName2, "clusters.0", "dsql", acctest.Region(), regexache.MustCompile(`cluster/.+$`)),
 				),
 			},
 			{
@@ -62,12 +67,12 @@ func TestAccDSQLClusterPeering_basic(t *testing.T) {
 	})
 }
 
-func testAccClusterPeeringConfig_basicPrep() string {
-	return acctest.ConfigCompose(acctest.ConfigMultipleRegionProvider(2), `
+func testAccClusterPeeringConfig_basicPrep(witnessRegion string) string {
+	return acctest.ConfigCompose(acctest.ConfigMultipleRegionProvider(2), fmt.Sprintf(`
 resource "aws_dsql_cluster" "test" {
   deletion_protection_enabled = false
   multi_region_properties {
-    witness_region = "us-west-2"
+    witness_region = "%[1]s"
   }
 }
 
@@ -76,25 +81,25 @@ resource "aws_dsql_cluster" "test1" {
 
   deletion_protection_enabled = false
   multi_region_properties {
-    witness_region = "us-west-2"
+    witness_region = "%[1]s"
   }
 }
-`)
+`, witnessRegion))
 }
 
-func testAccClusterPeeringConfig_basic() string {
-	return acctest.ConfigCompose(acctest.ConfigMultipleRegionProvider(2), `
+func testAccClusterPeeringConfig_basic(witnessRegion string) string {
+	return acctest.ConfigCompose(acctest.ConfigMultipleRegionProvider(2), fmt.Sprintf(`
 resource "aws_dsql_cluster" "test" {
   deletion_protection_enabled = false
   multi_region_properties {
-    witness_region = "us-west-2"
+    witness_region = "%[1]s"
   }
 }
 
 resource "aws_dsql_cluster_peering" "test" {
   identifier     = aws_dsql_cluster.test.identifier
   clusters       = [aws_dsql_cluster.test1.arn]
-  witness_region = "us-west-2"
+  witness_region = "%[1]s"
 }
 
 resource "aws_dsql_cluster" "test1" {
@@ -102,7 +107,7 @@ resource "aws_dsql_cluster" "test1" {
 
   deletion_protection_enabled = false
   multi_region_properties {
-    witness_region = "us-west-2"
+    witness_region = "%[1]s"
   }
 }
 
@@ -111,7 +116,7 @@ resource "aws_dsql_cluster_peering" "test1" {
 
   identifier     = aws_dsql_cluster.test1.identifier
   clusters       = [aws_dsql_cluster.test.arn]
-  witness_region = "us-west-2"
+  witness_region = "%[1]s"
 }
-`)
+`, witnessRegion))
 }
