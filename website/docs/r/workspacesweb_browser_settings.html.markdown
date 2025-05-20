@@ -5,17 +5,10 @@ page_title: "AWS: aws_workspacesweb_browser_settings"
 description: |-
   Terraform resource for managing an AWS WorkSpaces Web Browser Settings.
 ---
-<!---
-TIP: A few guiding principles for writing documentation:
-1. Use simple language while avoiding jargon and figures of speech.
-2. Focus on brevity and clarity to keep a reader's attention.
-3. Use active voice and present tense whenever you can.
-4. Document your feature as it exists now; do not mention the future or past if you can help it.
-5. Use accessible and inclusive language.
---->`
+
 # Resource: aws_workspacesweb_browser_settings
 
-Terraform resource for managing an AWS WorkSpaces Web Browser Settings.
+Terraform resource for managing an AWS WorkSpaces Web Browser Settings resource.
 
 ## Example Usage
 
@@ -23,6 +16,41 @@ Terraform resource for managing an AWS WorkSpaces Web Browser Settings.
 
 ```terraform
 resource "aws_workspacesweb_browser_settings" "example" {
+  browser_policy = jsonencode({
+    AdditionalSettings = {
+      DownloadsSettings = {
+        Behavior = "DISABLE"
+      }
+    }
+  })
+}
+```
+
+### With All Arguments
+
+```terraform
+resource "aws_kms_key" "example" {
+  description             = "KMS key for WorkSpaces Web Browser Settings"
+  deletion_window_in_days = 7
+}
+
+resource "aws_workspacesweb_browser_settings" "example" {
+  browser_policy = jsonencode({
+    chromePolicies = {
+        DefaultDownloadDirectory = {
+            value = "/home/as2-streaming-user/MyFiles/TemporaryFiles1"
+        }
+    }
+  })
+  customer_managed_key = aws_kms_key.example.arn
+  
+  additional_encryption_context = {
+    Environment = "Production"
+  }
+  
+  tags = {
+    Name = "example-browser-settings"
+  }
 }
 ```
 
@@ -30,40 +58,36 @@ resource "aws_workspacesweb_browser_settings" "example" {
 
 The following arguments are required:
 
-* `example_arg` - (Required) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `browser_policy` - (Required) Browser policy for the browser settings. This is a JSON string that defines the browser settings policy.
 
 The following arguments are optional:
 
-* `optional_arg` - (Optional) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `additional_encryption_context` - (Optional) Additional encryption context for the browser settings.
+* `customer_managed_key` - (Optional) ARN of the customer managed KMS key.
+* `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the Browser Settings. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-* `example_attribute` - Concise description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `associated_portal_arns` - List of web portal ARNs to associate with the browser settings.
+* `browser_settings_arn` - ARN of the browser settings resource.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-* `create` - (Default `60m`)
-* `update` - (Default `180m`)
-* `delete` - (Default `90m`)
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import WorkSpaces Web Browser Settings using the `example_id_arg`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import WorkSpaces Web Browser Settings using the `browser_settings_arn`. For example:
 
 ```terraform
 import {
   to = aws_workspacesweb_browser_settings.example
-  id = "browser_settings-id-12345678"
+  id = "arn:aws:workspaces-web:us-west-2:123456789012:browsersettings/abcdef12345"
 }
 ```
 
-Using `terraform import`, import WorkSpaces Web Browser Settings using the `example_id_arg`. For example:
+Using `terraform import`, import WorkSpaces Web Browser Settings using the `browser_settings_arn`. For example:
 
 ```console
-% terraform import aws_workspacesweb_browser_settings.example browser_settings-id-12345678
+% terraform import aws_workspacesweb_browser_settings.example arn:aws:workspacesweb:us-west-2:123456789012:browsersettings/abcdef12345
 ```
