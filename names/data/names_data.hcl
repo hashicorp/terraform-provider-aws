@@ -1659,7 +1659,8 @@ service "synthetics" {
 
 service "codeartifact" {
   sdk {
-    id = "codeartifact"
+    id          = "codeartifact"
+    arn_service = "codeartifact"
   }
 
   names {
