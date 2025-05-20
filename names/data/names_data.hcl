@@ -1296,7 +1296,8 @@ service "cloudformation" {
 
 service "cloudfront" {
   sdk {
-    id = "CloudFront"
+    id          = "CloudFront"
+    arn_service = "cloudfront"
   }
 
   names {
