@@ -132,7 +132,6 @@ func dataSourceServiceNetworkServiceAssociationsRead(ctx context.Context, d *sch
 		if err := d.Set("associations", flattenAssociations(assoc)); err != nil {
 			return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionReading, DSNameServiceNetworkServiceAssociations, d.Id(), err)
 		}
-
 	} else if v, ok := d.GetOk("service_identifier"); ok {
 		service_identifier := v.(string)
 
@@ -152,7 +151,6 @@ func dataSourceServiceNetworkServiceAssociationsRead(ctx context.Context, d *sch
 		if err := d.Set("associations", flattenAssociations(assoc)); err != nil {
 			return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionReading, DSNameServiceNetworkServiceAssociations, d.Id(), err)
 		}
-
 	}
 
 	return diags
