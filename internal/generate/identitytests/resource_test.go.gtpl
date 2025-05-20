@@ -143,6 +143,24 @@ import (
 	{{ end }}
 )
 
+{{ if .Serialize }}
+func {{ template "testname" . }}_IdentitySerial(t *testing.T) {
+	t.Helper()
+	{{ if .SerializeParallelTests -}}
+	t.Parallel()
+	{{- end }}
+
+	testCases := map[string]func(t *testing.T){
+		acctest.CtBasic:  {{ template "testname" . }}_Identity_Basic,
+		{{ if not .IsGlobal -}}
+		"RegionOverride": {{ template "testname" . }}_Identity_RegionOverride,
+		{{ end -}}
+	}
+
+	acctest.RunSerialTests1Level(t, testCases, {{ if .SerializeDelay }}serializeDelay{{ else }}0{{ end }})
+}
+{{ end }}
+
 func {{ template "testname" . }}_Identity_Basic(t *testing.T) {
 	{{- template "Init" . }}
 
