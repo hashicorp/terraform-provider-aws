@@ -29,7 +29,7 @@ data "aws_workspaces_pool" "example" {
 
 ## Argument Reference
 
-One of the following arguments must be specified:
+This data source supports the following arguments:
 
 * `id` - ID of the WorkSpaces Pool.
 * `name` - Name of the WorkSpaces Pool.
