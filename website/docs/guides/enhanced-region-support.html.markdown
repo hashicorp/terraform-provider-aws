@@ -556,6 +556,7 @@ Some regional services have a subset of resources that are global:
 | S3 | Resource | `aws_s3_account_public_access_block` |
 | S3 | Data Source | `aws_s3_account_public_access_block` |
 | Security Hub | Resource | `aws_securityhub_organization_admin_account` |
+| Security Hub | Resource | `aws_securityhub_organization_configuration` |
 | Service Catalog | Resource | `aws_servicecatalog_organizations_access` |
 
 ### Meta data sources
