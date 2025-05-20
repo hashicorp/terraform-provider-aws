@@ -224,7 +224,7 @@ func TestAccWorkSpacesWebBrowserSettings_customerManagedKey(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBrowserSettingsExists(ctx, resourceName, &browserSettings),
 					resource.TestCheckResourceAttr(resourceName, "browser_policy", browserPolicy1),
-					resource.TestCheckResourceAttrPair(resourceName, "customer_managed_key", "aws_kms_key.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "customer_managed_key", "aws_kms_key.test", names.AttrARN),
 				),
 			},
 			{
@@ -239,7 +239,7 @@ func TestAccWorkSpacesWebBrowserSettings_customerManagedKey(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBrowserSettingsExists(ctx, resourceName, &browserSettings),
 					resource.TestCheckResourceAttr(resourceName, "browser_policy", browserPolicy2),
-					resource.TestCheckResourceAttrPair(resourceName, "customer_managed_key", "aws_kms_key.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "customer_managed_key", "aws_kms_key.test", names.AttrARN),
 				),
 			},
 			{
@@ -294,7 +294,7 @@ func TestAccWorkSpacesWebBrowserSettings_complete(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "browser_policy", browserPolicy1),
 					resource.TestCheckResourceAttr(resourceName, "additional_encryption_context.department", "finance"),
 					resource.TestCheckResourceAttr(resourceName, "additional_encryption_context.project", "alpha"),
-					resource.TestCheckResourceAttrPair(resourceName, "customer_managed_key", keyResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "customer_managed_key", keyResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -311,7 +311,7 @@ func TestAccWorkSpacesWebBrowserSettings_complete(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "browser_policy", browserPolicy2),
 					resource.TestCheckResourceAttr(resourceName, "additional_encryption_context.department", "finance"),
 					resource.TestCheckResourceAttr(resourceName, "additional_encryption_context.project", "alpha"),
-					resource.TestCheckResourceAttrPair(resourceName, "customer_managed_key", keyResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "customer_managed_key", keyResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -375,9 +375,9 @@ func testAccCheckBrowserSettingsExists(ctx context.Context, n string, v *awstype
 func testAccPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesWebClient(ctx)
 
-	input := &workspacesweb.ListBrowserSettingsInput{}
+	input := workspacesweb.ListBrowserSettingsInput{}
 
-	_, err := conn.ListBrowserSettings(ctx, input)
+	_, err := conn.ListBrowserSettings(ctx, &input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
@@ -410,7 +410,6 @@ func testAccBrowserSettingsConfig_additionalEncryptionContext(browserPolicy stri
 	return fmt.Sprintf(`
 resource "aws_workspacesweb_browser_settings" "test" {
   browser_policy = %[1]q
-  
   additional_encryption_context = {
 %[2]s
   }
@@ -430,7 +429,7 @@ func testAccBrowserSettingsConfig_customerManagedKey(browserPolicy string) strin
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
-  policy                  = jsonencode({
+  policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
@@ -463,7 +462,7 @@ resource "aws_kms_key" "test" {
 }
 
 resource "aws_workspacesweb_browser_settings" "test" {
-  browser_policy      = %[1]q
+  browser_policy       = %[1]q
   customer_managed_key = aws_kms_key.test.arn
 }
 `, browserPolicy)
@@ -473,7 +472,7 @@ func testAccBrowserSettingsConfig_complete(browserPolicy string, encryptionConte
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
-  policy                  = jsonencode({
+  policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
@@ -506,9 +505,8 @@ resource "aws_kms_key" "test" {
 }
 
 resource "aws_workspacesweb_browser_settings" "test" {
-  browser_policy      = %[1]q
+  browser_policy       = %[1]q
   customer_managed_key = aws_kms_key.test.arn
-  
   additional_encryption_context = {
 %[2]s
   }

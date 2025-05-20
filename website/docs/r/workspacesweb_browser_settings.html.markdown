@@ -37,17 +37,15 @@ resource "aws_kms_key" "example" {
 resource "aws_workspacesweb_browser_settings" "example" {
   browser_policy = jsonencode({
     chromePolicies = {
-        DefaultDownloadDirectory = {
-            value = "/home/as2-streaming-user/MyFiles/TemporaryFiles1"
-        }
+      DefaultDownloadDirectory = {
+        value = "/home/as2-streaming-user/MyFiles/TemporaryFiles1"
+      }
     }
   })
   customer_managed_key = aws_kms_key.example.arn
-  
   additional_encryption_context = {
     Environment = "Production"
   }
-  
   tags = {
     Name = "example-browser-settings"
   }
@@ -73,7 +71,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `associated_portal_arns` - List of web portal ARNs to associate with the browser settings.
 * `browser_settings_arn` - ARN of the browser settings resource.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
-
 
 ## Import
 

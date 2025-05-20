@@ -10,11 +10,11 @@ provider "aws" {
 resource "aws_workspacesweb_browser_settings" "test" {
   browser_policy = jsonencode({
     chromePolicies = {
-        DefaultDownloadDirectory = {
-            value = "/home/as2-streaming-user/MyFiles/TemporaryFiles1"
-        }
+      DefaultDownloadDirectory = {
+        value = "/home/as2-streaming-user/MyFiles/TemporaryFiles1"
+      }
     }
-})
+  })
 
   tags = var.resource_tags
 

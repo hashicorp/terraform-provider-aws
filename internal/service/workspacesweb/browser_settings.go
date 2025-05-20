@@ -96,7 +96,7 @@ func (r *browserSettingsResource) Create(ctx context.Context, request resource.C
 	output, err := conn.CreateBrowserSettings(ctx, &input)
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("creating WorkSpacesWeb Browser Settings"), err.Error())
+		response.Diagnostics.AddError("creating WorkSpacesWeb Browser Settings", err.Error())
 		return
 	}
 
