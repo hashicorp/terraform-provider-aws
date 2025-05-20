@@ -8,6 +8,10 @@ BUG FIXES:
 
 * resource/aws_s3_bucket_lifecycle_configuration: No longer returns warning on empty `rule.filter`. ([#42624](https://github.com/hashicorp/terraform-provider-aws/issues/42624))
 
+ENHANCEMENTS:
+
+* resource/aws_quicksight_data_set: Support `use_as` property to create special RLS rules dataset ([#42687](https://github.com/hashicorp/terraform-provider-aws/pull/42687))
+
 ## 5.98.0 (May 15, 2025)
 
 FEATURES:
