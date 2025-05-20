@@ -10,14 +10,26 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/importer"
 )
 
-func arnIdentityResourceImporter(attrName string) *schema.ResourceImporter {
-	return &schema.ResourceImporter{
-		StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-			if err := importer.ARN(ctx, rd, attrName); err != nil {
-				return nil, err
-			}
+func arnIdentityResourceImporter(attrName string, isGlobal bool) *schema.ResourceImporter {
+	if isGlobal {
+		return &schema.ResourceImporter{
+			StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				if err := importer.GlobalARN(ctx, rd, attrName); err != nil {
+					return nil, err
+				}
 
-			return []*schema.ResourceData{rd}, nil
-		},
+				return []*schema.ResourceData{rd}, nil
+			},
+		}
+	} else {
+		return &schema.ResourceImporter{
+			StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				if err := importer.RegionalARN(ctx, rd, attrName); err != nil {
+					return nil, err
+				}
+
+				return []*schema.ResourceData{rd}, nil
+			},
+		}
 	}
 }
