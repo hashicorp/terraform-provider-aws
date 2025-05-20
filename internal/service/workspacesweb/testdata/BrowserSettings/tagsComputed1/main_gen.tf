@@ -20,12 +20,6 @@ resource "aws_workspacesweb_browser_settings" "test" {
 
 resource "null_resource" "test" {}
 
-variable "rName" {
-  description = "Name for resource"
-  type        = string
-  nullable    = false
-}
-
 variable "unknownTagKey" {
   type     = string
   nullable = false
