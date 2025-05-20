@@ -33,8 +33,8 @@ type dataSourcePolicyStore struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *dataSourcePolicyStore) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (d *dataSourcePolicyStore) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			names.AttrCreatedDate: schema.StringAttribute{
@@ -60,32 +60,33 @@ func (d *dataSourcePolicyStore) Schema(ctx context.Context, req datasource.Schem
 		},
 	}
 }
-func (d *dataSourcePolicyStore) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	conn := d.Meta().VerifiedPermissionsClient(ctx)
-
+func (d *dataSourcePolicyStore) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
 	var data dataSourcePolicyStoreData
-	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := findPolicyStoreByID(ctx, conn, data.ID.ValueString())
+	conn := d.Meta().VerifiedPermissionsClient(ctx)
+
+	output, err := findPolicyStoreByID(ctx, conn, data.ID.ValueString())
 
 	if err != nil {
-		resp.Diagnostics.AddError(
+		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.VerifiedPermissions, create.ErrActionReading, DSNamePolicyStore, data.ID.ValueString(), err),
 			err.Error(),
 		)
 		return
 	}
 
-	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &data)...)
-
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	setTagsOut(ctx, output.Tags)
+
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
 type dataSourcePolicyStoreData struct {
