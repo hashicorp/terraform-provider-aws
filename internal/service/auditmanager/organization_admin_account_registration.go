@@ -19,7 +19,6 @@ import (
 )
 
 // @FrameworkResource("aws_auditmanager_organization_admin_account_registration", name="Organization Admin Account Registration")
-// @Region(global=true)
 func newOrganizationAdminAccountRegistrationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &organizationAdminAccountRegistrationResource{}, nil
 }
@@ -132,6 +131,7 @@ func (r *organizationAdminAccountRegistrationResource) Delete(ctx context.Contex
 }
 
 type organizationAdminAccountRegistrationResourceModel struct {
+	framework.WithRegionModel
 	AdminAccountID types.String `tfsdk:"admin_account_id"`
 	ID             types.String `tfsdk:"id"`
 	OrganizationID types.String `tfsdk:"organization_id"`

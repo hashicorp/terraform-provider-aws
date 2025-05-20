@@ -538,7 +538,6 @@ Some regional services have a subset of resources that are global:
 
 | Service | Type | Name |
 |---|---|---|
-| Audit Manager | Resource | `aws_auditmanager_organization_admin_account_registration` |
 | Backup | Resource | `aws_backup_global_settings` |
 | Chime SDK Voice | Resource | `aws_chimesdkvoice_global_settings` |
 | CloudTrail | Resource | `aws_cloudtrail_organization_delegated_admin_account` |
