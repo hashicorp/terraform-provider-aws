@@ -28,6 +28,14 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 				IdentifierAttribute: "browser_settings_arn",
 			},
 		},
+		{
+			Factory:  newNetworkSettingsResource,
+			TypeName: "aws_workspacesweb_network_settings",
+			Name:     "Network Settings",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "network_settings_arn",
+			},
+		},
 	}
 }
 
