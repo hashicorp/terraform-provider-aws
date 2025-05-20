@@ -429,5 +429,5 @@ import {
 Using `terraform import`, import AppFlow flows using the `name`. For example:
 
 ```console
-% terraform import example-flow
+% terraform import aws_appflow_flow.example example-flow
 ```
