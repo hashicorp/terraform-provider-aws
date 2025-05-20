@@ -23,13 +23,13 @@ resource "aws_transfer_server" "example" {
 
 resource "aws_transfer_tag" "zone_id" {
   resource_arn = aws_transfer_server.example.arn
-  key          = "aws:transfer:route53HostedZoneId"
+  key          = "transfer:route53HostedZoneId"
   value        = "/hostedzone/MyHostedZoneId"
 }
 
 resource "aws_transfer_tag" "hostname" {
   resource_arn = aws_transfer_server.example.arn
-  key          = "aws:transfer:customHostname"
+  key          = "transfer:customHostname"
   value        = "example.com"
 }
 ```

@@ -34,6 +34,8 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `cluster_name` - (Required) Name of the cluster.
 * `node_group_name` - (Required) Name of the node group.
 
@@ -74,4 +76,4 @@ This data source exports the following attributes in addition to the arguments a
 * `tags` - Key-value map of resource tags.
 * `version` – Kubernetes version.
 
-<!-- cache-key: cdktf-0.20.8 input-455f97b7456c88e1697131f0d9d93c38151b37400a9cfe93bcaa3f2bceee01a2 -->
+<!-- cache-key: cdktf-0.20.8 input-899c67e46adce5f86a5054b1922efb47bb5d15d281e71b1b619ad4cb9fb4eac8 -->

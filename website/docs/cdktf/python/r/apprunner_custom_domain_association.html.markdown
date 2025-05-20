@@ -36,7 +36,7 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments supported:
+This resource supports the following arguments:
 
 * `domain_name` - (Required) Custom domain endpoint to association. Specify a base domain e.g., `example.com` or a subdomain e.g., `subdomain.example.com`.
 * `enable_www_subdomain` (Optional) Whether to associate the subdomain with the App Runner service in addition to the base domain. Defaults to `true`.
@@ -84,4 +84,4 @@ Using `terraform import`, import App Runner Custom Domain Associations using the
 % terraform import aws_apprunner_custom_domain_association.example example.com,arn:aws:apprunner:us-east-1:123456789012:service/example-app/8fe1e10304f84fd2b0df550fe98a71fa
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-f44a1204f60368d3f82244d217eadf1441e2e19fa6ded3141645439b4f000e68 -->
+<!-- cache-key: cdktf-0.20.8 input-d59bb982403c685cc22e2c6459ced2397f7ff3295cd1eb2413d76d679b8a1b50 -->

@@ -68,6 +68,8 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `tags` - (Optional) Map of tags, each pair of which must exactly match for desired security groups.
 * `filter` - (Optional) One or more name/value pairs to use as filters. There are several valid keys, for a full reference, check out [describe-security-groups in the AWS CLI reference][1].
 
@@ -88,4 +90,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.8 input-61bce3b277f527514fffcce8fa9eb4692ab442cb83160f5b9461f3e9c31d928a -->
+<!-- cache-key: cdktf-0.20.8 input-50d492fe5821456a408ee49cd31a5d8eade4f824ebd9a2bc44906e1863e805fb -->
