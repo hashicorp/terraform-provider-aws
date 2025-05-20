@@ -84,8 +84,6 @@ func (d *dataSourcePolicyStore) Read(ctx context.Context, request datasource.Rea
 		return
 	}
 
-	setTagsOut(ctx, output.Tags)
-
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
