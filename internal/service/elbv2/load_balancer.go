@@ -1196,7 +1196,7 @@ func waitForNLBNetworkInterfacesToDetach(ctx context.Context, conn *ec2.Client, 
 	return err
 }
 
-func waitCapacityReservationProvisioned(ctx context.Context, conn *elasticloadbalancingv2.Client, lbArn string, timeout time.Duration) (*elasticloadbalancingv2.DescribeCapacityReservationOutput, error) {
+func waitCapacityReservationProvisioned(ctx context.Context, conn *elasticloadbalancingv2.Client, lbArn string, timeout time.Duration) (*elasticloadbalancingv2.DescribeCapacityReservationOutput, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.CapacityReservationStateEnumPending, awstypes.CapacityReservationStateEnumFailed, awstypes.CapacityReservationStateEnumRebalancing),
 		Target:     enum.Slice(awstypes.CapacityReservationStateEnumProvisioned),
