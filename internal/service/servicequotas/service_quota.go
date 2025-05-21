@@ -52,17 +52,22 @@ func ResourceServiceQuota() *schema.Resource {
 			},
 			"quota_code": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
+				Computed: true,
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 128),
 					validation.StringMatch(regexache.MustCompile(`^[A-Za-z]`), "must begin with alphabetic character"),
 					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]+$`), "must contain only alphanumeric and hyphen characters"),
 				),
+				ExactlyOneOf: []string{"quota_code", "quota_name"},
 			},
 			"quota_name": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ExactlyOneOf: []string{"quota_code", "quota_name"},
 			},
 			"request_id": {
 				Type:     schema.TypeString,
@@ -144,7 +149,18 @@ func resourceServiceQuotaCreate(ctx context.Context, d *schema.ResourceData, met
 
 	quotaCode := d.Get("quota_code").(string)
 	serviceCode := d.Get("service_code").(string)
+	quotaName := d.Get("quota_name").(string)
 	value := d.Get(names.AttrValue).(float64)
+
+	// Lookup quotaCode if it has not been provided
+	if quotaName != "" {
+		defaultQuota, err := findServiceQuotaDefaultByName(ctx, conn, serviceCode, quotaName)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "getting Default Service Quota for (%s/%s): %s", serviceCode, quotaName, err)
+		}
+
+		quotaCode = aws.ToString(defaultQuota.QuotaCode)
+	}
 
 	// A Service Quota will always have a default value, but will only have a current value if it has been set.
 	// If it is not set, `GetServiceQuota` will return "NoSuchResourceException"
