@@ -50,6 +50,7 @@ jobs:
           jira_github_url_field_id: 'cf[10089]'
           github_release_name: ${{ needs.on-success-or-workflow-dispatch.outputs.release-tag }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
+
   on-failure:
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'failure' }}
@@ -59,6 +60,7 @@ jobs:
   start-registry-check:
     name: Start Registry Check
     runs-on: ubuntu-latest
+    needs: [on-success-or-workflow-dispatch]
     permissions:
       actions: write
     steps:
@@ -66,9 +68,10 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.on-success-or-workflow-dispatch.outputs.release-tag }}
         run: |
           gh workflow run \
             --repo ${{ github.repository }} \
             --ref main \
-            --field version=${{ github.event.client_payload.payload.version }} \
+            --field version=${VERSION:1} \
             registry-check.yml
