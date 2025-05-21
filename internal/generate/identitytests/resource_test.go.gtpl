@@ -81,11 +81,6 @@ plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), know
 {{ if gt (len .ImportStateID) 0 -}}
 	ImportStateId: {{ .ImportStateID }},
 {{ end -}}
-{{ if gt (len .ImportStateIDFunc) 0 -}}
-	ImportStateIdFunc: {{ .ImportStateIDFunc }}(resourceName),
-{{ else if .HasImportStateIDAttribute -}}
-	ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, {{ .ImportStateIDAttribute }}),
-{{ end -}}
 	ImportStateVerify: true,
 {{ if .HasImportStateIDAttribute -}}
 	ImportStateVerifyIdentifierAttribute: {{ .ImportStateIDAttribute }},
@@ -93,6 +88,27 @@ plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), know
 {{- end }}
 
 {{ define "ImportCommandWithIDBody" }}
+{{ if gt (len .ImportStateIDFunc) 0 -}}
+	ImportStateIdFunc: {{ .ImportStateIDFunc }}(resourceName),
+{{ else if .HasImportStateIDAttribute -}}
+	ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, {{ .ImportStateIDAttribute }}),
+{{ end -}}
+{{ template "CommonImportBody" . -}}
+{{- if gt (len .ImportIgnore) 0 -}}
+	ImportStateVerifyIgnore: []string{
+	{{ range $i, $v := .ImportIgnore }}{{ $v }},{{ end }}
+	},
+{{- end }}
+{{ end }}
+
+{{ define "ImportCommandWithIDBodyCrossRegion" }}
+{{ if gt (len .ImportStateIDFunc) 0 -}}
+	ImportStateIdFunc: acctest.CrossRegionImportStateIdFuncAdapter(resourceName, {{ .ImportStateIDFunc }}),
+{{ else if .HasImportStateIDAttribute -}}
+	// TODO
+{{ else -}}
+	ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
+{{ end -}}
 {{ template "CommonImportBody" . -}}
 {{- if gt (len .ImportIgnore) 0 -}}
 	ImportStateVerifyIgnore: []string{
@@ -241,8 +257,7 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 						{{ template "AdditionalTfVars" . -}}
 						"region": config.StringVariable(acctest.AlternateRegion()),
 					},
-					ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
-					{{- template "ImportCommandWithIDBody" . -}}
+					{{- template "ImportCommandWithIDBodyCrossRegion" . -}}
 				},
 				{{ if .IsARNIdentity }}
 				// Import without appended "@<region>"
