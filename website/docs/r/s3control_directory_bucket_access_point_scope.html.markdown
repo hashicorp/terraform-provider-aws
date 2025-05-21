@@ -77,5 +77,5 @@ import {
 Using `terraform import`, import Access Point Scope using access point name and AWS account ID separated by a colon (`,`). For example:
 
 ```console
-% terraform import aws_s3control_directory_access_point_scope.example example--zoneid--xa-s3,123456789012
+% terraform import aws_s3control_directory_bucket_access_point_scope.example example--zoneid--xa-s3,123456789012
 ```
