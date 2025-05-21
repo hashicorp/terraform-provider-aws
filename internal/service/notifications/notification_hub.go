@@ -31,8 +31,8 @@ import (
 )
 
 // @FrameworkResource("aws_notifications_notification_hub", name="Notification Hub")
-func newResourceNotificationHub(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceNotificationHub{}
+func newNotificationHubResource(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &notificationHubResource{}
 
 	r.SetDefaultCreateTimeout(20 * time.Minute)
 	r.SetDefaultDeleteTimeout(20 * time.Minute)
@@ -40,13 +40,13 @@ func newResourceNotificationHub(_ context.Context) (resource.ResourceWithConfigu
 	return r, nil
 }
 
-type resourceNotificationHub struct {
+type notificationHubResource struct {
 	framework.ResourceWithConfigure
 	framework.WithTimeouts
 	framework.WithNoUpdate
 }
 
-func (r *resourceNotificationHub) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+func (r *notificationHubResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"notification_hub_region": schema.StringAttribute{
@@ -65,8 +65,8 @@ func (r *resourceNotificationHub) Schema(ctx context.Context, request resource.S
 	}
 }
 
-func (r *resourceNotificationHub) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
-	var data resourceNotificationHubModel
+func (r *notificationHubResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data notificationHubResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -95,8 +95,8 @@ func (r *resourceNotificationHub) Create(ctx context.Context, request resource.C
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-func (r *resourceNotificationHub) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
-	var data resourceNotificationHubModel
+func (r *notificationHubResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data notificationHubResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -122,8 +122,8 @@ func (r *resourceNotificationHub) Read(ctx context.Context, request resource.Rea
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceNotificationHub) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
-	var data resourceNotificationHubModel
+func (r *notificationHubResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data notificationHubResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -158,7 +158,7 @@ func (r *resourceNotificationHub) Delete(ctx context.Context, request resource.D
 	}
 }
 
-func (r *resourceNotificationHub) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+func (r *notificationHubResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("notification_hub_region"), request, response)
 }
 
@@ -272,7 +272,7 @@ func waitNotificationHubDeleted(ctx context.Context, conn *notifications.Client,
 	return nil, err
 }
 
-type resourceNotificationHubModel struct {
+type notificationHubResourceModel struct {
 	NotificationHubRegion types.String   `tfsdk:"notification_hub_region"`
 	Timeouts              timeouts.Value `tfsdk:"timeouts"`
 }

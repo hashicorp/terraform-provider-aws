@@ -5,7 +5,7 @@ package notifications
 
 // Exports for use in tests only.
 var (
-	ResourceNotificationHub = newResourceNotificationHub
+	ResourceNotificationHub = newNotificationHubResource
 
 	FindNotificationHubByRegion = findNotificationHubByRegion
 )
