@@ -34,7 +34,7 @@ resource "aws_appfabric_app_authorization" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
 * `app` - (Required) The name of the application for valid values see https://docs.aws.amazon.com/appfabric/latest/api/API_CreateAppAuthorization.html.
 * `app_bundle_arn` - (Required) The Amazon Resource Name (ARN) of the app bundle to use for the request.

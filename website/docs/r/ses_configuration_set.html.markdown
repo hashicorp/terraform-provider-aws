@@ -46,11 +46,11 @@ resource "aws_ses_configuration_set" "test" {
 
 ## Argument Reference
 
-The following argument is required:
+The following arguments are required:
 
 * `name` - (Required) Name of the configuration set.
 
-The following argument is optional:
+The following arguments are optional:
 
 * `delivery_options` - (Optional) Whether messages that use the configuration set are required to use TLS. See below.
 * `reputation_metrics_enabled` - (Optional) Whether or not Amazon SES publishes reputation metrics for the configuration set, such as bounce and complaint rates, to Amazon CloudWatch. The default value is `false`.

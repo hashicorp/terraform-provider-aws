@@ -39,7 +39,7 @@ resource "aws_securitylake_subscriber_notification" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
 * `subscriber_id` - (Required) The subscriber ID for the notification subscription.
 * `configuration` - (Required) Specify the configuration using which you want to create the subscriber notification..

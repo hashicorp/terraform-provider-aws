@@ -2239,6 +2239,42 @@ func TestAccELBV2LoadBalancer_ALB_updateXffClientPort(t *testing.T) {
 	})
 }
 
+func TestAccELBV2LoadBalancer_updateCapacityReservation(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.LoadBalancer
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lb.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLoadBalancerConfig_capacityReservation(rName, 100),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "minimum_load_balancer_capacity.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "minimum_load_balancer_capacity.0.capacity_units", "100"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccLoadBalancerConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "minimum_load_balancer_capacity.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckLoadBalancerNotRecreated(i, j *awstypes.LoadBalancer) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.ToString(i.LoadBalancerArn) != aws.ToString(j.LoadBalancerArn) {
@@ -3583,4 +3619,22 @@ resource "aws_lb" "test" {
   }
 }
 `, rName, zs))
+}
+
+func testAccLoadBalancerConfig_capacityReservation(rName string, unit int) string {
+	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseInternal(rName, 2), fmt.Sprintf(`
+resource "aws_lb" "test" {
+  name            = %[1]q
+  internal        = true
+  security_groups = [aws_security_group.test.id]
+  subnets         = slice(aws_subnet.test[*].id, 0, 2)
+
+  idle_timeout               = 30
+  enable_deletion_protection = false
+
+  minimum_load_balancer_capacity {
+    capacity_units = %[2]d
+  }
+}
+`, rName, unit))
 }
