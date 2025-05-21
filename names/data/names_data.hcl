@@ -4136,6 +4136,7 @@ service "iotevents" {
   provider_package_correct = "iotevents"
   doc_prefix               = ["iotevents_"]
   brand                    = "AWS"
+  not_implemented          = true
 }
 
 service "ioteventsdata" {

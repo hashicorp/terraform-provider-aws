@@ -139,7 +139,6 @@ Inspector
 Inspector Classic
 Invoicing
 IoT Core
-IoT Events
 IoT Greengrass
 KMS (Key Management)
 Kendra

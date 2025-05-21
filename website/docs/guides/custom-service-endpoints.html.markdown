@@ -207,7 +207,6 @@ provider "aws" {
 |CloudWatch Internet Monitor|`internetmonitor`|`AWS_ENDPOINT_URL_INTERNETMONITOR`|`internetmonitor`|
 |Invoicing|`invoicing`|`AWS_ENDPOINT_URL_INVOICING`|`invoicing`|
 |IoT Core|`iot`|`AWS_ENDPOINT_URL_IOT`|`iot`|
-|IoT Events|`iotevents`|`AWS_ENDPOINT_URL_IOT_EVENTS`|`iot_events`|
 |IVS (Interactive Video)|`ivs`|`AWS_ENDPOINT_URL_IVS`|`ivs`|
 |IVS (Interactive Video) Chat|`ivschat`|`AWS_ENDPOINT_URL_IVSCHAT`|`ivschat`|
 |Managed Streaming for Kafka|`kafka`(or `msk`)|`AWS_ENDPOINT_URL_KAFKA`|`kafka`|
