@@ -1574,6 +1574,22 @@ func statusNATGatewayAddressByNATGatewayIDAndPrivateIP(ctx context.Context, conn
 	}
 }
 
+func statusNATGatewayAddressByNATGatewayIDAndCountID(ctx context.Context, conn *ec2.Client, natGatewayID string, countID int) retry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findNATGatewayAddressByNATGatewayIDAndCountID(ctx, conn, natGatewayID, countID)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.Status), nil
+	}
+}
+
 func statusNetworkInsightsAnalysis(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findNetworkInsightsAnalysisByID(ctx, conn, id)
