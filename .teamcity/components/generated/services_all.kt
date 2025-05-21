@@ -127,8 +127,6 @@ val services = mapOf(
     "internetmonitor" to ServiceSpec("CloudWatch Internet Monitor"),
     "invoicing" to ServiceSpec("Invoicing"),
     "iot" to ServiceSpec("IoT Core"),
-    "iotanalytics" to ServiceSpec("IoT Analytics"),
-    "iotevents" to ServiceSpec("IoT Events"),
     "ipam" to ServiceSpec("VPC IPAM (IP Address Manager)", vpcLock = true, patternOverride = "TestAccIPAM", splitPackageRealPackage = "ec2"),
     "ivs" to ServiceSpec("IVS (Interactive Video)"),
     "ivschat" to ServiceSpec("IVS (Interactive Video) Chat"),

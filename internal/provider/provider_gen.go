@@ -1167,22 +1167,6 @@ func endpointsSchema() *schema.Schema {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
-				// iotanalytics
-
-				"iotanalytics": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Description: "Use this to override the default service endpoint URL",
-				},
-
-				// iotevents
-
-				"iotevents": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Description: "Use this to override the default service endpoint URL",
-				},
-
 				// ivs
 
 				"ivs": {

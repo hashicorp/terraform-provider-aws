@@ -23,7 +23,7 @@ resource "aws_emr_studio_session_mapping" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
 * `identity_id`- (Optional) The globally unique identifier (GUID) of the user or group from the Amazon Web Services SSO Identity Store.
 * `identity_name` - (Optional) The name of the user or group from the Amazon Web Services SSO Identity Store.
