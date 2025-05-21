@@ -43,6 +43,11 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Name:     "Access Grants Location",
 			Tags:     &types.ServicePackageResourceTags{},
 		},
+		{
+			Factory:  newDirectoryBucketAccessPointScopeResource,
+			TypeName: "aws_s3control_directory_bucket_access_point_scope",
+			Name:     "Directory Bucket Access Point Scope",
+		},
 	}
 }
 
@@ -103,11 +108,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceAccessPointForDirectoryBucketPolicy,
 			TypeName: "aws_s3control_directory_access_point_policy",
 			Name:     "Directory Access Point Policy",
-		},
-		{
-			Factory:  resourceAccessPointForDirectoryBucketScope,
-			TypeName: "aws_s3control_directory_bucket_access_point_scope",
-			Name:     "Directory Access Point Scope",
 		},
 		{
 			Factory:  resourceMultiRegionAccessPoint,
