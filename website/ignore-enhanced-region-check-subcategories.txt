@@ -19,5 +19,6 @@ Route 53 Recovery Control Config
 Route 53 Recovery Readiness
 STS (Security Token)
 Shield
+User Notifications
 WAF Classic
 Web Services Budgets
