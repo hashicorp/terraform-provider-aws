@@ -24,7 +24,7 @@ resource "aws_backup_logically_air_gapped_vault" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
 * `name` - (Required) Name of the Logically Air Gapped Backup Vault to create.
 * `max_retention_days` - (Required) Maximum retention period that the Logically Air Gapped Backup Vault retains recovery points.
