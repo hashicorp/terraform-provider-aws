@@ -1,0 +1,35 @@
+```release-note:enhancement
+resource/aws_dlm_lifecycle_policy: Added `default_policy` argument
+```
+
+```release-note:enhancement
+resource/aws_dlm_lifecycle_policy: Add `copy_tags`,`create_interval`,`exclusions`,`extend_deletion`,`policy_language`,`resource_type` and `retain_interval` arguments to `policy_details`
+```
+
+```release-note:enhancement
+resource/aws_dlm_lifecycle_policy: Add `scripts` argument to `create_rule`
+```
+
+```release-note:enhancement
+resource/aws_dlm_lifecycle_policy: Add `execute_operation_on_script_failure`, `execution_handler`, `execution_handler_service`, `execution_timeout`, `maximum_retry_count` and `stages` arguments to `scripts`
+```
+
+```release-note:enhancement
+resource/aws_dlm_lifecycle_policy: Add `exclude_boot_volumes`, `exclude_tags` and `exclude_volume_types` arguments to `exclusions`
+```
+
+```release-note:enhancement
+resource/aws_dlm_lifecycle_policy: Add `archive_rule` argument to `schedule`
+```
+
+```release-note:enhancement
+resource/aws_dlm_lifecycle_policy: Add `archive_retain_rule` argument to `archive_rule`
+```
+
+```release-note:enhancement
+resource/aws_dlm_lifecycle_policy: Add `retention_archive_tier` argument to `archive_retain_rule`
+```
+
+```release-note:enhancement
+resource/aws_dlm_lifecycle_policy: Add `count`,`interval` and `interval_unit`  arguments to `retention_archive_tier`
+```
