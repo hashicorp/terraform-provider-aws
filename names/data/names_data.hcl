@@ -1841,7 +1841,8 @@ service "codegurureviewer" {
 
 service "codepipeline" {
   sdk {
-    id = "CodePipeline"
+    id          = "CodePipeline"
+    arn_service = "codepipeline"
   }
 
   names {
