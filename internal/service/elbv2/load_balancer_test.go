@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
 	"regexp"
 	"testing"
 
@@ -2242,11 +2241,6 @@ func TestAccELBV2LoadBalancer_ALB_updateXffClientPort(t *testing.T) {
 
 func TestAccELBV2LoadBalancer_updateCapacityReservation(t *testing.T) {
 	ctx := acctest.Context(t)
-	key := "RUN_LB_CAPACITY_RESERVATION_TESTS"
-	vifId := os.Getenv(key)
-	if vifId != acctest.CtTrue {
-		t.Skipf("Environment variable %s is not set to true", key)
-	}
 	var conf awstypes.LoadBalancer
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb.test"
