@@ -2,6 +2,7 @@
 
 BREAKING CHANGES:
 
+* provider: The `endpoints.iotanalytics` and `endpoints.iotevents` configuration arguments have been removed ([#42703](https://github.com/hashicorp/terraform-provider-aws/issues/42703))
 * resource/aws_sagemaker_image_version: `id` is now a comma-delimited string concatenating `image_name` and `version` ([#42536](https://github.com/hashicorp/terraform-provider-aws/issues/42536))
 
 NOTES:
