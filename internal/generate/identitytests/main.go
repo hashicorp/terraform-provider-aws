@@ -169,6 +169,11 @@ func main() {
 				g.Fatalf("parsing base Terraform config template: %s", err)
 			}
 
+			tfTemplates, err = tfTemplates.Parse(acctestTfTmpl)
+			if err != nil {
+				g.Fatalf("parsing common \"acctest\" config template: %s", err)
+			}
+
 			_, err = tfTemplates.New("body").Parse(configTmpl)
 			if err != nil {
 				g.Fatalf("parsing config template %q: %s", tagsConfigTmplFile, err)
@@ -354,6 +359,9 @@ type ConfigDatum struct {
 
 //go:embed resource_test.go.gtpl
 var resourceTestGoTmpl string
+
+//go:embed acctest.tf.gtpl
+var acctestTfTmpl string
 
 //go:embed test.tf.gtpl
 var testTfTmpl string
