@@ -44,9 +44,8 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of the Cluster.
 * `identifier` - Cluster Identifier.
-* `multi_region_properties` - (Optional) Multi-region properties of the DSQL Cluster.
+* `multi_region_properties` - Multi-region properties of the DSQL Cluster.
     * `clusters` - List of DSQL Cluster ARNs peered to this cluster.
-    * `witness_region` - Witness region for the multi-region clusters.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Timeouts
