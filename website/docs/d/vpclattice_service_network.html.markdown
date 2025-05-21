@@ -22,7 +22,7 @@ data "aws_vpclattice_service_network" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
 * `service_network_identifier` - (Required) Identifier of the service network.
 

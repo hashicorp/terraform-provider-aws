@@ -462,12 +462,12 @@ func resourceGrantConstraintsHash(v any) int {
 
 	if v, ok := tfMap["encryption_context_equals"]; ok {
 		if len(v.(map[string]any)) > 0 {
-			buf.WriteString(fmt.Sprintf("encryption_context_equals-%s-", sortedConcatStringMap(flex.ExpandStringValueMap(v.(map[string]any)))))
+			fmt.Fprintf(&buf, "encryption_context_equals-%s-", sortedConcatStringMap(flex.ExpandStringValueMap(v.(map[string]any))))
 		}
 	}
 	if v, ok := tfMap["encryption_context_subset"]; ok {
 		if len(v.(map[string]any)) > 0 {
-			buf.WriteString(fmt.Sprintf("encryption_context_subset-%s-", sortedConcatStringMap(flex.ExpandStringValueMap(v.(map[string]any)))))
+			fmt.Fprintf(&buf, "encryption_context_subset-%s-", sortedConcatStringMap(flex.ExpandStringValueMap(v.(map[string]any))))
 		}
 	}
 

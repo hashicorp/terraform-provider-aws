@@ -22,6 +22,8 @@ data "aws_sfn_state_machine" "example" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `name` - (Required) Friendly name of the state machine to match.
 
 ## Attribute Reference

@@ -38,6 +38,8 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `customKeyStoreId` - (Optional) The ID for the custom key store.
 * `customKeyStoreName` - (Optional) The user-specified friendly name for the custom key store.
 
@@ -51,4 +53,4 @@ This data source exports the following attributes in addition to the arguments a
 * `creationDate` - The date and time when the custom key store was created.
 * `trustAnchorCertificate` - The trust anchor certificate of the associated CloudHSM cluster.
 
-<!-- cache-key: cdktf-0.20.8 input-c99ed837841abb6fb88fc77efec11deea74fe80e9ca93d91eb217568414d6862 -->
+<!-- cache-key: cdktf-0.20.8 input-521afc4759abd94646fb15395b70fca2daf4d26406d5273ead2d288d6aa13682 -->

@@ -22,6 +22,8 @@ data "aws_licensemanager_received_license" "test" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `license_arn` - (Required) The ARN of the received license you want data for.
 
 ## Attribute Reference

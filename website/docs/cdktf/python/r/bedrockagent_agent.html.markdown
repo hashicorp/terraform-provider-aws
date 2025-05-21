@@ -105,7 +105,7 @@ The following arguments are optional:
 * `description` - (Optional) Description of the agent.
 * `guardrail_configuration` - (Optional) Details about the guardrail associated with the agent. See [`guardrail_configuration` Block](#guardrail_configuration-block) for details.
 * `idle_session_ttl_in_seconds` - (Optional) Number of seconds for which Amazon Bedrock keeps information about a user's conversation with the agent. A user interaction remains active for the amount of time specified. If no conversation occurs during this time, the session expires and Amazon Bedrock deletes any data provided before the timeout.
-* `instruction` - (Optional) Instructions that tell the agent what it should do and how it should interact with users. The valid range is 40 - 8000 characters.
+* `instruction` - (Optional) Instructions that tell the agent what it should do and how it should interact with users. The valid range is 40 - 20000 characters.
 * `memory_configuration` (Optional) Configurations for the agent's ability to retain the conversational context.
 * `prepare_agent` (Optional) Whether to prepare the agent after creation or modification. Defaults to `true`.
 * `prompt_override_configuration` (Optional) Configurations to override prompt templates in different parts of an agent sequence. For more information, see [Advanced prompts](https://docs.aws.amazon.com/bedrock/latest/userguide/advanced-prompts.html). See [`prompt_override_configuration` Block](#prompt_override_configuration-block) for details.
@@ -162,6 +162,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `agent_id` - Unique identifier of the agent.
 * `agent_version` - Version of the agent.
 * `id` - Unique identifier of the agent.
+* `prepared_at` - Timestamp of when the agent was last prepared.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
@@ -197,4 +198,4 @@ Using `terraform import`, import Agents for Amazon Bedrock Agent using the agent
 % terraform import aws_bedrockagent_agent.example GGRRAED6JP
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-74bfbe758e52c4d916b5181cc494b11841cf02d99c62e86e248858a9a754488f -->
+<!-- cache-key: cdktf-0.20.8 input-ff5d8123b17c10d54bd6aee6fe0c178bf6cf0326d7c5717f62293d4c9c74dc82 -->

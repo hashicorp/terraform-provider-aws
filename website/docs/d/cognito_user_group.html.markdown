@@ -23,7 +23,7 @@ data "aws_cognito_user_group" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
 * `name` - (Required) Name of the user group.
 * `user_pool_id` - (Required) User pool the client belongs to.

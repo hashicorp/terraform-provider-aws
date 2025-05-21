@@ -810,13 +810,13 @@ func generateStartTimes(resourceName, amount string, now time.Time) (string, []r
 
 	configBuilder := strings.Builder{}
 	for i := range startTimes {
-		configBuilder.WriteString(fmt.Sprintf(`
+		fmt.Fprintf(&configBuilder, `
 planned_limit {
   start_time = %[1]q
   amount     = %[2]q
   unit       = "USD"
 }
-`, tfbudgets.TimePeriodTimestampToString(&startTimes[i]), amount))
+`, tfbudgets.TimePeriodTimestampToString(&startTimes[i]), amount)
 	}
 
 	testCheckFuncs := make([]resource.TestCheckFunc, len(startTimes))

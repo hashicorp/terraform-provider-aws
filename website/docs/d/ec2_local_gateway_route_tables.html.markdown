@@ -24,9 +24,10 @@ output "foo" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `tags` - (Optional) Mapping of tags, each pair of which must exactly match
   a pair on the desired local gateway route table.
-
 * `filter` - (Optional) Custom filter block as described below.
 
 More complex filters can be expressed using one or more `filter` sub-blocks,

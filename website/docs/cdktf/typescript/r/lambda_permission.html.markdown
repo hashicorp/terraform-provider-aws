@@ -308,6 +308,8 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `action` - (Required) The AWS Lambda action you want to allow in this statement. (e.g., `lambda:InvokeFunction`)
 * `eventSourceToken` - (Optional) The Event Source Token to validate.  Used with [Alexa Skills][1].
 * `functionName` - (Required) Name of the Lambda function whose resource policy you are updating
@@ -390,4 +392,4 @@ Using `terraform import`, import Lambda permission statements using function_nam
 % terraform import aws_lambda_permission.test_lambda_permission my_test_lambda_function:qualifier_name/AllowExecutionFromCloudWatch
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-cc2da36a2a783465b1859d2644dd511fddd678311843151f41d2c8287a0c1159 -->
+<!-- cache-key: cdktf-0.20.8 input-8517c51e6c57e2ee3b3f163f0a9e52cc1b9587ee21a3e7a1b1cd43cb03841a62 -->

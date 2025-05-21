@@ -6,7 +6,7 @@ description: |-
   Provides a Lambda function URL data source.
 ---
 
-# aws_lambda_function_url
+# Data Source: aws_lambda_function_url
 
 Provides information about a Lambda function URL.
 

@@ -25,8 +25,6 @@ resource "aws_ebs_volume" "example" {
 
 ## Argument Reference
 
-~> **NOTE:** At least one of `size` or `snapshot_id` is required.
-
 This resource supports the following arguments:
 
 * `availability_zone` - (Required) Availability zone where the EBS volume will exist.
@@ -41,6 +39,8 @@ This resource supports the following arguments:
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `throughput` - (Optional) Throughput that the volume supports, in MiB/s. Only valid for `type` of `gp3`.
 * `type` - (Optional) Type of EBS volume. Can be `standard`, `gp2`, `gp3`, `io1`, `io2`, `sc1` or `st1` (Default: `gp2`).
+
+~> **NOTE:** At least one of `size` or `snapshot_id` is required.
 
 ~> **NOTE:** When changing the `size`, `iops` or `type` of an instance, there are [considerations](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/considerations.html) to be aware of.
 

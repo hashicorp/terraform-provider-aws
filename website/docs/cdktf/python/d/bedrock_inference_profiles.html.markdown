@@ -33,7 +33,7 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-There are no arguments available for this data source.
+This data source does not support any arguments.
 
 ## Attribute Reference
 
@@ -57,4 +57,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `model_arn` - The Amazon Resource Name (ARN) of the model.
 
-<!-- cache-key: cdktf-0.20.8 input-101042021f209852176299b58519c0e75fd1aea62727f5ca4d19d09ee337c1db -->
+<!-- cache-key: cdktf-0.20.8 input-3bf2b37215f46c5350daa1f6bc077759b295659ccfd2fcfc3fbfc55c95ba2afd -->

@@ -36,6 +36,8 @@ resource "kubernetes_pod" "agent" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `endpoint_type` - (Optional) Endpoint type. Valid values: `iot:CredentialProvider`, `iot:Data`, `iot:Data-ATS`, `iot:Jobs`.
 
 ## Attribute Reference

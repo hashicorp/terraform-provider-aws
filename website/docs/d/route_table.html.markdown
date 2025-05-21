@@ -32,9 +32,7 @@ resource "aws_route" "route" {
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available Route Table in the current region. The given filters must match exactly one Route Table whose data will be exported as attributes.
-
-The following arguments are optional:
+This data source supports the following arguments:
 
 * `filter` - (Optional) Configuration block. Detailed below.
 * `gateway_id` - (Optional) ID of an Internet Gateway or Virtual Private Gateway which is connected to the Route Table (not exported if not passed as a parameter).

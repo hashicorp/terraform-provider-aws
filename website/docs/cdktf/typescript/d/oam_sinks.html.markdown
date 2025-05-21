@@ -34,10 +34,14 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
+## Argument Reference
+
+This data source does not support any arguments.
+
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
 * `arns` - Set of ARN of the Sinks.
 
-<!-- cache-key: cdktf-0.20.8 input-b46f5566657905f2a09bc4770daf56461626b99543a0e965bfb54b6891ad7156 -->
+<!-- cache-key: cdktf-0.20.8 input-51535035edc0412e5b91879d334b22be584b718a2d6fca158f5eca2c4cb68f7c -->

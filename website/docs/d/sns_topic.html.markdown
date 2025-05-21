@@ -22,6 +22,8 @@ data "aws_sns_topic" "example" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `name` - (Required) Friendly name of the topic to match.
 
 ## Attribute Reference

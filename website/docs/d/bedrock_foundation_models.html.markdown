@@ -28,7 +28,7 @@ data "aws_bedrock_foundation_models" "test" {
 
 ## Argument Reference
 
-The following arguments are optional:
+This data source supports the following arguments:
 
 * `by_customization_type` - (Optional) Customization type to filter on. Valid values are `FINE_TUNING`.
 * `by_inference_type` - (Optional) Inference type to filter on. Valid values are `ON_DEMAND` and `PROVISIONED`.

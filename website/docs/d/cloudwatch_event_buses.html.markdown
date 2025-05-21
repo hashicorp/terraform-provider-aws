@@ -22,7 +22,7 @@ data "aws_cloudwatch_event_buses" "example" {
 
 ## Argument Reference
 
-The following arguments are optional:
+This data source supports the following arguments:
 
 * `name_prefix` - (Optional) Specifying this limits the results to only those event buses with names that start with the specified prefix.
 

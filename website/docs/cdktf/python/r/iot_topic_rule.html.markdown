@@ -91,6 +91,8 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `name` - (Required) The name of the rule.
 * `description` - (Optional) The description of the rule.
 * `enabled` - (Required) Specifies whether the rule is enabled.
@@ -276,4 +278,4 @@ Using `terraform import`, import IoT Topic Rules using the `name`. For example:
 % terraform import aws_iot_topic_rule.rule <name>
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-ee820e8d0c64a28bff215e3aea3a653758f560996e79bc2b74ed2938a5d291c8 -->
+<!-- cache-key: cdktf-0.20.8 input-890085d11823831d294f49f441689f282a28b5ca6c8cd2abd41bb6fe9b7f9acd -->

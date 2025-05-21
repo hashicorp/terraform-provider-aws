@@ -15,13 +15,13 @@ These are the locations that can be specified when configuring [`aws_dx_connecti
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_dx_locations" "available" {}
 ```
 
 ## Argument Reference
 
-There are no arguments available for this data source.
+This data source does not support any arguments.
 
 ## Attribute Reference
 

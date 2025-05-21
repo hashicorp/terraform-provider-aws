@@ -14,7 +14,7 @@ Get information on EC2 Transit Gateway VPC Attachments.
 
 ### By Filter
 
-```hcl
+```terraform
 data "aws_ec2_transit_gateway_vpc_attachments" "filtered" {
   filter {
     name   = "state"

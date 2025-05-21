@@ -201,7 +201,7 @@ func resourceSubscriptionFilterImport(d *schema.ResourceData, meta any) ([]*sche
 func subscriptionFilterCreateResourceID(logGroupName string) string {
 	var buf bytes.Buffer
 
-	buf.WriteString(fmt.Sprintf("%s-", logGroupName)) // only one filter allowed per log_group_name at the moment
+	fmt.Fprintf(&buf, "%s-", logGroupName) // only one filter allowed per log_group_name at the moment
 
 	return fmt.Sprintf("cwlsf-%d", create.StringHashcode(buf.String()))
 }

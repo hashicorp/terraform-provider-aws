@@ -36,6 +36,8 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `name` - (Required, Forces New Resource) The name of the thing type.
 * `deprecated` - (Optional, Defaults to false) Whether the thing type is deprecated. If true, no new things could be associated with this type.
 * `properties` - (Optional), Configuration block that can contain the following properties of the thing type:
@@ -78,4 +80,4 @@ Using `terraform import`, import IOT Thing Types using the name. For example:
 % terraform import aws_iot_thing_type.example example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-f6bb5e58ad214ec278c62df3ca0c39674a3e3f822552368c4b48cf6dedb96258 -->
+<!-- cache-key: cdktf-0.20.8 input-27591140708a4ce28780fae589a81355fee9d90b3492e5558ef7e3ac646698b7 -->

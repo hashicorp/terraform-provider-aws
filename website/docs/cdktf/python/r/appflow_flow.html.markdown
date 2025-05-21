@@ -214,6 +214,7 @@ EventBridge, Honeycode, and Marketo destination properties all support the follo
 * `error_handling_config` - (Optional) Settings that determine how Amazon AppFlow handles an error when placing data in the destination. See [Error Handling Config](#error-handling-config) for more details.
 * `id_field_names` - (Optional) Name of the field that Amazon AppFlow uses as an ID when performing a write operation such as update or delete.
 * `write_operation_type` - (Optional) This specifies the type of write operation to be performed in Salesforce. When the value is `UPSERT`, then `id_field_names` is required. Valid values are `INSERT`, `UPSERT`, `UPDATE`, and `DELETE`.
+* `data_transfer_api` - (Optional) Specifies which Salesforce API is used by Amazon AppFlow when your flow transfers data to Salesforce.
 
 ##### SAPOData Destination Properties
 
@@ -457,4 +458,4 @@ Using `terraform import`, import AppFlow flows using the `arn`. For example:
 % terraform import aws_appflow_flow.example arn:aws:appflow:us-west-2:123456789012:flow/example-flow
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-ebece2049267e2e946c15e412a2838dd2355365a39ed91a787b4dd1c249fb5b3 -->
+<!-- cache-key: cdktf-0.20.8 input-c2350fc035ee34cd63ff3c0d3d7adb80f48de43603f5751648444172f758e465 -->

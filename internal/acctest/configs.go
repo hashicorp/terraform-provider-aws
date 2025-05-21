@@ -912,8 +912,8 @@ ephemeral "aws_secretsmanager_random_password" "test" {
 `)
 
 	// Add default keys
-	builder.WriteString(fmt.Sprintf("  password_length     = %s\n", config["password_length"]))
-	builder.WriteString(fmt.Sprintf("  exclude_punctuation = %s\n", config["exclude_punctuation"]))
+	fmt.Fprintf(&builder, "  password_length     = %s\n", config["password_length"])
+	fmt.Fprintf(&builder, "  exclude_punctuation = %s\n", config["exclude_punctuation"])
 
 	// Add optional keys in a consistent order
 	for _, key := range optionalKeys {
@@ -925,12 +925,12 @@ ephemeral "aws_secretsmanager_random_password" "test" {
 					value = value[1 : len(value)-1]
 				}
 				value = strings.ReplaceAll(value, `\"`, `"`)
-				builder.WriteString(fmt.Sprintf("  %s = %q\n", key, value))
+				fmt.Fprintf(&builder, "  %s = %q\n", key, value)
 				continue
 			}
 
 			// Default handling for other keys
-			builder.WriteString(fmt.Sprintf("  %s = %s\n", key, value))
+			fmt.Fprintf(&builder, "  %s = %s\n", key, value)
 		}
 	}
 
