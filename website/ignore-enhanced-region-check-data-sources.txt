@@ -11,3 +11,4 @@ aws_regions
 aws_s3_account_public_access_block
 aws_servicequotas_templates
 aws_ssmincidents_replication_set
+aws_canonical_user_id
