@@ -13,14 +13,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfs3control "github.com/hashicorp/terraform-provider-aws/internal/service/s3control"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccS3ControlAccessPointForDirectoryBucketScope_basic(t *testing.T) {
+func TestAccS3ControlDirectoryBucketAccessPointScope_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "aws_s3control_directory_access_point_scope.test_scope"
+	resourceName := "aws_s3control_directory_bucket_access_point_scope.test"
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	accessPointName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -28,7 +29,7 @@ func TestAccS3ControlAccessPointForDirectoryBucketScope_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccessPointForDirectoryBucketScopeDestroy(ctx),
+		CheckDestroy:             testAccCheckDirectoryBucketAccessPointScopeDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDirectoryBucketConfig_basic(bucketName) + testAccAccessPointScopeConfig_basic(accessPointName),
@@ -48,32 +49,18 @@ func TestAccS3ControlAccessPointForDirectoryBucketScope_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName: resourceName,
-				ImportState:  true,
-				ImportStateIdFunc: func(s *terraform.State) (string, error) {
-					rs, ok := s.RootModule().Resources[resourceName]
-					if !ok {
-						return "", fmt.Errorf("not found: %s", resourceName)
-					}
-
-					name := rs.Primary.Attributes[names.AttrName]
-					accountID := rs.Primary.Attributes[names.AttrAccountID]
-
-					if name == "" || accountID == "" {
-						return "", fmt.Errorf("missing name or account_id in state")
-					}
-
-					return fmt.Sprintf("%s:%s", name, accountID), nil
-				},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: directoryBucketAccessPointScopeStateImportFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
 	})
 }
 
-func TestAccS3ControlAccessPointScope_disappears(t *testing.T) {
+func TestAccS3ControlDirectoryBucketAccessPointScope_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "aws_s3control_directory_access_point_scope.test_scope"
+	resourceName := "aws_s3control_directory_bucket_access_point_scope.test"
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	accessPointName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -81,13 +68,13 @@ func TestAccS3ControlAccessPointScope_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccessPointForDirectoryBucketScopeDestroy(ctx),
+		CheckDestroy:             testAccCheckDirectoryBucketAccessPointScopeDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDirectoryBucketConfig_basic(bucketName) + testAccAccessPointScopeConfig_basic(accessPointName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPointForDirectoryBucketScopeExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3control.ResourceAccessPointForDirectoryBucketScope(), resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfs3control.ResourceDirectoryBucketAccessPointScope, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -95,10 +82,9 @@ func TestAccS3ControlAccessPointScope_disappears(t *testing.T) {
 	})
 }
 
-func TestAccS3ControlAccessPointScope_disappears_AccessPoint(t *testing.T) {
+func TestAccS3ControlDirectoryBucketAccessPointScope_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	accessPointResourceName := "aws_s3_directory_access_point.test_ap"
-	resourceName := "aws_s3control_directory_access_point_scope.test_scope"
+	resourceName := "aws_s3control_directory_bucket_access_point_scope.test"
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	accessPointName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -106,31 +92,7 @@ func TestAccS3ControlAccessPointScope_disappears_AccessPoint(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccessPointForDirectoryBucketScopeDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDirectoryBucketConfig_basic(bucketName) + testAccAccessPointScopeConfig_basic(accessPointName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccessPointForDirectoryBucketScopeExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3control.ResourceAccessPointForDirectoryBucket(), accessPointResourceName),
-				),
-				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
-
-func TestAccS3ControlAccessPointScope_update(t *testing.T) {
-	ctx := acctest.Context(t)
-	resourceName := "aws_s3control_directory_access_point_scope.test_scope"
-	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	accessPointName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccessPointForDirectoryBucketScopeDestroy(ctx),
+		CheckDestroy:             testAccCheckDirectoryBucketAccessPointScopeDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDirectoryBucketConfig_basic(bucketName) + testAccAccessPointScopeConfig_basic(accessPointName),
@@ -150,23 +112,9 @@ func TestAccS3ControlAccessPointScope_update(t *testing.T) {
 				),
 			},
 			{
-				ResourceName: resourceName,
-				ImportState:  true,
-				ImportStateIdFunc: func(s *terraform.State) (string, error) {
-					rs, ok := s.RootModule().Resources[resourceName]
-					if !ok {
-						return "", fmt.Errorf("not found: %s", resourceName)
-					}
-
-					name := rs.Primary.Attributes[names.AttrName]
-					accountID := rs.Primary.Attributes[names.AttrAccountID]
-
-					if name == "" || accountID == "" {
-						return "", fmt.Errorf("missing name or account_id in state")
-					}
-
-					return fmt.Sprintf("%s:%s", name, accountID), nil
-				},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: directoryBucketAccessPointScopeStateImportFunc(resourceName),
 
 				ImportStateVerify: true,
 			},
@@ -189,6 +137,17 @@ func TestAccS3ControlAccessPointScope_update(t *testing.T) {
 	})
 }
 
+func directoryBucketAccessPointScopeStateImportFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		return fmt.Sprintf("%s,%s", rs.Primary.Attributes[names.AttrAccountID], rs.Primary.Attributes[names.AttrName]), nil
+	}
+}
+
 func testAccCheckAccessPointForDirectoryBucketScopeExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -196,37 +155,27 @@ func testAccCheckAccessPointForDirectoryBucketScopeExists(ctx context.Context, n
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		name, accountID, err := tfs3control.AccessPointForDirectoryBucketParseResourceID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlClient(ctx)
+		_, err := tfs3control.FindDirectoryAccessPointScopeByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrAccountID], rs.Primary.Attributes[names.AttrName])
 
-		_, err = tfs3control.FindAccessPointScopeByTwoPartKey(ctx, conn, accountID, name)
 		if err != nil {
-			return fmt.Errorf("error finding S3 Access Point for Directory Bucket Scope (%s): %w", rs.Primary.ID, err)
+			return create.Error(names.S3Control, create.ErrActionCheckingExistence, tfs3control.ResNameDirectoryBucketAccessPointScope, rs.Primary.ID, err)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckAccessPointForDirectoryBucketScopeDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckDirectoryBucketAccessPointScopeDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_s3control_directory_access_point_scope" {
+			if rs.Type != "aws_s3control_directory_bucket_access_point_scope" {
 				continue
 			}
 
-			name, accountID, err := tfs3control.AccessPointForDirectoryBucketParseResourceID(rs.Primary.ID)
-			if err != nil {
-				return err
-			}
-
-			_, err = tfs3control.FindAccessPointScopeByTwoPartKey(ctx, conn, accountID, name)
+			_, err := tfs3control.FindDirectoryAccessPointScopeByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrAccountID], rs.Primary.Attributes[names.AttrName])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -236,7 +185,7 @@ func testAccCheckAccessPointForDirectoryBucketScopeDestroy(ctx context.Context) 
 				return err
 			}
 
-			return fmt.Errorf("S3 Access Point for Directory Bucket Scope still exists: %s", rs.Primary.ID)
+			return create.Error(names.S3Control, create.ErrActionCheckingDestroyed, tfs3control.ResNameDirectoryBucketAccessPointScope, rs.Primary.ID, err)
 		}
 
 		return nil
@@ -245,7 +194,7 @@ func testAccCheckAccessPointForDirectoryBucketScopeDestroy(ctx context.Context) 
 
 func testAccAccessPointScopeConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccAccessPointForDirectoryBucketConfig_basic(rName), `
-resource "aws_s3control_directory_access_point_scope" "test_scope" {
+resource "aws_s3control_directory_bucket_access_point_scope" "test" {
   name       = aws_s3_directory_access_point.test_ap.name
   account_id = data.aws_caller_identity.current.account_id
 
@@ -259,7 +208,7 @@ resource "aws_s3control_directory_access_point_scope" "test_scope" {
 
 func testAccAccessPointScopeConfig_updated(rName string) string {
 	return acctest.ConfigCompose(testAccAccessPointForDirectoryBucketConfig_basic(rName), `
-resource "aws_s3control_directory_access_point_scope" "test_scope" {
+resource "aws_s3control_directory_bucket_access_point_scope" "test" {
   name       = aws_s3_directory_access_point.test_ap.name
   account_id = data.aws_caller_identity.current.account_id
 

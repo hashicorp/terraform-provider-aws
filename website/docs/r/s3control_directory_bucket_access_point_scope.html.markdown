@@ -1,12 +1,12 @@
 ---
 subcategory: "S3 Control"
 layout: "aws"
-page_title: "AWS: aws_s3control_directory_access_point_scope"
+page_title: "AWS: aws_s3control_directory_bucket_access_point_scope"
 description: |-
   Provides a resource to manage the access point scope for a directory bucket.
 ---
 
-# Resource: aws_s3control_directory_access_point_scope
+# Resource: aws_s3control_directory_bucket_access_point_scope
 
 Provides a resource to manage the access point scope for a directory bucket.
 
@@ -31,7 +31,7 @@ resource "aws_s3_directory_access_point" "example" {
   account_id = "123456789012"
 }
 
-resource "aws_s3control_directory_access_point_scope" "example" {
+resource "aws_s3control_directory_bucket_access_point_scope" "example" {
   name       = "example--zoneid--xa-s3"
   account_id = "123456789012"
 
@@ -47,17 +47,14 @@ resource "aws_s3control_directory_access_point_scope" "example" {
 This resource supports the following arguments:
 
 * `name` - (Required) The name of the access point that you want to apply the scope to.
-
 * `account_id` - (Required) The AWS account ID that owns the specified access point.
-
-* `scope` - (Optional). Scope is used to restrict access to specific prefixes, API operations, or a combination of both. `scope` can be set in `aws_s3control_directory_access_point_scope` or `aws_s3_directory_access_point`. To remove the `scope`, set it to `{permissions=[] prefixes=[]}`. The default scope is `{permissions=[] prefixes=[]}`.
+* `scope` - (Optional). Scope is used to restrict access to specific prefixes, API operations, or a combination of both. To remove the `scope`, set it to `{permissions=[] prefixes=[]}`. The default scope is `{permissions=[] prefixes=[]}`.
 
 ### scope Configuration block
 
 The following arguments are optional:
 
 * `permissions` – (Optional) You can specify a list of API operations as permissions for the access point.
-
 * `prefixes` – (Optional) You can specify a list of prefixes, but the total length of characters of all prefixes must be less than 256 bytes.
 
 * For more information on access point scope, see [AWS Documentation](https://docs.aws.amazon.com/AmazonS3/latest/userguide/access-points-directory-buckets-manage-scope.html).
@@ -66,21 +63,19 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The access point name and AWS account ID separated by a colon (`:`).
-
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import access point scope using the access point name and AWS accountID separated by a colon (`:`). For example:
 
 ```terraform
 import {
-  to = aws_s3control_directory_access_point_scope.example
-  id = "example--zoneid--xa-s3:123456789012"
+  to = aws_s3control_directory_bucketaccess_point_scope.example
+  id = "example--zoneid--xa-s3,123456789012"
 }
 ```
 
-Using `terraform import`, import Access Point Scope using access point name and AWS account ID separated by a colon (`:`). For example:
+Using `terraform import`, import Access Point Scope using access point name and AWS account ID separated by a colon (`,`). For example:
 
 ```console
-% terraform import aws_s3control_directory_access_point_scope.example example--zoneid--xa-s3:123456789012
+% terraform import aws_s3control_directory_access_point_scope.example example--zoneid--xa-s3,123456789012
 ```
