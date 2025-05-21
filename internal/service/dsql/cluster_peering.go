@@ -10,22 +10,26 @@ import (
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dsql"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dsql/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -35,8 +39,6 @@ func newResourceClusterPeering(_ context.Context) (resource.ResourceWithConfigur
 	r := &resourceClusterPeering{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
-	r.SetDefaultUpdateTimeout(30 * time.Minute)
-	r.SetDefaultDeleteTimeout(30 * time.Minute)
 
 	return r, nil
 }
@@ -48,6 +50,8 @@ const (
 type resourceClusterPeering struct {
 	framework.ResourceWithConfigure
 	framework.WithTimeouts
+	framework.WithNoOpDelete
+	framework.WithNoUpdate
 }
 
 func (r *resourceClusterPeering) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -60,16 +64,26 @@ func (r *resourceClusterPeering) Schema(ctx context.Context, req resource.Schema
 				CustomType:  fwtypes.SetOfStringType,
 				ElementType: types.StringType,
 				Required:    true,
+				Validators: []validator.Set{
+					setvalidator.SizeAtLeast(1),
+					setvalidator.ValueStringsAre(
+						validators.ARN(),
+					),
+				},
 			},
 			"witness_region": schema.StringAttribute{
 				Required: true,
+				Validators: []validator.String{
+					stringvalidator.RegexMatches(
+						regexache.MustCompile(
+							`^[a-z]{2}(-[a-z]+)+-\d{1,2}$`), "must be a valid AWS Region Code",
+					),
+				},
 			},
 		},
 		Blocks: map[string]schema.Block{
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
-				Update: true,
-				Delete: true,
 			}),
 		},
 	}
@@ -81,6 +95,30 @@ func (r *resourceClusterPeering) Create(ctx context.Context, req resource.Create
 	var plan resourceClusterPeeringModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Check if the cluster exists and is in a valid state to create a peering connection
+	status, err := findClusterByID(ctx, conn, plan.Identifier.ValueString())
+	if tfresource.NotFound(err) {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.DSQL, create.ErrActionCreating, ResNameClusterPeering, plan.Identifier.String(), nil),
+			errors.New("cluster resource doesn't seem to exist").Error(),
+		)
+		return
+	}
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.DSQL, create.ErrActionCreating, ResNameClusterPeering, plan.Identifier.String(), err),
+			err.Error(),
+		)
+		return
+	}
+	if status != nil && status.Status != awstypes.ClusterStatusPendingSetup {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.DSQL, create.ErrActionCreating, ResNameClusterPeering, plan.Identifier.String(), nil),
+			errors.New("cluster is not in a valid state to create a peering connection").Error(),
+		)
 		return
 	}
 
@@ -177,100 +215,6 @@ func (r *resourceClusterPeering) Read(ctx context.Context, req resource.ReadRequ
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceClusterPeering) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().DSQLClient(ctx)
-
-	var plan, state resourceClusterPeeringModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	diff, d := flex.Diff(ctx, plan, state)
-	resp.Diagnostics.Append(d...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	if diff.HasChanges() {
-		var input dsql.UpdateClusterInput
-
-		input.Identifier = plan.Identifier.ValueStringPointer()
-		input.MultiRegionProperties = &awstypes.MultiRegionProperties{} // TODO: validate the need for this
-		resp.Diagnostics.Append(flex.Expand(ctx, plan, input.MultiRegionProperties, flex.WithFieldNamePrefix("Test"))...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-
-		out, err := conn.UpdateCluster(ctx, &input)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.DSQL, create.ErrActionUpdating, ResNameClusterPeering, plan.Identifier.String(), err),
-				err.Error(),
-			)
-			return
-		}
-		if out == nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.DSQL, create.ErrActionUpdating, ResNameClusterPeering, plan.Identifier.String(), nil),
-				errors.New("empty output").Error(),
-			)
-			return
-		}
-	}
-
-	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	_, err := waitClusterPeeringUpdated(ctx, conn, plan.Identifier.ValueString(), updateTimeout)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DSQL, create.ErrActionWaitingForUpdate, ResNameClusterPeering, plan.Identifier.String(), err),
-			err.Error(),
-		)
-		return
-	}
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
-}
-
-func (r *resourceClusterPeering) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().DSQLClient(ctx)
-
-	var state resourceClusterPeeringModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	input := dsql.UpdateClusterInput{
-		Identifier:            state.Identifier.ValueStringPointer(),
-		MultiRegionProperties: nil,
-	}
-
-	_, err := conn.UpdateCluster(ctx, &input)
-	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return
-		}
-
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DSQL, create.ErrActionDeleting, ResNameClusterPeering, state.Identifier.String(), err),
-			err.Error(),
-		)
-		return
-	}
-
-	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitClusterPeeringDeleted(ctx, conn, state.Identifier.ValueString(), deleteTimeout)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DSQL, create.ErrActionWaitingForDeletion, ResNameClusterPeering, state.Identifier.String(), err),
-			err.Error(),
-		)
-		return
-	}
-}
-
 func (r *resourceClusterPeering) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrIdentifier), req, resp)
 }
@@ -279,42 +223,6 @@ func waitClusterPeeringCreated(ctx context.Context, conn *dsql.Client, id string
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.ClusterStatusUpdating, awstypes.ClusterStatusPendingSetup, awstypes.ClusterStatusCreating),
 		Target:                    enum.Slice(awstypes.ClusterStatusActive),
-		Refresh:                   statusCluster(ctx, conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*dsql.GetClusterOutput); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-func waitClusterPeeringUpdated(ctx context.Context, conn *dsql.Client, id string, timeout time.Duration) (*dsql.GetClusterOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(awstypes.ClusterStatusUpdating, awstypes.ClusterStatusPendingSetup),
-		Target:                    enum.Slice(awstypes.ClusterStatusActive),
-		Refresh:                   statusCluster(ctx, conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*dsql.GetClusterOutput); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-func waitClusterPeeringDeleted(ctx context.Context, conn *dsql.Client, id string, timeout time.Duration) (*dsql.GetClusterOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(awstypes.ClusterStatusUpdating),
-		Target:                    enum.Slice(awstypes.ClusterStatusActive, awstypes.ClusterStatusPendingSetup),
 		Refresh:                   statusCluster(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,

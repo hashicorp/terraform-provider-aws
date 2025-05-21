@@ -29,7 +29,7 @@ func TestAccDSQLClusterPeering_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			// Because dsql is in preview, we need to skip the precheck
+			// Because dsql is in preview, we need to skip the PreCheckPartitionHasService
 			// acctest.PreCheckPartitionHasService(t, names.DSQLEndpointID)
 			// PreCheck for the region configuration as long as DSQL is in preview
 			acctest.PreCheckRegion(t, "us-east-1", "us-east-2")          //lintignore:AWSAT003
@@ -40,14 +40,8 @@ func TestAccDSQLClusterPeering_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DSQLServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 2),
-		// CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
-			{
-				Config: testAccClusterPeeringConfig_basicPrep(acctest.ThirdRegion()),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceNameCluster, &cluster),
-				),
-			},
 			{
 				Config: testAccClusterPeeringConfig_basic(acctest.ThirdRegion()),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -65,26 +59,6 @@ func TestAccDSQLClusterPeering_basic(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccClusterPeeringConfig_basicPrep(witnessRegion string) string {
-	return acctest.ConfigCompose(acctest.ConfigMultipleRegionProvider(2), fmt.Sprintf(`
-resource "aws_dsql_cluster" "test" {
-  deletion_protection_enabled = false
-  multi_region_properties {
-    witness_region = "%[1]s"
-  }
-}
-
-resource "aws_dsql_cluster" "test1" {
-  provider = "awsalternate"
-
-  deletion_protection_enabled = false
-  multi_region_properties {
-    witness_region = "%[1]s"
-  }
-}
-`, witnessRegion))
 }
 
 func testAccClusterPeeringConfig_basic(witnessRegion string) string {
