@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_cloudwatch_log_stream: Fix to return the first matched stream name during the read operation. This fixes a performance regression introduced in `v5.83.0`.
+```
