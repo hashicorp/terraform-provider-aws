@@ -23,7 +23,7 @@ resource "aws_s3control_bucket" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
 * `bucket` - (Required) Name of the bucket.
 * `outpost_id` - (Required) Identifier of the Outpost to contain this bucket.

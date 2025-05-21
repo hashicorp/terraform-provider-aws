@@ -371,9 +371,7 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The CloudFront distribution argument layout is a complex structure composed of several sub-resources - these resources are laid out below.
-
-### Top-Level Arguments
+This resource supports the following arguments:
 
 * `aliases` (Optional) - Extra CNAMEs (alternate domain names), if any, for this distribution.
 * `comment` (Optional) - Any comments you want to include about the distribution.
@@ -718,4 +716,4 @@ Using `terraform import`, import CloudFront Distributions using the `id`. For ex
 % terraform import aws_cloudfront_distribution.distribution E74FTE3EXAMPLE
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-7d0a2bbb40d4210a64ec69e7d055271d7ee2ca7450c2354d87f2a43fd8a7b965 -->
+<!-- cache-key: cdktf-0.20.8 input-382c89aac919919632168fe38b864c0325caa30ceb813051bc58d154aba559ef -->

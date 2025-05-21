@@ -33,7 +33,7 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-There are no arguments available for this data source.
+This data source does not support any arguments.
 
 ## Attribute Reference
 
@@ -54,4 +54,4 @@ This data source exports the following attributes in addition to the arguments a
 * `display_name` - Name of the application provider.
 * `icon_url` - URL that points to an icon that represents the application provider.
 
-<!-- cache-key: cdktf-0.20.8 input-5b7f53830f2afb882f413121c04003a0266ebeabfe915b61f6df8b5b62338a3e -->
+<!-- cache-key: cdktf-0.20.8 input-5f39dd203a382ab694a8464d271f34ab0c12fdd5b7e8f85a29d2707959cd666a -->

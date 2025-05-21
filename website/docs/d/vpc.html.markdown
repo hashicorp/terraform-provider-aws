@@ -36,24 +36,16 @@ resource "aws_subnet" "example" {
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available
-VPCs in the current region. The given filters must match exactly one
-VPC whose data will be exported as attributes.
+This data source supports the following arguments:
 
 * `cidr_block` - (Optional) Cidr block of the desired VPC.
-
 * `dhcp_options_id` - (Optional) DHCP options id of the desired VPC.
-
 * `default` - (Optional) Boolean constraint on whether the desired VPC is
   the default VPC for the region.
-
 * `filter` - (Optional) Custom filter block as described below.
-
 * `id` - (Optional) ID of the specific VPC to retrieve.
-
 * `state` - (Optional) Current state of the desired VPC.
   Can be either `"pending"` or `"available"`.
-
 * `tags` - (Optional) Map of tags, each pair of which must exactly match
   a pair on the desired VPC.
 
@@ -62,7 +54,6 @@ which take the following arguments:
 
 * `name` - (Required) Name of the field to filter by, as defined by
   [the underlying AWS API](http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeVpcs.html).
-
 * `values` - (Required) Set of values that are accepted for the given field.
   A VPC will be selected if any one of the given values matches.
 

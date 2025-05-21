@@ -39,6 +39,8 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `globalNetworkId` - (Required) ID of the Global Network of the links to retrieve.
 * `providerName` - (Optional) Link provider to retrieve.
 * `siteId` - (Optional) ID of the site of the links to retrieve.
@@ -51,4 +53,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `ids` - IDs of the links.
 
-<!-- cache-key: cdktf-0.20.8 input-1487eb3f5d87d6cd23f55d505c7f05610224dba8734fb0a6bb26595cb48f7494 -->
+<!-- cache-key: cdktf-0.20.8 input-e922a9e98333fb28efc537e19e893e7c9f21c856daf3096efa2c2772ab97f68c -->

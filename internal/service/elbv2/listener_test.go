@@ -1248,6 +1248,70 @@ func TestAccELBV2Listener_attributes_alb_HTTPRequestHeaders(t *testing.T) {
 	})
 }
 
+func TestAccELBV2Listener_attributes_alb_HTTPRequestPartialHeaders(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.Listener
+	resourceName := "aws_lb_listener.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccListenerConfig_attributes_albHTTPRequestPartialHeaders(rName, "https://example.com", "DENY"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTP"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "80"),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_response_server_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_response_strict_transport_security_header_value", "max-age=31536000; includeSubDomains"),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_response_access_control_allow_origin_header_value", "https://example.com"),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_response_access_control_allow_methods_header_value", "GET,POST,OPTIONS"),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_response_access_control_allow_headers_header_value", "Content-Type,X-Custom-Header"),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_response_access_control_allow_credentials_header_value", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_response_access_control_expose_headers_header_value", "X-Custom-Header"),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_response_access_control_max_age_header_value", "3600"),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_response_content_security_policy_header_value", "default-src 'self'"),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_response_x_content_type_options_header_value", "nosniff"),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_response_x_frame_options_header_value", "DENY"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"default_action.0.forward",
+				},
+			},
+			{
+				Config: testAccListenerConfig_attributes_albHTTPRequestPartialHeaders(rName, "https://www.example.com", "SAMEORIGIN"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTP"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "80"),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_response_server_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_response_strict_transport_security_header_value", "max-age=31536000; includeSubDomains"),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_response_access_control_allow_origin_header_value", "https://www.example.com"),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_response_access_control_allow_methods_header_value", "GET,POST,OPTIONS"),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_response_access_control_allow_headers_header_value", "Content-Type,X-Custom-Header"),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_response_access_control_allow_credentials_header_value", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_response_access_control_expose_headers_header_value", "X-Custom-Header"),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_response_access_control_max_age_header_value", "3600"),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_response_content_security_policy_header_value", "default-src 'self'"),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_response_x_content_type_options_header_value", "nosniff"),
+					resource.TestCheckResourceAttr(resourceName, "routing_http_response_x_frame_options_header_value", "SAMEORIGIN"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccELBV2Listener_attributes_alb_HTTPSRequestHeaders(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Listener
@@ -3267,6 +3331,59 @@ resource "aws_lb_listener" "test" {
   port              = 80
 
   routing_http_response_server_enabled                                = true
+  routing_http_response_strict_transport_security_header_value        = "max-age=31536000; includeSubDomains"
+  routing_http_response_access_control_allow_origin_header_value      = %[2]q
+  routing_http_response_access_control_allow_methods_header_value     = "GET,POST,OPTIONS"
+  routing_http_response_access_control_allow_headers_header_value     = "Content-Type,X-Custom-Header"
+  routing_http_response_access_control_allow_credentials_header_value = "true"
+  routing_http_response_access_control_expose_headers_header_value    = "X-Custom-Header"
+  routing_http_response_access_control_max_age_header_value           = "3600"
+  routing_http_response_content_security_policy_header_value          = "default-src 'self'"
+  routing_http_response_x_content_type_options_header_value           = "nosniff"
+  routing_http_response_x_frame_options_header_value                  = %[3]q
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.test.arn
+  }
+}
+
+resource "aws_lb" "test" {
+  name               = %[1]q
+  internal           = true
+  load_balancer_type = "application"
+  security_groups    = [aws_security_group.test.id]
+  subnets            = aws_subnet.test[*].id
+
+  idle_timeout               = 30
+  enable_deletion_protection = false
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_lb_target_group" "test" {
+  name     = %[1]q
+  port     = 80
+  protocol = "HTTP"
+  vpc_id   = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, allowOriginHeaderValue, frameOptionsHeaderValue))
+}
+
+func testAccListenerConfig_attributes_albHTTPRequestPartialHeaders(rName, allowOriginHeaderValue, frameOptionsHeaderValue string) string {
+	return acctest.ConfigCompose(
+		testAccListenerConfig_base(rName), fmt.Sprintf(`
+resource "aws_lb_listener" "test" {
+  load_balancer_arn = aws_lb.test.arn
+  protocol          = "HTTP"
+  port              = 80
+
   routing_http_response_strict_transport_security_header_value        = "max-age=31536000; includeSubDomains"
   routing_http_response_access_control_allow_origin_header_value      = %[2]q
   routing_http_response_access_control_allow_methods_header_value     = "GET,POST,OPTIONS"

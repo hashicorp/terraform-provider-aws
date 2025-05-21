@@ -94,6 +94,8 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `active` - (Required)  Boolean flag to indicate if the certificate should be active for device authentication.
 * `allowAutoRegistration` - (Required)  Boolean flag to indicate if the certificate should be active for device regisration.
 * `caCertificatePem` - (Required)  PEM encoded CA certificate.
@@ -122,4 +124,4 @@ This resource exports the following attributes in addition to the arguments abov
     * `notAfter` - The certificate is not valid after this date.
     * `notBefore` - The certificate is not valid before this date.
 
-<!-- cache-key: cdktf-0.20.8 input-cc8891d5a27211f66870522cfbf5418744a6ccd4082272380030d5f138aeadb4 -->
+<!-- cache-key: cdktf-0.20.8 input-e4efef128162bb45b41d06e789b11315bc4c7a49d2ebc0f22dee2d342d432fb8 -->

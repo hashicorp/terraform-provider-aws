@@ -20,6 +20,9 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 			Factory:  newDataSourcePolicyStore,
 			TypeName: "aws_verifiedpermissions_policy_store",
 			Name:     "Policy Store",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
 		},
 	}
 }
@@ -40,6 +43,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Factory:  newResourcePolicyStore,
 			TypeName: "aws_verifiedpermissions_policy_store",
 			Name:     "Policy Store",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
 		},
 		{
 			Factory:  newResourcePolicyTemplate,

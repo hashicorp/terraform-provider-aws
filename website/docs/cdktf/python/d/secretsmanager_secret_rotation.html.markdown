@@ -35,6 +35,8 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `secret_id` - (Required) Specifies the secret containing the version that you want to retrieve. You can specify either the ARN or the friendly name of the secret.
 
 ## Attribute Reference
@@ -45,4 +47,4 @@ This data source exports the following attributes in addition to the arguments a
 * `rotation_lambda_arn` - Decrypted part of the protected secret information that was originally provided as a string.
 * `rotation_rules` - Decrypted part of the protected secret information that was originally provided as a binary. Base64 encoded.
 
-<!-- cache-key: cdktf-0.20.8 input-e027aa73fed49f05ed2c35a302ee5eef5a2de9f215c0ad6bb0470048e38bbb27 -->
+<!-- cache-key: cdktf-0.20.8 input-2448dfcf59d864854ccf6398cd399be423918454506132f213ed03592d690dc1 -->

@@ -39,6 +39,8 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `filters` – (Optional) Filters the results of the request. Prefix specifies the prefix of release labels to return. Application specifies the application (with/without version) of release labels to return. See [Filters](#filters).
 
 ### Filters
@@ -52,4 +54,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `releaseLabels` - Returned release labels.
 
-<!-- cache-key: cdktf-0.20.8 input-caff30a437585dca8d53271b57c03d47d50046916f1661780cb3a6963d53b86c -->
+<!-- cache-key: cdktf-0.20.8 input-fb78ebfad85778813e9c267d6d243c73637d6545ffda61bd740d4ef131d668e1 -->

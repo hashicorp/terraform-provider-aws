@@ -507,7 +507,7 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "test" {
-  bucket = aws_s3_bucket.test.id
+  bucket = aws_s3_bucket.test.bucket
 
   rule {
     # This is Amazon S3 bucket default encryption.
@@ -531,7 +531,7 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "test" {
-  bucket = aws_s3_bucket.test.id
+  bucket = aws_s3_bucket.test.bucket
 
   rule {
     apply_server_side_encryption_by_default {
@@ -555,7 +555,7 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "test" {
-  bucket = aws_s3_bucket.test.id
+  bucket = aws_s3_bucket.test.bucket
 
   rule {
     apply_server_side_encryption_by_default {
@@ -574,7 +574,7 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "test" {
-  bucket = aws_s3_bucket.test.id
+  bucket = aws_s3_bucket.test.bucket
 
   rule {
     apply_server_side_encryption_by_default {
@@ -592,7 +592,7 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "test" {
-  bucket = aws_s3_bucket.test.id
+  bucket = aws_s3_bucket.test.bucket
 
   rule {
     # This is Amazon S3 bucket default encryption.
@@ -618,7 +618,7 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "test" {
-  bucket = aws_s3_bucket.test.id
+  bucket = aws_s3_bucket.test.bucket
 
   rule {
     apply_server_side_encryption_by_default {
@@ -638,7 +638,7 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "test" {
-  bucket = aws_s3_bucket.test.id
+  bucket = aws_s3_bucket.test.bucket
 
   rule {
     apply_server_side_encryption_by_default {

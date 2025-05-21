@@ -37,9 +37,6 @@ resource "aws_docdb_cluster" "default" {
 
 ## Argument Reference
 
-For more detailed documentation about each argument, refer to
-the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/reference/docdb/create-db-instance.html).
-
 This resource supports the following arguments:
 
 * `apply_immediately` - (Optional) Specifies whether any database modifications
@@ -98,6 +95,9 @@ This resource exports the following attributes in addition to the arguments abov
 * `storage_encrypted` - Specifies whether the DB cluster is encrypted.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `writer` – Boolean indicating if this instance is writable. `False` indicates this instance is a read replica.
+
+For more detailed documentation about each argument, refer to
+the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/reference/docdb/create-db-instance.html).
 
 [1]: /docs/providers/aws/r/docdb_cluster.html
 [2]: https://docs.aws.amazon.com/documentdb/latest/developerguide/db-cluster-manage-performance.html#db-cluster-manage-scaling-instance

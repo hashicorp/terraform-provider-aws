@@ -41,6 +41,8 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
 
 ## filter Configuration Block
@@ -57,4 +59,4 @@ This data source exports the following attributes in addition to the arguments a
 * `arns` - Set of ARNs of the matched Secrets Manager secrets.
 * `names` - Set of names of the matched Secrets Manager secrets.
 
-<!-- cache-key: cdktf-0.20.8 input-150d44c91f421068bbfdaf75b6d510764b7e066887fe235c7afddf8fee2eaa61 -->
+<!-- cache-key: cdktf-0.20.8 input-46c85b9bf9b25167aa2da6a35a87667dad529e1c4845ee8334fa9d28d689325d -->

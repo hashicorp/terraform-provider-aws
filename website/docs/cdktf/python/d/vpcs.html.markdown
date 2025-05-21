@@ -91,17 +91,18 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `tags` - (Optional) Map of tags, each pair of which must exactly match
   a pair on the desired vpcs.
-
 * `filter` - (Optional) Custom filter block as described below.
 
-More complex filters can be expressed using one or more `filter` sub-blocks,
-which take the following arguments:
+### `filter`
+
+More complex filters can be expressed using one or more `filter` sub-blocks, which take the following arguments:
 
 * `name` - (Required) Name of the field to filter by, as defined by
   [the underlying AWS API](http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeVpcs.html).
-
 * `values` - (Required) Set of values that are accepted for the given field.
   A VPC will be selected if any one of the given values matches.
 
@@ -118,4 +119,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.8 input-be6a21066a3ec54cb0732f1d95589ca403b257a294348dbb989f92e860fb3744 -->
+<!-- cache-key: cdktf-0.20.8 input-457736f11fe2c74c2b6c33a23364d22094d1488589645ab5e2b561dcacdc0908 -->

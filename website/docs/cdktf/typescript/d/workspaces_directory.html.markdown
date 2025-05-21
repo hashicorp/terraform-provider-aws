@@ -36,6 +36,8 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `directoryId` - (Required) Directory identifier for registration in WorkSpaces service.
 
 ## Attribute Reference
@@ -83,4 +85,4 @@ This data source exports the following attributes in addition to the arguments a
 * `workspaceSecurityGroupId` - The identifier of the security group that is assigned to new WorkSpaces.
 * `workspace_type` - The type of WorkSpaces directory.
 
-<!-- cache-key: cdktf-0.20.8 input-b5ac05303aeea3ef25f5b96783433e0cf31954e7964af7a27d62375e8a751532 -->
+<!-- cache-key: cdktf-0.20.8 input-d7808a628e8c687da5a387957aa42f4deb015c677cf9afbd635c05389f8be042 -->
