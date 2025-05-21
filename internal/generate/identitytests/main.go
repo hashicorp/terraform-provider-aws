@@ -604,6 +604,11 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						}
 					}
 				}
+				if attr, ok := args.Keyword["preCheckRegion"]; ok {
+					d.PreChecks = append(d.PreChecks, codeBlock{
+						Code: fmt.Sprintf("acctest.PreCheckRegion(t, \"%s\")", attr),
+					})
+				}
 				if attr, ok := args.Keyword["serialize"]; ok {
 					if b, err := strconv.ParseBool(attr); err != nil {
 						v.errs = append(v.errs, fmt.Errorf("invalid serialize value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
