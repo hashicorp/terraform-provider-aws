@@ -26,18 +26,18 @@ resource "aws_s3_directory_bucket" "example" {
 }
 
 resource "aws_s3_directory_access_point" "example" {
-  bucket = aws_s3_directory_bucket.example.id
-  name   = "example--zoneid--xa-s3"
+  bucket     = aws_s3_directory_bucket.example.id
+  name       = "example--zoneid--xa-s3"
   account_id = "123456789012"
 }
 
 resource "aws_s3control_directory_access_point_scope" "example" {
-  name   = "example--zoneid--xa-s3"
+  name       = "example--zoneid--xa-s3"
   account_id = "123456789012"
 
   scope {
-    permissions = ["GetObject, "ListBucket"]
-    prefixes = ["myobject1.csv", "myobject2*"]
+    permissions = ["GetObject", "ListBucket"]
+    prefixes    = ["myobject1.csv", "myobject2*"]
   }
 }
 ```
@@ -53,17 +53,19 @@ This resource supports the following arguments:
 * `scope` - (Optional). Scope is used to restrict access to specific prefixes, API operations, or a combination of both. `scope` can be set in `aws_s3control_directory_access_point_scope` or `aws_s3_directory_access_point`. To remove the `scope`, set it to `{permissions=[] prefixes=[]}`. The default scope is `{permissions=[] prefixes=[]}`.
 
 ### scope Configuration block
+
 The following arguments are optional:
 
 * `permissions` – (Optional) You can specify a list of API operations as permissions for the access point.
 
-* `prefixes` – (Optional) You can specify a list of prefixes, but the total length of characters of all prefixes must be less than 256 bytes. 
+* `prefixes` – (Optional) You can specify a list of prefixes, but the total length of characters of all prefixes must be less than 256 bytes.
 
 * For more information on access point scope, see [AWS Documentation](https://docs.aws.amazon.com/AmazonS3/latest/userguide/access-points-directory-buckets-manage-scope.html).
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
+
 * `id` - The access point name and AWS account ID separated by a colon (`:`).
 
 ## Import

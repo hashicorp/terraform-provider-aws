@@ -16,7 +16,7 @@ Provides a resource to manage an access point policy for an access point resourc
 
 -> Terraform provides two ways to manage access point policies. You can use a standalone resource `aws_s3control_directory_access_point_policy` or, an in-line policy with the [`aws_s3_directory_access_point`](aws_s3_directory_access_point.html) resource. You cannot use a standalone resource at the same time as in-line, which will cause an overwrite of each other. You must use one or the other.
 
--> Bucket type: This resource cannot be used for access point policies for general purpose buckets, see [`aws_s3control_access_point_policy`](aws_s3control_access_point_policy.html) for more. 
+-> Bucket type: This resource cannot be used for access point policies for general purpose buckets, see [`aws_s3control_access_point_policy`](aws_s3control_access_point_policy.html) for more.
 
 ## Example Usage
 
@@ -29,8 +29,8 @@ resource "aws_s3_directory_bucket" "example" {
 
 
 resource "aws_s3_directory_access_point" "example" {
-  bucket = aws_s3_directory_bucket.example.id
-  name = "example--zoneid--xa-s3"
+  bucket     = aws_s3_directory_bucket.example.id
+  name       = "example--zoneid--xa-s3"
   account_id = "123456789012"
 }
 
@@ -61,6 +61,7 @@ This resource supports the following arguments:
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
+
 * `id` - The access point name and AWS account ID separated by a colon (`:`).
 
 ## Import
