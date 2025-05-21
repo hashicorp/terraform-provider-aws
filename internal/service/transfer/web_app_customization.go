@@ -1,0 +1,433 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
+package transfer
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"time"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/transfer"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/transfer/types"
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+// @FrameworkResource("aws_transfer_web_app_customization", name="Web App Customization")
+func newResourceWebAppCustomization(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &resourceWebAppCustomization{}
+
+	r.SetDefaultCreateTimeout(5 * time.Minute)
+	r.SetDefaultDeleteTimeout(5 * time.Minute)
+
+	return r, nil
+}
+
+const (
+	ResNameWebAppCustomization = "Web App Customization"
+)
+
+type resourceWebAppCustomization struct {
+	framework.ResourceWithConfigure
+	framework.WithTimeouts
+}
+
+func (r *resourceWebAppCustomization) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			"favicon_file": schema.StringAttribute{
+				// If faviconFile is not specified when calling the UpdateWebAppCustomization API,
+				// the existing favicon remains unchanged.
+				// Therefore, this field is marked as Optional and Computed.
+				Optional: true,
+				Computed: true,
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 20960),
+				},
+			},
+			names.AttrID: framework.IDAttribute(),
+			"logo_file": schema.StringAttribute{
+				// Same as favicon_file
+				Optional: true,
+				Computed: true,
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 51200),
+				},
+			},
+			"title": schema.StringAttribute{
+				Optional: true,
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(0, 100),
+				},
+			},
+			"web_app_id": schema.StringAttribute{
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
+		},
+		Blocks: map[string]schema.Block{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
+				Create: true,
+				Update: false,
+				Delete: true,
+			}),
+		},
+	}
+}
+
+func (r *resourceWebAppCustomization) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	conn := r.Meta().TransferClient(ctx)
+
+	var plan resourceWebAppCustomizationModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	var input transfer.UpdateWebAppCustomizationInput
+	resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Empty string values are not allowed for FaviconFile and LogoFile.
+	if v := plan.FaviconFile.ValueString(); v == "" {
+		input.FaviconFile = nil
+	}
+	if v := plan.LogoFile.ValueString(); v == "" {
+		input.LogoFile = nil
+	}
+
+	out, err := conn.UpdateWebAppCustomization(ctx, &input)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.Transfer, create.ErrActionCreating, ResNameWebAppCustomization, plan.ID.String(), err),
+			err.Error(),
+		)
+		return
+	}
+	if out == nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.Transfer, create.ErrActionCreating, ResNameWebAppCustomization, plan.ID.String(), nil),
+			errors.New("empty output").Error(),
+		)
+		return
+	}
+
+	resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	plan.ID = flex.StringToFramework(ctx, out.WebAppId)
+
+	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
+	_, err = waitWebAppCustomizationCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.Transfer, create.ErrActionWaitingForCreation, ResNameWebAppCustomization, plan.ID.String(), err),
+			err.Error(),
+		)
+		return
+	}
+
+	rout, _ := findWebAppCustomizationByID(ctx, conn, plan.ID.ValueString())
+	resp.Diagnostics.Append(flex.Flatten(ctx, rout, &plan)...)
+
+	// Set values for unknowns after creation is complete because they are marked as Computed.
+	if rout.FaviconFile == nil {
+		plan.FaviconFile = types.StringNull()
+	}
+	if rout.LogoFile == nil {
+		plan.LogoFile = types.StringNull()
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+}
+
+func (r *resourceWebAppCustomization) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	conn := r.Meta().TransferClient(ctx)
+
+	var state resourceWebAppCustomizationModel
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	out, err := findWebAppCustomizationByID(ctx, conn, state.ID.ValueString())
+	if tfresource.NotFound(err) {
+		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		resp.State.RemoveResource(ctx)
+		return
+	}
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.Transfer, create.ErrActionReading, ResNameWebAppCustomization, state.ID.String(), err),
+			err.Error(),
+		)
+		return
+	}
+
+	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	state.ID = flex.StringToFramework(ctx, out.WebAppId)
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+}
+
+func (r *resourceWebAppCustomization) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	conn := r.Meta().TransferClient(ctx)
+
+	var plan, state resourceWebAppCustomizationModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	diff, d := flex.Diff(ctx, plan, state)
+	resp.Diagnostics.Append(d...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if diff.HasChanges() {
+		var input transfer.UpdateWebAppCustomizationInput
+		resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		if v := plan.FaviconFile.ValueString(); v == "" {
+			input.FaviconFile = nil
+		}
+		if v := plan.LogoFile.ValueString(); v == "" {
+			input.LogoFile = nil
+		}
+
+		out, err := conn.UpdateWebAppCustomization(ctx, &input)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.Transfer, create.ErrActionUpdating, ResNameWebAppCustomization, plan.ID.String(), err),
+				err.Error(),
+			)
+			return
+		}
+		if out == nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.Transfer, create.ErrActionUpdating, ResNameWebAppCustomization, plan.ID.String(), nil),
+				errors.New("empty output").Error(),
+			)
+			return
+		}
+
+		resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	}
+
+	rout, _ := findWebAppCustomizationByID(ctx, conn, plan.ID.ValueString())
+	resp.Diagnostics.Append(flex.Flatten(ctx, rout, &plan)...)
+	if rout.FaviconFile == nil {
+		plan.FaviconFile = types.StringNull()
+	}
+	if rout.LogoFile == nil {
+		plan.LogoFile = types.StringNull()
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+}
+
+func (r *resourceWebAppCustomization) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	conn := r.Meta().TransferClient(ctx)
+
+	var state resourceWebAppCustomizationModel
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	input := transfer.DeleteWebAppCustomizationInput{
+		WebAppId: state.ID.ValueStringPointer(),
+	}
+
+	_, err := conn.DeleteWebAppCustomization(ctx, &input)
+	if err != nil {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return
+		}
+
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.Transfer, create.ErrActionDeleting, ResNameWebAppCustomization, state.ID.String(), err),
+			err.Error(),
+		)
+		return
+	}
+
+	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
+	_, err = waitWebAppCustomizationDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.Transfer, create.ErrActionWaitingForDeletion, ResNameWebAppCustomization, state.ID.String(), err),
+			err.Error(),
+		)
+		return
+	}
+}
+
+func (r *resourceWebAppCustomization) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
+}
+
+func waitWebAppCustomizationCreated(ctx context.Context, conn *transfer.Client, id string, timeout time.Duration) (*awstypes.DescribedWebAppCustomization, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   []string{},
+		Target:                    []string{statusNormal},
+		Refresh:                   statusWebAppCustomization(ctx, conn, id),
+		Timeout:                   timeout,
+		NotFoundChecks:            20,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*awstypes.DescribedWebAppCustomization); ok {
+		return out, err
+	}
+
+	return nil, err
+}
+
+func waitWebAppCustomizationDeleted(ctx context.Context, conn *transfer.Client, id string, timeout time.Duration) (*awstypes.DescribedWebAppCustomization, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{statusNormal},
+		Target:  []string{},
+		Refresh: statusWebAppCustomization(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*awstypes.DescribedWebAppCustomization); ok {
+		return out, err
+	}
+
+	return nil, err
+}
+
+func statusWebAppCustomization(ctx context.Context, conn *transfer.Client, id string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
+		out, err := findWebAppCustomizationByID(ctx, conn, id)
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return out, statusNormal, nil
+	}
+}
+
+func findWebAppCustomizationByID(ctx context.Context, conn *transfer.Client, id string) (*awstypes.DescribedWebAppCustomization, error) {
+	input := transfer.DescribeWebAppCustomizationInput{
+		WebAppId: aws.String(id),
+	}
+
+	out, err := conn.DescribeWebAppCustomization(ctx, &input)
+	if err != nil {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: &input,
+			}
+		}
+
+		return nil, err
+	}
+
+	if out == nil || out.WebAppCustomization == nil {
+		return nil, tfresource.NewEmptyResultError(&input)
+	}
+
+	return out.WebAppCustomization, nil
+}
+
+type resourceWebAppCustomizationModel struct {
+	ARN         types.String   `tfsdk:"arn"`
+	FaviconFile types.String   `tfsdk:"favicon_file"`
+	ID          types.String   `tfsdk:"id"`
+	LogoFile    types.String   `tfsdk:"logo_file"`
+	Timeouts    timeouts.Value `tfsdk:"timeouts"`
+	Title       types.String   `tfsdk:"title"`
+	WebAppID    types.String   `tfsdk:"web_app_id"`
+}
+
+var (
+	_ flex.Expander  = resourceWebAppCustomizationModel{}
+	_ flex.Flattener = &resourceWebAppCustomizationModel{}
+)
+
+func (m resourceWebAppCustomizationModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var input transfer.UpdateWebAppCustomizationInput
+	input.WebAppId = m.WebAppID.ValueStringPointer()
+	if !m.FaviconFile.IsNull() {
+		input.FaviconFile = itypes.MustBase64Decode(m.FaviconFile.ValueString())
+	}
+	if !m.LogoFile.IsNull() {
+		input.LogoFile = itypes.MustBase64Decode(m.LogoFile.ValueString())
+	}
+	if !m.Title.IsNull() {
+		input.Title = m.Title.ValueStringPointer()
+	}
+	return &input, nil
+}
+
+func (m *resourceWebAppCustomizationModel) Flatten(ctx context.Context, in any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	switch t := in.(type) {
+	case awstypes.DescribedWebAppCustomization:
+		m.ARN = flex.StringToFramework(ctx, t.Arn)
+		if t.FaviconFile != nil {
+			m.FaviconFile = flex.StringToFramework(ctx, aws.String(itypes.Base64Encode(t.FaviconFile)))
+		}
+		m.ID = flex.StringToFramework(ctx, t.WebAppId)
+		if t.LogoFile != nil {
+			m.LogoFile = flex.StringToFramework(ctx, aws.String(itypes.Base64Encode(t.LogoFile)))
+		}
+		if t.Title != nil {
+			m.Title = flex.StringToFramework(ctx, t.Title)
+		}
+		m.WebAppID = flex.StringToFramework(ctx, t.WebAppId)
+	case transfer.UpdateWebAppCustomizationOutput:
+		m.WebAppID = flex.StringToFramework(ctx, t.WebAppId)
+	default:
+		diags.AddError("Interface Conversion Error", fmt.Sprintf("cannot flatten %T into %T", in, m))
+	}
+	return diags
+}
