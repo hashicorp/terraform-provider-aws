@@ -4061,6 +4061,7 @@ service "iotanalytics" {
   provider_package_correct = "iotanalytics"
   doc_prefix               = ["iotanalytics_"]
   brand                    = "AWS"
+  not_implemented          = true
 }
 
 service "iotdata" {

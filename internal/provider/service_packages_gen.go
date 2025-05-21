@@ -131,7 +131,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/internetmonitor"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/invoicing"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/iot"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/iotanalytics"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/iotevents"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ivs"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ivschat"
@@ -387,7 +386,6 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		internetmonitor.ServicePackage(ctx),
 		invoicing.ServicePackage(ctx),
 		iot.ServicePackage(ctx),
-		iotanalytics.ServicePackage(ctx),
 		iotevents.ServicePackage(ctx),
 		ivs.ServicePackage(ctx),
 		ivschat.ServicePackage(ctx),
