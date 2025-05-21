@@ -547,6 +547,7 @@ Some regional services have a subset of resources that are global:
 | Firewall Manager | Resource | `aws_fms_admin_account` |
 | IPAM | Resource | `aws_vpc_ipam_organization_admin_account` |
 | Resource Access Manager | Resource | `aws_ram_sharing_with_organization` |
+| S3 | Data Source | `aws_canonical_user_id` |
 | S3 | Resource | `aws_s3_account_public_access_block` |
 | S3 | Data Source | `aws_s3_account_public_access_block` |
 | Service Catalog | Resource | `aws_servicecatalog_organizations_access` |
