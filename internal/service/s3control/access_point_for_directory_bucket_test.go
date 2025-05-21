@@ -410,7 +410,7 @@ resource "aws_s3_directory_access_point" "test_ap" {
   bucket     = aws_s3_directory_bucket.test_bucket.bucket
   name       = "%[1]s--${local.location_name}--xa-s3"
   account_id = data.aws_caller_identity.current.account_id
-  policy = data.aws_iam_policy_document.test.json
+  policy     = data.aws_iam_policy_document.test.json
 
   public_access_block_configuration {
     block_public_acls       = true

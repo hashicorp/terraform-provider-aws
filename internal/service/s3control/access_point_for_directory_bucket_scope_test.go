@@ -260,13 +260,13 @@ resource "aws_s3control_directory_access_point_scope" "test_scope" {
 func testAccAccessPointScopeConfig_updated(rName string) string {
 	return acctest.ConfigCompose(testAccAccessPointForDirectoryBucketConfig_basic(rName), `
 resource "aws_s3control_directory_access_point_scope" "test_scope" {
-	  name       = aws_s3_directory_access_point.test_ap.name
-	  account_id = data.aws_caller_identity.current.account_id
-	
-	  scope {
-		permissions = ["GetObject"]
-		prefixes    = ["prefix3/", "*prefix4*"]
-	  }
-	}
+  name       = aws_s3_directory_access_point.test_ap.name
+  account_id = data.aws_caller_identity.current.account_id
+
+  scope {
+    permissions = ["GetObject"]
+    prefixes    = ["prefix3/", "*prefix4*"]
+  }
+}
 `)
 }

@@ -230,7 +230,7 @@ resource "aws_s3control_directory_access_point_policy" "test_policy" {
     Version = "2008-10-17"
     Statement = [{
       Effect = "Allow"
-      "Action": "s3express:CreateSession"
+      "Action" : "s3express:CreateSession"
       Principal = {
         AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
       }
@@ -257,7 +257,7 @@ resource "aws_s3control_directory_access_point_policy" "test_policy" {
       Resource = "${aws_s3_directory_access_point.test_ap.arn}"
       Condition = {
         StringLike = {
-          "s3express:DataAccessPointArn": "${aws_s3_directory_access_point.test_ap.arn}"
+          "s3express:DataAccessPointArn" : "${aws_s3_directory_access_point.test_ap.arn}"
         }
       }
     }]
