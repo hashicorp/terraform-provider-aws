@@ -126,7 +126,7 @@ func (r *resourceWebApp) Schema(ctx context.Context, req resource.SchemaRequest,
 											stringvalidator.RegexMatches(regexache.MustCompile(`^arn:[\w-]+:sso:::instance/(sso)?ins-[a-zA-Z0-9-.]{16}$`), ""),
 										},
 									},
-									"role": schema.StringAttribute{
+									names.AttrRole: schema.StringAttribute{
 										Optional: true,
 										Validators: []validator.String{
 											stringvalidator.LengthBetween(20, 2048),
@@ -193,7 +193,7 @@ func (r *resourceWebApp) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
-	rout, err := findWebAppByID(ctx, conn, plan.WebAppId.ValueString())
+	rout, _ := findWebAppByID(ctx, conn, plan.WebAppId.ValueString())
 	resp.Diagnostics.Append(flex.Flatten(ctx, rout, &plan, flex.WithFieldNamePrefix("Described"))...)
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
@@ -254,7 +254,7 @@ func (r *resourceWebApp) Update(ctx context.Context, req resource.UpdateRequest,
 		}
 
 		if !state.AccessEndpoint.Equal(plan.AccessEndpoint) {
-			if v := plan.AccessEndpoint.ValueStringPointer(); v != nil && *v != "" {
+			if v := plan.AccessEndpoint.ValueStringPointer(); v != nil && aws.ToString(v) != "" {
 				input.AccessEndpoint = v
 			}
 			needUpdate = true
@@ -501,7 +501,7 @@ func (m webAppUnitsModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
 	switch {
 	case !m.Provisioned.IsNull():
 		var apiObject awstypes.WebAppUnitsMemberProvisioned
-		apiObject.Value = *flex.Int32FromFrameworkInt64(ctx, &m.Provisioned)
+		apiObject.Value = aws.ToInt32(flex.Int32FromFrameworkInt64(ctx, &m.Provisioned))
 		v = &apiObject
 	}
 
