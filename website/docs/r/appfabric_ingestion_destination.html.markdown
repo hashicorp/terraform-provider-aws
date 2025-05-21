@@ -40,7 +40,7 @@ resource "aws_appfabric_ingestion_destination" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
 * `app_bundle_arn` - (Required) The Amazon Resource Name (ARN) of the app bundle to use for the request.
 * `ingestion_arn` - (Required) The Amazon Resource Name (ARN) of the ingestion to use for the request.

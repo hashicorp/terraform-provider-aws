@@ -33,7 +33,7 @@ resource "aws_emrcontainers_job_template" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
 * `job_template_data` - (Required) The job template data which holds values of StartJobRun API request.
 * `kms_key_arn` - (Optional) The KMS key ARN used to encrypt the job template.

@@ -23,7 +23,7 @@ resource "aws_msk_vpc_connection" "test" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
 * `authentication` - (Required) The authentication type for the client VPC connection. Specify one of these auth type strings: SASL_IAM, SASL_SCRAM, or TLS.
 * `client_subnets` - (Required) The list of subnets in the client VPC to connect to.
