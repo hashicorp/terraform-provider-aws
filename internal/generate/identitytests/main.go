@@ -513,6 +513,21 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						)
 					}
 				}
+				if attr, ok := args.Keyword["domainTfVar"]; ok {
+					varName := "domain"
+					if len(attr) > 0 {
+						varName = attr
+					}
+					d.GoImports = append(d.GoImports,
+						goImport{
+							Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
+						},
+					)
+					d.InitCodeBlocks = append(d.InitCodeBlocks, codeBlock{
+						Code: fmt.Sprintf(`%s := acctest.RandomDomainName()`, varName),
+					})
+					d.additionalTfVars[varName] = varName
+				}
 				if attr, ok := args.Keyword["existsType"]; ok {
 					if typeName, importSpec, err := parseIdentifierSpec(attr); err != nil {
 						v.errs = append(v.errs, fmt.Errorf("%s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
