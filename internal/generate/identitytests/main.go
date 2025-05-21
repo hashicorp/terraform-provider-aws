@@ -196,9 +196,11 @@ func main() {
 				g.Fatalf("parsing config template: %s", err)
 			}
 
-			common.WithRegion = true
+			if resource.GenerateRegionOverrideTest() {
+				common.WithRegion = true
 
-			generateTestConfig(g, testDirPath, "region_override", tfTemplates, common)
+				generateTestConfig(g, testDirPath, "region_override", tfTemplates, common)
+			}
 		}
 	}
 
@@ -302,6 +304,7 @@ type ResourceDatum struct {
 	ARNFormat                   string
 	ARNAttribute                string
 	IsGlobal                    bool
+	HasRegionOverrideTest       bool
 }
 
 func (d ResourceDatum) AdditionalTfVars() map[string]string {
@@ -336,6 +339,10 @@ func (d ResourceDatum) OverrideIdentifierAttribute() string {
 
 func (d ResourceDatum) IsARNIdentity() bool {
 	return d.ARNAttribute != ""
+}
+
+func (d ResourceDatum) GenerateRegionOverrideTest() bool {
+	return !d.IsGlobal && d.HasRegionOverrideTest
 }
 
 type goImport struct {
@@ -426,9 +433,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 	v.functionName = funcDecl.Name.Name
 
 	d := ResourceDatum{
-		FileName:         v.fileName,
-		additionalTfVars: make(map[string]string),
-		IsGlobal:         false,
+		FileName:              v.fileName,
+		additionalTfVars:      make(map[string]string),
+		IsGlobal:              false,
+		HasRegionOverrideTest: true,
 	}
 	hasIdentity := false
 	skip := false
@@ -645,6 +653,14 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					default:
 						v.errs = append(v.errs, fmt.Errorf("invalid identityTest value: %q at %s.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 						continue
+					}
+				}
+				if attr, ok := args.Keyword["identityRegionOverrideTest"]; ok {
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid identityRegionOverrideTest value: %q at %s. Should be duration value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					} else {
+						d.HasRegionOverrideTest = b
 					}
 				}
 				if attr, ok := args.Keyword["tlsKey"]; ok {

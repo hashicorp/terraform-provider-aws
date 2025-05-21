@@ -29,7 +29,7 @@ import (
 // @ArnIdentity
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/devicefarm/types;awstypes;awstypes.NetworkProfile")
 // @Testing(preCheckRegion="us-west-2")
-// @Testing(identityTestRegionOverride=false)
+// @Testing(identityRegionOverrideTest=false)
 func resourceNetworkProfile() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNetworkProfileCreate,

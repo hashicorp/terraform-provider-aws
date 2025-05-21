@@ -28,7 +28,7 @@ import (
 // @ArnIdentity
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/devicefarm/types;awstypes;awstypes.TestGridProject")
 // @Testing(preCheckRegion="us-west-2")
-// @Testing(identityTestRegionOverride=false)
+// @Testing(identityRegionOverrideTest=false)
 func resourceTestGridProject() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTestGridProjectCreate,

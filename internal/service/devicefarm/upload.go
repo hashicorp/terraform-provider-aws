@@ -27,7 +27,7 @@ import (
 // @ArnIdentity
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/devicefarm/types;awstypes;awstypes.Upload")
 // @Testing(preCheckRegion="us-west-2")
-// @Testing(identityTestRegionOverride=false)
+// @Testing(identityRegionOverrideTest=false)
 // @Testing(importIgnore="url")
 func resourceUpload() *schema.Resource {
 	return &schema.Resource{
