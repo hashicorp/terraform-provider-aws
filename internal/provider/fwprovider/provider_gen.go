@@ -1008,20 +1008,6 @@ func endpointsBlock() schema.SetNestedBlock {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
-				// iotanalytics
-
-				"iotanalytics": schema.StringAttribute{
-					Optional:    true,
-					Description: "Use this to override the default service endpoint URL",
-				},
-
-				// iotevents
-
-				"iotevents": schema.StringAttribute{
-					Optional:    true,
-					Description: "Use this to override the default service endpoint URL",
-				},
-
 				// ivs
 
 				"ivs": schema.StringAttribute{
