@@ -321,7 +321,7 @@ func resourceAccessPointForDirectoryBucketRead(ctx context.Context, d *schema.Re
 		return sdkdiag.AppendErrorf(diags, "reading S3 Access Point for Directory Bucket (%s) policy: %s", d.Id(), err)
 	}
 
-	scope, err := FindAccessPointScopeByTwoPartKey(ctx, conn, accountID, name)
+	scope, err := findAccessPointScopeByTwoPartKey(ctx, conn, accountID, name)
 	if err == nil && scope != nil {
 		flattened := flattenScope(scope)
 		if err := d.Set(names.AttrScope, []any{flattened}); err != nil {
@@ -536,18 +536,17 @@ func flattenScope(scope *types.Scope) map[string]any {
 	}
 }
 
-func FindAccessPointScopeByTwoPartKey(ctx context.Context, conn *s3control.Client, accountID, name string) (*types.Scope, error) {
-	inputGAPS := &s3control.GetAccessPointScopeInput{
+func findAccessPointScopeByTwoPartKey(ctx context.Context, conn *s3control.Client, accountID, name string) (*types.Scope, error) {
+	input := s3control.GetAccessPointScopeInput{
 		AccountId: aws.String(accountID),
 		Name:      aws.String(name),
 	}
 
-	outputGAPS, err := conn.GetAccessPointScope(ctx, inputGAPS)
-
+	output, err := conn.GetAccessPointScope(ctx, &input)
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchAccessPoint) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
-			LastRequest: inputGAPS,
+			LastRequest: input,
 		}
 	}
 
@@ -555,11 +554,11 @@ func FindAccessPointScopeByTwoPartKey(ctx context.Context, conn *s3control.Clien
 		return nil, err
 	}
 
-	if outputGAPS == nil {
-		return nil, tfresource.NewEmptyResultError(inputGAPS)
+	if output == nil || output.Scope == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return outputGAPS.Scope, nil
+	return output.Scope, nil
 }
 
 func FindAccessPointForDirectoryBucketPolicyByTwoPartKey(ctx context.Context, conn *s3control.Client, accountID, name string) (string, error) {

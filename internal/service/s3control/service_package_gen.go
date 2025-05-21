@@ -106,7 +106,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		},
 		{
 			Factory:  resourceAccessPointForDirectoryBucketScope,
-			TypeName: "aws_s3control_directory_access_point_scope",
+			TypeName: "aws_s3control_directory_bucket_access_point_scope",
 			Name:     "Directory Access Point Scope",
 		},
 		{

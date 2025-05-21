@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_s3control_directory_access_point_scope", name="Directory Access Point Scope")
+// @SDKResource("aws_s3control_directory_bucket_access_point_scope", name="Directory Access Point Scope")
 func resourceAccessPointForDirectoryBucketScope() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAccessPointForDirectoryBucketScopeCreate,
@@ -120,7 +120,7 @@ func resourceAccessPointForDirectoryBucketScopeRead(ctx context.Context, d *sche
 	d.Set(names.AttrName, name)
 	d.Set(names.AttrAccountID, accountID)
 
-	scope, err := FindAccessPointScopeByTwoPartKey(ctx, conn, accountID, name)
+	scope, err := findAccessPointScopeByTwoPartKey(ctx, conn, accountID, name)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] S3 Access Point for Directory Bucket Scope (%s) not found, removing from state", d.Id())

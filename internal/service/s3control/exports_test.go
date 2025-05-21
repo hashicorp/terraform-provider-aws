@@ -30,6 +30,7 @@ var (
 	FindAccessGrantsLocationByTwoPartKey                   = findAccessGrantsLocationByTwoPartKey
 	FindAccessPointByTwoPartKey                            = findAccessPointByTwoPartKey
 	FindAccessPointPolicyAndStatusByTwoPartKey             = findAccessPointPolicyAndStatusByTwoPartKey
+	FindAccessPointScopeByTwoPartKey                       = findAccessPointScopeByTwoPartKey
 	FindBucketByTwoPartKey                                 = findBucketByTwoPartKey
 	FindBucketLifecycleConfigurationByTwoPartKey           = findBucketLifecycleConfigurationByTwoPartKey
 	FindBucketPolicyByTwoPartKey                           = findBucketPolicyByTwoPartKey
