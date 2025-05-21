@@ -1816,7 +1816,8 @@ service "codegurureviewer" {
   }
 
   sdk {
-    id = "CodeGuru Reviewer"
+    id          = "CodeGuru Reviewer"
+    arn_service = "codeguru-reviewer"
   }
 
   names {
