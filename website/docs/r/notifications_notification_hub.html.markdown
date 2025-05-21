@@ -40,7 +40,7 @@ import {
 }
 ```
 
-Using `terraform import`, import User Notifications Notification Hub using the `region`. For example:
+Using `terraform import`, import User Notifications Notification Hub using the `notification_hub_region `. For example:
 
 ```console
 % terraform import aws_notifications_notification_hub.example us-west-2
