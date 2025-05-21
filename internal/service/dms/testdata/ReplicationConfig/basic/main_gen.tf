@@ -1,5 +1,7 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 resource "aws_dms_replication_config" "test" {
-{{- template "region" }}
   replication_config_identifier = var.rName
   replication_type              = "cdc"
   source_endpoint_arn           = aws_dms_endpoint.source.endpoint_arn
@@ -12,13 +14,11 @@ resource "aws_dms_replication_config" "test" {
     min_capacity_units           = "2"
     preferred_maintenance_window = "sun:23:45-mon:00:30"
   }
-{{- template "tags" . }}
 }
 
 # testAccReplicationConfigConfig_base_DummyDatabase
 
 resource "aws_dms_replication_subnet_group" "test" {
-{{- template "region" }}
   replication_subnet_group_id          = var.rName
   replication_subnet_group_description = "terraform test"
   subnet_ids                           = aws_subnet.test[*].id
@@ -27,12 +27,9 @@ resource "aws_dms_replication_subnet_group" "test" {
 # testAccReplicationEndpointConfig_dummyDatabase
 
 data "aws_partition" "current" {}
-data "aws_region" "current" {
-{{- template "region" -}}
-}
+data "aws_region" "current" {}
 
 resource "aws_dms_endpoint" "source" {
-{{- template "region" }}
   database_name = var.rName
   endpoint_id   = "${var.rName}-source"
   endpoint_type = "source"
@@ -44,7 +41,6 @@ resource "aws_dms_endpoint" "source" {
 }
 
 resource "aws_dms_endpoint" "target" {
-{{- template "region" }}
   database_name = var.rName
   endpoint_id   = "${var.rName}-target"
   endpoint_type = "target"
@@ -58,12 +54,10 @@ resource "aws_dms_endpoint" "target" {
 # acctest.ConfigVPCWithSubnets(rName, 2)
 
 resource "aws_vpc" "test" {
-{{- template "region" }}
   cidr_block = "10.0.0.0/16"
 }
 
 resource "aws_subnet" "test" {
-{{- template "region" }}
   count = 2
 
   vpc_id            = aws_vpc.test.id
@@ -74,7 +68,6 @@ resource "aws_subnet" "test" {
 # acctest.ConfigAvailableAZsNoOptInDefaultExclude
 
 data "aws_availability_zones" "available" {
-{{- template "region" }}
   exclude_zone_ids = local.default_exclude_zone_ids
   state            = "available"
 
@@ -86,4 +79,10 @@ data "aws_availability_zones" "available" {
 
 locals {
   default_exclude_zone_ids = ["usw2-az4", "usgw1-az2"]
+}
+
+variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
 }
