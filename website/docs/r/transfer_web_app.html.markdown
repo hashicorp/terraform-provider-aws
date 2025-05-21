@@ -17,6 +17,7 @@ Terraform resource for managing an AWS Transfer Family Web App.
 ```terraform
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
+data "aws_partition" "current" {}
 
 data "aws_ssoadmin_instances" "example" {}
 
@@ -52,7 +53,7 @@ data "aws_iam_policy_document" "example" {
       "s3:ListCallerAccessGrants",
     ]
     resources = [
-      "arn:aws:s3:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:access-grants/*"
+      "arn:${data.aws_partition.current.partition}:s3:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:access-grants/*"
     ]
     condition {
       test     = "StringEquals"
@@ -90,7 +91,7 @@ resource "aws_transfer_web_app" "example" {
     provisioned = 1
   }
   tags = {
-    Name      = "test"
+    Name = "test"
   }
 }
 ```

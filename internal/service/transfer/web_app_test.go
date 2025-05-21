@@ -52,7 +52,7 @@ func TestAccTransferWebApp_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "identity_provider_details.0.identity_center_config.0.role", "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "web_app_units.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "web_app_units.0.provisioned", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
@@ -73,7 +73,7 @@ func TestAccTransferWebApp_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "identity_provider_details.0.identity_center_config.0.role", "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "web_app_units.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "web_app_units.0.provisioned", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName+"-tag-changed"),
 				),
 			},
@@ -89,7 +89,7 @@ func TestAccTransferWebApp_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "identity_provider_details.0.identity_center_config.0.role", "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "web_app_units.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "web_app_units.0.provisioned", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName+"-tag-changed"),
 				),
 			},
@@ -125,7 +125,7 @@ func TestAccTransferWebApp_webAppUnits(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "web_app_units.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "web_app_units.0.provisioned", "1"),
 					resource.TestCheckResourceAttr(resourceName, "web_app_endpoint_policy", "STANDARD"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
@@ -146,7 +146,7 @@ func TestAccTransferWebApp_webAppUnits(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "web_app_units.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "web_app_units.0.provisioned", "2"),
 					resource.TestCheckResourceAttr(resourceName, "web_app_endpoint_policy", "STANDARD"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
@@ -183,7 +183,7 @@ func TestAccTransferWebApp_accessEndpoint(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "web_app_units.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "web_app_units.0.provisioned", "1"),
 					resource.TestCheckResourceAttr(resourceName, "web_app_endpoint_policy", "STANDARD"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
@@ -205,7 +205,7 @@ func TestAccTransferWebApp_accessEndpoint(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "web_app_units.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "web_app_units.0.provisioned", "1"),
 					resource.TestCheckResourceAttr(resourceName, "web_app_endpoint_policy", "STANDARD"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
@@ -234,7 +234,7 @@ func TestAccTransferWebApp_tags(t *testing.T) {
 				Config: testAccWebAppConfig_basic(rName, rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWebAppExists(ctx, resourceName, &webappBefore),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
@@ -244,7 +244,7 @@ func TestAccTransferWebApp_tags(t *testing.T) {
 					testAccCheckWebAppExists(ctx, resourceName, &webappAfter),
 					testAccCheckWebAppNotRecreated(&webappBefore, &webappAfter),
 					testAccCheckWebAppNotRecreated(&webappBefore, &webappAfter),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -257,7 +257,7 @@ func TestAccTransferWebApp_tags(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWebAppExists(ctx, resourceName, &webappAfter),
 					testAccCheckWebAppNotRecreated(&webappBefore, &webappAfter),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
@@ -266,7 +266,7 @@ func TestAccTransferWebApp_tags(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWebAppExists(ctx, resourceName, &webappAfter),
 					testAccCheckWebAppNotRecreated(&webappBefore, &webappAfter),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.Env", rName),
 				),
@@ -276,7 +276,7 @@ func TestAccTransferWebApp_tags(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWebAppExists(ctx, resourceName, &webappAfter),
 					testAccCheckWebAppNotRecreated(&webappBefore, &webappAfter),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
@@ -382,6 +382,7 @@ func testAccWebAppConfig_base(roleName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
+data "aws_partition" "current" {}
 
 data "aws_ssoadmin_instances" "test" {}
 
@@ -417,7 +418,7 @@ data "aws_iam_policy_document" "web_app_identity_bearer" {
       "s3:ListCallerAccessGrants",
     ]
     resources = [
-      "arn:aws:s3:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:access-grants/*"
+      "arn:${data.aws_partition.current.partition}:s3:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:access-grants/*"
     ]
     condition {
       test     = "StringEquals"
@@ -447,7 +448,7 @@ resource "aws_iam_role_policy" "web_app_identity_bearer" {
 }
 
 func testAccWebAppConfig_basic(rName, roleName string) string {
-	return fmt.Sprintf(acctest.ConfigCompose(
+	return acctest.ConfigCompose(
 		testAccWebAppConfig_base(roleName), fmt.Sprintf(`
 resource "aws_transfer_web_app" "test" {
   identity_provider_details {
@@ -460,11 +461,11 @@ resource "aws_transfer_web_app" "test" {
     Name = %[1]q
   }
 }
-`, rName)))
+`, rName))
 }
 
 func testAccWebAppConfig_webAppUnits(rName string, webAppUnitsProvisioned int) string {
-	return fmt.Sprintf(acctest.ConfigCompose(
+	return acctest.ConfigCompose(
 		testAccWebAppConfig_base(rName), fmt.Sprintf(`
 resource "aws_transfer_web_app" "test" {
   identity_provider_details {
@@ -481,11 +482,11 @@ resource "aws_transfer_web_app" "test" {
     Name = %[1]q
   }
 }
-`, rName, webAppUnitsProvisioned)))
+`, rName, webAppUnitsProvisioned))
 }
 
 func testAccWebAppConfig_accessEndPoint(rName, accessEndPoint string) string {
-	return fmt.Sprintf(acctest.ConfigCompose(
+	return acctest.ConfigCompose(
 		testAccWebAppConfig_base(rName), fmt.Sprintf(`
 resource "aws_transfer_web_app" "test" {
   identity_provider_details {
@@ -500,12 +501,12 @@ resource "aws_transfer_web_app" "test" {
     Name = %[1]q
   }
 }
-`, rName, accessEndPoint)))
+`, rName, accessEndPoint))
 }
 
 func testAccWebAppConfig_noTags(rName string) string {
-	return fmt.Sprintf(acctest.ConfigCompose(
-		testAccWebAppConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccWebAppConfig_base(rName), `
 resource "aws_transfer_web_app" "test" {
   identity_provider_details {
     identity_center_config {
@@ -514,11 +515,11 @@ resource "aws_transfer_web_app" "test" {
     }
   }
 }
-`)))
+`)
 }
 
 func testAccWebAppConfig_multipleTags(rName string) string {
-	return fmt.Sprintf(acctest.ConfigCompose(
+	return acctest.ConfigCompose(
 		testAccWebAppConfig_base(rName), fmt.Sprintf(`
 resource "aws_transfer_web_app" "test" {
   identity_provider_details {
@@ -534,5 +535,5 @@ resource "aws_transfer_web_app" "test" {
   }
 
 }
-`, rName)))
+`, rName))
 }

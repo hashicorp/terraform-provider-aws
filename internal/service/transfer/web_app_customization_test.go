@@ -210,8 +210,7 @@ func testAccCheckWebAppCustomizationExists(ctx context.Context, name string, web
 
 func testAccWebAppCustomizationConfig_base(rName string) string {
 	return acctest.ConfigCompose(
-		testAccWebAppConfig_base(rName),
-		fmt.Sprintf(`
+		testAccWebAppConfig_base(rName), `
 resource "aws_transfer_web_app" "test" {
   identity_provider_details {
     identity_center_config {
@@ -220,7 +219,7 @@ resource "aws_transfer_web_app" "test" {
     }
   }
 }
-`))
+`)
 }
 
 func testAccWebAppCustomizationConfig_basic(rName, title string) string {
@@ -228,8 +227,8 @@ func testAccWebAppCustomizationConfig_basic(rName, title string) string {
 		testAccWebAppCustomizationConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_transfer_web_app_customization" "test" {
-  web_app_id   = aws_transfer_web_app.test.id
-  title        = %[1]q
+  web_app_id = aws_transfer_web_app.test.id
+  title      = %[1]q
 }
 `, title))
 }
