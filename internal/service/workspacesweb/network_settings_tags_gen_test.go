@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/workspacesweb/types"
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -21,7 +20,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.NetworkSettings
 	resourceName := "aws_workspacesweb_network_settings.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -32,7 +30,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/NetworkSettings/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -63,7 +60,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/NetworkSettings/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -77,7 +73,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/NetworkSettings/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
@@ -113,7 +108,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/NetworkSettings/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
@@ -128,7 +122,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/NetworkSettings/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
@@ -159,7 +152,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/NetworkSettings/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
@@ -173,7 +165,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/NetworkSettings/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -194,7 +185,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/NetworkSettings/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				ResourceName:                         resourceName,
@@ -211,7 +201,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.NetworkSettings
 	resourceName := "aws_workspacesweb_network_settings.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -222,7 +211,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_null(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/NetworkSettings/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: nil,
 					}),
@@ -253,7 +241,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_null(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/NetworkSettings/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: nil,
 					}),
@@ -275,7 +262,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.NetworkSettings
 	resourceName := "aws_workspacesweb_network_settings.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -286,7 +272,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_EmptyMap(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/NetworkSettings/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -307,7 +292,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_EmptyMap(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/NetworkSettings/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
 				},
 				ResourceName:                         resourceName,
@@ -327,7 +311,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_AddOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.NetworkSettings
 	resourceName := "aws_workspacesweb_network_settings.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -338,7 +321,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_AddOnUpdate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/NetworkSettings/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -359,7 +341,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_AddOnUpdate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/NetworkSettings/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -390,7 +371,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_AddOnUpdate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/NetworkSettings/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -409,7 +389,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_EmptyTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.NetworkSettings
 	resourceName := "aws_workspacesweb_network_settings.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -420,7 +399,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_EmptyTag_OnCreate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/NetworkSettings/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
@@ -451,7 +429,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_EmptyTag_OnCreate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/NetworkSettings/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
@@ -465,7 +442,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_EmptyTag_OnCreate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/NetworkSettings/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -486,7 +462,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_EmptyTag_OnCreate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/NetworkSettings/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				ResourceName:                         resourceName,
@@ -503,7 +478,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_EmptyTag_OnUpdate_Add(t *testing.T
 	ctx := acctest.Context(t)
 	var v types.NetworkSettings
 	resourceName := "aws_workspacesweb_network_settings.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -514,7 +488,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_EmptyTag_OnUpdate_Add(t *testing.T
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/NetworkSettings/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -545,7 +518,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_EmptyTag_OnUpdate_Add(t *testing.T
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/NetworkSettings/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 						acctest.CtKey2: config.StringVariable(""),
@@ -581,7 +553,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_EmptyTag_OnUpdate_Add(t *testing.T
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/NetworkSettings/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 						acctest.CtKey2: config.StringVariable(""),
@@ -596,7 +567,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_EmptyTag_OnUpdate_Add(t *testing.T
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/NetworkSettings/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -627,7 +597,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_EmptyTag_OnUpdate_Add(t *testing.T
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/NetworkSettings/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -646,7 +615,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_EmptyTag_OnUpdate_Replace(t *testi
 	ctx := acctest.Context(t)
 	var v types.NetworkSettings
 	resourceName := "aws_workspacesweb_network_settings.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -657,7 +625,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_EmptyTag_OnUpdate_Replace(t *testi
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/NetworkSettings/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -688,7 +655,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_EmptyTag_OnUpdate_Replace(t *testi
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/NetworkSettings/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
@@ -719,7 +685,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_EmptyTag_OnUpdate_Replace(t *testi
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/NetworkSettings/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
@@ -738,7 +703,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_DefaultTags_providerOnly(t *testin
 	ctx := acctest.Context(t)
 	var v types.NetworkSettings
 	resourceName := "aws_workspacesweb_network_settings.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
@@ -749,7 +713,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_DefaultTags_providerOnly(t *testin
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/NetworkSettings/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -778,7 +741,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_DefaultTags_providerOnly(t *testin
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/NetworkSettings/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -794,7 +756,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_DefaultTags_providerOnly(t *testin
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/NetworkSettings/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
@@ -826,7 +787,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_DefaultTags_providerOnly(t *testin
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/NetworkSettings/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
@@ -843,7 +803,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_DefaultTags_providerOnly(t *testin
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/NetworkSettings/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
@@ -872,7 +831,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_DefaultTags_providerOnly(t *testin
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/NetworkSettings/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
@@ -888,7 +846,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_DefaultTags_providerOnly(t *testin
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/NetworkSettings/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -910,7 +867,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_DefaultTags_providerOnly(t *testin
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/NetworkSettings/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				ResourceName:                         resourceName,
@@ -927,7 +883,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_DefaultTags_nonOverlapping(t *test
 	ctx := acctest.Context(t)
 	var v types.NetworkSettings
 	resourceName := "aws_workspacesweb_network_settings.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
@@ -938,7 +893,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_DefaultTags_nonOverlapping(t *test
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/NetworkSettings/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -975,7 +929,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_DefaultTags_nonOverlapping(t *test
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/NetworkSettings/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -993,7 +946,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_DefaultTags_nonOverlapping(t *test
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/NetworkSettings/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1Updated),
 					}),
@@ -1035,7 +987,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_DefaultTags_nonOverlapping(t *test
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/NetworkSettings/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1Updated),
 					}),
@@ -1054,7 +1005,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_DefaultTags_nonOverlapping(t *test
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/NetworkSettings/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -1076,7 +1026,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_DefaultTags_nonOverlapping(t *test
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/NetworkSettings/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				ResourceName:                         resourceName,
@@ -1093,7 +1042,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_DefaultTags_overlapping(t *testing
 	ctx := acctest.Context(t)
 	var v types.NetworkSettings
 	resourceName := "aws_workspacesweb_network_settings.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
@@ -1104,7 +1052,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_DefaultTags_overlapping(t *testing
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/NetworkSettings/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -1139,7 +1086,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_DefaultTags_overlapping(t *testing
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/NetworkSettings/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -1157,7 +1103,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_DefaultTags_overlapping(t *testing
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/NetworkSettings/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
 						acctest.CtOverlapKey2: config.StringVariable("providervalue2"),
@@ -1198,7 +1143,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_DefaultTags_overlapping(t *testing
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/NetworkSettings/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
 						acctest.CtOverlapKey2: config.StringVariable("providervalue2"),
@@ -1218,7 +1162,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_DefaultTags_overlapping(t *testing
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/NetworkSettings/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -1253,7 +1196,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_DefaultTags_overlapping(t *testing
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/NetworkSettings/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -1275,7 +1217,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_DefaultTags_updateToProviderOnly(t
 	ctx := acctest.Context(t)
 	var v types.NetworkSettings
 	resourceName := "aws_workspacesweb_network_settings.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
@@ -1286,7 +1227,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_DefaultTags_updateToProviderOnly(t
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/NetworkSettings/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -1318,7 +1258,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_DefaultTags_updateToProviderOnly(t
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/NetworkSettings/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -1347,7 +1286,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_DefaultTags_updateToProviderOnly(t
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/NetworkSettings/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -1367,7 +1305,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_DefaultTags_updateToResourceOnly(t
 	ctx := acctest.Context(t)
 	var v types.NetworkSettings
 	resourceName := "aws_workspacesweb_network_settings.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
@@ -1378,7 +1315,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_DefaultTags_updateToResourceOnly(t
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/NetworkSettings/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -1407,7 +1343,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_DefaultTags_updateToResourceOnly(t
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/NetworkSettings/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -1439,7 +1374,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_DefaultTags_updateToResourceOnly(t
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/NetworkSettings/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -1458,7 +1392,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_DefaultTags_emptyResourceTag(t *te
 	ctx := acctest.Context(t)
 	var v types.NetworkSettings
 	resourceName := "aws_workspacesweb_network_settings.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
@@ -1469,7 +1402,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_DefaultTags_emptyResourceTag(t *te
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/NetworkSettings/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -1504,7 +1436,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_DefaultTags_emptyResourceTag(t *te
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/NetworkSettings/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -1526,7 +1457,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_DefaultTags_emptyProviderOnlyTag(t
 	ctx := acctest.Context(t)
 	var v types.NetworkSettings
 	resourceName := "aws_workspacesweb_network_settings.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
@@ -1537,7 +1467,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_DefaultTags_emptyProviderOnlyTag(t
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/NetworkSettings/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
@@ -1566,7 +1495,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_DefaultTags_emptyProviderOnlyTag(t
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/NetworkSettings/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
@@ -1586,7 +1514,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_DefaultTags_nullOverlappingResourc
 	ctx := acctest.Context(t)
 	var v types.NetworkSettings
 	resourceName := "aws_workspacesweb_network_settings.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
@@ -1597,7 +1524,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_DefaultTags_nullOverlappingResourc
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/NetworkSettings/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -1632,7 +1558,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_DefaultTags_nullOverlappingResourc
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/NetworkSettings/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -1657,7 +1582,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_DefaultTags_nullNonOverlappingReso
 	ctx := acctest.Context(t)
 	var v types.NetworkSettings
 	resourceName := "aws_workspacesweb_network_settings.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
@@ -1668,7 +1592,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_DefaultTags_nullNonOverlappingReso
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/NetworkSettings/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -1705,7 +1628,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_DefaultTags_nullNonOverlappingReso
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/NetworkSettings/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -1730,7 +1652,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_ComputedTag_OnCreate(t *testing.T)
 	ctx := acctest.Context(t)
 	var v types.NetworkSettings
 	resourceName := "aws_workspacesweb_network_settings.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
@@ -1741,7 +1662,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_ComputedTag_OnCreate(t *testing.T)
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/NetworkSettings/tagsComputed1/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable("computedkey1"),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -1770,7 +1690,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_ComputedTag_OnCreate(t *testing.T)
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/NetworkSettings/tagsComputed1/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable("computedkey1"),
 				},
 				ResourceName:                         resourceName,
@@ -1787,7 +1706,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_ComputedTag_OnUpdate_Add(t *testin
 	ctx := acctest.Context(t)
 	var v types.NetworkSettings
 	resourceName := "aws_workspacesweb_network_settings.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
@@ -1798,7 +1716,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_ComputedTag_OnUpdate_Add(t *testin
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/NetworkSettings/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -1830,7 +1747,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_ComputedTag_OnUpdate_Add(t *testin
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/NetworkSettings/tagsComputed2/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable("computedkey1"),
 					"knownTagKey":   config.StringVariable(acctest.CtKey1),
 					"knownTagValue": config.StringVariable(acctest.CtValue1),
@@ -1867,7 +1783,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_ComputedTag_OnUpdate_Add(t *testin
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/NetworkSettings/tagsComputed2/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable("computedkey1"),
 					"knownTagKey":   config.StringVariable(acctest.CtKey1),
 					"knownTagValue": config.StringVariable(acctest.CtValue1),
@@ -1886,7 +1801,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_ComputedTag_OnUpdate_Replace(t *te
 	ctx := acctest.Context(t)
 	var v types.NetworkSettings
 	resourceName := "aws_workspacesweb_network_settings.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
@@ -1897,7 +1811,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_ComputedTag_OnUpdate_Replace(t *te
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/NetworkSettings/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -1929,7 +1842,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_ComputedTag_OnUpdate_Replace(t *te
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/NetworkSettings/tagsComputed1/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable(acctest.CtKey1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -1958,7 +1870,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_ComputedTag_OnUpdate_Replace(t *te
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/NetworkSettings/tagsComputed1/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable(acctest.CtKey1),
 				},
 				ResourceName:                         resourceName,
@@ -1975,7 +1886,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_IgnoreTags_Overlap_DefaultTag(t *t
 	ctx := acctest.Context(t)
 	var v types.NetworkSettings
 	resourceName := "aws_workspacesweb_network_settings.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
@@ -1987,7 +1897,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_IgnoreTags_Overlap_DefaultTag(t *t
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/NetworkSettings/tags_ignore/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -2036,7 +1945,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_IgnoreTags_Overlap_DefaultTag(t *t
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/NetworkSettings/tags_ignore/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1Updated),
 					}),
@@ -2085,7 +1993,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_IgnoreTags_Overlap_DefaultTag(t *t
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/NetworkSettings/tags_ignore/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1Again),
 					}),
@@ -2137,7 +2044,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_IgnoreTags_Overlap_ResourceTag(t *
 	ctx := acctest.Context(t)
 	var v types.NetworkSettings
 	resourceName := "aws_workspacesweb_network_settings.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
@@ -2149,7 +2055,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_IgnoreTags_Overlap_ResourceTag(t *
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/NetworkSettings/tags_ignore/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtResourceKey1: config.StringVariable(acctest.CtResourceValue1),
 						acctest.CtResourceKey2: config.StringVariable(acctest.CtResourceValue2),
@@ -2207,7 +2112,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_IgnoreTags_Overlap_ResourceTag(t *
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/NetworkSettings/tags_ignore/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtResourceKey1: config.StringVariable(acctest.CtResourceValue1Updated),
 						acctest.CtResourceKey2: config.StringVariable(acctest.CtResourceValue2),
@@ -2264,7 +2168,6 @@ func TestAccWorkSpacesWebNetworkSettings_tags_IgnoreTags_Overlap_ResourceTag(t *
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/NetworkSettings/tags_ignore/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtResourceKey1: config.StringVariable(acctest.CtResourceValue1Again),
 						acctest.CtResourceKey2: config.StringVariable(acctest.CtResourceValue2Updated),

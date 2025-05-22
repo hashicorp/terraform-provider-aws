@@ -31,6 +31,7 @@ import (
 // @FrameworkResource("aws_workspacesweb_network_settings", name="Network Settings")
 // @Tags(identifierAttribute="network_settings_arn")
 // @Testing(tagsTest=true)
+// @Testing(generator=false)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/workspacesweb/types;types.NetworkSettings")
 // @Testing(importStateIdAttribute="network_settings_arn")
 func newNetworkSettingsResource(_ context.Context) (resource.ResourceWithConfigure, error) {
@@ -58,21 +59,21 @@ func (r *networkSettingsResource) Schema(ctx context.Context, request resource.S
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"security_group_ids": schema.ListAttribute{
+			names.AttrSecurityGroupIDs: schema.ListAttribute{
 				ElementType: types.StringType,
 				Required:    true,
 				Validators: []validator.List{
 					listvalidator.SizeAtLeast(2),
 				},
 			},
-			"subnet_ids": schema.ListAttribute{
+			names.AttrSubnetIDs: schema.ListAttribute{
 				ElementType: types.StringType,
 				Required:    true,
 				Validators: []validator.List{
 					listvalidator.SizeAtLeast(2),
 				},
 			},
-			"vpc_id": schema.StringAttribute{
+			names.AttrVPCID: schema.StringAttribute{
 				Required: true,
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
@@ -102,7 +103,7 @@ func (r *networkSettingsResource) Create(ctx context.Context, request resource.C
 	output, err := conn.CreateNetworkSettings(ctx, &input)
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("creating WorkSpacesWeb Network Settings"), err.Error())
+		response.Diagnostics.AddError("creating WorkSpacesWeb Network Settings", err.Error())
 		return
 	}
 
