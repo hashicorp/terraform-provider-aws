@@ -155,6 +155,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` – (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cache_behavior` - (Optional) A set of configuration blocks that describe the per-path cache behavior of the distribution. [Detailed below](#cache_behavior)
 * `certificate_name` - (Optional) The name of the SSL/TLS certificate attached to the distribution, if any.
 * `ip_address_type` - (Optional) The IP address type of the distribution. Default: `dualstack`.

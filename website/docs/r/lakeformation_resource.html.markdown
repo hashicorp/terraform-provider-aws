@@ -35,6 +35,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` – (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `role_arn` – (Optional) Role that has read/write access to the resource.
 * `use_service_linked_role` - (Optional) Designates an AWS Identity and Access Management (IAM) service-linked role by registering this role with the Data Catalog.
 * `hybrid_access_enabled` - (Optional) Flag to enable AWS LakeFormation hybrid access permission mode.

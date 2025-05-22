@@ -94,6 +94,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` – (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cache_usage_limits` - (Optional) Sets the cache usage limits for storage and ElastiCache Processing Units for the cache. See [`cache_usage_limits` Block](#cache_usage_limits-block) for details.
 * `daily_snapshot_time` - (Optional) The daily time that snapshots will be created from the new serverless cache. Only supported for engine types `"redis"` or `"valkey"`. Defaults to `0`.
 * `description` - (Optional) User-provided description for the serverless cache. The default is NULL.
