@@ -15,6 +15,14 @@ resource "aws_subnet" "test" {
   cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
 }
 
+locals {
+  subnet_count = {{ . }}
+}
+
+{{ template "acctest.ConfigAvailableAZsNoOptInDefaultExclude" }}
+{{- end }}
+
+{{ define "acctest.ConfigAvailableAZsNoOptInDefaultExclude" -}}
 # acctest.ConfigAvailableAZsNoOptInDefaultExclude
 
 data "aws_availability_zones" "available" {
@@ -29,7 +37,37 @@ data "aws_availability_zones" "available" {
 }
 
 locals {
-  subnet_count             = {{ . }}
   default_exclude_zone_ids = ["usw2-az4", "usgw1-az2"]
+}
+{{- end }}
+
+{{ define "acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI" -}}
+# acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI
+
+{{ template "acctest.configLatestAmazonLinux2HVMEBSAMI" "x86_64" }}
+{{- end }}
+
+{{ define "acctest.configLatestAmazonLinux2HVMEBSAMI" -}}
+# acctest.configLatestAmazonLinux2HVMEBSAMI
+
+data "aws_ami" "amzn2-ami-minimal-hvm-ebs-{{ . }}" {
+{{- template "region" }}
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn2-ami-minimal-hvm-*"]
+  }
+
+  filter {
+    name   = "root-device-type"
+    values = ["ebs"]
+  }
+
+  filter {
+    name   = "architecture"
+    values = ["{{ . }}"]
+  }
 }
 {{- end }}
