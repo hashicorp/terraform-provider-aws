@@ -260,7 +260,6 @@ func dataSourceAMIRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	diags = checkMostRecentAndMissingFilters(diags, &describeImagesInput, d.Get(names.AttrMostRecent).(bool))
 
 	images, err := findImages(ctx, conn, &describeImagesInput)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 AMIs: %s", err)
 	}
@@ -375,13 +374,14 @@ func flattenAMIBlockDeviceMappings(apiObjects []awstypes.BlockDeviceMapping) []a
 
 		if apiObject := apiObject.Ebs; apiObject != nil {
 			ebs := map[string]any{
-				names.AttrDeleteOnTermination: flex.BoolToStringValue(apiObject.DeleteOnTermination),
-				names.AttrEncrypted:           flex.BoolToStringValue(apiObject.Encrypted),
-				names.AttrIOPS:                flex.Int32ToStringValue(apiObject.Iops),
-				names.AttrSnapshotID:          aws.ToString(apiObject.SnapshotId),
-				names.AttrThroughput:          flex.Int32ToStringValue(apiObject.Throughput),
-				names.AttrVolumeSize:          flex.Int32ToStringValue(apiObject.VolumeSize),
-				names.AttrVolumeType:          apiObject.VolumeType,
+				names.AttrDeleteOnTermination:      flex.BoolToStringValue(apiObject.DeleteOnTermination),
+				names.AttrEncrypted:                flex.BoolToStringValue(apiObject.Encrypted),
+				names.AttrIOPS:                     flex.Int32ToStringValue(apiObject.Iops),
+				names.AttrSnapshotID:               aws.ToString(apiObject.SnapshotId),
+				names.AttrThroughput:               flex.Int32ToStringValue(apiObject.Throughput),
+				names.AttrVolumeSize:               flex.Int32ToStringValue(apiObject.VolumeSize),
+				names.AttrVolumeInitializationRate: flex.Int32ToStringValue(apiObject.VolumeInitializationRate),
+				names.AttrVolumeType:               apiObject.VolumeType,
 			}
 
 			tfMap["ebs"] = ebs

@@ -79,6 +79,7 @@ This data source exports the following attributes in addition to the arguments a
         * `volume_size` - The size of the volume, in GiB.
         * `throughput` - The throughput that the EBS volume supports, in MiB/s.
         * `volume_type` - The volume type.
+        * `volume_initialization_rate` - The volume initialization rate, in MiB/s.
     * `no_device` - Suppresses the specified device included in the block device mapping of the AMI.
     * `virtual_name` - Virtual device name (for instance stores).
 * `creation_date` - Date and time the image was created.

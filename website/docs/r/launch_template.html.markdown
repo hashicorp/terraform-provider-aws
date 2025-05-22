@@ -188,6 +188,7 @@ The `ebs` block supports the following:
 * `snapshot_id` - (Optional) The Snapshot ID to mount.
 * `throughput` - (Optional) The throughput to provision for a `gp3` volume in MiB/s (specified as an integer, e.g., 500), with a maximum of 1,000 MiB/s.
 * `volume_size` - (Optional) The size of the volume in gigabytes.
+* `volume_initialization_rate` - (Optional) The volume initialization rate in MiB/s (specified as an integer, e.g. 100), with a minimum of 100 MiB/s and maximum of 300 MiB/s.
 * `volume_type` - (Optional) The volume type.
   Can be one of `standard`, `gp2`, `gp3`, `io1`, `io2`, `sc1` or `st1`.
 
