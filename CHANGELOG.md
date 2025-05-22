@@ -52,6 +52,7 @@ ENHANCEMENTS:
 * resource/aws_rum_app_monitor: Mark `domain` as Optional ([#42456](https://github.com/hashicorp/terraform-provider-aws/issues/42456))
 * resource/aws_s3tables_table: Add `encryption_configuration` argument. This functionality requires the `s3tables:GetTableEncryption` IAM permission ([#42356](https://github.com/hashicorp/terraform-provider-aws/issues/42356))
 * resource/aws_s3tables_table_bucket: Add `encryption_configuration` argument. This functionality requires the `s3tables:GetTableBucketEncryption` IAM permission ([#42356](https://github.com/hashicorp/terraform-provider-aws/issues/42356))
+* resource/aws_sagemaker_image_version: Add `aliases` argument ([#42610](https://github.com/hashicorp/terraform-provider-aws/issues/42610))
 * resource/aws_securityhub_finding_aggregator: Support `NO_REGIONS` as a valid value for `linking_mode` ([#42574](https://github.com/hashicorp/terraform-provider-aws/issues/42574))
 * resource/aws_sns_topic: Add `fifo_throughput_scope` argument ([#42508](https://github.com/hashicorp/terraform-provider-aws/issues/42508))
 * resource/aws_wafv2_rule_group: Add `uri_fragment` to `field_to_match` configuration blocks ([#42407](https://github.com/hashicorp/terraform-provider-aws/issues/42407))
