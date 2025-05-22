@@ -37,7 +37,7 @@ import (
 )
 
 // @SDKResource("aws_ecs_service", name="Service")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn")
 func resourceService() *schema.Resource {
 	// Resource with v0 schema (provider v5.58.0).
 	resourceV0 := &schema.Resource{
