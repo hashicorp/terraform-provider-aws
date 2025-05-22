@@ -52,6 +52,8 @@ resource "aws_signer_signing_profile_permission" "sp_permission_3" {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `profile_name` - (Required) Name of the signing profile to add the cross-account permissions.
 * `action` - (Required) An AWS Signer action permitted as part of cross-account permissions. Valid values: `signer:StartSigningJob`, `signer:GetSigningProfile`, `signer:RevokeSignature`, or `signer:SignPayload`.
 * `principal` - (Required) The AWS principal to be granted a cross-account permission.

@@ -20,6 +20,8 @@ data "aws_lakeformation_resource" "example" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `arn` – (Required) ARN of the resource, an S3 path.
 
 ## Attribute Reference

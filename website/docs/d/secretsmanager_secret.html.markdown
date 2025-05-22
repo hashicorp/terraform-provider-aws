@@ -30,6 +30,8 @@ data "aws_secretsmanager_secret" "by-name" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `arn` - (Optional) ARN of the secret to retrieve.
 * `name` - (Optional) Name of the secret to retrieve.
 

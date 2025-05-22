@@ -20,6 +20,8 @@ data "aws_imagebuilder_image_pipeline" "example" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `arn` - (Required) ARN of the image pipeline.
 
 ## Attribute Reference

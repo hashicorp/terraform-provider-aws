@@ -81,7 +81,7 @@ resource "aws_appflow_connector_profile" "example" {
 
 ## Argument Reference
 
-The AppFlow connector profile argument layout is a complex structure. The following top-level arguments are supports:
+This resource supports the following arguments:
 
 * `name ` (Required) - Name of the connector profile. The name is unique for each `ConnectorProfile` in your AWS account.
 * `connection_mode` (Required) - Indicates the connection mode and specifies whether it is public or private. Private flows use AWS PrivateLink to route data over AWS infrastructure without exposing it to the public internet. One of: `Public`, `Private`.

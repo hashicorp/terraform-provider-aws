@@ -32,6 +32,8 @@ resource "aws_lambda_alias" "test_lambda_alias" {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `name` - (Required) Name for the alias you are creating. Pattern: `(?!^[0-9]+$)([a-zA-Z0-9-_]+)`
 * `description` - (Optional) Description of the alias.
 * `function_name` - (Required) Lambda Function name or ARN.

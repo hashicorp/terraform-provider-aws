@@ -23,7 +23,7 @@ data "aws_dx_router_configuration" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
 * `virtual_interface_id` - (Required) ID of the Direct Connect Virtual Interface
 * `router_type_identifier` - (Required) ID of the Router Type. For example: `CiscoSystemsInc-2900SeriesRouters-IOS124`

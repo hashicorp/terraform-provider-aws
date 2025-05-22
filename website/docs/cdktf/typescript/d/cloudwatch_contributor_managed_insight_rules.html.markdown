@@ -39,13 +39,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
 * `resourceArn` - (Required) ARN of an Amazon Web Services resource that has managed Contributor Insights rules.
-
-The following arguments are optional:
-
-There are no optional arguments.
 
 ## Attribute Reference
 
@@ -64,4 +60,4 @@ This data source exports the following attributes in addition to the arguments a
 * `ruleName` - Name of the Contributor Insights rule that contains data for the specified Amazon Web Services resource.
 * `state` - Indicates whether the rule is enabled or disabled.
 
-<!-- cache-key: cdktf-0.20.8 input-751aa447b1b1d126bc0f55a5dbcfcb57fdf4dd07463a7f2b0a7d676e1bc00620 -->
+<!-- cache-key: cdktf-0.20.8 input-832ca64aae9ec54eb1e287edbfece39ca22fe82bc14afd47b0217ffe60336392 -->

@@ -20,6 +20,8 @@ data "aws_location_tracker" "example" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `tracker_name` - (Required) Name of the tracker resource.
 
 ## Attribute Reference

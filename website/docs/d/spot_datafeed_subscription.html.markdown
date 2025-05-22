@@ -18,6 +18,10 @@ Terraform data source for accessing an AWS EC2 (Elastic Compute Cloud) spot data
 data "aws_spot_datafeed_subscription" "default" {}
 ```
 
+## Argument Reference
+
+This data source does not support any arguments.
+
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:

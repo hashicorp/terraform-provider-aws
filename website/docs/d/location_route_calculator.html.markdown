@@ -20,6 +20,8 @@ data "aws_location_route_calculator" "example" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `calculator_name` - (Required) Name of the route calculator resource.
 
 ## Attribute Reference

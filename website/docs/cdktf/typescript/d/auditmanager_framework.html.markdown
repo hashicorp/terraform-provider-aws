@@ -39,13 +39,15 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
 * `name` - (Required) Name of the framework.
 * `type` - (Required) Type of framework. Valid values are `Custom` and `Standard`.
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 See the [`aws_auditmanager_framework` resource](/docs/providers/aws/r/auditmanager_framework.html) for details on the returned attributes - they are identical.
 
-<!-- cache-key: cdktf-0.20.8 input-e12a3dc3cc7a030af0ee05ef605e7ae0ed5532ec722427fc48f953a615499bf2 -->
+<!-- cache-key: cdktf-0.20.8 input-78032ac93dacb2d18bf9813f45c82f5f519eccc023a1cac1ed20d42f84c7607e -->

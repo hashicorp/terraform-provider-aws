@@ -80,4 +80,4 @@ This data source exports the following attributes in addition to the arguments a
 * `spec` - Virtual gateway specification. See the [`aws_appmesh_virtual_gateway`](/docs/providers/aws/r/appmesh_virtual_gateway.html#spec) resource for details.
 * `tags` - Map of tags.
 
-<!-- cache-key: cdktf-0.20.8 input-a538bcbf642443121e211852f127911c6109e4baf18bd72f5915c80b62936a13 -->
+<!-- cache-key: cdktf-0.20.8 input-0718ca0daccbac34456cd844e6da67d862a2fb170384a17adc5ef579da918516 -->

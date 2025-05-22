@@ -1161,6 +1161,38 @@ func TestAccImageBuilderDistributionConfiguration_DistributionS3Export_s3Prefix(
 	})
 }
 
+func TestAccImageBuilderDistributionConfiguration_ssmParameterConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_imagebuilder_distribution_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDistributionConfigurationConfig_ssmParameterConfiguration(rName, "/test/output", "aws:ec2:image"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "distribution.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "distribution.*", map[string]string{
+						"ssm_parameter_configuration.#":                "1",
+						"ssm_parameter_configuration.0.parameter_name": "/test/output",
+						"ssm_parameter_configuration.0.data_type":      "aws:ec2:image",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccImageBuilderDistributionConfiguration_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1922,6 +1954,23 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
   }
 }
 `, rName, s3Prefix)
+}
+
+func testAccDistributionConfigurationConfig_ssmParameterConfiguration(rName string, parameterName string, dataType string) string {
+	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
+resource "aws_imagebuilder_distribution_configuration" "test" {
+  name = %[1]q
+  distribution {
+    ssm_parameter_configuration {
+      parameter_name = %[2]q
+      data_type      = %[3]q
+    }
+    region = data.aws_region.current.name
+  }
+}
+`, rName, parameterName, dataType)
 }
 
 func testAccDistributionConfigurationConfig_tags1(rName string, tagKey1 string, tagValue1 string) string {

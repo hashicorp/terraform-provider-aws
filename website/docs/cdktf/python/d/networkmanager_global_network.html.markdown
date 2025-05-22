@@ -33,6 +33,8 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `global_network_id` - (Required) ID of the specific global network to retrieve.
 
 ## Attribute Reference
@@ -43,4 +45,4 @@ This data source exports the following attributes in addition to the arguments a
 * `description` - Description of the global network.
 * `tags` - Map of resource tags.
 
-<!-- cache-key: cdktf-0.20.8 input-2beedb9058cb6af0278a82e6f6239295f59bb32ff22d4cf013144823c528e416 -->
+<!-- cache-key: cdktf-0.20.8 input-41c5dbbd5f067648081875f92a382bbc0f8fa95880fc24f5156c84c9b627009d -->

@@ -27,6 +27,8 @@ resource "aws_serverlessapplicationrepository_cloudformation_stack" "example" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `application_id` - (Required) ARN of the application.
 * `semantic_version` - (Optional) Requested version of the application. By default, retrieves the latest version.
 

@@ -404,9 +404,10 @@ func expandSource(tfList []any) *awstypes.Source {
 	}
 
 	if v, ok := tfMap["source_data"].([]any); ok && len(v) > 0 && v[0] != nil {
-		if result.SourceType == awstypes.TrustAnchorTypeAwsAcmPca {
+		switch result.SourceType {
+		case awstypes.TrustAnchorTypeAwsAcmPca:
 			result.SourceData = expandSourceDataACMPCA(v[0].(map[string]any))
-		} else if result.SourceType == awstypes.TrustAnchorTypeCertificateBundle {
+		case awstypes.TrustAnchorTypeCertificateBundle:
 			result.SourceData = expandSourceDataCertificateBundle(v[0].(map[string]any))
 		}
 	}

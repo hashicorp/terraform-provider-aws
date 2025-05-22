@@ -54,6 +54,8 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `arn` - (Optional) ARN of the secret to retrieve.
 * `name` - (Optional) Name of the secret to retrieve.
 
@@ -70,4 +72,4 @@ This data source exports the following attributes in addition to the arguments a
 * `policy` - Resource-based policy document that's attached to the secret.
 * `tags` - Tags of the secret.
 
-<!-- cache-key: cdktf-0.20.8 input-1cf3158ebed32b0b6c34be5689b105718c04748bc53773ad85c5652ccd87a14c -->
+<!-- cache-key: cdktf-0.20.8 input-20e18a86b173f94cb3d0d3d0e8b4485430a7a20592bea4ec4d8ae14cd88824c3 -->

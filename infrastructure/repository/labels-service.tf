@@ -236,6 +236,8 @@ variable "service_labels" {
     "networkmanager",
     "networkmonitor",
     "nimble",
+    "notifications",
+    "notificationscontacts",
     "oam",
     "opensearch",
     "opensearchserverless",

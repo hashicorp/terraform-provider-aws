@@ -40,6 +40,8 @@ resource "aws_iot_certificate" "cert" {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `active` - (Required)  Boolean flag to indicate if the certificate should be active
 * `csr` - (Optional) The certificate signing request. Review
   [CreateCertificateFromCsr](https://docs.aws.amazon.com/iot/latest/apireference/API_CreateCertificateFromCsr.html)

@@ -33,11 +33,15 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `name` - (Required) Friendly name of the ledger to match.
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 See the [QLDB Ledger Resource](/docs/providers/aws/r/qldb_ledger.html) for details on the
 returned attributes - they are identical.
 
-<!-- cache-key: cdktf-0.20.8 input-0a3bcd75f129ece3016f3577ca775df98dda0b448d78fa027251b4d8bf803822 -->
+<!-- cache-key: cdktf-0.20.8 input-3cdfdc5244c84465f2597b4c07292d7433f17ce8a9b0a57bf255271801f02672 -->

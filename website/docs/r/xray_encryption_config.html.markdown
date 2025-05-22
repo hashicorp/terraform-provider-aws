@@ -53,6 +53,8 @@ resource "aws_xray_encryption_config" "example" {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `type` - (Required) The type of encryption. Set to `KMS` to use your own key for encryption. Set to `NONE` for default encryption.
 * `key_id` - (Optional) An AWS KMS customer master key (CMK) ARN.
 

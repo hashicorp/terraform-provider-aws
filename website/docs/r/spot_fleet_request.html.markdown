@@ -197,8 +197,7 @@ resource "aws_spot_fleet_request" "foo" {
 
 ## Argument Reference
 
-Most of these arguments directly correspond to the
-[official API](http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_SpotFleetRequestConfigData.html).
+This resource supports the following arguments:
 
 * `iam_fleet_role` - (Required) Grants the Spot fleet permission to terminate
   Spot instances on your behalf when you cancel its Spot fleet request using

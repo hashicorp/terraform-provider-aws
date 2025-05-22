@@ -36,6 +36,8 @@ provider "helm" {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `name` - (Required) Name of the EKS cluster.
 
 ## Attribute Reference

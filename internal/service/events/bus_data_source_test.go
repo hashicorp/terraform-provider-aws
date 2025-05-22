@@ -57,6 +57,29 @@ func TestAccEventsBusDataSource_kmsKeyIdentifier(t *testing.T) {
 	})
 }
 
+func TestAccEventsBusDataSource_deadLetterConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	busName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSourceName := "data.aws_cloudwatch_event_bus.test"
+	resourceName := "aws_cloudwatch_event_bus.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBusDataSourceConfig_deadLetterConfig(busName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "dead_letter_config.#", "1"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "dead_letter_config.0.arn", resourceName, "dead_letter_config.0.arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
+				),
+			},
+		},
+	})
+}
+
 func testAccBusDataSourceConfig_basic(busName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_bus" "test" {
@@ -127,6 +150,25 @@ resource "aws_cloudwatch_event_bus" "test" {
   name               = %[1]q
   description        = "Test event bus"
   kms_key_identifier = aws_kms_key.test.arn
+}
+
+data "aws_cloudwatch_event_bus" "test" {
+  name = aws_cloudwatch_event_bus.test.name
+}
+`, busName)
+}
+
+func testAccBusDataSourceConfig_deadLetterConfig(busName string) string {
+	return fmt.Sprintf(`
+resource "aws_sqs_queue" "test" {
+  name = %[1]q
+}
+
+resource "aws_cloudwatch_event_bus" "test" {
+  name = %[1]q
+  dead_letter_config {
+    arn = aws_sqs_queue.test.arn
+  }
 }
 
 data "aws_cloudwatch_event_bus" "test" {

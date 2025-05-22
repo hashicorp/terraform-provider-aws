@@ -35,8 +35,7 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available resolver rules in the current region.
-The given filters must match exactly one resolver rule whose data will be exported as attributes.
+This data source supports the following arguments:
 
 * `firewall_rule_group_id` - (Required) The unique identifier of the firewall rule group that you want to retrieve the rules for.
 * `action` - (Optional) The action that DNS Firewall should take on a DNS query when it matches one of the domains in the rule's domain list.
@@ -60,4 +59,4 @@ This data source exports the following attributes in addition to the arguments a
 * `modification_time` - The date and time that the rule was last modified, in Unix time format and Coordinated Universal Time (UTC).
 * `name` - The name of the rule.
 
-<!-- cache-key: cdktf-0.20.8 input-7b8006826528bb5f3aaa7132422f98725c6be04f17245114660aea8409422dde -->
+<!-- cache-key: cdktf-0.20.8 input-70d995e777780343142077b2399fbecb095fd7927b7a223f855734a8aa789930 -->
