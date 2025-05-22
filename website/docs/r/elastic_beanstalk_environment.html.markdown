@@ -34,6 +34,7 @@ resource "aws_elastic_beanstalk_environment" "tfenvtest" {
 
 This resource supports the following arguments:
 
+* `region` – (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) A unique name for this Environment. This name is used
   in the application URL
 * `application` – (Required) Name of the application that contains the version

@@ -43,6 +43,7 @@ resource "aws_lightsail_lb_https_redirection_policy" "test" {
 
 This resource supports the following arguments:
 
+* `region` – (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `lb_name` - (Required) The name of the load balancer to which you want to enable http to https redirection.
 * `enabled` - (Required) - The Https Redirection state of the load balancer. `true` to activate http to https redirection or `false` to deactivate http to https redirection.
 

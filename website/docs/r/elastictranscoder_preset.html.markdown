@@ -82,6 +82,7 @@ resource "aws_elastictranscoder_preset" "bar" {
 
 This resource supports the following arguments:
 
+* `region` – (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `audio` - (Optional, Forces new resource) Audio parameters object (documented below).
 * `audio_codec_options` - (Optional, Forces new resource) Codec options for the audio parameters (documented below)
 * `container` - (Required, Forces new resource) The container type for the output file. Valid values are `flac`, `flv`, `fmp4`, `gif`, `mp3`, `mp4`, `mpg`, `mxf`, `oga`, `ogg`, `ts`, and `webm`.

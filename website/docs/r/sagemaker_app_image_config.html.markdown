@@ -46,6 +46,7 @@ resource "aws_sagemaker_app_image_config" "test" {
 
 This resource supports the following arguments:
 
+* `region` – (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `app_image_config_name` - (Required) The name of the App Image Config.
 * `code_editor_app_image_config` - (Optional) The CodeEditorAppImageConfig. You can only specify one image kernel in the AppImageConfig API. This kernel is shown to users before the image starts. After the image runs, all kernels are visible in Code Editor. See [Code Editor App Image Config](#code-editor-app-image-config) details below.
 * `jupyter_lab_image_config` - (Optional) The JupyterLabAppImageConfig. You can only specify one image kernel in the AppImageConfig API. This kernel is shown to users before the image starts. After the image runs, all kernels are visible in JupyterLab. See [Jupyter Lab Image Config](#jupyter-lab-image-config) details below.

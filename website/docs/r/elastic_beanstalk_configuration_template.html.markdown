@@ -31,6 +31,7 @@ resource "aws_elastic_beanstalk_configuration_template" "tf_template" {
 
 This resource supports the following arguments:
 
+* `region` – (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) A unique name for this Template.
 * `application` – (Required) name of the application to associate with this configuration template
 * `description` - (Optional) Short description of the Template

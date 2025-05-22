@@ -178,6 +178,7 @@ resource "aws_s3_bucket" "example" {
 
 This resource supports the following arguments:
 
+* `region` – (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `traffic_type` - (Required) The type of traffic to capture. Valid values: `ACCEPT`,`REJECT`, `ALL`.
 * `deliver_cross_account_role` - (Optional) ARN of the IAM role that allows Amazon EC2 to publish flow logs across accounts.
 * `eni_id` - (Optional) Elastic Network Interface ID to attach to.

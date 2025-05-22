@@ -97,6 +97,7 @@ resource "aws_lb" "example" {
 
 This resource supports the following arguments:
 
+* `region` – (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `access_logs` - (Optional) Access Logs block. See below.
 * `connection_logs` - (Optional) Connection Logs block. See below. Only valid for Load Balancers of type `application`.
 * `client_keep_alive` - (Optional) Client keep alive value in seconds. The valid range is 60-604800 seconds. The default is 3600 seconds.

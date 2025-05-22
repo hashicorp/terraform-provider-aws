@@ -37,6 +37,7 @@ resource "aws_lightsail_instance" "test" {
 
 This resource supports the following arguments:
 
+* `region` – (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `static_ip_name` - (Required) The name of the allocated static IP
 * `instance_name` - (Required) The name of the Lightsail instance to attach the IP to
 

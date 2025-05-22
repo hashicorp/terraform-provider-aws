@@ -100,6 +100,7 @@ resource "aws_elasticache_replication_group" "secondary" {
 
 This resource supports the following arguments:
 
+* `region` – (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `automatic_failover_enabled` - (Optional) Specifies whether read-only replicas will be automatically promoted to read/write primary if the existing primary fails.
   When creating, by default the Global Replication Group inherits the automatic failover setting of the primary replication group.
 * `cache_node_type` - (Optional) The instance class used.

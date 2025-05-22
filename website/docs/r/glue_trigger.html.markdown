@@ -107,6 +107,7 @@ resource "aws_glue_trigger" "example" {
 
 This resource supports the following arguments:
 
+* `region` – (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `actions` – (Required) List of actions initiated by this trigger when it fires. See [Actions](#actions) Below.
 * `description` – (Optional) A description of the new trigger.
 * `enabled` – (Optional) Start the trigger. Defaults to `true`.
