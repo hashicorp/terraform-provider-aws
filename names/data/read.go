@@ -218,7 +218,6 @@ func (sr ServiceRecord) ARNService() string {
 		return sr.service.ServiceSDK.ARNService
 	}
 	return ""
-
 }
 
 func (sr ServiceRecord) AWSServiceEnvVar() string {
