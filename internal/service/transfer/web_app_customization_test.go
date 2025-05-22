@@ -42,11 +42,43 @@ func TestAccTransferWebAppCustomization_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckWebAppCustomizationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebAppCustomizationConfig_basic(rName, "test"),
+				Config: testAccWebAppCustomizationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWebAppCustomizationExists(ctx, resourceName, &webappcustomization),
 					resource.TestCheckResourceAttrPair(resourceName, "web_app_id", "aws_transfer_web_app.test", names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "title", "test"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccTransferWebAppCustomization_title(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var webappcustomization awstypes.DescribedWebAppCustomization
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_transfer_web_app_customization.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.TransferEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebAppCustomizationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebAppCustomizationConfig_title(rName, "test"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWebAppCustomizationExists(ctx, resourceName, &webappcustomization),
+					resource.TestCheckResourceAttrPair(resourceName, "web_app_id", "aws_transfer_web_app.test", names.AttrID),
 				),
 			},
 			{
@@ -55,11 +87,27 @@ func TestAccTransferWebAppCustomization_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccWebAppCustomizationConfig_basic(rName, "test2"),
+				Config: testAccWebAppCustomizationConfig_title(rName, "test2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWebAppCustomizationExists(ctx, resourceName, &webappcustomization),
 					resource.TestCheckResourceAttrPair(resourceName, "web_app_id", "aws_transfer_web_app.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "title", "test2"),
+				),
+			},
+			{
+				Config: testAccWebAppCustomizationConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWebAppCustomizationExists(ctx, resourceName, &webappcustomization),
+					resource.TestCheckResourceAttrPair(resourceName, "web_app_id", "aws_transfer_web_app.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "title", "test2"),
+				),
+			},
+			{
+				Config: testAccWebAppCustomizationConfig_title(rName, ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWebAppCustomizationExists(ctx, resourceName, &webappcustomization),
+					resource.TestCheckResourceAttrPair(resourceName, "web_app_id", "aws_transfer_web_app.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "title", ""),
 				),
 			},
 		},
@@ -88,11 +136,10 @@ func TestAccTransferWebAppCustomization_files(t *testing.T) {
 		CheckDestroy:             testAccCheckWebAppCustomizationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebAppCustomizationConfig_files(rName, "test", "Dark", "Light"),
+				Config: testAccWebAppCustomizationConfig_files(rName, "Dark", "Light"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWebAppCustomizationExists(ctx, resourceName, &webappcustomization),
 					resource.TestCheckResourceAttrPair(resourceName, "web_app_id", "aws_transfer_web_app.test", names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "title", "test"),
 					resource.TestCheckResourceAttr(resourceName, "logo_file", darkFileBase64Encoded),
 					resource.TestCheckResourceAttr(resourceName, "favicon_file", lightFileBase64Encoded),
 				),
@@ -103,21 +150,19 @@ func TestAccTransferWebAppCustomization_files(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccWebAppCustomizationConfig_files(rName, "test", "Light", "Dark"),
+				Config: testAccWebAppCustomizationConfig_files(rName, "Light", "Dark"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWebAppCustomizationExists(ctx, resourceName, &webappcustomization),
 					resource.TestCheckResourceAttrPair(resourceName, "web_app_id", "aws_transfer_web_app.test", names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "title", "test"),
 					resource.TestCheckResourceAttr(resourceName, "logo_file", lightFileBase64Encoded),
 					resource.TestCheckResourceAttr(resourceName, "favicon_file", darkFileBase64Encoded),
 				),
 			},
 			{
-				Config: testAccWebAppCustomizationConfig_basic(rName, "test"),
+				Config: testAccWebAppCustomizationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWebAppCustomizationExists(ctx, resourceName, &webappcustomization),
 					resource.TestCheckResourceAttrPair(resourceName, "web_app_id", "aws_transfer_web_app.test", names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "title", "test"),
 					resource.TestCheckResourceAttr(resourceName, "logo_file", lightFileBase64Encoded),
 					resource.TestCheckResourceAttr(resourceName, "favicon_file", darkFileBase64Encoded),
 				),
@@ -144,7 +189,7 @@ func TestAccTransferWebAppCustomization_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckWebAppCustomizationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebAppCustomizationConfig_basic(rName, "test"),
+				Config: testAccWebAppCustomizationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWebAppCustomizationExists(ctx, resourceName, &webappcustomization),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tftransfer.ResourceWebAppCustomization, resourceName),
@@ -222,7 +267,16 @@ resource "aws_transfer_web_app" "test" {
 `)
 }
 
-func testAccWebAppCustomizationConfig_basic(rName, title string) string {
+func testAccWebAppCustomizationConfig_basic(rName string) string {
+	return acctest.ConfigCompose(
+		testAccWebAppCustomizationConfig_base(rName), `
+resource "aws_transfer_web_app_customization" "test" {
+  web_app_id = aws_transfer_web_app.test.id
+}
+`)
+}
+
+func testAccWebAppCustomizationConfig_title(rName, title string) string {
 	return acctest.ConfigCompose(
 		testAccWebAppCustomizationConfig_base(rName),
 		fmt.Sprintf(`
@@ -233,15 +287,14 @@ resource "aws_transfer_web_app_customization" "test" {
 `, title))
 }
 
-func testAccWebAppCustomizationConfig_files(rName, title, logoFileSuffix, faviconFileSuffix string) string {
+func testAccWebAppCustomizationConfig_files(rName, logoFileSuffix, faviconFileSuffix string) string {
 	return acctest.ConfigCompose(
 		testAccWebAppCustomizationConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_transfer_web_app_customization" "test" {
   web_app_id   = aws_transfer_web_app.test.id
-  title        = %[1]q
-  logo_file    = filebase64("test-fixtures/Terraform-LogoMark_on%[2]s.png")
-  favicon_file = filebase64("test-fixtures/Terraform-LogoMark_on%[3]s.png")
+  logo_file    = filebase64("test-fixtures/Terraform-LogoMark_on%[1]s.png")
+  favicon_file = filebase64("test-fixtures/Terraform-LogoMark_on%[2]s.png")
 }
-`, title, logoFileSuffix, faviconFileSuffix))
+`, logoFileSuffix, faviconFileSuffix))
 }
