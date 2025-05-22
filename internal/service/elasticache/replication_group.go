@@ -715,7 +715,7 @@ func resourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData, m
 	if rgp.ConfigurationEndpoint != nil {
 		d.Set(names.AttrPort, rgp.ConfigurationEndpoint.Port)
 		d.Set("configuration_endpoint_address", rgp.ConfigurationEndpoint.Address)
-	} else {
+	} else if len(rgp.NodeGroups) > 0 {
 		log.Printf("[DEBUG] ElastiCache Replication Group (%s) Configuration Endpoint is nil", d.Id())
 
 		if rgp.NodeGroups[0].PrimaryEndpoint != nil {
