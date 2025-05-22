@@ -6,7 +6,6 @@ package organizations_test
 import (
 	"context"
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -36,12 +35,7 @@ func testAccAccountImportStep(n string) resource.TestStep {
 
 func testAccAccount_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	key := "TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN"
-	orgsEmailDomain := os.Getenv(key)
-	if orgsEmailDomain == "" {
-		t.Skipf("Environment variable %s is not set", key)
-	}
-
+	orgsEmailDomain := acctest.SkipIfEnvVarNotSet(t, "TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN")
 	var v awstypes.Account
 	resourceName := "aws_organizations_account.test"
 	rInt := sdkacctest.RandInt()
@@ -75,12 +69,7 @@ func testAccAccount_basic(t *testing.T) {
 
 func testAccAccount_CloseOnDeletion(t *testing.T) {
 	ctx := acctest.Context(t)
-	key := "TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN"
-	orgsEmailDomain := os.Getenv(key)
-	if orgsEmailDomain == "" {
-		t.Skipf("Environment variable %s is not set", key)
-	}
-
+	orgsEmailDomain := acctest.SkipIfEnvVarNotSet(t, "TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN")
 	var v awstypes.Account
 	resourceName := "aws_organizations_account.test"
 	rInt := sdkacctest.RandInt()
@@ -115,12 +104,7 @@ func testAccAccount_CloseOnDeletion(t *testing.T) {
 
 func testAccAccount_ParentID(t *testing.T) {
 	ctx := acctest.Context(t)
-	key := "TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN"
-	orgsEmailDomain := os.Getenv(key)
-	if orgsEmailDomain == "" {
-		t.Skipf("Environment variable %s is not set", key)
-	}
-
+	orgsEmailDomain := acctest.SkipIfEnvVarNotSet(t, "TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN")
 	var v awstypes.Account
 	rInt := sdkacctest.RandInt()
 	name := fmt.Sprintf("tf_acctest_%d", rInt)
@@ -156,12 +140,7 @@ func testAccAccount_ParentID(t *testing.T) {
 
 func testAccAccount_AccountUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
-	key := "TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN"
-	orgsEmailDomain := os.Getenv(key)
-	if orgsEmailDomain == "" {
-		t.Skipf("Environment variable %s is not set", key)
-	}
-
+	orgsEmailDomain := acctest.SkipIfEnvVarNotSet(t, "TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN")
 	var v awstypes.Account
 	rInt := sdkacctest.RandInt()
 
@@ -204,12 +183,7 @@ func testAccAccount_AccountUpdate(t *testing.T) {
 
 func testAccAccount_Tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	key := "TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN"
-	orgsEmailDomain := os.Getenv(key)
-	if orgsEmailDomain == "" {
-		t.Skipf("Environment variable %s is not set", key)
-	}
-
+	orgsEmailDomain := acctest.SkipIfEnvVarNotSet(t, "TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN")
 	var v awstypes.Account
 	rInt := sdkacctest.RandInt()
 	name := fmt.Sprintf("tf_acctest_%d", rInt)
@@ -254,12 +228,7 @@ func testAccAccount_Tags(t *testing.T) {
 
 func testAccAccount_govCloud(t *testing.T) {
 	ctx := acctest.Context(t)
-	key := "TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN"
-	orgsEmailDomain := os.Getenv(key)
-	if orgsEmailDomain == "" {
-		t.Skipf("Environment variable %s is not set", key)
-	}
-
+	orgsEmailDomain := acctest.SkipIfEnvVarNotSet(t, "TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN")
 	var v awstypes.Account
 	resourceName := "aws_organizations_account.test"
 	rInt := sdkacctest.RandInt()
