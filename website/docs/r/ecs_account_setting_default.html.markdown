@@ -34,7 +34,6 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - ARN that identifies the account setting.
 * `prinicpal_arn` - ARN that identifies the account setting.
 
 ## Import

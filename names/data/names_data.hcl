@@ -2920,7 +2920,8 @@ service "ecrpublic" {
 
 service "ecs" {
   sdk {
-    id = "ECS"
+    id          = "ECS"
+    arn_service = "ecs"
   }
 
   names {
