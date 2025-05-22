@@ -29,7 +29,9 @@ import (
 )
 
 // @FrameworkResource("aws_dynamodb_resource_policy", name="Resource Policy")
-// @ArnIdentity
+// @ArnIdentity("resource_arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/dynamodb;dynamodb.GetResourcePolicyOutput")
+// @Testing(importIgnore="confirm_remove_self_resource_access;policy")
 func newResourcePolicyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourcePolicyResource{}
 
