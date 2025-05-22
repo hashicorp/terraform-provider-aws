@@ -1333,8 +1333,6 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any) 
 		return sdkdiag.AppendErrorf(diags, "reading ECS Service (%s): %s", d.Id(), err)
 	}
 
-	d.SetId(aws.ToString(service.ServiceArn))
-	d.Set(names.AttrARN, service.ServiceArn)
 	d.Set("availability_zone_rebalancing", service.AvailabilityZoneRebalancing)
 	if err := d.Set(names.AttrCapacityProviderStrategy, flattenCapacityProviderStrategyItems(service.CapacityProviderStrategy)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting capacity_provider_strategy: %s", err)
@@ -1703,18 +1701,26 @@ func resourceServiceImport(ctx context.Context, d *schema.ResourceData, meta any
 	serviceName := parts[1]
 	log.Printf("[DEBUG] Importing ECS service %s from cluster %s", serviceName, clusterName)
 
-	d.SetId(serviceName)
-
 	region := d.Get(names.AttrRegion).(string)
 
-	clusterArn := arn.ARN{
+	clusterARN := arn.ARN{
 		Partition: names.PartitionForRegion(region).ID(),
 		Region:    region,
 		Service:   "ecs",
 		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("cluster/%s", clusterName),
 	}.String()
-	d.Set("cluster", clusterArn)
+	d.Set("cluster", clusterARN)
+
+	serviceARN := arn.ARN{
+		Partition: names.PartitionForRegion(region).ID(),
+		Region:    region,
+		Service:   "ecs",
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
+		Resource:  fmt.Sprintf("service/%s/%s", clusterName, serviceName),
+	}.String()
+	d.SetId(serviceARN)
+	d.Set(names.AttrARN, serviceARN)
 
 	return []*schema.ResourceData{d}, nil
 }
