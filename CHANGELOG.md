@@ -8,6 +8,7 @@ BREAKING CHANGES:
 NOTES:
 
 * data-source/aws_kms_secret: This data source will be removed in a future version ([#42524](https://github.com/hashicorp/terraform-provider-aws/issues/42524))
+* resource/aws_redshift_cluster: The default value of `encrypted` is now `true` to match the AWS API. ([#42631](https://github.com/hashicorp/terraform-provider-aws/issues/42631))
 
 FEATURES:
 
@@ -71,6 +72,7 @@ BUG FIXES:
 * resource/aws_instance: Fix `InvalidNetworkInterface.InUse` errors on Create ([#42623](https://github.com/hashicorp/terraform-provider-aws/issues/42623))
 * resource/aws_lb_listener: Don't send zero value (`false`, `0` or `""`) for unconfigured listener attributes on Create ([#41846](https://github.com/hashicorp/terraform-provider-aws/issues/41846))
 * resource/aws_rds_cluster_parameter_group: Fix `InvalidParameterValue: collation_server '..' is not valid for character_set '...'` errors on Create ([#42559](https://github.com/hashicorp/terraform-provider-aws/issues/42559))
+* resource/aws_redshift_cluster: Fixes permanent diff when `encrypted` is not explicitly set to `true`. ([#42631](https://github.com/hashicorp/terraform-provider-aws/issues/42631))
 * resource/aws_sagemaker_image_version: Read the correct image version after creation rather than always fetching the latest ([#42536](https://github.com/hashicorp/terraform-provider-aws/issues/42536))
 
 ## 6.0.0-beta1 (May  7, 2025)
