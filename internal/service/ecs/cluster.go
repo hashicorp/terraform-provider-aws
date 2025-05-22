@@ -329,9 +329,11 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta any
 
 func resourceClusterImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	d.Set(names.AttrName, d.Id())
+
+	region := d.Get(names.AttrRegion).(string)
 	d.SetId(arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Region:    meta.(*conns.AWSClient).Region(ctx),
+		Partition: names.PartitionForRegion(region).ID(),
+		Region:    region,
 		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Service:   "ecs",
 		Resource:  "cluster/" + d.Id(),
