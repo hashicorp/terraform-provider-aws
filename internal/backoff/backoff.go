@@ -5,8 +5,6 @@ package backoff
 
 import (
 	"context"
-	"math"
-	"math/rand"
 	"time"
 )
 
@@ -29,28 +27,6 @@ func FixedDelay(delay time.Duration) DelayFunc {
 
 		return delay
 	}
-}
-
-// Do not use the default RNG since we do not want different provider instances
-// to pick the same deterministic random sequence.
-var rng = rand.New(rand.NewSource(time.Now().UnixNano()))
-
-// ExponentialJitterBackoff returns a duration of backoffMinDuration * backoffMultiplier**n, with added jitter.
-func ExponentialJitterBackoff(backoffMinDuration time.Duration, backoffMultiplier float64) DelayFunc {
-	return func(n uint) time.Duration {
-		if n == 0 {
-			return 0
-		}
-
-		mult := math.Pow(backoffMultiplier, float64(n))
-		return applyJitter(time.Duration(float64(backoffMinDuration) * mult))
-	}
-}
-
-func applyJitter(base time.Duration) time.Duration {
-	const jitterFactor = 0.4
-	jitter := 1 - jitterFactor*rng.Float64() // Subtract up to 40%.
-	return time.Duration(float64(base) * jitter)
 }
 
 type sdkv2HelperRetryCompatibleDelay struct {
@@ -200,7 +176,7 @@ func (r *RetryLoop) Continue(ctx context.Context) bool {
 	r.sleep(ctx, r.config.delay(r.attempt))
 	r.attempt++
 
-	return true
+	return ctx.Err() == nil
 }
 
 // Reset resets a RetryLoop to its initial state.
