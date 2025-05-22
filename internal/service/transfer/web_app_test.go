@@ -150,6 +150,22 @@ func TestAccTransferWebApp_webAppUnits(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
+			{
+				Config: testAccWebAppConfig_basic(rName, rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWebAppExists(ctx, resourceName, &webappAfter),
+					testAccCheckWebAppNotRecreated(&webappBefore, &webappAfter),
+					resource.TestCheckResourceAttr(resourceName, "identity_provider_details.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "identity_provider_details.0.identity_center_config.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "identity_provider_details.0.identity_center_config.0.instance_arn", "data.aws_ssoadmin_instances.test", "arns.0"),
+					resource.TestCheckResourceAttrPair(resourceName, "identity_provider_details.0.identity_center_config.0.role", "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "web_app_units.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "web_app_units.0.provisioned", "2"),
+					resource.TestCheckResourceAttr(resourceName, "web_app_endpoint_policy", "STANDARD"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
+				),
+			},
 		},
 	})
 }
@@ -194,6 +210,23 @@ func TestAccTransferWebApp_accessEndpoint(t *testing.T) {
 			},
 			{
 				Config: testAccWebAppConfig_accessEndPoint(rName, "https://example2.com"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWebAppExists(ctx, resourceName, &webappAfter),
+					testAccCheckWebAppNotRecreated(&webappBefore, &webappAfter),
+					resource.TestCheckResourceAttr(resourceName, "access_endpoint", "https://example2.com"),
+					resource.TestCheckResourceAttr(resourceName, "identity_provider_details.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "identity_provider_details.0.identity_center_config.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "identity_provider_details.0.identity_center_config.0.instance_arn", "data.aws_ssoadmin_instances.test", "arns.0"),
+					resource.TestCheckResourceAttrPair(resourceName, "identity_provider_details.0.identity_center_config.0.role", "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "web_app_units.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "web_app_units.0.provisioned", "1"),
+					resource.TestCheckResourceAttr(resourceName, "web_app_endpoint_policy", "STANDARD"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
+				),
+			},
+			{
+				Config: testAccWebAppConfig_basic(rName, rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWebAppExists(ctx, resourceName, &webappAfter),
 					testAccCheckWebAppNotRecreated(&webappBefore, &webappAfter),
