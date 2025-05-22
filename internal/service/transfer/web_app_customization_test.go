@@ -79,6 +79,7 @@ func TestAccTransferWebAppCustomization_title(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWebAppCustomizationExists(ctx, resourceName, &webappcustomization),
 					resource.TestCheckResourceAttrPair(resourceName, "web_app_id", "aws_transfer_web_app.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "title", "test"),
 				),
 			},
 			{
@@ -99,15 +100,7 @@ func TestAccTransferWebAppCustomization_title(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWebAppCustomizationExists(ctx, resourceName, &webappcustomization),
 					resource.TestCheckResourceAttrPair(resourceName, "web_app_id", "aws_transfer_web_app.test", names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "title", "test2"),
-				),
-			},
-			{
-				Config: testAccWebAppCustomizationConfig_title(rName, ""),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWebAppCustomizationExists(ctx, resourceName, &webappcustomization),
-					resource.TestCheckResourceAttrPair(resourceName, "web_app_id", "aws_transfer_web_app.test", names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "title", ""),
+					resource.TestCheckNoResourceAttr(resourceName, "title"),
 				),
 			},
 		},

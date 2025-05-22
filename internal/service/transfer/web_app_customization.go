@@ -78,7 +78,7 @@ func (r *resourceWebAppCustomization) Schema(ctx context.Context, req resource.S
 			"title": schema.StringAttribute{
 				Optional: true,
 				Validators: []validator.String{
-					stringvalidator.LengthBetween(0, 100),
+					stringvalidator.LengthBetween(1, 100),
 				},
 			},
 			"web_app_id": schema.StringAttribute{
@@ -111,14 +111,6 @@ func (r *resourceWebAppCustomization) Create(ctx context.Context, req resource.C
 	resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
 	if resp.Diagnostics.HasError() {
 		return
-	}
-
-	// Empty string values are not allowed for FaviconFile and LogoFile.
-	if v := plan.FaviconFile.ValueString(); v == "" {
-		input.FaviconFile = nil
-	}
-	if v := plan.LogoFile.ValueString(); v == "" {
-		input.LogoFile = nil
 	}
 
 	out, err := conn.UpdateWebAppCustomization(ctx, &input)
@@ -156,14 +148,6 @@ func (r *resourceWebAppCustomization) Create(ctx context.Context, req resource.C
 
 	rout, _ := findWebAppCustomizationByID(ctx, conn, plan.ID.ValueString())
 	resp.Diagnostics.Append(flex.Flatten(ctx, rout, &plan)...)
-
-	// Set values for unknowns after creation is complete because they are marked as Computed.
-	if rout.FaviconFile == nil {
-		plan.FaviconFile = types.StringNull()
-	}
-	if rout.LogoFile == nil {
-		plan.LogoFile = types.StringNull()
-	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
@@ -223,12 +207,6 @@ func (r *resourceWebAppCustomization) Update(ctx context.Context, req resource.U
 		if resp.Diagnostics.HasError() {
 			return
 		}
-		if v := plan.FaviconFile.ValueString(); v == "" {
-			input.FaviconFile = nil
-		}
-		if v := plan.LogoFile.ValueString(); v == "" {
-			input.LogoFile = nil
-		}
 
 		out, err := conn.UpdateWebAppCustomization(ctx, &input)
 		if err != nil {
@@ -254,12 +232,6 @@ func (r *resourceWebAppCustomization) Update(ctx context.Context, req resource.U
 
 	rout, _ := findWebAppCustomizationByID(ctx, conn, plan.ID.ValueString())
 	resp.Diagnostics.Append(flex.Flatten(ctx, rout, &plan)...)
-	if rout.FaviconFile == nil {
-		plan.FaviconFile = types.StringNull()
-	}
-	if rout.LogoFile == nil {
-		plan.LogoFile = types.StringNull()
-	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
@@ -396,14 +368,20 @@ var (
 func (m resourceWebAppCustomizationModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
 	var input transfer.UpdateWebAppCustomizationInput
 	input.WebAppId = m.WebAppID.ValueStringPointer()
-	if !m.FaviconFile.IsNull() {
+	if !m.FaviconFile.IsNull() && m.FaviconFile.ValueString() != "" {
 		input.FaviconFile = itypes.MustBase64Decode(m.FaviconFile.ValueString())
+	} else {
+		input.FaviconFile = nil
 	}
-	if !m.LogoFile.IsNull() {
+	if !m.LogoFile.IsNull() && m.LogoFile.ValueString() != "" {
 		input.LogoFile = itypes.MustBase64Decode(m.LogoFile.ValueString())
+	} else {
+		input.LogoFile = nil
 	}
-	if !m.Title.IsNull() {
+	if !m.Title.IsNull() && m.Title.ValueString() != "" {
 		input.Title = m.Title.ValueStringPointer()
+	} else {
+		input.Title = aws.String("")
 	}
 	return &input, nil
 }
@@ -415,13 +393,19 @@ func (m *resourceWebAppCustomizationModel) Flatten(ctx context.Context, in any) 
 		m.ARN = flex.StringToFramework(ctx, t.Arn)
 		if t.FaviconFile != nil {
 			m.FaviconFile = flex.StringToFramework(ctx, aws.String(itypes.Base64Encode(t.FaviconFile)))
+		} else {
+			m.FaviconFile = types.StringNull()
 		}
 		m.ID = flex.StringToFramework(ctx, t.WebAppId)
 		if t.LogoFile != nil {
 			m.LogoFile = flex.StringToFramework(ctx, aws.String(itypes.Base64Encode(t.LogoFile)))
+		} else {
+			m.LogoFile = types.StringNull()
 		}
 		if t.Title != nil {
 			m.Title = flex.StringToFramework(ctx, t.Title)
+		} else {
+			m.Title = types.StringNull()
 		}
 		m.WebAppID = flex.StringToFramework(ctx, t.WebAppId)
 	case transfer.UpdateWebAppCustomizationOutput:
