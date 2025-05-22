@@ -1950,20 +1950,6 @@ resource "aws_acm_certificate" "test" {
 `, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key))
 }
 
-func testAccCertificateConfig_privateKeyNoChain_regionOverride(t *testing.T, commonName string) string {
-	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, commonName)
-
-	return fmt.Sprintf(`
-resource "aws_acm_certificate" "test" {
-  region = %[3]q
-
-  certificate_body = "%[1]s"
-  private_key      = "%[2]s"
-}
-`, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key), acctest.AlternateRegion())
-}
-
 func testAccCertificateConfig_privateKey(certificate, privateKey, chain string) string {
 	return fmt.Sprintf(`
 resource "aws_acm_certificate" "test" {

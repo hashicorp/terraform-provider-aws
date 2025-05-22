@@ -173,52 +173,6 @@ data "aws_partition" "current" {}
 `, commonName)
 }
 
-func testAccCertificateAuthorityCertificateConfig_rootCA_regionOverride(commonName string) string {
-	return fmt.Sprintf(`
-resource "aws_acmpca_certificate_authority_certificate" "test" {
-  region = %[2]q
-
-  certificate_authority_arn = aws_acmpca_certificate_authority.test.arn
-
-  certificate       = aws_acmpca_certificate.test.certificate
-  certificate_chain = aws_acmpca_certificate.test.certificate_chain
-}
-
-resource "aws_acmpca_certificate" "test" {
-  region = %[2]q
-
-  certificate_authority_arn   = aws_acmpca_certificate_authority.test.arn
-  certificate_signing_request = aws_acmpca_certificate_authority.test.certificate_signing_request
-  signing_algorithm           = "SHA512WITHRSA"
-
-  template_arn = "arn:${data.aws_partition.current.partition}:acm-pca:::template/RootCACertificate/V1"
-
-  validity {
-    type  = "YEARS"
-    value = 1
-  }
-}
-
-resource "aws_acmpca_certificate_authority" "test" {
-  region = %[2]q
-
-  permanent_deletion_time_in_days = 7
-  type                            = "ROOT"
-
-  certificate_authority_configuration {
-    key_algorithm     = "RSA_4096"
-    signing_algorithm = "SHA512WITHRSA"
-
-    subject {
-      common_name = %[1]q
-    }
-  }
-}
-
-data "aws_partition" "current" {}
-`, commonName, acctest.AlternateRegion())
-}
-
 func testAccCertificateAuthorityCertificateConfig_updateRootCA(commonName string) string {
 	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority_certificate" "updated" {

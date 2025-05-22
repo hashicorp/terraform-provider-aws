@@ -176,31 +176,6 @@ resource "aws_dynamodb_resource_policy" "test" {
 `)
 }
 
-func testAccResourcePolicyConfig_regionOverride(rName string) string {
-	return acctest.ConfigCompose(
-		testAccTableConfig_regionOverride(rName),
-		fmt.Sprintf(`
-resource "aws_dynamodb_resource_policy" "test" {
-  region = %[1]q
-
-  resource_arn = aws_dynamodb_table.test.arn
-  policy       = data.aws_iam_policy_document.test.json
-}
-
-data "aws_caller_identity" "current" {}
-data "aws_iam_policy_document" "test" {
-  statement {
-    actions = ["dynamodb:*"]
-    principals {
-      type        = "AWS"
-      identifiers = [data.aws_caller_identity.current.account_id]
-    }
-    resources = [aws_dynamodb_table.test.arn, "${aws_dynamodb_table.test.arn}/*"]
-  }
-}
-`, acctest.AlternateRegion()))
-}
-
 func testAccResourcePolicyConfig_update(rName string) string {
 	return acctest.ConfigCompose(testAccTableConfig_basic(rName), `
 data "aws_caller_identity" "current" {}
