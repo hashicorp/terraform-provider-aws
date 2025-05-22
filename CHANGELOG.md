@@ -8,10 +8,12 @@ FEATURES:
 ENHANCEMENTS:
 
 * data-source/aws_verifiedpermissions_policy_store: Add `tags` attribute. This functionality requires the `verifiedpermissions:ListTagsForResource` IAM permission ([#42663](https://github.com/hashicorp/terraform-provider-aws/issues/42663))
+* resource/aws_lb: Add `minimum_load_balancer_capacity` configuration block. This functionality requires the `elasticloadbalancing:DescribeCapacityReservations` and `elasticloadbalancing:ModifyCapacityReservation` IAM permissions ([#42685](https://github.com/hashicorp/terraform-provider-aws/issues/42685))
 * resource/aws_verifiedpermissions_policy_store: Add `tags` argument and `tags_all` attribute. This functionality requires the `verifiedpermissions:ListTagsForResource`, `verifiedpermissions:TagResource`, and `verifiedpermissions:UntagResource` IAM permissions ([#42663](https://github.com/hashicorp/terraform-provider-aws/issues/42663))
 
 BUG FIXES:
 
+* resource/aws_elasticache_replication_group: Fix crash during read operations where configuration endpoint and node groups are nil and empty, respectively ([#42726](https://github.com/hashicorp/terraform-provider-aws/issues/42726))
 * resource/aws_s3_bucket_lifecycle_configuration: No longer returns warning on empty `rule.filter`. ([#42624](https://github.com/hashicorp/terraform-provider-aws/issues/42624))
 
 ## 5.98.0 (May 15, 2025)
