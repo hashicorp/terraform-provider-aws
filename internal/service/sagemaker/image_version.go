@@ -126,7 +126,7 @@ func resourceImageVersionCreate(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
 	name := d.Get("image_name").(string)
-	input := &sagemaker.CreateImageVersionInput{
+	input := sagemaker.CreateImageVersionInput{
 		ImageName:   aws.String(name),
 		BaseImage:   aws.String(d.Get("base_image").(string)),
 		ClientToken: aws.String(id.UniqueId()),
@@ -160,15 +160,11 @@ func resourceImageVersionCreate(ctx context.Context, d *schema.ResourceData, met
 		input.ProgrammingLang = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("aliases"); ok {
-		aliases := v.(*schema.Set).List()
-		input.Aliases = make([]string, len(aliases))
-		for i, alias := range aliases {
-			input.Aliases[i] = alias.(string)
-		}
+	if v, ok := d.GetOk("aliases"); ok && v.(*schema.Set).Len() > 0 {
+		input.Aliases = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	if _, err := conn.CreateImageVersion(ctx, input); err != nil {
+	if _, err := conn.CreateImageVersion(ctx, &input); err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Image Version %s: %s", name, err)
 	}
 
@@ -223,31 +219,14 @@ func resourceImageVersionRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("ml_framework", image.MLFramework)
 	d.Set("programming_lang", image.ProgrammingLang)
 
-	// The AWS SDK doesn't have an Aliases field in DescribeImageVersionOutput
-	// We need to fetch aliases separately using ListAliases API
-	idParts, err := flex.ExpandResourceId(d.Id(), imageVersionResourcePartCount, false)
+	// The DescribeImageVersion API response does not include aliases, so these must
+	// be fetched separately using the ListAliases API
+	aliases, err := findImageVersionAliasesByTwoPartKey(ctx, conn, name, version)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "invalid resource ID format: %s", d.Id())
+		return sdkdiag.AppendErrorf(diags, "reading aliases for SageMaker AI Image Version (%s): %s", d.Id(), err)
 	}
 
-	imageName := idParts[0]
-	versionStr := idParts[1]
-	versionNum, err := strconv.Atoi(versionStr)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "invalid version number in resource ID: %s", d.Id())
-	}
-
-	aliasesInput := &sagemaker.ListAliasesInput{
-		ImageName: aws.String(imageName),
-		Version:   aws.Int32(int32(versionNum)),
-	}
-
-	aliasesOutput, err := conn.ListAliases(ctx, aliasesInput)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing aliases for SageMaker AI Image Version (%s): %s", d.Id(), err)
-	}
-
-	if err := d.Set("aliases", aliasesOutput.SageMakerImageVersionAliases); err != nil {
+	if err := d.Set("aliases", aliases); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting aliases: %s", err)
 	}
 
@@ -261,7 +240,7 @@ func resourceImageVersionUpdate(ctx context.Context, d *schema.ResourceData, met
 	name := d.Get("image_name").(string)
 	version := d.Get(names.AttrVersion).(int)
 
-	input := &sagemaker.UpdateImageVersionInput{
+	input := sagemaker.UpdateImageVersionInput{
 		ImageName: aws.String(name),
 		Version:   aws.Int32(int32(version)),
 	}
@@ -297,50 +276,19 @@ func resourceImageVersionUpdate(ctx context.Context, d *schema.ResourceData, met
 	if d.HasChange("aliases") {
 		// For UpdateImageVersion, we need to use AliasesToAdd and AliasesToDelete
 		// instead of Aliases directly
-		oldAliasesSet, newAliasesSet := d.GetChange("aliases")
-		oldAliases := oldAliasesSet.(*schema.Set).List()
-		newAliases := newAliasesSet.(*schema.Set).List()
+		o, n := d.GetChange("aliases")
+		os, ns := o.(*schema.Set), n.(*schema.Set)
+		add, del := flex.ExpandStringValueSet(ns.Difference(os)), flex.ExpandStringValueSet(os.Difference(ns))
 
-		// Find aliases to add (in new but not in old)
-		var aliasesToAdd []string
-		for _, newAlias := range newAliases {
-			found := false
-			for _, oldAlias := range oldAliases {
-				if newAlias.(string) == oldAlias.(string) {
-					found = true
-					break
-				}
-			}
-			if !found {
-				aliasesToAdd = append(aliasesToAdd, newAlias.(string))
-			}
+		if len(add) > 0 {
+			input.AliasesToAdd = add
 		}
-
-		// Find aliases to delete (in old but not in new)
-		var aliasesToDelete []string
-		for _, oldAlias := range oldAliases {
-			found := false
-			for _, newAlias := range newAliases {
-				if oldAlias.(string) == newAlias.(string) {
-					found = true
-					break
-				}
-			}
-			if !found {
-				aliasesToDelete = append(aliasesToDelete, oldAlias.(string))
-			}
-		}
-
-		if len(aliasesToAdd) > 0 {
-			input.AliasesToAdd = aliasesToAdd
-		}
-
-		if len(aliasesToDelete) > 0 {
-			input.AliasesToDelete = aliasesToDelete
+		if len(del) > 0 {
+			input.AliasesToDelete = del
 		}
 	}
 
-	if _, err := conn.UpdateImageVersion(ctx, input); err != nil {
+	if _, err := conn.UpdateImageVersion(ctx, &input); err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating SageMaker AI Image Version (%s): %s", d.Id(), err)
 	}
 
@@ -354,12 +302,12 @@ func resourceImageVersionDelete(ctx context.Context, d *schema.ResourceData, met
 	name := d.Get("image_name").(string)
 	version := d.Get(names.AttrVersion).(int)
 
-	input := &sagemaker.DeleteImageVersionInput{
+	input := sagemaker.DeleteImageVersionInput{
 		ImageName: aws.String(name),
 		Version:   aws.Int32(int32(version)),
 	}
 
-	if _, err := conn.DeleteImageVersion(ctx, input); err != nil {
+	if _, err := conn.DeleteImageVersion(ctx, &input); err != nil {
 		if errs.IsAErrorMessageContains[*awstypes.ResourceNotFound](err, "does not exist") {
 			return diags
 		}
@@ -429,6 +377,32 @@ func findImageVersionByTwoPartKey(ctx context.Context, conn *sagemaker.Client, n
 	}
 
 	return output, nil
+}
+
+func findImageVersionAliasesByTwoPartKey(ctx context.Context, conn *sagemaker.Client, name string, version int) ([]string, error) {
+	input := sagemaker.ListAliasesInput{
+		ImageName: aws.String(name),
+		Version:   aws.Int32(int32(version)),
+	}
+
+	output, err := conn.ListAliases(ctx, &input)
+
+	if errs.IsAErrorMessageContains[*awstypes.ResourceNotFound](err, "does not exist") {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.SageMakerImageVersionAliases, nil
 }
 
 // expandImageVersionResourceID wraps flex.ExpandResourceId and handles conversion

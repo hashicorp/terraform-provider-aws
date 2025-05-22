@@ -97,9 +97,6 @@ func TestAccSageMakerImageVersion_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "job_type", "TRAINING"),
 					resource.TestCheckResourceAttr(resourceName, "ml_framework", "TensorFlow 1.1"),
 					resource.TestCheckResourceAttr(resourceName, "programming_lang", "Python 3.8"),
-					resource.TestCheckResourceAttr(resourceName, "aliases.#", "2"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "aliases.*", "latest"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "aliases.*", "stable"),
 				),
 			},
 			{
@@ -124,9 +121,6 @@ func TestAccSageMakerImageVersion_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "job_type", "TRAINING"),
 					resource.TestCheckResourceAttr(resourceName, "ml_framework", "TensorFlow 1.1"),
 					resource.TestCheckResourceAttr(resourceName, "programming_lang", "Python 3.8"),
-					resource.TestCheckResourceAttr(resourceName, "aliases.#", "2"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "aliases.*", "latest"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "aliases.*", "stable"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -238,6 +232,60 @@ func TestAccSageMakerImageVersion_multiple(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccSageMakerImageVersion_aliases(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var image sagemaker.DescribeImageVersionOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_image_version.test"
+	baseImage := acctest.SkipIfEnvVarNotSet(t, imageVersionBaseImageEnvVar)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckImageVersionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccImageVersionConfig_aliases(rName, baseImage),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckImageVersionExists(ctx, resourceName, &image),
+					resource.TestCheckResourceAttr(resourceName, "image_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "base_image", baseImage),
+					resource.TestCheckResourceAttr(resourceName, "aliases.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "aliases.*", "latest"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "aliases.*", "stable"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccImageVersionConfig_basic(rName, baseImage),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckImageVersionExists(ctx, resourceName, &image),
+					resource.TestCheckResourceAttr(resourceName, "image_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "base_image", baseImage),
+					resource.TestCheckResourceAttr(resourceName, "aliases.#", "0"),
+				),
+			},
+			{
+				Config: testAccImageVersionConfig_aliases(rName, baseImage),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckImageVersionExists(ctx, resourceName, &image),
+					resource.TestCheckResourceAttr(resourceName, "image_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "base_image", baseImage),
+					resource.TestCheckResourceAttr(resourceName, "aliases.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "aliases.*", "latest"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "aliases.*", "stable"),
+				),
 			},
 		},
 	})
@@ -410,7 +458,6 @@ resource "aws_sagemaker_image_version" "test" {
   vendor_guidance  = "STABLE"
   ml_framework     = "TensorFlow 1.1"
   programming_lang = "Python 3.8"
-  aliases          = ["latest", "stable"]
 }
 `, baseImage, notes))
 }
@@ -427,6 +474,18 @@ resource "aws_sagemaker_image_version" "test" {
 resource "aws_sagemaker_image_version" "test_v2" {
   image_name = aws_sagemaker_image_version.test.image_name
   base_image = %[1]q
+}
+`, baseImage))
+}
+
+func testAccImageVersionConfig_aliases(rName, baseImage string) string {
+	return acctest.ConfigCompose(
+		testAccImageVersionConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_sagemaker_image_version" "test" {
+  image_name = aws_sagemaker_image.test.id
+  base_image = %[1]q
+  aliases    = ["latest", "stable"]
 }
 `, baseImage))
 }

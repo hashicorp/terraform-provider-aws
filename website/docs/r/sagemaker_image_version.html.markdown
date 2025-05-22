@@ -21,7 +21,7 @@ resource "aws_sagemaker_image_version" "example" {
 }
 ```
 
-### With aliases
+### With Aliases
 
 ```terraform
 resource "aws_sagemaker_image_version" "test" {
