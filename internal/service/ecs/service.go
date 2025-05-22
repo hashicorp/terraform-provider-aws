@@ -1704,14 +1704,18 @@ func resourceServiceImport(ctx context.Context, d *schema.ResourceData, meta any
 	log.Printf("[DEBUG] Importing ECS service %s from cluster %s", serviceName, clusterName)
 
 	d.SetId(serviceName)
+
+	region := d.Get(names.AttrRegion).(string)
+
 	clusterArn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Region:    meta.(*conns.AWSClient).Region(ctx),
+		Partition: names.PartitionForRegion(region).ID(),
+		Region:    region,
 		Service:   "ecs",
 		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("cluster/%s", clusterName),
 	}.String()
 	d.Set("cluster", clusterArn)
+
 	return []*schema.ResourceData{d}, nil
 }
 
