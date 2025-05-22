@@ -6,6 +6,8 @@ package backoff
 import (
 	"context"
 	"time"
+
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 // Inspired by https://github.com/ServiceWeaver/weaver and https://github.com/avast/retry-go.
@@ -141,7 +143,7 @@ func defaultRetryConfig() RetryConfig {
 type RetryLoop struct {
 	attempt  uint
 	config   RetryConfig
-	deadline deadline
+	deadline inttypes.Deadline
 	timedOut bool
 }
 
@@ -154,7 +156,7 @@ func NewRetryLoopWithOptions(timeout time.Duration, opts ...Option) *RetryLoop {
 
 	return &RetryLoop{
 		config:   config,
-		deadline: NewDeadline(timeout + config.gracePeriod),
+		deadline: inttypes.NewDeadline(timeout + config.gracePeriod),
 	}
 }
 
