@@ -961,7 +961,7 @@ resource "aws_verifiedaccess_endpoint" "test" {
 
 func testAccVerifiedAccessEndpointConfig_rdsUpdate(rName, key, certificate string) string {
 	return acctest.ConfigCompose(
-		testAccVerifiedAccessEndpointConfig_baseTCP(rName, key, certificate, 2),
+		testAccVerifiedAccessEndpointConfig_base(rName, key, certificate, 2),
 		fmt.Sprintf(`
 resource "aws_security_group" "testrds" {
   name        = "%[1]s-rds"
@@ -1036,4 +1036,536 @@ resource "aws_verifiedaccess_endpoint" "test" {
   }
 }
 `, rName))
+}
+
+func TestAccVerifiedAccessEndpoint_PortRangeTCP(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+	var v types.VerifiedAccessEndpoint
+	resourceName := "aws_verifiedaccess_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckVerifiedAccess(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVerifiedAccessEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVerifiedAccessEndpointConfig_PortRangeTCP(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVerifiedAccessEndpointExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.port_range.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.port_range.0.from_port", "22"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.port_range.0.to_port", "22"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.protocol", "tcp"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"endpoint_domain_prefix"},
+			},
+		},
+	})
+}
+
+func TestAccVerifiedAccessEndpoint_PortTCP(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+	var v types.VerifiedAccessEndpoint
+	resourceName := "aws_verifiedaccess_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckVerifiedAccess(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVerifiedAccessEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVerifiedAccessEndpointConfig_PortTCP(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVerifiedAccessEndpointExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.port_range.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.port_range.0.from_port", "22"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.port_range.0.to_port", "22"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.protocol", "tcp"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"endpoint_domain_prefix"},
+			},
+		},
+	})
+}
+
+func TestAccVerifiedAccessEndpoint_PortHTTP(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+	var v types.VerifiedAccessEndpoint
+	resourceName := "aws_verifiedaccess_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	cert := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckVerifiedAccess(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVerifiedAccessEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVerifiedAccessEndpointConfig_PortHTTP(
+					rName,
+					acctest.TLSPEMEscapeNewlines(key),
+					acctest.TLSPEMEscapeNewlines(cert),
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVerifiedAccessEndpointExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.port", "80"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.protocol", "http"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"endpoint_domain_prefix"},
+			},
+		},
+	})
+}
+
+func TestAccVerifiedAccessEndpoint_PortHTTPS(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.VerifiedAccessEndpoint
+	resourceName := "aws_verifiedaccess_endpoint.test"
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	cert := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckVerifiedAccess(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVerifiedAccessEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVerifiedAccessEndpointConfig_PortHTTPS(
+					rName,
+					acctest.TLSPEMEscapeNewlines(key),
+					acctest.TLSPEMEscapeNewlines(cert),
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVerifiedAccessEndpointExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.port", "443"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.protocol", "https"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"endpoint_domain_prefix"},
+			},
+		},
+	})
+}
+
+func testAccVerifiedAccessEndpointConfig_PortRangeTCP(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 2),
+		fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+}
+
+resource "aws_lb" "test_nlb" {
+  name               = %[1]q
+  internal           = true
+  load_balancer_type = "network"
+  subnets            = aws_subnet.test[*].id
+}
+
+resource "aws_lb_target_group" "test_nlb" {
+  name     = %[1]q
+  port     = 22
+  protocol = "TCP"
+  vpc_id   = aws_vpc.test.id
+}
+
+resource "aws_lb_listener" "test_nlb" {
+  load_balancer_arn = aws_lb.test_nlb.arn
+  port              = 22
+  protocol          = "TCP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.test_nlb.arn
+  }
+}
+
+resource "aws_verifiedaccess_instance" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_verifiedaccess_trust_provider" "test" {
+  policy_reference_name    = "native"
+  trust_provider_type      = "user"
+  user_trust_provider_type = "oidc"
+
+  native_application_oidc_options {
+    authorization_endpoint      = "https://example.com/authorize"
+    client_id                   = "cid"
+    client_secret               = "secret"
+    issuer                      = "https://example.com"
+    public_signing_key_endpoint = "https://example.com/jwks.json"
+    scope                       = "openid"
+    token_endpoint              = "https://example.com/token"
+    user_info_endpoint          = "https://example.com/userinfo"
+  }
+}
+
+resource "aws_verifiedaccess_instance_trust_provider_attachment" "test" {
+  verifiedaccess_instance_id       = aws_verifiedaccess_instance.test.id
+  verifiedaccess_trust_provider_id = aws_verifiedaccess_trust_provider.test.id
+}
+
+resource "aws_verifiedaccess_group" "test" {
+  verifiedaccess_instance_id = aws_verifiedaccess_instance_trust_provider_attachment.test.verifiedaccess_instance_id
+}
+
+resource "aws_verifiedaccess_endpoint" "test" {
+  attachment_type = "vpc"
+  endpoint_type   = "load-balancer"
+
+  load_balancer_options {
+    load_balancer_arn = aws_lb.test_nlb.arn
+
+    port_range {
+      from_port = 22
+      to_port   = 22
+    }
+
+    protocol   = "tcp"
+    subnet_ids = [for s in aws_subnet.test : s.id]
+  }
+
+  security_group_ids       = [aws_security_group.test.id]
+  verified_access_group_id = aws_verifiedaccess_group.test.id
+}
+`, rName),
+	)
+}
+
+func testAccVerifiedAccessEndpointConfig_PortTCP(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 2),
+		fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+}
+
+resource "aws_lb" "test_nlb" {
+  name               = %[1]q
+  internal           = true
+  load_balancer_type = "network"
+  subnets            = aws_subnet.test[*].id
+}
+
+resource "aws_lb_target_group" "test_nlb" {
+  name     = %[1]q
+  port     = 22
+  protocol = "TCP"
+  vpc_id   = aws_vpc.test.id
+}
+
+resource "aws_lb_listener" "test_nlb" {
+  load_balancer_arn = aws_lb.test_nlb.arn
+  port              = 22
+  protocol          = "TCP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.test_nlb.arn
+  }
+}
+
+resource "aws_verifiedaccess_instance" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_verifiedaccess_trust_provider" "test" {
+  policy_reference_name    = "native"
+  trust_provider_type      = "user"
+  user_trust_provider_type = "oidc"
+
+  native_application_oidc_options {
+    authorization_endpoint      = "https://example.com/authorize"
+    client_id                   = "cid"
+    client_secret               = "secret"
+    issuer                      = "https://example.com"
+    public_signing_key_endpoint = "https://example.com/jwks.json"
+    scope                       = "openid"
+    token_endpoint              = "https://example.com/token"
+    user_info_endpoint          = "https://example.com/userinfo"
+  }
+}
+
+resource "aws_verifiedaccess_instance_trust_provider_attachment" "test" {
+  verifiedaccess_instance_id       = aws_verifiedaccess_instance.test.id
+  verifiedaccess_trust_provider_id = aws_verifiedaccess_trust_provider.test.id
+}
+
+resource "aws_verifiedaccess_group" "test" {
+  verifiedaccess_instance_id = aws_verifiedaccess_instance_trust_provider_attachment.test.verifiedaccess_instance_id
+}
+
+resource "aws_verifiedaccess_endpoint" "test" {
+  attachment_type = "vpc"
+  endpoint_type   = "load-balancer"
+
+  load_balancer_options {
+    load_balancer_arn = aws_lb.test_nlb.arn
+
+    port_range {
+      from_port = 22
+      to_port   = 22
+    }
+
+    protocol   = "tcp"
+    subnet_ids = [for s in aws_subnet.test : s.id]
+  }
+
+  security_group_ids       = [aws_security_group.test.id]
+  verified_access_group_id = aws_verifiedaccess_group.test.id
+}
+`, rName),
+	)
+}
+
+func testAccVerifiedAccessEndpointConfig_PortHTTPS(rName, key, certificate string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 2),
+		fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+}
+
+resource "aws_acm_certificate" "test" {
+  private_key      = "%[2]s"
+  certificate_body = "%[3]s"
+}
+
+resource "aws_lb" "test_alb" {
+  name               = %[1]q
+  internal           = true
+  load_balancer_type = "application"
+  subnets            = aws_subnet.test[*].id
+}
+
+resource "aws_lb_target_group" "test_alb" {
+  name     = %[1]q
+  port     = 443
+  protocol = "HTTPS"
+  vpc_id   = aws_vpc.test.id
+
+  health_check {
+    protocol = "HTTPS"
+    port     = "443"
+  }
+}
+
+resource "aws_lb_listener" "test_alb" {
+  load_balancer_arn = aws_lb.test_alb.arn
+  port              = 443
+  protocol          = "HTTPS"
+  ssl_policy        = "ELBSecurityPolicy-2016-08"
+  certificate_arn   = aws_acm_certificate.test.arn
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.test_alb.arn
+  }
+}
+
+resource "aws_verifiedaccess_instance" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_verifiedaccess_trust_provider" "test" {
+  policy_reference_name    = "web"
+  trust_provider_type      = "user"
+  user_trust_provider_type = "oidc"
+
+  oidc_options {
+    authorization_endpoint = "https://example.com/authorize"
+    client_id              = "cid"
+    client_secret          = "secret"
+    issuer                 = "https://example.com"
+    scope                  = "openid"
+    token_endpoint         = "https://example.com/token"
+    user_info_endpoint     = "https://example.com/userinfo"
+  }
+}
+
+resource "aws_verifiedaccess_instance_trust_provider_attachment" "test" {
+  verifiedaccess_instance_id       = aws_verifiedaccess_instance.test.id
+  verifiedaccess_trust_provider_id = aws_verifiedaccess_trust_provider.test.id
+}
+
+resource "aws_verifiedaccess_group" "test" {
+  verifiedaccess_instance_id = aws_verifiedaccess_instance_trust_provider_attachment.test.verifiedaccess_instance_id
+}
+
+resource "aws_verifiedaccess_endpoint" "test" {
+  application_domain     = "example.com"
+  domain_certificate_arn = aws_acm_certificate.test.arn
+  endpoint_domain_prefix = "example"
+  attachment_type        = "vpc"
+  endpoint_type          = "load-balancer"
+
+  load_balancer_options {
+    load_balancer_arn = aws_lb.test_alb.arn
+    port              = 443
+    protocol          = "https"
+    subnet_ids        = [for s in aws_subnet.test : s.id]
+  }
+
+  security_group_ids       = [aws_security_group.test.id]
+  verified_access_group_id = aws_verifiedaccess_group.test.id
+}
+`, rName, key, certificate),
+	)
+}
+
+func testAccVerifiedAccessEndpointConfig_PortHTTP(rName, key, certificate string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 2),
+		fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+}
+
+resource "aws_acm_certificate" "test" {
+  private_key      = "%[2]s"
+  certificate_body = "%[3]s"
+}
+
+resource "aws_lb" "test_alb" {
+  name               = %[1]q
+  internal           = true
+  load_balancer_type = "application"
+  subnets            = aws_subnet.test[*].id
+}
+
+resource "aws_lb_target_group" "test_alb" {
+  name     = %[1]q
+  port     = 80
+  protocol = "HTTP"
+  vpc_id   = aws_vpc.test.id
+
+  health_check {
+    protocol = "HTTP"
+    port     = "80"
+  }
+}
+
+resource "aws_lb_listener" "test_alb" {
+  load_balancer_arn = aws_lb.test_alb.arn
+  port              = 80
+  protocol          = "HTTP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.test_alb.arn
+  }
+}
+
+resource "aws_verifiedaccess_instance" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_verifiedaccess_trust_provider" "test" {
+  policy_reference_name    = "web"
+  trust_provider_type      = "user"
+  user_trust_provider_type = "oidc"
+
+  oidc_options {
+    authorization_endpoint = "https://example.com/authorize"
+    client_id              = "cid"
+    client_secret          = "secret"
+    issuer                 = "https://example.com"
+    scope                  = "openid"
+    token_endpoint         = "https://example.com/token"
+    user_info_endpoint     = "https://example.com/userinfo"
+  }
+}
+
+resource "aws_verifiedaccess_instance_trust_provider_attachment" "test" {
+  verifiedaccess_instance_id       = aws_verifiedaccess_instance.test.id
+  verifiedaccess_trust_provider_id = aws_verifiedaccess_trust_provider.test.id
+}
+
+resource "aws_verifiedaccess_group" "test" {
+  verifiedaccess_instance_id = aws_verifiedaccess_instance_trust_provider_attachment.test.verifiedaccess_instance_id
+}
+
+resource "aws_verifiedaccess_endpoint" "test" {
+  application_domain     = "example.com"
+  domain_certificate_arn = aws_acm_certificate.test.arn
+  endpoint_domain_prefix = "example"
+  attachment_type        = "vpc"
+  endpoint_type          = "load-balancer"
+
+  load_balancer_options {
+    load_balancer_arn = aws_lb.test_alb.arn
+    port              = 80
+    protocol          = "http"
+    subnet_ids        = [for s in aws_subnet.test : s.id]
+  }
+
+  security_group_ids       = [aws_security_group.test.id]
+  verified_access_group_id = aws_verifiedaccess_group.test.id
+}
+`, rName, key, certificate),
+	)
 }
