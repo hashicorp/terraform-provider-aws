@@ -48,7 +48,7 @@ The following arguments are optional:
 
 * `favicon_file` - (Optional) Base64-encoded string representing the favicon image. Terraform will detect drift only if this argument is specified. To remove the favicon, recreate the resource.
 * `logo_file` - (Optional) Base64-encoded string representing the logo image. Terraform will detect drift only if this argument is specified. To remove the logo, recreate the resource.
-* `title` – (Optional) Title of the web app.
+* `title` – (Optional) Title of the web app. Must be between 1 and 100 characters in length (an empty string is not allowed). To remove the title, omit this argument from your configuration.
 
 ## Attribute Reference
 
