@@ -57,7 +57,6 @@ func testAccAccountSettingDefault_containerInstanceLongARNFormat(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     settingName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -87,7 +86,6 @@ func testAccAccountSettingDefault_serviceLongARNFormat(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     settingName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -117,7 +115,6 @@ func testAccAccountSettingDefault_taskLongARNFormat(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     settingName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -147,7 +144,6 @@ func testAccAccountSettingDefault_vpcTrunking(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     settingName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -177,7 +173,6 @@ func testAccAccountSettingDefault_containerInsights(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     settingName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -207,7 +202,6 @@ func testAccAccountSettingDefault_fargateTaskRetirementWaitPeriod(t *testing.T) 
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     "fargateTaskRetirementWaitPeriod",
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
