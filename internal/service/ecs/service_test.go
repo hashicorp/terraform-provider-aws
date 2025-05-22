@@ -89,6 +89,7 @@ func TestAccECSService_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var service awstypes.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	clusterName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -98,10 +99,12 @@ func TestAccECSService_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckServiceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceConfig_basic(rName),
+				Config: testAccServiceConfig_basic(rName, clusterName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "alarms.#", "0"),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ecs", fmt.Sprintf("service/%s/%s", clusterName, rName)),
+					resource.TestCheckResourceAttrPair(resourceName, "cluster", "aws_ecs_cluster.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "service_registries.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "scheduling_strategy", "REPLICA"),
 					resource.TestCheckResourceAttr(resourceName, "availability_zone_rebalancing", "DISABLED"),
@@ -115,10 +118,11 @@ func TestAccECSService_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceConfig_modified(rName),
+				Config: testAccServiceConfig_modified(rName, clusterName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "alarms.#", "0"),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ecs", fmt.Sprintf("service/%s/%s", clusterName, rName)),
 					resource.TestCheckResourceAttr(resourceName, "service_registries.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "scheduling_strategy", "REPLICA"),
 					resource.TestCheckResourceAttr(resourceName, "availability_zone_rebalancing", "DISABLED"),
@@ -178,6 +182,7 @@ func TestAccECSService_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var service awstypes.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	clusterName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -187,7 +192,7 @@ func TestAccECSService_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckServiceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceConfig_basic(rName),
+				Config: testAccServiceConfig_basic(rName, clusterName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfecs.ResourceService(), resourceName),
@@ -1003,6 +1008,7 @@ func TestAccECSService_forceNewDeployment(t *testing.T) {
 	ctx := acctest.Context(t)
 	var service awstypes.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	clusterName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1012,7 +1018,7 @@ func TestAccECSService_forceNewDeployment(t *testing.T) {
 		CheckDestroy:             testAccCheckServiceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceConfig_basic(rName),
+				Config: testAccServiceConfig_basic(rName, clusterName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "ordered_placement_strategy.#", "0"),
@@ -1024,7 +1030,7 @@ func TestAccECSService_forceNewDeployment(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccServiceConfig_forceNewDeployment(rName),
+				Config: testAccServiceConfig_forceNewDeployment(rName, clusterName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "ordered_placement_strategy.#", "1"),
@@ -1045,6 +1051,7 @@ func TestAccECSService_forceNewDeploymentTriggers(t *testing.T) {
 	ctx := acctest.Context(t)
 	var service awstypes.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	clusterName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1054,7 +1061,7 @@ func TestAccECSService_forceNewDeploymentTriggers(t *testing.T) {
 		CheckDestroy:             testAccCheckServiceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceConfig_forceNewDeployment(rName),
+				Config: testAccServiceConfig_forceNewDeployment(rName, clusterName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "ordered_placement_strategy.#", "1"),
@@ -1068,7 +1075,7 @@ func TestAccECSService_forceNewDeploymentTriggers(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccServiceConfig_forceNewDeploymentTriggers(rName),
+				Config: testAccServiceConfig_forceNewDeploymentTriggers(rName, clusterName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "force_new_deployment", acctest.CtTrue),
@@ -1091,6 +1098,7 @@ func TestAccECSService_PlacementStrategy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var service awstypes.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	clusterName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1100,7 +1108,7 @@ func TestAccECSService_PlacementStrategy_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckServiceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceConfig_basic(rName),
+				Config: testAccServiceConfig_basic(rName, clusterName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "ordered_placement_strategy.#", "0"),
@@ -1112,7 +1120,7 @@ func TestAccECSService_PlacementStrategy_basic(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccServiceConfig_placementStrategy(rName),
+				Config: testAccServiceConfig_placementStrategy(rName, clusterName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "ordered_placement_strategy.#", "1"),
@@ -1126,7 +1134,7 @@ func TestAccECSService_PlacementStrategy_basic(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccServiceConfig_randomPlacementStrategy(rName),
+				Config: testAccServiceConfig_randomPlacementStrategy(rName, clusterName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "ordered_placement_strategy.#", "1"),
@@ -1140,7 +1148,7 @@ func TestAccECSService_PlacementStrategy_basic(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccServiceConfig_multiplacementStrategy(rName),
+				Config: testAccServiceConfig_multiplacementStrategy(rName, clusterName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "ordered_placement_strategy.#", "2"),
@@ -2013,14 +2021,14 @@ func testAccCheckServiceExists(ctx context.Context, name string, service *awstyp
 	}
 }
 
-func testAccServiceConfig_basic(rName string) string {
+func testAccServiceConfig_basic(rName, clusterName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
-  name = %[1]q
+  name = %[2]q
 }
 
 resource "aws_ecs_task_definition" "test" {
-  family = %[1]q
+  family = %[2]q
 
   container_definitions = <<DEFINITION
 [
@@ -2041,17 +2049,17 @@ resource "aws_ecs_service" "test" {
   task_definition = aws_ecs_task_definition.test.arn
   desired_count   = 1
 }
-`, rName)
+`, rName, clusterName)
 }
 
-func testAccServiceConfig_modified(rName string) string {
+func testAccServiceConfig_modified(rName, clusterName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
-  name = %[1]q
+  name = %[2]q
 }
 
 resource "aws_ecs_task_definition" "test" {
-  family = %[1]q
+  family = %[2]q
 
   container_definitions = <<DEFINITION
 [
@@ -2072,7 +2080,7 @@ resource "aws_ecs_service" "test" {
   task_definition = aws_ecs_task_definition.test.arn
   desired_count   = 2
 }
-`, rName)
+`, rName, clusterName)
 }
 
 func testAccServiceConfig_launchTypeFargateBase(rName string) string {
@@ -2605,14 +2613,14 @@ resource "aws_ecs_service" "test" {
 `, rName))
 }
 
-func testAccServiceConfig_forceNewDeployment(rName string) string {
+func testAccServiceConfig_forceNewDeployment(rName, clusterName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
-  name = %[1]q
+  name = %[2]q
 }
 
 resource "aws_ecs_task_definition" "test" {
-  family = %[1]q
+  family = %[2]q
 
   container_definitions = <<DEFINITION
 [
@@ -2639,17 +2647,17 @@ resource "aws_ecs_service" "test" {
     field = "memory"
   }
 }
-`, rName)
+`, rName, clusterName)
 }
 
-func testAccServiceConfig_forceNewDeploymentTriggers(rName string) string {
+func testAccServiceConfig_forceNewDeploymentTriggers(rName, clusterName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
-  name = %[1]q
+  name = %[2]q
 }
 
 resource "aws_ecs_task_definition" "test" {
-  family = %[1]q
+  family = %[2]q
 
   container_definitions = <<DEFINITION
 [
@@ -2680,17 +2688,17 @@ resource "aws_ecs_service" "test" {
     update = timestamp()
   }
 }
-`, rName)
+`, rName, clusterName)
 }
 
-func testAccServiceConfig_placementStrategy(rName string) string {
+func testAccServiceConfig_placementStrategy(rName, clusterName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
-  name = %[1]q
+  name = %[2]q
 }
 
 resource "aws_ecs_task_definition" "test" {
-  family = %[1]q
+  family = %[2]q
 
   container_definitions = <<DEFINITION
 [
@@ -2716,7 +2724,7 @@ resource "aws_ecs_service" "test" {
     field = "memory"
   }
 }
-`, rName)
+`, rName, clusterName)
 }
 
 func testAccServiceConfig_placementStrategyType(rName string, placementStrategyType string) string {
@@ -2754,14 +2762,14 @@ resource "aws_ecs_service" "test" {
 `, rName, placementStrategyType)
 }
 
-func testAccServiceConfig_randomPlacementStrategy(rName string) string {
+func testAccServiceConfig_randomPlacementStrategy(rName, clusterName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
-  name = %[1]q
+  name = %[2]q
 }
 
 resource "aws_ecs_task_definition" "test" {
-  family = %[1]q
+  family = %[2]q
 
   container_definitions = <<DEFINITION
 [
@@ -2786,17 +2794,17 @@ resource "aws_ecs_service" "test" {
     type = "random"
   }
 }
-`, rName)
+`, rName, clusterName)
 }
 
-func testAccServiceConfig_multiplacementStrategy(rName string) string {
+func testAccServiceConfig_multiplacementStrategy(rName, clusterName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
-  name = %[1]q
+  name = %[2]q
 }
 
 resource "aws_ecs_task_definition" "test" {
-  family = %[1]q
+  family = %[2]q
 
   container_definitions = <<DEFINITION
 [
@@ -2827,7 +2835,7 @@ resource "aws_ecs_service" "test" {
     type  = "spread"
   }
 }
-`, rName)
+`, rName, clusterName)
 }
 
 func testAccServiceConfig_placementConstraint(rName string) string {

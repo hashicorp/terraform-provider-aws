@@ -554,6 +554,10 @@ func resourceService() *schema.Resource {
 					},
 				},
 			},
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"availability_zone_rebalancing": {
 				Type:             schema.TypeString,
 				Optional:         true,
@@ -1285,6 +1289,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta any
 	}
 
 	d.SetId(aws.ToString(output.Service.ServiceArn))
+	d.Set(names.AttrARN, output.Service.ServiceArn)
 
 	fn := waitServiceActive
 	if d.Get("wait_for_steady_state").(bool) {
@@ -1329,6 +1334,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	d.SetId(aws.ToString(service.ServiceArn))
+	d.Set(names.AttrARN, service.ServiceArn)
 	d.Set("availability_zone_rebalancing", service.AvailabilityZoneRebalancing)
 	if err := d.Set(names.AttrCapacityProviderStrategy, flattenCapacityProviderStrategyItems(service.CapacityProviderStrategy)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting capacity_provider_strategy: %s", err)
@@ -1689,20 +1695,21 @@ func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta any
 }
 
 func resourceServiceImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	if len(strings.Split(d.Id(), "/")) != 2 {
+	parts := strings.Split(d.Id(), "/")
+	if len(parts) != 2 {
 		return []*schema.ResourceData{}, fmt.Errorf("wrong format of resource: %s, expecting 'cluster-name/service-name'", d.Id())
 	}
-	cluster := strings.Split(d.Id(), "/")[0]
-	name := strings.Split(d.Id(), "/")[1]
-	log.Printf("[DEBUG] Importing ECS service %s from cluster %s", name, cluster)
+	clusterName := parts[0]
+	serviceName := parts[1]
+	log.Printf("[DEBUG] Importing ECS service %s from cluster %s", serviceName, clusterName)
 
-	d.SetId(name)
+	d.SetId(serviceName)
 	clusterArn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Region:    meta.(*conns.AWSClient).Region(ctx),
 		Service:   "ecs",
 		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  fmt.Sprintf("cluster/%s", cluster),
+		Resource:  fmt.Sprintf("cluster/%s", clusterName),
 	}.String()
 	d.Set("cluster", clusterArn)
 	return []*schema.ResourceData{d}, nil
