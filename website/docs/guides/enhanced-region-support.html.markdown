@@ -539,24 +539,19 @@ Some regional services have a subset of resources that are global:
 
 | Service | Type | Name |
 |---|---|---|
-| Audit Manager | Resource | `aws_auditmanager_organization_admin_account_registration` |
 | Backup | Resource | `aws_backup_global_settings` |
 | Chime SDK Voice | Resource | `aws_chimesdkvoice_global_settings` |
 | CloudTrail | Resource | `aws_cloudtrail_organization_delegated_admin_account` |
-| Detective | Resource | `aws_detective_organization_admin_account` |
 | Direct Connect | Resource | `aws_dx_gateway` |
 | Direct Connect | Data Source | `aws_dx_gateway` |
 | EC2 | Resource | `aws_ec2_image_block_public_access` |
 | Firewall Manager | Resource | `aws_fms_admin_account` |
-| Guard Duty | Resource | `aws_guardduty_organization_admin_account` |
-| Inspector | Resource | `aws_inspector2_delegated_admin_account` |
 | IPAM | Resource | `aws_vpc_ipam_organization_admin_account` |
-| Macie | Resource | `aws_macie2_organization_admin_account` |
-| Macie | Resource | `aws_macie2_organization_configuration` |
 | Resource Access Manager | Resource | `aws_ram_sharing_with_organization` |
+| S3 | Data Source | `aws_canonical_user_id` |
 | S3 | Resource | `aws_s3_account_public_access_block` |
 | S3 | Data Source | `aws_s3_account_public_access_block` |
-| Security Hub | Resource | `aws_securityhub_organization_admin_account` |
+| Service Catalog | Resource | `aws_servicecatalog_organizations_access` |
 
 ### Meta data sources
 

@@ -26,7 +26,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newOrganizationConfigurationResource,
 			TypeName: "aws_macie2_organization_configuration",
 			Name:     "Organization Configuration",
-			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 	}
 }
@@ -95,7 +95,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceOrganizationAdminAccount,
 			TypeName: "aws_macie2_organization_admin_account",
 			Name:     "Organization Admin Account",
-			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 	}
 }

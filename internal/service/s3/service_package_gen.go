@@ -50,7 +50,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Factory:  dataSourceCanonicalUserID,
 			TypeName: "aws_canonical_user_id",
 			Name:     "Canonical User ID",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  dataSourceBucket,
