@@ -40,6 +40,7 @@ resource "aws_kinesis_stream" "test_stream" {
 
 This resource supports the following arguments:
 
+* `region` – (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) A name to identify the stream. This is unique to the AWS account and region the Stream is created in.
 * `shard_count` – (Optional) The number of shards that the stream will use. If the `stream_mode` is `PROVISIONED`, this field is required.
 Amazon has guidelines for specifying the Stream size that should be referenced when creating a Kinesis stream. See [Amazon Kinesis Streams][2] for more.

@@ -103,6 +103,7 @@ resource "aws_cloudwatch_log_group" "example" {
 
 This resource supports the following arguments:
 
+* `region` – (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `rest_api_id` - (Required) ID of the associated REST API
 * `stage_name` - (Required) Name of the stage
 * `deployment_id` - (Required) ID of the deployment that the stage points to

@@ -24,6 +24,7 @@ resource "aws_lightsail_certificate" "test" {
 
 This resource supports the following arguments:
 
+* `region` – (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the Lightsail load balancer.
 * `domain_name` - (Required) A domain name for which the certificate should be issued.
 * `subject_alternative_names` - (Optional) Set of domains that should be SANs in the issued certificate. `domain_name` attribute is automatically added as a Subject Alternative Name.

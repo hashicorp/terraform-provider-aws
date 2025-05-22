@@ -39,6 +39,7 @@ resource "aws_lambda_code_signing_config" "new_csc" {
 
 This resource supports the following arguments:
 
+* `region` – (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `allowed_publishers` (Required) A configuration block of allowed publishers as signing profiles for this code signing configuration. Detailed below.
 * `policies` (Optional) A configuration block of code signing policies that define the actions to take if the validation checks fail. Detailed below.
 * `description` - (Optional) Descriptive name for this code signing configuration.

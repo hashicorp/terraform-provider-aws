@@ -25,6 +25,7 @@ resource "aws_dax_cluster" "bar" {
 
 This resource supports the following arguments:
 
+* `region` – (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cluster_endpoint_encryption_type` – (Optional) The type of encryption the
 cluster's endpoint should support. Valid values are: `NONE` and `TLS`.
 Default value is `NONE`.

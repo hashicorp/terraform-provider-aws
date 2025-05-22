@@ -123,6 +123,7 @@ resource "aws_glue_catalog_table" "test" {
 
 This resource supports the following arguments:
 
+* `region` – (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` – (Required) The name you assign to this ML Transform. It must be unique in your account.
 * `input_record_tables` - (Required)  A list of AWS Glue table definitions used by the transform. see [Input Record Tables](#input_record_tables).
 * `parameters` - (Required) The algorithmic parameters that are specific to the transform type used. Conditionally dependent on the transform type. see [Parameters](#parameters).
