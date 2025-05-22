@@ -83,6 +83,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` – (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `auto_scaling_configuration` - (Optional) Configuration based on which FinSpace will scale in or scale out nodes in your cluster. See [auto_scaling_configuration](#auto_scaling_configuration).
 * `availability_zone_id` - (Optional) The availability zone identifiers for the requested regions. Required when `az_mode` is set to SINGLE.
 * `cache_storage_configurations` - (Optional) Configurations for a read only cache storage associated with a cluster. This cache will be stored as an FSx Lustre that reads from the S3 store. See [cache_storage_configuration](#cache_storage_configuration).

@@ -41,6 +41,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` – (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `nas1_configuration` - (Optional) Specifies the configuration for the Network attached storage (`NAS_1`) file system volume. This parameter is required when `volume_type` is `NAS_1`. See [`nas1_configuration` Argument Reference](#nas1_configuration-argument-reference) below.
 * `description` - (Optional) Description of the volume.
 * `tags` - (Optional) A list of key-value pairs to label the volume. You can add up to 50 tags to a volume
