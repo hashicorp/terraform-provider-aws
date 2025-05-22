@@ -33,6 +33,7 @@ data "aws_workspaces_workspace" "example" {
 
 This data source supports the following arguments:
 
+* `region` – (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `bundle_id` - (Optional) ID of the bundle for the WorkSpace.
 * `directory_id` - (Optional) ID of the directory for the WorkSpace. You have to specify `user_name` along with `directory_id`. You cannot combine this parameter with `workspace_id`.
 * `root_volume_encryption_enabled` - (Optional) Indicates whether the data stored on the root volume is encrypted.

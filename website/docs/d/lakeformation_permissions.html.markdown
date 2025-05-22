@@ -62,6 +62,7 @@ data "aws_lakeformation_permissions" "test" {
 
 This data source supports the following arguments:
 
+* `region` – (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `principal` – (Required) Principal to be granted the permissions on the resource. Supported principals are IAM users or IAM roles.
 
 One of the following is required:

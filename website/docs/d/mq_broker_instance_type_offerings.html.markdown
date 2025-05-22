@@ -38,6 +38,7 @@ data "aws_mq_broker_instance_type_offerings" "all" {
 
 This data source supports the following arguments:
 
+* `region` – (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `engine_type` - (Optional) Filter response by engine type.
 * `host_instance_type` - (Optional) Filter response by host instance type.
 * `storage_type` - (Optional) Filter response by storage type.

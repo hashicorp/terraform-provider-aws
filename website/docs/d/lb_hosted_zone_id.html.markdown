@@ -32,6 +32,7 @@ resource "aws_route53_record" "www" {
 
 This data source supports the following arguments:
 
+* `region` – (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `region` - (Optional) Name of the region whose AWS ELB HostedZoneId is desired.
   Defaults to the region from the AWS provider configuration.
 * `load_balancer_type` - (Optional) Type of load balancer to create. Possible values are `application` or `network`. The default value is `application`.
