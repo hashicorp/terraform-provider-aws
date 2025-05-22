@@ -79,13 +79,13 @@ func TestSDKv2HelperRetryCompatibleDelayWithPollTimeout(t *testing.T) {
 	}
 }
 
-func TestRetryWithTimeoutDefaultGracePeriod(t *testing.T) {
+func TestLoopWithTimeoutDefaultGracePeriod(t *testing.T) {
 	t.Parallel()
 
 	ctx := context.Background()
 
 	var n int
-	for r := NewRetryLoopWithOptions(1*time.Minute, WithDelay(FixedDelay(1*time.Second))); r.Continue(ctx); {
+	for r := NewLoopWithOptions(1*time.Minute, WithDelay(FixedDelay(1*time.Second))); r.Continue(ctx); {
 		time.Sleep(35 * time.Second)
 		n++
 	}
@@ -96,13 +96,13 @@ func TestRetryWithTimeoutDefaultGracePeriod(t *testing.T) {
 	}
 }
 
-func TestRetryWithTimeoutNoGracePeriod(t *testing.T) {
+func TestLoopWithTimeoutNoGracePeriod(t *testing.T) {
 	t.Parallel()
 
 	ctx := context.Background()
 
 	var n int
-	for r := NewRetryLoopWithOptions(1*time.Minute, WithDelay(FixedDelay(1*time.Second)), WithGracePeriod(0)); r.Continue(ctx); {
+	for r := NewLoopWithOptions(1*time.Minute, WithDelay(FixedDelay(1*time.Second)), WithGracePeriod(0)); r.Continue(ctx); {
 		time.Sleep(35 * time.Second)
 		n++
 	}
