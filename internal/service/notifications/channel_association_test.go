@@ -15,8 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfnotifications "github.com/hashicorp/terraform-provider-aws/internal/service/notifications"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -24,7 +23,6 @@ import (
 
 func TestAccNotificationsChannelAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rEmailAddress := acctest.RandomEmailAddress(acctest.RandomDomainName())
 	resourceName := "aws_notifications_channel_association.test"
@@ -50,26 +48,14 @@ func TestAccNotificationsChannelAssociation_basic(t *testing.T) {
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
-				ImportStateIdFunc:                    testAccObjectImportStateIdFromARNsFunc(resourceName),
+				ImportStateIdFunc:                    testAccChannelAssociationImportStateIDFunc(resourceName),
 			},
 		},
 	})
 }
 
-func testAccObjectImportStateIdFromARNsFunc(resourceName string) func(state *terraform.State) (string, error) {
-	return func(state *terraform.State) (string, error) {
-		rs, ok := state.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("not Found: %s", resourceName)
-		}
-
-		return rs.Primary.Attributes[names.AttrARN] + flex.ResourceIdSeparator + rs.Primary.Attributes["notification_configuration_arn"], nil
-	}
-}
-
 func TestAccNotificationsChannelAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rEmailAddress := acctest.RandomEmailAddress(acctest.RandomDomainName())
 	resourceName := "aws_notifications_channel_association.test"
@@ -110,42 +96,50 @@ func testAccCheckChannelAssociationDestroy(ctx context.Context) resource.TestChe
 				continue
 			}
 
-			exists, err := tfnotifications.FindChannelAssociationByARNs(ctx, conn, rs.Primary.Attributes[names.AttrARN], rs.Primary.Attributes["notification_configuration_arn"])
-			if !exists || tfresource.NotFound(err) {
-				return nil
+			err := tfnotifications.FindChannelAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["notification_configuration_arn"], rs.Primary.Attributes[names.AttrARN])
+
+			if tfresource.NotFound(err) {
+				continue
 			}
+
 			if err != nil {
-				return create.Error(names.Notifications, create.ErrActionCheckingDestroyed, tfnotifications.ResNameChannelAssociation, rs.Primary.ID, err)
+				return err
 			}
-			return create.Error(names.Notifications, create.ErrActionCheckingDestroyed, tfnotifications.ResNameChannelAssociation, rs.Primary.ID, errors.New("not destroyed"))
+
+			return errors.New("User Notifications Channel Association still exists")
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckChannelAssociationExists(ctx context.Context, name string) resource.TestCheckFunc {
+func testAccCheckChannelAssociationExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.Notifications, create.ErrActionCheckingExistence, tfnotifications.ResNameChannelAssociation, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.Notifications, create.ErrActionCheckingExistence, tfnotifications.ResNameChannelAssociation, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).NotificationsClient(ctx)
 
-		exists, err := tfnotifications.FindChannelAssociationByARNs(ctx, conn, rs.Primary.Attributes[names.AttrARN], rs.Primary.Attributes["notification_configuration_arn"])
-		if !exists || err != nil {
-			return create.Error(names.Notifications, create.ErrActionCheckingExistence, tfnotifications.ResNameChannelAssociation, rs.Primary.ID, err)
-		}
-		return nil
+		err := tfnotifications.FindChannelAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["notification_configuration_arn"], rs.Primary.Attributes[names.AttrARN])
+
+		return err
 	}
 }
 
-func testAccChannelAssociationConfig_basic(rName string, rEmailAddress string) string {
+func testAccChannelAssociationImportStateIDFunc(n string) func(*terraform.State) (string, error) {
+	return func(state *terraform.State) (string, error) {
+		rs, ok := state.RootModule().Resources[n]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", n)
+		}
+
+		return rs.Primary.Attributes["notification_configuration_arn"] + intflex.ResourceIdSeparator + rs.Primary.Attributes[names.AttrARN], nil
+	}
+}
+
+func testAccChannelAssociationConfig_basic(rName, rEmailAddress string) string {
 	return fmt.Sprintf(`
 resource "aws_notifications_notification_configuration" "test" {
   name        = %[1]q
@@ -153,7 +147,7 @@ resource "aws_notifications_notification_configuration" "test" {
 }
 
 resource "aws_notificationscontacts_email_contact" "test" {
-  name          = %[2]q
+  name          = %[1]q
   email_address = %[2]q
 }
 

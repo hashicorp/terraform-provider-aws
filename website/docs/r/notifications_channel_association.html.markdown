@@ -43,17 +43,17 @@ This resource exports no additional attributes.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import User Notifications Channel Association using the `channel_arn,notification_configuration_arn` format. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import User Notifications Channel Association using the `notification_configuration_arn,channel_arn` format. For example:
 
 ```terraform
 import {
   to = aws_notifications_channel_association.example
-  id = "arn:aws:notificationscontacts:us-west-2:123456789012:emailcontact:example-contact,arn:aws:notifications:us-west-2:123456789012:configuration:example-notification-config"
+  id = "arn:aws:notifications:us-west-2:123456789012:configuration:example-notification-config,arn:aws:notificationscontacts:us-west-2:123456789012:emailcontact:example-contact"
 }
 ```
 
-Using `terraform import`, import User Notifications Channel Association using the `channel_arn,notification_configuration_arn` format. For example:
+Using `terraform import`, import User Notifications Channel Association using the `notification_configuration_arn,channel_arn` format. For example:
 
 ```console
-% terraform import aws_notifications_channel_association.example arn:aws:notificationscontacts:us-west-2:123456789012:emailcontact:example-contact,arn:aws:notifications:us-west-2:123456789012:configuration:example-notification-config
+% terraform import aws_notifications_channel_association.example arn:aws:notifications:us-west-2:123456789012:configuration:example-notification-config,arn:aws:notificationscontacts:us-west-2:123456789012:emailcontact:example-contact
 ```

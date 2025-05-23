@@ -5,7 +5,6 @@ package notifications
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"slices"
 
@@ -17,50 +16,42 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource("aws_notifications_channel_association", name="Channel Association")
-func newResourceChannelAssociation(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceChannelAssociation{}
+func newChannelAssociationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &channelAssociationResource{}
 
 	return r, nil
 }
 
-const (
-	ResNameChannelAssociation    = "Channel Association"
-	ChannelAssociationsARNsCount = 2
-)
-
-type resourceChannelAssociation struct {
+type channelAssociationResource struct {
 	framework.ResourceWithConfigure
-	framework.WithNoOpUpdate[resourceChannelAssociationModel]
+	framework.WithNoUpdate
 }
 
-func (r *resourceChannelAssociation) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *channelAssociationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: schema.StringAttribute{
-				Required: true,
+				CustomType: fwtypes.ARNType,
+				Required:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			"notification_configuration_arn": schema.StringAttribute{
-				Required: true,
+				CustomType: fwtypes.ARNType,
+				Required:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -69,155 +60,135 @@ func (r *resourceChannelAssociation) Schema(ctx context.Context, req resource.Sc
 	}
 }
 
-func (r *resourceChannelAssociation) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().NotificationsClient(ctx)
-
-	var plan resourceChannelAssociationModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
+func (r *channelAssociationResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data channelAssociationResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
+
+	conn := r.Meta().NotificationsClient(ctx)
 
 	var input notifications.AssociateChannelInput
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := conn.AssociateChannel(ctx, &input)
+	_, err := conn.AssociateChannel(ctx, &input)
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Notifications, create.ErrActionCreating, ResNameChannelAssociation, plan.NotificationConfigurationARN.String(), err),
-			err.Error(),
-		)
-		return
-	}
-	if out == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Notifications, create.ErrActionCreating, ResNameChannelAssociation, plan.NotificationConfigurationARN.String(), nil),
-			errors.New("empty output").Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("creating User Notifications Channel Association (%s,%s)", data.NotificationConfigurationARN.ValueString(), data.ARN.ValueString()), err.Error())
+
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-func (r *resourceChannelAssociation) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *channelAssociationResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data channelAssociationResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().NotificationsClient(ctx)
 
-	var state resourceChannelAssociationModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+	notificationConfigurationARN, arn := fwflex.StringValueFromFramework(ctx, data.NotificationConfigurationARN), fwflex.StringValueFromFramework(ctx, data.ARN)
+	err := findChannelAssociationByTwoPartKey(ctx, conn, notificationConfigurationARN, arn)
+
+	if tfresource.NotFound(err) {
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+
 		return
 	}
 
-	exists, err := findChannelAssociationByARNs(ctx, conn, state.ARN.ValueString(), state.NotificationConfigurationARN.ValueString())
-	if !exists {
-		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
-		resp.State.RemoveResource(ctx)
-		return
-	}
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Notifications, create.ErrActionReading, ResNameChannelAssociation, state.NotificationConfigurationARN.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("reading User Notifications Channel Association (%s,%s)", notificationConfigurationARN, arn), err.Error())
+
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceChannelAssociation) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().NotificationsClient(ctx)
-
-	var state resourceChannelAssociationModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *channelAssociationResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data channelAssociationResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	input := notifications.DisassociateChannelInput{
-		Arn:                          state.ARN.ValueStringPointer(),
-		NotificationConfigurationArn: state.NotificationConfigurationARN.ValueStringPointer(),
+	conn := r.Meta().NotificationsClient(ctx)
+
+	var input notifications.DisassociateChannelInput
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
+	if response.Diagnostics.HasError() {
+		return
 	}
 
 	_, err := conn.DisassociateChannel(ctx, &input)
-	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return
-		}
 
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Notifications, create.ErrActionDeleting, ResNameChannelAssociation, state.NotificationConfigurationARN.String(), err),
-			err.Error(),
-		)
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return
+	}
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("deleting User Notifications Channel Association (%s,%s)", data.NotificationConfigurationARN.ValueString(), data.ARN.ValueString()), err.Error())
+
 		return
 	}
 }
 
-func (r *resourceChannelAssociation) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	parts, err := intflex.ExpandResourceId(req.ID, ChannelAssociationsARNsCount, false)
+func (r *channelAssociationResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	const (
+		channelAssociationIDParts = 2
+	)
+	parts, err := intflex.ExpandResourceId(request.ID, channelAssociationIDParts, false)
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Unexpected Import Identifier",
-			fmt.Sprintf("Expected import identifier with format: channel_arn,notification_configuration_arn. Got: %q", req.ID),
-		)
+		response.Diagnostics.Append(fwdiag.NewParsingResourceIDErrorDiagnostic(err))
+
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrARN), parts[0])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("notification_configuration_arn"), parts[1])...)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrARN), parts[1])...)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("notification_configuration_arn"), parts[0])...)
 }
 
-func findChannelAssociationByARNs(ctx context.Context, conn *notifications.Client, arn string, notificationConfigurationArn string) (bool, error) {
+func findChannelAssociationByTwoPartKey(ctx context.Context, conn *notifications.Client, notificationConfigurationArn, arn string) error {
 	input := notifications.ListChannelsInput{
 		NotificationConfigurationArn: aws.String(notificationConfigurationArn),
 	}
 
-	out, err := conn.ListChannels(ctx, &input)
-	if err != nil {
-		return false, err
+	pages := notifications.NewListChannelsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: &input,
+			}
+		}
+
+		if err != nil {
+			return err
+		}
+
+		if slices.Contains(page.Channels, arn) {
+			return nil
+		}
 	}
 
-	if out == nil || out.Channels == nil || len(out.Channels) == 0 {
-		return false, tfresource.NewEmptyResultError(&input)
-	}
-
-	if slices.Contains(out.Channels, arn) {
-		return true, nil
-	}
-
-	return false, &retry.NotFoundError{
-		LastError:   fmt.Errorf("association of channel %q to notification configuration %q not found", arn, notificationConfigurationArn),
+	return &retry.NotFoundError{
 		LastRequest: &input,
 	}
 }
 
-type resourceChannelAssociationModel struct {
-	ARN                          types.String `tfsdk:"arn"`
-	NotificationConfigurationARN types.String `tfsdk:"notification_configuration_arn"`
-}
-
-func sweepChannelAssociations(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	input := notifications.ListChannelsInput{}
-	conn := client.NotificationsClient(ctx)
-	var sweepResources []sweep.Sweepable
-
-	pages := notifications.NewListChannelsPaginator(conn, &input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-		if err != nil {
-			return nil, err
-		}
-
-		for _, arn := range page.Channels {
-			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newResourceChannelAssociation, client,
-				sweepfw.NewAttribute(names.AttrARN, arn)),
-			)
-		}
-	}
-
-	return sweepResources, nil
+type channelAssociationResourceModel struct {
+	ARN                          fwtypes.ARN `tfsdk:"arn"`
+	NotificationConfigurationARN fwtypes.ARN `tfsdk:"notification_configuration_arn"`
 }

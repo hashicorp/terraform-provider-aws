@@ -287,7 +287,7 @@ func testAccCheckNotificationConfigurationExists(ctx context.Context, n string, 
 	}
 }
 
-func testAccNotificationConfigurationImportStateIDFunc(n string) func(state *terraform.State) (string, error) {
+func testAccNotificationConfigurationImportStateIDFunc(n string) func(*terraform.State) (string, error) {
 	return func(state *terraform.State) (string, error) {
 		rs, ok := state.RootModule().Resources[n]
 		if !ok {

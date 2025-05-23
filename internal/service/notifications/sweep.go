@@ -43,3 +43,25 @@ func sweepNotificationConfigurations(ctx context.Context, client *conns.AWSClien
 
 	return sweepResources, nil
 }
+
+func sweepChannelAssociations(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.NotificationsClient(ctx)
+	var input notifications.ListChannelsInput
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := notifications.NewListChannelsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Channels {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newChannelAssociationResource, client,
+				framework.NewAttribute(names.AttrARN, v)),
+			)
+		}
+	}
+
+	return sweepResources, nil
+}
