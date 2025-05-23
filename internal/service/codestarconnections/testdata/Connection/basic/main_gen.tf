@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_codestarconnections_connection" "test" {
-  name              = var.rName
+  name          = var.rName
   provider_type = "Bitbucket"
 }
 

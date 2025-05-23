@@ -4,7 +4,7 @@
 resource "aws_codestarconnections_connection" "test" {
   region = var.region
 
-  name              = var.rName
+  name          = var.rName
   provider_type = "Bitbucket"
 }
 
