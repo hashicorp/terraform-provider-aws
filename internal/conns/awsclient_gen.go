@@ -129,8 +129,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/internetmonitor"
 	"github.com/aws/aws-sdk-go-v2/service/invoicing"
 	"github.com/aws/aws-sdk-go-v2/service/iot"
-	"github.com/aws/aws-sdk-go-v2/service/iotanalytics"
-	"github.com/aws/aws-sdk-go-v2/service/iotevents"
 	"github.com/aws/aws-sdk-go-v2/service/ivs"
 	"github.com/aws/aws-sdk-go-v2/service/ivschat"
 	"github.com/aws/aws-sdk-go-v2/service/kafka"
@@ -761,14 +759,6 @@ func (c *AWSClient) InvoicingClient(ctx context.Context) *invoicing.Client {
 
 func (c *AWSClient) IoTClient(ctx context.Context) *iot.Client {
 	return errs.Must(client[*iot.Client](ctx, c, names.IoT, make(map[string]any)))
-}
-
-func (c *AWSClient) IoTAnalyticsClient(ctx context.Context) *iotanalytics.Client {
-	return errs.Must(client[*iotanalytics.Client](ctx, c, names.IoTAnalytics, make(map[string]any)))
-}
-
-func (c *AWSClient) IoTEventsClient(ctx context.Context) *iotevents.Client {
-	return errs.Must(client[*iotevents.Client](ctx, c, names.IoTEvents, make(map[string]any)))
 }
 
 func (c *AWSClient) KMSClient(ctx context.Context) *kms.Client {

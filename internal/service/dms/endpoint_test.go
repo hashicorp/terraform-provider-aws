@@ -3641,10 +3641,9 @@ resource "aws_dms_endpoint" "test" {
 }
 
 func testAccEndpointConfig_redshiftBase(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_redshift_cluster" "test" {
   cluster_identifier = %[1]q
-  availability_zone  = data.aws_availability_zones.available.names[0]
   database_name      = "mydb"
   master_username    = "foo"
   master_password    = "Mustbe8characters"
@@ -3698,7 +3697,7 @@ data "aws_iam_policy_document" "test" {
     resources = ["*"]
   }
 }
-`, rName))
+`, rName)
 }
 
 func testAccEndpointConfig_redshift(rName string) string {

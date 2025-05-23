@@ -50,6 +50,7 @@ resource "aws_workspaces_workspace" "example" {
 
 This resource supports the following arguments:
 
+* `region` – (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `directory_id` - (Required) The ID of the directory for the WorkSpace.
 * `bundle_id` - (Required) The ID of the bundle for the WorkSpace.
 * `user_name` – (Required) The user name of the user for the WorkSpace. This user name must exist in the directory for the WorkSpace.

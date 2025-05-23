@@ -27,6 +27,7 @@ resource "aws_lightsail_bucket_access_key_access_key" "test" {
 
 This resource supports the following arguments:
 
+* `region` – (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `bucket_name` - (Required) The name of the bucket that the new access key will belong to, and grant access to.
 
 ## Attribute Reference

@@ -26,7 +26,7 @@ type TemplateData struct {
 
 func main() {
 	const (
-		filename = `../../../website/allowed-subcategories.txt`
+		filename = `../../../website/ignore-enhanced-region-check-subcategories.txt`
 	)
 	g := common.NewGenerator()
 
@@ -41,7 +41,11 @@ func main() {
 	td := TemplateData{}
 
 	for _, l := range data {
-		if l.Exclude() && !l.AllowedSubcategory() {
+		if l.Exclude() {
+			continue
+		}
+
+		if !l.IsGlobal() {
 			continue
 		}
 
@@ -62,7 +66,7 @@ func main() {
 
 	d := g.NewUnformattedFileDestination(filename)
 
-	if err := d.BufferTemplate("allowsubcats", tmpl, td); err != nil {
+	if err := d.BufferTemplate("ignregionsubcats", tmpl, td); err != nil {
 		g.Fatalf("generating file (%s): %s", filename, err)
 	}
 
@@ -71,5 +75,5 @@ func main() {
 	}
 }
 
-//go:embed file.tmpl
+//go:embed ignore_enhanced_region_check_subcats.tmpl
 var tmpl string

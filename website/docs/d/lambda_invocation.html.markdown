@@ -39,6 +39,7 @@ output "result_entry" {
 
 This data source supports the following arguments:
 
+* `region` – (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `function_name` - (Required) Name of the lambda function.
 * `input` - (Required) String in JSON format that is passed as payload to the lambda function.
 * `qualifier` - (Optional) Qualifier (a.k.a version) of the lambda function. Defaults

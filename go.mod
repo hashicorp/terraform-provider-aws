@@ -1,6 +1,6 @@
 module github.com/hashicorp/terraform-provider-aws
 
-go 1.24.2
+go 1.24.3
 
 // Disable post-quantum X25519MLKEM768 key exchange mechanism
 // This causes errors with AWS Network Firewall
@@ -140,8 +140,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.21.2
 	github.com/aws/aws-sdk-go-v2/service/invoicing v1.1.2
 	github.com/aws/aws-sdk-go-v2/service/iot v1.64.2
-	github.com/aws/aws-sdk-go-v2/service/iotanalytics v1.27.2
-	github.com/aws/aws-sdk-go-v2/service/iotevents v1.28.2
 	github.com/aws/aws-sdk-go-v2/service/ivs v1.43.2
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.17.2
 	github.com/aws/aws-sdk-go-v2/service/kafka v1.39.2

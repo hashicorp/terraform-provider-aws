@@ -22,7 +22,7 @@ resource "aws_s3tables_table_bucket" "example" {
 
 ## Argument Reference
 
-The following argument is required:
+The following arguments are required:
 
 * `name` - (Required, Forces new resource) Name of the table bucket.
   Must be between 3 and 63 characters in length.
@@ -31,6 +31,7 @@ The following argument is required:
 
 The following arguments are optional:
 
+* `region` – (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `encryption_configuration` - (Optional) A single table bucket encryption configuration object.
   [See `encryption_configuration` below](#encryption_configuration).
 * `maintenance_configuration` - (Optional) A single table bucket maintenance configuration object.

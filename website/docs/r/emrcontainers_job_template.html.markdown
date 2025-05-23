@@ -33,8 +33,9 @@ resource "aws_emrcontainers_job_template" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` – (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `job_template_data` - (Required) The job template data which holds values of StartJobRun API request.
 * `kms_key_arn` - (Optional) The KMS key ARN used to encrypt the job template.
 * `name` – (Required) The specified name of the job template.

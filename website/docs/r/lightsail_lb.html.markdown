@@ -27,6 +27,7 @@ resource "aws_lightsail_lb" "test" {
 
 This resource supports the following arguments:
 
+* `region` – (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the Lightsail load balancer.
 * `instance_port` - (Required) The instance port the load balancer will connect.
 * `health_check_path` - (Optional) The health check path of the load balancer. Default value "/".

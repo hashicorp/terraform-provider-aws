@@ -1,6 +1,6 @@
 module github.com/hashicorp/terraform-provider-aws/tools/tfsdk2fw
 
-go 1.24.2
+go 1.24.3
 
 require (
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.36.1
@@ -159,8 +159,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.21.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/invoicing v1.1.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/iot v1.64.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/iotanalytics v1.27.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/iotevents v1.28.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ivs v1.43.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.17.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/kafka v1.39.2 // indirect
