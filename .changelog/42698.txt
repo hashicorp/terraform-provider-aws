@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_vpc_endpoint_security_group_association: add retry to handle VpcEndpoint modify operation in progress error.
+```

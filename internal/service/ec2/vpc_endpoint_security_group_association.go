@@ -13,8 +13,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -182,7 +184,20 @@ func createVPCEndpointSecurityGroupAssociation(ctx context.Context, conn *ec2.Cl
 	}
 
 	log.Printf("[DEBUG] Creating VPC Endpoint Security Group Association: %v", input)
-	_, err := conn.ModifyVpcEndpoint(ctx, input)
+	err := retry.RetryContext(ctx, vpcModifyTimeout, func() *retry.RetryError {
+		_, err := conn.ModifyVpcEndpoint(ctx, input)
+		if err != nil {
+			if errs.Contains(err, "VpcEndpoint modify operation in progress") {
+				return retry.RetryableError(err)
+			}
+			return retry.NonRetryableError(err)
+		}
+		return nil
+	})
+
+	if tfresource.TimedOut(err) {
+		_, err = conn.ModifyVpcEndpoint(ctx, input)
+	}
 
 	if err != nil {
 		return fmt.Errorf("creating VPC Endpoint (%s) Security Group (%s) Association: %w", vpcEndpointID, securityGroupID, err)
@@ -199,7 +214,20 @@ func deleteVPCEndpointSecurityGroupAssociation(ctx context.Context, conn *ec2.Cl
 	}
 
 	log.Printf("[DEBUG] Deleting VPC Endpoint Security Group Association: %v", input)
-	_, err := conn.ModifyVpcEndpoint(ctx, input)
+	err := retry.RetryContext(ctx, vpcModifyTimeout, func() *retry.RetryError {
+		_, err := conn.ModifyVpcEndpoint(ctx, input)
+		if err != nil {
+			if errs.Contains(err, "VpcEndpoint modify operation in progress") {
+				return retry.RetryableError(err)
+			}
+			return retry.NonRetryableError(err)
+		}
+		return nil
+	})
+
+	if tfresource.TimedOut(err) {
+		_, err = conn.ModifyVpcEndpoint(ctx, input)
+	}
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointIdNotFound, errCodeInvalidGroupNotFound, errCodeInvalidParameter) {
 		return nil
