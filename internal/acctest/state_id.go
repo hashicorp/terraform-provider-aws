@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // AttrImportStateIdFunc is a resource.ImportStateIdFunc that returns the value of the specified attribute
@@ -32,7 +33,7 @@ func CrossRegionAttrImportStateIdFunc(resourceName, attrName string) resource.Im
 		}
 
 		id := rs.Primary.Attributes[attrName]
-		region, ok := rs.Primary.Attributes["region"]
+		region, ok := rs.Primary.Attributes[names.AttrRegion]
 		if !ok {
 			return "", fmt.Errorf("Attribute \"region\" not found in %s", resourceName)
 		}
