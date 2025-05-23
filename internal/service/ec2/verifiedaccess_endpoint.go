@@ -604,7 +604,7 @@ func flattenVerifiedAccessEndpointLoadBalancerOptions(apiObject *types.VerifiedA
 	}
 
 	if v := apiObject.PortRanges; v != nil {
-		tfMap["port_ranges"] = flattenVerifiedAccessEndpointPortRanges(v)
+		tfMap["port_range"] = flattenVerifiedAccessEndpointPortRanges(v)
 	}
 
 	if v := apiObject.Protocol; v != "" {
@@ -634,7 +634,7 @@ func flattenVerifiedAccessEndpointENIOptions(apiObject *types.VerifiedAccessEndp
 	}
 
 	if v := apiObject.PortRanges; v != nil {
-		tfMap["port_ranges"] = flattenVerifiedAccessEndpointPortRanges(v)
+		tfMap["port_range"] = flattenVerifiedAccessEndpointPortRanges(v)
 	}
 
 	if v := apiObject.Protocol; v != "" {
@@ -823,7 +823,7 @@ func expandCreateVerifiedAccessEndpointLoadBalancerOptions(tfMap map[string]any)
 		apiObject.LoadBalancerArn = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrPort].(int); ok {
+	if v, ok := tfMap[names.AttrPort].(int); ok && v != 0 {
 		apiObject.Port = aws.Int32(int32(v))
 	}
 
@@ -910,7 +910,7 @@ func expandModifyVerifiedAccessEndpointLoadBalancerOptions(tfMap map[string]any)
 
 	apiObject := &types.ModifyVerifiedAccessEndpointLoadBalancerOptions{}
 
-	if v, ok := tfMap[names.AttrPort].(int); ok {
+	if v, ok := tfMap[names.AttrPort].(int); ok && v != 0 {
 		apiObject.Port = aws.Int32(int32(v))
 	}
 
