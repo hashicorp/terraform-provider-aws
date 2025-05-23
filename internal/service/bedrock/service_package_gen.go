@@ -93,6 +93,13 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 				IdentifierAttribute: "provisioned_model_arn",
 			},
 		},
+		{
+			Factory: newResourceEvaluationJob,
+			Name:    "Evaluation Job",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "evaluation_job_arn",
+			},
+		},
 	}
 }
 
