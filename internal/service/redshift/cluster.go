@@ -104,6 +104,10 @@ func resourceCluster() *schema.Resource {
 					validation.StringDoesNotMatch(regexache.MustCompile(`-$`), "cannot end with a hyphen"),
 				),
 			},
+			names.AttrClusterStatus: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"cluster_namespace_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -338,9 +342,10 @@ func resourceCluster() *schema.Resource {
 				Required: true,
 			},
 			"number_of_nodes": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  1,
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      1,
+				ValidateFunc: validation.IntBetween(1, 100),
 			},
 			"owner_account": {
 				Type:         schema.TypeString,
@@ -713,6 +718,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	d.Set("cluster_parameter_group_name", rsc.ClusterParameterGroups[0].ParameterGroupName)
 	d.Set("cluster_public_key", rsc.ClusterPublicKey)
 	d.Set("cluster_revision_number", rsc.ClusterRevisionNumber)
+	d.Set(names.AttrClusterStatus, rsc.ClusterStatus)
 	d.Set("cluster_subnet_group_name", rsc.ClusterSubnetGroupName)
 	if len(rsc.ClusterNodes) > 1 {
 		d.Set("cluster_type", clusterTypeMultiNode)
@@ -805,16 +811,18 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			input.ManualSnapshotRetentionPeriod = aws.Int32(int32(d.Get("manual_snapshot_retention_period").(int)))
 		}
 
-		// If the cluster type, node type, or number of nodes changed, then the AWS API expects all three
-		// items to be sent over.
-		if d.HasChanges("cluster_type", "node_type", "number_of_nodes") {
-			input.NodeType = aws.String(d.Get("node_type").(string))
-
-			if v := d.Get("number_of_nodes").(int); v > 1 {
-				input.ClusterType = aws.String(clusterTypeMultiNode)
-				input.NumberOfNodes = aws.Int32(int32(d.Get("number_of_nodes").(int)))
-			} else {
-				input.ClusterType = aws.String(clusterTypeSingleNode)
+		if v, ok := d.GetOk(names.AttrClusterStatus); ok && v.(string) != "paused" {
+			// If the cluster type, node type, or number of nodes changed, then the AWS API expects all three
+			// items to be sent over.
+			if d.HasChanges("cluster_type", "node_type", "number_of_nodes") {
+				// do not do anything if the cluster is suspended
+				input.NodeType = aws.String(d.Get("node_type").(string))
+				if v := d.Get("number_of_nodes").(int); v > 1 {
+					input.ClusterType = aws.String(clusterTypeMultiNode)
+					input.NumberOfNodes = aws.Int32(int32(d.Get("number_of_nodes").(int)))
+				} else {
+					input.ClusterType = aws.String(clusterTypeSingleNode)
+				}
 			}
 		}
 
