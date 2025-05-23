@@ -36,6 +36,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
+		{
+			Factory:  ResourceOriginEndpoint,
+			TypeName: "aws_media_package_origin_endpoint",
+			Name:     "Origin Endpoint",
+		},
 	}
 }
 
