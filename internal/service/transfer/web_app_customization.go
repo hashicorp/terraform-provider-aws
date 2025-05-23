@@ -382,7 +382,6 @@ func (m resourceWebAppCustomizationModel) Expand(ctx context.Context) (any, diag
 				"Favicon File Decode Error",
 				"An unexpected error occurred while decoding the Favicon File. ",
 			)
-
 		} else {
 			input.FaviconFile = v
 		}
