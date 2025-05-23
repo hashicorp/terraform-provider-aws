@@ -614,8 +614,13 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				}
 				if attr, ok := args.Keyword["preCheckRegion"]; ok {
 					d.PreChecks = append(d.PreChecks, codeBlock{
-						Code: fmt.Sprintf("acctest.PreCheckRegion(t, \"%s\")", attr),
+						Code: fmt.Sprintf("acctest.PreCheckRegion(t, %s)", endpointsConstOrQuote(attr)),
 					})
+					d.GoImports = append(d.GoImports,
+						goImport{
+							Path: "github.com/hashicorp/aws-sdk-go-base/v2/endpoints",
+						},
+					)
 				}
 				if attr, ok := args.Keyword["serialize"]; ok {
 					if b, err := strconv.ParseBool(attr); err != nil {
@@ -812,4 +817,16 @@ func count[T any](s iter.Seq[T], f func(T) bool) (c int) {
 		}
 	}
 	return c
+}
+
+func endpointsConstOrQuote(region string) string {
+	var buf strings.Builder
+	buf.WriteString("endpoints.")
+
+	for _, part := range strings.Split(region, "-") {
+		buf.WriteString(strings.Title(part))
+	}
+	buf.WriteString("RegionID")
+
+	return buf.String()
 }
