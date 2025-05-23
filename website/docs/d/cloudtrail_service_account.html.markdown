@@ -61,13 +61,11 @@ resource "aws_s3_bucket_policy" "allow_cloudtrail_logging" {
 
 This data source supports the following arguments:
 
-* `region` – (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `region` - (Optional) Name of the region whose AWS CloudTrail account ID is desired.
-Defaults to the region from the AWS provider configuration.
+* `region` - (Optional) Name of the Region whose AWS CloudTrail account ID is desired. Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `id` - ID of the AWS CloudTrail service account in the selected region.
-* `arn` - ARN of the AWS CloudTrail service account in the selected region.
+* `id` - ID of the AWS CloudTrail service account in the selected Region.
+* `arn` - ARN of the AWS CloudTrail service account in the selected Region.
