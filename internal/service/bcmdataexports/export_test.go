@@ -54,7 +54,7 @@ func TestAccBCMDataExportsExport_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExportExists(ctx, resourceName, &export),
 					resource.TestCheckResourceAttr(resourceName, "export.#", "1"),
-					acctest.MatchResourceAttrRegionalARNRegion(ctx, resourceName, "export.0.export_arn", "bcm-data-exports", "us-east-1", regexache.MustCompile("export/"+rName+"-"+verify.UUIDRegexPattern)),
+					acctest.MatchResourceAttrRegionalARNRegion(ctx, resourceName, "export.0.export_arn", "bcm-data-exports", endpoints.UsEast1RegionID, regexache.MustCompile("export/"+rName+"-"+verify.UUIDRegexPattern)),
 					resource.TestCheckResourceAttr(resourceName, "export.0.name", rName),
 					resource.TestCheckResourceAttr(resourceName, "export.0.data_query.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "export.0.data_query.0.query_statement"),
@@ -107,7 +107,7 @@ func TestAccBCMDataExportsExport_Identity_Basic(t *testing.T) {
 					testAccCheckExportExists(ctx, resourceName, &export),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexpRegion("bcm-data-exports", "us-east-1", regexache.MustCompile("export/"+rName+"-"+verify.UUIDRegexPattern))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexpRegion("bcm-data-exports", endpoints.UsEast1RegionID, regexache.MustCompile("export/"+rName+"-"+verify.UUIDRegexPattern))),
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
 				},
 			},
