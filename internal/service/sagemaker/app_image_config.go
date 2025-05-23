@@ -5,6 +5,7 @@ package sagemaker
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/YakDriver/regexache"
@@ -36,6 +37,19 @@ func resourceAppImageConfig() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
+		CustomizeDiff: schema.CustomizeDiffFunc(func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
+			// Ensure at least one of the three config blocks is provided
+			codeEditorConfig := d.Get("code_editor_app_image_config").([]interface{})
+			jupyterLabConfig := d.Get("jupyter_lab_image_config").([]interface{})
+			kernelGatewayConfig := d.Get("kernel_gateway_image_config").([]interface{})
+
+			if len(codeEditorConfig) == 0 && len(jupyterLabConfig) == 0 && len(kernelGatewayConfig) == 0 {
+				return fmt.Errorf("one of code_editor_app_image_config, jupyter_lab_image_config, or kernel_gateway_image_config must be configured")
+			}
+
+			return nil
+		}),
+
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,
@@ -51,9 +65,10 @@ func resourceAppImageConfig() *schema.Resource {
 				),
 			},
 			"code_editor_app_image_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
+				Type:          schema.TypeList,
+				Optional:      true,
+				MaxItems:      1,
+				ConflictsWith: []string{"jupyter_lab_image_config", "kernel_gateway_image_config"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"container_config": {
@@ -114,9 +129,10 @@ func resourceAppImageConfig() *schema.Resource {
 				},
 			},
 			"jupyter_lab_image_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
+				Type:          schema.TypeList,
+				Optional:      true,
+				MaxItems:      1,
+				ConflictsWith: []string{"code_editor_app_image_config", "kernel_gateway_image_config"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"container_config": {
@@ -177,9 +193,10 @@ func resourceAppImageConfig() *schema.Resource {
 				},
 			},
 			"kernel_gateway_image_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
+				Type:          schema.TypeList,
+				Optional:      true,
+				MaxItems:      1,
+				ConflictsWith: []string{"code_editor_app_image_config", "jupyter_lab_image_config"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"file_system_config": {
@@ -250,16 +267,16 @@ func resourceAppImageConfigCreate(ctx context.Context, d *schema.ResourceData, m
 		Tags:               getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("code_editor_app_image_config"); ok && len(v.([]any)) > 0 {
-		input.CodeEditorAppImageConfig = expandCodeEditorAppImageConfig(v.([]any))
+	if _, ok := d.GetOk("code_editor_app_image_config"); ok {
+		input.CodeEditorAppImageConfig = expandCodeEditorAppImageConfig(d.Get("code_editor_app_image_config").([]any))
 	}
 
-	if v, ok := d.GetOk("jupyter_lab_image_config"); ok && len(v.([]any)) > 0 {
-		input.JupyterLabAppImageConfig = expandJupyterLabAppImageConfig(v.([]any))
+	if _, ok := d.GetOk("jupyter_lab_image_config"); ok {
+		input.JupyterLabAppImageConfig = expandJupyterLabAppImageConfig(d.Get("jupyter_lab_image_config").([]any))
 	}
 
-	if v, ok := d.GetOk("kernel_gateway_image_config"); ok && len(v.([]any)) > 0 {
-		input.KernelGatewayImageConfig = expandKernelGatewayImageConfig(v.([]any))
+	if _, ok := d.GetOk("kernel_gateway_image_config"); ok {
+		input.KernelGatewayImageConfig = expandKernelGatewayImageConfig(d.Get("kernel_gateway_image_config").([]any))
 	}
 
 	_, err := conn.CreateAppImageConfig(ctx, input)
@@ -317,20 +334,20 @@ func resourceAppImageConfigUpdate(ctx context.Context, d *schema.ResourceData, m
 		}
 
 		if d.HasChange("code_editor_app_image_config") {
-			if v, ok := d.GetOk("code_editor_app_image_config"); ok && len(v.([]any)) > 0 {
-				input.CodeEditorAppImageConfig = expandCodeEditorAppImageConfig(v.([]any))
+			if _, ok := d.GetOk("code_editor_app_image_config"); ok {
+				input.CodeEditorAppImageConfig = expandCodeEditorAppImageConfig(d.Get("code_editor_app_image_config").([]any))
 			}
 		}
 
 		if d.HasChange("kernel_gateway_image_config") {
-			if v, ok := d.GetOk("kernel_gateway_image_config"); ok && len(v.([]any)) > 0 {
-				input.KernelGatewayImageConfig = expandKernelGatewayImageConfig(v.([]any))
+			if _, ok := d.GetOk("kernel_gateway_image_config"); ok {
+				input.KernelGatewayImageConfig = expandKernelGatewayImageConfig(d.Get("kernel_gateway_image_config").([]any))
 			}
 		}
 
 		if d.HasChange("jupyter_lab_image_config") {
-			if v, ok := d.GetOk("jupyter_lab_image_config"); ok && len(v.([]any)) > 0 {
-				input.JupyterLabAppImageConfig = expandJupyterLabAppImageConfig(v.([]any))
+			if _, ok := d.GetOk("jupyter_lab_image_config"); ok {
+				input.JupyterLabAppImageConfig = expandJupyterLabAppImageConfig(d.Get("jupyter_lab_image_config").([]any))
 			}
 		}
 
@@ -388,13 +405,19 @@ func findAppImageConfigByName(ctx context.Context, conn *sagemaker.Client, appIm
 }
 
 func expandKernelGatewayImageConfig(l []any) *awstypes.KernelGatewayImageConfig {
-	if len(l) == 0 || l[0] == nil {
+	if len(l) == 0 {
 		return nil
 	}
 
-	m := l[0].(map[string]any)
-
+	// Always create a config object even if the block is empty
 	config := &awstypes.KernelGatewayImageConfig{}
+
+	// If the block is nil, return the empty config
+	if l[0] == nil {
+		return config
+	}
+
+	m := l[0].(map[string]any)
 
 	if v, ok := m["kernel_spec"].([]any); ok && len(v) > 0 {
 		config.KernelSpecs = expandKernelGatewayImageConfigKernelSpecs(v)
@@ -408,17 +431,27 @@ func expandKernelGatewayImageConfig(l []any) *awstypes.KernelGatewayImageConfig 
 }
 
 func expandFileSystemConfig(l []any) *awstypes.FileSystemConfig {
-	if len(l) == 0 || l[0] == nil {
+	if len(l) == 0 {
 		return nil
+	}
+
+	// Always create a config object even if the block is empty
+	config := &awstypes.FileSystemConfig{
+		DefaultGid: aws.Int32(100),                     // Default values
+		DefaultUid: aws.Int32(1000),                    // Default values
+		MountPath:  aws.String("/home/sagemaker-user"), // Default value
+	}
+
+	// If the block is nil, return the config with default values
+	if l[0] == nil {
+		return config
 	}
 
 	m := l[0].(map[string]any)
 
-	config := &awstypes.FileSystemConfig{
-		DefaultGid: aws.Int32(int32(m["default_gid"].(int))),
-		DefaultUid: aws.Int32(int32(m["default_uid"].(int))),
-		MountPath:  aws.String(m["mount_path"].(string)),
-	}
+	config.DefaultGid = aws.Int32(int32(m["default_gid"].(int)))
+	config.DefaultUid = aws.Int32(int32(m["default_uid"].(int)))
+	config.MountPath = aws.String(m["mount_path"].(string))
 
 	return config
 }
@@ -502,13 +535,19 @@ func flattenKernelGatewayImageConfigKernelSpecs(kernelSpecs []awstypes.KernelSpe
 }
 
 func expandCodeEditorAppImageConfig(l []any) *awstypes.CodeEditorAppImageConfig {
-	if len(l) == 0 || l[0] == nil {
+	if len(l) == 0 {
 		return nil
 	}
 
-	m := l[0].(map[string]any)
-
+	// Always create a config object even if the block is empty
 	config := &awstypes.CodeEditorAppImageConfig{}
+
+	// If the block is nil, return the empty config
+	if l[0] == nil {
+		return config
+	}
+
+	m := l[0].(map[string]any)
 
 	if v, ok := m["container_config"].([]any); ok && len(v) > 0 {
 		config.ContainerConfig = expandContainerConfig(v)
@@ -540,13 +579,19 @@ func flattenCodeEditorAppImageConfig(config *awstypes.CodeEditorAppImageConfig) 
 }
 
 func expandJupyterLabAppImageConfig(l []any) *awstypes.JupyterLabAppImageConfig {
-	if len(l) == 0 || l[0] == nil {
+	if len(l) == 0 {
 		return nil
 	}
 
-	m := l[0].(map[string]any)
-
+	// Always create a config object even if the block is empty
 	config := &awstypes.JupyterLabAppImageConfig{}
+
+	// If the block is nil, return the empty config
+	if l[0] == nil {
+		return config
+	}
+
+	m := l[0].(map[string]any)
 
 	if v, ok := m["container_config"].([]any); ok && len(v) > 0 {
 		config.ContainerConfig = expandContainerConfig(v)
@@ -578,13 +623,19 @@ func flattenJupyterLabAppImageConfig(config *awstypes.JupyterLabAppImageConfig) 
 }
 
 func expandContainerConfig(l []any) *awstypes.ContainerConfig {
-	if len(l) == 0 || l[0] == nil {
+	if len(l) == 0 {
 		return nil
 	}
 
-	m := l[0].(map[string]any)
-
+	// Always create a config object even if the block is empty
 	config := &awstypes.ContainerConfig{}
+
+	// If the block is nil, return the empty config
+	if l[0] == nil {
+		return config
+	}
+
+	m := l[0].(map[string]any)
 
 	if v, ok := m["container_arguments"].([]any); ok && len(v) > 0 {
 		config.ContainerArguments = flex.ExpandStringValueList(v)
