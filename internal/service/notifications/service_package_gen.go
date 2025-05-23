@@ -23,6 +23,24 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
+			Factory:  newResourceChannelAssociation,
+			TypeName: "aws_notifications_channel_association",
+			Name:     "Channel Association",
+		},
+		{
+			Factory:  newResourceEventRule,
+			TypeName: "aws_notifications_event_rule",
+			Name:     "Event Rule",
+		},
+		{
+			Factory:  newResourceNotificationConfiguration,
+			TypeName: "aws_notifications_notification_configuration",
+			Name:     "Notification Configuration",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
 			Factory:  newNotificationHubResource,
 			TypeName: "aws_notifications_notification_hub",
 			Name:     "Notification Hub",
