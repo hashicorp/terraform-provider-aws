@@ -497,6 +497,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				args := common.ParseArgs(m[3])
 				d.ARNFormat = args.Positional[0]
 
+			case "SingletonIdentity":
+				hasIdentity = true
+				d.idAttrDuplicates = "region"
+
 			case "Testing":
 				args := common.ParseArgs(m[3])
 
