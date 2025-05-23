@@ -341,8 +341,16 @@ func (d ResourceDatum) IsARNIdentity() bool {
 	return d.ARNAttribute != ""
 }
 
+func (d ResourceDatum) IsRegionalSingleton() bool {
+	return !d.IsGlobal && d.idAttrDuplicates == "region"
+}
+
 func (d ResourceDatum) GenerateRegionOverrideTest() bool {
 	return !d.IsGlobal && d.HasRegionOverrideTest
+}
+
+func (d ResourceDatum) HasInherentRegion() bool {
+	return d.IsARNIdentity() || d.IsRegionalSingleton()
 }
 
 type goImport struct {

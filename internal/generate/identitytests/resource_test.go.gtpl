@@ -247,7 +247,7 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 				},
 			},
 			{{ if not .NoImport }}
-				{{ if .IsARNIdentity }}
+				{{ if .HasInherentRegion }}
 				// Import with appended "@<region>"
 				{{ end -}}
 				{
@@ -259,7 +259,7 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 					},
 					{{- template "ImportCommandWithIDBodyCrossRegion" . -}}
 				},
-				{{ if .IsARNIdentity }}
+				{{ if .HasInherentRegion }}
 				// Import without appended "@<region>"
 				{
 					ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/region_override/"),
