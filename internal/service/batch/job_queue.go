@@ -37,7 +37,10 @@ import (
 
 // @FrameworkResource("aws_batch_job_queue", name="Job Queue")
 // @Tags(identifierAttribute="arn")
+// @ArnIdentity
+// @ArnFormat("job-queue/{name}")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/batch/types;types.JobQueueDetail")
+// @Testing(idAttrDuplicates="arn")
 func newJobQueueResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := jobQueueResource{}
 
@@ -50,8 +53,8 @@ func newJobQueueResource(_ context.Context) (resource.ResourceWithConfigure, err
 
 type jobQueueResource struct {
 	framework.ResourceWithModel[jobQueueResourceModel]
-	framework.WithImportByID
 	framework.WithTimeouts
+	framework.WithImportByARN
 }
 
 func (r *jobQueueResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -191,12 +194,6 @@ func (r *jobQueueResource) Read(ctx context.Context, request resource.ReadReques
 	var data jobQueueResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
-		return
-	}
-
-	if err := data.InitFromID(); err != nil {
-		response.Diagnostics.AddError("parsing resource ID", err.Error())
-
 		return
 	}
 
@@ -511,12 +508,6 @@ type jobQueueResourceModel struct {
 	Tags                     tftags.Map                                                    `tfsdk:"tags"`
 	TagsAll                  tftags.Map                                                    `tfsdk:"tags_all"`
 	Timeouts                 timeouts.Value                                                `tfsdk:"timeouts"`
-}
-
-func (model *jobQueueResourceModel) InitFromID() error {
-	model.JobQueueARN = model.ID
-
-	return nil
 }
 
 func (model *jobQueueResourceModel) setID() {

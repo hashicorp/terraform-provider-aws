@@ -1222,8 +1222,14 @@ func PreCheckRegionOptIn(ctx context.Context, t *testing.T, region string) {
 }
 
 func PreCheckSSOAdminInstances(ctx context.Context, t *testing.T) {
+	PreCheckSSOAdminInstancesWithRegion(ctx, t, Region())
+}
+
+func PreCheckSSOAdminInstancesWithRegion(ctx context.Context, t *testing.T, region string) {
 	t.Helper()
 
+	// Push region into Context.
+	ctx = conns.NewResourceContext(ctx, "", "", region)
 	conn := Provider.Meta().(*conns.AWSClient).SSOAdminClient(ctx)
 	input := ssoadmin.ListInstancesInput{}
 	var instances []ssoadmintypes.InstanceMetadata
@@ -1244,7 +1250,7 @@ func PreCheckSSOAdminInstances(ctx context.Context, t *testing.T) {
 	}
 
 	if len(instances) == 0 {
-		t.Skip("skipping tests; no SSO Instances found.")
+		t.Skipf("skipping tests; no SSO Instances found in %s.", region)
 	}
 }
 

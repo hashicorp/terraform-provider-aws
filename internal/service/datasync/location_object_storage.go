@@ -28,17 +28,17 @@ import (
 )
 
 // @SDKResource("aws_datasync_location_object_storage", name="Location Object Storage")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn")
+// @ArnIdentity
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/datasync;datasync.DescribeLocationObjectStorageOutput")
+// @Testing(preCheck="testAccPreCheck")
+// @Testing(domainTfVar="domain")
 func resourceLocationObjectStorage() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocationObjectStorageCreate,
 		ReadWithoutTimeout:   resourceLocationObjectStorageRead,
 		UpdateWithoutTimeout: resourceLocationObjectStorageUpdate,
 		DeleteWithoutTimeout: resourceLocationObjectStorageDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrAccessKey: {

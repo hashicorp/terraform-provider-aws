@@ -29,17 +29,15 @@ const (
 )
 
 // @SDKResource("aws_ce_cost_category", name="Cost Category")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn")
+// @ArnIdentity
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/costexplorer/types;awstypes;awstypes.CostCategory")
 func resourceCostCategory() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCostCategoryCreate,
 		ReadWithoutTimeout:   resourceCostCategoryRead,
 		UpdateWithoutTimeout: resourceCostCategoryUpdate,
 		DeleteWithoutTimeout: resourceCostCategoryDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{

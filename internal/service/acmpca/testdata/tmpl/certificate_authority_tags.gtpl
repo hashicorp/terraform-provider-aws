@@ -1,4 +1,5 @@
 resource "aws_acmpca_certificate_authority" "test" {
+{{- template "region" }}
   permanent_deletion_time_in_days = 7
   usage_mode                      = "SHORT_LIVED_CERTIFICATE"
 

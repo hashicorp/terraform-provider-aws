@@ -27,17 +27,16 @@ import (
 )
 
 // @SDKResource("aws_datasync_location_nfs", name="Location NFS")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn")
+// @ArnIdentity
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/datasync;datasync.DescribeLocationNfsOutput")
+// @Testing(preCheck="testAccPreCheck")
 func resourceLocationNFS() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocationNFSCreate,
 		ReadWithoutTimeout:   resourceLocationNFSRead,
 		UpdateWithoutTimeout: resourceLocationNFSUpdate,
 		DeleteWithoutTimeout: resourceLocationNFSDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {

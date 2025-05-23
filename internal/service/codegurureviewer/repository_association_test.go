@@ -54,6 +54,12 @@ func TestAccCodeGuruReviewerRepositoryAssociation_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "kms_key_details.0.encryption_option", "AWS_OWNED_CMK"),
 				),
 			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"repository"},
+			},
 		},
 	})
 }

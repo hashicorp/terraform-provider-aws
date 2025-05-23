@@ -53,7 +53,6 @@ func TestAccECSCapacityProvider_basic(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     rName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -113,7 +112,6 @@ func TestAccECSCapacityProvider_managedScaling(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     rName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -178,7 +176,6 @@ func TestAccECSCapacityProvider_managedScalingPartial(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     rName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -208,7 +205,6 @@ func TestAccECSCapacityProvider_tags(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     rName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},

@@ -9,9 +9,12 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/shield/types"
+	"github.com/hashicorp/terraform-plugin-testing/compare"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfshield "github.com/hashicorp/terraform-provider-aws/internal/service/shield"
@@ -52,6 +55,41 @@ func TestAccShieldApplicationLayerAutomaticResponse_basic(t *testing.T) {
 					testAccCheckApplicationLayerAutomaticResponseExists(ctx, resourceName, &applicationlayerautomaticresponse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAction, "BLOCK"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccShieldApplicationLayerAutomaticResponse_Identity_Basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	var applicationlayerautomaticresponse types.ApplicationLayerAutomaticResponseConfiguration
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_shield_application_layer_automatic_response.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckWAFV2CloudFrontScope(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckApplicationLayerAutomaticResponseDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccApplicationLayerAutomaticResponseConfig_basic(rName, "COUNT"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckApplicationLayerAutomaticResponseExists(ctx, resourceName, &applicationlayerautomaticresponse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAction, "COUNT"),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrResourceARN), "aws_cloudfront_distribution.test", tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrResourceARN), compare.ValuesSame()),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})

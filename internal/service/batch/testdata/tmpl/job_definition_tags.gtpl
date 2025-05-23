@@ -1,4 +1,5 @@
 resource "aws_batch_job_definition" "test" {
+{{- template "region" }}
   name = var.rName
   type = "container"
   container_properties = jsonencode({

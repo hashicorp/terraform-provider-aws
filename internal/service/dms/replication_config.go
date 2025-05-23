@@ -30,7 +30,8 @@ import (
 )
 
 // @SDKResource("aws_dms_replication_config", name="Replication Config")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn")
+// @ArnIdentity
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/databasemigrationservice/types;awstypes;awstypes.ReplicationConfig")
 // @Testing(importIgnore="start_replication")
 func resourceReplicationConfig() *schema.Resource {
@@ -44,10 +45,6 @@ func resourceReplicationConfig() *schema.Resource {
 			Create: schema.DefaultTimeout(60 * time.Minute),
 			Update: schema.DefaultTimeout(60 * time.Minute),
 			Delete: schema.DefaultTimeout(60 * time.Minute),
-		},
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{

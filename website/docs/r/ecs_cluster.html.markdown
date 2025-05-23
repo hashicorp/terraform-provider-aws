@@ -206,7 +206,6 @@ The `setting` configuration block supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN that identifies the cluster.
-* `id` - ARN that identifies the cluster.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import

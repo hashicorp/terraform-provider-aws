@@ -21,13 +21,15 @@ func TestAccAppFabric_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"AppBundle": {
-			acctest.CtBasic:       testAccAppBundle_basic,
-			acctest.CtDisappears:  testAccAppBundle_disappears,
-			"cmk":                 testAccAppBundle_cmk,
-			"tags":                testAccAppFabricAppBundle_tagsSerial,
-			"regionCreateNull":    testAccAppBundle_regionCreateNull,
-			"regionCreateNonNull": testAccAppBundle_regionCreateNonNull,
-			"upgradeFromV5":       testAccAppBundle_upgradeFromV5,
+			acctest.CtBasic:           testAccAppBundle_basic,
+			acctest.CtDisappears:      testAccAppBundle_disappears,
+			"cmk":                     testAccAppBundle_cmk,
+			"tags":                    testAccAppFabricAppBundle_tagsSerial,
+			"regionCreateNull":        testAccAppBundle_regionCreateNull,
+			"regionCreateNonNull":     testAccAppBundle_regionCreateNonNull,
+			"upgradeFromV5":           testAccAppBundle_upgradeFromV5,
+			"Identity_Basic":          testAccAppBundle_Identity_Basic,
+			"Identity_RegionOverride": testAccAppBundle_Identity_RegionOverride,
 		},
 		"AppAuthorization": {
 			acctest.CtBasic:      testAccAppAuthorization_basic,
@@ -70,4 +72,10 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
+}
+
+func testAccPreCheckInRegion(ctx context.Context, t *testing.T, region string) {
+	// Push region into Context.
+	ctx = conns.NewResourceContext(ctx, "AppFabric", "aws_appfabric_app_bundle", region)
+	testAccPreCheck(ctx, t)
 }

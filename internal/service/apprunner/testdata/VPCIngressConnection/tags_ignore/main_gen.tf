@@ -24,7 +24,8 @@ resource "aws_apprunner_vpc_ingress_connection" "test" {
 
 # testAccVPCIngressConnectionConfig_base
 
-data "aws_region" "current" {}
+data "aws_region" "current" {
+}
 
 resource "aws_apprunner_service" "test" {
   service_name = var.rName
@@ -63,10 +64,6 @@ resource "aws_vpc_endpoint" "test" {
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = var.rName
-  }
 }
 
 resource "aws_subnet" "test" {

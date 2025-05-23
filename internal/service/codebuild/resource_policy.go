@@ -23,16 +23,14 @@ import (
 )
 
 // @SDKResource("aws_codebuild_resource_policy", name="Resource Policy")
+// @ArnIdentity("resource_arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/codebuild;codebuild.GetResourcePolicyOutput")
 func resourceResourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceResourcePolicyPut,
 		ReadWithoutTimeout:   resourceResourcePolicyRead,
 		UpdateWithoutTimeout: resourceResourcePolicyPut,
 		DeleteWithoutTimeout: resourceResourcePolicyDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrPolicy: {

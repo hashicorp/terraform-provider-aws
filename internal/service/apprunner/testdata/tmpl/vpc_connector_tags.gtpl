@@ -1,4 +1,5 @@
 resource "aws_apprunner_vpc_connector" "test" {
+{{- template "region" }}
   vpc_connector_name = var.rName
   subnets            = aws_subnet.test[*].id
   security_groups    = [aws_security_group.test.id]
@@ -9,6 +10,7 @@ resource "aws_apprunner_vpc_connector" "test" {
 # testAccVPCConnectorConfig_base
 
 resource "aws_security_group" "test" {
+{{- template "region" }}
   vpc_id = aws_vpc.test.id
   name   = var.rName
 }
@@ -16,14 +18,12 @@ resource "aws_security_group" "test" {
 # acctest.ConfigVPCWithSubnets(rName, 1)
 
 resource "aws_vpc" "test" {
+{{- template "region" }}
   cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = var.rName
-  }
 }
 
 resource "aws_subnet" "test" {
+{{- template "region" }}
   count = 1
 
   vpc_id            = aws_vpc.test.id
@@ -34,6 +34,7 @@ resource "aws_subnet" "test" {
 # acctest.ConfigAvailableAZsNoOptInDefaultExclude()
 
 data "aws_availability_zones" "available" {
+{{- template "region" }}
   exclude_zone_ids = local.default_exclude_zone_ids
   state            = "available"
 

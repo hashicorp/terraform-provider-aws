@@ -1,4 +1,5 @@
 resource "aws_apprunner_vpc_ingress_connection" "test" {
+{{- template "region" }}
   name        = var.rName
   service_arn = aws_apprunner_service.test.arn
 
@@ -12,9 +13,12 @@ resource "aws_apprunner_vpc_ingress_connection" "test" {
 
 # testAccVPCIngressConnectionConfig_base
 
-data "aws_region" "current" {}
+data "aws_region" "current" {
+{{- template "region" }}
+}
 
 resource "aws_apprunner_service" "test" {
+{{- template "region" }}
   service_name = var.rName
 
   source_configuration {
@@ -36,6 +40,7 @@ resource "aws_apprunner_service" "test" {
 }
 
 resource "aws_vpc_endpoint" "test" {
+{{- template "region" }}
   vpc_id            = aws_vpc.test.id
   service_name      = "com.amazonaws.${data.aws_region.current.name}.apprunner.requests"
   vpc_endpoint_type = "Interface"
@@ -50,14 +55,12 @@ resource "aws_vpc_endpoint" "test" {
 # acctest.ConfigVPCWithSubnets(rName, 1)
 
 resource "aws_vpc" "test" {
+{{- template "region" }}
   cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = var.rName
-  }
 }
 
 resource "aws_subnet" "test" {
+{{- template "region" }}
   count = 1
 
   vpc_id            = aws_vpc.test.id
@@ -68,6 +71,7 @@ resource "aws_subnet" "test" {
 # acctest.ConfigAvailableAZsNoOptInDefaultExclude()
 
 data "aws_availability_zones" "available" {
+{{- template "region" }}
   exclude_zone_ids = local.default_exclude_zone_ids
   state            = "available"
 

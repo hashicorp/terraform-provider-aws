@@ -384,3 +384,28 @@ func (r resourceImportRegionInterceptor) importState(ctx context.Context, opts i
 func resourceImportRegion() resourceImportStateInterceptor {
 	return &resourceImportRegionInterceptor{}
 }
+
+type resourceImportRegionNoDefaultInterceptor struct{}
+
+func (r resourceImportRegionNoDefaultInterceptor) importState(ctx context.Context, opts interceptorOptions[resource.ImportStateRequest, resource.ImportStateResponse]) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	switch request, response, when := opts.request, opts.response, opts.when; when {
+	case Before:
+		// Import ID optionally ends with "@<region>".
+		if matches := regexache.MustCompile(`^(.+)@([a-z]{2}(?:-[a-z]+)+-\d{1,2})$`).FindStringSubmatch(request.ID); len(matches) == 3 {
+			request.ID = matches[1]
+			diags.Append(response.State.SetAttribute(ctx, path.Root(names.AttrRegion), matches[2])...)
+			if diags.HasError() {
+				return diags
+			}
+		}
+	}
+
+	return diags
+}
+
+// resourceImportRegionNoDefault sets the value of the top-level `region` attribute during import.
+func resourceImportRegionNoDefault() resourceImportStateInterceptor {
+	return &resourceImportRegionNoDefaultInterceptor{}
+}

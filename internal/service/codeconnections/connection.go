@@ -35,6 +35,7 @@ import (
 
 // @FrameworkResource("aws_codeconnections_connection", name="Connection")
 // @Tags(identifierAttribute="arn")
+// @ArnIdentity
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/codeconnections/types;types.Connection")
 func newConnectionResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &connectionResource{}
@@ -52,7 +53,7 @@ const (
 
 type connectionResource struct {
 	framework.ResourceWithModel[connectionResourceModel]
-	framework.WithImportByID
+	framework.WithImportByARN
 	framework.WithTimeouts
 }
 
@@ -77,7 +78,7 @@ func (r *connectionResource) Schema(ctx context.Context, req resource.SchemaRequ
 					}...),
 				},
 			},
-			names.AttrID: framework.IDAttribute(),
+			names.AttrID: framework.IDAttributeDeprecatedWithAlternate(path.Root(names.AttrARN)),
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
