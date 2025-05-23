@@ -9,6 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegionalARN(ctx context.Context, rd *schema.ResourceData, attrName string) error {
@@ -18,12 +19,12 @@ func RegionalARN(ctx context.Context, rd *schema.ResourceData, attrName string) 
 	}
 	rd.Set(attrName, rd.Id())
 
-	if region, ok := rd.GetOk("region"); ok {
+	if region, ok := rd.GetOk(names.AttrRegion); ok {
 		if region != arnARN.Region {
 			return fmt.Errorf("the region passed for import %q does not match the region %q in the ARN %q", region, arnARN.Region, rd.Id())
 		}
 	} else {
-		rd.Set("region", arnARN.Region)
+		rd.Set(names.AttrRegion, arnARN.Region)
 	}
 
 	return nil
@@ -36,12 +37,12 @@ func RegionalARNValue(ctx context.Context, rd *schema.ResourceData, attrName str
 	}
 	rd.Set(attrName, arnValue)
 
-	if region, ok := rd.GetOk("region"); ok {
+	if region, ok := rd.GetOk(names.AttrRegion); ok {
 		if region != arnARN.Region {
 			return fmt.Errorf("the region passed for import %q does not match the region %q in the ARN %q", region, arnARN.Region, rd.Id())
 		}
 	} else {
-		rd.Set("region", arnARN.Region)
+		rd.Set(names.AttrRegion, arnARN.Region)
 	}
 
 	rd.SetId(arnValue)
