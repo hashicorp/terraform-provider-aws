@@ -50,6 +50,10 @@ resource "aws_subnet" "test" {
   cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
 }
 
+locals {
+  subnet_count = 1
+}
+
 # acctest.ConfigAvailableAZsNoOptInDefaultExclude
 
 data "aws_availability_zones" "available" {
@@ -63,7 +67,6 @@ data "aws_availability_zones" "available" {
 }
 
 locals {
-  subnet_count             = 1
   default_exclude_zone_ids = ["usw2-az4", "usgw1-az2"]
 }
 
