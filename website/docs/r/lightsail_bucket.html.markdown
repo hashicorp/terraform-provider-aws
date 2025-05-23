@@ -37,7 +37,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - The ARN of the lightsail bucket.
 * `availability_zone` - The resource Availability Zone. Follows the format us-east-2a (case-sensitive).
 * `created_at` - The timestamp when the bucket was created.
-* `region` - The Amazon Web Services Region name.
 * `support_code` - The support code for the resource. Include this code in your email to support when you have questions about a resource in Lightsail. This code enables our support team to look up your Lightsail information more easily.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider `default_tags` configuration block.
 
