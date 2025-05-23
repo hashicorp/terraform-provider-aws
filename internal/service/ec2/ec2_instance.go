@@ -1060,7 +1060,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 	}
 
 	var output *ec2.RunInstancesOutput
-	for r := backoff.NewRetryLoop(iamPropagationTimeout); r.Continue(ctx); {
+	for r := backoff.NewLoop(iamPropagationTimeout); r.Continue(ctx); {
 		output, err = conn.RunInstances(ctx, &input)
 
 		// IAM instance profiles can take ~10 seconds to propagate in AWS:
