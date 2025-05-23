@@ -400,7 +400,6 @@ resource "aws_redshift_cluster" "test" {
   cluster_identifier  = %[1]q
   availability_zone   = data.aws_availability_zones.available.names[0]
   database_name       = "mydb"
-  encrypted = true
   master_username     = "foo"
   master_password     = "Mustbe8characters"
   node_type           = "dc2.large"
@@ -525,7 +524,6 @@ resource "aws_redshift_cluster" "test" {
   availability_zone   = data.aws_availability_zones.available.names[0]
   database_name       = "mydb"
   master_username     = "foo"
-  encrypted = true
   master_password     = "Mustbe8characters"
   node_type           = "dc2.large"
   cluster_type        = "single-node"
