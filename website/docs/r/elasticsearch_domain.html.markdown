@@ -341,7 +341,6 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of the domain.
 * `domain_id` - Unique identifier for the domain.
-* `domain_name` - Name of the Elasticsearch domain.
 * `endpoint` - Domain-specific endpoint used to submit index, search, and data upload requests.
 * `kibana_endpoint` - Domain-specific endpoint for kibana without https scheme.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
