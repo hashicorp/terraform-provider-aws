@@ -29,7 +29,7 @@ resource "aws_cloudhsm_v2_hsm" "cloudhsm_v2_hsm" {
 
 This resource supports the following arguments:
 
-* `region` – (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 ~> **NOTE:** Either `subnet_id` or `availability_zone` must be specified.
 
 * `cluster_id` - (Required) The ID of Cloud HSM v2 cluster to which HSM will be added.

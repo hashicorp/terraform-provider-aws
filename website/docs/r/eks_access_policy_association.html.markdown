@@ -29,10 +29,10 @@ resource "aws_eks_access_policy_association" "example" {
 
 The following arguments are required:
 
-* `cluster_name` – (Required) Name of the EKS Cluster.
-* `policy_arn` – (Required) The ARN of the access policy that you're associating.
-* `principal_arn` – (Required) The IAM Principal ARN which requires Authentication access to the EKS cluster.
-* `access_scope` – (Required) The configuration block to determine the scope of the access. See [`access_scope` Block](#access_scope-block) below.
+* `cluster_name` - (Required) Name of the EKS Cluster.
+* `policy_arn` - (Required) The ARN of the access policy that you're associating.
+* `principal_arn` - (Required) The IAM Principal ARN which requires Authentication access to the EKS cluster.
+* `access_scope` - (Required) The configuration block to determine the scope of the access. See [`access_scope` Block](#access_scope-block) below.
 
 ### `access_scope` Block
 

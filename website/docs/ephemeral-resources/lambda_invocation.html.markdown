@@ -45,7 +45,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `region` – (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `client_context` - (Optional) Up to 3583 bytes of base64-encoded data about the invoking client to pass to the function in the context object.
 * `log_type` - (Optional) Set to `Tail` to include the execution log in the response. Valid values are `None` and `Tail`.
 * `qualifier` - (Optional) Version or alias to invoke a published version of the function. Defaults to `$LATEST`.
