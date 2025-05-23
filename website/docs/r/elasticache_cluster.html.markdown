@@ -136,7 +136,7 @@ resource "aws_elasticache_cluster" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
 * `cluster_id` - (Required) Group identifier. ElastiCache converts this name to lowercase. Changing this value will re-create the resource.
 * `engine` - (Optional, Required if `replication_group_id` is not specified) Name of the cache engine to be used for this cache cluster. Valid values are `memcached`, `redis` and `valkey`.
@@ -146,9 +146,6 @@ The following arguments are required:
   For Memcached, changing this value will re-create the resource.
 * `num_cache_nodes` - (Required unless `replication_group_id` is provided) The initial number of cache nodes that the cache cluster will have. For Redis, this value must be 1. For Memcached, this value must be between 1 and 40. If this number is reduced on subsequent runs, the highest numbered nodes will be removed.
 * `parameter_group_name` - (Required unless `replication_group_id` is provided) The name of the parameter group to associate with this cache cluster.
-
-The following arguments are optional:
-
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `apply_immediately` - (Optional) Whether any database modifications are applied immediately, or during the next maintenance window. Default is `false`. See [Amazon ElastiCache Documentation for more information](https://docs.aws.amazon.com/AmazonElastiCache/latest/APIReference/API_ModifyCacheCluster.html).
 * `auto_minor_version_upgrade` - (Optional) Specifies whether minor version engine upgrades will be applied automatically to the underlying Cache Cluster instances during the maintenance window.
