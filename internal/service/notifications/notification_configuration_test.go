@@ -5,21 +5,22 @@ package notifications_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/notifications"
 	"github.com/aws/aws-sdk-go-v2/service/notifications/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfnotifications "github.com/hashicorp/terraform-provider-aws/internal/service/notifications"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -27,11 +28,10 @@ import (
 
 func TestAccNotificationsNotificationConfiguration_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-
-	var notificationconfiguration notifications.GetNotificationConfigurationOutput
+	var v notifications.GetNotificationConfigurationOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rDescription := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_notifications_notification_configuration.testAccObjectImportStateIdFromARNsFunc"
+	resourceName := "aws_notifications_notification_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -44,22 +44,28 @@ func TestAccNotificationsNotificationConfiguration_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckNotificationConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNotificationConfigurationConfig_basic(rName, rDescription, string(types.AggregationDurationLong), acctest.CtKey1, acctest.CtValue1),
+				Config: testAccNotificationConfigurationConfig_basic(rName, rDescription),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckNotificationConfigurationExists(ctx, resourceName, &notificationconfiguration),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rDescription),
-					resource.TestCheckResourceAttr(resourceName, "aggregation_duration", string(types.AggregationDurationLong)),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "1"),
-					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "notifications", regexache.MustCompile(`configuration/.+$`)),
+					testAccCheckNotificationConfigurationExists(ctx, resourceName, &v),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("aggregation_duration"), tfknownvalue.StringExact(types.AggregationDurationNone)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.GlobalARNRegexp("notifications", regexache.MustCompile(`configuration/.+$`))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact(rDescription)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+				},
 			},
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    testAccObjectImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    testAccNotificationConfigurationImportStateIDFunc(resourceName),
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 			},
 		},
@@ -68,11 +74,10 @@ func TestAccNotificationsNotificationConfiguration_basic(t *testing.T) {
 
 func TestAccNotificationsNotificationConfiguration_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-
-	var notificationconfiguration notifications.GetNotificationConfigurationOutput
+	var v notifications.GetNotificationConfigurationOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rDescription := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_notifications_notification_configuration.testAccObjectImportStateIdFromARNsFunc"
+	resourceName := "aws_notifications_notification_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -85,9 +90,9 @@ func TestAccNotificationsNotificationConfiguration_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckNotificationConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNotificationConfigurationConfig_minimal(rName, rDescription),
+				Config: testAccNotificationConfigurationConfig_basic(rName, rDescription),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckNotificationConfigurationExists(ctx, resourceName, &notificationconfiguration),
+					testAccCheckNotificationConfigurationExists(ctx, resourceName, &v),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfnotifications.ResourceNotificationConfiguration, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -103,14 +108,12 @@ func TestAccNotificationsNotificationConfiguration_disappears(t *testing.T) {
 
 func TestAccNotificationsNotificationConfiguration_update(t *testing.T) {
 	ctx := acctest.Context(t)
-
-	var v1, v2 notifications.GetNotificationConfigurationOutput
+	var v notifications.GetNotificationConfigurationOutput
 	rNameOne := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rNameTwo := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rDescriptionOne := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rDescriptionTwo := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resourceName := "aws_notifications_notification_configuration.testAccObjectImportStateIdFromARNsFunc"
+	resourceName := "aws_notifications_notification_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -123,39 +126,115 @@ func TestAccNotificationsNotificationConfiguration_update(t *testing.T) {
 		CheckDestroy:             testAccCheckNotificationConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNotificationConfigurationConfig_minimal(rNameOne, rDescriptionOne),
+				Config: testAccNotificationConfigurationConfig_all(rNameOne, rDescriptionOne, string(types.AggregationDurationShort)),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckNotificationConfigurationExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameOne),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rDescriptionOne),
-					resource.TestCheckResourceAttr(resourceName, "aggregation_duration", string(types.AggregationDurationNone)),
-					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "notifications", regexache.MustCompile(`configuration/.+$`)),
+					testAccCheckNotificationConfigurationExists(ctx, resourceName, &v),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("aggregation_duration"), tfknownvalue.StringExact(types.AggregationDurationShort)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.GlobalARNRegexp("notifications", regexache.MustCompile(`configuration/.+$`))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact(rDescriptionOne)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rNameOne)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+				},
 			},
 			{
-				Config: testAccNotificationConfigurationConfig_basic(rNameTwo, rDescriptionTwo, string(types.AggregationDurationShort), acctest.CtKey1, acctest.CtValue1),
+				Config: testAccNotificationConfigurationConfig_all(rNameTwo, rDescriptionTwo, string(types.AggregationDurationLong)),
+				Check:  resource.ComposeAggregateTestCheckFunc(),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("aggregation_duration"), tfknownvalue.StringExact(types.AggregationDurationLong)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.GlobalARNRegexp("notifications", regexache.MustCompile(`configuration/.+$`))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact(rDescriptionTwo)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rNameTwo)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+				},
+			},
+		},
+	})
+}
+
+func TestAccNotificationsNotificationConfiguration_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v notifications.GetNotificationConfigurationOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rDescription := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_notifications_notification_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.NotificationsEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.NotificationsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNotificationConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNotificationConfigurationConfig_tags1(rName, rDescription, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckNotificationConfigurationExists(ctx, resourceName, &v2),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameTwo),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rDescriptionTwo),
-					resource.TestCheckResourceAttr(resourceName, "aggregation_duration", string(types.AggregationDurationShort)),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-					testAccCheckNotificationConfigurationNotRecreated(&v1, &v2),
+					testAccCheckNotificationConfigurationExists(ctx, resourceName, &v),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
 			},
 			{
-				Config: testAccNotificationConfigurationConfig_basic(rNameTwo, rDescriptionTwo, string(types.AggregationDurationLong), acctest.CtKey1, acctest.CtValue1Updated),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    testAccNotificationConfigurationImportStateIDFunc(resourceName),
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+			{
+				Config: testAccNotificationConfigurationConfig_tags2(rName, rDescription, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameTwo),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rDescriptionTwo),
-					resource.TestCheckResourceAttr(resourceName, "aggregation_duration", string(types.AggregationDurationLong)),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "notifications", regexache.MustCompile(`configuration/.+$`)),
+					testAccCheckNotificationConfigurationExists(ctx, resourceName, &v),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+				},
+			},
+			{
+				Config: testAccNotificationConfigurationConfig_tags1(rName, rDescription, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckNotificationConfigurationExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+				},
 			},
 		},
 	})
@@ -171,85 +250,96 @@ func testAccCheckNotificationConfigurationDestroy(ctx context.Context) resource.
 			}
 
 			_, err := tfnotifications.FindNotificationConfigurationByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
+
 			if tfresource.NotFound(err) {
-				return nil
-			}
-			if err != nil {
-				return create.Error(names.Notifications, create.ErrActionCheckingDestroyed, tfnotifications.ResNameNotificationConfiguration, rs.Primary.Attributes[names.AttrARN], err)
+				continue
 			}
 
-			return create.Error(names.Notifications, create.ErrActionCheckingDestroyed, tfnotifications.ResNameNotificationConfiguration, rs.Primary.Attributes[names.AttrARN], errors.New("not destroyed"))
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("User Notifications Notification Configuration %s still exists", rs.Primary.Attributes[names.AttrARN])
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckNotificationConfigurationExists(ctx context.Context, name string, notificationconfiguration *notifications.GetNotificationConfigurationOutput) resource.TestCheckFunc {
+func testAccCheckNotificationConfigurationExists(ctx context.Context, n string, v *notifications.GetNotificationConfigurationOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.Notifications, create.ErrActionCheckingExistence, tfnotifications.ResNameNotificationConfiguration, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.Notifications, create.ErrActionCheckingExistence, tfnotifications.ResNameNotificationConfiguration, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).NotificationsClient(ctx)
 
-		resp, err := tfnotifications.FindNotificationConfigurationByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
+		output, err := tfnotifications.FindNotificationConfigurationByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
+
 		if err != nil {
-			return create.Error(names.Notifications, create.ErrActionCheckingExistence, tfnotifications.ResNameNotificationConfiguration, rs.Primary.Attributes[names.AttrARN], err)
+			return err
 		}
 
-		*notificationconfiguration = *resp
+		*v = *output
 
 		return nil
 	}
 }
 
-func testAccObjectImportStateIdFunc(resourceName string) func(state *terraform.State) (string, error) {
+func testAccNotificationConfigurationImportStateIDFunc(n string) func(state *terraform.State) (string, error) {
 	return func(state *terraform.State) (string, error) {
-		rs, ok := state.RootModule().Resources[resourceName]
+		rs, ok := state.RootModule().Resources[n]
 		if !ok {
-			return "", fmt.Errorf("Not Found: %s", resourceName)
+			return "", fmt.Errorf("Not found: %s", n)
 		}
 
 		return rs.Primary.Attributes[names.AttrARN], nil
 	}
 }
 
-func testAccCheckNotificationConfigurationNotRecreated(before, after *notifications.GetNotificationConfigurationOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := aws.ToString(before.Arn), aws.ToString(after.Arn); before != after {
-			return create.Error(names.Notifications, create.ErrActionCheckingNotRecreated, tfnotifications.ResNameNotificationConfiguration, before, errors.New("recreated"))
-		}
-
-		return nil
-	}
-}
-
-func testAccNotificationConfigurationConfig_basic(rName, description, aggregation_duration, tagKey, tagValue string) string {
+func testAccNotificationConfigurationConfig_basic(rName, description string) string {
 	return fmt.Sprintf(`
-
-resource "aws_notifications_notification_configuration" "testAccObjectImportStateIdFromARNsFunc" {
-  name                 = %[1]q
-  description          = %[2]q
-  aggregation_duration = %[3]q
-  tags = {
-    %[4]q = %[5]q
-  }
-}
-`, rName, description, aggregation_duration, tagKey, tagValue)
-}
-
-func testAccNotificationConfigurationConfig_minimal(rName, description string) string {
-	return fmt.Sprintf(`
-
-resource "aws_notifications_notification_configuration" "testAccObjectImportStateIdFromARNsFunc" {
+resource "aws_notifications_notification_configuration" "test" {
   name        = %[1]q
   description = %[2]q
 }
 `, rName, description)
+}
+
+func testAccNotificationConfigurationConfig_all(rName, description, aggregation_duration string) string {
+	return fmt.Sprintf(`
+resource "aws_notifications_notification_configuration" "test" {
+  name                 = %[1]q
+  description          = %[2]q
+  aggregation_duration = %[3]q
+}
+`, rName, description, aggregation_duration)
+}
+
+func testAccNotificationConfigurationConfig_tags1(rName, description, tag1Key, tag1Value string) string {
+	return fmt.Sprintf(`
+resource "aws_notifications_notification_configuration" "test" {
+  name        = %[1]q
+  description = %[2]q
+
+  tags = {
+    %[3]q = %[4]q
+  }
+}
+`, rName, description, tag1Key, tag1Value)
+}
+
+func testAccNotificationConfigurationConfig_tags2(rName, description, tag1Key, tag1Value, tag2Key, tag2Value string) string {
+	return fmt.Sprintf(`
+resource "aws_notifications_notification_configuration" "test" {
+  name        = %[1]q
+  description = %[2]q
+
+  tags = {
+    %[3]q = %[4]q
+    %[5]q = %[6]q
+  }
+}
+`, rName, description, tag1Key, tag1Value, tag2Key, tag2Value)
 }

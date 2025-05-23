@@ -5,7 +5,7 @@ package notifications
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -16,52 +16,46 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource("aws_notifications_notification_configuration", name="Notification Configuration")
 // @Tags(identifierAttribute="arn")
-func newResourceNotificationConfiguration(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceNotificationConfiguration{}
+func newNotificationConfigurationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &notificationConfigurationResource{}
 
 	return r, nil
 }
 
-const (
-	ResNameNotificationConfiguration = "Notification Configuration"
-)
-
-type resourceNotificationConfiguration struct {
+type notificationConfigurationResource struct {
 	framework.ResourceWithConfigure
 }
 
-func (r *resourceNotificationConfiguration) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *notificationConfigurationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"aggregation_duration": schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.AggregationDuration](),
 				Optional:   true,
 				Computed:   true,
-				CustomType: fwtypes.StringEnumType[awstypes.AggregationDuration](),
-				Default:    stringdefault.StaticString(string(awstypes.AggregationDurationNone)),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			names.AttrDescription: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
@@ -82,184 +76,178 @@ func (r *resourceNotificationConfiguration) Schema(ctx context.Context, req reso
 	}
 }
 
-func (r *resourceNotificationConfiguration) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *notificationConfigurationResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data notificationConfigurationResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().NotificationsClient(ctx)
 
-	var plan resourceNotificationConfigurationModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
+	name := fwflex.StringValueFromFramework(ctx, data.Name)
+	var input notifications.CreateNotificationConfigurationInput
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	var input notifications.CreateNotificationConfigurationInput
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	// Additional fields.
 	input.Tags = getTagsIn(ctx)
 
-	out, err := conn.CreateNotificationConfiguration(ctx, &input)
+	outputCNC, err := conn.CreateNotificationConfiguration(ctx, &input)
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Notifications, create.ErrActionCreating, ResNameNotificationConfiguration, plan.Name.String(), err),
-			err.Error(),
-		)
-		return
-	}
-	if out == nil || out.Arn == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Notifications, create.ErrActionCreating, ResNameNotificationConfiguration, plan.Name.String(), nil),
-			errors.New("empty output").Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("creating User Notifications Notification Configuration (%s)", name), err.Error())
+
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
-	if resp.Diagnostics.HasError() {
+	arn := aws.ToString(outputCNC.Arn)
+	outputGNC, err := findNotificationConfigurationByARN(ctx, conn, arn)
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("reading User Notifications Notification Configuration (%s)", arn), err.Error())
+
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	// Set values for unknowns.
+	data.AggregationDuration = fwtypes.StringEnumValue(outputGNC.AggregationDuration)
+	data.ARN = fwflex.StringValueToFramework(ctx, arn)
+
+	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-func (r *resourceNotificationConfiguration) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().NotificationsClient(ctx)
-
-	var state resourceNotificationConfigurationModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *notificationConfigurationResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data notificationConfigurationResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := findNotificationConfigurationByARN(ctx, conn, state.ARN.ValueString())
+	conn := r.Meta().NotificationsClient(ctx)
+
+	out, err := findNotificationConfigurationByARN(ctx, conn, data.ARN.ValueString())
+
 	if tfresource.NotFound(err) {
-		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
-		resp.State.RemoveResource(ctx)
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+
 		return
 	}
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Notifications, create.ErrActionReading, ResNameNotificationConfiguration, state.ARN.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("reading User Notifications Notification Configuration (%s)", data.ARN.ValueString()), err.Error())
+
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
-	if resp.Diagnostics.HasError() {
+	// Set attributes for import.
+	response.Diagnostics.Append(fwflex.Flatten(ctx, out, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceNotificationConfiguration) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *notificationConfigurationResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var new, old notificationConfigurationResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().NotificationsClient(ctx)
 
-	var plan, state resourceNotificationConfigurationModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	diff, d := flex.Diff(ctx, plan, state)
-	resp.Diagnostics.Append(d...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	if diff.HasChanges() {
+	if !new.AggregationDuration.Equal(old.AggregationDuration) || !new.Description.Equal(old.Description) || !new.Name.Equal(old.Name) {
 		var input notifications.UpdateNotificationConfigurationInput
-		resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
-		if resp.Diagnostics.HasError() {
+		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
+		if response.Diagnostics.HasError() {
 			return
 		}
 
-		out, err := conn.UpdateNotificationConfiguration(ctx, &input)
+		_, err := conn.UpdateNotificationConfiguration(ctx, &input)
+
 		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.Notifications, create.ErrActionUpdating, ResNameNotificationConfiguration, plan.ARN.String(), err),
-				err.Error(),
-			)
-			return
-		}
-		if out == nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.Notifications, create.ErrActionUpdating, ResNameNotificationConfiguration, plan.ARN.String(), nil),
-				errors.New("empty output").Error(),
-			)
-			return
-		}
+			response.Diagnostics.AddError(fmt.Sprintf("updating User Notifications Notification Configuration (%s)", new.ARN.ValueString()), err.Error())
 
-		resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
-		if resp.Diagnostics.HasError() {
 			return
 		}
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
-func (r *resourceNotificationConfiguration) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *notificationConfigurationResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data notificationConfigurationResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().NotificationsClient(ctx)
 
-	var state resourceNotificationConfigurationModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
+	arn := fwflex.StringValueFromFramework(ctx, data.ARN)
 	input := notifications.DeleteNotificationConfigurationInput{
-		Arn: state.ARN.ValueStringPointer(),
+		Arn: aws.String(arn),
 	}
-
 	_, err := conn.DeleteNotificationConfiguration(ctx, &input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return
+	}
+
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return
+		response.Diagnostics.AddError(fmt.Sprintf("deleting User Notifications Notification Configuration (%s)", arn), err.Error())
+
+		return
+	}
+
+	if _, err := waitNotificationConfigurationDeleted(ctx, conn, arn); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for User Notifications Notification Configuration (%s) delete", arn), err.Error())
+
+		return
+	}
+}
+
+func (r *notificationConfigurationResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrARN), request, response)
+}
+
+func findNotificationConfigurationByARN(ctx context.Context, conn *notifications.Client, id string) (*notifications.GetNotificationConfigurationOutput, error) {
+	input := notifications.GetNotificationConfigurationInput{
+		Arn: aws.String(id),
+	}
+	output, err := conn.GetNotificationConfiguration(ctx, &input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: &input,
 		}
-
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Notifications, create.ErrActionDeleting, ResNameNotificationConfiguration, state.ARN.String(), err),
-			err.Error(),
-		)
-		return
 	}
 
-	_, err = waitNotificationConfigurationDeleted(ctx, conn, state.ARN.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Notifications, create.ErrActionWaitingForDeletion, ResNameNotificationConfiguration, state.ARN.String(), err),
-			err.Error(),
-		)
-		return
-	}
-}
-
-func (r *resourceNotificationConfiguration) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrARN), req, resp)
-}
-
-func waitNotificationConfigurationDeleted(ctx context.Context, conn *notifications.Client, id string) (*awstypes.NotificationConfigurationStructure, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.NotificationConfigurationStatusDeleting),
-		Target:  []string{},
-		Refresh: statusNotificationConfiguration(ctx, conn, id),
-		Timeout: 10 * time.Minute,
+		return nil, err
 	}
 
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awstypes.NotificationConfigurationStructure); ok {
-		return out, err
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return nil, err
+	return output, nil
 }
 
 func statusNotificationConfiguration(ctx context.Context, conn *notifications.Client, arn string) retry.StateRefreshFunc {
 	return func() (any, string, error) {
-		out, err := findNotificationConfigurationByARN(ctx, conn, arn)
+		output, err := findNotificationConfigurationByARN(ctx, conn, arn)
+
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -268,61 +256,35 @@ func statusNotificationConfiguration(ctx context.Context, conn *notifications.Cl
 			return nil, "", err
 		}
 
-		return out, string(out.Status), nil
+		return output, string(output.Status), nil
 	}
 }
 
-func findNotificationConfigurationByARN(ctx context.Context, conn *notifications.Client, id string) (*notifications.GetNotificationConfigurationOutput, error) {
-	input := notifications.GetNotificationConfigurationInput{
-		Arn: aws.String(id),
+func waitNotificationConfigurationDeleted(ctx context.Context, conn *notifications.Client, id string) (*notifications.GetNotificationConfigurationOutput, error) {
+	const (
+		timeout = 10 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.NotificationConfigurationStatusDeleting),
+		Target:  []string{},
+		Refresh: statusNotificationConfiguration(ctx, conn, id),
+		Timeout: timeout,
 	}
 
-	out, err := conn.GetNotificationConfiguration(ctx, &input)
-	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: &input,
-			}
-		}
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-		return nil, err
+	if output, ok := outputRaw.(*notifications.GetNotificationConfigurationOutput); ok {
+		return output, err
 	}
 
-	if out == nil {
-		return nil, tfresource.NewEmptyResultError(&input)
-	}
-
-	return out, nil
+	return nil, err
 }
 
-type resourceNotificationConfigurationModel struct {
-	ARN                 types.String                                     `tfsdk:"arn"`
+type notificationConfigurationResourceModel struct {
 	AggregationDuration fwtypes.StringEnum[awstypes.AggregationDuration] `tfsdk:"aggregation_duration"`
+	ARN                 types.String                                     `tfsdk:"arn"`
 	Description         types.String                                     `tfsdk:"description"`
 	Name                types.String                                     `tfsdk:"name"`
 	Tags                tftags.Map                                       `tfsdk:"tags"`
 	TagsAll             tftags.Map                                       `tfsdk:"tags_all"`
-}
-
-func sweepNotificationConfigurations(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	input := notifications.ListNotificationConfigurationsInput{}
-	conn := client.NotificationsClient(ctx)
-	var sweepResources []sweep.Sweepable
-
-	pages := notifications.NewListNotificationConfigurationsPaginator(conn, &input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-		if err != nil {
-			return nil, err
-		}
-
-		for _, v := range page.NotificationConfigurations {
-			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newResourceNotificationConfiguration, client,
-				sweepfw.NewAttribute(names.AttrARN, aws.ToString(v.Arn))),
-			)
-		}
-	}
-
-	return sweepResources, nil
 }

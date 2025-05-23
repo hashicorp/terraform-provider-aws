@@ -63,7 +63,7 @@ func TestAccNotificationsEventRule_basic(t *testing.T) {
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    testAccObjectImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    testAccNotificationConfigurationImportStateIDFunc(resourceName),
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 			},
 		},

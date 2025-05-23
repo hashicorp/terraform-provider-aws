@@ -33,7 +33,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Name:     "Event Rule",
 		},
 		{
-			Factory:  newResourceNotificationConfiguration,
+			Factory:  newNotificationConfigurationResource,
 			TypeName: "aws_notifications_notification_configuration",
 			Name:     "Notification Configuration",
 			Tags: &types.ServicePackageResourceTags{
