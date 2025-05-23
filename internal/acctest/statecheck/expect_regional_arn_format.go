@@ -6,8 +6,6 @@ package statecheck
 import (
 	"context"
 	"fmt"
-	"maps"
-	"slices"
 
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
@@ -72,28 +70,4 @@ func ExpectRegionalARNAlternateRegionFormat(resourceAddress string, attributePat
 			return tfknownvalue.RegionalARNAlternateRegionExact(service, arn)
 		},
 	}
-}
-
-// createDeltaString prints the map keys that are present in mapA and not present in mapB
-func createDeltaString[T any, V any](mapA map[string]T, mapB map[string]V, msgPrefix string) string {
-	deltaMsg := ""
-
-	deltaMap := make(map[string]T, len(mapA))
-	maps.Copy(deltaMap, mapA)
-	for key := range mapB {
-		delete(deltaMap, key)
-	}
-
-	deltaKeys := slices.Sorted(maps.Keys(deltaMap))
-
-	for i, k := range deltaKeys {
-		if i == 0 {
-			deltaMsg += msgPrefix
-		} else {
-			deltaMsg += ", "
-		}
-		deltaMsg += fmt.Sprintf("%q", k)
-	}
-
-	return deltaMsg
 }
