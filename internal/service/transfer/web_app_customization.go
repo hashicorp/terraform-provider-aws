@@ -65,6 +65,9 @@ func (r *resourceWebAppCustomization) Schema(ctx context.Context, req resource.S
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 20960),
 				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			names.AttrID: framework.IDAttribute(),
 			"logo_file": schema.StringAttribute{
@@ -73,6 +76,9 @@ func (r *resourceWebAppCustomization) Schema(ctx context.Context, req resource.S
 				Computed: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 51200),
+				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"title": schema.StringAttribute{
@@ -367,14 +373,31 @@ var (
 
 func (m resourceWebAppCustomizationModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
 	var input transfer.UpdateWebAppCustomizationInput
+	var diags diag.Diagnostics
 	input.WebAppId = m.WebAppID.ValueStringPointer()
+
 	if !m.FaviconFile.IsNull() && m.FaviconFile.ValueString() != "" {
-		input.FaviconFile = itypes.MustBase64Decode(m.FaviconFile.ValueString())
+		if v, err := itypes.Base64Decode(m.FaviconFile.ValueString()); err != nil {
+			diags.AddError(
+				"Favicon File Decode Error",
+				"An unexpected error occurred while decoding the Favicon File. ",
+			)
+
+		} else {
+			input.FaviconFile = v
+		}
 	} else {
 		input.FaviconFile = nil
 	}
 	if !m.LogoFile.IsNull() && m.LogoFile.ValueString() != "" {
-		input.LogoFile = itypes.MustBase64Decode(m.LogoFile.ValueString())
+		if v, err := itypes.Base64Decode(m.LogoFile.ValueString()); err != nil {
+			diags.AddError(
+				"Logo File Decode Error",
+				"An unexpected error occurred while decoding the Logo File. ",
+			)
+		} else {
+			input.LogoFile = v
+		}
 	} else {
 		input.LogoFile = nil
 	}
@@ -391,22 +414,10 @@ func (m *resourceWebAppCustomizationModel) Flatten(ctx context.Context, in any) 
 	switch t := in.(type) {
 	case awstypes.DescribedWebAppCustomization:
 		m.ARN = flex.StringToFramework(ctx, t.Arn)
-		if t.FaviconFile != nil {
-			m.FaviconFile = flex.StringToFramework(ctx, aws.String(itypes.Base64Encode(t.FaviconFile)))
-		} else {
-			m.FaviconFile = types.StringNull()
-		}
+		m.FaviconFile = flex.StringToFramework(ctx, aws.String(itypes.Base64Encode(t.FaviconFile)))
 		m.ID = flex.StringToFramework(ctx, t.WebAppId)
-		if t.LogoFile != nil {
-			m.LogoFile = flex.StringToFramework(ctx, aws.String(itypes.Base64Encode(t.LogoFile)))
-		} else {
-			m.LogoFile = types.StringNull()
-		}
-		if t.Title != nil {
-			m.Title = flex.StringToFramework(ctx, t.Title)
-		} else {
-			m.Title = types.StringNull()
-		}
+		m.LogoFile = flex.StringToFramework(ctx, aws.String(itypes.Base64Encode(t.LogoFile)))
+		m.Title = flex.StringToFramework(ctx, t.Title)
 		m.WebAppID = flex.StringToFramework(ctx, t.WebAppId)
 	case transfer.UpdateWebAppCustomizationOutput:
 		m.WebAppID = flex.StringToFramework(ctx, t.WebAppId)
