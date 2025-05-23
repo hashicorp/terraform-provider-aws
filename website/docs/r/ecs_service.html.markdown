@@ -193,6 +193,7 @@ The `managed_ebs_volume` configuration block supports the following:
 * `size_in_gb` - (Optional) Size of the volume in GiB. You must specify either a `size_in_gb` or a `snapshot_id`. You can optionally specify a volume size greater than or equal to the snapshot size.
 * `snapshot_id` - (Optional) Snapshot that Amazon ECS uses to create the volume. You must specify either a `size_in_gb` or a `snapshot_id`.
 * `throughput` - (Optional) Throughput to provision for a volume, in MiB/s, with a maximum of 1,000 MiB/s.
+* `volume_initialization_rate` - (Optional) Volume Initialization Rate in MiB/s. You must also specify a `snapshot_id`.
 * `volume_type` - (Optional) Volume type.
 * `tag_specifications` - (Optional) The tags to apply to the volume. [See below](#tag_specifications).
 

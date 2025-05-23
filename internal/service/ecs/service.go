@@ -1081,6 +1081,10 @@ func resourceService() *schema.Resource {
 										Optional:     true,
 										ValidateFunc: validation.IntBetween(0, 1000),
 									},
+									"volume_initialization_rate": {
+										Type:     schema.TypeInt,
+										Optional: true,
+									},
 									names.AttrVolumeType: {
 										Type:     schema.TypeString,
 										Optional: true,
@@ -2508,6 +2512,9 @@ func expandServiceManagedEBSVolumeConfiguration(ctx context.Context, tfList []an
 	if v, ok := tfMap[names.AttrThroughput].(int); ok && v != 0 {
 		apiObject.Throughput = aws.Int32(int32(v))
 	}
+	if v, ok := tfMap["volume_initialization_rate"].(int); ok && v != 0 {
+		apiObject.VolumeInitializationRate = aws.Int32(int32(v))
+	}
 	if v, ok := tfMap[names.AttrVolumeType].(string); ok && v != "" {
 		apiObject.VolumeType = aws.String(v)
 	}
@@ -2601,6 +2608,9 @@ func flattenServiceManagedEBSVolumeConfiguration(ctx context.Context, apiObject 
 	}
 	if v := apiObject.Throughput; v != nil {
 		tfMap[names.AttrThroughput] = aws.ToInt32(v)
+	}
+	if v := apiObject.VolumeInitializationRate; v != nil {
+		tfMap["volume_initialization_rate"] = aws.ToInt32(v)
 	}
 	if v := apiObject.VolumeType; v != nil {
 		tfMap[names.AttrVolumeType] = aws.ToString(v)

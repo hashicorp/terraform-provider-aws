@@ -411,6 +411,38 @@ func TestAccECSService_VolumeConfiguration_basic(t *testing.T) {
 	})
 }
 
+func TestAccECSService_VolumeConfiguration_volumeInitializationRate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var service awstypes.Service
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_service.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceConfig_volumeConfiguration_volumeInitializationRate(rName, 100),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "volume_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "volume_configuration.0.name", "vol1"),
+					resource.TestCheckResourceAttrPair(
+						resourceName, "volume_configuration.0.managed_ebs_volume.0.snapshot_id",
+						"aws_ebs_snapshot.test", "id",
+					),
+					resource.TestCheckResourceAttr(
+						resourceName, "volume_configuration.0.managed_ebs_volume.0.volume_initialization_rate",
+						"100",
+					),
+				),
+			},
+		},
+	})
+}
+
 func TestAccECSService_VolumeConfiguration_tagSpecifications(t *testing.T) {
 	ctx := acctest.Context(t)
 	var service awstypes.Service
@@ -2531,6 +2563,43 @@ resource "aws_ecs_service" "test" {
   depends_on = [aws_iam_role_policy.ecs_service]
 }
 `, rName))
+}
+
+func testAccServiceConfig_volumeConfiguration_volumeInitializationRate(rName string, volumeInitializationRate int) string {
+	return acctest.ConfigCompose(testAccServiceConfig_baseVolumeConfiguration(rName), fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+resource "aws_ebs_volume" "test" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  size              = 1
+}
+resource "aws_ebs_snapshot" "test" {
+  volume_id = aws_ebs_volume.test.id
+  tags = {
+    Name = %[1]q
+  }
+}
+resource "aws_ecs_service" "test" {
+  name            = %[1]q
+  cluster         = aws_ecs_cluster.test.id
+  task_definition = aws_ecs_task_definition.test.arn
+  desired_count   = 1
+  volume_configuration {
+    name = "vol1"
+    managed_ebs_volume {
+      role_arn                   = aws_iam_role.ecs_service.arn
+      snapshot_id                = aws_ebs_snapshot.test.id
+      volume_initialization_rate = %[2]d
+    }
+  }
+  depends_on = [aws_iam_role_policy.ecs_service]
+}
+`, rName, volumeInitializationRate))
 }
 
 func testAccServiceConfig_volumeConfiguration_tagSpecifications(rName string) string {
