@@ -39,7 +39,7 @@ See the AWS [Docs](https://docs.aws.amazon.com/neptune/latest/userguide/limits.h
 
 This resource supports the following arguments:
 
-* `region` – (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `allow_major_version_upgrade` - (Optional) Specifies whether upgrades between different major versions are allowed. You must set it to `true` when providing an `engine_version` parameter that uses a different major version than the DB cluster's current version. Default is `false`.
 * `apply_immediately` - (Optional) Specifies whether any cluster modifications are applied immediately, or during the next maintenance window. Default is `false`.
 * `availability_zones` - (Optional) A list of EC2 Availability Zones that instances in the Neptune cluster can be created in.
@@ -105,7 +105,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - The Neptune Cluster Amazon Resource Name (ARN)
 * `cluster_resource_id` - The Neptune Cluster Resource ID
-* `cluster_members` – List of Neptune Instances that are a part of this cluster
+* `cluster_members` - List of Neptune Instances that are a part of this cluster
 * `endpoint` - The DNS address of the Neptune instance
 * `hosted_zone_id` - The Route53 Hosted Zone ID of the endpoint
 * `id` - The Neptune Cluster Identifier

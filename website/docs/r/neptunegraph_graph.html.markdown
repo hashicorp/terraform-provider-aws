@@ -45,7 +45,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
-- `region` – (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+- `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 - `deletion_protection` (Boolean, Default: `true`) Value that indicates whether the Graph has deletion protection enabled. The graph can't be deleted when deletion protection is enabled.
 - `graph_name` (String, Forces new resource) Contains a user-supplied name for the Graph. If omitted, Terraform will assign a random, unique identifier.
 - `public_connectivity` (Boolean, Default: `false`) Specifies whether the Graph can be reached over the internet. Access to all graphs requires IAM authentication.  When the Graph is publicly reachable, its Domain Name System (DNS) endpoint resolves to the public IP address from the internet.  When the Graph isn't publicly reachable, you need to create a PrivateGraphEndpoint in a given VPC to ensure the DNS name resolves to a private IP address that is reachable from the VPC.

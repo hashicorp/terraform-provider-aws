@@ -57,7 +57,7 @@ resource "aws_lightsail_container_service_deployment_version" "example" {
 
 This resource supports the following arguments:
 
-* `region` – (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `service_name` - (Required) The name for the container service.
 * `container` - (Required) A set of configuration blocks that describe the settings of the containers that will be launched on the container service. Maximum of 53. [Detailed below](#container).
 * `public_endpoint` - (Optional) A configuration block that describes the settings of the public endpoint for the container service. [Detailed below](#public_endpoint).

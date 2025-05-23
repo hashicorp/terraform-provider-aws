@@ -28,7 +28,7 @@ resource "aws_pinpointsmsvoicev2_phone_number" "example" {
 
 This resource supports the following arguments:
 
-* `region` – (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `deletion_protection_enabled` - (Optional) By default this is set to `false`. When set to true the phone number can’t be deleted.
 * `iso_country_code` - (Required) The two-character code, in ISO 3166-1 alpha-2 format, for the country or region.
 * `message_type` - (Required) The type of message. Valid values are `TRANSACTIONAL` for messages that are critical or time-sensitive and `PROMOTIONAL` for messages that aren’t critical or time-sensitive.
