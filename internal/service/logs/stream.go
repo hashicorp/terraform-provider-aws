@@ -153,7 +153,7 @@ func findLogStreamByTwoPartKey(ctx context.Context, conn *cloudwatchlogs.Client,
 }
 
 func findLogStream(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeLogStreamsInput, filter tfslices.Predicate[*awstypes.LogStream]) (*awstypes.LogStream, error) { // nosemgrep:ci.logs-in-func-name
-	output, err := findLogStreams(ctx, conn, input, filter)
+	output, err := findLogStreams(ctx, conn, input, filter, withReturnFirstMatch())
 
 	if err != nil {
 		return nil, err
@@ -162,8 +162,9 @@ func findLogStream(ctx context.Context, conn *cloudwatchlogs.Client, input *clou
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findLogStreams(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeLogStreamsInput, filter tfslices.Predicate[*awstypes.LogStream]) ([]awstypes.LogStream, error) { // nosemgrep:ci.logs-in-func-name
+func findLogStreams(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeLogStreamsInput, filter tfslices.Predicate[*awstypes.LogStream], optFn ...filterOptionsFunc) ([]awstypes.LogStream, error) { // nosemgrep:ci.logs-in-func-name
 	var output []awstypes.LogStream
+	opts := newFilterOptions(optFn)
 
 	pages := cloudwatchlogs.NewDescribeLogStreamsPaginator(conn, input)
 	for pages.HasMorePages() {
@@ -183,9 +184,36 @@ func findLogStreams(ctx context.Context, conn *cloudwatchlogs.Client, input *clo
 		for _, v := range page.LogStreams {
 			if filter(&v) {
 				output = append(output, v)
+				if opts.shouldReturnFirstMatch() {
+					return output, nil
+				}
 			}
 		}
 	}
 
 	return output, nil
+}
+
+type filterOptions struct {
+	returnFirstMatch bool
+}
+
+func newFilterOptions(optFn []filterOptionsFunc) *filterOptions {
+	opts := &filterOptions{}
+	for _, fn := range optFn {
+		fn(opts)
+	}
+	return opts
+}
+
+func (o *filterOptions) shouldReturnFirstMatch() bool {
+	return o.returnFirstMatch
+}
+
+type filterOptionsFunc func(*filterOptions)
+
+func withReturnFirstMatch() filterOptionsFunc {
+	return func(o *filterOptions) {
+		o.returnFirstMatch = true
+	}
 }
