@@ -114,6 +114,11 @@ var (
 	ResourceVPCIPv4CIDRBlockAssociation                   = resourceVPCIPv4CIDRBlockAssociation
 	ResourceVPCIPv6CIDRBlockAssociation                   = resourceVPCIPv6CIDRBlockAssociation
 	ResourceVPCPeeringConnection                          = resourceVPCPeeringConnection
+	ResourceVPCRouteServer                                = newVPCRouteServerResource
+	ResourceVPCRouteServerAssociation                     = newVPCRouteServerAssociationResource
+	ResourceVPCRouteServerPropagation                     = newVPCRouteServerPropagationResource
+	ResourceVPCRouteServerEndpoint                        = newVPCRouteServerEndpointResource
+	ResourceVPCRouteServerPeer                            = newVPCRouteServerPeerResource
 	ResourceVPNConnection                                 = resourceVPNConnection
 	ResourceVPNConnectionRoute                            = resourceVPNConnectionRoute
 	ResourceVPNGateway                                    = resourceVPNGateway
@@ -237,6 +242,11 @@ var (
 	FindVPCEndpointSubnetAssociationExists                     = findVPCEndpointSubnetAssociationExists
 	FindVPCIPv6CIDRBlockAssociationByID                        = findVPCIPv6CIDRBlockAssociationByID
 	FindVPCPeeringConnectionByID                               = findVPCPeeringConnectionByID
+	FindVPCRouteServerByID                                     = findVPCRouteServerByID
+	FindVPCRouteServerAssociationByTwoPartKey                  = findVPCRouteServerAssociationByTwoPartKey
+	FindVPCRouteServerPropagationByTwoPartKey                  = findVPCRouteServerPropagationByTwoPartKey
+	FindVPCRouteServerEndpointByID                             = findVPCRouteServerEndpointByID
+	FindVPCRouteServerPeerByID                                 = findVPCRouteServerPeerByID
 	FindVPNConnectionByID                                      = findVPNConnectionByID
 	FindVPNConnectionRouteByTwoPartKey                         = findVPNConnectionRouteByTwoPartKey
 	FindVPNGatewayByID                                         = findVPNGatewayByID
