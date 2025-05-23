@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_verifiedaccess_endpoint: No longer set load_balancer_options.port when load_balancer_options.protocol="tcp"
+```
