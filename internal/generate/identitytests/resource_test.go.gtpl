@@ -189,9 +189,11 @@ func {{ template "testname" . }}_Identity_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
 					{{ template "AdditionalTfVars" . }}
 				},
+				{{ if .HasExistsFunc -}}
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
 				),
+				{{ end -}}
 				ConfigStateChecks: []statecheck.StateCheck{
 					{{ if ne .ARNFormat "" -}}
 						{{ if .IsGlobal -}}

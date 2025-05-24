@@ -278,6 +278,7 @@ type ResourceDatum struct {
 	Name                        string
 	TypeName                    string
 	DestroyTakesT               bool
+	HasExistsFunc               bool
 	ExistsTypeName              string
 	ExistsTakesT                bool
 	FileName                    string
@@ -444,6 +445,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		FileName:              v.fileName,
 		additionalTfVars:      make(map[string]string),
 		IsGlobal:              false,
+		HasExistsFunc:         true,
 		HasRegionOverrideTest: true,
 	}
 	hasIdentity := false
@@ -547,6 +549,14 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						Code: fmt.Sprintf(`%s := acctest.RandomDomainName()`, varName),
 					})
 					d.additionalTfVars[varName] = varName
+				}
+				if attr, ok := args.Keyword["hasExistsFunction"]; ok {
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid existsFunction value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					} else {
+						d.HasExistsFunc = b
+					}
 				}
 				if attr, ok := args.Keyword["existsType"]; ok {
 					if typeName, importSpec, err := parseIdentifierSpec(attr); err != nil {
