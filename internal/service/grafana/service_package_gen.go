@@ -41,6 +41,11 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Workspace",
 			Tags:     &types.ServicePackageResourceTags{},
 		},
+		{
+			Factory:  dataSourceWorkspaces,
+			TypeName: "aws_grafana_workspaces",
+			Name:     "Workspaces",
+		},
 	}
 }
 
