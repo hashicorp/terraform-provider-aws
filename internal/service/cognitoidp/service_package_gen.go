@@ -46,6 +46,11 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			TypeName: "aws_cognito_user_pool_client",
 			Name:     "User Pool Client",
 		},
+		{
+			Factory:  newResourceManagedLoginBranding,
+			TypeName: "aws_cognito_managed_login_branding",
+			Name:     "Managed Login Branding",
+		},
 	}
 }
 
