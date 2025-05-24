@@ -101,7 +101,7 @@ func main() {
 		sourceName = strings.TrimSuffix(sourceName, "_")
 
 		if name, err := svc.ProviderNameUpper(resource.TypeName); err != nil {
-			g.Fatalf("determining provider service name: %w", err)
+			g.Fatalf("determining provider service name: %s", err)
 		} else {
 			resource.ResourceProviderNameUpper = name
 		}
@@ -214,46 +214,57 @@ type serviceRecords struct {
 	additional []data.ServiceRecord
 }
 
-func (sr serviceRecords) ProviderNameUpper(resource string) (string, error) {
+func (sr serviceRecords) ProviderNameUpper(typeName string) (string, error) {
 	if len(sr.additional) == 0 {
 		return sr.primary.ProviderNameUpper(), nil
 	}
 
-	var (
-		service data.ServiceRecord
-		found   bool
-	)
 	for _, svc := range sr.additional {
-		re, err := regexp2.Compile(svc.ResourcePrefix(), 0)
-		if err != nil {
-			return "", err
-		}
-		if match, err := re.MatchString(resource); err != nil {
+		if match, err := resourceTypeNameMatchesService(typeName, svc); err != nil {
 			return "", err
 		} else if match {
-			service = svc
-			found = true
+			return svc.ProviderNameUpper(), nil
 		}
 	}
 
-	if !found {
-		re, err := regexp2.Compile(sr.primary.ResourcePrefix(), 0)
-		if err != nil {
-			return "", err
-		}
-		if match, err := re.MatchString(resource); err != nil {
-			return "", err
+	if match, err := resourceTypeNameMatchesService(typeName, sr.primary); err != nil {
+		return "", err
+	} else if match {
+		return sr.primary.ProviderNameUpper(), nil
+	}
+
+	return "", fmt.Errorf("No match found for resource type %q", typeName)
+}
+
+func resourceTypeNameMatchesService(typeName string, sr data.ServiceRecord) (bool, error) {
+	prefixActual := sr.ResourcePrefixActual()
+	if prefixActual != "" {
+		if match, err := resourceTypeNameMatchesPrefix(typeName, prefixActual); err != nil {
+			return false, err
 		} else if match {
-			service = sr.primary
-			found = true
+			return true, nil
 		}
 	}
 
-	if found {
-		return service.ProviderNameUpper(), nil
+	if match, err := resourceTypeNameMatchesPrefix(typeName, sr.ResourcePrefixCorrect()); err != nil {
+		return false, err
+	} else if match {
+		return true, nil
 	}
 
-	return "", fmt.Errorf("No match found for resource type %q", resource)
+	return false, nil
+}
+
+func resourceTypeNameMatchesPrefix(typeName, typePrefix string) (bool, error) {
+	re, err := regexp2.Compile(typePrefix, 0)
+	if err != nil {
+		return false, err
+	}
+	match, err := re.MatchString(typeName)
+	if err != nil {
+		return false, err
+	}
+	return match, err
 }
 
 func (sr serviceRecords) PackageProviderNameUpper() string {
@@ -510,6 +521,16 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			case "SingletonIdentity":
 				hasIdentity = true
 				d.idAttrDuplicates = "region"
+
+			case "Region":
+				args := common.ParseArgs(m[3])
+				if attr, ok := args.Keyword["global"]; ok {
+					if global, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid Region/global value (%s): %s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
+					} else {
+						d.IsGlobal = global
+					}
+				}
 
 			case "Testing":
 				args := common.ParseArgs(m[3])
