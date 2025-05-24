@@ -199,7 +199,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 					{{- end }}
 				{{- end }}
 			{{- else if $value.SingletonIdentity }}
-				Identity: inttypes.RegionalSingletonIdentity(),
+				{{- if or $.IsGlobal $value.IsGlobal }}
+					Identity: inttypes.GlobalSingletonIdentity(),
+				{{- else }}
+					Identity: inttypes.RegionalSingletonIdentity(),
+				{{- end }}
 			{{- end }}
 			{{- if $value.WrappedImport }}
 				Import: inttypes.Import{
