@@ -233,7 +233,7 @@ func testAccCheckManagedLoginBrandingDestroy(ctx context.Context) resource.TestC
 				continue
 			}
 
-			_, err := tfcognitoidp.FindManagedLoginBrandingByID(ctx, conn, rs.Primary.Attributes["managed_login_branding_id"], rs.Primary.Attributes["user_pool_id"])
+			_, err := tfcognitoidp.FindManagedLoginBrandingByID(ctx, conn, rs.Primary.Attributes["managed_login_branding_id"], rs.Primary.Attributes[names.AttrUserPoolID])
 			if tfresource.NotFound(err) {
 				return nil
 			}
@@ -261,7 +261,7 @@ func testAccCheckManagedLoginBrandingExists(ctx context.Context, name string, ma
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPClient(ctx)
 
-		resp, err := tfcognitoidp.FindManagedLoginBrandingByID(ctx, conn, rs.Primary.Attributes["managed_login_branding_id"], rs.Primary.Attributes["user_pool_id"])
+		resp, err := tfcognitoidp.FindManagedLoginBrandingByID(ctx, conn, rs.Primary.Attributes["managed_login_branding_id"], rs.Primary.Attributes[names.AttrUserPoolID])
 		if err != nil {
 			return create.Error(names.CognitoIDP, create.ErrActionCheckingExistence, tfcognitoidp.ResNameManagedLoginBranding, rs.Primary.ID, err)
 		}
@@ -335,7 +335,7 @@ resource "aws_cognito_managed_login_branding" "test" {
   asset {
     bytes      = filebase64("test-fixtures/login_branding_asset.svg")
     category   = %[1]q
-    color_mode =  %[2]q
+    color_mode = %[2]q
     extension  = "SVG"
   }
 }

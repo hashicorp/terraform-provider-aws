@@ -7,8 +7,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"strings"
 
 	"github.com/YakDriver/regexache"
@@ -17,12 +15,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/document"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -68,7 +68,7 @@ func (r *resourceManagedLoginBranding) Schema(ctx context.Context, req resource.
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"creation_date": schema.StringAttribute{
+			names.AttrCreationDate: schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
 			},
@@ -96,7 +96,7 @@ func (r *resourceManagedLoginBranding) Schema(ctx context.Context, req resource.
 				Optional: true,
 				Computed: true,
 			},
-			"user_pool_id": schema.StringAttribute{
+			names.AttrUserPoolID: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 55),
@@ -148,7 +148,7 @@ func (r *resourceManagedLoginBranding) Schema(ctx context.Context, req resource.
 								enum.FrameworkValidate[awstypes.AssetExtensionType](),
 							},
 						},
-						"resource_id": schema.StringAttribute{
+						names.AttrResourceID: schema.StringAttribute{
 							Optional: true,
 							Validators: []validator.String{
 								stringvalidator.LengthBetween(1, 40),
@@ -258,7 +258,6 @@ func (r *resourceManagedLoginBranding) Create(ctx context.Context, req resource.
 		plan.UseCognitoProvidedValues = types.BoolPointerValue(nil)
 	}
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
-
 }
 
 func (r *resourceManagedLoginBranding) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -365,7 +364,6 @@ func (r *resourceManagedLoginBranding) Update(ctx context.Context, req resource.
 			return
 		}
 		state.Settings = flattenedSettings
-
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
@@ -410,8 +408,8 @@ func (r *resourceManagedLoginBranding) ImportState(ctx context.Context, req reso
 	}
 
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("managed_login_branding_id"), idParts[0])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("user_pool_id"), idParts[1])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("client_id"), idParts[2])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrUserPoolID), idParts[1])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrClientID), idParts[2])...)
 }
 
 func findManagedLoginBrandingByID(ctx context.Context, conn *cognitoidentityprovider.Client, id string, userPoolId string) (*awstypes.ManagedLoginBrandingType, error) {

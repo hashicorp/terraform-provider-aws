@@ -43,7 +43,7 @@ resource "aws_cognito_managed_login_branding" "example" {
   }
 
   settings = jsonencode({
-    // place you setting in JSON
+    # place you setting in JSON
   })
 }
 ```
@@ -71,7 +71,7 @@ The following arguments are optional:
 
 ## Attribute Reference
 
-This resource exports the following attributes:
+This resource exports the following attributes in addition to the arguments above:
 
 * `creation_date` – Date and time when the resource was created.
 * `id` – Composite ID formed by joining `managed_login_branding_id`, `user_pool_id`, and `client_id` with `|`.
