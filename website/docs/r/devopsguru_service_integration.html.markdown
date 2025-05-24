@@ -56,8 +56,9 @@ resource "aws_devopsguru_service_integration" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `kms_server_side_encryption` - (Required) Information about whether DevOps Guru is configured to encrypt server-side data using KMS. See [`kms_server_side_encryption`](#kms_server_side_encryption-argument-reference) below.
 * `logs_anomaly_detection` - (Required) Information about whether DevOps Guru is configured to perform log anomaly detection on Amazon CloudWatch log groups. See [`logs_anomaly_detection`](#logs_anomaly_detection-argument-reference) below.
 * `ops_center` - (Required) Information about whether DevOps Guru is configured to create an OpsItem in AWS Systems Manager OpsCenter for each created insight. See [`ops_center`](#ops_center-argument-reference) below.

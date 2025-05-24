@@ -81,8 +81,9 @@ resource "aws_bedrock_model_invocation_logging_configuration" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `logging_config` - (Required) The logging configuration values to set. See [`logging_config` Block](#logging_config-block) for details.
 
 ### `logging_config` Block

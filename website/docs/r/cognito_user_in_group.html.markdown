@@ -44,8 +44,9 @@ resource "aws_cognito_user_in_group" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `user_pool_id` - (Required) The user pool ID of the user and group.
 * `group_name` - (Required) The name of the group to which the user is to be added.
 * `username` - (Required) The username of the user to be added to the group.

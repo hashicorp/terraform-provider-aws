@@ -21,8 +21,9 @@ resource "aws_vpc_security_group_vpc_association" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `security_group_id` - (Required) The ID of the security group.
 * `vpc_id` - (Required) The ID of the VPC to make the association with.
 

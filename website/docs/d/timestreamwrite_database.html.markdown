@@ -22,8 +22,9 @@ data "aws_timestreamwrite_database" "test" {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `database_name` - (Required) The name of the Timestream database. Minimum length of 3. Maximum length of 256.
 
 ## Attribute Reference
