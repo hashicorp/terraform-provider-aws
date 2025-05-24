@@ -80,17 +80,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import a Cognito IDP Managed Login Branding resource. Use the composite ID, which consists of the managed login branding ID, user pool ID, and client ID, separated by pipes (`|`). Example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Cognito IDP Managed Login Branding using the `id`, which consists of the managed login branding ID, user pool ID, and client ID, separated by pipes (`|`). For example:
 
-```hcl
+```terraform
 import {
   to = aws_cognito_managed_login_branding.example
   id = "1ee76372-aa1d-4030-9b97-b0e86ced64bf|us-east-1_TsleZoGGE|7fpogu27daf3gg86ncehv8bh6h"
 }
 ```
 
-Alternatively, use the `terraform import` CLI command:
+Using `terraform import`, import Cognito IDP Managed Login Branding using the `id`. For example:
 
 ```console
-terraform import aws_cognito_managed_login_branding.example 1ee76372-aa1d-4030-9b97-b0e86ced64bf|us-east-1_TsleZoGGE|7fpogu27daf3gg86ncehv8bh6h
+% terraform import aws_cognito_managed_login_branding.example 1ee76372-aa1d-4030-9b97-b0e86ced64bf|us-east-1_TsleZoGGE|7fpogu27daf3gg86ncehv8bh6h
 ```
