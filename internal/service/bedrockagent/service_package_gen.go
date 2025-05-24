@@ -80,6 +80,15 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
+		{
+			Factory:  newPromptResource,
+			TypeName: "aws_bedrockagent_prompt",
+			Name:     "Prompt",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
+		},
 	}
 }
 

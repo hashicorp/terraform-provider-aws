@@ -35,6 +35,7 @@ data "aws_ec2_client_vpn_endpoint" "example" {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `client_vpn_endpoint_id` - (Optional) ID of the Client VPN endpoint.
 * `filter` - (Optional) One or more configuration blocks containing name-values filters. Detailed below.
 * `tags` - (Optional) Map of tags, each pair of which must exactly match a pair on the desired endpoint.
@@ -57,6 +58,7 @@ This data source exports the following attributes in addition to the arguments a
 * `client_cidr_block` - IPv4 address range, in CIDR notation, from which client IP addresses are assigned.
 * `client_connect_options` - The options for managing connection authorization for new client connections.
 * `client_login_banner_options` - Options for enabling a customizable text banner that will be displayed on AWS provided clients when a VPN session is established.
+* `client_route_enforcement_options` - Options for enforce administrator defined routes on devices connected through the VPN.
 * `connection_log_options` - Information about the client connection logging options for the Client VPN endpoint.
 * `description` - Brief description of the endpoint.
 * `dns_name` - DNS name to be used by clients when connecting to the Client VPN endpoint.

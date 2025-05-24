@@ -39,6 +39,8 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `virtual_cluster_id` - (Required) ID of the cluster.
 
 ## Attribute Reference
@@ -58,4 +60,4 @@ This data source exports the following attributes in addition to the arguments a
 * `state` - Status of the EKS cluster. One of `RUNNING`, `TERMINATING`, `TERMINATED`, `ARRESTED`.
 * `tags` - Key-value mapping of resource tags.
 
-<!-- cache-key: cdktf-0.20.8 input-b68b876212554fb1c28230029578a838320e08a00b6bc270b81195566fe1902f -->
+<!-- cache-key: cdktf-0.20.8 input-31a19efb9c98f116a9c0b58e2c1a7b85f209280894ad159507f6f6fb7cf0f2e6 -->

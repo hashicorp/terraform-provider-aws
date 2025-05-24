@@ -24,6 +24,7 @@ resource "aws_api_gateway_domain_name_access_association" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `access_association_source` - (Required) The identifier of the domain name access association source. For a `VPCE`, the value is the VPC endpoint ID.
 * `access_association_source_type` - (Required) The type of the domain name access association source. Valid values are `VPCE`.
 * `domain_name_arn` - (Required) The ARN of the domain name.

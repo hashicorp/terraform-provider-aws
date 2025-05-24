@@ -194,6 +194,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	client.accountID = accountID
 	client.defaultTagsConfig = c.DefaultTagsConfig
 	client.ignoreTagsConfig = c.IgnoreTagsConfig
+	client.terraformVersion = c.TerraformVersion
 
 	// Used for lazy-loading AWS API clients.
 	client.awsConfig = &cfg

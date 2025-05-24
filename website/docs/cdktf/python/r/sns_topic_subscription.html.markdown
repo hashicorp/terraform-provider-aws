@@ -360,4 +360,4 @@ Using `terraform import`, import SNS Topic Subscriptions using the subscription 
 % terraform import aws_sns_topic_subscription.user_updates_sqs_target arn:aws:sns:us-west-2:123456789012:my-topic:8a21d249-4329-4871-acc6-7be709c6ea7f
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-6a804279a813dc0c3cf034acc14f3f0a426b69b3ceb9221145a3f263e38b16dc -->
+<!-- cache-key: cdktf-0.20.8 input-c4fbd8c9870eef774c36eccafdb5ae0d452ea81ca773557990c1467bf2c2a08f -->

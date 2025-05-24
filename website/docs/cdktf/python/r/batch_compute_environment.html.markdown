@@ -205,6 +205,8 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `name` - (Optional, Forces new resource) The name for your compute environment. Up to 128 letters (uppercase and lowercase), numbers, and underscores are allowed. If omitted, Terraform will assign a random, unique name.
 * `name_prefix` - (Optional, Forces new resource) Creates a unique compute environment name beginning with the specified prefix. Conflicts with `name`.
 * `compute_resources` - (Optional) Details of the compute resources managed by the compute environment. This parameter is required for managed compute environments. See details below.
@@ -303,4 +305,4 @@ Using `terraform import`, import AWS Batch compute using the `name`. For example
 [2]: http://docs.aws.amazon.com/batch/latest/userguide/compute_environments.html
 [3]: http://docs.aws.amazon.com/batch/latest/userguide/troubleshooting.html
 
-<!-- cache-key: cdktf-0.20.8 input-a4d2fad96b051bf90d8da55fdec7bad58af8e8716e155068f8033f1e7ecde7a0 -->
+<!-- cache-key: cdktf-0.20.8 input-3c717b4fce12bd68e5158d9f510cf29d1220cc8e65ace96b7e2eca3107125c2b -->

@@ -22,17 +22,27 @@ resource "aws_s3tables_table_bucket" "example" {
 
 ## Argument Reference
 
-The following argument is required:
+The following arguments are required:
 
 * `name` - (Required, Forces new resource) Name of the table bucket.
   Must be between 3 and 63 characters in length.
   Can consist of lowercase letters, numbers, and hyphens, and must begin and end with a lowercase letter or number.
   A full list of bucket naming rules can be found in the [S3 Tables documentation](https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-tables-buckets-naming.html#table-buckets-naming-rules).
 
-The following argument is optional:
+The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `encryption_configuration` - (Optional) A single table bucket encryption configuration object.
+  [See `encryption_configuration` below](#encryption_configuration).
 * `maintenance_configuration` - (Optional) A single table bucket maintenance configuration object.
   [See `maintenance_configuration` below](#maintenance_configuration).
+
+### `encryption_configuration`
+
+The `encryption_configuration` object supports the following arguments:
+
+* `kms_key_arn` - (Optional) The ARN of a KMS Key to be used with `aws:kms` `sse_algorithm`
+* `sse_algorithm` - (Required) One of `aws:kms` or `AES256`
 
 ### `maintenance_configuration`
 

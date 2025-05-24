@@ -35,6 +35,7 @@ resource "aws_default_vpc_dhcp_options" "default" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 The arguments of an `aws_default_vpc_dhcp_options` differ slightly from `aws_vpc_dhcp_options`  resources.
 Namely, the `domain_name`, `domain_name_servers` and `ntp_servers` arguments are computed.
 The following arguments are still supported:

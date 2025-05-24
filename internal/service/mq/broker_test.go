@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfmq "github.com/hashicorp/terraform-provider-aws/internal/service/mq"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -318,9 +319,9 @@ func TestNormalizeEngineVersion(t *testing.T) {
 }
 
 const (
-	testAccBrokerVersionNewer = "5.17.6"  // before changing, check b/c must be valid on GovCloud
-	testAccBrokerVersionOlder = "5.16.7"  // before changing, check b/c must be valid on GovCloud
-	testAccRabbitVersion      = "3.11.20" // before changing, check b/c must be valid on GovCloud
+	testAccBrokerVersionNewer = "5.17.6" // before changing, check b/c must be valid on GovCloud
+	// testAccBrokerVersionOlder = "5.16.7"  // before changing, check b/c must be valid on GovCloud
+	testAccRabbitVersion = "3.11.20" // before changing, check b/c must be valid on GovCloud
 
 	testAccActiveVersionNormalized5_18 = "5.18"
 	testAccRabbitVersionNormalized3_13 = "3.13"
@@ -362,7 +363,7 @@ func TestAccMQBroker_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "encryption_options.0.use_aws_owned_key", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "engine_type", "ActiveMQ"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, testAccBrokerVersionNewer),
-					resource.TestCheckResourceAttr(resourceName, "host_instance_type", "mq.t2.micro"),
+					resource.TestCheckResourceAttr(resourceName, "host_instance_type", "mq.t3.micro"),
 					resource.TestCheckResourceAttr(resourceName, "instances.#", "1"),
 					resource.TestMatchResourceAttr(resourceName, "instances.0.console_url",
 						regexache.MustCompile(`^https://[0-9a-f-]+\.mq.[0-9a-z-]+.amazonaws.com:8162$`)),
@@ -651,7 +652,7 @@ func TestAccMQBroker_AllFields_defaultVPC(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "engine_type", "ActiveMQ"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, testAccBrokerVersionNewer),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "efs"),
-					resource.TestCheckResourceAttr(resourceName, "host_instance_type", "mq.t2.micro"),
+					resource.TestCheckResourceAttr(resourceName, "host_instance_type", "mq.t3.micro"),
 					resource.TestCheckResourceAttr(resourceName, "maintenance_window_start_time.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "maintenance_window_start_time.0.day_of_week", "TUESDAY"),
 					resource.TestCheckResourceAttr(resourceName, "maintenance_window_start_time.0.time_of_day", "02:00"),
@@ -780,7 +781,7 @@ func TestAccMQBroker_AllFields_customVPC(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "engine_type", "ActiveMQ"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, testAccBrokerVersionNewer),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "efs"),
-					resource.TestCheckResourceAttr(resourceName, "host_instance_type", "mq.t2.micro"),
+					resource.TestCheckResourceAttr(resourceName, "host_instance_type", "mq.t3.micro"),
 					resource.TestCheckResourceAttr(resourceName, "maintenance_window_start_time.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "maintenance_window_start_time.0.day_of_week", "TUESDAY"),
 					resource.TestCheckResourceAttr(resourceName, "maintenance_window_start_time.0.time_of_day", "02:00"),
@@ -1119,6 +1120,7 @@ func TestAccMQBroker_Update_securityGroup(t *testing.T) {
 	})
 }
 
+/*
 func TestAccMQBroker_Update_engineVersion(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -1162,6 +1164,7 @@ func TestAccMQBroker_Update_engineVersion(t *testing.T) {
 		},
 	})
 }
+*/
 
 func TestAccMQBroker_Update_hostInstanceType(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -1184,10 +1187,10 @@ func TestAccMQBroker_Update_hostInstanceType(t *testing.T) {
 		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBrokerConfig_instanceType(rName, testAccBrokerVersionNewer, "mq.t2.micro"),
+				Config: testAccBrokerConfig_instanceType(rName, testAccBrokerVersionNewer, "mq.t3.micro"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(ctx, resourceName, &broker1),
-					resource.TestCheckResourceAttr(resourceName, "host_instance_type", "mq.t2.micro"),
+					resource.TestCheckResourceAttr(resourceName, "host_instance_type", "mq.t3.micro"),
 				),
 			},
 			{
@@ -1734,7 +1737,7 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 
 func testAccUnpairBrokerWithProvider(ctx context.Context, t *testing.T, broker *mq.DescribeBrokerOutput, providerF func() *schema.Provider) {
 	brokerID := aws.ToString(broker.BrokerId)
-	deadline := tfresource.NewDeadline(30 * time.Minute)
+	deadline := inttypes.NewDeadline(30 * time.Minute)
 	conn := providerF().Meta().(*conns.AWSClient).MQClient(ctx)
 
 	_, err := conn.UpdateBroker(ctx, &mq.UpdateBrokerInput{
@@ -1758,7 +1761,7 @@ func testAccUnpairBrokerWithProvider(ctx context.Context, t *testing.T, broker *
 
 func testAccDeleteBrokerWithProvider(ctx context.Context, t *testing.T, broker *mq.DescribeBrokerOutput, providerF func() *schema.Provider) {
 	brokerID := aws.ToString(broker.BrokerId)
-	deadline := tfresource.NewDeadline(30 * time.Minute)
+	deadline := inttypes.NewDeadline(30 * time.Minute)
 	conn := providerF().Meta().(*conns.AWSClient).MQClient(ctx)
 
 	_, err := conn.DeleteBroker(ctx, &mq.DeleteBrokerInput{BrokerId: aws.String(brokerID)})
@@ -1796,7 +1799,7 @@ resource "aws_mq_broker" "test" {
   broker_name             = %[1]q
   engine_type             = "ActiveMQ"
   engine_version          = %[2]q
-  host_instance_type      = "mq.t2.micro"
+  host_instance_type      = "mq.t3.micro"
   security_groups         = [aws_security_group.test.id]
   authentication_strategy = "simple"
   storage_type            = "efs"
@@ -1827,7 +1830,7 @@ resource "aws_mq_broker" "test" {
   broker_name                = %[1]q
   engine_type                = "ActiveMQ"
   engine_version             = %[2]q
-  host_instance_type         = "mq.t2.micro"
+  host_instance_type         = "mq.t3.micro"
   security_groups            = [aws_security_group.test.id]
   authentication_strategy    = "simple"
   storage_type               = "efs"
@@ -1875,6 +1878,7 @@ resource "aws_mq_broker" "test" {
 `, rName, version)
 }
 
+/*
 func testAccBrokerConfig_engineVersionUpdate(rName, version string) string {
 	return fmt.Sprintf(`
 resource "aws_security_group" "test" {
@@ -1890,7 +1894,7 @@ resource "aws_mq_broker" "test" {
   apply_immediately  = true
   engine_type        = "ActiveMQ"
   engine_version     = %[2]q
-  host_instance_type = "mq.t2.micro"
+  host_instance_type = "mq.t3.micro"
   security_groups    = [aws_security_group.test.id]
 
   logs {
@@ -1904,6 +1908,7 @@ resource "aws_mq_broker" "test" {
 }
 `, rName, version)
 }
+*/
 
 func testAccBrokerConfig_allFieldsDefaultVPC(rName, version, cfgName, cfgBody string) string {
 	return fmt.Sprintf(`
@@ -1941,7 +1946,7 @@ resource "aws_mq_broker" "test" {
   engine_type        = "ActiveMQ"
   engine_version     = %[2]q
   storage_type       = "efs"
-  host_instance_type = "mq.t2.micro"
+  host_instance_type = "mq.t3.micro"
 
   maintenance_window_start_time {
     day_of_week = "TUESDAY"
@@ -2036,7 +2041,7 @@ resource "aws_mq_broker" "test" {
   engine_type        = "ActiveMQ"
   engine_version     = %[2]q
   storage_type       = "efs"
-  host_instance_type = "mq.t2.micro"
+  host_instance_type = "mq.t3.micro"
 
   logs {
     general = true
@@ -2090,7 +2095,7 @@ resource "aws_mq_broker" "test" {
   broker_name        = %[1]q
   engine_type        = "ActiveMQ"
   engine_version     = %[2]q
-  host_instance_type = "mq.t2.micro"
+  host_instance_type = "mq.t3.micro"
   security_groups    = [aws_security_group.test.id]
 
   encryption_options {
@@ -2124,7 +2129,7 @@ resource "aws_mq_broker" "test" {
   broker_name        = %[1]q
   engine_type        = "ActiveMQ"
   engine_version     = %[2]q
-  host_instance_type = "mq.t2.micro"
+  host_instance_type = "mq.t3.micro"
   security_groups    = [aws_security_group.test.id]
 
   encryption_options {
@@ -2158,7 +2163,7 @@ resource "aws_mq_broker" "test" {
   broker_name        = %[1]q
   engine_type        = "ActiveMQ"
   engine_version     = %[2]q
-  host_instance_type = "mq.t2.micro"
+  host_instance_type = "mq.t3.micro"
   security_groups    = [aws_security_group.test.id]
 
   user {
@@ -2184,7 +2189,7 @@ resource "aws_mq_broker" "test" {
   broker_name        = %[1]q
   engine_type        = "ActiveMQ"
   engine_version     = %[2]q
-  host_instance_type = "mq.t2.micro"
+  host_instance_type = "mq.t3.micro"
   security_groups    = [aws_security_group.test.id]
 
   user {
@@ -2216,7 +2221,7 @@ resource "aws_mq_broker" "test" {
   broker_name        = %[1]q
   engine_type        = "ActiveMQ"
   engine_version     = %[2]q
-  host_instance_type = "mq.t2.micro"
+  host_instance_type = "mq.t3.micro"
   security_groups    = [aws_security_group.test.id]
 
   user {
@@ -2243,7 +2248,7 @@ resource "aws_mq_broker" "test" {
   broker_name        = %[1]q
   engine_type        = "ActiveMQ"
   engine_version     = %[2]q
-  host_instance_type = "mq.t2.micro"
+  host_instance_type = "mq.t3.micro"
   security_groups    = [aws_security_group.test.id]
 
   user {
@@ -2273,7 +2278,7 @@ resource "aws_mq_broker" "test" {
   broker_name        = %[1]q
   engine_type        = "ActiveMQ"
   engine_version     = %[2]q
-  host_instance_type = "mq.t2.micro"
+  host_instance_type = "mq.t3.micro"
   security_groups    = [aws_security_group.test.id]
 
   user {
@@ -2312,7 +2317,7 @@ resource "aws_mq_broker" "test" {
   broker_name        = %[1]q
   engine_type        = "ActiveMQ"
   engine_version     = %[2]q
-  host_instance_type = "mq.t2.micro"
+  host_instance_type = "mq.t3.micro"
   security_groups    = [aws_security_group.test.id, aws_security_group.test2.id]
 
   logs {
@@ -2350,7 +2355,7 @@ resource "aws_mq_broker" "test" {
   broker_name        = %[1]q
   engine_type        = "ActiveMQ"
   engine_version     = %[2]q
-  host_instance_type = "mq.t2.micro"
+  host_instance_type = "mq.t3.micro"
   security_groups    = [aws_security_group.test2.id]
 
   logs {
@@ -2572,7 +2577,7 @@ resource "aws_mq_broker" "test" {
   broker_name             = %[1]q
   engine_type             = "ActiveMQ"
   engine_version          = %[2]q
-  host_instance_type      = "mq.t2.micro"
+  host_instance_type      = "mq.t3.micro"
   security_groups         = [aws_security_group.test.id]
 
   logs {

@@ -33,6 +33,8 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `user_pool_id` - (Required) Cognito user pool ID.
 
 ## Attribute Reference
@@ -42,4 +44,4 @@ This data source exports the following attributes in addition to the arguments a
 * `client_ids` - List of Cognito user pool client IDs.
 * `client_names` - List of Cognito user pool client names.
 
-<!-- cache-key: cdktf-0.20.8 input-0fe61149f327af030714ff2a7ce38b01d25e4ce678ca724c3e6bcaa54b7f9201 -->
+<!-- cache-key: cdktf-0.20.8 input-5d46d65117330e50b9ad16de4543c28f81a268a8030a29be87a54c31e4e826fb -->

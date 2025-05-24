@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strconv"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -89,6 +90,12 @@ var (
 		names.AttrDisplayName: {
 			Type:     schema.TypeString,
 			Optional: true,
+		},
+		"fifo_throughput_scope": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			Computed:     true,
+			ValidateFunc: validation.StringInSlice(topicFIFOThroughputScope_Values(), false),
 		},
 		"fifo_topic": {
 			Type:     schema.TypeBool,
@@ -217,6 +224,7 @@ var (
 		"delivery_policy":                          topicAttributeNameDeliveryPolicy,
 		names.AttrDisplayName:                      topicAttributeNameDisplayName,
 		"fifo_topic":                               topicAttributeNameFIFOTopic,
+		"fifo_throughput_scope":                    topicAttributeNameFIFOThroughputScope,
 		"firehose_failure_feedback_role_arn":       topicAttributeNameFirehoseFailureFeedbackRoleARN,
 		"firehose_success_feedback_role_arn":       topicAttributeNameFirehoseSuccessFeedbackRoleARN,
 		"firehose_success_feedback_sample_rate":    topicAttributeNameFirehoseSuccessFeedbackSampleRate,
@@ -277,8 +285,12 @@ func resourceTopicCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 		input.Attributes = map[string]string{
 			topicAttributeNameFIFOTopic: v,
 		}
+		if w, ok := attributes[topicAttributeNameFIFOThroughputScope]; ok && v == strconv.FormatBool(true) {
+			input.Attributes[topicAttributeNameFIFOThroughputScope] = w
+		}
 
 		delete(attributes, topicAttributeNameFIFOTopic)
+		delete(attributes, topicAttributeNameFIFOThroughputScope)
 	}
 
 	output, err := conn.CreateTopic(ctx, input)
@@ -401,6 +413,7 @@ func resourceTopicDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 
 func resourceTopicCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta any) error {
 	fifoTopic := diff.Get("fifo_topic").(bool)
+	fifoTopicThroughputScope := diff.Get("fifo_throughput_scope").(string)
 	archivePolicy := diff.Get("archive_policy").(string)
 	contentBasedDeduplication := diff.Get("content_based_deduplication").(bool)
 
@@ -423,6 +436,9 @@ func resourceTopicCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, me
 	if !fifoTopic {
 		if archivePolicy != "" {
 			return errors.New("message archive policy can only be set for FIFO topics")
+		}
+		if fifoTopicThroughputScope != "" {
+			return errors.New("FIFO throughput scope can only be set for FIFO topics")
 		}
 		if contentBasedDeduplication {
 			return errors.New("content-based deduplication can only be set for FIFO topics")

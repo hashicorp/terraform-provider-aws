@@ -703,6 +703,7 @@ resource "aws_kinesis_firehose_delivery_stream" "example_snowflake_destination" 
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) A name to identify the stream. This is unique to the AWS account and region the Stream is created in. When using for WAF logging, name must be prefixed with `aws-waf-logs-`. See [AWS Documentation](https://docs.aws.amazon.com/waf/latest/developerguide/waf-policies.html#waf-policies-logging-config) for more details.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `kinesis_source_configuration` - (Optional) The stream and role Amazon Resource Names (ARNs) for a Kinesis data stream used as the source for a delivery stream. See [`kinesis_source_configuration` block](#kinesis_source_configuration-block) below for details.
@@ -710,7 +711,7 @@ This resource supports the following arguments:
 * `server_side_encryption` - (Optional) Encrypt at rest options. See [`server_side_encryption` block](#server_side_encryption-block) below for details.
 
   **NOTE:** Server-side encryption should not be enabled when a kinesis stream is configured as the source of the firehose delivery stream.
-* `destination` – (Required) This is the destination to where the data is delivered. The only options are `s3` (Deprecated, use `extended_s3` instead), `extended_s3`, `redshift`, `elasticsearch`, `splunk`, `http_endpoint`, `opensearch`, `opensearchserverless` and `snowflake`.
+* `destination` - (Required) This is the destination to where the data is delivered. The only options are `s3` (Deprecated, use `extended_s3` instead), `extended_s3`, `redshift`, `elasticsearch`, `splunk`, `http_endpoint`, `opensearch`, `opensearchserverless` and `snowflake`.
 * `elasticsearch_configuration` - (Optional) Configuration options when `destination` is `elasticsearch`. See [`elasticsearch_configuration` block](#elasticsearch_configuration-block) below for details.
 * `extended_s3_configuration` - (Optional, only Required when `destination` is `extended_s3`) Enhanced configuration options for the s3 destination. See [`extended_s3_configuration` block](#extended_s3_configuration-block) below for details.
 * `http_endpoint_configuration` - (Optional) Configuration options when `destination` is `http_endpoint`. Requires the user to also specify an `s3_configuration` block.  See [`http_endpoint_configuration` block](#http_endpoint_configuration-block) below for details.

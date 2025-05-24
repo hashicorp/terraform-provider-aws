@@ -33,6 +33,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -7001,7 +7002,7 @@ func TestAccRDSInstance_BlueGreenDeployment_outOfBand(t *testing.T) {
 				PreConfig: func() {
 					meta := acctest.Provider.Meta().(*conns.AWSClient)
 					conn := meta.RDSClient(ctx)
-					deadline := tfresource.NewDeadline(40 * time.Minute)
+					deadline := inttypes.NewDeadline(40 * time.Minute)
 
 					orchestrator := tfrds.NewBlueGreenOrchestrator(conn)
 					defer orchestrator.CleanUp(ctx)

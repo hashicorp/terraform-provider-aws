@@ -29,6 +29,7 @@ func TestAccClientVPNEndpoint_serial(t *testing.T) {
 			"federatedAuthWithSelfService": testAccClientVPNEndpoint_federatedAuthWithSelfServiceProvider,
 			"withClientConnect":            testAccClientVPNEndpoint_withClientConnectOptions,
 			"withClientLoginBanner":        testAccClientVPNEndpoint_withClientLoginBannerOptions,
+			"withClientRouteEnforcement":   testAccClientVPNEndpoint_withClientRouteEnforcementOptions,
 			"withLogGroup":                 testAccClientVPNEndpoint_withConnectionLogOptions,
 			"withDNSServers":               testAccClientVPNEndpoint_withDNSServers,
 			"tags":                         testAccClientVPNEndpoint_tags,

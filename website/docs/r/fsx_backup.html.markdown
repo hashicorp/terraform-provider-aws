@@ -78,6 +78,7 @@ resource "aws_fsx_openzfs_file_system" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 Note - Only file_system_id or volume_id can be specified. file_system_id is used for Lustre and Windows, volume_id is used for ONTAP.
 
 * `file_system_id` - (Optional) The ID of the file system to back up. Required if backing up Lustre or Windows file systems.

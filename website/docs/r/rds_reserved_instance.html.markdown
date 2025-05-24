@@ -40,6 +40,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `instance_count` - (Optional) Number of instances to reserve. Default value is `1`.
 * `reservation_id` - (Optional) Customer-specified identifier to track this reservation.
 * `tags` - (Optional) Map of tags to assign to the DB reservation. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -52,7 +53,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - Unique identifier for the reservation. same as `reservation_id`.
 * `currency_code` - Currency code for the reserved DB instance.
 * `duration` - Duration of the reservation in seconds.
-* `fixed_price` – Fixed price charged for this reserved DB instance.
+* `fixed_price` - Fixed price charged for this reserved DB instance.
 * `db_instance_class` - DB instance class for the reserved DB instance.
 * `lease_id` - Unique identifier for the lease associated with the reserved DB instance. Amazon Web Services Support might request the lease ID for an issue related to a reserved DB instance.
 * `multi_az` - Whether the reservation applies to Multi-AZ deployments.

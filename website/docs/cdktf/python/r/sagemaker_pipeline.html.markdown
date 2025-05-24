@@ -49,7 +49,7 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `pipeline_name` - (Required) The name of the pipeline.
 * `pipeline_description` - (Optional) A description of the pipeline.
@@ -103,4 +103,4 @@ Using `terraform import`, import pipelines using the `pipeline_name`. For exampl
 % terraform import aws_sagemaker_pipeline.test_pipeline pipeline
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-d537202b139dd47c1023a1f9a8dcce4e9ac9b6af813002b5bab6dd98e3a9c316 -->
+<!-- cache-key: cdktf-0.20.8 input-f519206b6d8e29adc3146002009a30ff16ed8d6e076d8837feda06ee3816ba73 -->

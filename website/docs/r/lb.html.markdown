@@ -95,12 +95,9 @@ resource "aws_lb" "example" {
 
 ## Argument Reference
 
-~> **NOTE:** Please note that internal LBs can only use `ipv4` as the `ip_address_type`. You can only change to `dualstack` `ip_address_type` if the selected subnets are IPv6 enabled.
-
-~> **NOTE:** Please note that one of either `subnets` or `subnet_mapping` is required.
-
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `access_logs` - (Optional) Access Logs block. See below.
 * `connection_logs` - (Optional) Connection Logs block. See below. Only valid for Load Balancers of type `application`.
 * `client_keep_alive` - (Optional) Client keep alive value in seconds. The valid range is 60-604800 seconds. The default is 3600 seconds.
@@ -129,6 +126,10 @@ This resource supports the following arguments:
 * `subnets` - (Optional) List of subnet IDs to attach to the LB. For Load Balancers of type `network` subnets can only be added (see [Availability Zones](https://docs.aws.amazon.com/elasticloadbalancing/latest/network/network-load-balancers.html#availability-zones)), deleting a subnet for load balancers of type `network` will force a recreation of the resource.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `xff_header_processing_mode` - (Optional) Determines how the load balancer modifies the `X-Forwarded-For` header in the HTTP request before sending the request to the target. The possible values are `append`, `preserve`, and `remove`. Only valid for Load Balancers of type `application`. The default is `append`.
+
+~> **NOTE:** Please note that internal LBs can only use `ipv4` as the `ip_address_type`. You can only change to `dualstack` `ip_address_type` if the selected subnets are IPv6 enabled.
+
+~> **NOTE:** Please note that one of either `subnets` or `subnet_mapping` is required.
 
 ### access_logs
 

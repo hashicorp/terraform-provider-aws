@@ -219,6 +219,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `additional_authentication_provider` - (Optional) One or more additional authentication providers for the GraphQL API. See [`additional_authentication_provider` Block](#additional_authentication_provider-block) for details.
 * `api_type` - (Optional) API type. Valid values are `GRAPHQL` or `MERGED`. A `MERGED` type requires `merged_api_execution_role_arn` to be set.
 * `enhanced_metrics_config` - (Optional) Enables and controls the enhanced metrics feature. See [`enhanced_metrics_config` Block](#enhanced_metrics_config-block) for details.

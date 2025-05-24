@@ -35,6 +35,7 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -2100,7 +2101,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta any)
 func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
-	deadline := tfresource.NewDeadline(d.Timeout(schema.TimeoutUpdate))
+	deadline := inttypes.NewDeadline(d.Timeout(schema.TimeoutUpdate))
 
 	// Separate request to promote a database.
 	if d.HasChange("replicate_source_db") {

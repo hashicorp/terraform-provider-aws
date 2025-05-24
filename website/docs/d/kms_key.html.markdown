@@ -37,6 +37,7 @@ data "aws_kms_key" "by_key_arn" {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `key_id` - (Required) Key identifier which can be one of the following format:
     * Key ID. E.g: `1234abcd-12ab-34cd-56ef-1234567890ab`
     * Key ARN. E.g.: `arn:aws:kms:us-east-1:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab`

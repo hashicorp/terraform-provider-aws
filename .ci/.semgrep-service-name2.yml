@@ -43,128 +43,6 @@ rules:
           patterns:
             - pattern-regex: "(?i)IoT"
     severity: WARNING
-  - id: iotanalytics-in-func-name
-    languages:
-      - go
-    message: Do not use "IoTAnalytics" in func name inside iotanalytics package
-    paths:
-      include:
-        - internal/service/iotanalytics
-      exclude:
-        - internal/service/iotanalytics/list_pages_gen.go
-    patterns:
-      - pattern: func $NAME( ... )
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)IoTAnalytics"
-      - focus-metavariable: $NAME
-      - pattern-not: func $NAME($T *testing.T)
-    severity: WARNING
-  - id: iotanalytics-in-test-name
-    languages:
-      - go
-    message: Include "IoTAnalytics" in test name
-    paths:
-      include:
-        - internal/service/iotanalytics/*_test.go
-    patterns:
-      - pattern: func $NAME( ... )
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-not-regex: "^TestAccIoTAnalytics"
-            - pattern-regex: ^TestAcc.*
-    severity: WARNING
-  - id: iotanalytics-in-const-name
-    languages:
-      - go
-    message: Do not use "IoTAnalytics" in const name inside iotanalytics package
-    paths:
-      include:
-        - internal/service/iotanalytics
-    patterns:
-      - pattern: const $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)IoTAnalytics"
-    severity: WARNING
-  - id: iotanalytics-in-var-name
-    languages:
-      - go
-    message: Do not use "IoTAnalytics" in var name inside iotanalytics package
-    paths:
-      include:
-        - internal/service/iotanalytics
-    patterns:
-      - pattern: var $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)IoTAnalytics"
-    severity: WARNING
-  - id: iotevents-in-func-name
-    languages:
-      - go
-    message: Do not use "IoTEvents" in func name inside iotevents package
-    paths:
-      include:
-        - internal/service/iotevents
-      exclude:
-        - internal/service/iotevents/list_pages_gen.go
-    patterns:
-      - pattern: func $NAME( ... )
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)IoTEvents"
-      - focus-metavariable: $NAME
-      - pattern-not: func $NAME($T *testing.T)
-    severity: WARNING
-  - id: iotevents-in-test-name
-    languages:
-      - go
-    message: Include "IoTEvents" in test name
-    paths:
-      include:
-        - internal/service/iotevents/*_test.go
-    patterns:
-      - pattern: func $NAME( ... )
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-not-regex: "^TestAccIoTEvents"
-            - pattern-regex: ^TestAcc.*
-    severity: WARNING
-  - id: iotevents-in-const-name
-    languages:
-      - go
-    message: Do not use "IoTEvents" in const name inside iotevents package
-    paths:
-      include:
-        - internal/service/iotevents
-    patterns:
-      - pattern: const $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)IoTEvents"
-    severity: WARNING
-  - id: iotevents-in-var-name
-    languages:
-      - go
-    message: Do not use "IoTEvents" in var name inside iotevents package
-    paths:
-      include:
-        - internal/service/iotevents
-    patterns:
-      - pattern: var $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)IoTEvents"
-    severity: WARNING
   - id: ipam-in-test-name
     languages:
       - go
@@ -2941,6 +2819,128 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)NetworkMonitor"
+    severity: WARNING
+  - id: notifications-in-func-name
+    languages:
+      - go
+    message: Do not use "Notifications" in func name inside notifications package
+    paths:
+      include:
+        - internal/service/notifications
+      exclude:
+        - internal/service/notifications/list_pages_gen.go
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)Notifications"
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
+    severity: WARNING
+  - id: notifications-in-test-name
+    languages:
+      - go
+    message: Include "Notifications" in test name
+    paths:
+      include:
+        - internal/service/notifications/*_test.go
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccNotifications"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: notifications-in-const-name
+    languages:
+      - go
+    message: Do not use "Notifications" in const name inside notifications package
+    paths:
+      include:
+        - internal/service/notifications
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)Notifications"
+    severity: WARNING
+  - id: notifications-in-var-name
+    languages:
+      - go
+    message: Do not use "Notifications" in var name inside notifications package
+    paths:
+      include:
+        - internal/service/notifications
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)Notifications"
+    severity: WARNING
+  - id: notificationscontacts-in-func-name
+    languages:
+      - go
+    message: Do not use "NotificationsContacts" in func name inside notificationscontacts package
+    paths:
+      include:
+        - internal/service/notificationscontacts
+      exclude:
+        - internal/service/notificationscontacts/list_pages_gen.go
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)NotificationsContacts"
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
+    severity: WARNING
+  - id: notificationscontacts-in-test-name
+    languages:
+      - go
+    message: Include "NotificationsContacts" in test name
+    paths:
+      include:
+        - internal/service/notificationscontacts/*_test.go
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccNotificationsContacts"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: notificationscontacts-in-const-name
+    languages:
+      - go
+    message: Do not use "NotificationsContacts" in const name inside notificationscontacts package
+    paths:
+      include:
+        - internal/service/notificationscontacts
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)NotificationsContacts"
+    severity: WARNING
+  - id: notificationscontacts-in-var-name
+    languages:
+      - go
+    message: Do not use "NotificationsContacts" in var name inside notificationscontacts package
+    paths:
+      include:
+        - internal/service/notificationscontacts
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)NotificationsContacts"
     severity: WARNING
   - id: oam-in-func-name
     languages:

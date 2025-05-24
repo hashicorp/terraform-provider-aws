@@ -409,17 +409,3 @@ func Retry(ctx context.Context, timeout time.Duration, f retry.RetryFunc, optFns
 	// more likely to be useful
 	return resultErr
 }
-
-type deadline time.Time
-
-func NewDeadline(duration time.Duration) deadline {
-	return deadline(time.Now().Add(duration))
-}
-
-func (d deadline) Remaining() time.Duration {
-	if v := time.Until(time.Time(d)); v < 0 {
-		return 0
-	} else {
-		return v
-	}
-}

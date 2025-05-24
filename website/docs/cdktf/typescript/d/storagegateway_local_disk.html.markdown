@@ -37,6 +37,8 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `gatewayArn` - (Required) ARN of the gateway.
 * `diskNode` - (Optional) Device node of the local disk to retrieve. For example, `/dev/sdb`.
 * `diskPath` - (Optional) Device path of the local disk to retrieve. For example, `/dev/xvdb` or `/dev/nvme1n1`.
@@ -48,4 +50,4 @@ This data source exports the following attributes in addition to the arguments a
 * `diskId` - Disk identifierE.g., `pci-0000:03:00.0-scsi-0:0:0:0`
 * `id` - Disk identifierE.g., `pci-0000:03:00.0-scsi-0:0:0:0`
 
-<!-- cache-key: cdktf-0.20.8 input-64c44f7144dae6178c64ac35e8513dac768f1816678a338129b7de095d6a0d5c -->
+<!-- cache-key: cdktf-0.20.8 input-6b979c721dca74259ed8632e9e51e5b48ce907c3ecdac61071a898c5c8fa2dee -->

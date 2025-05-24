@@ -25,7 +25,7 @@ import (
 )
 
 // @SDKResource("aws_fms_admin_account", name="Admin Account")
-// @Region(overrideEnabled=false)
+// @Region(global=true)
 func resourceAdminAccount() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAdminAccountCreate,

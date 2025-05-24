@@ -83,6 +83,7 @@ resource "aws_vpc_ipam" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cidr` - (Optional, Forces new resource) The CIDR you want to assign to the pool.
 * `description` - (Optional, Forces new resource) The description for the allocation.
 * `disallowed_cidrs` - (Optional, Forces new resource) Exclude a particular CIDR range from being returned by the pool.

@@ -138,9 +138,7 @@ IVS (Interactive Video) Chat
 Inspector
 Inspector Classic
 Invoicing
-IoT Analytics
 IoT Core
-IoT Events
 IoT Greengrass
 KMS (Key Management)
 Kendra
@@ -241,6 +239,8 @@ Timestream for InfluxDB
 Transcribe
 Transfer Family
 Transit Gateway
+User Notifications
+User Notifications Contacts
 VPC (Virtual Private Cloud)
 VPC IPAM (IP Address Manager)
 VPC Lattice

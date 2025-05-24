@@ -35,6 +35,8 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `service_name` - (Required) Service name to lookup within Service Quotas. Available values can be found with the [AWS CLI service-quotas list-services command](https://docs.aws.amazon.com/cli/latest/reference/service-quotas/list-services.html).
 
 ## Attribute Reference
@@ -44,4 +46,4 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - Code of the service.
 * `service_code` - Code of the service.
 
-<!-- cache-key: cdktf-0.20.8 input-4d133c6d1401c018a17d5ac93ddafa2d0e17605d51df1be8cf1b26789b0bd62e -->
+<!-- cache-key: cdktf-0.20.8 input-31524052830d67a9508c9dbf8e638bc6dab75852bd77dd320e249854c15b325c -->

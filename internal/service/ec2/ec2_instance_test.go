@@ -4748,7 +4748,7 @@ func TestAccEC2Instance_CreditSpecificationUnknownCPUCredits_t4g(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "credit_specification.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "credit_specification.0.cpu_credits", "unlimited"),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.0.cpu_credits", "standard"),
 				),
 			},
 			{

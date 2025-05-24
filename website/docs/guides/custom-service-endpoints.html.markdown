@@ -207,8 +207,6 @@ provider "aws" {
 |CloudWatch Internet Monitor|`internetmonitor`|`AWS_ENDPOINT_URL_INTERNETMONITOR`|`internetmonitor`|
 |Invoicing|`invoicing`|`AWS_ENDPOINT_URL_INVOICING`|`invoicing`|
 |IoT Core|`iot`|`AWS_ENDPOINT_URL_IOT`|`iot`|
-|IoT Analytics|`iotanalytics`|`AWS_ENDPOINT_URL_IOTANALYTICS`|`iotanalytics`|
-|IoT Events|`iotevents`|`AWS_ENDPOINT_URL_IOT_EVENTS`|`iot_events`|
 |IVS (Interactive Video)|`ivs`|`AWS_ENDPOINT_URL_IVS`|`ivs`|
 |IVS (Interactive Video) Chat|`ivschat`|`AWS_ENDPOINT_URL_IVSCHAT`|`ivschat`|
 |Managed Streaming for Kafka|`kafka`(or `msk`)|`AWS_ENDPOINT_URL_KAFKA`|`kafka`|
@@ -248,6 +246,8 @@ provider "aws" {
 |Network Firewall|`networkfirewall`|`AWS_ENDPOINT_URL_NETWORK_FIREWALL`|`network_firewall`|
 |Network Manager|`networkmanager`|`AWS_ENDPOINT_URL_NETWORKMANAGER`|`networkmanager`|
 |CloudWatch Network Monitor|`networkmonitor`|`AWS_ENDPOINT_URL_NETWORKMONITOR`|`networkmonitor`|
+|User Notifications|`notifications`|`AWS_ENDPOINT_URL_NOTIFICATIONS`|`notifications`|
+|User Notifications Contacts|`notificationscontacts`|`AWS_ENDPOINT_URL_NOTIFICATIONSCONTACTS`|`notificationscontacts`|
 |CloudWatch Observability Access Manager|`oam`(or `cloudwatchobservabilityaccessmanager`)|`AWS_ENDPOINT_URL_OAM`|`oam`|
 |OpenSearch|`opensearch`(or `opensearchservice`)|`AWS_ENDPOINT_URL_OPENSEARCH`|`opensearch`|
 |OpenSearch Serverless|`opensearchserverless`|`AWS_ENDPOINT_URL_OPENSEARCHSERVERLESS`|`opensearchserverless`|

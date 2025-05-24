@@ -112,6 +112,7 @@ resource "aws_api_gateway_method_response" "response_200" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `rest_api_id` - (Required) The string identifier of the associated REST API.
 * `resource_id` - (Required) The Resource identifier for the method resource.
 * `http_method` - (Required) The HTTP verb of the method resource (`GET`, `POST`, `PUT`, `DELETE`, `HEAD`, `OPTIONS`, `ANY`).

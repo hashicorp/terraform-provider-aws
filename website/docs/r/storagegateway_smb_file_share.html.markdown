@@ -42,6 +42,7 @@ resource "aws_storagegateway_smb_file_share" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `gateway_arn` - (Required) Amazon Resource Name (ARN) of the file gateway.
 * `location_arn` - (Required) The ARN of the backed storage used for storing file data.
 * `vpc_endpoint_dns_name` - (Optional) The DNS name of the VPC endpoint for S3 private link.

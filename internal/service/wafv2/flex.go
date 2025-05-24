@@ -594,6 +594,10 @@ func expandFieldToMatch(l []any) *awstypes.FieldToMatch {
 		f.SingleQueryArgument = expandSingleQueryArgument(m["single_query_argument"].([]any))
 	}
 
+	if v, ok := m["uri_fragment"]; ok && len(v.([]any)) > 0 {
+		f.UriFragment = expandURIFragment(v.([]any))
+	}
+
 	if v, ok := m["uri_path"]; ok && len(v.([]any)) > 0 {
 		f.UriPath = &awstypes.UriPath{}
 	}
@@ -775,6 +779,21 @@ func expandSingleQueryArgument(l []any) *awstypes.SingleQueryArgument {
 	return &awstypes.SingleQueryArgument{
 		Name: aws.String(m[names.AttrName].(string)),
 	}
+}
+
+func expandURIFragment(tfList []any) *awstypes.UriFragment {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+	tfMap := tfList[0].(map[string]any)
+
+	apiObject := &awstypes.UriFragment{}
+
+	if v, ok := tfMap["fallback_behavior"].(string); ok && v != "" {
+		apiObject.FallbackBehavior = awstypes.FallbackBehavior(v)
+	}
+
+	return apiObject
 }
 
 func expandTextTransformations(l []any) []awstypes.TextTransformation {
@@ -1772,6 +1791,68 @@ func expandRegex(m map[string]any) awstypes.Regex {
 	}
 }
 
+func expandDataProtectionConfig(tfList []any) *awstypes.DataProtectionConfig {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]any)
+
+	return &awstypes.DataProtectionConfig{
+		DataProtections: expandDataProtections(tfMap["data_protection"].([]any)),
+	}
+}
+
+func expandDataProtections(tfList []any) []awstypes.DataProtection {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	apiObjects := make([]awstypes.DataProtection, 0)
+
+	for _, tfMapRaw := range tfList {
+		if tfMapRaw == nil {
+			continue
+		}
+
+		tfMap := tfMapRaw.(map[string]any)
+		apiObject := &awstypes.DataProtection{
+			Action: awstypes.DataProtectionAction(tfMap[names.AttrAction].(string)),
+			Field:  expandFieldToProtect(tfMap[names.AttrField].([]any)),
+		}
+
+		if v, ok := tfMap["exclude_rate_based_details"].(bool); ok {
+			apiObject.ExcludeRateBasedDetails = v
+		}
+
+		if v, ok := tfMap["exclude_rule_match_details"].(bool); ok {
+			apiObject.ExcludeRuleMatchDetails = v
+		}
+
+		apiObjects = append(apiObjects, *apiObject)
+	}
+
+	return apiObjects
+}
+
+func expandFieldToProtect(tfList []any) *awstypes.FieldToProtect {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]any)
+
+	apiObject := &awstypes.FieldToProtect{
+		FieldType: awstypes.FieldToProtectType(tfMap["field_type"].(string)),
+	}
+
+	if v, ok := tfMap["field_keys"].([]any); ok && len(v) > 0 {
+		apiObject.FieldKeys = flex.ExpandStringValueList(v)
+	}
+
+	return apiObject
+}
+
 func flattenRules(r []awstypes.Rule) any {
 	out := make([]map[string]any, len(r))
 	for i, rule := range r {
@@ -2193,6 +2274,10 @@ func flattenFieldToMatch(f *awstypes.FieldToMatch) any {
 		m["single_query_argument"] = flattenSingleQueryArgument(f.SingleQueryArgument)
 	}
 
+	if f.UriFragment != nil {
+		m["uri_fragment"] = flattenURIFragment(f.UriFragment)
+	}
+
 	if f.UriPath != nil {
 		m["uri_path"] = make([]map[string]any, 1)
 	}
@@ -2347,6 +2432,19 @@ func flattenSingleQueryArgument(s *awstypes.SingleQueryArgument) any {
 	}
 
 	return []any{m}
+}
+
+func flattenURIFragment(apiObject *awstypes.UriFragment) any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.FallbackBehavior; v != "" {
+		tfMap["fallback_behavior"] = v
+	}
+	return []any{tfMap}
 }
 
 func flattenTextTransformations(l []awstypes.TextTransformation) []any {
@@ -3203,4 +3301,52 @@ func flattenRegexPatternSet(r []awstypes.Regex) any {
 	}
 
 	return regexPatterns
+}
+
+func flattenDataProtectionConfig(apiObject *awstypes.DataProtectionConfig) any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		"data_protection": flattenDataProtections(apiObject.DataProtections),
+	}
+
+	return []any{tfMap}
+}
+
+func flattenDataProtections(apiObjects []awstypes.DataProtection) any {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	tfList := make([]any, 0)
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{
+			names.AttrAction:             apiObject.Action,
+			"exclude_rate_based_details": apiObject.ExcludeRateBasedDetails,
+			"exclude_rule_match_details": apiObject.ExcludeRuleMatchDetails,
+			names.AttrField:              flattenFieldToProtect(apiObject.Field),
+		}
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenFieldToProtect(apiObject *awstypes.FieldToProtect) any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		"field_type": apiObject.FieldType,
+	}
+
+	if v := apiObject.FieldKeys; len(v) > 0 {
+		tfMap["field_keys"] = v
+	}
+
+	return []any{tfMap}
 }
