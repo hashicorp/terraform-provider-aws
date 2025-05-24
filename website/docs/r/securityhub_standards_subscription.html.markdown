@@ -52,6 +52,13 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The ARN of a resource that represents your subscription to a supported standard.
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `3m`)
+* `delete` - (Default `3m`)
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Security Hub standards subscriptions using the standards subscription ARN. For example:
