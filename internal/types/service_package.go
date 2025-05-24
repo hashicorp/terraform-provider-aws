@@ -98,6 +98,13 @@ type Identity struct {
 	ARNAttribute string
 }
 
+func GlobalSingletonIdentity() Identity {
+	return Identity{
+		Global:    true,
+		Singleton: true,
+	}
+}
+
 func RegionalSingletonIdentity() Identity {
 	return Identity{
 		Global:    false,
