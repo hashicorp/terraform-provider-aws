@@ -37,11 +37,11 @@ func resourceAppImageConfig() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: schema.CustomizeDiffFunc(func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
+		CustomizeDiff: schema.CustomizeDiffFunc(func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
 			// Ensure at least one of the three config blocks is provided
-			codeEditorConfig := d.Get("code_editor_app_image_config").([]interface{})
-			jupyterLabConfig := d.Get("jupyter_lab_image_config").([]interface{})
-			kernelGatewayConfig := d.Get("kernel_gateway_image_config").([]interface{})
+			codeEditorConfig := d.Get("code_editor_app_image_config").([]any)
+			jupyterLabConfig := d.Get("jupyter_lab_image_config").([]any)
+			kernelGatewayConfig := d.Get("kernel_gateway_image_config").([]any)
 
 			if len(codeEditorConfig) == 0 && len(jupyterLabConfig) == 0 && len(kernelGatewayConfig) == 0 {
 				return fmt.Errorf("one of code_editor_app_image_config, jupyter_lab_image_config, or kernel_gateway_image_config must be configured")
