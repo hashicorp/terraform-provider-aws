@@ -137,6 +137,7 @@ const (
 	AttrParameter                  = "parameter"
 	AttrParameterGroupName         = "parameter_group_name"
 	AttrParameters                 = "parameters"
+	AttrParentID                   = "parent_id"
 	AttrPassword                   = "password"
 	AttrPath                       = "path"
 	AttrPermissions                = "permissions"

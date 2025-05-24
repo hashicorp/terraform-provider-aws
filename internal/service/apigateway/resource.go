@@ -45,7 +45,7 @@ func resourceResource() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"parent_id": {
+			names.AttrParentID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -71,7 +71,7 @@ func resourceResourceCreate(ctx context.Context, d *schema.ResourceData, meta an
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
 	input := apigateway.CreateResourceInput{
-		ParentId:  aws.String(d.Get("parent_id").(string)),
+		ParentId:  aws.String(d.Get(names.AttrParentID).(string)),
 		PathPart:  aws.String(d.Get("path_part").(string)),
 		RestApiId: aws.String(d.Get("rest_api_id").(string)),
 	}
@@ -103,7 +103,7 @@ func resourceResourceRead(ctx context.Context, d *schema.ResourceData, meta any)
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway Resource (%s): %s", d.Id(), err)
 	}
 
-	d.Set("parent_id", resource.ParentId)
+	d.Set(names.AttrParentID, resource.ParentId)
 	d.Set("path_part", resource.PathPart)
 	d.Set(names.AttrPath, resource.Path)
 
@@ -120,11 +120,11 @@ func resourceResourceUpdateOperations(d *schema.ResourceData) []types.PatchOpera
 		})
 	}
 
-	if d.HasChange("parent_id") {
+	if d.HasChange(names.AttrParentID) {
 		operations = append(operations, types.PatchOperation{
 			Op:    types.OpReplace,
 			Path:  aws.String("/parentId"),
-			Value: aws.String(d.Get("parent_id").(string)),
+			Value: aws.String(d.Get(names.AttrParentID).(string)),
 		})
 	}
 	return operations

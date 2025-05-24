@@ -145,6 +145,7 @@ func ConstOrQuote(constant string) string {
 		"parameter":                     "AttrParameter",
 		"parameter_group_name":          "AttrParameterGroupName",
 		"parameters":                    "AttrParameters",
+		"parent_id":                     "AttrParentID",
 		"password":                      "AttrPassword",
 		"path":                          "AttrPath",
 		"permissions":                   "AttrPermissions",

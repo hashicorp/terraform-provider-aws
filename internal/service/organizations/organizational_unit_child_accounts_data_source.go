@@ -50,7 +50,7 @@ func dataSourceOrganizationalUnitChildAccounts() *schema.Resource {
 					},
 				},
 			},
-			"parent_id": {
+			names.AttrParentID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -62,7 +62,7 @@ func dataSourceOrganizationalUnitChildAccountsRead(ctx context.Context, d *schem
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
-	parentID := d.Get("parent_id").(string)
+	parentID := d.Get(names.AttrParentID).(string)
 	accounts, err := findAccountsForParentByID(ctx, conn, parentID)
 
 	if err != nil {
