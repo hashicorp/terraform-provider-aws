@@ -71,7 +71,7 @@ func resourceImageBlockPublicAccessPut(ctx context.Context, d *schema.ResourceDa
 	}
 
 	if d.IsNewResource() {
-		d.SetId(meta.(*conns.AWSClient).Region(ctx))
+		d.SetId(meta.(*conns.AWSClient).AccountID(ctx))
 	}
 
 	if err := waitImageBlockPublicAccessState(ctx, conn, state, d.Timeout(schema.TimeoutUpdate)); err != nil {
