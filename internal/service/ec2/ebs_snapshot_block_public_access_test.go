@@ -26,7 +26,7 @@ func TestAccEC2EBSSnapshotBlockPublicAccess_basic(t *testing.T) {
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		WorkingDir:               "/tmp",
-		CheckDestroy:             testAccCheckEBSSnapshotBlockAccessDestroy(ctx),
+		CheckDestroy:             testAccCheckEBSSnapshotBlockPublicAccessDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				ResourceName: resourceName,
@@ -51,7 +51,7 @@ func TestAccEC2EBSSnapshotBlockPublicAccess_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckEBSSnapshotBlockAccessDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckEBSSnapshotBlockPublicAccessDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 		input := ec2.GetSnapshotBlockPublicAccessStateInput{}

@@ -17,16 +17,14 @@ import (
 )
 
 // @SDKResource("aws_ebs_snapshot_block_public_access", name="EBS Snapshot Block Public Access")
+// @SingletonIdentity
+// @Testing(hasExistsFunction=false)
 func resourceEBSSnapshotBlockPublicAccess() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEBSSnapshotBlockPublicAccessPut,
 		ReadWithoutTimeout:   resourceEBSSnapshotBlockPublicAccessRead,
 		UpdateWithoutTimeout: resourceEBSSnapshotBlockPublicAccessPut,
 		DeleteWithoutTimeout: resourceEBSSnapshotBlockPublicAccessDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrState: {
