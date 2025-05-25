@@ -207,7 +207,6 @@ func statusStandardsSubscriptionDelete(ctx context.Context, conn *securityhub.Cl
 }
 
 func waitStandardsSubscriptionCreated(ctx context.Context, conn *securityhub.Client, arn string, timeout time.Duration) (*types.StandardsSubscription, error) {
-
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.StandardsStatusPending),
 		Target:  enum.Slice(types.StandardsStatusReady, types.StandardsStatusIncomplete),
