@@ -948,6 +948,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_ec2_image_block_public_access",
 			Name:     "Image Block Public Access",
 			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Identity: inttypes.GlobalSingletonIdentity(),
 		},
 		{
 			Factory:  resourceInstanceState,
