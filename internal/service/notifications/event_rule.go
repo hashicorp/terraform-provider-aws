@@ -5,7 +5,7 @@ package notifications
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -22,38 +22,30 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/maps"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource("aws_notifications_event_rule", name="Event Rule")
-func newResourceEventRule(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceEventRule{}
+func newEventRuleResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &eventRuleResource{}
 
 	return r, nil
 }
 
-const (
-	ResNameEventRule = "Event Rule"
-)
-
-type resourceEventRule struct {
+type eventRuleResource struct {
 	framework.ResourceWithConfigure
 }
 
-func (r *resourceEventRule) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *eventRuleResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"event_pattern": schema.StringAttribute{
@@ -73,20 +65,18 @@ func (r *resourceEventRule) Schema(ctx context.Context, req resource.SchemaReque
 				},
 			},
 			"notification_configuration_arn": schema.StringAttribute{
-				Required: true,
+				CustomType: fwtypes.ARNType,
+				Required:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			"regions": schema.SetAttribute{
+				CustomType:  fwtypes.SetOfStringType,
 				Required:    true,
 				ElementType: types.StringType,
 				Validators: []validator.Set{
 					setvalidator.SizeAtLeast(1),
-					setvalidator.ValueStringsAre(
-						stringvalidator.LengthBetween(2, 25),
-						stringvalidator.RegexMatches(regexache.MustCompile(`([a-z]{1,2})-([a-z]{1,15}-)+([0-9])`), ""),
-					),
 				},
 			},
 			names.AttrSource: schema.StringAttribute{
@@ -103,198 +93,233 @@ func (r *resourceEventRule) Schema(ctx context.Context, req resource.SchemaReque
 	}
 }
 
-func (r *resourceEventRule) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().NotificationsClient(ctx)
-
-	var plan resourceEventRuleModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
+func (r *eventRuleResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data eventRuleResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
+
+	conn := r.Meta().NotificationsClient(ctx)
 
 	var input notifications.CreateEventRuleInput
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	out, err := conn.CreateEventRule(ctx, &input)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Notifications, create.ErrActionCreating, ResNameEventRule, plan.EventPattern.String(), err),
-			err.Error(),
-		)
-		return
-	}
-	if out == nil || out.Arn == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Notifications, create.ErrActionCreating, ResNameEventRule, plan.EventPattern.String(), nil),
-			errors.New("empty output").Error(),
-		)
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	_, err = waitEventRuleCreated(ctx, conn, plan.ARN.ValueString())
+	output, err := conn.CreateEventRule(ctx, &input)
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Notifications, create.ErrActionWaitingForCreation, ResNameEventRule, plan.EventType.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError("creating User Notifications Event Rule", err.Error())
+
 		return
 	}
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+
+	// Set values for unknowns.
+	arn := aws.ToString(output.Arn)
+	data.ARN = fwflex.StringValueToFramework(ctx, arn)
+
+	if _, err := waitEventRuleCreated(ctx, conn, arn); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for User Notifications Event Rule (%s) create", arn), err.Error())
+
+		return
+	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-func (r *resourceEventRule) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().NotificationsClient(ctx)
-
-	var state resourceEventRuleModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *eventRuleResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data eventRuleResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := findEventRuleByARN(ctx, conn, state.ARN.ValueString())
+	conn := r.Meta().NotificationsClient(ctx)
+
+	output, err := findEventRuleByARN(ctx, conn, data.ARN.ValueString())
+
 	if tfresource.NotFound(err) {
-		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
-		resp.State.RemoveResource(ctx)
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+
 		return
 	}
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Notifications, create.ErrActionReading, ResNameEventRule, state.ARN.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("reading User Notifications Event Rule (%s)", data.ARN.ValueString()), err.Error())
+
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
-	if resp.Diagnostics.HasError() {
+	// Set attributes for import.
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceEventRule) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *eventRuleResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var new, old eventRuleResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().NotificationsClient(ctx)
 
-	var plan, state resourceEventRuleModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	diff, d := flex.Diff(ctx, plan, state)
-	resp.Diagnostics.Append(d...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	if diff.HasChanges() {
+	if !new.EventPattern.Equal(old.EventPattern) || !new.Regions.Equal(old.Regions) {
 		var input notifications.UpdateEventRuleInput
-		resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
-		if resp.Diagnostics.HasError() {
+		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
+		if response.Diagnostics.HasError() {
 			return
 		}
 
-		out, err := conn.UpdateEventRule(ctx, &input)
+		_, err := conn.UpdateEventRule(ctx, &input)
+
 		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.Notifications, create.ErrActionUpdating, ResNameEventRule, plan.ARN.String(), err),
-				err.Error(),
-			)
-			return
-		}
-		if out == nil || out.Arn == nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.Notifications, create.ErrActionUpdating, ResNameEventRule, plan.ARN.String(), nil),
-				errors.New("empty output").Error(),
-			)
+			response.Diagnostics.AddError(fmt.Sprintf("updating User Notifications Event Rule (%s)", new.ARN.ValueString()), err.Error())
+
 			return
 		}
 
-		resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
-		if resp.Diagnostics.HasError() {
+		if _, err := waitEventRuleUpdated(ctx, conn, new.ARN.ValueString()); err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("waiting for User Notifications Event Rule (%s) update", new.ARN.ValueString()), err.Error())
+
 			return
 		}
 	}
 
-	_, err := waitEventRuleUpdated(ctx, conn, plan.ARN.ValueString())
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Notifications, create.ErrActionWaitingForUpdate, ResNameEventRule, plan.ARN.String(), err),
-			err.Error(),
-		)
+	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
+}
+
+func (r *eventRuleResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data eventRuleResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
-}
-
-func (r *resourceEventRule) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().NotificationsClient(ctx)
 
-	var state resourceEventRuleModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+	arn := fwflex.StringValueFromFramework(ctx, data.ARN)
+	input := notifications.DeleteEventRuleInput{
+		Arn: aws.String(arn),
+	}
+	_, err := conn.DeleteEventRule(ctx, &input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
 	}
 
-	input := notifications.DeleteEventRuleInput{
-		Arn: state.ARN.ValueStringPointer(),
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("deleting User Notifications Event Rule (%s)", arn), err.Error())
+
+		return
 	}
 
-	_, err := conn.DeleteEventRule(ctx, &input)
+	if _, err := waitEventRuleDeleted(ctx, conn, arn); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for User Notifications Event Rule (%s) delete", arn), err.Error())
+
+		return
+	}
+}
+
+func (r *eventRuleResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrARN), request, response)
+}
+
+func findEventRuleByARN(ctx context.Context, conn *notifications.Client, arn string) (*notifications.GetEventRuleOutput, error) {
+	input := notifications.GetEventRuleInput{
+		Arn: aws.String(arn),
+	}
+	output, err := conn.GetEventRule(ctx, &input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return
+		return nil, err
+	}
+
+	if output == nil || output.Arn == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func statusEventRule(ctx context.Context, conn *notifications.Client, arn string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findEventRuleByARN(ctx, conn, arn)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
 		}
 
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Notifications, create.ErrActionDeleting, ResNameEventRule, state.ARN.String(), err),
-			err.Error(),
-		)
-		return
-	}
+		if err != nil {
+			return nil, "", err
+		}
 
-	_, err = waitEventRuleDeleted(ctx, conn, state.ARN.ValueString())
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Notifications, create.ErrActionWaitingForDeletion, ResNameEventRule, state.ARN.String(), err),
-			err.Error(),
-		)
-		return
+		allActive := true
+
+		for _, v := range maps.Values(output.StatusSummaryByRegion) {
+			switch status := v.Status; status {
+			// If regions were added/deleted then rule status across regions can be a mix of "CREATING", "DELETING", "UPDATING"
+			// Does not matter which is returned as any of these is valid for waitEventRuleUpdated implementation
+			case awstypes.EventRuleStatusCreating,
+				awstypes.EventRuleStatusUpdating,
+				awstypes.EventRuleStatusDeleting:
+				return output, string(status), nil
+			case awstypes.EventRuleStatusInactive:
+				allActive = false
+			}
+		}
+
+		if allActive {
+			return output, string(awstypes.EventRuleStatusActive), nil
+		}
+
+		return output, string(awstypes.EventRuleStatusInactive), nil
 	}
 }
 
-func (r *resourceEventRule) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrARN), req, resp)
-}
-
-func waitEventRuleCreated(ctx context.Context, conn *notifications.Client, id string) (*notifications.GetEventRuleOutput, error) {
+func waitEventRuleCreated(ctx context.Context, conn *notifications.Client, arn string) (*notifications.GetEventRuleOutput, error) {
+	const (
+		timeout = 10 * time.Minute
+	)
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.EventRuleStatusCreating),
 		Target:                    enum.Slice(awstypes.EventRuleStatusActive, awstypes.EventRuleStatusInactive),
-		Refresh:                   statusEventRule(ctx, conn, id),
-		Timeout:                   10 * time.Minute,
-		NotFoundChecks:            20,
+		Refresh:                   statusEventRule(ctx, conn, arn),
+		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*notifications.GetEventRuleOutput); ok {
-		return out, err
+
+	if output, ok := outputRaw.(*notifications.GetEventRuleOutput); ok {
+		return output, err
 	}
 
 	return nil, err
 }
 
 func waitEventRuleUpdated(ctx context.Context, conn *notifications.Client, id string) (*notifications.GetEventRuleOutput, error) {
+	const (
+		timeout = 10 * time.Minute
+	)
 	stateConf := &retry.StateChangeConf{
 		// If regions were added/removed then rule status across regions can be a mix of "CREATING", "DELETING", "UPDATING"
 		Pending:                   enum.Slice(awstypes.EventRuleStatusCreating, awstypes.EventRuleStatusUpdating, awstypes.EventRuleStatusDeleting),
@@ -306,14 +331,18 @@ func waitEventRuleUpdated(ctx context.Context, conn *notifications.Client, id st
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*notifications.GetEventRuleOutput); ok {
-		return out, err
+
+	if output, ok := outputRaw.(*notifications.GetEventRuleOutput); ok {
+		return output, err
 	}
 
 	return nil, err
 }
 
 func waitEventRuleDeleted(ctx context.Context, conn *notifications.Client, id string) (*notifications.GetEventRuleOutput, error) {
+	const (
+		timeout = 10 * time.Minute
+	)
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.EventRuleStatusDeleting),
 		Target:  []string{},
@@ -322,104 +351,19 @@ func waitEventRuleDeleted(ctx context.Context, conn *notifications.Client, id st
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*notifications.GetEventRuleOutput); ok {
-		return out, err
+
+	if output, ok := outputRaw.(*notifications.GetEventRuleOutput); ok {
+		return output, err
 	}
 
 	return nil, err
 }
 
-func statusEventRule(ctx context.Context, conn *notifications.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
-		out, err := findEventRuleByARN(ctx, conn, id)
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		allActive := true
-		allInactive := true
-
-		for _, status := range maps.Values(out.StatusSummaryByRegion) {
-			switch status.Status {
-			// If regions were added/deleted then rule status across regions can be a mix of "CREATING", "DELETING", "UPDATING"
-			// Does not matter which is returned as any of these is valid for waitEventRuleUpdated implementation
-			case awstypes.EventRuleStatusCreating,
-				awstypes.EventRuleStatusUpdating,
-				awstypes.EventRuleStatusDeleting:
-				return out, string(status.Status), nil
-			case awstypes.EventRuleStatusActive:
-				allInactive = false
-			case awstypes.EventRuleStatusInactive:
-				allActive = false
-			}
-		}
-
-		if allActive {
-			return out, string(awstypes.EventRuleStatusActive), nil
-		}
-		if allInactive {
-			return out, string(awstypes.EventRuleStatusInactive), nil
-		}
-
-		return out, "", nil
-	}
-}
-
-func findEventRuleByARN(ctx context.Context, conn *notifications.Client, arn string) (*notifications.GetEventRuleOutput, error) {
-	input := notifications.GetEventRuleInput{
-		Arn: aws.String(arn),
-	}
-
-	out, err := conn.GetEventRule(ctx, &input)
-	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: &input,
-			}
-		}
-
-		return nil, err
-	}
-
-	if out == nil || out.Arn == nil {
-		return nil, tfresource.NewEmptyResultError(&input)
-	}
-
-	return out, nil
-}
-
-type resourceEventRuleModel struct {
-	ARN                          types.String `tfsdk:"arn"`
-	EventPattern                 types.String `tfsdk:"event_pattern"`
-	EventType                    types.String `tfsdk:"event_type"`
-	NotificationConfigurationARN types.String `tfsdk:"notification_configuration_arn"`
-	Regions                      types.Set    `tfsdk:"regions"`
-	Source                       types.String `tfsdk:"source"`
-}
-
-func sweepEventRules(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	input := notifications.ListEventRulesInput{}
-	conn := client.NotificationsClient(ctx)
-	var sweepResources []sweep.Sweepable
-
-	pages := notifications.NewListEventRulesPaginator(conn, &input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-		if err != nil {
-			return nil, err
-		}
-
-		for _, v := range page.EventRules {
-			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newResourceEventRule, client,
-				sweepfw.NewAttribute(names.AttrARN, aws.ToString(v.Arn))),
-			)
-		}
-	}
-
-	return sweepResources, nil
+type eventRuleResourceModel struct {
+	ARN                          types.String        `tfsdk:"arn"`
+	EventPattern                 types.String        `tfsdk:"event_pattern"`
+	EventType                    types.String        `tfsdk:"event_type"`
+	NotificationConfigurationARN fwtypes.ARN         `tfsdk:"notification_configuration_arn"`
+	Regions                      fwtypes.SetOfString `tfsdk:"regions"`
+	Source                       types.String        `tfsdk:"source"`
 }

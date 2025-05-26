@@ -21,6 +21,29 @@ func RegisterSweepers() {
 	awsv2.Register("aws_notifications_channel_association", sweepChannelAssociations, "aws_notifications_notification_configuration", "aws_notificationscontacts_email_contact")
 }
 
+func sweepEventRules(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.NotificationsClient(ctx)
+	var input notifications.ListEventRulesInput
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := notifications.NewListEventRulesPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.EventRules {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newEventRuleResource, client,
+				framework.NewAttribute(names.AttrARN, aws.ToString(v.Arn))),
+			)
+		}
+	}
+
+	return sweepResources, nil
+}
+
 func sweepNotificationConfigurations(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.NotificationsClient(ctx)
 	var input notifications.ListNotificationConfigurationsInput

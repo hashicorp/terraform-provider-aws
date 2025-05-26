@@ -65,7 +65,7 @@ func TestAccNotificationsNotificationConfiguration_basic(t *testing.T) {
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    testAccNotificationConfigurationImportStateIDFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 			},
 		},
@@ -200,7 +200,7 @@ func TestAccNotificationsNotificationConfiguration_tags(t *testing.T) {
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    testAccNotificationConfigurationImportStateIDFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 			},
 			{
@@ -284,17 +284,6 @@ func testAccCheckNotificationConfigurationExists(ctx context.Context, n string, 
 		*v = *output
 
 		return nil
-	}
-}
-
-func testAccNotificationConfigurationImportStateIDFunc(n string) func(*terraform.State) (string, error) {
-	return func(state *terraform.State) (string, error) {
-		rs, ok := state.RootModule().Resources[n]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", n)
-		}
-
-		return rs.Primary.Attributes[names.AttrARN], nil
 	}
 }
 

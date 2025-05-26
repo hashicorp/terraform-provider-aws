@@ -5,12 +5,10 @@ package notifications_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/notifications"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -18,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfnotifications "github.com/hashicorp/terraform-provider-aws/internal/service/notifications"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -26,7 +23,6 @@ import (
 
 func TestAccNotificationsEventRule_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var eventrule notifications.GetEventRuleOutput
 	rConfigName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rEventPattern := "{\"detail\":{\"state\":{\"value\":[\"ALARM\"]}}}"
@@ -63,7 +59,7 @@ func TestAccNotificationsEventRule_basic(t *testing.T) {
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    testAccNotificationConfigurationImportStateIDFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 			},
 		},
@@ -72,8 +68,7 @@ func TestAccNotificationsEventRule_basic(t *testing.T) {
 
 func TestAccNotificationsEventRule_update(t *testing.T) {
 	ctx := acctest.Context(t)
-
-	var v1, v2 notifications.GetEventRuleOutput
+	var v notifications.GetEventRuleOutput
 	rConfigName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rEventPatternV1 := "{\"detail\":{\"state\":{\"value\":[\"ALARM\"]}}}"
 	rEventPatternV2 := "{\"detail\":{\"state\":{\"value\":[\"OK\"]}}}"
@@ -97,14 +92,13 @@ func TestAccNotificationsEventRule_update(t *testing.T) {
 			{
 				Config: testAccEventRuleConfig_basic(rConfigName, rEventPatternV1, rEventType, rRegion1, rRegion2, rSource),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEventRuleExists(ctx, resourceName, &v1),
+					testAccCheckEventRuleExists(ctx, resourceName, &v),
 				),
 			},
 			{
 				Config: testAccEventRuleConfig_basic(rConfigName, rEventPatternV2, rEventType, rRegion1, rRegion3, rSource),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEventRuleExists(ctx, resourceName, &v2),
-					testAccCheckEventRuleNotRecreated(&v1, &v2),
+					testAccCheckEventRuleExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "event_pattern", rEventPatternV2),
 					resource.TestCheckResourceAttr(resourceName, "regions.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "regions.*", rRegion1),
@@ -166,7 +160,6 @@ func TestAccNotificationsEventRule_disappears(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-
 	var eventrule notifications.GetEventRuleOutput
 	rConfigName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rEventPattern := "{\"detail\":{\"state\":{\"value\":[\"ALARM\"]}}}"
@@ -213,49 +206,38 @@ func testAccCheckEventRuleDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			_, err := tfnotifications.FindEventRuleByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
+
 			if tfresource.NotFound(err) {
-				return nil
-			}
-			if err != nil {
-				return create.Error(names.Notifications, create.ErrActionCheckingDestroyed, tfnotifications.ResNameEventRule, rs.Primary.Attributes[names.AttrARN], err)
+				continue
 			}
 
-			return create.Error(names.Notifications, create.ErrActionCheckingDestroyed, tfnotifications.ResNameEventRule, rs.Primary.Attributes[names.AttrARN], errors.New("not destroyed"))
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("User Notifications Event Rule %s still exists", rs.Primary.Attributes[names.AttrARN])
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckEventRuleExists(ctx context.Context, name string, eventrule *notifications.GetEventRuleOutput) resource.TestCheckFunc {
+func testAccCheckEventRuleExists(ctx context.Context, n string, v *notifications.GetEventRuleOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.Notifications, create.ErrActionCheckingExistence, tfnotifications.ResNameEventRule, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.Notifications, create.ErrActionCheckingExistence, tfnotifications.ResNameEventRule, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).NotificationsClient(ctx)
 
-		resp, err := tfnotifications.FindEventRuleByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
+		output, err := tfnotifications.FindEventRuleByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
+
 		if err != nil {
-			return create.Error(names.Notifications, create.ErrActionCheckingExistence, tfnotifications.ResNameEventRule, rs.Primary.Attributes[names.AttrARN], err)
+			return err
 		}
 
-		*eventrule = *resp
-
-		return nil
-	}
-}
-
-func testAccCheckEventRuleNotRecreated(before, after *notifications.GetEventRuleOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := aws.ToString(before.Arn), aws.ToString(after.Arn); before != after {
-			return create.Error(names.Notifications, create.ErrActionCheckingNotRecreated, tfnotifications.ResNameEventRule, before, errors.New("recreated"))
-		}
+		*v = *output
 
 		return nil
 	}

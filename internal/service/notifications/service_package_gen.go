@@ -28,7 +28,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Name:     "Channel Association",
 		},
 		{
-			Factory:  newResourceEventRule,
+			Factory:  newEventRuleResource,
 			TypeName: "aws_notifications_event_rule",
 			Name:     "Event Rule",
 		},
