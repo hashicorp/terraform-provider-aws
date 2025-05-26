@@ -47,7 +47,7 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
 * `jobTemplateData` - (Required) The job template data which holds values of StartJobRun API request.
 * `kmsKeyArn` - (Optional) The KMS key ARN used to encrypt the job template.
@@ -144,4 +144,4 @@ Using `terraform import`, import EKS job templates using the `id`. For example:
 % terraform import aws_emrcontainers_job_template.example a1b2c3d4e5f6g7h8i9j10k11l
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-40a45aaa72930deebb9754da5bddf771139ffc5f6fcddde32b7b2b44ae90f112 -->
+<!-- cache-key: cdktf-0.20.8 input-b9bc27a793bbbe70f5b89276490d8765515c43fad873ca118e50367df4bd44b1 -->

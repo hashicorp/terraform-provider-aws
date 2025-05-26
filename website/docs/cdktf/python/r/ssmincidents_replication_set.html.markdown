@@ -121,6 +121,13 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
+* `region` - (Required) The Regions that Incident Manager replicates your data to. You can have up to three Regions in your replication set.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+For information about the maximum allowed number of Regions and tag value constraints, see [CreateReplicationSet in the *AWS Systems Manager Incident Manager API Reference*](https://docs.aws.amazon.com/incident-manager/latest/APIReference/API_CreateReplicationSet.html).
+
 ~> **NOTE:** The Region specified by a Terraform provider must always be one of the Regions specified for the replication set. This is especially important when you perform complex update operations.
 
 ~> **NOTE:** After a replication set is created, you can add or delete only one Region at a time.
@@ -131,16 +138,10 @@ class MyConvertedCode(TerraformStack):
 
 ~> **NOTE:** If possible, create all the customer managed keys you need (using the `terraform apply` command) before you create the replication set, or create the keys and replication set in the same `terraform apply` command. Otherwise, to delete a replication set, you must run one `terraform apply` command to delete the replication set and another to delete the AWS KMS keys used by the replication set. Deleting the AWS KMS keys before deleting the replication set results in an error. In that case, you must manually reenable the deleted key using the AWS Management Console before you can delete the replication set.
 
-The `region` configuration block is required and supports the following arguments:
+The `region` configuration block supports the following arguments:
 
 * `name` - (Required) The name of the Region, such as `ap-southeast-2`.
 * `kms_key_arn` - (Optional) The Amazon Resource name (ARN) of the customer managed key. If omitted, AWS manages the AWS KMS keys for you, using an AWS owned key, as indicated by a default value of `DefaultKey`.
-
-The following arguments are optional:
-
-* `tags` - Tags applied to the replication set.
-
-For information about the maximum allowed number of Regions and tag value constraints, see [CreateReplicationSet in the *AWS Systems Manager Incident Manager API Reference*](https://docs.aws.amazon.com/incident-manager/latest/APIReference/API_CreateReplicationSet.html).
 
 ## Attribute Reference
 
@@ -200,4 +201,4 @@ Using `terraform import`, import an Incident Manager replication. For example:
 % terraform import aws_ssmincidents_replication_set.replicationSetName import
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-db40342720668c450b5bd2187447758810506f9aa388358f6b3d9c52cf3d9ebf -->
+<!-- cache-key: cdktf-0.20.8 input-6fa8fbb110dfb740c7b47e28c03e5ba40f0c6228f6e9e879b05822866924595e -->

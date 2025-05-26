@@ -12,6 +12,8 @@ description: |-
 
 Provides a Terraform resource to manage response plans in AWS Systems Manager Incident Manager.
 
+~> NOTE: A response plan implicitly depends on a replication set. If you configured your replication set in Terraform, we recommend you add it to the `dependsOn` argument for the Terraform ResponsePlan Resource.
+
 ## Example Usage
 
 ### Basic Usage
@@ -127,30 +129,22 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-~> NOTE: A response plan implicitly depends on a replication set. If you configured your replication set in Terraform,
-we recommend you add it to the `dependsOn` argument for the Terraform ResponsePlan Resource.
-
-The following arguments are required:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the response plan.
-
-The `incidentTemplate` configuration block is required and supports the following arguments:
-
-* `title` - (Required) The title of a generated incident.
-* `impact` - (Required) The impact value of a generated incident. The following values are supported:
-    * `1` - Severe Impact
-    * `2` - High Impact
-    * `3` - Medium Impact
-    * `4` - Low Impact
-    * `5` - No Impact
-* `dedupeString` - (Optional) A string used to stop Incident Manager from creating multiple incident records for the same incident.
-* `incidentTags` - (Optional) The tags assigned to an incident template. When an incident starts, Incident Manager assigns the tags specified in the template to the incident.
-* `summary` - (Optional) The summary of an incident.
-* `notificationTarget` - (Optional) The Amazon Simple Notification Service (Amazon SNS) targets that this incident notifies when it is updated. The `notificationTarget` configuration block supports the following argument:
-    * `snsTopicArn` - (Required) The ARN of the Amazon SNS topic.
-
-The following arguments are optional:
-
+* `incidentTemplate` - (Required) The `incidentTemplate` configuration block is required and supports the following arguments:
+    * `title` - (Required) The title of a generated incident.
+    * `impact` - (Required) The impact value of a generated incident. The following values are supported:
+        * `1` - Severe Impact
+        * `2` - High Impact
+        * `3` - Medium Impact
+        * `4` - Low Impact
+        * `5` - No Impact
+    * `dedupeString` - (Optional) A string used to stop Incident Manager from creating multiple incident records for the same incident.
+    * `incidentTags` - (Optional) The tags assigned to an incident template. When an incident starts, Incident Manager assigns the tags specified in the template to the incident.
+    * `summary` - (Optional) The summary of an incident.
+    * `notificationTarget` - (Optional) The Amazon Simple Notification Service (Amazon SNS) targets that this incident notifies when it is updated. The `notificationTarget` configuration block supports the following argument:
+        * `snsTopicArn` - (Required) The ARN of the Amazon SNS topic.
 * `tags` - (Optional) The tags applied to the response plan.
 * `displayName` - (Optional) The long format of the response plan name. This field can contain spaces.
 * `chatChannel` - (Optional) The Chatbot chat channel used for collaboration during an incident.
@@ -212,4 +206,4 @@ Using `terraform import`, import an Incident Manager response plan using the res
 % terraform import aws_ssmincidents_response_plan.responsePlanName ARNValue
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-5361abe938254390d796107fc777680b0ac2ec3e08a7c3e24cc29d54aae3c456 -->
+<!-- cache-key: cdktf-0.20.8 input-7c6618b7e59001213d682216c5f894f522d43442da327f87babfed4c0496feff -->
