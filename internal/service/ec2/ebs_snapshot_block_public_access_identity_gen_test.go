@@ -16,12 +16,23 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccEC2EBSEBSSnapshotBlockPublicAccess_Identity_Basic(t *testing.T) {
+func testAccEC2EBSEBSSnapshotBlockPublicAccess_IdentitySerial(t *testing.T) {
+	t.Helper()
+
+	testCases := map[string]func(t *testing.T){
+		acctest.CtBasic:  testAccEC2EBSEBSSnapshotBlockPublicAccess_Identity_Basic,
+		"RegionOverride": testAccEC2EBSEBSSnapshotBlockPublicAccess_Identity_RegionOverride,
+	}
+
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
+
+func testAccEC2EBSEBSSnapshotBlockPublicAccess_Identity_Basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ebs_snapshot_block_public_access.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		CheckDestroy:             testAccCheckEBSSnapshotBlockPublicAccessDestroy(ctx),
@@ -50,13 +61,13 @@ func TestAccEC2EBSEBSSnapshotBlockPublicAccess_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2EBSEBSSnapshotBlockPublicAccess_Identity_RegionOverride(t *testing.T) {
+func testAccEC2EBSEBSSnapshotBlockPublicAccess_Identity_RegionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ebs_snapshot_block_public_access.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		CheckDestroy:             acctest.CheckDestroyNoop,
