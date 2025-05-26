@@ -5737,6 +5737,8 @@ service "notificationscontacts" {
   provider_package_correct = "notificationscontacts"
   doc_prefix               = ["notificationscontacts_"]
   brand                    = "AWS"
+
+  is_global = true
 }
 
 service "oam" {
