@@ -22,16 +22,15 @@ import (
 )
 
 // @SDKResource("aws_iot_event_configurations", name="Event Configurations")
+// @SingletonIdentity
+// @Testing(hasExistsFunction=false)
+// @Testing(checkDestroyNoop=true)
 func resourceEventConfigurations() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEventConfigurationsPut,
 		ReadWithoutTimeout:   resourceEventConfigurationsRead,
 		UpdateWithoutTimeout: resourceEventConfigurationsPut,
 		DeleteWithoutTimeout: schema.NoopContext,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			"event_configurations": {
