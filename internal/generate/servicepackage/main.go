@@ -298,6 +298,9 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			case "SingletonIdentity":
 				d.SingletonIdentity = true
 				d.WrappedImport = true
+
+			case "NoImport":
+				d.WrappedImport = false
 			}
 		}
 	}
@@ -431,7 +434,8 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				} else {
 					v.sdkResources[typeName] = d
 				}
-			case "Region", "Tags", "ArnIdentity", "SingletonIdentity":
+
+			case "Region", "Tags", "ArnIdentity", "SingletonIdentity", "IdentityAttribute", "NoImport":
 				// Handled above.
 			case "ArnFormat", "Testing", "WrappedImport":
 				// Ignored.

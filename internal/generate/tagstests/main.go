@@ -589,6 +589,9 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					hasIdentifierAttribute = true
 				}
 
+			case "NoImport":
+				d.NoImport = true
+
 			case "Testing":
 				args := common.ParseArgs(m[3])
 				if attr, ok := args.Keyword["altRegionProvider"]; ok {

@@ -538,6 +538,9 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					}
 				}
 
+			case "NoImport":
+				d.NoImport = true
+
 			case "Testing":
 				args := common.ParseArgs(m[3])
 

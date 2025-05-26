@@ -24,11 +24,10 @@ import (
 // @SDKResource("aws_ec2_image_block_public_access", name="Image Block Public Access")
 // @Region(global=true)
 // @SingletonIdentity
-// @WrappedImport(false)
+// @NoImport
 // @Testing(checkDestroyNoop=true)
 // @Testing(hasExistsFunction=false)
 // @Testing(generator=false)
-// @Testing(noImport=true)
 func resourceImageBlockPublicAccess() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceImageBlockPublicAccessPut,
