@@ -5,7 +5,7 @@ package notificationscontacts
 
 import (
 	"context"
-	"errors"
+	"fmt"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -16,45 +16,34 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource("aws_notificationscontacts_email_contact", name="Email Contact")
 // @Tags(identifierAttribute="arn")
-func newResourceEmailContact(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceEmailContact{}
+func newEmailContactResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &emailContactResource{}
 
 	return r, nil
 }
 
-const (
-	ResNameEmailContact = "Email Contact"
-)
-
-type resourceEmailContact struct {
+type emailContactResource struct {
 	framework.ResourceWithConfigure
-	framework.WithNoOpUpdate[resourceEmailContactModel]
+	framework.WithNoOpUpdate[emailContactResourceModel]
 }
 
-func (r *resourceEmailContact) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *emailContactResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"email_address": schema.StringAttribute{
@@ -77,180 +66,146 @@ func (r *resourceEmailContact) Schema(ctx context.Context, req resource.SchemaRe
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			names.AttrStatus: schema.StringAttribute{
-				CustomType: fwtypes.StringEnumType[awstypes.EmailContactStatus](),
-				Computed:   true,
-				Default:    stringdefault.StaticString(string(awstypes.EmailContactStatusInactive)),
-			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 	}
 }
 
-func (r *resourceEmailContact) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *emailContactResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data emailContactResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().NotificationsContactsClient(ctx)
 
-	var plan resourceEmailContactModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
+	var inputCEC notificationscontacts.CreateEmailContactInput
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &inputCEC)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
+	inputCEC.Tags = getTagsIn(ctx)
 
-	var input notificationscontacts.CreateEmailContactInput
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	input.Tags = getTagsIn(ctx)
+	output, err := conn.CreateEmailContact(ctx, &inputCEC)
 
-	out, err := conn.CreateEmailContact(ctx, &input)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.NotificationsContacts, create.ErrActionCreating, ResNameEmailContact, plan.EmailAddress.String(), err),
-			err.Error(),
-		)
-		return
-	}
-	if out == nil || out.Arn == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.NotificationsContacts, create.ErrActionCreating, ResNameEmailContact, plan.EmailAddress.String(), nil),
-			errors.New("empty output").Error(),
-		)
-		return
-	}
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+		response.Diagnostics.AddError(fmt.Sprintf("creating User Notifications Contacts Email Contact (%s)", data.Name.ValueString()), err.Error())
 
-	var activateIn notificationscontacts.SendActivationCodeInput
-	activateIn.Arn = out.Arn
-	_, err = conn.SendActivationCode(ctx, &activateIn)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.NotificationsContacts, "activating", ResNameEmailContact, plan.EmailAddress.String(), err),
-			err.Error(),
-		)
 		return
 	}
+
+	// Set values for unknowns.
+	arn := aws.ToString(output.Arn)
+	data.ARN = fwflex.StringValueToFramework(ctx, arn)
+
+	inputSAC := notificationscontacts.SendActivationCodeInput{
+		Arn: aws.String(arn),
+	}
+	_, err = conn.SendActivationCode(ctx, &inputSAC)
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("activating User Notifications Contacts Email Contact (%s)", arn), err.Error())
+
+		return
+	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-func (r *resourceEmailContact) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().NotificationsContactsClient(ctx)
-
-	var state resourceEmailContactModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *emailContactResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data emailContactResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := findEmailContactByARN(ctx, conn, state.ARN.ValueString())
+	conn := r.Meta().NotificationsContactsClient(ctx)
+
+	arn := fwflex.StringValueFromFramework(ctx, data.ARN)
+	output, err := findEmailContactByARN(ctx, conn, arn)
+
 	if tfresource.NotFound(err) {
-		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
-		resp.State.RemoveResource(ctx)
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+
 		return
 	}
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.NotificationsContacts, create.ErrActionReading, ResNameEmailContact, state.ARN.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("reading User Notifications Contacts Email Contact (%s)", arn), err.Error())
+
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
-	state.EmailAddress = flex.StringToFramework(ctx, out.Address)
-	if resp.Diagnostics.HasError() {
+	// Set attributes for import.
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
+	data.EmailAddress = fwflex.StringToFramework(ctx, output.Address)
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceEmailContact) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().NotificationsContactsClient(ctx)
-
-	var state resourceEmailContactModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *emailContactResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data emailContactResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
+
+	conn := r.Meta().NotificationsContactsClient(ctx)
 
 	input := notificationscontacts.DeleteEmailContactInput{
-		Arn: state.ARN.ValueStringPointer(),
+		Arn: fwflex.StringFromFramework(ctx, data.ARN),
+	}
+	_, err := conn.DeleteEmailContact(ctx, &input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return
 	}
 
-	_, err := conn.DeleteEmailContact(ctx, &input)
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return
-		}
+		response.Diagnostics.AddError(fmt.Sprintf("deleting User Notifications Contacts Email Contact (%s)", data.ARN.ValueString()), err.Error())
 
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.NotificationsContacts, create.ErrActionDeleting, ResNameEmailContact, state.ARN.String(), err),
-			err.Error(),
-		)
 		return
 	}
 }
 
-func (r *resourceEmailContact) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrARN), req, resp)
+func (r *emailContactResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrARN), request, response)
 }
 
 func findEmailContactByARN(ctx context.Context, conn *notificationscontacts.Client, arn string) (*awstypes.EmailContact, error) {
 	input := notificationscontacts.GetEmailContactInput{
 		Arn: aws.String(arn),
 	}
+	output, err := conn.GetEmailContact(ctx, &input)
 
-	out, err := conn.GetEmailContact(ctx, &input)
-	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: &input,
-			}
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: &input,
 		}
+	}
 
+	if err != nil {
 		return nil, err
 	}
 
-	if out == nil || out.EmailContact == nil {
+	if output == nil || output.EmailContact == nil {
 		return nil, tfresource.NewEmptyResultError(&input)
 	}
 
-	return out.EmailContact, nil
+	return output.EmailContact, nil
 }
 
-type resourceEmailContactModel struct {
-	ARN          types.String                                    `tfsdk:"arn"`
-	EmailAddress types.String                                    `tfsdk:"email_address"`
-	Name         types.String                                    `tfsdk:"name"`
-	Status       fwtypes.StringEnum[awstypes.EmailContactStatus] `tfsdk:"status"`
-	Tags         tftags.Map                                      `tfsdk:"tags"`
-	TagsAll      tftags.Map                                      `tfsdk:"tags_all"`
-}
-
-func sweepEmailContacts(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	input := notificationscontacts.ListEmailContactsInput{}
-	conn := client.NotificationsContactsClient(ctx)
-	var sweepResources []sweep.Sweepable
-
-	pages := notificationscontacts.NewListEmailContactsPaginator(conn, &input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-		if err != nil {
-			return nil, err
-		}
-
-		for _, v := range page.EmailContacts {
-			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newResourceEmailContact, client,
-				sweepfw.NewAttribute(names.AttrARN, aws.ToString(v.Arn))),
-			)
-		}
-	}
-
-	return sweepResources, nil
+type emailContactResourceModel struct {
+	ARN          types.String `tfsdk:"arn"`
+	EmailAddress types.String `tfsdk:"email_address"`
+	Name         types.String `tfsdk:"name"`
+	Tags         tftags.Map   `tfsdk:"tags"`
+	TagsAll      tftags.Map   `tfsdk:"tags_all"`
 }

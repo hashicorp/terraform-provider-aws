@@ -5,21 +5,22 @@ package notificationscontacts_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/notificationscontacts"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/notificationscontacts/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfnotificationscontacts "github.com/hashicorp/terraform-provider-aws/internal/service/notificationscontacts"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -27,7 +28,6 @@ import (
 
 func TestAccNotificationsContactsEmailContact_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var emailcontact awstypes.EmailContact
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rEmailAddress := acctest.RandomEmailAddress(acctest.RandomDomainName())
@@ -44,22 +44,27 @@ func TestAccNotificationsContactsEmailContact_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckEmailContactDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEmailContactConfig_basic(rName, rEmailAddress, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccEmailContactConfig_basic(rName, rEmailAddress),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEmailContactExists(ctx, resourceName, &emailcontact),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "email_address", rEmailAddress),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "notifications-contacts", regexache.MustCompile(`emailcontact/.+$`)),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.GlobalARNRegexp("notifications-contacts", regexache.MustCompile(`emailcontact/.+$`))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("email_address"), knownvalue.StringExact(rEmailAddress)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+				},
 			},
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    testAccObjectImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 			},
 		},
@@ -68,7 +73,6 @@ func TestAccNotificationsContactsEmailContact_basic(t *testing.T) {
 
 func TestAccNotificationsContactsEmailContact_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var emailcontact awstypes.EmailContact
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rEmailAddress := acctest.RandomEmailAddress(acctest.RandomDomainName())
@@ -85,7 +89,7 @@ func TestAccNotificationsContactsEmailContact_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckEmailContactDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEmailContactConfig_basic(rName, rEmailAddress, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccEmailContactConfig_basic(rName, rEmailAddress),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEmailContactExists(ctx, resourceName, &emailcontact),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfnotificationscontacts.ResourceEmailContact, resourceName),
@@ -101,12 +105,10 @@ func TestAccNotificationsContactsEmailContact_disappears(t *testing.T) {
 	})
 }
 
-func TestAccNotificationsContactsEmailContact_update(t *testing.T) {
+func TestAccNotificationsContactsEmailContact_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-
-	var v1, v2 awstypes.EmailContact
+	var v awstypes.EmailContact
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rNameUpdated := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rEmailAddress := acctest.RandomEmailAddress(acctest.RandomDomainName())
 	resourceName := "aws_notificationscontacts_email_contact.test"
 
@@ -121,31 +123,60 @@ func TestAccNotificationsContactsEmailContact_update(t *testing.T) {
 		CheckDestroy:             testAccCheckEmailContactDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEmailContactConfig_basic(rName, rEmailAddress, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccEmailContactConfig_tags1(rName, rEmailAddress, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEmailContactExists(ctx, resourceName, &v1),
+					testAccCheckEmailContactExists(ctx, resourceName, &v),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
 			},
 			{
-				Config: testAccEmailContactConfig_basic(rName, rEmailAddress, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEmailContactExists(ctx, resourceName, &v2),
-					testAccCheckEmailContactNotRecreated(&v1, &v2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 			},
 			{
-				Config: testAccEmailContactConfig_basic(rNameUpdated, rEmailAddress, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccEmailContactConfig_tags2(rName, rEmailAddress, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdated),
-					resource.TestCheckResourceAttr(resourceName, "email_address", rEmailAddress),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "notifications-contacts", regexache.MustCompile(`emailcontact/.+$`)),
+					testAccCheckEmailContactExists(ctx, resourceName, &v),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+				},
+			},
+			{
+				Config: testAccEmailContactConfig_tags1(rName, rEmailAddress, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEmailContactExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+				},
 			},
 		},
 	})
@@ -161,39 +192,38 @@ func testAccCheckEmailContactDestroy(ctx context.Context) resource.TestCheckFunc
 			}
 
 			_, err := tfnotificationscontacts.FindEmailContactByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
+
 			if tfresource.NotFound(err) {
-				return nil
-			}
-			if err != nil {
-				return create.Error(names.NotificationsContacts, create.ErrActionCheckingDestroyed, tfnotificationscontacts.ResNameEmailContact, rs.Primary.Attributes[names.AttrARN], err)
+				continue
 			}
 
-			return create.Error(names.NotificationsContacts, create.ErrActionCheckingDestroyed, tfnotificationscontacts.ResNameEmailContact, rs.Primary.Attributes[names.AttrARN], errors.New("not destroyed"))
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("User Notifications Contacts Email Contact %s still exists", rs.Primary.Attributes[names.AttrARN])
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckEmailContactExists(ctx context.Context, name string, emailcontact *awstypes.EmailContact) resource.TestCheckFunc {
+func testAccCheckEmailContactExists(ctx context.Context, n string, v *awstypes.EmailContact) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.NotificationsContacts, create.ErrActionCheckingExistence, tfnotificationscontacts.ResNameEmailContact, name, errors.New("not found"))
-		}
-
-		if rs.Primary.Attributes[names.AttrARN] == "" {
-			return create.Error(names.NotificationsContacts, create.ErrActionCheckingExistence, tfnotificationscontacts.ResNameEmailContact, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).NotificationsContactsClient(ctx)
 
-		resp, err := tfnotificationscontacts.FindEmailContactByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
+		output, err := tfnotificationscontacts.FindEmailContactByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
+
 		if err != nil {
-			return create.Error(names.NotificationsContacts, create.ErrActionCheckingExistence, tfnotificationscontacts.ResNameEmailContact, rs.Primary.Attributes[names.AttrARN], err)
+			return err
 		}
 
-		*emailcontact = *resp
+		*v = *output
 
 		return nil
 	}
@@ -214,29 +244,17 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccObjectImportStateIdFunc(resourceName string) func(state *terraform.State) (string, error) {
-	return func(state *terraform.State) (string, error) {
-		rs, ok := state.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("Not Found: %s", resourceName)
-		}
-
-		return rs.Primary.Attributes[names.AttrARN], nil
-	}
-}
-
-func testAccCheckEmailContactNotRecreated(before, after *awstypes.EmailContact) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := aws.ToString(before.Arn), aws.ToString(after.Arn); before != after {
-			return create.Error(names.NotificationsContacts, create.ErrActionCheckingNotRecreated, tfnotificationscontacts.ResNameEmailContact, before, errors.New("recreated"))
-		}
-		return nil
-	}
-}
-
-func testAccEmailContactConfig_basic(rName, rEmail, rTagKey, rTagValue string) string {
+func testAccEmailContactConfig_basic(rName, rEmail string) string {
 	return fmt.Sprintf(`
+resource "aws_notificationscontacts_email_contact" "test" {
+  name          = %[1]q
+  email_address = %[2]q
+}
+`, rName, rEmail)
+}
 
+func testAccEmailContactConfig_tags1(rName, rEmail, tag1Key, tag1Value string) string {
+	return fmt.Sprintf(`
 resource "aws_notificationscontacts_email_contact" "test" {
   name          = %[1]q
   email_address = %[2]q
@@ -245,5 +263,19 @@ resource "aws_notificationscontacts_email_contact" "test" {
     %[3]q = %[4]q
   }
 }
-`, rName, rEmail, rTagKey, rTagValue)
+`, rName, rEmail, tag1Key, tag1Value)
+}
+
+func testAccEmailContactConfig_tags2(rName, rEmail, tag1Key, tag1Value, tag2Key, tag2Value string) string {
+	return fmt.Sprintf(`
+resource "aws_notificationscontacts_email_contact" "test" {
+  name          = %[1]q
+  email_address = %[2]q
+
+  tags = {
+    %[3]q = %[4]q
+    %[5]q = %[6]q
+  }
+}
+`, rName, rEmail, tag1Key, tag1Value, tag2Key, tag2Value)
 }

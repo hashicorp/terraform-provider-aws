@@ -23,7 +23,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory:  newResourceEmailContact,
+			Factory:  newEmailContactResource,
 			TypeName: "aws_notificationscontacts_email_contact",
 			Name:     "Email Contact",
 			Tags: &types.ServicePackageResourceTags{

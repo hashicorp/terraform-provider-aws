@@ -5,7 +5,7 @@ package notificationscontacts
 
 // Exports for use in tests only.
 var (
-	ResourceEmailContact = newResourceEmailContact
+	ResourceEmailContact = newEmailContactResource
 
 	FindEmailContactByARN = findEmailContactByARN
 )

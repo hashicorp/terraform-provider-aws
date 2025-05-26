@@ -7,7 +7,7 @@ aws_notifications_event_rule
 ```
 
 ```release-note:new-resource
-aws_notifications_contacts_email
+aws_notificationscontacts_email_contact
 ```
 
 ```release-note:new-resource
