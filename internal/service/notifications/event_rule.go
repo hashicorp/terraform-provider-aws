@@ -325,8 +325,7 @@ func waitEventRuleUpdated(ctx context.Context, conn *notifications.Client, id st
 		Pending:                   enum.Slice(awstypes.EventRuleStatusCreating, awstypes.EventRuleStatusUpdating, awstypes.EventRuleStatusDeleting),
 		Target:                    enum.Slice(awstypes.EventRuleStatusActive, awstypes.EventRuleStatusInactive),
 		Refresh:                   statusEventRule(ctx, conn, id),
-		Timeout:                   10 * time.Minute,
-		NotFoundChecks:            20,
+		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}
 
@@ -347,7 +346,7 @@ func waitEventRuleDeleted(ctx context.Context, conn *notifications.Client, id st
 		Pending: enum.Slice(awstypes.EventRuleStatusDeleting),
 		Target:  []string{},
 		Refresh: statusEventRule(ctx, conn, id),
-		Timeout: 10 * time.Minute,
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)

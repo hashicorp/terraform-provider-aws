@@ -70,7 +70,7 @@ This resource exports the following attributes in addition to the arguments abov
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to
-import User Notifications Notification Configuration using the ARN. For example:
+import User Notifications Notification Configuration using the `arn`. For example:
 
 ```terraform
 import {
@@ -79,7 +79,7 @@ import {
 }
 ```
 
-Using `terraform import`, import User Notifications Notification Configuration using the ARN. For example:
+Using `terraform import`, import User Notifications Notification Configuration using the `arn`. For example:
 
 ```console
 % terraform import aws_notifications_notification_configuration.example arn:aws:notifications::123456789012:configuration/abcdef1234567890abcdef1234567890
