@@ -316,6 +316,7 @@ type ResourceDatum struct {
 	ARNFormat                   string
 	ARNAttribute                string
 	IsGlobal                    bool
+	isSingleton                 bool
 	HasRegionOverrideTest       bool
 }
 
@@ -353,8 +354,12 @@ func (d ResourceDatum) IsARNIdentity() bool {
 	return d.ARNAttribute != ""
 }
 
+func (d ResourceDatum) IsGlobalSingleton() bool {
+	return d.isSingleton && d.IsGlobal
+}
+
 func (d ResourceDatum) IsRegionalSingleton() bool {
-	return !d.IsGlobal && d.idAttrDuplicates == "region"
+	return d.isSingleton && !d.IsGlobal
 }
 
 func (d ResourceDatum) GenerateRegionOverrideTest() bool {
@@ -520,7 +525,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 			case "SingletonIdentity":
 				hasIdentity = true
-				d.idAttrDuplicates = "region"
+				d.isSingleton = true
 
 			case "Region":
 				args := common.ParseArgs(m[3])
@@ -741,6 +746,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		})
 		d.additionalTfVars["certificate_pem"] = "certificatePEM"
 		d.additionalTfVars["private_key_pem"] = "privateKeyPEM"
+	}
+
+	if d.IsRegionalSingleton() {
+		d.idAttrDuplicates = "region"
 	}
 
 	if hasIdentity {
