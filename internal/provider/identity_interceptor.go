@@ -5,7 +5,6 @@ package provider
 
 import (
 	"context"
-	"errors"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/importer"
@@ -37,10 +36,9 @@ func arnIdentityResourceImporter(attrName string, isGlobal bool) *schema.Resourc
 
 func singletonIdentityResourceImporter(isGlobal bool) *schema.ResourceImporter {
 	if isGlobal {
+		// Historically, we haven't validated *any* Import ID value for Global Singletons
 		return &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				return nil, errors.New("Shared Global Singleton resource import not yet implemented")
-			},
+			StateContext: schema.ImportStatePassthroughContext,
 		}
 	} else {
 		return &schema.ResourceImporter{
