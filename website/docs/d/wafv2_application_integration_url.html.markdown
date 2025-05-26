@@ -19,9 +19,8 @@ data "aws_wafv2_application_integration_url" "example" {}
 
 This data source does not support any arguments.
 
-
 ## Attribute Reference
 
-This data source exports the following attributes:
+This data source exports the following attributes in addition to the arguments above:
 
 * `url` - The Application Integration URL.
