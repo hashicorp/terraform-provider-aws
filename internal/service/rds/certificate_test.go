@@ -24,6 +24,7 @@ func TestAccRDSCertificate_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:      testAccCertificate_basic,
 		acctest.CtDisappears: testAccCertificate_disappears,
+		"Identity":           testAccRDSCertificate_IdentitySerial,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)

@@ -286,6 +286,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_rds_certificate",
 			Name:     "Default Certificate",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingletonIdentity(),
+			Import: inttypes.Import{
+				WrappedImport: true,
+			},
 		},
 		{
 			Factory:  resourceCluster,
