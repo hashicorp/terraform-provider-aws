@@ -25,7 +25,7 @@ func populateFromResourceState(format string, state *tfjson.StateResource) (stri
 			var param string
 			param, remaining, found = strings.Cut(remaining, "}")
 			if !found {
-				return "", fmt.Errorf("missing closing '}' in format %q", remaining)
+				return "", fmt.Errorf("missing closing '}' in format %q", format)
 			}
 
 			attr, ok := state.AttributeValues[param]

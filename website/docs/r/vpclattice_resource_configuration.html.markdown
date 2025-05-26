@@ -86,6 +86,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `allow_association_to_shareable_service_network` (Optional) Allow or Deny the association of this resource to a shareable service network.
 * `protocol` - (Optional) Protocol for the Resource `TCP` is currently the only supported value.  MUST be specified if `resource_configuration_group_id` is not.
 * `resource_configuration_group_id` (Optional) ID of Resource Configuration where `type` is `CHILD`.
@@ -99,6 +100,7 @@ One of `dns_resource`, `ip_resource`, `arn_resource` must be specified.
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `arn_resource` - (Optional) Resource DNS Configuration. See [`arn_resource` Block](#arn_resource-block) for details.
 * `dns_resource` - (Optional) Resource DNS Configuration. See [`dns_resource` Block](#dns_resource-block) for details.
 * `ip_resource` - (Optional) Resource DNS Configuration. See [`ip_resource` Block](#ip_resource-block) for details.

@@ -54,6 +54,13 @@ func resourceImageVersion() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"aliases": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 			"base_image": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -153,6 +160,10 @@ func resourceImageVersionCreate(ctx context.Context, d *schema.ResourceData, met
 		input.ProgrammingLang = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("aliases"); ok && v.(*schema.Set).Len() > 0 {
+		input.Aliases = flex.ExpandStringValueSet(v.(*schema.Set))
+	}
+
 	if _, err := conn.CreateImageVersion(ctx, &input); err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Image Version %s: %s", name, err)
 	}
@@ -208,6 +219,17 @@ func resourceImageVersionRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("ml_framework", image.MLFramework)
 	d.Set("programming_lang", image.ProgrammingLang)
 
+	// The DescribeImageVersion API response does not include aliases, so these must
+	// be fetched separately using the ListAliases API
+	aliases, err := findImageVersionAliasesByTwoPartKey(ctx, conn, name, version)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading aliases for SageMaker AI Image Version (%s): %s", d.Id(), err)
+	}
+
+	if err := d.Set("aliases", aliases); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting aliases: %s", err)
+	}
+
 	return diags
 }
 
@@ -251,6 +273,21 @@ func resourceImageVersionUpdate(ctx context.Context, d *schema.ResourceData, met
 		input.ProgrammingLang = aws.String(d.Get("programming_lang").(string))
 	}
 
+	if d.HasChange("aliases") {
+		// For UpdateImageVersion, we need to use AliasesToAdd and AliasesToDelete
+		// instead of Aliases directly
+		o, n := d.GetChange("aliases")
+		os, ns := o.(*schema.Set), n.(*schema.Set)
+		add, del := flex.ExpandStringValueSet(ns.Difference(os)), flex.ExpandStringValueSet(os.Difference(ns))
+
+		if len(add) > 0 {
+			input.AliasesToAdd = add
+		}
+		if len(del) > 0 {
+			input.AliasesToDelete = del
+		}
+	}
+
 	if _, err := conn.UpdateImageVersion(ctx, &input); err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating SageMaker AI Image Version (%s): %s", d.Id(), err)
 	}
@@ -265,12 +302,12 @@ func resourceImageVersionDelete(ctx context.Context, d *schema.ResourceData, met
 	name := d.Get("image_name").(string)
 	version := d.Get(names.AttrVersion).(int)
 
-	input := &sagemaker.DeleteImageVersionInput{
+	input := sagemaker.DeleteImageVersionInput{
 		ImageName: aws.String(name),
 		Version:   aws.Int32(int32(version)),
 	}
 
-	if _, err := conn.DeleteImageVersion(ctx, input); err != nil {
+	if _, err := conn.DeleteImageVersion(ctx, &input); err != nil {
 		if errs.IsAErrorMessageContains[*awstypes.ResourceNotFound](err, "does not exist") {
 			return diags
 		}
@@ -342,6 +379,32 @@ func findImageVersionByTwoPartKey(ctx context.Context, conn *sagemaker.Client, n
 	return output, nil
 }
 
+func findImageVersionAliasesByTwoPartKey(ctx context.Context, conn *sagemaker.Client, name string, version int) ([]string, error) {
+	input := sagemaker.ListAliasesInput{
+		ImageName: aws.String(name),
+		Version:   aws.Int32(int32(version)),
+	}
+
+	output, err := conn.ListAliases(ctx, &input)
+
+	if errs.IsAErrorMessageContains[*awstypes.ResourceNotFound](err, "does not exist") {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.SageMakerImageVersionAliases, nil
+}
+
 // expandImageVersionResourceID wraps flex.ExpandResourceId and handles conversion
 // of the version portion to an integer
 func expandImageVersionResourceID(id string) (string, int, error) {
@@ -353,7 +416,7 @@ func expandImageVersionResourceID(id string) (string, int, error) {
 	name := parts[0]
 	version, err := strconv.Atoi(parts[1])
 	if err != nil {
-		return name, version, err
+		return name, 0, err
 	}
 
 	return name, version, nil

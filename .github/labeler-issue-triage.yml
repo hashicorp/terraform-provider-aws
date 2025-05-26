@@ -497,6 +497,10 @@ service/networkmonitor:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_networkmonitor_'
 service/nimble:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_nimble_'
+service/notifications:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_notifications_'
+service/notificationscontacts:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_notificationscontacts_'
 service/oam:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_oam_'
 service/opensearch:

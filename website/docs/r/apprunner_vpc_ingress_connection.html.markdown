@@ -33,6 +33,7 @@ resource "aws_apprunner_vpc_ingress_connection" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) A name for the VPC Ingress Connection resource. It must be unique across all the active VPC Ingress Connections in your AWS account in the AWS Region.
 * `service_arn` - (Required) The Amazon Resource Name (ARN) for this App Runner service that is used to create the VPC Ingress Connection resource.
 * `ingress_vpc_configuration` - (Required) Specifications for the customer’s Amazon VPC and the related AWS PrivateLink VPC endpoint that are used to create the VPC Ingress Connection resource. See [Ingress VPC Configuration](#ingress-vpc-configuration) below for more details.

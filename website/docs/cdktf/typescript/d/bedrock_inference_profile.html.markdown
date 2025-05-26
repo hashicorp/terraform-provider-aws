@@ -48,7 +48,7 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following argument are required:
+This data source supports the following arguments:
 
 - `inferenceProfileId` – (Required) Inference Profile identifier.
 
@@ -69,4 +69,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `modelArn` - The Amazon Resource Name (ARN) of the model.
 
-<!-- cache-key: cdktf-0.20.8 input-7c7de44da024dbff139972e27e2f73110a1761ce08ae4cfcbe48ef644e38424c -->
+<!-- cache-key: cdktf-0.20.8 input-21ff245daf6250d6f969f7e8c1d8730e243e66e3d832a82c902bc826eef7eda6 -->

@@ -316,6 +316,7 @@ resource "aws_wafv2_rule_group" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `capacity` - (Required, Forces new resource) The web ACL capacity units (WCUs) required for this rule group. See [here](https://docs.aws.amazon.com/waf/latest/APIReference/API_CreateRuleGroup.html#API_CreateRuleGroup_RequestSyntax) for general information and [here](https://docs.aws.amazon.com/waf/latest/developerguide/waf-rule-statements-list.html) for capacity specific information.
 * `custom_response_body` - (Optional) Defines custom response bodies that can be referenced by `custom_response` actions. See [Custom Response Body](#custom-response-body) below for details.
 * `description` - (Optional) A friendly description of the rule group.
@@ -581,7 +582,7 @@ The part of a web request that you want AWS WAF to inspect. Include the single `
 
 The `field_to_match` block supports the following arguments:
 
-~> **NOTE:** Only one of `all_query_arguments`, `body`, `cookies`, `header_order`, `headers`, `json_body`, `method`, `query_string`, `single_header`, `single_query_argument`, or `uri_path` can be specified.
+~> **NOTE:** Only one of `all_query_arguments`, `body`, `cookies`, `header_order`, `headers`, `json_body`, `method`, `query_string`, `single_header`, `single_query_argument`, `uri_fragment` or `uri_path` can be specified.
 An empty configuration block `{}` should be used when specifying `all_query_arguments`, `body`, `method`, or `query_string` attributes.
 
 * `all_query_arguments` - (Optional) Inspect all query arguments.
@@ -596,6 +597,7 @@ An empty configuration block `{}` should be used when specifying `all_query_argu
 * `query_string` - (Optional) Inspect the query string. This is the part of a URL that appears after a `?` character, if any.
 * `single_header` - (Optional) Inspect a single header. See [Single Header](#single-header) below for details.
 * `single_query_argument` - (Optional) Inspect a single query argument. See [Single Query Argument](#single-query-argument) below for details.
+* `uri_fragment` - (Optional) Inspect the part of a URL that follows the "#" symbol, providing additional information about the resource. See [URI Fragment](#uri-fragment) below for details.
 * `uri_path` - (Optional) Inspect the request URI path. This is the part of a web request that identifies a resource, for example, `/images/daily-ad.jpg`.
 
 ### Forwarded IP Config
@@ -676,6 +678,14 @@ Inspect a single query argument. Provide the name of the query argument to inspe
 The `single_query_argument` block supports the following arguments:
 
 * `name` - (Optional) The name of the query header to inspect. This setting must be provided as lower case characters.
+
+### URI Fragment
+
+Inspect the part of a URL that follows the "#" symbol, providing additional information about the resource.
+
+The `uri_fragment` block supports the following arguments:
+
+* `fallback_behavior` - (Optional) What AWS WAF should do if it fails to completely parse the JSON body. Valid values are `MATCH` (default) and `NO_MATCH`.
 
 ### Cookies
 

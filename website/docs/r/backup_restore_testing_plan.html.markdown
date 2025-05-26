@@ -29,8 +29,9 @@ resource "aws_backup_restore_testing_plan" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` (Required): The name of the restore testing plan. Must be between 1 and 50 characters long and contain only alphanumeric characters and underscores.
 * `schedule_expression` (Required): The schedule expression for the restore testing plan.
 * `schedule_expression_timezone` (Optional): The timezone for the schedule expression. If not provided, the state value will be used.

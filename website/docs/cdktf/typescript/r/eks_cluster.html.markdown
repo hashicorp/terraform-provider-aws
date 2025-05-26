@@ -63,7 +63,7 @@ class MyConvertedCode extends TerraformStack {
       },
       dependsOn: [clusterAmazonEksClusterPolicy],
       name: "example",
-      roleArn: Token.asString(awsIamRoleExample.arn),
+      roleArn: cluster.arn,
       version: "1.31",
       vpcConfig: {
         subnetIds: [az1.id, az2.id, az3.id],
@@ -346,7 +346,7 @@ class MyConvertedCode extends TerraformStack {
         controlPlaneInstanceType: "m5.large",
         outpostArns: [Token.asString(example.arn)],
       },
-      roleArn: Token.asString(awsIamRoleExample.arn),
+      roleArn: cluster.arn,
       version: "1.31",
       vpcConfig: {
         endpointPrivateAccess: true,
@@ -574,4 +574,4 @@ Using `terraform import`, import EKS Clusters using the `name`. For example:
 % terraform import aws_eks_cluster.my_cluster my_cluster
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-a809599a5fdfc173a7ce3ac8112cc24c0cf11b3b89570945b88acc1b4f4a2cf7 -->
+<!-- cache-key: cdktf-0.20.8 input-ff155908af1723e13fc646d53e0e6adaefe553c402abbd7a84fbb2e4ebd88f52 -->

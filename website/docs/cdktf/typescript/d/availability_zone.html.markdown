@@ -99,15 +99,17 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available
-availability zones. The given filters must match exactly one availability
-zone whose data will be exported as attributes.
+This data source supports the following arguments:
 
 * `allAvailabilityZones` - (Optional) Set to `true` to include all Availability Zones and Local Zones regardless of your opt in status.
 * `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
 * `name` - (Optional) Full name of the availability zone to select.
 * `state` - (Optional) Specific availability zone state to require. May be any of `"available"`, `"information"` or `"impaired"`.
 * `zoneId` - (Optional) Zone ID of the availability zone to select.
+
+The arguments of this data source act as filters for querying the available
+availability zones. The given filters must match exactly one availability
+zone whose data will be exported as attributes.
 
 ### filter Configuration Block
 
@@ -137,4 +139,4 @@ For Local and Wavelength Zones this is a longer string, for example `wl1-sfo-wlz
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.8 input-862d7a30e7b7fec1243f9a3afe7925988e240b4d36970fb4f9743ee1e9a647b3 -->
+<!-- cache-key: cdktf-0.20.8 input-23c522207afbf0542efcd6538cbfdd58692378558f2d7c6f0ea0111906139c9f -->

@@ -131,15 +131,81 @@ resource "aws_cloudwatch_event_connection" "test" {
 }
 ```
 
+## Example Usage CMK Encryption
+
+```terraform
+data "aws_caller_identity" "current" {}
+
+data "aws_partition" "current" {}
+
+resource "aws_kms_key" "test" {
+  deletion_window_in_days = 7
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Id      = "key-policy-example"
+    Statement = [
+      {
+        Sid    = "Enable IAM User Permissions"
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
+        },
+        Action   = "kms:*"
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow use of the key"
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
+        },
+        Action = [
+          "kms:DescribeKey",
+          "kms:Decrypt",
+          "kms:GenerateDataKey"
+        ],
+        Resource = "*"
+        Condition = {
+          StringLike = {
+            "kms:ViaService" = "secretsmanager.*.amazonaws.com"
+            "kms:EncryptionContext:SecretARN" = [
+              "arn:aws:secretsmanager:*:*:secret:events!connection/*"
+            ]
+          }
+        }
+      }
+    ]
+  })
+  tags = {
+    EventBridgeApiDestinations = "true"
+  }
+}
+
+resource "aws_cloudwatch_event_connection" "test" {
+  name               = "ngrok-connection"
+  description        = "A connection description"
+  authorization_type = "BASIC"
+  auth_parameters {
+    basic {
+      username = "user"
+      password = "Pass1234!"
+    }
+  }
+  kms_key_identifier = aws_kms_key.example.id
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
 
-* `name` - (Required) The name of the new connection. Maximum of 64 characters consisting of numbers, lower/upper case letters, .,-,_.
-* `description` - (Optional) Enter a description for the connection. Maximum of 512 characters.
-* `authorization_type` - (Required) Choose the type of authorization to use for the connection. One of `API_KEY`,`BASIC`,`OAUTH_CLIENT_CREDENTIALS`.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `name` - (Required) The name for the connection. Maximum of 64 characters consisting of numbers, lower/upper case letters, .,-,_.
+* `description` - (Optional) Description for the connection. Maximum of 512 characters.
+* `authorization_type` - (Required) Type of authorization to use for the connection. One of `API_KEY`,`BASIC`,`OAUTH_CLIENT_CREDENTIALS`.
 * `auth_parameters` - (Required) Parameters used for authorization. A maximum of 1 are allowed. Documented below.
-* `invocation_connectivity_parameters` - (Optional) The parameters to use for invoking a private API. Documented below.
+* `invocation_connectivity_parameters` - (Optional) Parameters to use for invoking a private API. Documented below.
+* `kms_key_identifier` - (Optional) Identifier of the AWS KMS customer managed key for EventBridge to use, if you choose to use a customer managed key to encrypt this connection. The identifier can be the key Amazon Resource Name (ARN), KeyId, key alias, or key alias ARN.
 
 `auth_parameters` support the following:
 

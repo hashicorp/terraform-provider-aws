@@ -34,6 +34,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -235,7 +236,7 @@ func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	input.Attributes = flex.ExpandStringyValueMap(attributes)
 
 	// create is 2 phase: 1. create, 2. wait for propagation
-	deadline := tfresource.NewDeadline(d.Timeout(schema.TimeoutCreate))
+	deadline := inttypes.NewDeadline(d.Timeout(schema.TimeoutCreate))
 
 	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate)/2, func() (any, error) {
 		return conn.CreateQueue(ctx, input)

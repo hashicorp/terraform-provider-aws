@@ -42,6 +42,8 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `restApiId` - (Required) Identifier of the associated REST API.
 * `stageName` - (Required) Name of the Stage that will be exported.
 * `sdkType` - (Required) Language for the generated SDK. Currently `java`, `javascript`, `android`, `objectivec` (for iOS), `swift` (for iOS), and `ruby` are supported.
@@ -56,4 +58,4 @@ This data source exports the following attributes in addition to the arguments a
 * `contentType` - Content-type header value in the HTTP response.
 * `contentDisposition` - Content-disposition header value in the HTTP response.
 
-<!-- cache-key: cdktf-0.20.8 input-ed1f26956d947879c351283b69f137259d03aa3d3365cfd1ed2dbc55a4d3774e -->
+<!-- cache-key: cdktf-0.20.8 input-b2a527a47745a3b23769fbb1c2de546e8642bea74eadf6654cee83946256e413 -->

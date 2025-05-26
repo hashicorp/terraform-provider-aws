@@ -44,6 +44,8 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `name` - (Required) Name for the alias you are creating. Pattern: `(?!^[0-9]+$)([a-zA-Z0-9-_]+)`
 * `description` - (Optional) Description of the alias.
 * `function_name` - (Required) Lambda Function name or ARN.
@@ -90,4 +92,4 @@ Using `terraform import`, import Lambda Function Aliases using the `function_nam
 % terraform import aws_lambda_alias.test_lambda_alias my_test_lambda_function/my_alias
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-8fb769e7276158548fab5fb93af4f2a28e9364558792a79cc5b94ffb6bf2c452 -->
+<!-- cache-key: cdktf-0.20.8 input-0f9bef51acc1dcccec16d11b62dcdcec88d517b7e17979d9f993384e0be12b6e -->

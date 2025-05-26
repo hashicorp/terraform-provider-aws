@@ -102,6 +102,7 @@ resource "aws_lightsail_database" "test" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `relational_database_name` - (Required) The name to use for your new Lightsail database resource. Names be unique within each AWS Region in your Lightsail account.
 * `availability_zone` - The Availability Zone in which to create your new database. Use the us-east-2a case-sensitive format.
 * `master_database_name` - (Required) The name of the master database created when the Lightsail database resource is created.

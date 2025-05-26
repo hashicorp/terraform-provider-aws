@@ -133,6 +133,7 @@ resource "aws_appflow_flow" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the flow.
 * `destination_flow_config` - (Required) A [Destination Flow Config](#destination-flow-config) that controls how Amazon AppFlow places data in the destination connector.
 * `source_flow_config` - (Required) The [Source Flow Config](#source-flow-config) that controls how Amazon AppFlow retrieves data from the source connector.
@@ -211,6 +212,7 @@ EventBridge, Honeycode, and Marketo destination properties all support the follo
 * `error_handling_config` - (Optional) Settings that determine how Amazon AppFlow handles an error when placing data in the destination. See [Error Handling Config](#error-handling-config) for more details.
 * `id_field_names` - (Optional) Name of the field that Amazon AppFlow uses as an ID when performing a write operation such as update or delete.
 * `write_operation_type` - (Optional) This specifies the type of write operation to be performed in Salesforce. When the value is `UPSERT`, then `id_field_names` is required. Valid values are `INSERT`, `UPSERT`, `UPDATE`, and `DELETE`.
+* `data_transfer_api` - (Optional) Specifies which Salesforce API is used by Amazon AppFlow when your flow transfers data to Salesforce.
 
 ##### SAPOData Destination Properties
 

@@ -34,6 +34,7 @@ resource "aws_lambda_alias" "test_lambda_alias" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name for the alias you are creating. Pattern: `(?!^[0-9]+$)([a-zA-Z0-9-_]+)`
 * `description` - (Optional) Description of the alias.
 * `function_name` - (Required) Lambda Function name or ARN.

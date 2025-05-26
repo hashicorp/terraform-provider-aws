@@ -48,6 +48,8 @@ Upgrade topics:
 - [Resource `aws_alb_target_group`](#typenullablebool-validation-update)
 - [Resource `aws_api_gateway_account`](#resource-aws_api_gateway_account)
 - [Resource `aws_api_gateway_deployment`](#resource-aws_api_gateway_deployment)
+- [Resource `aws_appflow_connector_profile`](#resource-aws_appflow_connector_profile)
+- [Resource `aws_appflow_flow`](#resource-aws_appflow_flow)
 - [Resource `aws_batch_compute_environment`](#resource-aws_batch_compute_environment)
 - [Resource `aws_batch_job_queue`](#resource-aws_batch_job_queue)
 - [Resource `aws_bedrock_model_invocation_logging_configuration`](#resource-aws_bedrock_model_invocation_logging_configuration)
@@ -434,6 +436,14 @@ Import the existing stage, replacing `rest_api_id` and `stage_name` with your va
 terraform import aws_api_gateway_stage.prod rest_api_id/stage_name
 ```
 
+## Resource `aws_appflow_connector_profile`
+
+Importing an `aws_appflow_connector_profile` resource now uses the `name` of the Connector Profile.
+
+## Resource `aws_appflow_flow`
+
+Importing an `aws_appflow_flow` resource now uses the `name` of the Flow.
+
 ## Resource `aws_batch_compute_environment`
 
 Replace any usage of `compute_environment_name` with `name` and `compute_environment_name_prefix` with `name_prefix` as they have been renamed.
@@ -606,6 +616,7 @@ Treat the `key_attributes` and `key_attributes.key_modes_of_use` as lists of nes
 
 ## Resource `aws_redshift_cluster`
 
+* `encrypted` now defaults to `true`.
 * `publicly_accessible` now defaults to `false`.
 * Remove `snapshot_copy`—it is no longer supported. Use the `aws_redshift_snapshot_copy` resource instead.
 * Remove `logging`—it is no longer supported. Use the `aws_redshift_logging` resource instead.

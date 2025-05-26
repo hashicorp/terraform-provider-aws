@@ -37,15 +37,17 @@ resource "aws_lightsail_instance_public_ports" "test" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `instance_name` - (Required) Name of the Lightsail Instance.
 * `port_info` - (Required) Configuration block with port information. AWS closes all currently open ports that are not included in the `port_info`. Detailed below.
 
 ### port_info
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `from_port` - (Required) First port in a range of open ports on an instance.
 * `protocol` - (Required) IP protocol name. Valid values are `tcp`, `all`, `udp`, and `icmp`.
 * `to_port` - (Required) Last port in a range of open ports on an instance.

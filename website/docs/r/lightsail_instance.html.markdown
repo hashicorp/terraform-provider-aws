@@ -69,6 +69,7 @@ resource "aws_lightsail_instance" "test" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the Lightsail Instance. Names must be unique within each AWS Region in your Lightsail account.
 * `availability_zone` - (Required) The Availability Zone in which to create your instance. A
   list of available zones can be obtained using the AWS CLI command:

@@ -229,6 +229,7 @@ resource "aws_lambda_permission" "logging" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `action` - (Required) The AWS Lambda action you want to allow in this statement. (e.g., `lambda:InvokeFunction`)
 * `event_source_token` - (Optional) The Event Source Token to validate.  Used with [Alexa Skills][1].
 * `function_name` - (Required) Name of the Lambda function whose resource policy you are updating
@@ -237,7 +238,7 @@ This resource supports the following arguments:
 * `qualifier` - (Optional) Query parameter to specify function version or alias name. The permission will then apply to the specific qualified ARN e.g., `arn:aws:lambda:aws-region:acct-id:function:function-name:2`
 * `source_account` - (Optional) This parameter is used when allowing cross-account access, or for S3 and SES. The AWS account ID (without a hyphen) of the source owner.
 * `source_arn` - (Optional) When the principal is an AWS service, the ARN of the specific resource within that service to grant permission to.
-  Without this, any resource from `principal` will be granted permission – even if that resource is from another account.
+  Without this, any resource from `principal` will be granted permission - even if that resource is from another account.
   For S3, this should be the ARN of the S3 Bucket.
   For EventBridge events, this should be the ARN of the EventBridge Rule.
   For API Gateway, this should be the ARN of the API, as described [here][2].

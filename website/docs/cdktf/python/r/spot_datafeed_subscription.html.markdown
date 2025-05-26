@@ -43,6 +43,8 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `bucket` - (Required) The Amazon S3 bucket in which to store the Spot instance data feed.
 * `prefix` - (Optional) Path of folder inside bucket to place spot pricing data.
 
@@ -75,4 +77,4 @@ Using `terraform import`, import a Spot Datafeed Subscription using the word `sp
 % terraform import aws_spot_datafeed_subscription.mysubscription spot-datafeed-subscription
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-70bf26be611a3ee0c49d03716734469d118e9b44f2ed7494fad6b135c57c3c2e -->
+<!-- cache-key: cdktf-0.20.8 input-1886fb28c68fc388fad644bd97360c90f1bab507d2e67777f15d8005479e2a3f -->

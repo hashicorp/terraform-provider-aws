@@ -3181,11 +3181,9 @@ func testAccPipeConfig_basicSQSSourceRedshiftTarget(rName string) string {
 	return acctest.ConfigCompose(
 		testAccPipeConfig_base(rName),
 		testAccPipeConfig_baseSQSSource(rName),
-		acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"),
 		fmt.Sprintf(`
 resource "aws_redshift_cluster" "target" {
   cluster_identifier                  = "%[1]s-target"
-  availability_zone                   = data.aws_availability_zones.available.names[0]
   database_name                       = "test"
   master_username                     = "tfacctest"
   master_password                     = "Mustbe8characters"

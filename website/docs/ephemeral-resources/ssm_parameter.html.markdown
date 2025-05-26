@@ -28,6 +28,7 @@ ephemeral "aws_ssm_parameter" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `arn` - (Required) The Amazon Resource Name (ARN) of the parameter that you want to query
 * `with_decryption` - (Optional) Return decrypted values for a secure string parameter (Defaults to `true`).
 

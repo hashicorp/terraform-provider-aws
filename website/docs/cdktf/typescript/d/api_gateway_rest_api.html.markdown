@@ -39,6 +39,8 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `name` - (Required) Name of the REST API to look up. If no REST API is found with this name, an error will be returned. If multiple REST APIs are found with this name, an error will be returned.
 
 ## Attribute Reference
@@ -60,4 +62,4 @@ This data source exports the following attributes in addition to the arguments a
 * `rootResourceId` - Set to the ID of the API Gateway Resource on the found REST API where the route matches '/'.
 * `tags` - Key-value map of resource tags.
 
-<!-- cache-key: cdktf-0.20.8 input-1fb7e7c22930afe6ef3eb4d5be88e9ce15d83fdd5cd7ce9d36df178bcd68b264 -->
+<!-- cache-key: cdktf-0.20.8 input-a3a1228d278d7b01dc901689f079a37e7c3ed5d226c4538b954fa68113900d32 -->

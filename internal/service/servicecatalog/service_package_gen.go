@@ -85,7 +85,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceOrganizationsAccess,
 			TypeName: "aws_servicecatalog_organizations_access",
 			Name:     "Organizations Access",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  resourcePortfolio,

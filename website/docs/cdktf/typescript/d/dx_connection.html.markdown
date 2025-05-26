@@ -36,6 +36,8 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `name` - (Required) Name of the connection to retrieve.
 
 ## Attribute Reference
@@ -54,4 +56,4 @@ This data source exports the following attributes in addition to the arguments a
 * `tags` - Map of tags for the resource.
 * `vlanId` - The VLAN ID.
 
-<!-- cache-key: cdktf-0.20.8 input-ee7442e2c312c4de1313a67206127c5d5a68b5ee77b2867d9bd5f4579bfd851e -->
+<!-- cache-key: cdktf-0.20.8 input-897446d8ce963c4d9a3d8b81cd0b162465a0530059f32e0c2f1c1c8b86077975 -->
