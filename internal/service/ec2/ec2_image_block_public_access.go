@@ -25,7 +25,6 @@ import (
 // @Region(global=true)
 // @SingletonIdentity
 // @WrappedImport(false)
-// @Testing(serialize=true)
 // @Testing(checkDestroyNoop=true)
 // @Testing(hasExistsFunction=false)
 // @Testing(generator=false)

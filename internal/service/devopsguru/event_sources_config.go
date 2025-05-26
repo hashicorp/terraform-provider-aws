@@ -27,7 +27,6 @@ import (
 // @FrameworkResource("aws_devopsguru_event_sources_config", name="Event Sources Config")
 // @SingletonIdentity
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/devopsguru;devopsguru.DescribeEventSourcesConfigOutput")
-// @Testing(serialize=true)
 // @Testing(preCheck="testAccPreCheck")
 func newEventSourcesConfigResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &eventSourcesConfigResource{}, nil

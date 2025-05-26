@@ -526,6 +526,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			case "SingletonIdentity":
 				hasIdentity = true
 				d.isSingleton = true
+				d.Serialize = true
 
 			case "Region":
 				args := common.ParseArgs(m[3])
