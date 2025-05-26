@@ -1287,56 +1287,6 @@ func TestAccEMRCluster_keepJob(t *testing.T) {
 	})
 }
 
-func TestAccEMRCluster_visibleToAllUsers(t *testing.T) {
-	ctx := acctest.Context(t)
-	var cluster awstypes.Cluster
-
-	resourceName := "aws_emr_cluster.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccClusterConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, "visible_to_all_users", acctest.CtTrue),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"cluster_state", // Ignore RUNNING versus WAITING changes
-					"configurations",
-					"keep_job_flow_alive_when_no_steps",
-				},
-			},
-			{
-				Config: testAccClusterConfig_visibleToAllUsersUpdated(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, "visible_to_all_users", acctest.CtFalse),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"cluster_state", // Ignore RUNNING versus WAITING changes
-					"configurations",
-					"keep_job_flow_alive_when_no_steps",
-				},
-			},
-		},
-	})
-}
-
 func TestAccEMRCluster_s3Logging(t *testing.T) {
 	ctx := acctest.Context(t)
 	var cluster awstypes.Cluster
@@ -1546,8 +1496,20 @@ func TestAccEMRCluster_ebs(t *testing.T) {
 				Config: testAccClusterConfig_ebs(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, "master_instance_group.0.ebs_config.0.volumes_per_instance", "2"),
-					resource.TestCheckResourceAttr(resourceName, "core_instance_group.0.ebs_config.0.volumes_per_instance", "2"),
+					resource.TestCheckResourceAttr(resourceName, "master_instance_group.0.ebs_config.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "core_instance_group.0.ebs_config.#", "2"),
+
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "master_instance_group.0.ebs_config.*", map[string]string{
+						names.AttrSize:         "32",
+						names.AttrType:         "gp2",
+						"volumes_per_instance": "2",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "master_instance_group.0.ebs_config.*", map[string]string{
+						names.AttrSize:         "50",
+						names.AttrType:         "gp3",
+						names.AttrThroughput:   "500",
+						"volumes_per_instance": "2",
+					}),
 				),
 			},
 			{
@@ -1558,6 +1520,10 @@ func TestAccEMRCluster_ebs(t *testing.T) {
 					"cluster_state", // Ignore RUNNING versus WAITING changes
 					"configurations",
 					"keep_job_flow_alive_when_no_steps",
+
+					// https://github.com/hashicorp/terraform-plugin-testing/issues/269
+					"master_instance_group.0.ebs_config",
+					"core_instance_group.0.ebs_config",
 				},
 			},
 		},
@@ -2132,41 +2098,13 @@ resource "aws_s3_bucket" "tester" {
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_public_access_block" "tester" {
-  bucket = aws_s3_bucket.tester.id
-
-  block_public_acls       = false
-  block_public_policy     = false
-  ignore_public_acls      = false
-  restrict_public_buckets = false
-}
-
-resource "aws_s3_bucket_ownership_controls" "tester" {
-  bucket = aws_s3_bucket.tester.id
-  rule {
-    object_ownership = "BucketOwnerPreferred"
-  }
-}
-
-resource "aws_s3_bucket_acl" "tester" {
-  depends_on = [
-    aws_s3_bucket_public_access_block.tester,
-    aws_s3_bucket_ownership_controls.tester,
-  ]
-
-  bucket = aws_s3_bucket.tester.id
-  acl    = "public-read"
-}
-
 resource "aws_s3_object" "testobject" {
-  bucket  = aws_s3_bucket_acl.tester.bucket
+  bucket  = aws_s3_bucket.tester.bucket
   key     = "testscript.sh"
   content = <<EOF
 #!/bin/bash
 echo $@
 EOF
-
-  acl = "public-read"
 }
 `, rName)
 }
@@ -3551,61 +3489,6 @@ resource "aws_emr_cluster" "test" {
 `, rName, keepJob))
 }
 
-func testAccClusterConfig_visibleToAllUsersUpdated(rName string) string {
-	return acctest.ConfigCompose(
-		testAccClusterConfig_baseVPC(rName, false),
-		testAccClusterConfig_baseIAMServiceRole(rName),
-		testAccClusterConfig_baseIAMInstanceProfile(rName),
-		testAccClusterConfig_baseIAMAutoScalingRole(rName),
-		fmt.Sprintf(`
-data "aws_partition" "current" {}
-
-resource "aws_emr_cluster" "test" {
-  name          = %[1]q
-  release_label = "emr-4.6.0"
-  applications  = ["Spark"]
-
-  ec2_attributes {
-    subnet_id                         = aws_subnet.test.id
-    emr_managed_master_security_group = aws_security_group.test.id
-    emr_managed_slave_security_group  = aws_security_group.test.id
-    instance_profile                  = aws_iam_instance_profile.emr_instance_profile.arn
-  }
-
-  master_instance_group {
-    instance_type = "c4.large"
-  }
-
-  core_instance_group {
-    instance_count = 1
-    instance_type  = "c4.large"
-  }
-
-  tags = {
-    role     = "rolename"
-    dns_zone = "env_zone"
-    env      = "env"
-    name     = "name-env"
-  }
-
-  keep_job_flow_alive_when_no_steps = true
-  visible_to_all_users              = false
-
-  configurations = "test-fixtures/emr_configurations.json"
-
-  depends_on = [
-    aws_route_table_association.test,
-    aws_iam_role_policy_attachment.emr_service,
-    aws_iam_role_policy_attachment.emr_instance_profile,
-    aws_iam_role_policy_attachment.emr_autoscaling_role,
-  ]
-
-  service_role     = aws_iam_role.emr_service.arn
-  autoscaling_role = aws_iam_role.emr_autoscaling_role.arn
-}
-`, rName))
-}
-
 func testAccClusterConfig_s3Logging(rName string) string {
 	return acctest.ConfigCompose(
 		testAccClusterConfig_baseVPC(rName, false),
@@ -3924,13 +3807,14 @@ resource "aws_emr_cluster" "test" {
     instance_count = 1
     instance_type  = "m5.xlarge"
     ebs_config {
-      size                 = 32
+      size                 = 33
       type                 = "gp2"
       volumes_per_instance = %[2]d
     }
     ebs_config {
-      size                 = 125
-      type                 = "sc1"
+      size                 = 50
+      iops                 = 3001
+      type                 = "gp3"
       volumes_per_instance = %[2]d
     }
   }
@@ -3944,9 +3828,33 @@ resource "aws_emr_cluster" "test" {
 `, rName, volumesPerInstance))
 }
 
+func configLatestAmazonLinux2FullHVMEBSAMI(architecture ec2types.ArchitectureValues) string {
+	return fmt.Sprintf(`
+data "aws_ami" "amzn2-ami-hvm-ebs-%[1]s" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn2-ami-hvm-*"]
+  }
+
+  filter {
+    name   = "root-device-type"
+    values = ["ebs"]
+  }
+
+  filter {
+    name   = "architecture"
+    values = [%[1]q]
+  }
+}
+`, architecture)
+}
+
 func testAccClusterConfig_customAMIID(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
+		configLatestAmazonLinux2FullHVMEBSAMI(ec2types.ArchitectureValuesX8664),
 		testAccClusterConfig_baseVPC(rName, false),
 		testAccClusterIAMServiceRoleCustomAMIIDConfig(rName),
 		testAccClusterConfig_baseIAMInstanceProfile(rName),
@@ -3956,7 +3864,7 @@ data "aws_partition" "current" {}
 
 resource "aws_emr_cluster" "test" {
   name          = %[1]q
-  release_label = "emr-5.7.0"
+  release_label = "emr-5.36.2"
   applications  = ["Spark"]
 
   ec2_attributes {
@@ -3997,7 +3905,7 @@ resource "aws_emr_cluster" "test" {
   service_role         = aws_iam_role.emr_service.arn
   autoscaling_role     = aws_iam_role.emr_autoscaling_role.arn
   ebs_root_volume_size = 48
-  custom_ami_id        = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+  custom_ami_id        = data.aws_ami.amzn2-ami-hvm-ebs-x86_64.id
 }
 `, rName))
 }
@@ -4007,7 +3915,6 @@ func testAccClusterConfig_instanceFleets(rName string) string {
 		testAccClusterConfig_baseVPC(rName, false),
 		testAccClusterConfig_baseIAMServiceRole(rName),
 		testAccClusterConfig_baseIAMInstanceProfile(rName),
-		testAccClusterConfig_baseBootstrapActionBucket(rName),
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -4095,7 +4002,6 @@ func testAccClusterConfig_instanceFleetMultipleSubnets(rName string) string {
 		testAccClusterConfig_baseVPC(rName, false),
 		testAccClusterConfig_baseIAMServiceRole(rName),
 		testAccClusterConfig_baseIAMInstanceProfile(rName),
-		testAccClusterConfig_baseBootstrapActionBucket(rName),
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
