@@ -753,6 +753,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		d.idAttrDuplicates = "region"
 	}
 
+	if d.IsGlobal {
+		d.HasRegionOverrideTest = false
+	}
+
 	if hasIdentity {
 		if !skip {
 			if d.idAttrDuplicates != "" {
