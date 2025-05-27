@@ -15,10 +15,17 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
+	"github.com/hashicorp/terraform-plugin-testing/compare"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -155,6 +162,135 @@ func TestAccELBV2LoadBalancer_NLB_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "zone_id"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccELBV2LoadBalancer_Identity_Basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.LoadBalancer
+	resourceName := "aws_lb.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_12_0),
+		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLoadBalancerConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("loadbalancer/app/%s/[a-z0-9]{16}", rName)))),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						"arn": tfknownvalue.RegionalARNRegexp("elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("loadbalancer/app/%s/[a-z0-9]{16}", rName))),
+					}),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateKind:   resource.ImportCommandWithID,
+				ImportStateVerify: true,
+			},
+			{
+				ResourceName:    resourceName,
+				ImportState:     true,
+				ImportStateKind: resource.ImportBlockWithID,
+				ImportPlanChecks: resource.ImportPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("region"), knownvalue.StringExact(acctest.Region())),
+					},
+				},
+			},
+			// {
+			// 	ResourceName:    resourceName,
+			// 	ImportState:     true,
+			// 	ImportStateKind: resource.ImportBlockWithResourceIdentity,
+			// 	ImportPlanChecks: resource.ImportPlanChecks{
+			// 		PreApply: []plancheck.PlanCheck{
+			// 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
+			// 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+			// 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("region"), knownvalue.StringExact(acctest.Region())),
+			// 		},
+			// 	},
+			// },
+		},
+	})
+}
+
+func TestAccELBV2LoadBalancer_Identity_RegionOverride(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_lb.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_12_0),
+		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLoadBalancerConfig_regionOverride(rName),
+				Check:  resource.ComposeAggregateTestCheckFunc(),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNAlternateRegionRegexp("elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("loadbalancer/app/%s/[a-z0-9]{16}", rName)))),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						"arn": tfknownvalue.RegionalARNAlternateRegionRegexp("elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("loadbalancer/app/%s/[a-z0-9]{16}", rName))),
+					}),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: acctest.CrossRegionAttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportState:       true,
+				ImportStateKind:   resource.ImportCommandWithID,
+				ImportStateVerify: true,
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateKind:   resource.ImportCommandWithID,
+				ImportStateVerify: true,
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: acctest.CrossRegionAttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportState:       true,
+				ImportStateKind:   resource.ImportBlockWithID,
+				ImportPlanChecks: resource.ImportPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("region"), knownvalue.StringExact(acctest.AlternateRegion())),
+					},
+				},
+			},
+			// {
+			// 	ResourceName:    resourceName,
+			// 	ImportState:     true,
+			// 	ImportStateKind: resource.ImportBlockWithResourceIdentity,
+			// 	ImportPlanChecks: resource.ImportPlanChecks{
+			// 		PreApply: []plancheck.PlanCheck{
+			// 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
+			// 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+			// 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("region"), knownvalue.StringExact(acctest.AlternateRegion())),
+			// 		},
+			// 	},
+			// },
 		},
 	})
 }
@@ -2312,12 +2448,13 @@ func testAccCheckLoadBalancerAttribute(ctx context.Context, n, key, value string
 
 func testAccCheckLoadBalancerDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Client(ctx)
-
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lb" && rs.Type != "aws_alb" {
 				continue
 			}
+
+			ctx = conns.NewResourceContext(ctx, "", "", rs.Primary.Attributes["region"])
+			conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Client(ctx)
 
 			_, err := tfelbv2.FindLoadBalancerByARN(ctx, conn, rs.Primary.ID)
 
@@ -2365,7 +2502,9 @@ func testAccPreCheckGatewayLoadBalancer(ctx context.Context, t *testing.T) {
 }
 
 func testAccLoadBalancerConfig_baseInternal(rName string, subnetCount int) string {
-	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, subnetCount), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, subnetCount),
+		fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name   = %[1]q
   vpc_id = aws_vpc.test.id
@@ -2389,6 +2528,33 @@ resource "aws_security_group" "test" {
   }
 }
 `, rName))
+}
+
+func testAccLoadBalancerConfig_baseInternal_regionOverride(rName string, subnetCount int) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets_RegionOverride(rName, subnetCount, acctest.AlternateRegion()),
+		fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  region = %[2]q
+
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+`, rName, acctest.AlternateRegion()))
 }
 
 func testAccLoadBalancerConfig_baseIPAMPools(rName string) string {
@@ -2441,6 +2607,26 @@ resource "aws_lb" "test" {
   enable_deletion_protection = false
 }
 `, rName, nSubnetsReferenced))
+}
+
+func testAccLoadBalancerConfig_regionOverride(rName string) string {
+	return testAccLoadBalancerConfig_subnetCount_regionOverride(rName, 2, 2)
+}
+
+func testAccLoadBalancerConfig_subnetCount_regionOverride(rName string, nSubnets, nSubnetsReferenced int) string {
+	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseInternal_regionOverride(rName, nSubnets), fmt.Sprintf(`
+resource "aws_lb" "test" {
+  region = %[3]q
+
+  name            = %[1]q
+  internal        = true
+  security_groups = [aws_security_group.test.id]
+  subnets         = slice(aws_subnet.test[*].id, 0, %[2]d)
+
+  idle_timeout               = 30
+  enable_deletion_protection = false
+}
+`, rName, nSubnetsReferenced, acctest.AlternateRegion()))
 }
 
 func testAccLoadBalancerConfig_subnetMappingCount(rName string, subnetCount int) string {

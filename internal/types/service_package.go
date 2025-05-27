@@ -5,6 +5,7 @@ package types
 
 import (
 	"context"
+	"slices"
 	"unique"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -66,6 +67,7 @@ type ServicePackageFrameworkResource struct {
 	Name     string
 	Tags     unique.Handle[ServicePackageResourceTags]
 	Region   unique.Handle[ServicePackageResourceRegion]
+	Identity Identity
 }
 
 // ServicePackageSDKDataSource represents a Terraform Plugin SDK data source
@@ -86,4 +88,108 @@ type ServicePackageSDKResource struct {
 	Name     string
 	Tags     unique.Handle[ServicePackageResourceTags]
 	Region   unique.Handle[ServicePackageResourceRegion]
+	Identity Identity
+	Import   Import
+}
+
+type Identity struct {
+	Global            bool
+	Singleton         bool
+	IDAttrShadowsAttr string
+	Attributes        []IdentityAttribute
+}
+
+func ParameterizedIdentity(attributes ...IdentityAttribute) Identity {
+	baseAttributes := []IdentityAttribute{
+		{
+			Name:     "account_id",
+			Required: false,
+		},
+		{
+			Name:     "region",
+			Required: false,
+		},
+	}
+	baseAttributes = slices.Grow(baseAttributes, len(attributes))
+	identity := Identity{
+		Attributes: append(baseAttributes, attributes...),
+	}
+	if len(attributes) == 1 {
+		identity.IDAttrShadowsAttr = attributes[0].Name
+	}
+	return identity
+}
+
+type IdentityAttribute struct {
+	Name     string
+	Required bool
+}
+
+func StringIdentityAttribute(name string, required bool) IdentityAttribute {
+	return IdentityAttribute{
+		Name:     name,
+		Required: required,
+	}
+}
+
+func ARNIdentity() Identity {
+	return Identity{
+		Attributes: []IdentityAttribute{
+			{
+				Name:     "arn",
+				Required: true,
+			},
+		},
+	}
+}
+
+func GlobalParameterizedIdentity(attributes ...IdentityAttribute) Identity {
+	baseAttributes := []IdentityAttribute{
+		{
+			Name:     "account_id",
+			Required: false,
+		},
+	}
+	baseAttributes = slices.Grow(baseAttributes, len(attributes))
+	identity := Identity{
+		Attributes: append(baseAttributes, attributes...),
+	}
+	if len(attributes) == 1 {
+		identity.IDAttrShadowsAttr = attributes[0].Name
+	}
+	return identity
+}
+
+func GlobalSingletonIdentity() Identity {
+	return Identity{
+		Global:    true,
+		Singleton: true,
+		Attributes: []IdentityAttribute{
+			{
+				Name:     "account_id",
+				Required: false,
+			},
+		},
+	}
+}
+
+func RegionalSingletonIdentity() Identity {
+	return Identity{
+		Global:    false,
+		Singleton: true,
+		Attributes: []IdentityAttribute{
+			{
+				Name:     "account_id",
+				Required: false,
+			},
+			{
+				Name:     "region",
+				Required: false,
+			},
+		},
+	}
+}
+
+type Import struct {
+	WrappedImport bool
 }

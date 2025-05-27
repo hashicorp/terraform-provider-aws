@@ -11,6 +11,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/batch"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/batch/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -37,6 +38,7 @@ import (
 
 // @FrameworkResource("aws_batch_job_queue", name="Job Queue")
 // @Tags(identifierAttribute="arn")
+// @ArnIdentity
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/batch/types;types.JobQueueDetail")
 func newJobQueueResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := jobQueueResource{}
@@ -50,7 +52,6 @@ func newJobQueueResource(_ context.Context) (resource.ResourceWithConfigure, err
 
 type jobQueueResource struct {
 	framework.ResourceWithModel[jobQueueResourceModel]
-	framework.WithImportByID
 	framework.WithTimeouts
 }
 
@@ -59,7 +60,7 @@ func (r *jobQueueResource) Schema(ctx context.Context, request resource.SchemaRe
 		Version: 2,
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			names.AttrID:  framework.IDAttribute(),
+			names.AttrID:  framework.IDAttributeDeprecatedWithAlternate(path.Root(names.AttrARN)),
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -173,7 +174,6 @@ func (r *jobQueueResource) Create(ctx context.Context, request resource.CreateRe
 		return
 	}
 
-	// Set values for unknowns.
 	data.JobQueueARN = fwflex.StringToFramework(ctx, output.JobQueueArn)
 	data.setID()
 
@@ -191,12 +191,6 @@ func (r *jobQueueResource) Read(ctx context.Context, request resource.ReadReques
 	var data jobQueueResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
-		return
-	}
-
-	if err := data.InitFromID(); err != nil {
-		response.Diagnostics.AddError("parsing resource ID", err.Error())
-
 		return
 	}
 
@@ -513,12 +507,6 @@ type jobQueueResourceModel struct {
 	Timeouts                 timeouts.Value                                                `tfsdk:"timeouts"`
 }
 
-func (model *jobQueueResourceModel) InitFromID() error {
-	model.JobQueueARN = model.ID
-
-	return nil
-}
-
 func (model *jobQueueResourceModel) setID() {
 	model.ID = model.JobQueueARN
 }
@@ -533,4 +521,33 @@ type jobStateTimeLimitActionModel struct {
 	MaxTimeSeconds types.Int64                                                 `tfsdk:"max_time_seconds"`
 	Reason         types.String                                                `tfsdk:"reason"`
 	State          fwtypes.StringEnum[awstypes.JobStateTimeLimitActionsState]  `tfsdk:"state"`
+}
+
+func (r *jobQueueResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	// Import-by-id case
+	if request.ID != "" {
+		resource.ImportStatePassthroughID(ctx, path.Root(names.AttrARN), request, response)
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), request.ID)...)
+		return
+	}
+
+	if identity := request.Identity; identity != nil {
+		arnPath := path.Root(names.AttrARN)
+		var arnVal string
+		identity.GetAttribute(ctx, arnPath, &arnVal)
+
+		arnARN, err := arn.Parse(arnVal)
+		if err != nil {
+			response.Diagnostics.AddAttributeError(
+				arnPath,
+				"Invalid Import Attribute Value",
+				fmt.Sprintf("Attribute %q is not a valid ARN, got: %s", arnPath, arnVal),
+			)
+			return
+		}
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrRegion), arnARN.Region)...)
+
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrARN), arnVal)...)
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), arnVal)...)
+	}
 }

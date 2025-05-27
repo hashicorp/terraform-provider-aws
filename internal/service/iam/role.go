@@ -41,6 +41,7 @@ const (
 
 // @SDKResource("aws_iam_role", name="Role")
 // @Tags(identifierAttribute="name", resourceType="Role")
+// @IdentityAttribute("name")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/iam/types;types.Role")
 func resourceRole() *schema.Resource {
 	return &schema.Resource{
@@ -50,7 +51,33 @@ func resourceRole() *schema.Resource {
 		DeleteWithoutTimeout: resourceRoleDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: resourceRoleImport,
+			StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				// Import-by-id case
+				if rd.Id() != "" {
+					rd.Set(names.AttrName, rd.Id())
+					return resourceRoleImport(ctx, rd, meta)
+				}
+
+				identity, err := rd.Identity()
+				if err != nil {
+					return nil, err
+				}
+
+				nameRaw, ok := identity.GetOk(names.AttrName)
+				if !ok {
+					return nil, fmt.Errorf("identity attribute %q is required", names.AttrName)
+				}
+
+				name, ok := nameRaw.(string)
+				if !ok {
+					return nil, fmt.Errorf("identity attribute %q: expected string, got %T", names.AttrName, nameRaw)
+				}
+
+				rd.Set(names.AttrName, name)
+				rd.SetId(name)
+
+				return resourceRoleImport(ctx, rd, meta)
+			},
 		},
 
 		Schema: map[string]*schema.Schema{

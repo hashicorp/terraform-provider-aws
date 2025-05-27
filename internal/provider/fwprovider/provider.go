@@ -579,6 +579,11 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 				interceptors: interceptors,
 				typeName:     typeName,
 			}
+			if len(v.Identity.Attributes) > 0 {
+				opts.identity = v.Identity
+				opts.interceptors = append(opts.interceptors, newIdentityInterceptor(v.Identity.Attributes))
+			}
+
 			p.resources = append(p.resources, func() resource.Resource {
 				return newWrappedResource(inner, opts)
 			})

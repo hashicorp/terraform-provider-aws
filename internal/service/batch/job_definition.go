@@ -12,6 +12,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/batch"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/batch/types"
 	"github.com/hashicorp/go-cty/cty"
@@ -33,7 +34,9 @@ import (
 
 // @SDKResource("aws_batch_job_definition", name="Job Definition")
 // @Tags(identifierAttribute="arn")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/batch/types;types.JobDefinition", importIgnore="deregister_on_new_revision")
+// @ArnIdentity
+// @MutableIdentity
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/batch/types;types.JobDefinition")
 func resourceJobDefinition() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceJobDefinitionCreate,
@@ -42,7 +45,43 @@ func resourceJobDefinition() *schema.Resource {
 		DeleteWithoutTimeout: resourceJobDefinitionDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: func(_ context.Context, rd *schema.ResourceData, _ any) ([]*schema.ResourceData, error) {
+				// Import-by-id case
+				if rd.Id() != "" {
+					rd.Set("deregister_on_new_revision", true)
+
+					return []*schema.ResourceData{rd}, nil
+				}
+
+				identity, err := rd.Identity()
+				if err != nil {
+					return nil, err
+				}
+
+				arnRaw, ok := identity.GetOk(names.AttrARN)
+				if !ok {
+					return nil, fmt.Errorf("identity attribute %q is required", names.AttrARN)
+				}
+
+				arnVal, ok := arnRaw.(string)
+				if !ok {
+					return nil, fmt.Errorf("identity attribute %q: expected string, got %T", names.AttrARN, arnRaw)
+				}
+
+				arnARN, err := arn.Parse(arnVal)
+				if err != nil {
+					return nil, fmt.Errorf("identity attribute %q: could not parse %q as ARN: %s", names.AttrARN, arnVal, err)
+				}
+
+				rd.Set(names.AttrRegion, arnARN.Region)
+
+				rd.Set(names.AttrARN, arnVal)
+				rd.SetId(arnVal)
+
+				rd.Set("deregister_on_new_revision", true)
+
+				return []*schema.ResourceData{rd}, nil
+			},
 		},
 
 		Schema: map[string]*schema.Schema{

@@ -49,6 +49,8 @@ const (
 
 // @SDKResource("aws_s3_bucket", name="Bucket")
 // @Tags(identifierAttribute="bucket", resourceType="Bucket")
+// @IdentityAttribute("bucket")
+// @WrappedImport
 // @Testing(importIgnore="force_destroy")
 func resourceBucket() *schema.Resource {
 	return &schema.Resource{
@@ -62,10 +64,6 @@ func resourceBucket() *schema.Resource {
 			Read:   schema.DefaultTimeout(20 * time.Minute),
 			Update: schema.DefaultTimeout(20 * time.Minute),
 			Delete: schema.DefaultTimeout(60 * time.Minute),
-		},
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -797,7 +795,6 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	}
 
 	d.Set(names.AttrARN, bucketARN(ctx, c, d.Id()))
-	d.Set(names.AttrBucket, d.Id())
 	d.Set("bucket_domain_name", c.PartitionHostname(ctx, d.Id()+".s3"))
 	d.Set(names.AttrBucketPrefix, create.NamePrefixFromName(d.Id()))
 

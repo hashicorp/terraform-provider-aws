@@ -11,11 +11,17 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/batch"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/batch/types"
+	"github.com/hashicorp/terraform-plugin-testing/compare"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfbatch "github.com/hashicorp/terraform-provider-aws/internal/service/batch"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -38,7 +44,7 @@ func TestAccBatchJobQueue_basic(t *testing.T) {
 				Config: testAccJobQueueConfig_state(rName, string(awstypes.JQStateEnabled)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &jobQueue1),
-					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "batch", fmt.Sprintf("job-queue/%s", rName)),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "batch", "job-queue/{name}"),
 					resource.TestCheckResourceAttr(resourceName, "compute_environment_order.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "compute_environment_order.0.compute_environment", "aws_batch_compute_environment.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "job_state_time_limit_action.#", "0"),
@@ -49,9 +55,125 @@ func TestAccBatchJobQueue_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName: resourceName,
-				RefreshState: true,
-				PlanOnly:     true,
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccBatchJobQueue_Identity_Basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	var jobQueue1 awstypes.JobQueueDetail
+	resourceName := "aws_batch_job_queue.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_12_0),
+		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckJobQueueDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccJobQueueConfig_state(rName, string(awstypes.JQStateEnabled)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckJobQueueExists(ctx, resourceName, &jobQueue1),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+					tfstatecheck.ExpectIdentityRegionalARNFormat(resourceName, "batch", "job-queue/{name}"),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateKind:   resource.ImportCommandWithID,
+				ImportStateVerify: true,
+			},
+			{
+				ResourceName:    resourceName,
+				ImportState:     true,
+				ImportStateKind: resource.ImportBlockWithID,
+				ImportPlanChecks: resource.ImportPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("region"), knownvalue.StringExact(acctest.Region())),
+					},
+				},
+			},
+			{
+				ResourceName:    resourceName,
+				ImportState:     true,
+				ImportStateKind: resource.ImportBlockWithResourceIdentity,
+				ImportPlanChecks: resource.ImportPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("region"), knownvalue.StringExact(acctest.Region())),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccBatchJobQueue_Identity_RegionOverride(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_batch_job_queue.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_12_0),
+		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckJobQueueDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccJobQueueConfig_regionOverride(rName),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+					tfstatecheck.ExpectIdentityRegionalARNAlternateRegionFormat(resourceName, "batch", "job-queue/{name}"),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: acctest.CrossRegionAttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateKind:   resource.ImportCommandWithID,
+				ImportStateVerify: true,
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: acctest.CrossRegionAttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateKind:   resource.ImportBlockWithID,
+				ImportPlanChecks: resource.ImportPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("region"), knownvalue.StringExact(acctest.AlternateRegion())),
+					},
+				},
+			},
+			{
+				ResourceName:    resourceName,
+				ImportState:     true,
+				ImportStateKind: resource.ImportBlockWithResourceIdentity,
+				ImportPlanChecks: resource.ImportPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("region"), knownvalue.StringExact(acctest.AlternateRegion())),
+					},
+				},
 			},
 		},
 	})
@@ -647,6 +769,25 @@ resource "aws_batch_job_queue" "test" {
 `, rName, state))
 }
 
+func testAccJobQueueConfig_regionOverride(rName string) string {
+	return acctest.ConfigCompose(
+		testAccJobQueueConfig_base_regionOverride(rName, acctest.AlternateRegion()),
+		fmt.Sprintf(`
+resource "aws_batch_job_queue" "test" {
+  region = %[2]q
+
+  compute_environment_order {
+    compute_environment = aws_batch_compute_environment.test.arn
+    order               = 1
+  }
+
+  name     = %[1]q
+  priority = 1
+  state    = "ENABLED"
+}
+`, rName, acctest.AlternateRegion()))
+}
+
 func testAccJobQueueConfig_ComputeEnvironments_multiple(rName string, state string) string {
 	return acctest.ConfigCompose(
 		testAccJobQueueConfig_base(rName),
@@ -968,4 +1109,73 @@ resource "aws_batch_job_queue" "test" {
   state    = "ENABLED"
 }
 `, rName))
+}
+
+func testAccJobQueueConfig_base_regionOverride(rName, region string) string {
+	return fmt.Sprintf(`
+resource "aws_batch_compute_environment" "test" {
+  region = %[2]q
+
+  name         = %[1]q
+  service_role = aws_iam_role.batch_service.arn
+  type         = "UNMANAGED"
+
+  depends_on = [aws_iam_role_policy_attachment.batch_service]
+}
+
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "batch_service" {
+  name = "%[1]s-batch-service"
+
+  assume_role_policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+    {
+        "Action": "sts:AssumeRole",
+        "Effect": "Allow",
+        "Principal": {
+        	"Service": "batch.${data.aws_partition.current.dns_suffix}"
+        }
+    }
+    ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "batch_service" {
+  role       = aws_iam_role.batch_service.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSBatchServiceRole"
+}
+
+resource "aws_iam_role" "ecs_instance" {
+  name = "%[1]s-ecs-instance"
+
+  assume_role_policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+    {
+        "Action": "sts:AssumeRole",
+        "Effect": "Allow",
+        "Principal": {
+        "Service": "ec2.${data.aws_partition.current.dns_suffix}"
+        }
+    }
+    ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "ecs_instance" {
+  role       = aws_iam_role.ecs_instance.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role"
+}
+
+resource "aws_iam_instance_profile" "ecs_instance" {
+  name = aws_iam_role.ecs_instance.name
+  role = aws_iam_role_policy_attachment.ecs_instance.role
+}
+`, rName, region)
 }

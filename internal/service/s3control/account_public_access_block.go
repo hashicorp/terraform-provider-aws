@@ -5,6 +5,7 @@ package s3control
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"reflect"
 	"strconv"
@@ -26,6 +27,8 @@ import (
 
 // @SDKResource("aws_s3_account_public_access_block", name="Account Public Access Block")
 // @Region(global=true)
+// @SingletonIdentity
+// @WrappedImport
 func resourceAccountPublicAccessBlock() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAccountPublicAccessBlockCreate,
@@ -34,7 +37,30 @@ func resourceAccountPublicAccessBlock() *schema.Resource {
 		DeleteWithoutTimeout: resourceAccountPublicAccessBlockDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: func(_ context.Context, rd *schema.ResourceData, _ any) ([]*schema.ResourceData, error) {
+				// Import-by-id case
+				if rd.Id() != "" {
+					return []*schema.ResourceData{rd}, nil
+				}
+
+				identity, err := rd.Identity()
+				if err != nil {
+					return nil, err
+				}
+
+				accountIDRaw, ok := identity.GetOk(names.AttrAccountID)
+				if !ok {
+					return nil, fmt.Errorf("identity attribute %q is required", names.AttrAccountID)
+				}
+				accountID, ok := accountIDRaw.(string)
+				if !ok {
+					return nil, fmt.Errorf("identity attribute %q: expected string, got %T", names.AttrAccountID, accountIDRaw)
+				}
+				rd.Set(names.AttrAccountID, accountID)
+				rd.SetId(accountID)
+
+				return []*schema.ResourceData{rd}, nil
+			},
 		},
 
 		Schema: map[string]*schema.Schema{

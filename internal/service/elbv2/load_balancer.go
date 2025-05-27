@@ -39,6 +39,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 // @SDKResource("aws_alb", name="Load Balancer")
 // @SDKResource("aws_lb", name="Load Balancer")
 // @Tags(identifierAttribute="arn")
+// @ArnIdentity
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types;types.LoadBalancer")
 func resourceLoadBalancer() *schema.Resource {
 	return &schema.Resource{
@@ -48,7 +49,51 @@ func resourceLoadBalancer() *schema.Resource {
 		DeleteWithoutTimeout: resourceLoadBalancerDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			// StateContext: schema.ImportStatePassthroughContext,
+			StateContext: func(_ context.Context, rd *schema.ResourceData, _ any) ([]*schema.ResourceData, error) {
+				// Import-by-id case
+				if rd.Id() != "" {
+					arnARN, err := arn.Parse(rd.Id())
+					if err != nil {
+						return nil, fmt.Errorf("could not parse import ID %q as ARN: %s", rd.Id(), err)
+					}
+					if region, ok := rd.GetOk("region"); ok {
+						if region != arnARN.Region {
+							return nil, fmt.Errorf("the region passed for import %q does not match the region in the ARN %q", region, arnARN.Region)
+						}
+					} else {
+						rd.Set("region", arnARN.Region)
+					}
+					return []*schema.ResourceData{rd}, nil
+				}
+
+				identity, err := rd.Identity()
+				if err != nil {
+					return nil, err
+				}
+
+				arnRaw, ok := identity.GetOk(names.AttrARN)
+				if !ok {
+					return nil, fmt.Errorf("identity attribute %q is required", names.AttrARN)
+				}
+
+				arnVal, ok := arnRaw.(string)
+				if !ok {
+					return nil, fmt.Errorf("identity attribute %q: expected string, got %T", names.AttrARN, arnRaw)
+				}
+
+				arnARN, err := arn.Parse(arnVal)
+				if err != nil {
+					return nil, fmt.Errorf("identity attribute %q: could not parse %q as ARN: %s", names.AttrARN, arnVal, err)
+				}
+
+				rd.Set(names.AttrRegion, arnARN.Region)
+
+				rd.Set(names.AttrARN, arnVal)
+				rd.SetId(arnVal)
+
+				return []*schema.ResourceData{rd}, nil
+			},
 		},
 
 		CustomizeDiff: customdiff.Sequence(

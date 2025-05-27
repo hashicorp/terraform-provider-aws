@@ -13,7 +13,9 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"maps"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 	"text/template"
@@ -85,6 +87,32 @@ func main() {
 			SDKDataSources:          v.sdkDataSources,
 			SDKResources:            v.sdkResources,
 		}
+
+		var imports []goImport
+		for resource := range maps.Values(v.ephemeralResources) {
+			imports = append(imports, resource.goImports...)
+		}
+		for resource := range maps.Values(v.frameworkDataSources) {
+			imports = append(imports, resource.goImports...)
+		}
+		for resource := range maps.Values(v.frameworkResources) {
+			imports = append(imports, resource.goImports...)
+		}
+		for resource := range maps.Values(v.sdkDataSources) {
+			imports = append(imports, resource.goImports...)
+		}
+		for resource := range maps.Values(v.sdkResources) {
+			imports = append(imports, resource.goImports...)
+		}
+		slices.SortFunc(imports, func(a, b goImport) int {
+			if n := strings.Compare(a.Path, b.Path); n != 0 {
+				return n
+			}
+			return strings.Compare(a.Alias, b.Alias)
+		})
+		imports = slices.Compact(imports)
+		s.GoImports = imports
+
 		templateFuncMap := template.FuncMap{
 			"Camel": names.ToCamelCase,
 		}
@@ -125,6 +153,22 @@ type ResourceDatum struct {
 	TagsIdentifierAttribute           string
 	TagsResourceType                  string
 	ValidateRegionOverrideInPartition bool
+	IdentityAttributes                []identityAttribute
+	ARNIdentity                       bool
+	SingletonIdentity                 bool
+	MutableIdentity                   bool
+	WrappedImport                     bool
+	goImports                         []goImport
+}
+
+type identityAttribute struct {
+	Name     string
+	Optional bool
+}
+
+type goImport struct {
+	Path  string
+	Alias string
 }
 
 func (d ResourceDatum) RegionOverrideEnabled() bool {
@@ -143,9 +187,10 @@ type ServiceDatum struct {
 	FrameworkResources      map[string]ResourceDatum
 	SDKDataSources          map[string]ResourceDatum
 	SDKResources            map[string]ResourceDatum
+	GoImports               []goImport
 }
 
-//go:embed file.gtpl
+//go:embed service_package_gen.go.gtpl
 var tmpl string
 
 //go:embed endpoint_resolver.go.gtpl
@@ -211,13 +256,27 @@ func (v *visitor) processFile(file *ast.File) {
 func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 	v.functionName = funcDecl.Name.Name
 
-	// Look first for per-resource annotations such as tagging and Region.
 	d := ResourceDatum{
 		IsGlobal:                          false,
 		regionOverrideEnabled:             true,
 		ValidateRegionOverrideInPartition: true,
 	}
 
+	annotations := make(map[string]bool)
+	for _, line := range funcDecl.Doc.List {
+		line := line.Text
+
+		if m := annotation.FindStringSubmatch(line); len(m) > 0 {
+			annotationName := m[1]
+			annotations[annotationName] = true
+		}
+	}
+	keys := slices.Collect(maps.Keys(annotations))
+	if slices.Contains(keys, "IdentityAttribute") && slices.Contains(keys, "ArnIdentity") {
+		v.errs = append(v.errs, fmt.Errorf(`only one of "IdentityAttribute" and "ArnIdentity" can be specified: %s`, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+	}
+
+	// Look first for per-resource annotations such as tagging and Region.
 	for _, line := range funcDecl.Doc.List {
 		line := line.Text
 
@@ -229,6 +288,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						v.errs = append(v.errs, fmt.Errorf("invalid Region/global value (%s): %s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
 					} else {
 						d.IsGlobal = global
+						if global {
+							d.regionOverrideEnabled = false
+							d.ValidateRegionOverrideInPartition = false
+						}
 					}
 				}
 				if attr, ok := args.Keyword["overrideEnabled"]; ok {
@@ -245,6 +308,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						d.ValidateRegionOverrideInPartition = validate
 					}
 				}
+
 			case "Tags":
 				d.TransparentTagging = true
 
@@ -259,6 +323,41 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				if attr, ok := args.Keyword["resourceType"]; ok {
 					d.TagsResourceType = attr
 				}
+
+			case "IdentityAttribute":
+				args := common.ParseArgs(m[3])
+
+				if len(args.Positional) == 0 {
+					v.errs = append(v.errs, fmt.Errorf("no Identity attribute name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					continue
+				}
+
+				identityAttribute := identityAttribute{
+					Name: namesgen.ConstOrQuote(args.Positional[0]),
+				}
+
+				if attr, ok := args.Keyword["optional"]; ok {
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid optional value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					} else {
+						identityAttribute.Optional = b
+					}
+				}
+
+				d.IdentityAttributes = append(d.IdentityAttributes, identityAttribute)
+
+			case "WrappedImport":
+				d.WrappedImport = true
+
+			case "ArnIdentity":
+				d.ARNIdentity = true
+
+			case "MutableIdentity":
+				d.MutableIdentity = true
+
+			case "SingletonIdentity":
+				d.SingletonIdentity = true
 			}
 		}
 	}
@@ -392,7 +491,8 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				} else {
 					v.sdkResources[typeName] = d
 				}
-			case "Region", "Tags":
+
+			case "IdentityAttribute", "ArnIdentity", "MutableIdentity", "SingletonIdentity", "Region", "Tags":
 				// Handled above.
 			case "Testing":
 				// Ignored.
