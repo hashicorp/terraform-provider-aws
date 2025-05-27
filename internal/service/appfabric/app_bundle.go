@@ -32,7 +32,9 @@ import (
 // @Tags(identifierAttribute="id")
 // @Testing(serialize=true)
 // @Testing(generator=false)
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appfabric/types;types.AppBundle")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appfabric/types;awstypes;awstypes.AppBundle")
+// @Testing(preCheckRegion="us-east-1;ap-northeast-1;eu-west-1")
+// @Testing(preCheck="testAccPreCheck")
 func newAppBundleResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &appBundleResource{}
 
