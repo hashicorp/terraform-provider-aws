@@ -1,17 +1,10 @@
 # Copyright (c) HashiCorp, Inc.
 # SPDX-License-Identifier: MPL-2.0
 
-provider "null" {}
-
 resource "aws_api_gateway_domain_name_access_association" "test" {
   access_association_source      = aws_vpc_endpoint.test.id
   access_association_source_type = "VPCE"
   domain_name_arn                = aws_api_gateway_domain_name.test.arn
-
-  tags = {
-    (var.unknownTagKey) = null_resource.test.id
-    (var.knownTagKey)   = var.knownTagValue
-  }
 }
 
 resource "aws_api_gateway_domain_name" "test" {
@@ -70,14 +63,11 @@ data "aws_availability_zones" "available" {
 locals {
   default_exclude_zone_ids = ["usw2-az4", "usgw1-az2"]
 }
-resource "null_resource" "test" {}
-
 variable "rName" {
   description = "Name for resource"
   type        = string
   nullable    = false
 }
-
 variable "certificate_pem" {
   type     = string
   nullable = false
@@ -88,17 +78,3 @@ variable "private_key_pem" {
   nullable = false
 }
 
-variable "unknownTagKey" {
-  type     = string
-  nullable = false
-}
-
-variable "knownTagKey" {
-  type     = string
-  nullable = false
-}
-
-variable "knownTagValue" {
-  type     = string
-  nullable = false
-}

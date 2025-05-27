@@ -1,20 +1,17 @@
 # Copyright (c) HashiCorp, Inc.
 # SPDX-License-Identifier: MPL-2.0
 
-provider "null" {}
-
 resource "aws_api_gateway_domain_name_access_association" "test" {
+  region = var.region
+
   access_association_source      = aws_vpc_endpoint.test.id
   access_association_source_type = "VPCE"
   domain_name_arn                = aws_api_gateway_domain_name.test.arn
-
-  tags = {
-    (var.unknownTagKey) = null_resource.test.id
-    (var.knownTagKey)   = var.knownTagValue
-  }
 }
 
 resource "aws_api_gateway_domain_name" "test" {
+  region = var.region
+
   domain_name     = var.rName
   certificate_arn = aws_acm_certificate.test.arn
 
@@ -23,25 +20,35 @@ resource "aws_api_gateway_domain_name" "test" {
   }
 }
 
-data "aws_region" "current" {}
+data "aws_region" "current" {
+  region = var.region
+}
 
 resource "aws_vpc" "test" {
+  region = var.region
+
   cidr_block           = "10.0.0.0/16"
   enable_dns_support   = true
   enable_dns_hostnames = true
 }
 
 resource "aws_default_security_group" "test" {
+  region = var.region
+
   vpc_id = aws_vpc.test.id
 }
 
 resource "aws_subnet" "test" {
+  region = var.region
+
   availability_zone = data.aws_availability_zones.available.names[0]
   cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, 0)
   vpc_id            = aws_vpc.test.id
 }
 
 resource "aws_vpc_endpoint" "test" {
+  region = var.region
+
   private_dns_enabled = false
   security_group_ids  = [aws_default_security_group.test.id]
   service_name        = "com.amazonaws.${data.aws_region.current.name}.execute-api"
@@ -51,6 +58,8 @@ resource "aws_vpc_endpoint" "test" {
 }
 
 resource "aws_acm_certificate" "test" {
+  region = var.region
+
   certificate_body = var.certificate_pem
   private_key      = var.private_key_pem
 }
@@ -58,6 +67,8 @@ resource "aws_acm_certificate" "test" {
 # acctest.ConfigAvailableAZsNoOptInDefaultExclude()
 
 data "aws_availability_zones" "available" {
+  region = var.region
+
   exclude_zone_ids = local.default_exclude_zone_ids
   state            = "available"
 
@@ -70,14 +81,11 @@ data "aws_availability_zones" "available" {
 locals {
   default_exclude_zone_ids = ["usw2-az4", "usgw1-az2"]
 }
-resource "null_resource" "test" {}
-
 variable "rName" {
   description = "Name for resource"
   type        = string
   nullable    = false
 }
-
 variable "certificate_pem" {
   type     = string
   nullable = false
@@ -88,17 +96,9 @@ variable "private_key_pem" {
   nullable = false
 }
 
-variable "unknownTagKey" {
-  type     = string
-  nullable = false
-}
 
-variable "knownTagKey" {
-  type     = string
-  nullable = false
-}
-
-variable "knownTagValue" {
-  type     = string
-  nullable = false
+variable "region" {
+  description = "Region to deploy resource in"
+  type        = string
+  nullable    = false
 }

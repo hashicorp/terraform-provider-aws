@@ -8,16 +8,11 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
-	"github.com/hashicorp/terraform-plugin-testing/compare"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
-	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -46,77 +41,6 @@ func TestAccAPIGatewayDomainNameAccessAssociation_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "access_association_source", "aws_vpc_endpoint.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "access_association_source_type", "VPCE"),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccAPIGatewayDomainNameAccessAssociation_Identity_Basic(t *testing.T) {
-	ctx := acctest.Context(t)
-
-	var v types.DomainNameAccessAssociation
-	resourceName := "aws_api_gateway_domain_name_access_association.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	domain := acctest.RandomSubdomain()
-	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, domain)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainNameAccessAssociationDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDomainNameAccessAssociationConfig_basic(rName, domain, key, certificate),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainNameAccessAssociationExists(ctx, resourceName, &v),
-				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("apigateway", regexache.MustCompile(fmt.Sprintf(`/domainnameaccessassociations/domainname/%s\+[0-9a-z]{10}/vpcesource/vpce-[[:xdigit:]]+`, domain)))),
-					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
-				},
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccAPIGatewayDomainNameAccessAssociation_Identity_RegionOverride(t *testing.T) {
-	ctx := acctest.Context(t)
-
-	resourceName := "aws_api_gateway_domain_name_access_association.test"
-	domain := acctest.RandomSubdomain()
-	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, domain)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainNameAccessAssociationDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDomainNameAccessAssociationConfig_regionOverride(domain, key, certificate),
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNAlternateRegionRegexp("apigateway", regexache.MustCompile(fmt.Sprintf(`/domainnameaccessassociations/domainname/%s\+[0-9a-z]{10}/vpcesource/vpce-[[:xdigit:]]+`, domain)))),
-					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
-				},
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
 			},
 			{
 				ResourceName:      resourceName,
