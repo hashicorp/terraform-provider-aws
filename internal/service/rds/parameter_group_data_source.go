@@ -127,7 +127,7 @@ func dataSourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, m
 				}
 			}
 			if !paramFound {
-				log.Printf("[DEBUG] Not persisting %s to state, as its source is %q and it isn't in the config", aws.ToString(parameter.ParameterName), aws.ToString(parameter.Source))
+				log.Printf("[DEBUG] Not getting %s, as its source is %q and it isn't in the config", aws.ToString(parameter.ParameterName), aws.ToString(parameter.Source))
 			}
 		}
 	}
