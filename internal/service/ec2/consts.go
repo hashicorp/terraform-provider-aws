@@ -4,6 +4,8 @@
 package ec2
 
 import (
+	"time"
+
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
@@ -307,4 +309,8 @@ const (
 
 const (
 	supportedRegionServiceStateAvailable = "Available"
+)
+
+const (
+	vpcModifyTimeout = 2 * time.Minute
 )
