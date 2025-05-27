@@ -110,6 +110,7 @@ const (
 	MediaConvertEndpointID                 = "mediaconvert"
 	MediaLiveEndpointID                    = "medialive"
 	NotificationsEndpointID                = "notifications"
+	NotificationsContactsEndpointID        = "notifications-contacts"
 	ObservabilityAccessManagerEndpointID   = "oam"
 	OpenSearchIngestionEndpointID          = "osis"
 	OpenSearchServerlessEndpointID         = "aoss"
