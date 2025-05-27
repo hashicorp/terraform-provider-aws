@@ -531,6 +531,7 @@ All resources for the following services are considered _global_:
 * Route 53 ARC (`aws_route53recoverycontrolconfig_*` and `aws_route53recoveryreadiness_*`)
 * Shield Advanced (`aws_shield_*`)
 * User Notifications (`aws_notifications_*`)
+* User Notifications Contacts (`aws_notificationscontacts_*`)
 * WAF Classic (`aws_waf_*`)
 
 ### Global resources in regional services
