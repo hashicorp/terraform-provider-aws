@@ -28,6 +28,7 @@ import (
 	acctestgen "github.com/hashicorp/terraform-provider-aws/internal/acctest/generate"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/names/data"
 	namesgen "github.com/hashicorp/terraform-provider-aws/names/generate"
 )
@@ -678,8 +679,11 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					}
 				}
 				if attr, ok := args.Keyword["preCheckRegion"]; ok {
+					regions := strings.Split(attr, ";")
 					d.PreChecks = append(d.PreChecks, codeBlock{
-						Code: fmt.Sprintf("acctest.PreCheckRegion(t, %s)", endpointsConstOrQuote(attr)),
+						Code: fmt.Sprintf("acctest.PreCheckRegion(t, %s)", strings.Join(tfslices.ApplyToAll(regions, func(s string) string {
+							return endpointsConstOrQuote(s)
+						}), ", ")),
 					})
 					d.GoImports = append(d.GoImports,
 						goImport{
