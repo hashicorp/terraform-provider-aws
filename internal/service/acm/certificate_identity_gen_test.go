@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -25,6 +26,9 @@ func TestAccACMCertificate_Identity_Basic(t *testing.T) {
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, acctest.RandomDomain().String())
 
 	resource.ParallelTest(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_12_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
 		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
@@ -42,6 +46,7 @@ func TestAccACMCertificate_Identity_Basic(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrARN)),
 				},
 			},
 			{
@@ -50,6 +55,7 @@ func TestAccACMCertificate_Identity_Basic(t *testing.T) {
 					acctest.CtCertificatePEM: config.StringVariable(certificatePEM),
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
+				ImportStateKind:   resource.ImportCommandWithID,
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -57,6 +63,8 @@ func TestAccACMCertificate_Identity_Basic(t *testing.T) {
 					"certificate_body", names.AttrPrivateKey,
 				},
 			},
+
+			// TODO: Plannable import cannot be tested due to import diffs
 		},
 	})
 }
@@ -69,6 +77,9 @@ func TestAccACMCertificate_Identity_RegionOverride(t *testing.T) {
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, acctest.RandomDomain().String())
 
 	resource.ParallelTest(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_12_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
 		CheckDestroy:             acctest.CheckDestroyNoop,
@@ -84,10 +95,11 @@ func TestAccACMCertificate_Identity_RegionOverride(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrARN)),
 				},
 			},
 
-			// Import with appended "@<region>"
+			// Import command with appended "@<region>"
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Certificate/region_override/"),
 				ConfigVariables: config.Variables{
@@ -95,6 +107,7 @@ func TestAccACMCertificate_Identity_RegionOverride(t *testing.T) {
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 					"region":                 config.StringVariable(acctest.AlternateRegion()),
 				},
+				ImportStateKind:   resource.ImportCommandWithID,
 				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -104,7 +117,7 @@ func TestAccACMCertificate_Identity_RegionOverride(t *testing.T) {
 				},
 			},
 
-			// Import without appended "@<region>"
+			// Import command without appended "@<region>"
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Certificate/region_override/"),
 				ConfigVariables: config.Variables{
@@ -112,6 +125,7 @@ func TestAccACMCertificate_Identity_RegionOverride(t *testing.T) {
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 					"region":                 config.StringVariable(acctest.AlternateRegion()),
 				},
+				ImportStateKind:   resource.ImportCommandWithID,
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -119,6 +133,8 @@ func TestAccACMCertificate_Identity_RegionOverride(t *testing.T) {
 					"certificate_body", names.AttrPrivateKey,
 				},
 			},
+
+			// TODO: Plannable import cannot be tested due to import diffs
 		},
 	})
 }
