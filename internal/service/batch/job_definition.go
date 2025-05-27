@@ -70,7 +70,7 @@ func resourceJobDefinition() *schema.Resource {
 
 				arnARN, err := arn.Parse(arnVal)
 				if err != nil {
-					return nil, fmt.Errorf("identity attribute %q: could not parse as ARN: %q", names.AttrARN, arnVal)
+					return nil, fmt.Errorf("identity attribute %q: could not parse %q as ARN: %s", names.AttrARN, arnVal, err)
 				}
 
 				rd.Set(names.AttrRegion, arnARN.Region)
