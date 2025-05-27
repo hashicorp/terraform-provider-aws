@@ -12,6 +12,12 @@ ENHANCEMENTS:
 
 ## 6.0.0-beta2 (May 22, 2025)
 
+ENHANCEMENTS:
+
+* resource/aws_ecs_service: Add `arn` attribute ([#42733](https://github.com/hashicorp/terraform-provider-aws/issues/42733))
+
+## 6.0.0-beta2 (May 22, 2025)
+
 BREAKING CHANGES:
 
 * provider: The `endpoints.iotanalytics` and `endpoints.iotevents` configuration arguments have been removed ([#42703](https://github.com/hashicorp/terraform-provider-aws/issues/42703))
