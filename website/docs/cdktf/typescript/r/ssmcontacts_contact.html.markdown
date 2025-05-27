@@ -12,6 +12,8 @@ description: |-
 
 Terraform resource for managing an AWS SSM Contact.
 
+~> **NOTE:** A contact implicitly depends on a replication set. If you configured your replication set in Terraform, we recommend you add it to the `dependsOn` argument for the Terraform Contact Resource.
+
 ## Example Usage
 
 ### Basic Usage
@@ -68,19 +70,15 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-~> **NOTE:** A contact implicitly depends on a replication set. If you configured your replication set in Terraform, we recommend you add it to the `dependsOn` argument for the Terraform Contact Resource.
-
 The following arguments are required:
 
 - `alias` - (Required) A unique and identifiable alias for the contact or escalation plan. Must be between 1 and 255 characters, and may contain alphanumerics, underscores (`_`), and hyphens (`-`).
-
 - `type` - (Required) The type of contact engaged. A single contact is type PERSONAL and an escalation
   plan is type ESCALATION.
 
 The following arguments are optional:
 
 - `displayName` - (Optional) Full friendly name of the contact or escalation plan. If set, must be between 1 and 255 characters, and may contain alphanumerics, underscores (`_`), hyphens (`-`), periods (`.`), and spaces.
-
 - `tags` - (Optional) Map of tags to assign to the resource.
 
 ## Attribute Reference
@@ -88,7 +86,6 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 - `arn` - The Amazon Resource Name (ARN) of the contact or escalation plan.
-
 - `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
@@ -119,4 +116,4 @@ Using `terraform import`, import SSM Contact using the `ARN`. For example:
 % terraform import aws_ssmcontacts_contact.example {ARNValue}
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-2663536b417f222904b9f9c62ac959d51fabe5b14bf73e4c198bb18616b00366 -->
+<!-- cache-key: cdktf-0.20.8 input-173f67d8fb953f3d01d03255003f7c1b228d0bf2e19cde61f9e52c4d62e2e238 -->

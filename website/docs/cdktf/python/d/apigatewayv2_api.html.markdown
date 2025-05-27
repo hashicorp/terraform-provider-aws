@@ -33,9 +33,6 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available APIs in the current region.
-The given filters must match exactly one API whose data will be exported as attributes.
-
 This data source supports the following arguments:
 
 * `api_id` - (Required) API identifier.
@@ -70,4 +67,4 @@ The `cors_configuration` object supports the following:
 * `expose_headers` - Set of exposed HTTP headers.
 * `max_age` - Number of seconds that the browser should cache preflight request results.
 
-<!-- cache-key: cdktf-0.20.8 input-07def8e516a65dc957df3faf29d3393a72b9685bf3a34d4aa3801030f8f0dd38 -->
+<!-- cache-key: cdktf-0.20.8 input-a36ee2097a07e6743ff2fde182e662250c9234a8799fef163ba25e3e035f9a0d -->
