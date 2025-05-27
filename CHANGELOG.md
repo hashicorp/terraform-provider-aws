@@ -2,7 +2,11 @@
 
 FEATURES:
 
+* **New Resource:** `aws_notifications_channel_association` ([#42575](https://github.com/hashicorp/terraform-provider-aws/issues/42575))
+* **New Resource:** `aws_notifications_event_rule` ([#42575](https://github.com/hashicorp/terraform-provider-aws/issues/42575))
+* **New Resource:** `aws_notifications_notification_configuration` ([#42575](https://github.com/hashicorp/terraform-provider-aws/issues/42575))
 * **New Resource:** `aws_notifications_notification_hub` ([#42544](https://github.com/hashicorp/terraform-provider-aws/issues/42544))
+* **New Resource:** `aws_notificationscontacts_email_contact` ([#42575](https://github.com/hashicorp/terraform-provider-aws/issues/42575))
 * **New Resource:** `aws_quicksight_account_settings` ([#42185](https://github.com/hashicorp/terraform-provider-aws/issues/42185))
 
 ENHANCEMENTS:
@@ -16,6 +20,7 @@ BUG FIXES:
 
 * resource/aws_elasticache_replication_group: Fix crash during read operations where configuration endpoint and node groups are nil and empty, respectively ([#42726](https://github.com/hashicorp/terraform-provider-aws/issues/42726))
 * resource/aws_s3_bucket_lifecycle_configuration: No longer returns warning on empty `rule.filter`. ([#42624](https://github.com/hashicorp/terraform-provider-aws/issues/42624))
+* resource/aws_vpc_endpoint: Fix issue where `dns_options` were not being updated correctly when `private_dns_enabled` was set to true ([#42746](https://github.com/hashicorp/terraform-provider-aws/issues/42746))
 
 ## 5.98.0 (May 15, 2025)
 
