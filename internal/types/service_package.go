@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // ServicePackageResourceRegion represents resource-level Region information.
@@ -95,6 +96,8 @@ type ServicePackageSDKResource struct {
 type Identity struct {
 	Global            bool
 	Singleton         bool
+	ARN               bool
+	ARNAttribute      string
 	IDAttrShadowsAttr string
 	Attributes        []IdentityAttribute
 }
@@ -132,11 +135,27 @@ func StringIdentityAttribute(name string, required bool) IdentityAttribute {
 	}
 }
 
-func ARNIdentity() Identity {
+func GlobalARNIdentity() Identity {
+	return arnIdentity(true, names.AttrARN)
+}
+
+func RegionalARNIdentity() Identity {
+	return RegionalARNIdentityNamed(names.AttrARN)
+}
+
+func RegionalARNIdentityNamed(name string) Identity {
+	return arnIdentity(false, name)
+}
+
+func arnIdentity(isGlobal bool, name string) Identity {
 	return Identity{
+		Global: isGlobal,
+		ARN:    true,
+		// TODO: This is redundant, simplify
+		ARNAttribute: name,
 		Attributes: []IdentityAttribute{
 			{
-				Name:     "arn",
+				Name:     name,
 				Required: true,
 			},
 		},

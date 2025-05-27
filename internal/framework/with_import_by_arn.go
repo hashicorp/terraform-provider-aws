@@ -1,0 +1,82 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
+package framework
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+// WithImportByARN is intended to be embedded in resources which import state via the "arn" attribute.
+// See https://developer.hashicorp.com/terraform/plugin/framework/resources/import.
+type WithImportByARN struct{}
+
+func (w *WithImportByARN) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	if request.ID != "" {
+		arnARN, err := arn.Parse(request.ID)
+		if err != nil {
+			response.Diagnostics.AddError(
+				"Invalid Resource Import ID Value",
+				"The import ID could not be parsed as an ARN.\n\n"+
+					fmt.Sprintf("Value: %q\nError: %s", request.ID, err),
+			)
+			return
+		}
+
+		var region types.String
+		response.Diagnostics.Append(response.State.GetAttribute(ctx, path.Root(names.AttrRegion), &region)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		if !region.IsNull() {
+			if region.ValueString() != arnARN.Region {
+				response.Diagnostics.AddError(
+					"Invalid Resource Import ID Value",
+					fmt.Sprintf("The region passed for import, %q, does not match the region %q in the ARN %q", region.ValueString(), arnARN.Region, request.ID),
+				)
+				return
+			}
+		} else {
+			response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrRegion), arnARN.Region)...)
+			if response.Diagnostics.HasError() {
+				return
+			}
+		}
+
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrARN), request.ID)...) // nosemgrep:ci.semgrep.framework.import-state-passthrough-id
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), request.ID)...)  // nosemgrep:ci.semgrep.framework.import-state-passthrough-id
+
+		return
+	}
+
+	if identity := request.Identity; identity != nil {
+		arnPath := path.Root(names.AttrARN)
+		var arnVal string
+		identity.GetAttribute(ctx, arnPath, &arnVal)
+
+		arnARN, err := arn.Parse(arnVal)
+		if err != nil {
+			response.Diagnostics.AddAttributeError(
+				arnPath,
+				"Invalid Import Attribute Value",
+				fmt.Sprintf("Import attribute %q is not a valid ARN, got: %s", arnPath, arnVal),
+			)
+			return
+		}
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrRegion), arnARN.Region)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrARN), arnVal)...)
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), arnVal)...)
+	}
+}

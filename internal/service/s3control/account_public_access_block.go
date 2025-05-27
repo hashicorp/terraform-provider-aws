@@ -5,7 +5,6 @@ package s3control
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"reflect"
 	"strconv"
@@ -35,33 +34,6 @@ func resourceAccountPublicAccessBlock() *schema.Resource {
 		ReadWithoutTimeout:   resourceAccountPublicAccessBlockRead,
 		UpdateWithoutTimeout: resourceAccountPublicAccessBlockUpdate,
 		DeleteWithoutTimeout: resourceAccountPublicAccessBlockDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: func(_ context.Context, rd *schema.ResourceData, _ any) ([]*schema.ResourceData, error) {
-				// Import-by-id case
-				if rd.Id() != "" {
-					return []*schema.ResourceData{rd}, nil
-				}
-
-				identity, err := rd.Identity()
-				if err != nil {
-					return nil, err
-				}
-
-				accountIDRaw, ok := identity.GetOk(names.AttrAccountID)
-				if !ok {
-					return nil, fmt.Errorf("identity attribute %q is required", names.AttrAccountID)
-				}
-				accountID, ok := accountIDRaw.(string)
-				if !ok {
-					return nil, fmt.Errorf("identity attribute %q: expected string, got %T", names.AttrAccountID, accountIDRaw)
-				}
-				rd.Set(names.AttrAccountID, accountID)
-				rd.SetId(accountID)
-
-				return []*schema.ResourceData{rd}, nil
-			},
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrAccountID: {

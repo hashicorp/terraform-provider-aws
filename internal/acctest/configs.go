@@ -289,14 +289,24 @@ data "aws_availability_zones" "available" {
 `
 }
 
+func ConfigAvailableAZsNoOptIn_RegionOverride(region string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  region = %[1]q
+
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+`, region)
+}
+
 func ConfigAvailableAZsNoOptInDefaultExclude() string {
 	// Exclude usw2-az4 (us-west-2d) as it has limited instance types.
 	return ConfigAvailableAZsNoOptInExclude("usw2-az4", "usgw1-az2")
-}
-
-func ConfigAvailableAZsNoOptInDefaultExclude_RegionOverride(region string) string {
-	// Exclude usw2-az4 (us-west-2d) as it has limited instance types.
-	return ConfigAvailableAZsNoOptInExclude_RegionOverride(region, "usw2-az4", "usgw1-az2")
 }
 
 func ConfigAvailableAZsNoOptInExclude(excludeZoneIds ...string) string {
@@ -311,6 +321,11 @@ data "aws_availability_zones" "available" {
   }
 }
 `, strings.Join(excludeZoneIds, "\", \""))
+}
+
+func ConfigAvailableAZsNoOptInDefaultExclude_RegionOverride(region string) string {
+	// Exclude usw2-az4 (us-west-2d) as it has limited instance types.
+	return ConfigAvailableAZsNoOptInExclude_RegionOverride(region, "usw2-az4", "usgw1-az2")
 }
 
 func ConfigAvailableAZsNoOptInExclude_RegionOverride(region string, excludeZoneIds ...string) string {

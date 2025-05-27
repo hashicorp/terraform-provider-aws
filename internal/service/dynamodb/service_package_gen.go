@@ -34,6 +34,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "aws_dynamodb_resource_policy",
 			Name:     "Resource Policy",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalARNIdentityNamed(names.AttrResourceARN),
 		},
 	}
 }
@@ -92,6 +93,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_dynamodb_table_export",
 			Name:     "Table Export",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalARNIdentity(),
+			Import: inttypes.Import{
+				WrappedImport: true,
+			},
 		},
 		{
 			Factory:  resourceTableItem,

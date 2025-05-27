@@ -109,6 +109,10 @@ func main() {
 		resource.ProviderPackage = servicePackage
 		resource.ARNService = svc.ARNService()
 
+		if svc.primary.IsGlobal() {
+			resource.IsGlobal = true
+		}
+
 		filename := fmt.Sprintf("%s_identity_gen_test.go", sourceName)
 
 		d := g.NewGoFileDestination(filename)
@@ -125,21 +129,35 @@ func main() {
 			g.Fatalf("generating file (%s): %s", filename, err)
 		}
 
-		configTmplFile := path.Join("testdata", "tmpl", fmt.Sprintf("%s_tags.gtpl", sourceName))
+		basicConfigTmplFile := path.Join("testdata", "tmpl", fmt.Sprintf("%s_basic.gtpl", sourceName))
+		var configTmplFile string
 		var configTmpl string
-		if _, err := os.Stat(configTmplFile); err == nil {
-			b, err := os.ReadFile(configTmplFile)
-			if err != nil {
-				g.Fatalf("reading %q: %w", configTmplFile, err)
-			}
-			configTmpl = string(b)
-			resource.GenerateConfig = true
-		} else if errors.Is(err, os.ErrNotExist) {
-			g.Errorf("no tags template found for %s at %q", sourceName, configTmplFile)
-			failed = true
-		} else {
-			g.Fatalf("opening config template %q: %w", configTmplFile, err)
+		if _, err := os.Stat(basicConfigTmplFile); err == nil {
+			configTmplFile = basicConfigTmplFile
+		} else if !errors.Is(err, os.ErrNotExist) {
+			g.Fatalf("accessing config template %q: %w", basicConfigTmplFile, err)
 		}
+
+		tagsConfigTmplFile := path.Join("testdata", "tmpl", fmt.Sprintf("%s_tags.gtpl", sourceName))
+		if configTmplFile == "" {
+			if _, err := os.Stat(tagsConfigTmplFile); err == nil {
+				configTmplFile = tagsConfigTmplFile
+			} else if !errors.Is(err, os.ErrNotExist) {
+				g.Fatalf("accessing config template %q: %w", tagsConfigTmplFile, err)
+			}
+		}
+
+		if configTmplFile == "" {
+			g.Errorf("no config template found for %q at %q or %q", sourceName, basicConfigTmplFile, tagsConfigTmplFile)
+			continue
+		}
+
+		b, err := os.ReadFile(configTmplFile)
+		if err != nil {
+			g.Fatalf("reading config template %q: %w", configTmplFile, err)
+		}
+		configTmpl = string(b)
+		resource.GenerateConfig = true
 
 		if resource.GenerateConfig {
 			additionalTfVars := tfmaps.Keys(resource.additionalTfVars)
@@ -151,9 +169,14 @@ func main() {
 				g.Fatalf("parsing base Terraform config template: %s", err)
 			}
 
+			tfTemplates, err = tfTemplates.Parse(acctestTfTmpl)
+			if err != nil {
+				g.Fatalf("parsing common \"acctest\" config template: %s", err)
+			}
+
 			_, err = tfTemplates.New("body").Parse(configTmpl)
 			if err != nil {
-				g.Fatalf("parsing config template %q: %s", configTmplFile, err)
+				g.Fatalf("parsing config template %q: %s", tagsConfigTmplFile, err)
 			}
 
 			_, err = tfTemplates.New("region").Parse("")
@@ -173,9 +196,11 @@ func main() {
 				g.Fatalf("parsing config template: %s", err)
 			}
 
-			common.WithRegion = true
+			if resource.GenerateRegionOverrideTest() {
+				common.WithRegion = true
 
-			generateTestConfig(g, testDirPath, "region_override", tfTemplates, common)
+				generateTestConfig(g, testDirPath, "region_override", tfTemplates, common)
+			}
 		}
 	}
 
@@ -189,46 +214,57 @@ type serviceRecords struct {
 	additional []data.ServiceRecord
 }
 
-func (sr serviceRecords) ProviderNameUpper(resource string) (string, error) {
+func (sr serviceRecords) ProviderNameUpper(typeName string) (string, error) {
 	if len(sr.additional) == 0 {
 		return sr.primary.ProviderNameUpper(), nil
 	}
 
-	var (
-		service data.ServiceRecord
-		found   bool
-	)
 	for _, svc := range sr.additional {
-		re, err := regexp2.Compile(svc.ResourcePrefix(), 0)
-		if err != nil {
-			return "", err
-		}
-		if match, err := re.MatchString(resource); err != nil {
+		if match, err := resourceTypeNameMatchesService(typeName, svc); err != nil {
 			return "", err
 		} else if match {
-			service = svc
-			found = true
+			return svc.ProviderNameUpper(), nil
 		}
 	}
 
-	if !found {
-		re, err := regexp2.Compile(sr.primary.ResourcePrefix(), 0)
-		if err != nil {
-			return "", err
-		}
-		if match, err := re.MatchString(resource); err != nil {
-			return "", err
+	if match, err := resourceTypeNameMatchesService(typeName, sr.primary); err != nil {
+		return "", err
+	} else if match {
+		return sr.primary.ProviderNameUpper(), nil
+	}
+
+	return "", fmt.Errorf("No match found for resource type %q", typeName)
+}
+
+func resourceTypeNameMatchesService(typeName string, sr data.ServiceRecord) (bool, error) {
+	prefixActual := sr.ResourcePrefixActual()
+	if prefixActual != "" {
+		if match, err := resourceTypeNameMatchesPrefix(typeName, prefixActual); err != nil {
+			return false, err
 		} else if match {
-			service = sr.primary
-			found = true
+			return true, nil
 		}
 	}
 
-	if found {
-		return service.ProviderNameUpper(), nil
+	if match, err := resourceTypeNameMatchesPrefix(typeName, sr.ResourcePrefixCorrect()); err != nil {
+		return false, err
+	} else if match {
+		return true, nil
 	}
 
-	return "", fmt.Errorf("No match found for resource type %q", resource)
+	return false, nil
+}
+
+func resourceTypeNameMatchesPrefix(typeName, typePrefix string) (bool, error) {
+	re, err := regexp2.Compile(typePrefix, 0)
+	if err != nil {
+		return false, err
+	}
+	match, err := re.MatchString(typeName)
+	if err != nil {
+		return false, err
+	}
+	return match, err
 }
 
 func (sr serviceRecords) PackageProviderNameUpper() string {
@@ -253,6 +289,7 @@ type ResourceDatum struct {
 	Name                        string
 	TypeName                    string
 	DestroyTakesT               bool
+	HasExistsFunc               bool
 	ExistsTypeName              string
 	ExistsTakesT                bool
 	FileName                    string
@@ -277,9 +314,12 @@ type ResourceDatum struct {
 	OverrideResourceType        string
 	ARNService                  string
 	ARNFormat                   string
+	ARNAttribute                string
 	ArnIdentity                 bool
 	MutableIdentity             bool
 	IsGlobal                    bool
+	isSingleton                 bool
+	HasRegionOverrideTest       bool
 }
 
 func (d ResourceDatum) AdditionalTfVars() map[string]string {
@@ -312,6 +352,26 @@ func (d ResourceDatum) OverrideIdentifierAttribute() string {
 	return namesgen.ConstOrQuote(d.overrideIdentifierAttribute)
 }
 
+func (d ResourceDatum) IsARNIdentity() bool {
+	return d.ARNAttribute != ""
+}
+
+func (d ResourceDatum) IsGlobalSingleton() bool {
+	return d.isSingleton && d.IsGlobal
+}
+
+func (d ResourceDatum) IsRegionalSingleton() bool {
+	return d.isSingleton && !d.IsGlobal
+}
+
+func (d ResourceDatum) GenerateRegionOverrideTest() bool {
+	return !d.IsGlobal && d.HasRegionOverrideTest
+}
+
+func (d ResourceDatum) HasInherentRegion() bool {
+	return d.IsARNIdentity() || d.IsRegionalSingleton()
+}
+
 type goImport struct {
 	Path  string
 	Alias string
@@ -333,6 +393,9 @@ type ConfigDatum struct {
 
 //go:embed resource_test.go.gtpl
 var resourceTestGoTmpl string
+
+//go:embed acctest.tf.gtpl
+var acctestTfTmpl string
 
 //go:embed test.tf.gtpl
 var testTfTmpl string
@@ -397,9 +460,11 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 	v.functionName = funcDecl.Name.Name
 
 	d := ResourceDatum{
-		FileName:         v.fileName,
-		additionalTfVars: make(map[string]string),
-		IsGlobal:         false,
+		FileName:              v.fileName,
+		additionalTfVars:      make(map[string]string),
+		IsGlobal:              false,
+		HasExistsFunc:         true,
+		HasRegionOverrideTest: true,
 	}
 	hasIdentity := false
 	skip := false
@@ -447,8 +512,15 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				}
 
 			case "ArnIdentity":
-				d.ArnIdentity = true
 				hasIdentity = true
+				d.ArnIdentity = true
+				args := common.ParseArgs(m[3])
+				if len(args.Positional) == 0 {
+					d.ARNAttribute = "arn"
+				} else {
+					d.ARNAttribute = args.Positional[0]
+				}
+				d.idAttrDuplicates = d.ARNAttribute
 
 			case "ArnFormat":
 				args := common.ParseArgs(m[3])
@@ -456,6 +528,19 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 			case "MutableIdentity":
 				d.MutableIdentity = true
+
+			case "Region":
+				args := common.ParseArgs(m[3])
+				if attr, ok := args.Keyword["global"]; ok {
+					if global, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid Region/global value (%s): %s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
+					} else {
+						d.IsGlobal = global
+					}
+				}
+
+			case "NoImport":
+				d.NoImport = true
 
 			case "Testing":
 				args := common.ParseArgs(m[3])
@@ -479,6 +564,29 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 								Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
 							},
 						)
+					}
+				}
+				if attr, ok := args.Keyword["domainTfVar"]; ok {
+					varName := "domain"
+					if len(attr) > 0 {
+						varName = attr
+					}
+					d.GoImports = append(d.GoImports,
+						goImport{
+							Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
+						},
+					)
+					d.InitCodeBlocks = append(d.InitCodeBlocks, codeBlock{
+						Code: fmt.Sprintf(`%s := acctest.RandomDomainName()`, varName),
+					})
+					d.additionalTfVars[varName] = varName
+				}
+				if attr, ok := args.Keyword["hasExistsFunction"]; ok {
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid existsFunction value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					} else {
+						d.HasExistsFunc = b
 					}
 				}
 				if attr, ok := args.Keyword["existsType"]; ok {
@@ -565,6 +673,16 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						}
 					}
 				}
+				if attr, ok := args.Keyword["preCheckRegion"]; ok {
+					d.PreChecks = append(d.PreChecks, codeBlock{
+						Code: fmt.Sprintf("acctest.PreCheckRegion(t, %s)", endpointsConstOrQuote(attr)),
+					})
+					d.GoImports = append(d.GoImports,
+						goImport{
+							Path: "github.com/hashicorp/aws-sdk-go-base/v2/endpoints",
+						},
+					)
+				}
 				if attr, ok := args.Keyword["serialize"]; ok {
 					if b, err := strconv.ParseBool(attr); err != nil {
 						v.errs = append(v.errs, fmt.Errorf("invalid serialize value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
@@ -603,6 +721,14 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						continue
 					}
 				}
+				if attr, ok := args.Keyword["identityRegionOverrideTest"]; ok {
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid identityRegionOverrideTest value: %q at %s. Should be duration value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					} else {
+						d.HasRegionOverrideTest = b
+					}
+				}
 				if attr, ok := args.Keyword["tlsKey"]; ok {
 					if b, err := strconv.ParseBool(attr); err != nil {
 						v.errs = append(v.errs, fmt.Errorf("invalid tlsKey value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
@@ -635,8 +761,26 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		d.additionalTfVars["private_key_pem"] = "privateKeyPEM"
 	}
 
+	if d.IsRegionalSingleton() {
+		d.idAttrDuplicates = "region"
+	}
+
+	if d.IsGlobal {
+		d.HasRegionOverrideTest = false
+	}
+
 	if hasIdentity {
 		if !skip {
+			if d.idAttrDuplicates != "" {
+				d.GoImports = append(d.GoImports,
+					goImport{
+						Path: "github.com/hashicorp/terraform-plugin-testing/config",
+					},
+					goImport{
+						Path: "github.com/hashicorp/terraform-plugin-testing/tfjsonpath",
+					},
+				)
+			}
 			if d.Name == "" {
 				v.errs = append(v.errs, fmt.Errorf("no name parameter set: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				return
@@ -742,4 +886,16 @@ func count[T any](s iter.Seq[T], f func(T) bool) (c int) {
 		}
 	}
 	return c
+}
+
+func endpointsConstOrQuote(region string) string {
+	var buf strings.Builder
+	buf.WriteString("endpoints.")
+
+	for _, part := range strings.Split(region, "-") {
+		buf.WriteString(strings.Title(part))
+	}
+	buf.WriteString("RegionID")
+
+	return buf.String()
 }

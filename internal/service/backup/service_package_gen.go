@@ -127,6 +127,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_backup_region_settings",
 			Name:     "Region Settings",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingletonIdentity(),
+			Import: inttypes.Import{
+				WrappedImport: true,
+			},
 		},
 		{
 			Factory:  resourceReportPlan,

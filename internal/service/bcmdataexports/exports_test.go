@@ -5,6 +5,6 @@ package bcmdataexports
 
 // Exports for use in tests only.
 var (
-	ResourceExport = newExportResource
-	FindExportByID = findExportByID
+	ResourceExport  = newExportResource
+	FindExportByARN = findExportByARN
 )

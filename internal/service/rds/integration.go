@@ -34,7 +34,10 @@ import (
 
 // @FrameworkResource("aws_rds_integration", name="Integration")
 // @Tags(identifierAttribute="arn")
+// @ArnIdentity
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/rds/types;awstypes;awstypes.Integration")
 // @Testing(tagsTest=false)
+// @Testing(identityTest=false)
 func newIntegrationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &integrationResource{}
 
@@ -57,7 +60,7 @@ const (
 type integrationResource struct {
 	framework.ResourceWithModel[integrationResourceModel]
 	framework.WithNoOpUpdate[integrationResourceModel]
-	framework.WithImportByID
+	framework.WithImportByARN
 	framework.WithTimeouts
 }
 

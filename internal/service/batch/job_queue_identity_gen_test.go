@@ -56,9 +56,9 @@ func TestAccBatchJobQueue_Identity_Basic(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
+				ImportStateKind:   resource.ImportCommandWithID,
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateKind:   resource.ImportCommandWithID,
 				ImportStateVerify: true,
 			},
 			{
@@ -115,8 +115,8 @@ func TestAccBatchJobQueue_Identity_RegionOverride(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/region_override/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:  config.StringVariable(rName),
-					names.AttrRegion: config.StringVariable(acctest.AlternateRegion()),
+					acctest.CtRName: config.StringVariable(rName),
+					"region":        config.StringVariable(acctest.AlternateRegion()),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectRegionalARNAlternateRegionFormat(resourceName, tfjsonpath.New(names.AttrARN), "batch", "job-queue/{name}"),
@@ -125,28 +125,45 @@ func TestAccBatchJobQueue_Identity_RegionOverride(t *testing.T) {
 					tfstatecheck.ExpectIdentityRegionalARNAlternateRegionFormat(resourceName, "batch", "job-queue/{name}"),
 				},
 			},
+
+			// Import command with appended "@<region>"
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/region_override/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:  config.StringVariable(rName),
-					names.AttrRegion: config.StringVariable(acctest.AlternateRegion()),
+					acctest.CtRName: config.StringVariable(rName),
+					"region":        config.StringVariable(acctest.AlternateRegion()),
 				},
+				ImportStateKind:   resource.ImportCommandWithID,
 				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateKind:   resource.ImportCommandWithID,
 				ImportStateVerify: true,
 			},
+
+			// Import command without appended "@<region>"
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/region_override/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:  config.StringVariable(rName),
-					names.AttrRegion: config.StringVariable(acctest.AlternateRegion()),
+					acctest.CtRName: config.StringVariable(rName),
+					"region":        config.StringVariable(acctest.AlternateRegion()),
 				},
-				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
+				ImportStateKind:   resource.ImportCommandWithID,
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+
+			// Import block with Import ID and appended "@<region>"
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/region_override/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"region":        config.StringVariable(acctest.AlternateRegion()),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateKind:   resource.ImportBlockWithID,
+				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
@@ -155,11 +172,32 @@ func TestAccBatchJobQueue_Identity_RegionOverride(t *testing.T) {
 					},
 				},
 			},
+
+			// Import block with Import ID and no appended "@<region>"
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/region_override/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:  config.StringVariable(rName),
-					names.AttrRegion: config.StringVariable(acctest.AlternateRegion()),
+					acctest.CtRName: config.StringVariable(rName),
+					"region":        config.StringVariable(acctest.AlternateRegion()),
+				},
+				ResourceName:    resourceName,
+				ImportState:     true,
+				ImportStateKind: resource.ImportBlockWithID,
+				ImportPlanChecks: resource.ImportPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
+					},
+				},
+			},
+
+			// Import block with Resource Identity
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/region_override/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"region":        config.StringVariable(acctest.AlternateRegion()),
 				},
 				ResourceName:    resourceName,
 				ImportState:     true,

@@ -22,7 +22,9 @@ import (
 
 // @SDKResource("aws_rds_certificate", name="Default Certificate")
 // @SingletonIdentity
-// @WrappedImport
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/rds/types;awstypes;awstypes.Certificate")
+// @Testing(generator=false)
+// @Testing(name="Certificate")
 func resourceCertificate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCertificatePut,

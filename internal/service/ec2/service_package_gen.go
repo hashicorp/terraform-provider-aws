@@ -842,6 +842,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_ebs_snapshot_block_public_access",
 			Name:     "EBS Snapshot Block Public Access",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingletonIdentity(),
+			Import: inttypes.Import{
+				WrappedImport: true,
+			},
 		},
 		{
 			Factory:  resourceEBSSnapshotCopy,
@@ -1004,7 +1008,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceSerialConsoleAccess,
 			TypeName: "aws_ec2_serial_console_access",
 			Name:     "Serial Console Access",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Identity: inttypes.GlobalSingletonIdentity(),
+			Import: inttypes.Import{
+				WrappedImport: true,
+			},
 		},
 		{
 			Factory:  resourceSubnetCIDRReservation,

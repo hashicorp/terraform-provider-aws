@@ -42,6 +42,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_xray_encryption_config",
 			Name:     "Encryption Config",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingletonIdentity(),
+			Import: inttypes.Import{
+				WrappedImport: true,
+			},
 		},
 		{
 			Factory:  resourceGroup,
@@ -50,7 +54,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalARNIdentity(),
+			Import: inttypes.Import{
+				WrappedImport: true,
+			},
 		},
 		{
 			Factory:  resourceSamplingRule,

@@ -10,10 +10,14 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/codeconnections/types"
+	"github.com/hashicorp/terraform-plugin-testing/compare"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcodeconnections "github.com/hashicorp/terraform-provider-aws/internal/service/codeconnections"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -44,6 +48,75 @@ func TestAccCodeConnectionsHost_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "provider_endpoint", "https://example.com"),
 					resource.TestCheckResourceAttr(resourceName, "provider_type", string(types.ProviderTypeGithubEnterpriseServer)),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccCodeConnectionsHost_Identity_Basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.Host
+	resourceName := "aws_codeconnections_host.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeConnectionsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHostDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccHostConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHostExists(ctx, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("codeconnections", regexache.MustCompile(`host/.+`))),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccCodeConnectionsHost_Identity_RegionOverride(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	resourceName := "aws_codeconnections_host.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeConnectionsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHostDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccHostConfig_regionOverride(rName),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNAlternateRegionRegexp("codeconnections", regexache.MustCompile(`host/.+`))),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
 			},
 			{
 				ResourceName:      resourceName,
@@ -237,6 +310,18 @@ resource "aws_codeconnections_host" "test" {
   provider_type     = "GitHubEnterpriseServer"
 }
 `, rName)
+}
+
+func testAccHostConfig_regionOverride(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_codeconnections_host" "test" {
+  region = %[2]q
+
+  name              = %[1]q
+  provider_endpoint = "https://example.com"
+  provider_type     = "GitHubEnterpriseServer"
+}
+`, rName, acctest.AlternateRegion())
 }
 
 func testAccHostConfig_vpcNoCertificate(rName string) string {

@@ -34,6 +34,7 @@ import (
 
 // @FrameworkResource("aws_codeconnections_host", name="Host")
 // @Tags(identifierAttribute="arn")
+// @ArnIdentity
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/codeconnections/types;types.Host")
 func newHostResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &hostResource{}
@@ -52,6 +53,7 @@ const (
 type hostResource struct {
 	framework.ResourceWithModel[hostResourceModel]
 	framework.WithTimeouts
+	framework.WithImportByARN
 }
 
 func (r *hostResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -303,11 +305,6 @@ func (r *hostResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 		)
 		return
 	}
-}
-
-func (r *hostResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrARN), req, resp)
 }
 
 const (

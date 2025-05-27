@@ -27,6 +27,7 @@ import (
 
 // @SDKResource("aws_ecs_cluster", name="Cluster")
 // @Tags(identifierAttribute="arn")
+// @ArnFormat("cluster/{name}")
 func resourceCluster() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterCreate,

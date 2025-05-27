@@ -12,7 +12,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/batch"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/batch/types"
 	"github.com/hashicorp/go-cty/cty"
@@ -26,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -36,9 +36,9 @@ import (
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
 // @MutableIdentity
+// @WrappedImport(false)
 // @ArnFormat("job-definition/{name}:{revision}")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/batch/types;types.JobDefinition")
-// @Testing(idAttrDuplicates="arn")
 func resourceJobDefinition() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceJobDefinitionCreate,
@@ -46,39 +46,12 @@ func resourceJobDefinition() *schema.Resource {
 		UpdateWithoutTimeout: resourceJobDefinitionUpdate,
 		DeleteWithoutTimeout: resourceJobDefinitionDelete,
 
+		// TODO: handle default values on Import
 		Importer: &schema.ResourceImporter{
-			StateContext: func(_ context.Context, rd *schema.ResourceData, _ any) ([]*schema.ResourceData, error) {
-				// Import-by-id case
-				if rd.Id() != "" {
-					rd.Set("deregister_on_new_revision", true)
-
-					return []*schema.ResourceData{rd}, nil
-				}
-
-				identity, err := rd.Identity()
-				if err != nil {
+			StateContext: func(ctx context.Context, rd *schema.ResourceData, _ any) ([]*schema.ResourceData, error) {
+				if err := importer.RegionalARN(ctx, rd, names.AttrARN); err != nil {
 					return nil, err
 				}
-
-				arnRaw, ok := identity.GetOk(names.AttrARN)
-				if !ok {
-					return nil, fmt.Errorf("identity attribute %q is required", names.AttrARN)
-				}
-
-				arnVal, ok := arnRaw.(string)
-				if !ok {
-					return nil, fmt.Errorf("identity attribute %q: expected string, got %T", names.AttrARN, arnRaw)
-				}
-
-				arnARN, err := arn.Parse(arnVal)
-				if err != nil {
-					return nil, fmt.Errorf("identity attribute %q: could not parse %q as ARN: %s", names.AttrARN, arnVal, err)
-				}
-
-				rd.Set(names.AttrRegion, arnARN.Region)
-
-				rd.Set(names.AttrARN, arnVal)
-				rd.SetId(arnVal)
 
 				rd.Set("deregister_on_new_revision", true)
 

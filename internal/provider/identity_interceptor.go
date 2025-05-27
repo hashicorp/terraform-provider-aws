@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/importer"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -111,18 +112,18 @@ func newIdentityAttribute(attribute inttypes.IdentityAttribute) *schema.Schema {
 	return attr
 }
 
-func newIdentityImporter(v inttypes.Identity) *schema.ResourceImporter {
-	if v.Singleton {
-		if v.Global {
-			return &schema.ResourceImporter{
-				StateContext: globalSingletonImporter,
-			}
-		} else {
-			return &schema.ResourceImporter{
-				StateContext: regionalSingletonImporter,
-			}
-		}
-	}
+func newParameterizedIdentityImporter(v inttypes.Identity) *schema.ResourceImporter {
+	// if v.Singleton {
+	// 	if v.Global {
+	// 		return &schema.ResourceImporter{
+	// 			StateContext: globalSingletonImporter,
+	// 		}
+	// 	} else {
+	// 		return &schema.ResourceImporter{
+	// 			StateContext: regionalSingletonImporter,
+	// 		}
+	// 	}
+	// }
 
 	importer := &schema.ResourceImporter{
 		StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
@@ -187,83 +188,132 @@ func newIdentityImporter(v inttypes.Identity) *schema.ResourceImporter {
 	return importer
 }
 
-func globalSingletonImporter(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	if rd.Id() != "" {
-		rd.Set(names.AttrAccountID, rd.Id())
-		return []*schema.ResourceData{rd}, nil
-	}
+// func globalSingletonImporter(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+// 	if rd.Id() != "" {
+// 		rd.Set(names.AttrAccountID, rd.Id())
+// 		return []*schema.ResourceData{rd}, nil
+// 	}
 
-	identity, err := rd.Identity()
-	if err != nil {
-		return nil, err
-	}
+// 	identity, err := rd.Identity()
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	client := meta.(*conns.AWSClient)
+// 	client := meta.(*conns.AWSClient)
 
-	accountIDRaw, ok := identity.GetOk(names.AttrAccountID)
-	var accountID string
-	if ok {
-		accountID, ok = accountIDRaw.(string)
-		if !ok {
-			return nil, fmt.Errorf("identity attribute %q: expected string, got %T", names.AttrAccountID, accountIDRaw)
-		}
-		if accountID != client.AccountID(ctx) {
-			return nil, fmt.Errorf("Unable to import\n\nidentity attribute %q: Provider configured with Account ID %q, got %q", names.AttrAccountID, client.AccountID(ctx), accountID)
-		}
-	} else {
-		accountID = client.AccountID(ctx)
-	}
-	rd.Set(names.AttrAccountID, accountID)
-	rd.SetId(accountID)
+// 	accountIDRaw, ok := identity.GetOk(names.AttrAccountID)
+// 	var accountID string
+// 	if ok {
+// 		accountID, ok = accountIDRaw.(string)
+// 		if !ok {
+// 			return nil, fmt.Errorf("identity attribute %q: expected string, got %T", names.AttrAccountID, accountIDRaw)
+// 		}
+// 		if accountID != client.AccountID(ctx) {
+// 			return nil, fmt.Errorf("Unable to import\n\nidentity attribute %q: Provider configured with Account ID %q, got %q", names.AttrAccountID, client.AccountID(ctx), accountID)
+// 		}
+// 	} else {
+// 		accountID = client.AccountID(ctx)
+// 	}
+// 	rd.Set(names.AttrAccountID, accountID)
+// 	rd.SetId(accountID)
 
-	return []*schema.ResourceData{rd}, nil
-}
+// 	return []*schema.ResourceData{rd}, nil
+// }
 
-func regionalSingletonImporter(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	if rd.Id() != "" {
-		rd.Set("region", rd.Id())
-		return []*schema.ResourceData{rd}, nil
-	}
+// func regionalSingletonImporter(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+// 	if rd.Id() != "" {
+// 		rd.Set("region", rd.Id())
+// 		return []*schema.ResourceData{rd}, nil
+// 	}
 
-	identity, err := rd.Identity()
-	if err != nil {
-		return nil, err
-	}
+// 	identity, err := rd.Identity()
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	client := meta.(*conns.AWSClient)
+// 	client := meta.(*conns.AWSClient)
 
-	accountIDRaw, ok := identity.GetOk(names.AttrAccountID)
-	var accountID string
-	if ok {
-		accountID, ok = accountIDRaw.(string)
-		if !ok {
-			return nil, fmt.Errorf("identity attribute %q: expected string, got %T", names.AttrAccountID, accountIDRaw)
-		}
-		if accountID != client.AccountID(ctx) {
-			return nil, fmt.Errorf("Unable to import\n\nidentity attribute %q: Provider configured with Account ID %q, got %q", names.AttrAccountID, client.AccountID(ctx), accountID)
-		}
-	}
+// 	accountIDRaw, ok := identity.GetOk(names.AttrAccountID)
+// 	var accountID string
+// 	if ok {
+// 		accountID, ok = accountIDRaw.(string)
+// 		if !ok {
+// 			return nil, fmt.Errorf("identity attribute %q: expected string, got %T", names.AttrAccountID, accountIDRaw)
+// 		}
+// 		if accountID != client.AccountID(ctx) {
+// 			return nil, fmt.Errorf("Unable to import\n\nidentity attribute %q: Provider configured with Account ID %q, got %q", names.AttrAccountID, client.AccountID(ctx), accountID)
+// 		}
+// 	}
 
-	regionRaw, ok := identity.GetOk("region")
-	var region string
-	if ok {
-		region, ok = regionRaw.(string)
-		if !ok {
-			return nil, fmt.Errorf("identity attribute %q: expected string, got %T", "region", regionRaw)
-		}
-	} else {
-		region = client.Region(ctx)
-	}
-	rd.Set("region", region)
-	rd.SetId(region)
+// 	regionRaw, ok := identity.GetOk("region")
+// 	var region string
+// 	if ok {
+// 		region, ok = regionRaw.(string)
+// 		if !ok {
+// 			return nil, fmt.Errorf("identity attribute %q: expected string, got %T", "region", regionRaw)
+// 		}
+// 	} else {
+// 		region = client.Region(ctx)
+// 	}
+// 	rd.Set("region", region)
+// 	rd.SetId(region)
 
-	return []*schema.ResourceData{rd}, nil
-}
+// 	return []*schema.ResourceData{rd}, nil
+// }
 
 func setAttribute(d *schema.ResourceData, name, value string) {
 	if name == "id" {
 		d.SetId(value)
 	} else {
 		d.Set(name, value)
+	}
+}
+
+func arnIdentityResourceImporter(attrName string, isGlobal bool) *schema.ResourceImporter {
+	if isGlobal {
+		return &schema.ResourceImporter{
+			StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				if err := importer.GlobalARN(ctx, rd, attrName); err != nil {
+					return nil, err
+				}
+
+				return []*schema.ResourceData{rd}, nil
+			},
+		}
+	} else {
+		return &schema.ResourceImporter{
+			StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				if err := importer.RegionalARN(ctx, rd, attrName); err != nil {
+					return nil, err
+				}
+
+				return []*schema.ResourceData{rd}, nil
+			},
+		}
+	}
+}
+
+func singletonIdentityResourceImporter(isGlobal bool) *schema.ResourceImporter {
+	if isGlobal {
+		// Historically, we haven't validated *any* Import ID value for Global Singletons
+		return &schema.ResourceImporter{
+			StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				if err := importer.GlobalSingleton(ctx, rd, meta); err != nil {
+					return nil, err
+				}
+
+				return []*schema.ResourceData{rd}, nil
+			},
+		}
+	} else {
+		return &schema.ResourceImporter{
+			StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				if err := importer.RegionalSingleton(ctx, rd, meta); err != nil {
+					return nil, err
+				}
+
+				return []*schema.ResourceData{rd}, nil
+			},
+		}
 	}
 }

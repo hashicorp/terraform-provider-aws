@@ -418,15 +418,15 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 			provider.DataSourcesMap[typeName] = r
 		}
 
-		for _, v := range sp.SDKResources(ctx) {
-			typeName := v.TypeName
+		for _, resource := range sp.SDKResources(ctx) {
+			typeName := resource.TypeName
 
 			if _, ok := provider.ResourcesMap[typeName]; ok {
 				errs = append(errs, fmt.Errorf("duplicate resource: %s", typeName))
 				continue
 			}
 
-			r := v.Factory()
+			r := resource.Factory()
 
 			// Ensure that the correct CRUD handler variants are used.
 			if r.Create != nil || r.CreateContext != nil {
@@ -447,14 +447,14 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 			}
 
 			var isRegionOverrideEnabled bool
-			if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
+			if v := resource.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
 				isRegionOverrideEnabled = true
 			}
 
 			var interceptors interceptorInvocations
 
 			if isRegionOverrideEnabled {
-				v := v.Region.Value()
+				v := resource.Region.Value()
 				s := r.SchemaMap()
 
 				if _, ok := s[names.AttrRegion]; !ok {
@@ -506,18 +506,18 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 					why:         CustomizeDiff,
 					interceptor: forceNewIfRegionChanges(),
 				})
-				interceptors = append(interceptors, interceptorInvocation{
-					when:        Before,
-					why:         Import,
-					interceptor: importRegion(),
-				})
+				if resource.Identity.Singleton || resource.Identity.ARN {
+					interceptors = append(interceptors, resourceImportRegionNoDefault())
+				} else {
+					interceptors = append(interceptors, resourceImportRegion())
+				}
 			}
 
-			if !tfunique.IsHandleNil(v.Tags) {
+			if !tfunique.IsHandleNil(resource.Tags) {
 				interceptors = append(interceptors, interceptorInvocation{
 					when:        Before | After | Finally,
 					why:         Create | Read | Update,
-					interceptor: resourceTransparentTagging(v.Tags),
+					interceptor: resourceTransparentTagging(resource.Tags),
 				})
 				interceptors = append(interceptors, interceptorInvocation{
 					when:        Before,
@@ -526,14 +526,25 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 				})
 			}
 
-			if len(v.Identity.Attributes) > 0 {
-				r.Identity = newResourceIdentity(v.Identity)
+			if len(resource.Identity.Attributes) > 0 {
+				r.Identity = newResourceIdentity(resource.Identity)
 
-				if v.Import.WrappedImport {
-					r.Importer = newIdentityImporter(v.Identity)
+				interceptors = append(interceptors, newIdentityInterceptor(resource.Identity.Attributes))
+			}
+
+			if resource.Import.WrappedImport {
+				if r.Importer != nil && r.Importer.StateContext != nil {
+					errs = append(errs, fmt.Errorf("resource type %s: uses WrappedImport but defines an import function", typeName))
+					continue
 				}
 
-				interceptors = append(interceptors, newIdentityInterceptor(v.Identity.Attributes))
+				if resource.Identity.ARN {
+					r.Importer = arnIdentityResourceImporter(resource.Identity.ARNAttribute, resource.Identity.Global)
+				} else if resource.Identity.Singleton {
+					r.Importer = singletonIdentityResourceImporter(resource.Identity.Global)
+				} else {
+					r.Importer = newParameterizedIdentityImporter(resource.Identity)
+				}
 			}
 
 			opts := wrappedResourceOptions{
@@ -547,7 +558,7 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 						}
 					}
 
-					ctx = conns.NewResourceContext(ctx, servicePackageName, v.Name, overrideRegion)
+					ctx = conns.NewResourceContext(ctx, servicePackageName, resource.Name, overrideRegion)
 					if c, ok := meta.(*conns.AWSClient); ok {
 						ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx))
 						ctx = c.RegisterLogger(ctx)

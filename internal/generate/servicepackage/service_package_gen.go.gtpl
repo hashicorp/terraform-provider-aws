@@ -119,29 +119,35 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				IsValidateOverrideInPartition: {{ $value.ValidateRegionOverrideInPartition }},
 			}),
 	{{- end }}
-			{{- if not $value.MutableIdentity }}
-				{{- if gt (len $value.IdentityAttributes) 0 }}
-					{{- if or $.IsGlobal $value.IsGlobal }}
-						Identity: inttypes.GlobalParameterizedIdentity(
-							{{- range $value.IdentityAttributes }}
-								{{ template "IdentifierAttribute" . }}
-							{{- end }}
-						),
-					{{ else }}
-						Identity: inttypes.ParameterizedIdentity(
-							{{- range $value.IdentityAttributes }}
-								{{ template "IdentifierAttribute" . }}
-							{{- end }}
-						),
+			{{- if gt (len $value.IdentityAttributes) 0 }}
+				{{- if or $.IsGlobal $value.IsGlobal }}
+					Identity: inttypes.GlobalParameterizedIdentity(
+						{{- range $value.IdentityAttributes }}
+							{{ template "IdentifierAttribute" . }}
+						{{- end }}
+					),
+				{{ else }}
+					Identity: inttypes.ParameterizedIdentity(
+						{{- range $value.IdentityAttributes }}
+							{{ template "IdentifierAttribute" . }}
+						{{- end }}
+					),
+				{{- end }}
+			{{- else if $value.ARNIdentity }}
+				{{- if $.IsGlobal }}
+					Identity: inttypes.GlobalARNIdentity(),		
+				{{- else }}
+					{{- if $value.HasARNAttribute }}
+						Identity: inttypes.RegionalARNIdentityNamed({{ $value.ARNAttribute }}),
+					{{- else }}
+						Identity: inttypes.RegionalARNIdentity(),
 					{{- end }}
-				{{- else if $value.ARNIdentity }}
-					Identity: inttypes.ARNIdentity(),
-				{{- else if $value.SingletonIdentity }}
-					{{- if or $.IsGlobal $value.IsGlobal }}
-						Identity: inttypes.GlobalSingletonIdentity(),
-					{{ else }}
-						Identity: inttypes.RegionalSingletonIdentity(),
-					{{- end }}
+				{{- end }}
+			{{- else if $value.SingletonIdentity }}
+				{{- if or $.IsGlobal $value.IsGlobal }}
+					Identity: inttypes.GlobalSingletonIdentity(),
+				{{ else }}
+					Identity: inttypes.RegionalSingletonIdentity(),
 				{{- end }}
 			{{- end }}
 		},
@@ -210,29 +216,35 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IsValidateOverrideInPartition: {{ $value.ValidateRegionOverrideInPartition }},
 			}),
 	{{- end }}
-			{{- if not $value.MutableIdentity }}
-				{{- if gt (len $value.IdentityAttributes) 0 }}
-					{{- if or $.IsGlobal $value.IsGlobal }}
-						Identity: inttypes.GlobalParameterizedIdentity(
-							{{- range $value.IdentityAttributes }}
-								{{ template "IdentifierAttribute" . }}
-							{{- end }}
-						),
+			{{- if gt (len $value.IdentityAttributes) 0 }}
+				{{- if or $.IsGlobal $value.IsGlobal }}
+					Identity: inttypes.GlobalParameterizedIdentity(
+						{{- range $value.IdentityAttributes }}
+							{{ template "IdentifierAttribute" . }}
+						{{- end }}
+					),
+				{{- else }}
+					Identity: inttypes.ParameterizedIdentity(
+						{{- range $value.IdentityAttributes }}
+							{{ template "IdentifierAttribute" . }}
+						{{- end }}
+					),
+				{{- end }}
+			{{- else if $value.ARNIdentity }}
+				{{- if $.IsGlobal }}
+					Identity: inttypes.GlobalARNIdentity(),		
+				{{- else }}
+					{{- if $value.HasARNAttribute }}
+						Identity: inttypes.RegionalARNIdentityNamed({{ $value.ARNAttribute }}),
 					{{- else }}
-						Identity: inttypes.ParameterizedIdentity(
-							{{- range $value.IdentityAttributes }}
-								{{ template "IdentifierAttribute" . }}
-							{{- end }}
-						),
+						Identity: inttypes.RegionalARNIdentity(),
 					{{- end }}
-				{{- else if $value.ARNIdentity }}
-					Identity: inttypes.ARNIdentity(),
-				{{- else if $value.SingletonIdentity }}
-					{{- if or $.IsGlobal $value.IsGlobal }}
-						Identity: inttypes.GlobalSingletonIdentity(),
-					{{- else }}
-						Identity: inttypes.RegionalSingletonIdentity(),
-					{{- end }}
+				{{- end }}
+			{{- else if $value.SingletonIdentity }}
+				{{- if or $.IsGlobal $value.IsGlobal }}
+					Identity: inttypes.GlobalSingletonIdentity(),
+				{{- else }}
+					Identity: inttypes.RegionalSingletonIdentity(),
 				{{- end }}
 			{{- end }}
 			{{- if $value.WrappedImport }}
