@@ -2468,7 +2468,7 @@ resource "aws_ecs_service" "test" {
 }
 
 func testAccServiceConfig_baseVolumeConfiguration(rName string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
 
@@ -2477,9 +2477,9 @@ resource "aws_ecs_cluster" "test" {
 }
 
 resource "aws_ecs_task_definition" "test" {
-  family = %[1]q
-
-  container_definitions = <<TASK_DEFINITION
+  family                = %[1]q
+  network_mode          = "awsvpc"
+  container_definitions = <<DEFINITION
 [
   {
     "cpu": 128,
@@ -2492,7 +2492,7 @@ resource "aws_ecs_task_definition" "test" {
     ]
   }
 ]
-TASK_DEFINITION
+DEFINITION
 
   volume {
     name                = "vol1"
@@ -2541,7 +2541,7 @@ resource "aws_iam_role_policy" "ecs_service" {
 }
 EOF
 }
-`, rName)
+`, rName))
 }
 
 func testAccServiceConfig_volumeConfiguration_basic(rName string) string {
@@ -2560,6 +2560,10 @@ resource "aws_ecs_service" "test" {
     }
   }
 
+  network_configuration {
+    subnets = aws_subnet.test[*].id
+  }
+
   depends_on = [aws_iam_role_policy.ecs_service]
 }
 `, rName))
@@ -2567,28 +2571,29 @@ resource "aws_ecs_service" "test" {
 
 func testAccServiceConfig_volumeConfiguration_volumeInitializationRate(rName string, volumeInitializationRate int) string {
 	return acctest.ConfigCompose(testAccServiceConfig_baseVolumeConfiguration(rName), fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
 resource "aws_ebs_volume" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
   size              = 1
-}
-resource "aws_ebs_snapshot" "test" {
-  volume_id = aws_ebs_volume.test.id
+
   tags = {
     Name = %[1]q
   }
 }
+
+resource "aws_ebs_snapshot" "test" {
+  volume_id = aws_ebs_volume.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
 resource "aws_ecs_service" "test" {
   name            = %[1]q
   cluster         = aws_ecs_cluster.test.id
   task_definition = aws_ecs_task_definition.test.arn
   desired_count   = 1
+
   volume_configuration {
     name = "vol1"
     managed_ebs_volume {
@@ -2597,6 +2602,11 @@ resource "aws_ecs_service" "test" {
       volume_initialization_rate = %[2]d
     }
   }
+
+  network_configuration {
+    subnets = aws_subnet.test[*].id
+  }
+
   depends_on = [aws_iam_role_policy.ecs_service]
 }
 `, rName, volumeInitializationRate))
@@ -2625,6 +2635,10 @@ resource "aws_ecs_service" "test" {
     }
   }
 
+  network_configuration {
+    subnets = aws_subnet.test[*].id
+  }
+
   depends_on = [aws_iam_role_policy.ecs_service]
 }
 `, rName))
@@ -2647,6 +2661,10 @@ resource "aws_ecs_service" "test" {
     }
   }
 
+  network_configuration {
+    subnets = aws_subnet.test[*].id
+  }
+
   depends_on = [aws_iam_role_policy.ecs_service]
 }
 `, rName, volumeType, size))
@@ -2667,6 +2685,10 @@ resource "aws_ecs_service" "test" {
       size_in_gb  = 10
       volume_type = "gp3"
     }
+  }
+
+  network_configuration {
+    subnets = aws_subnet.test[*].id
   }
 
   depends_on = [aws_iam_role_policy.ecs_service]
