@@ -481,6 +481,7 @@ func resourceVPCEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta
 		if d.HasChange("private_dns_enabled") {
 			input.PrivateDnsEnabled = aws.Bool(privateDNSEnabled)
 
+			// when private_dns_enabled is set to true, always set dns_options
 			if privateDNSEnabled {
 				if v, ok := d.GetOk("dns_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 					tfMap := v.([]any)[0].(map[string]any)
