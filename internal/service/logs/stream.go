@@ -153,7 +153,7 @@ func findLogStreamByTwoPartKey(ctx context.Context, conn *cloudwatchlogs.Client,
 }
 
 func findLogStream(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeLogStreamsInput, filter tfslices.Predicate[*awstypes.LogStream]) (*awstypes.LogStream, error) { // nosemgrep:ci.logs-in-func-name
-	output, err := findLogStreams(ctx, conn, input, filter, withReturnFirstMatch())
+	output, err := findLogStreams(ctx, conn, input, filter, tfslices.WithReturnFirstMatch())
 
 	if err != nil {
 		return nil, err
@@ -162,9 +162,9 @@ func findLogStream(ctx context.Context, conn *cloudwatchlogs.Client, input *clou
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findLogStreams(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeLogStreamsInput, filter tfslices.Predicate[*awstypes.LogStream], optFn ...filterOptionsFunc) ([]awstypes.LogStream, error) { // nosemgrep:ci.logs-in-func-name
+func findLogStreams(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeLogStreamsInput, filter tfslices.Predicate[*awstypes.LogStream], optFns ...tfslices.FinderOptionsFunc) ([]awstypes.LogStream, error) { // nosemgrep:ci.logs-in-func-name
 	var output []awstypes.LogStream
-	opts := newFilterOptions(optFn)
+	opts := tfslices.NewFinderOptions(optFns)
 
 	pages := cloudwatchlogs.NewDescribeLogStreamsPaginator(conn, input)
 	for pages.HasMorePages() {
@@ -184,7 +184,7 @@ func findLogStreams(ctx context.Context, conn *cloudwatchlogs.Client, input *clo
 		for _, v := range page.LogStreams {
 			if filter(&v) {
 				output = append(output, v)
-				if opts.shouldReturnFirstMatch() {
+				if opts.ReturnFirstMatch() {
 					return output, nil
 				}
 			}
@@ -192,28 +192,4 @@ func findLogStreams(ctx context.Context, conn *cloudwatchlogs.Client, input *clo
 	}
 
 	return output, nil
-}
-
-type filterOptions struct {
-	returnFirstMatch bool
-}
-
-func newFilterOptions(optFn []filterOptionsFunc) *filterOptions {
-	opts := &filterOptions{}
-	for _, fn := range optFn {
-		fn(opts)
-	}
-	return opts
-}
-
-func (o *filterOptions) shouldReturnFirstMatch() bool {
-	return o.returnFirstMatch
-}
-
-type filterOptionsFunc func(*filterOptions)
-
-func withReturnFirstMatch() filterOptionsFunc {
-	return func(o *filterOptions) {
-		o.returnFirstMatch = true
-	}
 }
