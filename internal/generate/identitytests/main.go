@@ -314,7 +314,7 @@ type ResourceDatum struct {
 	OverrideResourceType        string
 	ARNService                  string
 	ARNFormat                   string
-	ARNAttribute                string
+	arnAttribute                string
 	ArnIdentity                 bool
 	MutableIdentity             bool
 	IsGlobal                    bool
@@ -353,7 +353,11 @@ func (d ResourceDatum) OverrideIdentifierAttribute() string {
 }
 
 func (d ResourceDatum) IsARNIdentity() bool {
-	return d.ARNAttribute != ""
+	return d.arnAttribute != ""
+}
+
+func (d ResourceDatum) ARNAttribute() string {
+	return namesgen.ConstOrQuote(d.arnAttribute)
 }
 
 func (d ResourceDatum) IsGlobalSingleton() bool {
@@ -516,11 +520,11 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				d.ArnIdentity = true
 				args := common.ParseArgs(m[3])
 				if len(args.Positional) == 0 {
-					d.ARNAttribute = "arn"
+					d.arnAttribute = "arn"
 				} else {
-					d.ARNAttribute = args.Positional[0]
+					d.arnAttribute = args.Positional[0]
 				}
-				d.idAttrDuplicates = d.ARNAttribute
+				d.idAttrDuplicates = d.arnAttribute
 
 			case "ArnFormat":
 				args := common.ParseArgs(m[3])

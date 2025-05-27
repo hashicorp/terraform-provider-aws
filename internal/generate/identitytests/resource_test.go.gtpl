@@ -243,8 +243,10 @@ func {{ template "testname" . }}_Identity_Basic(t *testing.T) {
 					{{ if not .IsGlobal -}}
 						statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 					{{ end -}}
-					{{ if and .ArnIdentity (ne .ARNFormat "") -}}
-						tfstatecheck.ExpectIdentityRegionalARNFormat(resourceName, "{{ .ARNService }}", "{{ .ARNFormat }}"),
+					{{ if .ArnIdentity -}}
+						statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .ARNAttribute }})),
+					{{ else if .IsRegionalSingleton }}
+						statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrRegion)),
 					{{ end -}}
 				},
 			},
@@ -326,8 +328,10 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 						statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New({{ .IDAttrDuplicates }}), compare.ValuesSame()),
 					{{ end -}}
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
-					{{ if and .ArnIdentity (ne .ARNFormat "") -}}
-						tfstatecheck.ExpectIdentityRegionalARNAlternateRegionFormat(resourceName, "{{ .ARNService }}", "{{ .ARNFormat }}"),
+					{{ if .ArnIdentity -}}
+						statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .ARNAttribute }})),
+					{{ else if .IsRegionalSingleton }}
+						statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrRegion)),
 					{{ end -}}
 				},
 			},
