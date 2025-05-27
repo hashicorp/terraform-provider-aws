@@ -262,6 +262,12 @@ func TestAccELBV2LoadBalancer_Identity_RegionOverride(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateKind:   resource.ImportCommandWithID,
+				ImportStateVerify: true,
+			},
+			{
+				ResourceName:      resourceName,
 				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateKind:   resource.ImportBlockWithID,
@@ -2589,10 +2595,6 @@ func testAccLoadBalancerConfig_basic(rName string) string {
 	return testAccLoadBalancerConfig_subnetCount(rName, 2, 2)
 }
 
-func testAccLoadBalancerConfig_regionOverride(rName string) string {
-	return testAccLoadBalancerConfig_subnetCount_regionOverride(rName, 2, 2)
-}
-
 func testAccLoadBalancerConfig_subnetCount(rName string, nSubnets, nSubnetsReferenced int) string {
 	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseInternal(rName, nSubnets), fmt.Sprintf(`
 resource "aws_lb" "test" {
@@ -2605,6 +2607,10 @@ resource "aws_lb" "test" {
   enable_deletion_protection = false
 }
 `, rName, nSubnetsReferenced))
+}
+
+func testAccLoadBalancerConfig_regionOverride(rName string) string {
+	return testAccLoadBalancerConfig_subnetCount_regionOverride(rName, 2, 2)
 }
 
 func testAccLoadBalancerConfig_subnetCount_regionOverride(rName string, nSubnets, nSubnetsReferenced int) string {
