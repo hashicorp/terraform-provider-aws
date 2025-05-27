@@ -109,6 +109,19 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				IsValidateOverrideInPartition: {{ $value.ValidateRegionOverrideInPartition }},
 			}),
 	{{- end }}
+			{{- if $value.ARNIdentity }}
+				{{- if $.IsGlobal }}
+					Identity: inttypes.GlobalARNIdentity(),		
+				{{- else }}
+					{{- if $value.HasARNAttribute }}
+						Identity: inttypes.RegionalARNIdentityNamed({{ $value.ARNAttribute }}),
+					{{- else }}
+						Identity: inttypes.RegionalARNIdentity(),
+					{{- end }}
+				{{- end }}
+			{{- else if $value.SingletonIdentity }}
+				Identity: inttypes.RegionalSingletonIdentity(),
+			{{- end }}
 		},
 {{- end }}
 	}
@@ -175,6 +188,24 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IsValidateOverrideInPartition: {{ $value.ValidateRegionOverrideInPartition }},
 			}),
 	{{- end }}
+			{{- if $value.ARNIdentity }}
+				{{- if $.IsGlobal }}
+					Identity: inttypes.GlobalARNIdentity(),		
+				{{- else }}
+					{{- if $value.HasARNAttribute }}
+						Identity: inttypes.RegionalARNIdentityNamed({{ $value.ARNAttribute }}),
+					{{- else }}
+						Identity: inttypes.RegionalARNIdentity(),
+					{{- end }}
+				{{- end }}
+			{{- else if $value.SingletonIdentity }}
+				Identity: inttypes.RegionalSingletonIdentity(),
+			{{- end }}
+			{{- if $value.WrappedImport }}
+				Import: inttypes.Import{
+					WrappedImport: true,
+				},
+			{{- end }}
 		},
 {{- end }}
 	}

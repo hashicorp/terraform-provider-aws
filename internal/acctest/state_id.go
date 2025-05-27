@@ -41,3 +41,45 @@ func CrossRegionAttrImportStateIdFunc(resourceName, attrName string) resource.Im
 		return id + "@" + region, nil
 	}
 }
+
+// CrossRegionImportStateIdFunc is a resource.ImportStateIdFunc that appends the region
+func CrossRegionImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		id := rs.Primary.ID
+		region, ok := rs.Primary.Attributes[names.AttrRegion]
+		if !ok {
+			return "", fmt.Errorf("Attribute \"region\" not found in %s", resourceName)
+		}
+
+		return id + "@" + region, nil
+	}
+}
+
+// CrossRegionImportStateIdFuncAdapter adapts an ImportStateIdFunc by appending the region
+func CrossRegionImportStateIdFuncAdapter(resourceName string, f Func) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		id, err := f(resourceName)(s)
+		if err != nil {
+			return "", err
+		}
+
+		region, ok := rs.Primary.Attributes[names.AttrRegion]
+		if !ok {
+			return "", fmt.Errorf("Attribute \"region\" not found in %s", resourceName)
+		}
+
+		return id + "@" + region, nil
+	}
+}
+
+type Func func(resourceName string) resource.ImportStateIdFunc

@@ -5,11 +5,16 @@ package backup_test
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/backup"
+	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfbackup "github.com/hashicorp/terraform-provider-aws/internal/service/backup"
@@ -20,7 +25,9 @@ func TestAccBackupRegionSettings_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic: testAccRegionSettings_basic,
+		acctest.CtBasic:           testAccRegionSettings_basic,
+		"Identity_Basic":          testAccBackupRegionSettings_Identity_Basic,
+		"Identity_RegionOverride": testAccBackupRegionSettings_Identity_RegionOverride,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -112,6 +119,76 @@ func testAccRegionSettings_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "resource_type_management_preference.DynamoDB", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_management_preference.EFS", acctest.CtTrue),
 				),
+			},
+		},
+	})
+}
+
+func testAccBackupRegionSettings_Identity_Basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	var settings backup.DescribeRegionSettingsOutput
+	resourceName := "aws_backup_region_settings.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.FSxEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRegionSettingsConfig_1(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRegionSettingsExists(ctx, &settings),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrRegion), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccBackupRegionSettings_Identity_RegionOverride(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_backup_region_settings.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.FSxEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRegionSettingsConfig_regionOverride(),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrRegion), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -219,4 +296,32 @@ resource "aws_backup_region_settings" "test" {
   }
 }
 `
+}
+
+func testAccRegionSettingsConfig_regionOverride() string {
+	return fmt.Sprintf(`
+resource "aws_backup_region_settings" "test" {
+  region = %[1]q
+
+  resource_type_opt_in_preference = {
+    "Aurora"                 = true
+    "CloudFormation"         = true
+    "DocumentDB"             = true
+    "DynamoDB"               = true
+    "EBS"                    = true
+    "EC2"                    = true
+    "EFS"                    = true
+    "FSx"                    = true
+    "Neptune"                = true
+    "RDS"                    = true
+    "Redshift"               = true
+    "Redshift Serverless"    = true
+    "S3"                     = true
+    "SAP HANA on Amazon EC2" = true
+    "Storage Gateway"        = true
+    "Timestream"             = true
+    "VirtualMachine"         = true
+  }
+}
+`, acctest.AlternateRegion())
 }
