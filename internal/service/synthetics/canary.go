@@ -189,6 +189,20 @@ func ResourceCanary() *schema.Resource {
 								return (new == "rate(0 minute)" || new == "rate(0 minutes)") && old == "rate(0 hour)"
 							},
 						},
+						"retry_config": {
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"max_retries": {
+										Type:         schema.TypeInt,
+										Optional:     false,
+										ValidateFunc: validation.IntBetween(0, 2),
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -316,7 +330,6 @@ func resourceCanaryCreate(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 
 	output, err := conn.CreateCanary(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Synthetics Canary (%s): %s", name, err)
 	}
@@ -345,7 +358,6 @@ func resourceCanaryCreate(ctx context.Context, d *schema.ResourceData, meta any)
 			return false, err
 		},
 	)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Synthetics Canary (%s): waiting for completion: %s", name, err)
 	}
@@ -491,7 +503,6 @@ func resourceCanaryUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 		}
 
 		_, err := conn.UpdateCanary(ctx, input)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Synthetics Canary (%s): %s", d.Id(), err)
 		}
@@ -558,7 +569,6 @@ func resourceCanaryDelete(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 
 	_, err = waitCanaryDeleted(ctx, conn, d.Id())
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Synthetics Canary (%s): waiting for completion: %s", d.Id(), err)
 	}
@@ -793,13 +803,11 @@ func startCanary(ctx context.Context, name string, conn *synthetics.Client) erro
 	_, err := conn.StartCanary(ctx, &synthetics.StartCanaryInput{
 		Name: aws.String(name),
 	})
-
 	if err != nil {
 		return fmt.Errorf("starting Synthetics Canary: %w", err)
 	}
 
 	_, err = waitCanaryRunning(ctx, conn, name)
-
 	if err != nil {
 		return fmt.Errorf("starting Synthetics Canary: waiting for completion: %w", err)
 	}
@@ -822,7 +830,6 @@ func stopCanary(ctx context.Context, name string, conn *synthetics.Client) error
 	}
 
 	_, err = waitCanaryStopped(ctx, conn, name)
-
 	if err != nil {
 		return fmt.Errorf("stopping Synthetics Canary: waiting for completion: %w", err)
 	}
