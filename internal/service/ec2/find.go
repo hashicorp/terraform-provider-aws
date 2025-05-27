@@ -178,6 +178,28 @@ func findCOIPPools(ctx context.Context, conn *ec2.Client, input *ec2.DescribeCoi
 	return output, nil
 }
 
+func findDefaultCreditSpecification(ctx context.Context, conn *ec2.Client, input *ec2.GetDefaultCreditSpecificationInput) (*awstypes.InstanceFamilyCreditSpecification, error) {
+	output, err := conn.GetDefaultCreditSpecification(ctx, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.InstanceFamilyCreditSpecification == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.InstanceFamilyCreditSpecification, nil
+}
+
+func findDefaultCreditSpecificationByInstanceFamily(ctx context.Context, conn *ec2.Client, instanceFamily awstypes.UnlimitedSupportedInstanceFamily) (*awstypes.InstanceFamilyCreditSpecification, error) {
+	input := ec2.GetDefaultCreditSpecificationInput{
+		InstanceFamily: instanceFamily,
+	}
+
+	return findDefaultCreditSpecification(ctx, conn, &input)
+}
+
 func findDHCPOptions(ctx context.Context, conn *ec2.Client, input *ec2.DescribeDhcpOptionsInput) (*awstypes.DhcpOptions, error) {
 	output, err := findDHCPOptionses(ctx, conn, input)
 

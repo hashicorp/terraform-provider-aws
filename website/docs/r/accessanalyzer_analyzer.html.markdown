@@ -35,6 +35,35 @@ resource "aws_accessanalyzer_analyzer" "example" {
 }
 ```
 
+### Organization Unused Access Analyzer with analysis rule
+
+```terraform
+resource "aws_accessanalyzer_analyzer" "example" {
+  analyzer_name = "example"
+  type          = "ORGANIZATION_UNUSED_ACCESS"
+
+  configuration {
+    unused_access {
+      unused_access_age = 180
+      analysis_rule {
+        exclusion {
+          account_ids = [
+            "123456789012",
+            "234567890123",
+          ]
+        }
+        exclusion {
+          resource_tags = [
+            { key1 = "value1" },
+            { key2 = "value2" },
+          ]
+        }
+      }
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -43,17 +72,28 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `configuration` - (Optional) A block that specifies the configuration of the analyzer. [Documented below](#configuration-argument-reference)
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `type` - (Optional) Type of Analyzer. Valid values are `ACCOUNT`, `ORGANIZATION`, `ACCOUNT_UNUSED_ACCESS `, `ORGANIZATION_UNUSED_ACCESS`. Defaults to `ACCOUNT`.
 
 ### `configuration` Argument Reference
 
-* `unused_access` - A block that specifies the configuration of an unused access analyzer for an AWS organization or account. [Documented below](#unused_access-argument-reference)
+* `unused_access` - (Optional) A block that specifies the configuration of an unused access analyzer for an AWS organization or account. [Documented below](#unused_access-argument-reference)
 
 ### `unused_access` Argument Reference
 
-* `unused_access_age` - The specified access age in days for which to generate findings for unused access.
+* `unused_access_age` - (Optional) The specified access age in days for which to generate findings for unused access.
+* `analysis_rule` - (Optional) A block for analysis rules. [Documented below](#analysis_rule-argument-reference)
+
+### `analysis_rule` Argument Reference
+
+* `exclusion` - (Optional) A block for the analyzer rules containing criteria to exclude from analysis. [Documented below](#exclusion-argument-reference)
+
+#### `exclusion` Argument Reference
+
+* `account_ids` - (Optional) A list of account IDs to exclude from the analysis.
+* `resource_tags` - (Optional) A list of key-value pairs for resource tags to exclude from the analysis.
 
 ## Attribute Reference
 

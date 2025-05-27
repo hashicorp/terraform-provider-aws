@@ -36,10 +36,13 @@ data "aws_mq_broker" "by_name" {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `broker_id` - (Optional) Unique id of the mq broker.
 * `broker_name` - (Optional) Unique name of the mq broker.
 
 ## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 See the [`aws_mq_broker` resource](/docs/providers/aws/r/mq_broker.html) for details on the returned attributes.
 They are identical except for user password, which is not returned when describing broker.

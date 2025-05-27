@@ -34,12 +34,15 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `id` - (Optional) ID of the detector.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
+* `arn` - ARN of the detector.
 * `features` - Current configuration of the detector features.
     * `additionalConfiguration` - Additional feature configuration.
         * `name` - The name of the additional configuration.
@@ -49,5 +52,6 @@ This data source exports the following attributes in addition to the arguments a
 * `findingPublishingFrequency` - The frequency of notifications sent about subsequent finding occurrences.
 * `serviceRoleArn` - Service-linked role that grants GuardDuty access to the resources in the AWS account.
 * `status` - Current status of the detector.
+* `tags` - Map of tags for the resource.
 
-<!-- cache-key: cdktf-0.20.8 input-07755259e17c1389ef594d13cf31fa96fecc80102f8edf0b3ec9e035aef6985e -->
+<!-- cache-key: cdktf-0.20.8 input-b61efde9a82a553e9e55f67e03dfe94b7bd766a31f5940940033eb0c3839e97a -->

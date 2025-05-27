@@ -167,14 +167,15 @@ resource "aws_dynamodb_tag" "example" {
 
 ## Argument Reference
 
-Required arguments:
+The following arguments are required:
 
 * `attribute` - (Required) Set of nested attribute definitions. Only required for `hash_key` and `range_key` attributes. See below.
 * `hash_key` - (Required, Forces new resource) Attribute to use as the hash (partition) key. Must also be defined as an `attribute`. See below.
 * `name` - (Required) Unique within a region name of the table.
 
-Optional arguments:
+The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `billing_mode` - (Optional) Controls how you are charged for read and write throughput and how you manage capacity. The valid values are `PROVISIONED` and `PAY_PER_REQUEST`. Defaults to `PROVISIONED`.
 * `deletion_protection_enabled` - (Optional) Enables deletion protection for table. Defaults to `false`.
 * `import_table` - (Optional) Import Amazon S3 data into a new table. See below.
@@ -254,6 +255,7 @@ Optional arguments:
 ### `point_in_time_recovery`
 
 * `enabled` - (Required) Whether to enable point-in-time recovery. It can take 10 minutes to enable for new tables. If the `point_in_time_recovery` block is not provided, this defaults to `false`.
+* `recovery_period_in_days` - (Optional) Number of preceding days for which continuous backups are taken and maintained. Default is 35.
 
 ### `replica`
 

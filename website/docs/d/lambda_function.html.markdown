@@ -6,7 +6,7 @@ description: |-
   Provides a Lambda Function data source.
 ---
 
-# aws_lambda_function
+# Data Source: aws_lambda_function
 
 Provides information about a Lambda Function.
 
@@ -26,6 +26,7 @@ data "aws_lambda_function" "existing" {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `function_name` - (Required) Name of the lambda function.
 * `qualifier` - (Optional) Alias name or version number of the lambda functionE.g., `$LATEST`, `my-alias`, or `1`. When not included: the data source resolves to the most recent published version; if no published version exists: it resolves to the most recent unpublished version.
 

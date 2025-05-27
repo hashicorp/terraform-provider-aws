@@ -39,7 +39,7 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
 * `name` - (Required) Name of the user group.
 * `userPoolId` - (Required) User pool the client belongs to.
@@ -53,4 +53,4 @@ This data source exports the following attributes in addition to the arguments a
 * `precedence` - Precedence of the user group.
 * `roleArn` - ARN of the IAM role to be associated with the user group.
 
-<!-- cache-key: cdktf-0.20.8 input-27df73fb237762edc7cf45b6bd3efdbad132db982d809d1c48656693e1ae599d -->
+<!-- cache-key: cdktf-0.20.8 input-8d9713279363f8e0d8a9add257df026ef27bd8156e838e8c5418f329e0244c48 -->

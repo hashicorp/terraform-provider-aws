@@ -26,10 +26,9 @@ data "aws_region" "current" {}
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available
-regions. The given filters must match exactly one region whose data will be
-exported as attributes.
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `endpoint` - (Optional) EC2 endpoint of the region to select.
 * `name` - (Optional, **Deprecated**) Full name of the region to select. Use `region` instead.
 * `region` - (Optional) Full name of the region to select (e.g. `us-east-1`)

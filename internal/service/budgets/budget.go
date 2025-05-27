@@ -450,9 +450,10 @@ func resourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		var snsSubscribers []string
 
 		for _, subscriber := range subscribers {
-			if subscriber.SubscriptionType == awstypes.SubscriptionTypeSns {
+			switch subscriber.SubscriptionType {
+			case awstypes.SubscriptionTypeSns:
 				snsSubscribers = append(snsSubscribers, aws.ToString(subscriber.Address))
-			} else if subscriber.SubscriptionType == awstypes.SubscriptionTypeEmail {
+			case awstypes.SubscriptionTypeEmail:
 				emailSubscribers = append(emailSubscribers, aws.ToString(subscriber.Address))
 			}
 		}

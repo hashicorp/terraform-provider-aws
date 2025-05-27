@@ -2134,7 +2134,9 @@ resource "aws_docdb_cluster" "test" {
 func testAccEventSourceMappingConfig_sqsKMSKeyARN(rName, pattern string) string {
 	return acctest.ConfigCompose(testAccEventSourceMappingConfig_sqsBase(rName), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description = "%[1]s"
+  description             = "%[1]s"
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 
   policy = <<POLICY
 {

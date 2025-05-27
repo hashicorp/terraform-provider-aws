@@ -46,6 +46,10 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
+## Argument Reference
+
+This data source does not support any arguments.
+
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
@@ -53,4 +57,4 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - AWS Region.
 * `names` - Set of EKS clusters names
 
-<!-- cache-key: cdktf-0.20.8 input-dcfc76e9158933045e252a7c855e58231f5ae7d708f1bbdd9026d8d93182a8f3 -->
+<!-- cache-key: cdktf-0.20.8 input-b1175bc8c570a5af18e57a7c1afa031c3f603aac9bf8e194248bfe11a5fb0505 -->

@@ -101,6 +101,18 @@ func dataSourceClientVPNEndpoint() *schema.Resource {
 					},
 				},
 			},
+			"client_route_enforcement_options": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enforced": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"client_vpn_endpoint_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -236,6 +248,13 @@ func dataSourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData
 		}
 	} else {
 		d.Set("client_login_banner_options", nil)
+	}
+	if ep.ClientRouteEnforcementOptions != nil {
+		if err := d.Set("client_route_enforcement_options", []any{flattenClientRouteEnforcementOptions(ep.ClientRouteEnforcementOptions)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting client_route_enforcement_options: %s", err)
+		}
+	} else {
+		d.Set("client_route_enforcement_options", nil)
 	}
 	d.Set("client_vpn_endpoint_id", ep.ClientVpnEndpointId)
 	if ep.ConnectionLogOptions != nil {

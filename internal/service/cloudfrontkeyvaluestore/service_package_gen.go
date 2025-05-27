@@ -26,13 +26,17 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newKeyResource,
 			TypeName: "aws_cloudfrontkeyvaluestore_key",
 			Name:     "Key",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled: false,
-			}),
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 			Identity: inttypes.GlobalParameterizedIdentity(
 				inttypes.StringIdentityAttribute("key_value_store_arn", true),
 				inttypes.StringIdentityAttribute(names.AttrKey, true),
 			),
+		},
+		{
+			Factory:  newKeysExclusiveResource,
+			TypeName: "aws_cloudfrontkeyvaluestore_keys_exclusive",
+			Name:     "Keys  Exclusive",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 	}
 }

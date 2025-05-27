@@ -37,6 +37,7 @@ const (
 	ErrActionWaitingForDeletion     = "waiting for delete"
 	ErrActionWaitingForUpdate       = "waiting for update"
 	ErrActionWaitingForCancellation = "waiting for cancellation"
+	ErrActionSynchronizing          = "synchronizing"
 )
 
 // ProblemStandardMessage is a standardized message for reporting errors and warnings

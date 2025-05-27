@@ -145,7 +145,7 @@ When using `aws_iam_principal_policy_simulation` to test the effect of a policy 
 
 ## Argument Reference
 
-The following arguments are required for any principal policy simulation:
+This data source supports the following arguments:
 
 * `action_names` (Required) - A set of IAM action names to run simulations for. Each entry in this set adds an additional hypothetical request to the simulation.
 

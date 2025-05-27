@@ -22,7 +22,7 @@ import (
 )
 
 // @SDKResource("aws_guardduty_organization_configuration", name="Organization Configuration")
-func ResourceOrganizationConfiguration() *schema.Resource {
+func resourceOrganizationConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOrganizationConfigurationPut,
 		ReadWithoutTimeout:   resourceOrganizationConfigurationRead,

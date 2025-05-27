@@ -914,8 +914,10 @@ resource "aws_mwaa_environment" "test" {
 data "aws_region" "current" {}
 
 resource "aws_kms_key" "test" {
-  description = "Key for a Terraform ACC test"
-  key_usage   = "ENCRYPT_DECRYPT"
+  description             = "Key for a Terraform ACC test"
+  key_usage               = "ENCRYPT_DECRYPT"
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 
   policy = <<POLICY
 {
@@ -962,8 +964,6 @@ resource "aws_s3_object" "startup_script" {
   key     = "startup.sh"
   content = "airflow db init"
 }
-
-
 `, rName))
 }
 

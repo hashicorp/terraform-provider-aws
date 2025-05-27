@@ -419,11 +419,13 @@ func testAccSecretConfig_overwriteReplica(rName string, force_overwrite_replica_
 resource "aws_kms_key" "test" {
   provider                = awsalternate
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_key" "test2" {
   provider                = awsthird
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 data "aws_region" "alternate" {
@@ -447,11 +449,13 @@ func testAccSecretConfig_overwriteReplicaUpdate(rName string, force_overwrite_re
 resource "aws_kms_key" "test" {
   provider                = awsalternate
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_key" "test2" {
   provider                = awsthird
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 data "aws_region" "third" {
@@ -490,10 +494,12 @@ func testAccSecretConfig_kmsKeyID(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test1" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_key" "test2" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_secretsmanager_secret" "test" {
@@ -507,10 +513,12 @@ func testAccSecretConfig_kmsKeyIDUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test1" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_key" "test2" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_secretsmanager_secret" "test" {

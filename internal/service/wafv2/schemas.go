@@ -422,6 +422,21 @@ var fieldToMatchBaseSchema = sync.OnceValue(func() *schema.Resource {
 					},
 				},
 			},
+			"uri_fragment": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"fallback_behavior": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.FallbackBehavior](),
+						},
+					},
+				},
+			},
 			"uri_path": emptySchema(),
 		},
 	}

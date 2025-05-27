@@ -22,6 +22,7 @@ data "aws_codeartifact_authorization_token" "test" {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `domain` - (Required) Name of the domain that is in scope for the generated authorization token.
 * `domain_owner` - (Optional) Account number of the AWS account that owns the domain.
 * `duration_seconds` - (Optional) Time, in seconds, that the generated authorization token is valid. Valid values are `0` and between `900` and `43200`.

@@ -46,6 +46,7 @@ resource "aws_lightsail_disk_attachment" "test" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `disk_name` - (Required) The name of the Lightsail Disk.
 * `instance_name` - (Required) The name of the Lightsail Instance to attach to.
 * `disk_path` - (Required) The disk path to expose to the instance.

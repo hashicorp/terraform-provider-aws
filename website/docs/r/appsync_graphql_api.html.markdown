@@ -212,13 +212,15 @@ resource "aws_appsync_graphql_api" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `authentication_type` - (Required) Authentication type. Valid values: `API_KEY`, `AWS_IAM`, `AMAZON_COGNITO_USER_POOLS`, `OPENID_CONNECT`, `AWS_LAMBDA`
 * `name` - (Required) User-supplied name for the GraphQL API.
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `additional_authentication_provider` - (Optional) One or more additional authentication providers for the GraphQL API. See [`additional_authentication_provider` Block](#additional_authentication_provider-block) for details.
 * `api_type` - (Optional) API type. Valid values are `GRAPHQL` or `MERGED`. A `MERGED` type requires `merged_api_execution_role_arn` to be set.
 * `enhanced_metrics_config` - (Optional) Enables and controls the enhanced metrics feature. See [`enhanced_metrics_config` Block](#enhanced_metrics_config-block) for details.

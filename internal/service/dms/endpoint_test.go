@@ -3526,6 +3526,7 @@ func testAccEndpointConfig_postgresKey(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_dms_endpoint" "test" {
@@ -3553,6 +3554,7 @@ func testAccEndpointConfig_sqlserverKey(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_dms_endpoint" "test" {
@@ -3580,6 +3582,7 @@ func testAccEndpointConfig_sybaseKey(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_dms_endpoint" "test" {
@@ -3638,10 +3641,9 @@ resource "aws_dms_endpoint" "test" {
 }
 
 func testAccEndpointConfig_redshiftBase(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_redshift_cluster" "test" {
   cluster_identifier = %[1]q
-  availability_zone  = data.aws_availability_zones.available.names[0]
   database_name      = "mydb"
   master_username    = "foo"
   master_password    = "Mustbe8characters"
@@ -3695,7 +3697,7 @@ data "aws_iam_policy_document" "test" {
     resources = ["*"]
   }
 }
-`, rName))
+`, rName)
 }
 
 func testAccEndpointConfig_redshift(rName string) string {
@@ -3793,6 +3795,7 @@ resource "aws_dms_endpoint" "test" {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 `, rName))
 }
@@ -3825,6 +3828,7 @@ resource "aws_dms_endpoint" "test" {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 `, rName))
 }
@@ -3857,6 +3861,7 @@ resource "aws_dms_endpoint" "test" {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 `, rName))
 }

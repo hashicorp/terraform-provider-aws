@@ -255,7 +255,7 @@ func TestAccELBV2LoadBalancer_Identity_RegionOverride(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
+				ImportStateIdFunc: acctest.CrossRegionAttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportState:       true,
 				ImportStateKind:   resource.ImportCommandWithID,
 				ImportStateVerify: true,
@@ -268,7 +268,7 @@ func TestAccELBV2LoadBalancer_Identity_RegionOverride(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
+				ImportStateIdFunc: acctest.CrossRegionAttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportState:       true,
 				ImportStateKind:   resource.ImportBlockWithID,
 				ImportPlanChecks: resource.ImportPlanChecks{

@@ -49,12 +49,13 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available
-IPAM Pools in the current region.
+This data source supports the following arguments:
 
 * `filter` - (Required) Custom filter block as described below.
 
-### filter
+The arguments of this data source act as filters for querying the available IPAM Pools in the current region.
+
+### `filter`
 
 * `name` - (Required) The name of the filter. Filter names are case-sensitive.
 * `values` - (Required) The filter values. Filter values are case-sensitive.
@@ -85,4 +86,4 @@ The following attributes are available on each pool entry found.
 * `sourceIpamPoolId` - ID of the source IPAM pool.
 * `tags` - Map of tags to assigned to the resource.
 
-<!-- cache-key: cdktf-0.20.8 input-0f25f29b8da73a8eab1f57b2d6fd05fbdbacc033fa3a351d8ef07553310a8208 -->
+<!-- cache-key: cdktf-0.20.8 input-706040e7027aed771b014f0d18efb8a9f5a447b43075d31c861fb2335604b5d1 -->

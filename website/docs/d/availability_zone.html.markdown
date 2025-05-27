@@ -9,10 +9,10 @@ description: |-
 # Data Source: aws_availability_zone
 
 `aws_availability_zone` provides details about a specific availability zone (AZ)
-in the current region.
+in the current Region.
 
 This can be used both to validate an availability zone given in a variable
-and to split the AZ name into its component parts of an AWS region and an
+and to split the AZ name into its component parts of an AWS Region and an
 AZ identifier letter. The latter may be useful e.g., for implementing a
 consistent subnet numbering scheme across several regions by mapping both
 the region and the subnet letter to network numbers.
@@ -70,15 +70,18 @@ resource "aws_subnet" "example" {
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available
-availability zones. The given filters must match exactly one availability
-zone whose data will be exported as attributes.
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `all_availability_zones` - (Optional) Set to `true` to include all Availability Zones and Local Zones regardless of your opt in status.
 * `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
 * `name` - (Optional) Full name of the availability zone to select.
 * `state` - (Optional) Specific availability zone state to require. May be any of `"available"`, `"information"` or `"impaired"`.
 * `zone_id` - (Optional) Zone ID of the availability zone to select.
+
+The arguments of this data source act as filters for querying the available
+availability zones. The given filters must match exactly one availability
+zone whose data will be exported as attributes.
 
 ### filter Configuration Block
 

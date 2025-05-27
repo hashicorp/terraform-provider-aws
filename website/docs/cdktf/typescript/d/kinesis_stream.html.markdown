@@ -39,14 +39,16 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `name` - (Required) Name of the Kinesis Stream.
 
 ## Attribute Reference
 
-`id` is set to the ARN of the Kinesis Stream. In addition, the following attributes
-are exported:
+This data source exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the Kinesis Stream (same as id).
+* `id` - ARN of the Kinesis Stream.
+* `arn` - ARN of the Kinesis Stream (same as `id`).
 * `closedShards` - List of shard ids in the CLOSED state. See [Shard State][2] for more.
 * `creationTimestamp` - Approximate UNIX timestamp that the stream was created.
 * `encryptionType` - Encryption type used.
@@ -68,4 +70,4 @@ are exported:
 [3]: https://docs.aws.amazon.com/streams/latest/dev/monitoring-with-cloudwatch.html
 [4]: https://docs.aws.amazon.com/streams/latest/dev/how-do-i-size-a-stream.html
 
-<!-- cache-key: cdktf-0.20.8 input-fa9e8af044240db88bc0177862ab514d3d3abe026c71cbc8ce4c90ad35bdc2bd -->
+<!-- cache-key: cdktf-0.20.8 input-479b5524fab6fc422cf78d3c7d041110f98098d8002c794f3d0c74a527ee0d67 -->

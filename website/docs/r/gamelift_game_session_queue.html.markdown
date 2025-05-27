@@ -40,6 +40,7 @@ resource "aws_gamelift_game_session_queue" "test" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the session queue.
 * `timeout_in_seconds` - (Required) Maximum time a game session request can remain in the queue.
 * `custom_event_data` - (Optional) Information to be added to all events that are related to this game session queue.

@@ -507,7 +507,7 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "test" {
-  bucket = aws_s3_bucket.test.id
+  bucket = aws_s3_bucket.test.bucket
 
   rule {
     # This is Amazon S3 bucket default encryption.
@@ -524,6 +524,7 @@ func testAccBucketServerSideEncryptionConfigurationConfig_applySSEByDefaultKMSMa
 resource "aws_kms_key" "test" {
   description             = "KMS Key for Bucket %[1]s"
   deletion_window_in_days = 10
+  enable_key_rotation     = true
 }
 
 resource "aws_s3_bucket" "test" {
@@ -531,7 +532,7 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "test" {
-  bucket = aws_s3_bucket.test.id
+  bucket = aws_s3_bucket.test.bucket
 
   rule {
     apply_server_side_encryption_by_default {
@@ -548,6 +549,7 @@ func testAccBucketServerSideEncryptionConfigurationConfig_applySSEByDefaultKMSMa
 resource "aws_kms_key" "test" {
   description             = "KMS Key for Bucket %[1]s"
   deletion_window_in_days = 10
+  enable_key_rotation     = true
 }
 
 resource "aws_s3_bucket" "test" {
@@ -555,7 +557,7 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "test" {
-  bucket = aws_s3_bucket.test.id
+  bucket = aws_s3_bucket.test.bucket
 
   rule {
     apply_server_side_encryption_by_default {
@@ -574,7 +576,7 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "test" {
-  bucket = aws_s3_bucket.test.id
+  bucket = aws_s3_bucket.test.bucket
 
   rule {
     apply_server_side_encryption_by_default {
@@ -592,7 +594,7 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "test" {
-  bucket = aws_s3_bucket.test.id
+  bucket = aws_s3_bucket.test.bucket
 
   rule {
     # This is Amazon S3 bucket default encryption.
@@ -611,6 +613,7 @@ func testAccBucketServerSideEncryptionConfigurationConfig_applySSEByDefaultKeyEn
 resource "aws_kms_key" "test" {
   description             = "KMS Key for Bucket %[1]s"
   deletion_window_in_days = 10
+  enable_key_rotation     = true
 }
 
 resource "aws_s3_bucket" "test" {
@@ -618,7 +621,7 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "test" {
-  bucket = aws_s3_bucket.test.id
+  bucket = aws_s3_bucket.test.bucket
 
   rule {
     apply_server_side_encryption_by_default {
@@ -638,7 +641,7 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "test" {
-  bucket = aws_s3_bucket.test.id
+  bucket = aws_s3_bucket.test.bucket
 
   rule {
     apply_server_side_encryption_by_default {
@@ -662,6 +665,7 @@ resource "aws_s3_directory_bucket" "test" {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "test" {

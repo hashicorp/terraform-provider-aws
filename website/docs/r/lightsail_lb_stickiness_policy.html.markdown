@@ -33,6 +33,7 @@ resource "aws_lightsail_lb_stickiness_policy" "test" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `lb_name` - (Required) The name of the load balancer to which you want to enable session stickiness.
 * `cookie_duration` - (Required) The cookie duration in seconds. This determines the length of the session stickiness.
 * `enabled` - (Required) - The Session Stickiness state of the load balancer. `true` to activate session stickiness or `false` to deactivate session stickiness.

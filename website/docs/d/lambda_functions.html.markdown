@@ -6,7 +6,7 @@ description: |-
   Terraform data resource to get a list of Lambda Functions.
 ---
 
-# aws_lambda_functions
+# Data Source: aws_lambda_functions
 
 Terraform data resource to get a list of Lambda Functions.
 
@@ -18,7 +18,9 @@ data "aws_lambda_functions" "all" {}
 
 ## Argument Reference
 
-The resource does not support any arguments.
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 

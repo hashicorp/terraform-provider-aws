@@ -247,7 +247,6 @@ func findPreferences(ctx context.Context, conn *costoptimizationhub.Client) (*co
 }
 
 type preferencesResourceModel struct {
-	framework.WithRegionModel
 	ID                              types.String `tfsdk:"id"`
 	MemberAccountDiscountVisibility types.String `tfsdk:"member_account_discount_visibility"`
 	SavingsEstimationMode           types.String `tfsdk:"savings_estimation_mode"`

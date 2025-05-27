@@ -4242,7 +4242,9 @@ resource "aws_security_group" "test" {
 }
 
 resource "aws_kms_key" "test" {
-  description = "tf-test-cmk-kms-key-id"
+  description             = "tf-test-cmk-kms-key-id"
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 `, rName),
 	)

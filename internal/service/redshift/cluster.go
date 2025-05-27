@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 	"time"
 
@@ -19,6 +20,7 @@ import (
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -26,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -182,9 +185,10 @@ func resourceCluster() *schema.Resource {
 				Optional: true,
 			},
 			names.AttrEncrypted: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
+				Type:         nullable.TypeNullableBool,
+				Optional:     true,
+				Default:      "true",
+				ValidateFunc: nullable.ValidateTypeStringNullableBool,
 			},
 			names.AttrEndpoint: {
 				Type:     schema.TypeString,
@@ -451,9 +455,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 		inputC.ElasticIp = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrEncrypted); ok {
-		inputC.Encrypted = aws.Bool(v.(bool)) // encryption is true by default
-		inputR.Encrypted = aws.Bool(v.(bool))
+	isEncrypted := true
+	v := d.Get(names.AttrEncrypted)
+	if v, null, _ := nullable.Bool(v.(string)).ValueBool(); !null {
+		isEncrypted = v
 	}
 
 	if v, ok := d.GetOk("enhanced_vpc_routing"); ok {
@@ -537,12 +542,15 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 		}
 
 		output, err := conn.RestoreFromClusterSnapshot(ctx, inputR)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "restoring Redshift Cluster (%s) from snapshot: %s", clusterID, err)
 		}
 
 		d.SetId(aws.ToString(output.Cluster.ClusterIdentifier))
+
+		if _, err := waitClusterRestored(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "creating Redshift Cluster (%s): restoring cluster: %s", d.Id(), err)
+		}
 	} else {
 		if _, ok := d.GetOk("master_password"); !ok && masterPasswordWO == "" {
 			if _, ok := d.GetOk("manage_master_password"); !ok {
@@ -562,20 +570,35 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 		}
 
 		output, err := conn.CreateCluster(ctx, inputC)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating Redshift Cluster (%s): %s", clusterID, err)
 		}
 
 		d.SetId(aws.ToString(output.Cluster.ClusterIdentifier))
+
+		if _, err := waitClusterCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "creating Redshift Cluster (%s): waiting for completion: %s", d.Id(), err)
+		}
 	}
 
-	if _, err := waitClusterCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Redshift Cluster (%s): waiting for completion: %s", d.Id(), err)
-	}
-
-	if _, err := waitClusterRelocationStatusResolved(ctx, conn, d.Id()); err != nil {
+	cluster, err := waitClusterRelocationStatusResolved(ctx, conn, d.Id())
+	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Redshift Cluster (%s): waiting for relocation: %s", d.Id(), err)
+	}
+
+	if isEncrypted != aws.ToBool(cluster.Encrypted) {
+		modifyInput := redshift.ModifyClusterInput{
+			ClusterIdentifier: aws.String(d.Id()),
+			Encrypted:         aws.Bool(isEncrypted),
+		}
+		_, err := conn.ModifyCluster(ctx, &modifyInput)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "creating Redshift Cluster (%s): disabling encryption: %s", d.Id(), err)
+		}
+
+		if _, err := waitClusterUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "creating Redshift Cluster (%s): disabling encryption: %s", d.Id(), err)
+		}
 	}
 
 	return append(diags, resourceClusterRead(ctx, d, meta)...)
@@ -633,7 +656,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	d.Set("cluster_version", rsc.ClusterVersion)
 	d.Set(names.AttrDatabaseName, rsc.DBName)
 	d.Set("default_iam_role_arn", rsc.DefaultIamRoleArn)
-	d.Set(names.AttrEncrypted, rsc.Encrypted)
+	d.Set(names.AttrEncrypted, strconv.FormatBool(aws.ToBool(rsc.Encrypted)))
 	d.Set("enhanced_vpc_routing", rsc.EnhancedVpcRouting)
 	d.Set("iam_roles", tfslices.ApplyToAll(rsc.IamRoles, func(v awstypes.ClusterIamRole) string {
 		return aws.ToString(v.IamRoleArn)
@@ -727,15 +750,21 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			input.ClusterVersion = aws.String(d.Get("cluster_version").(string))
 		}
 
+		var isEncrypted bool
+		v := d.Get(names.AttrEncrypted)
+		if v, null, _ := nullable.Bool(v.(string)).ValueBool(); !null {
+			isEncrypted = v
+		}
+
 		if d.HasChange(names.AttrEncrypted) {
-			input.Encrypted = aws.Bool(d.Get(names.AttrEncrypted).(bool))
+			input.Encrypted = aws.Bool(isEncrypted)
 		}
 
 		if d.HasChange("enhanced_vpc_routing") {
 			input.EnhancedVpcRouting = aws.Bool(d.Get("enhanced_vpc_routing").(bool))
 		}
 
-		if d.Get(names.AttrEncrypted).(bool) && d.HasChange(names.AttrKMSKeyID) {
+		if isEncrypted && d.HasChange(names.AttrKMSKeyID) {
 			input.KmsKeyId = aws.String(d.Get(names.AttrKMSKeyID).(string))
 		}
 
@@ -1008,5 +1037,45 @@ func clusterMultiAZStatus(cluster *awstypes.Cluster) (bool, error) {
 		return false, nil
 	default:
 		return false, fmt.Errorf("unexpected MultiAZ value %q returned by API", multiAZStatus)
+	}
+}
+
+func waitClusterRestored(ctx context.Context, conn *redshift.Client, id string, timeout time.Duration) (*awstypes.Cluster, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{clusterRestoreStatusStarting, clusterRestoreStatusRestoring},
+		Target:     []string{clusterRestoreStatusCompleted},
+		Refresh:    statusClusterRestoration(ctx, conn, id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.Cluster); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.ClusterStatus)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func statusClusterRestoration(ctx context.Context, conn *redshift.Client, id string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findClusterByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if output.RestoreStatus == nil {
+			return nil, "", nil
+		}
+
+		return output, aws.ToString(output.RestoreStatus.Status), nil
 	}
 }

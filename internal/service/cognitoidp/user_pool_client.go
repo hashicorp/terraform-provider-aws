@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/helpers/validatordiag"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
@@ -297,6 +298,26 @@ func (r *userPoolClientResource) Schema(ctx context.Context, request resource.Sc
 						"user_data_shared": schema.BoolAttribute{
 							Optional: true,
 							Computed: true,
+						},
+					},
+				},
+			},
+			"refresh_token_rotation": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[refreshTokenRotationModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"feature": schema.StringAttribute{
+							CustomType: fwtypes.StringEnumType[awstypes.FeatureType](),
+							Required:   true,
+						},
+						"retry_grace_period_seconds": schema.Int32Attribute{
+							Optional: true,
+							Validators: []validator.Int32{
+								int32validator.Between(0, 60),
+							},
 						},
 					},
 				},
@@ -596,6 +617,7 @@ type userPoolClientResourceModel struct {
 	Name                                     types.String                                                 `tfsdk:"name"`
 	PreventUserExistenceErrors               fwtypes.StringEnum[awstypes.PreventUserExistenceErrorTypes]  `tfsdk:"prevent_user_existence_errors" autoflex:",legacy"`
 	ReadAttributes                           fwtypes.SetOfString                                          `tfsdk:"read_attributes" autoflex:",legacy"`
+	RefreshTokenRotation                     fwtypes.ListNestedObjectValueOf[refreshTokenRotationModel]   `tfsdk:"refresh_token_rotation"`
 	RefreshTokenValidity                     types.Int64                                                  `tfsdk:"refresh_token_validity"`
 	SupportedIdentityProviders               fwtypes.SetOfString                                          `tfsdk:"supported_identity_providers" autoflex:",legacy"`
 	TokenValidityUnits                       fwtypes.ListNestedObjectValueOf[tokenValidityUnitsModel]     `tfsdk:"token_validity_units"`
@@ -616,6 +638,11 @@ type analyticsConfigurationModel struct {
 	ExternalID     types.String `tfsdk:"external_id"`
 	RoleARN        fwtypes.ARN  `tfsdk:"role_arn"`
 	UserDataShared types.Bool   `tfsdk:"user_data_shared"`
+}
+
+type refreshTokenRotationModel struct {
+	Feature                 fwtypes.StringEnum[awstypes.FeatureType] `tfsdk:"feature"`
+	RetryGracePeriodSeconds types.Int32                              `tfsdk:"retry_grace_period_seconds"`
 }
 
 type tokenValidityUnitsModel struct {
