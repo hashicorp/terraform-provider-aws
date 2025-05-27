@@ -431,7 +431,7 @@ func TestAccECSService_VolumeConfiguration_volumeInitializationRate(t *testing.T
 					resource.TestCheckResourceAttr(resourceName, "volume_configuration.0.name", "vol1"),
 					resource.TestCheckResourceAttrPair(
 						resourceName, "volume_configuration.0.managed_ebs_volume.0.snapshot_id",
-						"aws_ebs_snapshot.test", "id",
+						"aws_ebs_snapshot.test", names.AttrID,
 					),
 					resource.TestCheckResourceAttr(
 						resourceName, "volume_configuration.0.managed_ebs_volume.0.volume_initialization_rate",
