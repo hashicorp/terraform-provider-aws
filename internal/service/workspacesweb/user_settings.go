@@ -11,6 +11,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/workspacesweb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/workspacesweb/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -34,7 +36,6 @@ import (
 // @FrameworkResource("aws_workspacesweb_user_settings", name="User Settings")
 // @Tags(identifierAttribute="user_settings_arn")
 // @Testing(tagsTest=true)
-// @Testing(generator=false)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/workspacesweb/types;types.UserSettings")
 // @Testing(importStateIdAttribute="user_settings_arn")
 func newUserSettingsResource(_ context.Context) (resource.ResourceWithConfigure, error) {
@@ -60,48 +61,9 @@ func (r *userSettingsResource) Schema(ctx context.Context, request resource.Sche
 					listplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"cookie_synchronization_configuration": schema.SingleNestedAttribute{
-				Optional: true,
-				Attributes: map[string]schema.Attribute{
-					"allowlist": schema.ListNestedAttribute{
-						Required: true,
-						NestedObject: schema.NestedAttributeObject{
-							Attributes: map[string]schema.Attribute{
-								"domain": schema.StringAttribute{
-									Required: true,
-								},
-								"name": schema.StringAttribute{
-									Optional: true,
-								},
-								"path": schema.StringAttribute{
-									Optional: true,
-								},
-							},
-						},
-					},
-					"blocklist": schema.ListNestedAttribute{
-						Optional: true,
-						NestedObject: schema.NestedAttributeObject{
-							Attributes: map[string]schema.Attribute{
-								"domain": schema.StringAttribute{
-									Required: true,
-								},
-								"name": schema.StringAttribute{
-									Optional: true,
-								},
-								"path": schema.StringAttribute{
-									Optional: true,
-								},
-							},
-						},
-					},
-				},
-			},
 			"copy_allowed": schema.StringAttribute{
-				Required: true,
-				Validators: []validator.String{
-					stringvalidator.OneOf("Enabled", "Disabled"),
-				},
+				CustomType: fwtypes.StringEnumType[awstypes.EnabledType](),
+				Required:   true,
 			},
 			"customer_managed_key": schema.StringAttribute{
 				Optional: true,
@@ -143,27 +105,6 @@ func (r *userSettingsResource) Schema(ctx context.Context, request resource.Sche
 				CustomType: fwtypes.StringEnumType[awstypes.EnabledType](),
 				Required:   true,
 			},
-			"toolbar_configuration": schema.SingleNestedAttribute{
-				Optional: true,
-				Attributes: map[string]schema.Attribute{
-					"hidden_toolbar_items": schema.ListAttribute{
-						ElementType: fwtypes.StringEnumType[awstypes.ToolbarItem](),
-						Optional:    true,
-					},
-					"max_display_resolution": schema.StringAttribute{
-						CustomType: fwtypes.StringEnumType[awstypes.MaxDisplayResolution](),
-						Optional:   true,
-					},
-					"toolbar_type": schema.StringAttribute{
-						CustomType: fwtypes.StringEnumType[awstypes.ToolbarType](),
-						Optional:   true,
-					},
-					"visual_mode": schema.StringAttribute{
-						CustomType: fwtypes.StringEnumType[awstypes.VisualMode](),
-						Optional:   true,
-					},
-				},
-			},
 			"upload_allowed": schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.EnabledType](),
 				Required:   true,
@@ -176,6 +117,80 @@ func (r *userSettingsResource) Schema(ctx context.Context, request resource.Sche
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
+		},
+		Blocks: map[string]schema.Block{
+			"cookie_synchronization_configuration": schema.SetNestedBlock{
+				CustomType: fwtypes.NewSetNestedObjectTypeOf[cookieSynchronizationConfigurationModel](ctx),
+				Validators: []validator.Set{
+					setvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Blocks: map[string]schema.Block{
+						"allowlist": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[cookieSpecificationModel](ctx),
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"domain": schema.StringAttribute{
+										Required: true,
+									},
+									"name": schema.StringAttribute{
+										Optional: true,
+									},
+									"path": schema.StringAttribute{
+										Optional: true,
+									},
+								},
+							},
+						},
+						"blocklist": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[cookieSpecificationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.IsRequired(),
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"domain": schema.StringAttribute{
+										Required: true,
+									},
+									"name": schema.StringAttribute{
+										Optional: true,
+									},
+									"path": schema.StringAttribute{
+										Optional: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"toolbar_configuration": schema.SetNestedBlock{
+				CustomType: fwtypes.NewSetNestedObjectTypeOf[toolbarConfigurationModel](ctx),
+				Validators: []validator.Set{
+					setvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"hidden_toolbar_items": schema.ListAttribute{
+							ElementType: fwtypes.StringEnumType[awstypes.ToolbarItem](),
+							Optional:    true,
+						},
+						"max_display_resolution": schema.StringAttribute{
+							CustomType: fwtypes.StringEnumType[awstypes.MaxDisplayResolution](),
+							Optional:   true,
+						},
+						"toolbar_type": schema.StringAttribute{
+							CustomType: fwtypes.StringEnumType[awstypes.ToolbarType](),
+							Optional:   true,
+						},
+						"visual_mode": schema.StringAttribute{
+							CustomType: fwtypes.StringEnumType[awstypes.VisualMode](),
+							Optional:   true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -361,20 +376,38 @@ func findUserSettingsByARN(ctx context.Context, conn *workspacesweb.Client, arn 
 }
 
 type userSettingsResourceModel struct {
-	AdditionalEncryptionContext        types.Map    `tfsdk:"additional_encryption_context"`
-	AssociatedPortalArns               types.List   `tfsdk:"associated_portal_arns"`
-	CookieSynchronizationConfiguration types.Object `tfsdk:"cookie_synchronization_configuration"`
-	CopyAllowed                        types.String `tfsdk:"copy_allowed"`
-	CustomerManagedKey                 types.String `tfsdk:"customer_managed_key"`
-	DeepLinkAllowed                    types.String `tfsdk:"deep_link_allowed"`
-	DisconnectTimeoutInMinutes         types.Int64  `tfsdk:"disconnect_timeout_in_minutes"`
-	DownloadAllowed                    types.String `tfsdk:"download_allowed"`
-	IdleDisconnectTimeoutInMinutes     types.Int64  `tfsdk:"idle_disconnect_timeout_in_minutes"`
-	PasteAllowed                       types.String `tfsdk:"paste_allowed"`
-	PrintAllowed                       types.String `tfsdk:"print_allowed"`
-	ToolbarConfiguration               types.Object `tfsdk:"toolbar_configuration"`
-	UploadAllowed                      types.String `tfsdk:"upload_allowed"`
-	UserSettingsARN                    types.String `tfsdk:"user_settings_arn"`
-	Tags                               tftags.Map   `tfsdk:"tags"`
-	TagsAll                            tftags.Map   `tfsdk:"tags_all"`
+	AdditionalEncryptionContext        types.Map                                                               `tfsdk:"additional_encryption_context"`
+	AssociatedPortalArns               types.List                                                              `tfsdk:"associated_portal_arns"`
+	CookieSynchronizationConfiguration fwtypes.SetNestedObjectValueOf[cookieSynchronizationConfigurationModel] `tfsdk:"cookie_synchronization_configuration"`
+	CopyAllowed                        fwtypes.StringEnum[awstypes.EnabledType]                                `tfsdk:"copy_allowed"`
+	CustomerManagedKey                 types.String                                                            `tfsdk:"customer_managed_key"`
+	DeepLinkAllowed                    fwtypes.StringEnum[awstypes.EnabledType]                                `tfsdk:"deep_link_allowed"`
+	DisconnectTimeoutInMinutes         types.Int64                                                             `tfsdk:"disconnect_timeout_in_minutes"`
+	DownloadAllowed                    fwtypes.StringEnum[awstypes.EnabledType]                                `tfsdk:"download_allowed"`
+	IdleDisconnectTimeoutInMinutes     types.Int64                                                             `tfsdk:"idle_disconnect_timeout_in_minutes"`
+	PasteAllowed                       fwtypes.StringEnum[awstypes.EnabledType]                                `tfsdk:"paste_allowed"`
+	PrintAllowed                       fwtypes.StringEnum[awstypes.EnabledType]                                `tfsdk:"print_allowed"`
+	ToolbarConfiguration               fwtypes.SetNestedObjectValueOf[toolbarConfigurationModel]               `tfsdk:"toolbar_configuration"`
+	UploadAllowed                      fwtypes.StringEnum[awstypes.EnabledType]                                `tfsdk:"upload_allowed"`
+	UserSettingsARN                    types.String                                                            `tfsdk:"user_settings_arn"`
+	Tags                               tftags.Map                                                              `tfsdk:"tags"`
+	TagsAll                            tftags.Map                                                              `tfsdk:"tags_all"`
+}
+
+type cookieSynchronizationConfigurationModel struct {
+	Allowlist fwtypes.ListNestedObjectValueOf[cookieSpecificationModel] `tfsdk:"allowlist"`
+	Blocklist fwtypes.ListNestedObjectValueOf[cookieSpecificationModel] `tfsdk:"blocklist"`
+}
+
+type cookieSpecificationModel struct {
+	Domain types.String `tfsdk:"domain"`
+	Name   types.String `tfsdk:"name"`
+	Path   types.String `tfsdk:"path"`
+}
+
+type toolbarConfigurationModel struct {
+	HiddenToolbarItems   types.List                                        `tfsdk:"hidden_toolbar_items"`
+	MaxDisplayResolution fwtypes.StringEnum[awstypes.MaxDisplayResolution] `tfsdk:"max_display_resolution"`
+	ToolbarType          fwtypes.StringEnum[awstypes.ToolbarType]          `tfsdk:"toolbar_type"`
+	VisualMode           fwtypes.StringEnum[awstypes.VisualMode]           `tfsdk:"visual_mode"`
 }
