@@ -1,5 +1,7 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 resource "aws_ssmcontacts_rotation" "test" {
-{{- template "region" }}
   contact_ids = aws_ssmcontacts_contact.test[*].arn
 
   name = var.rName
@@ -13,8 +15,6 @@ resource "aws_ssmcontacts_rotation" "test" {
     }
   }
 
-{{- template "tags" . }}
-
   time_zone_id = "Australia/Sydney"
 
   depends_on = [aws_ssmincidents_replication_set.test]
@@ -23,7 +23,6 @@ resource "aws_ssmcontacts_rotation" "test" {
 # testAccRotationConfig_base(rName, 1)
 
 resource "aws_ssmcontacts_contact" "test" {
-{{- template "region" }}
   count = 1
   alias = "${var.rName}-${count.index}"
   type  = "PERSONAL"
@@ -39,6 +38,10 @@ resource "aws_ssmincidents_replication_set" "test" {
   }
 }
 
-data "aws_region" "current" {
-{{- template "region" -}}
+data "aws_region" "current" {}
+
+variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
 }
