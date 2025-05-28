@@ -1,5 +1,9 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 resource "aws_lb" "test" {
-{{- template "region" }}
+  region = var.region
+
   name            = var.rName
   internal        = true
   security_groups = [aws_security_group.test.id]
@@ -7,12 +11,11 @@ resource "aws_lb" "test" {
 
   idle_timeout               = 30
   enable_deletion_protection = false
-
-{{- template "tags" . }}
 }
 
 resource "aws_security_group" "test" {
-{{- template "region" }}
+  region = var.region
+
   name   = var.rName
   vpc_id = aws_vpc.test.id
 
@@ -34,12 +37,14 @@ resource "aws_security_group" "test" {
 # acctest.ConfigVPCWithSubnets
 
 resource "aws_vpc" "test" {
-{{- template "region" }}
+  region = var.region
+
   cidr_block = "10.0.0.0/16"
 }
 
 resource "aws_subnet" "test" {
-{{- template "region" }}
+  region = var.region
+
   count = 2
 
   vpc_id            = aws_vpc.test.id
@@ -48,11 +53,24 @@ resource "aws_subnet" "test" {
 }
 
 data "aws_availability_zones" "available" {
-{{- template "region" }}
+  region = var.region
+
   state = "available"
 
   filter {
     name   = "opt-in-status"
     values = ["opt-in-not-required"]
   }
+}
+
+variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
+}
+
+variable "region" {
+  description = "Region to deploy resource in"
+  type        = string
+  nullable    = false
 }
