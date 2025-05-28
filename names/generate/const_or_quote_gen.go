@@ -239,7 +239,6 @@ func ConstOrQuote(constant string) string {
 		"values":                        "AttrValues",
 		"version":                       "AttrVersion",
 		"virtual_name":                  "AttrVirtualName",
-		"volume_initialization_rate":    "AttrVolumeInitializationRate",
 		"volume_size":                   "AttrVolumeSize",
 		"volume_type":                   "AttrVolumeType",
 		"weight":                        "AttrWeight",

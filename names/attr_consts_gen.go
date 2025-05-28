@@ -232,7 +232,6 @@ const (
 	AttrVersion                    = "version"
 	AttrVirtualName                = "virtual_name"
 	AttrVolumeSize                 = "volume_size"
-	AttrVolumeInitializationRate   = "volume_initialization_rate"
 	AttrVolumeType                 = "volume_type"
 	AttrWeight                     = "weight"
 )
