@@ -5,7 +5,7 @@ package dsql_test
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfdsql "github.com/hashicorp/terraform-provider-aws/internal/service/dsql"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -22,7 +21,6 @@ import (
 
 func TestAccDSQLCluster_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var cluster dsql.GetClusterOutput
 	resourceName := "aws_dsql_cluster.test"
 
@@ -64,7 +62,6 @@ func TestAccDSQLCluster_basic(t *testing.T) {
 
 func TestAccDSQLCluster_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var cluster dsql.GetClusterOutput
 	resourceName := "aws_dsql_cluster.test"
 
@@ -105,39 +102,38 @@ func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			_, err := tfdsql.FindClusterByID(ctx, conn, rs.Primary.Attributes[names.AttrIdentifier])
+
 			if tfresource.NotFound(err) {
-				return nil
-			}
-			if err != nil {
-				return create.Error(names.DSQL, create.ErrActionCheckingDestroyed, tfdsql.ResNameCluster, rs.Primary.Attributes[names.AttrIdentifier], err)
+				continue
 			}
 
-			return create.Error(names.DSQL, create.ErrActionCheckingDestroyed, tfdsql.ResNameCluster, rs.Primary.Attributes[names.AttrIdentifier], errors.New("not destroyed"))
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Aurora DSQL Cluster %s still exists", rs.Primary.Attributes[names.AttrIdentifier])
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckClusterExists(ctx context.Context, name string, cluster *dsql.GetClusterOutput) resource.TestCheckFunc {
+func testAccCheckClusterExists(ctx context.Context, n string, v *dsql.GetClusterOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.DSQL, create.ErrActionCheckingExistence, tfdsql.ResNameCluster, name, errors.New("not found"))
-		}
-
-		if rs.Primary.Attributes[names.AttrIdentifier] == "" {
-			return create.Error(names.DSQL, create.ErrActionCheckingExistence, tfdsql.ResNameCluster, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DSQLClient(ctx)
 
-		resp, err := tfdsql.FindClusterByID(ctx, conn, rs.Primary.Attributes[names.AttrIdentifier])
+		output, err := tfdsql.FindClusterByID(ctx, conn, rs.Primary.Attributes[names.AttrIdentifier])
+
 		if err != nil {
-			return create.Error(names.DSQL, create.ErrActionCheckingExistence, tfdsql.ResNameCluster, rs.Primary.Attributes[names.AttrIdentifier], err)
+			return err
 		}
 
-		*cluster = *resp
+		*v = *output
 
 		return nil
 	}
