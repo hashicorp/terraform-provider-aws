@@ -5,19 +5,17 @@ package auditmanager_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/auditmanager/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfauditmanager "github.com/hashicorp/terraform-provider-aws/internal/service/auditmanager"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -50,7 +48,7 @@ func TestAccAuditManagerAssessmentDelegation_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"control_set_id", "role_type"},
+				ImportStateVerifyIgnore: []string{"role_type"},
 			},
 		},
 	})
@@ -113,7 +111,7 @@ func TestAccAuditManagerAssessmentDelegation_optional(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"control_set_id", "role_type", names.AttrComment},
+				ImportStateVerifyIgnore: []string{"role_type", names.AttrComment},
 			},
 			{
 				Config: testAccAssessmentDelegationConfig_basic(rName),
@@ -142,10 +140,10 @@ func TestAccAuditManagerAssessmentDelegation_optional(t *testing.T) {
 
 func TestAccAuditManagerAssessmentDelegation_multiple(t *testing.T) {
 	ctx := acctest.Context(t)
-	var delegation types.DelegationMetadata
+	var delegation1 types.DelegationMetadata
 	var delegation2 types.DelegationMetadata
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_auditmanager_assessment_delegation.test"
+	resourceName1 := "aws_auditmanager_assessment_delegation.test1"
 	resourceName2 := "aws_auditmanager_assessment_delegation.test2"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -160,29 +158,17 @@ func TestAccAuditManagerAssessmentDelegation_multiple(t *testing.T) {
 			{
 				Config: testAccAssessmentDelegationConfig_multiple(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAssessmentDelegationExists(ctx, resourceName, &delegation),
-					resource.TestCheckResourceAttrPair(resourceName, "assessment_id", "aws_auditmanager_assessment.test", names.AttrID),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test_delegation", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "control_set_id", rName),
-					resource.TestCheckResourceAttr(resourceName, "role_type", string(types.RoleTypeResourceOwner)),
+					testAccCheckAssessmentDelegationExists(ctx, resourceName1, &delegation1),
+					resource.TestCheckResourceAttrPair(resourceName1, "assessment_id", "aws_auditmanager_assessment.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName1, names.AttrRoleARN, "aws_iam_role.test_delegation1", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName1, "control_set_id", rName),
+					resource.TestCheckResourceAttr(resourceName1, "role_type", string(types.RoleTypeResourceOwner)),
 					testAccCheckAssessmentDelegationExists(ctx, resourceName2, &delegation2),
 					resource.TestCheckResourceAttrPair(resourceName2, "assessment_id", "aws_auditmanager_assessment.test", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName2, names.AttrRoleARN, "aws_iam_role.test_delegation2", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName2, "control_set_id", rName),
 					resource.TestCheckResourceAttr(resourceName2, "role_type", string(types.RoleTypeResourceOwner)),
 				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"control_set_id", "role_type"},
-			},
-			{
-				ResourceName:            resourceName2,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"control_set_id", "role_type"},
 			},
 		},
 	})
@@ -197,46 +183,45 @@ func testAccCheckAssessmentDelegationDestroy(ctx context.Context) resource.TestC
 				continue
 			}
 
-			_, err := tfauditmanager.FindAssessmentDelegationByID(ctx, conn, rs.Primary.ID)
+			_, err := tfauditmanager.FindAssessmentDelegationByThreePartKey(ctx, conn, rs.Primary.Attributes["assessment_id"], rs.Primary.Attributes[names.AttrRoleARN], rs.Primary.Attributes["control_set_id"])
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
 			if err != nil {
-				var nfe *retry.NotFoundError
-				if errors.As(err, &nfe) {
-					return nil
-				}
 				return err
 			}
 
-			return create.Error(names.AuditManager, create.ErrActionCheckingDestroyed, tfauditmanager.ResNameAssessmentDelegation, rs.Primary.ID, errors.New("not destroyed"))
+			return fmt.Errorf("Audit Manager Assessment Delegation %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckAssessmentDelegationExists(ctx context.Context, name string, delegation *types.DelegationMetadata) resource.TestCheckFunc {
+func testAccCheckAssessmentDelegationExists(ctx context.Context, n string, v *types.DelegationMetadata) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.AuditManager, create.ErrActionCheckingExistence, tfauditmanager.ResNameAssessmentDelegation, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.AuditManager, create.ErrActionCheckingExistence, tfauditmanager.ResNameAssessmentDelegation, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AuditManagerClient(ctx)
-		resp, err := tfauditmanager.FindAssessmentDelegationByID(ctx, conn, rs.Primary.ID)
+
+		output, err := tfauditmanager.FindAssessmentDelegationByThreePartKey(ctx, conn, rs.Primary.Attributes["assessment_id"], rs.Primary.Attributes[names.AttrRoleARN], rs.Primary.Attributes["control_set_id"])
+
 		if err != nil {
-			return create.Error(names.AuditManager, create.ErrActionCheckingExistence, tfauditmanager.ResNameAssessmentDelegation, rs.Primary.ID, err)
+			return err
 		}
 
-		*delegation = *resp
+		*v = *output
 
 		return nil
 	}
 }
 
-func testAccAssessmentDelegationConfigBase(rName string) string {
+func testAccAssessmentDelegationConfig_base(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
@@ -300,9 +285,6 @@ resource "aws_auditmanager_assessment" "test" {
     aws_accounts {
       id = data.aws_caller_identity.current.account_id
     }
-    aws_services {
-      service_name = "S3"
-    }
   }
 }
 `, rName)
@@ -310,7 +292,7 @@ resource "aws_auditmanager_assessment" "test" {
 
 func testAccAssessmentDelegationConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
-		testAccAssessmentDelegationConfigBase(rName),
+		testAccAssessmentDelegationConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_iam_role" "test_delegation" {
   name               = "%[1]s-delegation"
@@ -328,7 +310,7 @@ resource "aws_auditmanager_assessment_delegation" "test" {
 
 func testAccAssessmentDelegationConfig_optional(rName, comment string) string {
 	return acctest.ConfigCompose(
-		testAccAssessmentDelegationConfigBase(rName),
+		testAccAssessmentDelegationConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_iam_role" "test_delegation" {
   name               = "%[1]s-delegation"
@@ -348,16 +330,16 @@ resource "aws_auditmanager_assessment_delegation" "test" {
 
 func testAccAssessmentDelegationConfig_multiple(rName string) string {
 	return acctest.ConfigCompose(
-		testAccAssessmentDelegationConfigBase(rName),
+		testAccAssessmentDelegationConfig_base(rName),
 		fmt.Sprintf(`
-resource "aws_iam_role" "test_delegation" {
-  name               = "%[1]s-delegation"
+resource "aws_iam_role" "test_delegation1" {
+  name               = "%[1]s-delegation1"
   assume_role_policy = data.aws_iam_policy_document.test.json
 }
 
-resource "aws_auditmanager_assessment_delegation" "test" {
+resource "aws_auditmanager_assessment_delegation" "test1" {
   assessment_id  = aws_auditmanager_assessment.test.id
-  role_arn       = aws_iam_role.test_delegation.arn
+  role_arn       = aws_iam_role.test_delegation1.arn
   role_type      = "RESOURCE_OWNER"
   control_set_id = %[1]q
 }

@@ -57,6 +57,7 @@ func RegisterSweepers() {
 	resource.AddTestSweepers("aws_iam_role", &resource.Sweeper{
 		Name: "aws_iam_role",
 		Dependencies: []string{
+			"aws_auditmanager_assessment",
 			"aws_batch_compute_environment",
 			"aws_cloudformation_stack_set_instance",
 			"aws_cognito_user_pool",
