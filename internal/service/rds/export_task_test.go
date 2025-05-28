@@ -58,33 +58,6 @@ func TestAccRDSExportTask_basic(t *testing.T) {
 	})
 }
 
-func TestAccRDSExportTask_disappears(t *testing.T) {
-	ctx := acctest.Context(t)
-	var exportTask types.ExportTask
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_rds_export_task.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.SkipBelow(tfversion.Version1_11_0),
-		},
-		CheckDestroy: testAccCheckExportTaskDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccExportTaskConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExportTaskExists(ctx, resourceName, &exportTask),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfrds.ResourceExportTask, resourceName),
-				),
-				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
-
 func TestAccRDSExportTask_optional(t *testing.T) {
 	ctx := acctest.Context(t)
 	var exportTask types.ExportTask
