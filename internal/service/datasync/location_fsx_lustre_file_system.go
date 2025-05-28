@@ -30,7 +30,6 @@ import (
 
 // @SDKResource("aws_datasync_location_fsx_lustre_file_system", name="Location FSx for Lustre File System")
 // @Tags(identifierAttribute="arn")
-// @ArnIdentity
 // @WrappedImport(false)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/datasync;datasync.DescribeLocationFsxLustreOutput")
 // @Testing(preCheck="testAccPreCheck")

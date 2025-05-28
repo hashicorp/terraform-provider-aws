@@ -31,7 +31,6 @@ import (
 
 // @SDKResource("aws_datasync_location_fsx_openzfs_file_system", name="Location FSx for OpenZFS File System")
 // @Tags(identifierAttribute="arn")
-// @ArnIdentity
 // @WrappedImport(false)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/datasync;datasync.DescribeLocationFsxOpenZfsOutput")
 // @Testing(preCheck="testAccPreCheck")

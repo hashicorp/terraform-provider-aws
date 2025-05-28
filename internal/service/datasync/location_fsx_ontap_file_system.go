@@ -31,7 +31,6 @@ import (
 
 // @SDKResource("aws_datasync_location_fsx_ontap_file_system", name="Location FSx for NetApp ONTAP File System")
 // @Tags(identifierAttribute="arn")
-// @ArnIdentity
 // @WrappedImport(false)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/datasync;datasync.DescribeLocationFsxOntapOutput")
 // @Testing(preCheck="testAccPreCheck")
