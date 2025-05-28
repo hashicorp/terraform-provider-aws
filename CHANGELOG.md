@@ -2,16 +2,26 @@
 
 FEATURES:
 
+* **New Resource:** `aws_notifications_channel_association` ([#42575](https://github.com/hashicorp/terraform-provider-aws/issues/42575))
+* **New Resource:** `aws_notifications_event_rule` ([#42575](https://github.com/hashicorp/terraform-provider-aws/issues/42575))
+* **New Resource:** `aws_notifications_notification_configuration` ([#42575](https://github.com/hashicorp/terraform-provider-aws/issues/42575))
+* **New Resource:** `aws_notifications_notification_hub` ([#42544](https://github.com/hashicorp/terraform-provider-aws/issues/42544))
+* **New Resource:** `aws_notificationscontacts_email_contact` ([#42575](https://github.com/hashicorp/terraform-provider-aws/issues/42575))
 * **New Resource:** `aws_quicksight_account_settings` ([#42185](https://github.com/hashicorp/terraform-provider-aws/issues/42185))
 
 ENHANCEMENTS:
 
 * data-source/aws_verifiedpermissions_policy_store: Add `tags` attribute. This functionality requires the `verifiedpermissions:ListTagsForResource` IAM permission ([#42663](https://github.com/hashicorp/terraform-provider-aws/issues/42663))
+* resource/aws_lb: Add `minimum_load_balancer_capacity` configuration block. This functionality requires the `elasticloadbalancing:DescribeCapacityReservations` and `elasticloadbalancing:ModifyCapacityReservation` IAM permissions ([#42685](https://github.com/hashicorp/terraform-provider-aws/issues/42685))
+* resource/aws_securityhub_standards_subscription: Add configurable Create and Delete timeouts ([#42759](https://github.com/hashicorp/terraform-provider-aws/issues/42759))
 * resource/aws_verifiedpermissions_policy_store: Add `tags` argument and `tags_all` attribute. This functionality requires the `verifiedpermissions:ListTagsForResource`, `verifiedpermissions:TagResource`, and `verifiedpermissions:UntagResource` IAM permissions ([#42663](https://github.com/hashicorp/terraform-provider-aws/issues/42663))
 
 BUG FIXES:
 
+* resource/aws_cloudwatch_log_stream: Fix to return the first matched stream name during the read operation. This fixes a regression introduced in [v5.83.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#5830-january--9-2025) ([#42719](https://github.com/hashicorp/terraform-provider-aws/issues/42719))
+* resource/aws_elasticache_replication_group: Fix crash during read operations where configuration endpoint and node groups are nil and empty, respectively ([#42726](https://github.com/hashicorp/terraform-provider-aws/issues/42726))
 * resource/aws_s3_bucket_lifecycle_configuration: No longer returns warning on empty `rule.filter`. ([#42624](https://github.com/hashicorp/terraform-provider-aws/issues/42624))
+* resource/aws_vpc_endpoint: Fix issue where `dns_options` were not being updated correctly when `private_dns_enabled` was set to true ([#42746](https://github.com/hashicorp/terraform-provider-aws/issues/42746))
 
 ## 5.98.0 (May 15, 2025)
 

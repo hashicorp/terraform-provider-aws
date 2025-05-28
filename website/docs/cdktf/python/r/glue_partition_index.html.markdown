@@ -108,7 +108,7 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
 * `table_name` - (Required) Name of the table. For Hive compatibility, this must be entirely lowercase.
 * `database_name` - (Required) Name of the metadata database where the table metadata resides. For Hive compatibility, this must be all lowercase.
@@ -158,4 +158,4 @@ Using `terraform import`, import Glue Partition Indexes using the catalog ID (us
 % terraform import aws_glue_partition_index.example 123456789012:MyDatabase:MyTable:index-name
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-2c1eca414462f36b306c6c36d0f8b45e95a67975829b6e6678f2b74c1376628b -->
+<!-- cache-key: cdktf-0.20.8 input-f189d7baa5238c491dd09ccfbd0855f9c605ac06b9134dba8293df667f0872d6 -->

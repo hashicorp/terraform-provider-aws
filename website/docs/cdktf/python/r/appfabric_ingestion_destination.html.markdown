@@ -57,7 +57,7 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
 * `app_bundle_arn` - (Required) The Amazon Resource Name (ARN) of the app bundle to use for the request.
 * `ingestion_arn` - (Required) The Amazon Resource Name (ARN) of the ingestion to use for the request.
@@ -111,4 +111,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `update` - (Default `5m`)
 * `delete` - (Default `5m`)
 
-<!-- cache-key: cdktf-0.20.8 input-50d4a17f9fb37a863009c764fd691e03b87e03ecfead784db0291660c7a5684b -->
+<!-- cache-key: cdktf-0.20.8 input-5a9d40e656f1ca10d5a6e1d0dced840e3ad33077a73d2f65d9125adc385edb21 -->
