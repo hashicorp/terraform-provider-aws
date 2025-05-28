@@ -2821,7 +2821,8 @@ service "ebs" {
 
 service "imagebuilder" {
   sdk {
-    id = "imagebuilder"
+    id          = "imagebuilder"
+    arn_service = "imagebuilder"
   }
 
   names {
