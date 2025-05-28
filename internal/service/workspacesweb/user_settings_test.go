@@ -114,13 +114,26 @@ func TestAccWorkSpacesWebUserSettings_complete(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "idle_disconnect_timeout_in_minutes", "15"),
 					resource.TestCheckResourceAttrPair(resourceName, "customer_managed_key", kmsKeyResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "additional_encryption_context.Environment", "Production"),
-					resource.TestCheckResourceAttr(resourceName, "toolbar_configuration.toolbar_type", "Docked"),
-					resource.TestCheckResourceAttr(resourceName, "toolbar_configuration.visual_mode", "Dark"),
-					resource.TestCheckResourceAttr(resourceName, "toolbar_configuration.hidden_toolbar_items.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "cookie_synchronization_configuration.allowlist.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "cookie_synchronization_configuration.allowlist.0.domain", "example.com"),
-					resource.TestCheckResourceAttr(resourceName, "cookie_synchronization_configuration.blocklist.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "cookie_synchronization_configuration.blocklist.0.domain", "blocked.com"),
+					resource.TestCheckResourceAttr(resourceName, "toolbar_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "toolbar_configuration.0.toolbar_type", "Docked"),
+					resource.TestCheckResourceAttr(resourceName, "toolbar_configuration.0.visual_mode", "Dark"),
+					resource.TestCheckResourceAttr(resourceName, "toolbar_configuration.0.hidden_toolbar_items.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "toolbar_configuration.0.hidden_toolbar_items.0", "Webcam"),
+					resource.TestCheckResourceAttr(resourceName, "toolbar_configuration.0.hidden_toolbar_items.1", "Microphone"),
+					resource.TestCheckResourceAttr(resourceName, "cookie_synchronization_configuration.0.allowlist.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "cookie_synchronization_configuration.0.allowlist.0.domain", "example1.com"),
+					resource.TestCheckResourceAttr(resourceName, "cookie_synchronization_configuration.0.allowlist.0.path", "/path1"),
+					resource.TestCheckResourceAttr(resourceName, "cookie_synchronization_configuration.0.allowlist.0.name", "ExampleAllow1"),
+					resource.TestCheckResourceAttr(resourceName, "cookie_synchronization_configuration.0.allowlist.1.domain", "example2.com"),
+					resource.TestCheckResourceAttr(resourceName, "cookie_synchronization_configuration.0.allowlist.1.path", "/path2"),
+					resource.TestCheckResourceAttr(resourceName, "cookie_synchronization_configuration.0.allowlist.1.name", "ExampleAllow2"),
+					resource.TestCheckResourceAttr(resourceName, "cookie_synchronization_configuration.0.blocklist.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "cookie_synchronization_configuration.0.blocklist.0.domain", "blocked1.com"),
+					resource.TestCheckResourceAttr(resourceName, "cookie_synchronization_configuration.0.blocklist.0.path", "/path3"),
+					resource.TestCheckResourceAttr(resourceName, "cookie_synchronization_configuration.0.blocklist.0.name", "ExampleBlock1"),
+					resource.TestCheckResourceAttr(resourceName, "cookie_synchronization_configuration.0.blocklist.1.domain", "blocked2.com"),
+					resource.TestCheckResourceAttr(resourceName, "cookie_synchronization_configuration.0.blocklist.1.path", "/path4"),
+					resource.TestCheckResourceAttr(resourceName, "cookie_synchronization_configuration.0.blocklist.1.name", "ExampleBlock2"),
 				),
 			},
 			{
@@ -161,11 +174,19 @@ func TestAccWorkSpacesWebUserSettings_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "deep_link_allowed", "Enabled"),
 					resource.TestCheckResourceAttr(resourceName, "disconnect_timeout_in_minutes", "30"),
 					resource.TestCheckResourceAttr(resourceName, "idle_disconnect_timeout_in_minutes", "15"),
-					resource.TestCheckResourceAttr(resourceName, "toolbar_configuration.toolbar_type", "Docked"),
-					resource.TestCheckResourceAttr(resourceName, "toolbar_configuration.visual_mode", "Dark"),
-					resource.TestCheckResourceAttr(resourceName, "toolbar_configuration.hidden_toolbar_items.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "cookie_synchronization_configuration.allowlist.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "cookie_synchronization_configuration.allowlist.0.domain", "example.com"),
+					resource.TestCheckResourceAttr(resourceName, "toolbar_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "toolbar_configuration.0.toolbar_type", "Docked"),
+					resource.TestCheckResourceAttr(resourceName, "toolbar_configuration.0.visual_mode", "Dark"),
+					resource.TestCheckResourceAttr(resourceName, "toolbar_configuration.0.hidden_toolbar_items.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "toolbar_configuration.0.hidden_toolbar_items.0", "Webcam"),
+					resource.TestCheckResourceAttr(resourceName, "cookie_synchronization_configuration.0.allowlist.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cookie_synchronization_configuration.0.allowlist.0.domain", "example.com"),
+					resource.TestCheckResourceAttr(resourceName, "cookie_synchronization_configuration.0.allowlist.0.path", "/path1"),
+					resource.TestCheckResourceAttr(resourceName, "cookie_synchronization_configuration.0.allowlist.0.name", "ExampleAllow"),
+					resource.TestCheckResourceAttr(resourceName, "cookie_synchronization_configuration.0.blocklist.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cookie_synchronization_configuration.0.blocklist.0.domain", "blocked.com"),
+					resource.TestCheckResourceAttr(resourceName, "cookie_synchronization_configuration.0.blocklist.0.path", "/path2"),
+					resource.TestCheckResourceAttr(resourceName, "cookie_synchronization_configuration.0.blocklist.0.name", "ExampleBlock"),
 				),
 			},
 			{
@@ -187,13 +208,26 @@ func TestAccWorkSpacesWebUserSettings_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "deep_link_allowed", "Disabled"),
 					resource.TestCheckResourceAttr(resourceName, "disconnect_timeout_in_minutes", "60"),
 					resource.TestCheckResourceAttr(resourceName, "idle_disconnect_timeout_in_minutes", "30"),
-					resource.TestCheckResourceAttr(resourceName, "toolbar_configuration.toolbar_type", "Floating"),
-					resource.TestCheckResourceAttr(resourceName, "toolbar_configuration.visual_mode", "Light"),
-					resource.TestCheckResourceAttr(resourceName, "toolbar_configuration.hidden_toolbar_items.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "cookie_synchronization_configuration.allowlist.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "cookie_synchronization_configuration.allowlist.0.domain", "updated.com"),
-					resource.TestCheckResourceAttr(resourceName, "cookie_synchronization_configuration.blocklist.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "cookie_synchronization_configuration.blocklist.0.domain", "blocked.com"),
+					resource.TestCheckResourceAttr(resourceName, "toolbar_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "toolbar_configuration.0.toolbar_type", "Floating"),
+					resource.TestCheckResourceAttr(resourceName, "toolbar_configuration.0.visual_mode", "Light"),
+					resource.TestCheckResourceAttr(resourceName, "toolbar_configuration.0.hidden_toolbar_items.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "toolbar_configuration.0.hidden_toolbar_items.0", "Webcam"),
+					resource.TestCheckResourceAttr(resourceName, "toolbar_configuration.0.hidden_toolbar_items.1", "Microphone"),
+					resource.TestCheckResourceAttr(resourceName, "cookie_synchronization_configuration.0.allowlist.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "cookie_synchronization_configuration.0.allowlist.0.domain", "example1.com"),
+					resource.TestCheckResourceAttr(resourceName, "cookie_synchronization_configuration.0.allowlist.0.path", "/path1"),
+					resource.TestCheckResourceAttr(resourceName, "cookie_synchronization_configuration.0.allowlist.0.name", "ExampleAllow1"),
+					resource.TestCheckResourceAttr(resourceName, "cookie_synchronization_configuration.0.allowlist.1.domain", "example2.com"),
+					resource.TestCheckResourceAttr(resourceName, "cookie_synchronization_configuration.0.allowlist.1.path", "/path2"),
+					resource.TestCheckResourceAttr(resourceName, "cookie_synchronization_configuration.0.allowlist.1.name", "ExampleAllow2"),
+					resource.TestCheckResourceAttr(resourceName, "cookie_synchronization_configuration.0.blocklist.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "cookie_synchronization_configuration.0.blocklist.0.domain", "blocked1.com"),
+					resource.TestCheckResourceAttr(resourceName, "cookie_synchronization_configuration.0.blocklist.0.path", "/path3"),
+					resource.TestCheckResourceAttr(resourceName, "cookie_synchronization_configuration.0.blocklist.0.name", "ExampleBlock1"),
+					resource.TestCheckResourceAttr(resourceName, "cookie_synchronization_configuration.0.blocklist.1.domain", "blocked2.com"),
+					resource.TestCheckResourceAttr(resourceName, "cookie_synchronization_configuration.0.blocklist.1.path", "/path4"),
+					resource.TestCheckResourceAttr(resourceName, "cookie_synchronization_configuration.0.blocklist.1.name", "ExampleBlock2"),
 				),
 			},
 			{
@@ -240,6 +274,90 @@ func TestAccWorkSpacesWebUserSettings_customerManagedKey(t *testing.T) {
 	})
 }
 
+func TestAccWorkSpacesWebUserSettings_customerManagedKeyUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var userSettings awstypes.UserSettings
+	resourceName := "aws_workspacesweb_user_settings.test"
+	kmsKeyResourceName1 := "aws_kms_key.test1"
+	kmsKeyResourceName2 := "aws_kms_key.test2"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.WorkSpacesWebEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserSettingsDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserSettingsConfig_customerManagedKeyBefore(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserSettingsExists(ctx, resourceName, &userSettings),
+					resource.TestCheckResourceAttrPair(resourceName, "customer_managed_key", kmsKeyResourceName1, names.AttrARN),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    testAccUserSettingsImportStateIdFunc(resourceName),
+				ImportStateVerifyIdentifierAttribute: "user_settings_arn",
+			},
+			{
+				Config: testAccUserSettingsConfig_customerManagedKeyAfter(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserSettingsExists(ctx, resourceName, &userSettings),
+					resource.TestCheckResourceAttrPair(resourceName, "customer_managed_key", kmsKeyResourceName2, names.AttrARN),
+				),
+			},
+		},
+	})
+}
+
+func TestAccWorkSpacesWebUserSettings_additionalEncryptionContextUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var userSettings awstypes.UserSettings
+	resourceName := "aws_workspacesweb_user_settings.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.WorkSpacesWebEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserSettingsDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserSettingsConfig_additionalEncryptionContextBefore(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserSettingsExists(ctx, resourceName, &userSettings),
+					resource.TestCheckResourceAttr(resourceName, "additional_encryption_context.Environment", "Development"),
+					resource.TestCheckResourceAttr(resourceName, "additional_encryption_context.Project", "Test"),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    testAccUserSettingsImportStateIdFunc(resourceName),
+				ImportStateVerifyIdentifierAttribute: "user_settings_arn",
+			},
+			{
+				Config: testAccUserSettingsConfig_additionalEncryptionContextAfter(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserSettingsExists(ctx, resourceName, &userSettings),
+					resource.TestCheckResourceAttr(resourceName, "additional_encryption_context.Environment", "Production"),
+					resource.TestCheckResourceAttr(resourceName, "additional_encryption_context.Project", "Live"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccWorkSpacesWebUserSettings_toolbarConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 	var userSettings awstypes.UserSettings
@@ -259,9 +377,10 @@ func TestAccWorkSpacesWebUserSettings_toolbarConfiguration(t *testing.T) {
 				Config: testAccUserSettingsConfig_toolbarConfigurationBefore(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserSettingsExists(ctx, resourceName, &userSettings),
-					resource.TestCheckResourceAttr(resourceName, "toolbar_configuration.toolbar_type", "Docked"),
-					resource.TestCheckResourceAttr(resourceName, "toolbar_configuration.visual_mode", "Dark"),
-					resource.TestCheckResourceAttr(resourceName, "toolbar_configuration.hidden_toolbar_items.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "toolbar_configuration.0.toolbar_type", "Docked"),
+					resource.TestCheckResourceAttr(resourceName, "toolbar_configuration.0.visual_mode", "Dark"),
+					resource.TestCheckResourceAttr(resourceName, "toolbar_configuration.0.hidden_toolbar_items.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "toolbar_configuration.0.hidden_toolbar_items.0", "Webcam"),
 				),
 			},
 			{
@@ -275,9 +394,11 @@ func TestAccWorkSpacesWebUserSettings_toolbarConfiguration(t *testing.T) {
 				Config: testAccUserSettingsConfig_toolbarConfigurationAfter(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserSettingsExists(ctx, resourceName, &userSettings),
-					resource.TestCheckResourceAttr(resourceName, "toolbar_configuration.toolbar_type", "Floating"),
-					resource.TestCheckResourceAttr(resourceName, "toolbar_configuration.visual_mode", "Light"),
-					resource.TestCheckResourceAttr(resourceName, "toolbar_configuration.hidden_toolbar_items.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "toolbar_configuration.0.toolbar_type", "Floating"),
+					resource.TestCheckResourceAttr(resourceName, "toolbar_configuration.0.visual_mode", "Light"),
+					resource.TestCheckResourceAttr(resourceName, "toolbar_configuration.0.hidden_toolbar_items.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "toolbar_configuration.0.hidden_toolbar_items.0", "Webcam"),
+					resource.TestCheckResourceAttr(resourceName, "toolbar_configuration.0.hidden_toolbar_items.1", "Microphone"),
 				),
 			},
 			{
@@ -291,7 +412,7 @@ func TestAccWorkSpacesWebUserSettings_toolbarConfiguration(t *testing.T) {
 	})
 }
 
-func TestAccWorkSpacesWebUserSettings_cookieSynchronization(t *testing.T) {
+func TestAccWorkSpacesWebUserSettings_cookieSynchronizationConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 	var userSettings awstypes.UserSettings
 	resourceName := "aws_workspacesweb_user_settings.test"
@@ -310,8 +431,10 @@ func TestAccWorkSpacesWebUserSettings_cookieSynchronization(t *testing.T) {
 				Config: testAccUserSettingsConfig_cookieSynchronizationBefore(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserSettingsExists(ctx, resourceName, &userSettings),
-					resource.TestCheckResourceAttr(resourceName, "cookie_synchronization_configuration.allowlist.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "cookie_synchronization_configuration.allowlist.0.domain", "example.com"),
+					resource.TestCheckResourceAttr(resourceName, "cookie_synchronization_configuration.0.allowlist.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cookie_synchronization_configuration.0.allowlist.0.domain", "example.com"),
+					resource.TestCheckResourceAttr(resourceName, "cookie_synchronization_configuration.0.allowlist.0.path", "/path1"),
+					resource.TestCheckResourceAttr(resourceName, "cookie_synchronization_configuration.0.allowlist.0.name", "ExampleAllow"),
 				),
 			},
 			{
@@ -325,10 +448,14 @@ func TestAccWorkSpacesWebUserSettings_cookieSynchronization(t *testing.T) {
 				Config: testAccUserSettingsConfig_cookieSynchronizationAfter(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserSettingsExists(ctx, resourceName, &userSettings),
-					resource.TestCheckResourceAttr(resourceName, "cookie_synchronization_configuration.allowlist.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "cookie_synchronization_configuration.allowlist.0.domain", "example.com"),
-					resource.TestCheckResourceAttr(resourceName, "cookie_synchronization_configuration.blocklist.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "cookie_synchronization_configuration.blocklist.0.domain", "blocked.com"),
+					resource.TestCheckResourceAttr(resourceName, "cookie_synchronization_configuration.0.allowlist.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cookie_synchronization_configuration.0.allowlist.0.domain", "example.com"),
+					resource.TestCheckResourceAttr(resourceName, "cookie_synchronization_configuration.0.allowlist.0.path", "/path1"),
+					resource.TestCheckResourceAttr(resourceName, "cookie_synchronization_configuration.0.allowlist.0.name", "ExampleAllow"),
+					resource.TestCheckResourceAttr(resourceName, "cookie_synchronization_configuration.0.blocklist.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cookie_synchronization_configuration.0.blocklist.0.domain", "blocked.com"),
+					resource.TestCheckResourceAttr(resourceName, "cookie_synchronization_configuration.0.blocklist.0.path", "/path2"),
+					resource.TestCheckResourceAttr(resourceName, "cookie_synchronization_configuration.0.blocklist.0.name", "ExampleBlock"),
 				),
 			},
 			{
@@ -468,14 +595,27 @@ resource "aws_workspacesweb_user_settings" "test" {
     visual_mode = "Dark"
     hidden_toolbar_items = ["Webcam", "Microphone"]
   }
-  
+
   cookie_synchronization_configuration {
     allowlist {
-      domain = "example.com"
-      path = "/path"
+      domain = "example1.com"
+      path = "/path1"
+	  name = "ExampleAllow1"
+    }
+    allowlist {
+      domain = "example2.com"
+      path = "/path2"
+	  name = "ExampleAllow2"
     }
     blocklist {
-      domain = "blocked.com"
+      domain = "blocked1.com"
+      path = "/path3"
+	  name = "ExampleBlock1"
+    }
+    blocklist {
+      domain = "blocked2.com"
+      path = "/path4"
+	  name = "ExampleBlock2"
     }
   }
 }
@@ -494,18 +634,30 @@ resource "aws_workspacesweb_user_settings" "test" {
   disconnect_timeout_in_minutes = 30
   idle_disconnect_timeout_in_minutes = 15
   
+  additional_encryption_context = {
+    Environment = "Development"
+  }
+  
   toolbar_configuration {
     toolbar_type = "Docked"
     visual_mode = "Dark"
     hidden_toolbar_items = ["Webcam"]
   }
   
+
   cookie_synchronization_configuration {
     allowlist {
       domain = "example.com"
-      path = "/path"
+      path = "/path1"
+	  name = "ExampleAllow"
+    }
+    blocklist {
+      domain = "blocked.com"
+      path = "/path2"
+	  name = "ExampleBlock"
     }
   }
+
 }
 `
 }
@@ -522,19 +674,36 @@ resource "aws_workspacesweb_user_settings" "test" {
   disconnect_timeout_in_minutes = 60
   idle_disconnect_timeout_in_minutes = 30
   
+  additional_encryption_context = {
+    Environment = "Production"
+  }
+  
   toolbar_configuration {
     toolbar_type = "Floating"
     visual_mode = "Light"
     hidden_toolbar_items = ["Webcam", "Microphone"]
   }
-  
+
   cookie_synchronization_configuration {
     allowlist {
-      domain = "updated.com"
-      path = "/path"
+      domain = "example1.com"
+      path = "/path1"
+	  name = "ExampleAllow1"
+    }
+    allowlist {
+      domain = "example2.com"
+      path = "/path2"
+	  name = "ExampleAllow2"
     }
     blocklist {
-      domain = "blocked.com"
+      domain = "blocked1.com"
+      path = "/path3"
+	  name = "ExampleBlock1"
+    }
+    blocklist {
+      domain = "blocked2.com"
+      path = "/path4"
+	  name = "ExampleBlock2"
     }
   }
 }
@@ -636,7 +805,8 @@ resource "aws_workspacesweb_user_settings" "test" {
   cookie_synchronization_configuration {
     allowlist {
       domain = "example.com"
-      path = "/path"
+      path = "/path1"
+	  name = "ExampleAllow"
     }
   }
 }
@@ -655,11 +825,244 @@ resource "aws_workspacesweb_user_settings" "test" {
   cookie_synchronization_configuration {
     allowlist {
       domain = "example.com"
-      path = "/path"
+      path = "/path1"
+	  name = "ExampleAllow"
     }
     blocklist {
       domain = "blocked.com"
+	  path = "/path2"
+	  name = "ExampleBlock"
     }
+  }
+}
+`
+}
+
+func testAccUserSettingsConfig_customerManagedKeyBefore() string {
+	return `
+resource "aws_kms_key" "test1" {
+  deletion_window_in_days = 7
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "Enable IAM User Permissions"
+        Effect = "Allow"
+        Principal = {
+          AWS = "*"
+        }
+        Action   = "kms:*"
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow WorkSpacesWeb to use the key"
+        Effect = "Allow"
+        Principal = {
+          Service = "workspaces-web.amazonaws.com"
+        }
+        Action = [
+          "kms:DescribeKey",
+          "kms:GenerateDataKey",
+          "kms:GenerateDataKeyWithoutPlaintext",
+          "kms:Decrypt",
+          "kms:ReEncryptTo",
+          "kms:ReEncryptFrom"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+resource "aws_workspacesweb_user_settings" "test" {
+  copy_allowed        = "Enabled"
+  download_allowed    = "Enabled"
+  paste_allowed       = "Enabled"
+  print_allowed       = "Enabled"
+  upload_allowed      = "Enabled"
+  customer_managed_key = aws_kms_key.test1.arn
+}
+`
+}
+
+func testAccUserSettingsConfig_customerManagedKeyAfter() string {
+	return `
+resource "aws_kms_key" "test1" {
+  deletion_window_in_days = 7
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "Enable IAM User Permissions"
+        Effect = "Allow"
+        Principal = {
+          AWS = "*"
+        }
+        Action   = "kms:*"
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow WorkSpacesWeb to use the key"
+        Effect = "Allow"
+        Principal = {
+          Service = "workspaces-web.amazonaws.com"
+        }
+        Action = [
+          "kms:DescribeKey",
+          "kms:GenerateDataKey",
+          "kms:GenerateDataKeyWithoutPlaintext",
+          "kms:Decrypt",
+          "kms:ReEncryptTo",
+          "kms:ReEncryptFrom"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+resource "aws_kms_key" "test2" {
+  deletion_window_in_days = 7
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "Enable IAM User Permissions"
+        Effect = "Allow"
+        Principal = {
+          AWS = "*"
+        }
+        Action   = "kms:*"
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow WorkSpacesWeb to use the key"
+        Effect = "Allow"
+        Principal = {
+          Service = "workspaces-web.amazonaws.com"
+        }
+        Action = [
+          "kms:DescribeKey",
+          "kms:GenerateDataKey",
+          "kms:GenerateDataKeyWithoutPlaintext",
+          "kms:Decrypt",
+          "kms:ReEncryptTo",
+          "kms:ReEncryptFrom"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+resource "aws_workspacesweb_user_settings" "test" {
+  copy_allowed        = "Enabled"
+  download_allowed    = "Enabled"
+  paste_allowed       = "Enabled"
+  print_allowed       = "Enabled"
+  upload_allowed      = "Enabled"
+  customer_managed_key = aws_kms_key.test2.arn
+}
+`
+}
+
+func testAccUserSettingsConfig_additionalEncryptionContextBefore() string {
+	return `
+resource "aws_kms_key" "test" {
+  deletion_window_in_days = 7
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "Enable IAM User Permissions"
+        Effect = "Allow"
+        Principal = {
+          AWS = "*"
+        }
+        Action   = "kms:*"
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow WorkSpacesWeb to use the key"
+        Effect = "Allow"
+        Principal = {
+          Service = "workspaces-web.amazonaws.com"
+        }
+        Action = [
+          "kms:DescribeKey",
+          "kms:GenerateDataKey",
+          "kms:GenerateDataKeyWithoutPlaintext",
+          "kms:Decrypt",
+          "kms:ReEncryptTo",
+          "kms:ReEncryptFrom"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+resource "aws_workspacesweb_user_settings" "test" {
+  copy_allowed        = "Enabled"
+  download_allowed    = "Enabled"
+  paste_allowed       = "Enabled"
+  print_allowed       = "Enabled"
+  upload_allowed      = "Enabled"
+  customer_managed_key = aws_kms_key.test.arn
+  additional_encryption_context = {
+    Environment = "Development"
+    Project     = "Test"
+  }
+}
+`
+}
+
+func testAccUserSettingsConfig_additionalEncryptionContextAfter() string {
+	return `
+resource "aws_kms_key" "test" {
+  deletion_window_in_days = 7
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "Enable IAM User Permissions"
+        Effect = "Allow"
+        Principal = {
+          AWS = "*"
+        }
+        Action   = "kms:*"
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow WorkSpacesWeb to use the key"
+        Effect = "Allow"
+        Principal = {
+          Service = "workspaces-web.amazonaws.com"
+        }
+        Action = [
+          "kms:DescribeKey",
+          "kms:GenerateDataKey",
+          "kms:GenerateDataKeyWithoutPlaintext",
+          "kms:Decrypt",
+          "kms:ReEncryptTo",
+          "kms:ReEncryptFrom"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+resource "aws_workspacesweb_user_settings" "test" {
+  copy_allowed        = "Enabled"
+  download_allowed    = "Enabled"
+  paste_allowed       = "Enabled"
+  print_allowed       = "Enabled"
+  upload_allowed      = "Enabled"
+  customer_managed_key = aws_kms_key.test.arn
+  additional_encryption_context = {
+    Environment = "Production"
+    Project     = "Live"
   }
 }
 `

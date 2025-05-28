@@ -11,13 +11,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/workspacesweb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/workspacesweb/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
-	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/mapplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -52,6 +52,9 @@ func (r *userSettingsResource) Schema(ctx context.Context, request resource.Sche
 			"additional_encryption_context": schema.MapAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
+				PlanModifiers: []planmodifier.Map{
+					mapplanmodifier.RequiresReplace(),
+				},
 			},
 			"associated_portal_arns": schema.ListAttribute{
 				ElementType: types.StringType,
@@ -80,12 +83,14 @@ func (r *userSettingsResource) Schema(ctx context.Context, request resource.Sche
 			"deep_link_allowed": schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.EnabledType](),
 				Optional:   true,
+				Computed:   true,
 			},
 			"disconnect_timeout_in_minutes": schema.Int64Attribute{
 				Optional: true,
 				Validators: []validator.Int64{
 					int64validator.Between(1, 600),
 				},
+				Computed: true,
 			},
 			"download_allowed": schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.EnabledType](),
@@ -96,6 +101,7 @@ func (r *userSettingsResource) Schema(ctx context.Context, request resource.Sche
 				Validators: []validator.Int64{
 					int64validator.Between(0, 60),
 				},
+				Computed: true,
 			},
 			"paste_allowed": schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.EnabledType](),
@@ -144,10 +150,6 @@ func (r *userSettingsResource) Schema(ctx context.Context, request resource.Sche
 						},
 						"blocklist": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[cookieSpecificationModel](ctx),
-							Validators: []validator.List{
-								listvalidator.IsRequired(),
-								listvalidator.SizeAtMost(1),
-							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"domain": schema.StringAttribute{
@@ -371,7 +373,6 @@ func findUserSettingsByARN(ctx context.Context, conn *workspacesweb.Client, arn 
 	if output == nil || output.UserSettings == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
-
 	return output.UserSettings, nil
 }
 
@@ -406,8 +407,8 @@ type cookieSpecificationModel struct {
 }
 
 type toolbarConfigurationModel struct {
-	HiddenToolbarItems   types.List                                        `tfsdk:"hidden_toolbar_items"`
-	MaxDisplayResolution fwtypes.StringEnum[awstypes.MaxDisplayResolution] `tfsdk:"max_display_resolution"`
-	ToolbarType          fwtypes.StringEnum[awstypes.ToolbarType]          `tfsdk:"toolbar_type"`
-	VisualMode           fwtypes.StringEnum[awstypes.VisualMode]           `tfsdk:"visual_mode"`
+	HiddenToolbarItems   fwtypes.ListValueOf[fwtypes.StringEnum[awstypes.ToolbarItem]] `tfsdk:"hidden_toolbar_items"`
+	MaxDisplayResolution fwtypes.StringEnum[awstypes.MaxDisplayResolution]             `tfsdk:"max_display_resolution"`
+	ToolbarType          fwtypes.StringEnum[awstypes.ToolbarType]                      `tfsdk:"toolbar_type"`
+	VisualMode           fwtypes.StringEnum[awstypes.VisualMode]                       `tfsdk:"visual_mode"`
 }
