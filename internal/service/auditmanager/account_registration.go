@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/auditmanager"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/auditmanager/types"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -24,13 +25,14 @@ import (
 )
 
 // @FrameworkResource("aws_auditmanager_account_registration", name="Account Registration")
+// @SingletonIdentity
 func newAccountRegistrationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &accountRegistrationResource{}, nil
 }
 
 type accountRegistrationResource struct {
 	framework.ResourceWithModel[accountRegistrationResourceModel]
-	framework.WithImportByID
+	framework.WithImportRegionalSingleton
 }
 
 func (r *accountRegistrationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -45,7 +47,7 @@ func (r *accountRegistrationResource) Schema(ctx context.Context, request resour
 			names.AttrKMSKey: schema.StringAttribute{
 				Optional: true,
 			},
-			names.AttrID: framework.IDAttribute(),
+			names.AttrID: framework.IDAttributeDeprecatedWithAlternate(path.Root(names.AttrRegion)),
 			names.AttrStatus: schema.StringAttribute{
 				Computed: true,
 			},

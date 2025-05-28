@@ -26,16 +26,13 @@ import (
 
 // @SDKResource("aws_apprunner_auto_scaling_configuration_version", name="AutoScaling Configuration Version")
 // @Tags(identifierAttribute="arn")
+// @ArnIdentity
 func resourceAutoScalingConfigurationVersion() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAutoScalingConfigurationCreate,
 		ReadWithoutTimeout:   resourceAutoScalingConfigurationRead,
 		UpdateWithoutTimeout: resourceAutoScalingConfigurationUpdate,
 		DeleteWithoutTimeout: resourceAutoScalingConfigurationDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {

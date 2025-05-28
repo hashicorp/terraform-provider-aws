@@ -39,7 +39,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `region` – (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `alternate_identifier` (Optional) A unique identifier for the group that is not the primary identifier. Conflicts with `group_id` and `filter`. Detailed below.
 * `group_id` - (Optional) The identifier for a group in the Identity Store.
 

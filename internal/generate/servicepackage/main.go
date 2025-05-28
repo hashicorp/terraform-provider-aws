@@ -125,6 +125,18 @@ type ResourceDatum struct {
 	TagsIdentifierAttribute           string
 	TagsResourceType                  string
 	ValidateRegionOverrideInPartition bool
+	ARNIdentity                       bool
+	arnAttribute                      string
+	SingletonIdentity                 bool
+	WrappedImport                     bool
+}
+
+func (r ResourceDatum) HasARNAttribute() bool {
+	return r.arnAttribute != "" && r.arnAttribute != "arn"
+}
+
+func (r ResourceDatum) ARNAttribute() string {
+	return namesgen.ConstOrQuote(r.arnAttribute)
 }
 
 func (d ResourceDatum) RegionOverrideEnabled() bool {
@@ -259,6 +271,32 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				if attr, ok := args.Keyword["resourceType"]; ok {
 					d.TagsResourceType = attr
 				}
+
+			case "WrappedImport":
+				if len(args.Positional) == 0 {
+					d.WrappedImport = true
+				} else {
+					attr := args.Positional[0]
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid WrappedImport value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					} else {
+						d.WrappedImport = b
+					}
+				}
+
+			case "ArnIdentity":
+				d.ARNIdentity = true
+				d.WrappedImport = true
+				args := common.ParseArgs(m[3])
+				if len(args.Positional) == 0 {
+					d.arnAttribute = "arn"
+				} else {
+					d.arnAttribute = args.Positional[0]
+				}
+
+			case "SingletonIdentity":
+				d.SingletonIdentity = true
 			}
 		}
 	}
@@ -392,9 +430,9 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				} else {
 					v.sdkResources[typeName] = d
 				}
-			case "Region", "Tags":
+			case "Region", "Tags", "ArnIdentity", "SingletonIdentity":
 				// Handled above.
-			case "Testing":
+			case "ArnFormat", "Testing", "WrappedImport":
 				// Ignored.
 			default:
 				v.g.Warnf("unknown annotation: %s", annotationName)

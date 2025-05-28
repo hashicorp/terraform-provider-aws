@@ -35,7 +35,7 @@ resource "aws_sagemaker_image_version" "test" {
 
 This resource supports the following arguments:
 
-* `region` – (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `image_name` - (Required) The name of the image. Must be unique to your account.
 * `base_image` - (Required) The registry path of the container image on which this image version is based.
 * `aliases` - (Optional) A list of aliases for the image version.

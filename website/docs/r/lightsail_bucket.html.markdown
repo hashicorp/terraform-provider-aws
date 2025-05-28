@@ -23,7 +23,7 @@ resource "aws_lightsail_bucket" "test" {
 
 This resource supports the following arguments:
 
-* `region` – (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name for the bucket.
 * `bundle_id` - (Required) - The ID of the bundle to use for the bucket. A bucket bundle specifies the monthly cost, storage space, and data transfer quota for a bucket. Use the [get-bucket-bundles](https://docs.aws.amazon.com/cli/latest/reference/lightsail/get-bucket-bundles.html) cli command to get a list of bundle IDs that you can specify.
 * `force_delete` - (Optional) - Force Delete non-empty buckets using `terraform destroy`. AWS by default will not delete an s3 bucket which is not empty, to prevent losing bucket data and affecting other resources in lightsail. If `force_delete` is set to `true` the bucket will be deleted even when not empty.
@@ -37,7 +37,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - The ARN of the lightsail bucket.
 * `availability_zone` - The resource Availability Zone. Follows the format us-east-2a (case-sensitive).
 * `created_at` - The timestamp when the bucket was created.
-* `region` - The Amazon Web Services Region name.
 * `support_code` - The support code for the resource. Include this code in your email to support when you have questions about a resource in Lightsail. This code enables our support team to look up your Lightsail information more easily.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider `default_tags` configuration block.
 

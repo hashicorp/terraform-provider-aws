@@ -116,7 +116,7 @@ func (r *accountResource) Create(ctx context.Context, request resource.CreateReq
 	}
 
 	response.Diagnostics.Append(flex.Flatten(ctx, output, &data)...)
-	data.ID = types.StringValue("api-gateway-account")
+	data.ID = flex.StringValueToFramework(ctx, r.Meta().AccountID(ctx))
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }

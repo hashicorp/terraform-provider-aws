@@ -35,6 +35,7 @@ import (
 
 // @FrameworkResource("aws_paymentcryptography_key", name="Key")
 // @Tags(identifierAttribute="arn")
+// @ArnIdentity
 func newKeyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &keyResource{}
 
@@ -52,7 +53,7 @@ const (
 
 type keyResource struct {
 	framework.ResourceWithModel[keyResourceModel]
-	framework.WithImportByID
+	framework.WithImportByARN
 	framework.WithTimeouts
 }
 

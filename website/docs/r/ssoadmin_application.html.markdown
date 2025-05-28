@@ -57,7 +57,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `region` – (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `client_token` - (Optional) A unique, case-sensitive ID that you provide to ensure the idempotency of the request. AWS generates a random value when not provided.
 * `description` - (Optional) Description of the application.
 * `portal_options` - (Optional) Options for the portal associated with an application. See [`portal_options`](#portal_options-argument-reference) below.

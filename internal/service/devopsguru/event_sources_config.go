@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/devopsguru"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/devopsguru/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -24,6 +25,7 @@ import (
 )
 
 // @FrameworkResource("aws_devopsguru_event_sources_config", name="Event Sources Config")
+// @SingletonIdentity
 func newEventSourcesConfigResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &eventSourcesConfigResource{}, nil
 }
@@ -34,13 +36,13 @@ const (
 
 type eventSourcesConfigResource struct {
 	framework.ResourceWithModel[eventSourcesConfigResourceModel]
-	framework.WithImportByID
+	framework.WithImportRegionalSingleton
 }
 
 func (r *eventSourcesConfigResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrID: framework.IDAttribute(),
+			names.AttrID: framework.IDAttributeDeprecatedWithAlternate(path.Root(names.AttrRegion)),
 		},
 		Blocks: map[string]schema.Block{
 			"event_sources": schema.ListNestedBlock{

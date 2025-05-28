@@ -51,7 +51,8 @@ service "account" {
 
 service "acm" {
   sdk {
-    id = "ACM"
+    id          = "ACM"
+    arn_service = "acm"
   }
 
   names {
@@ -79,7 +80,8 @@ service "acmpca" {
   }
 
   sdk {
-    id = "ACM PCA"
+    id          = "ACM PCA"
+    arn_service = "acm-pca"
   }
 
   names {
@@ -393,8 +395,9 @@ service "appconfigdata" {
 
 service "appflow" {
   sdk {
-    id = "Appflow"
-  }
+    id          = "Appflow"
+    arn_service = "appflow"
+}
 
   names {
     provider_name_upper = "AppFlow"
@@ -768,7 +771,8 @@ service "backupgateway" {
 
 service "batch" {
   sdk {
-    id = "Batch"
+    id          = "Batch"
+    arn_service = "batch"
   }
 
   names {
@@ -1292,7 +1296,8 @@ service "cloudformation" {
 
 service "cloudfront" {
   sdk {
-    id = "CloudFront"
+    id          = "CloudFront"
+    arn_service = "cloudfront"
   }
 
   names {
@@ -1654,7 +1659,8 @@ service "synthetics" {
 
 service "codeartifact" {
   sdk {
-    id = "codeartifact"
+    id          = "codeartifact"
+    arn_service = "codeartifact"
   }
 
   names {
@@ -1677,7 +1683,8 @@ service "codeartifact" {
 
 service "codebuild" {
   sdk {
-    id = "CodeBuild"
+    id          = "CodeBuild"
+    arn_service = "codebuild"
   }
 
   names {
@@ -1809,7 +1816,8 @@ service "codegurureviewer" {
   }
 
   sdk {
-    id = "CodeGuru Reviewer"
+    id          = "CodeGuru Reviewer"
+    arn_service = "codeguru-reviewer"
   }
 
   names {
@@ -1833,7 +1841,8 @@ service "codegurureviewer" {
 
 service "codepipeline" {
   sdk {
-    id = "CodePipeline"
+    id          = "CodePipeline"
+    arn_service = "codepipeline"
   }
 
   names {
@@ -2911,7 +2920,8 @@ service "ecrpublic" {
 
 service "ecs" {
   sdk {
-    id = "ECS"
+    id          = "ECS"
+    arn_service = "ecs"
   }
 
   names {
@@ -5737,6 +5747,8 @@ service "notificationscontacts" {
   provider_package_correct = "notificationscontacts"
   doc_prefix               = ["notificationscontacts_"]
   brand                    = "AWS"
+
+  is_global = true
 }
 
 service "oam" {

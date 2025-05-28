@@ -8,8 +8,12 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfauditmanager "github.com/hashicorp/terraform-provider-aws/internal/service/auditmanager"
@@ -20,9 +24,11 @@ func TestAccAuditManagerAccountRegistration_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:      testAccAccountRegistration_basic,
-		acctest.CtDisappears: testAccAccountRegistration_disappears,
-		"kms key":            testAccAccountRegistration_optionalKMSKey,
+		acctest.CtBasic:           testAccAccountRegistration_basic,
+		acctest.CtDisappears:      testAccAccountRegistration_disappears,
+		"kms key":                 testAccAccountRegistration_optionalKMSKey,
+		"Identity_Basic":          testAccAccountRegistration_Identity_Basic,
+		"Identity_RegionOverride": testAccAccountRegistration_Identity_RegionOverride,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -46,6 +52,73 @@ func testAccAccountRegistration_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccoountRegistrationExists(ctx, resourceName),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccAccountRegistration_Identity_Basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_auditmanager_account_registration.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.AuditManagerEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAccountRegistrationConfig_basic(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccoountRegistrationExists(ctx, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrRegion), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccAccountRegistration_Identity_RegionOverride(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_auditmanager_account_registration.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.AuditManagerEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAccountRegistrationConfig_regionOverride(),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrRegion), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				ResourceName:      resourceName,
@@ -144,6 +217,14 @@ func testAccAccountRegistrationConfig_basic() string {
 	return `
 resource "aws_auditmanager_account_registration" "test" {}
 `
+}
+
+func testAccAccountRegistrationConfig_regionOverride() string {
+	return fmt.Sprintf(`
+resource "aws_auditmanager_account_registration" "test" {
+  region = %[1]q
+}
+`, acctest.AlternateRegion())
 }
 
 func testAccAccountRegistrationConfig_deregisterOnDestroy() string {

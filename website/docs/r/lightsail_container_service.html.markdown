@@ -97,7 +97,7 @@ resource "aws_ecr_repository_policy" "default" {
 
 This resource supports the following arguments:
 
-* `region` – (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name for the container service. Names must be of length 1 to 63, and be
   unique within each AWS Region in your Lightsail account.
 * `power` - (Required) The power specification for the container service. The power specifies the amount of memory,
