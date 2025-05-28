@@ -18,16 +18,39 @@ import (
 type WithImportByGlobalARN struct{}
 
 func (w *WithImportByGlobalARN) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	_, err := arn.Parse(request.ID)
-	if err != nil {
-		response.Diagnostics.AddError(
-			"Invalid Resource Import ID Value",
-			"The import ID could not be parsed as an ARN.\n\n"+
-				fmt.Sprintf("Value: %q\nError: %s", request.ID, err),
-		)
+	if request.ID != "" {
+		_, err := arn.Parse(request.ID)
+		if err != nil {
+			response.Diagnostics.AddError(
+				"Invalid Resource Import ID Value",
+				"The import ID could not be parsed as an ARN.\n\n"+
+					fmt.Sprintf("Value: %q\nError: %s", request.ID, err),
+			)
+			return
+		}
+
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrARN), request.ID)...) // nosemgrep:ci.semgrep.framework.import-state-passthrough-id
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), request.ID)...)  // nosemgrep:ci.semgrep.framework.import-state-passthrough-id
+
 		return
 	}
 
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrARN), request.ID)...) // nosemgrep:ci.semgrep.framework.import-state-passthrough-id
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), request.ID)...)  // nosemgrep:ci.semgrep.framework.import-state-passthrough-id
+	if identity := request.Identity; identity != nil {
+		arnPath := path.Root(names.AttrARN)
+		var arnVal string
+		identity.GetAttribute(ctx, arnPath, &arnVal)
+
+		_, err := arn.Parse(arnVal)
+		if err != nil {
+			response.Diagnostics.AddAttributeError(
+				arnPath,
+				"Invalid Import Attribute Value",
+				fmt.Sprintf("Import attribute %q is not a valid ARN, got: %s", arnPath, arnVal),
+			)
+			return
+		}
+
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrARN), arnVal)...)
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), arnVal)...)
+	}
 }

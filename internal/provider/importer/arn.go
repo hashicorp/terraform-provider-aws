@@ -80,11 +80,38 @@ func RegionalARNValue(_ context.Context, rd *schema.ResourceData, attrName strin
 }
 
 func GlobalARN(_ context.Context, rd *schema.ResourceData, attrName string) error {
-	_, err := arn.Parse(rd.Id())
-	if err != nil {
-		return fmt.Errorf("could not parse import ID %q as ARN: %s", rd.Id(), err)
+	if rd.Id() != "" {
+		_, err := arn.Parse(rd.Id())
+		if err != nil {
+			return fmt.Errorf("could not parse import ID %q as ARN: %s", rd.Id(), err)
+		}
+		rd.Set(attrName, rd.Id())
+
+		return nil
 	}
-	rd.Set(attrName, rd.Id())
+
+	identity, err := rd.Identity()
+	if err != nil {
+		return err
+	}
+
+	arnRaw, ok := identity.GetOk(attrName)
+	if !ok {
+		return fmt.Errorf("identity attribute %q is required", attrName)
+	}
+
+	arnVal, ok := arnRaw.(string)
+	if !ok {
+		return fmt.Errorf("identity attribute %q: expected string, got %T", attrName, arnRaw)
+	}
+
+	_, err = arn.Parse(arnVal)
+	if err != nil {
+		return fmt.Errorf("identity attribute %q: could not parse %q as ARN: %s", attrName, arnVal, err)
+	}
+
+	rd.Set(attrName, arnVal)
+	rd.SetId(arnVal)
 
 	return nil
 }
