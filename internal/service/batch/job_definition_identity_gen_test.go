@@ -48,7 +48,7 @@ func TestAccBatchJobDefinition_Identity_Basic(t *testing.T) {
 					tfstatecheck.ExpectRegionalARNFormat(resourceName, tfjsonpath.New(names.AttrARN), "batch", "job-definition/{name}:{revision}"),
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
-					tfstatecheck.ExpectIdentityRegionalARNFormat(resourceName, "batch", "job-definition/{name}:{revision}"),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrARN)),
 				},
 			},
 			{
@@ -61,6 +61,7 @@ func TestAccBatchJobDefinition_Identity_Basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
+
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/JobDefinition/basic/"),
 				ConfigVariables: config.Variables{
@@ -109,7 +110,7 @@ func TestAccBatchJobDefinition_Identity_RegionOverride(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
-		CheckDestroy:             testAccCheckJobDefinitionDestroy(ctx),
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -122,7 +123,7 @@ func TestAccBatchJobDefinition_Identity_RegionOverride(t *testing.T) {
 					tfstatecheck.ExpectRegionalARNAlternateRegionFormat(resourceName, tfjsonpath.New(names.AttrARN), "batch", "job-definition/{name}:{revision}"),
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
-					tfstatecheck.ExpectIdentityRegionalARNAlternateRegionFormat(resourceName, "batch", "job-definition/{name}:{revision}"),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrARN)),
 				},
 			},
 
