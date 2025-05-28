@@ -45,7 +45,7 @@ resource "aws_workspacesweb_network_settings" "example" {
 
 The following arguments are required:
 
-* `security_group_ids` - (Required) One or more security groups used to control access from streaming instances to your VPC. At least two security groups must be specified.
+* `security_group_ids` - (Required) One or more security groups used to control access from streaming instances to your VPC.
 * `subnet_ids` - (Required) The subnets in which network interfaces are created to connect streaming instances to your VPC. At least two subnet ids must be specified.
 * `vpc_id` - (Required) The VPC that streaming instances will connect to.
 

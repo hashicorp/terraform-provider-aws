@@ -7,9 +7,10 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/workspacesweb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/workspacesweb/types"
-	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -18,11 +19,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -46,9 +49,9 @@ func (r *networkSettingsResource) Schema(ctx context.Context, request resource.S
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"associated_portal_arns": schema.ListAttribute{
+				CustomType:  fwtypes.ListOfStringType,
 				ElementType: types.StringType,
 				Computed:    true,
-				Optional:    true,
 				PlanModifiers: []planmodifier.List{
 					listplanmodifier.UseStateForUnknown(),
 				},
@@ -59,25 +62,27 @@ func (r *networkSettingsResource) Schema(ctx context.Context, request resource.S
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			names.AttrSecurityGroupIDs: schema.ListAttribute{
+			names.AttrSecurityGroupIDs: schema.SetAttribute{
+				CustomType:  fwtypes.SetOfStringType,
 				ElementType: types.StringType,
 				Required:    true,
-				Validators: []validator.List{
-					listvalidator.SizeAtLeast(2),
+				Validators: []validator.Set{
+					setvalidator.SizeBetween(1, 5),
 				},
 			},
-			names.AttrSubnetIDs: schema.ListAttribute{
+			names.AttrSubnetIDs: schema.SetAttribute{
+				CustomType:  fwtypes.SetOfStringType,
 				ElementType: types.StringType,
 				Required:    true,
-				Validators: []validator.List{
-					listvalidator.SizeAtLeast(2),
+				Validators: []validator.Set{
+					setvalidator.SizeBetween(2, 5),
 				},
-			},
-			names.AttrVPCID: schema.StringAttribute{
-				Required: true,
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
+			names.AttrVPCID: schema.StringAttribute{
+				Required: true,
+			},
 		},
 	}
 }
@@ -98,6 +103,7 @@ func (r *networkSettingsResource) Create(ctx context.Context, request resource.C
 	}
 
 	// Additional fields.
+	input.ClientToken = aws.String(sdkid.UniqueId())
 	input.Tags = getTagsIn(ctx)
 
 	output, err := conn.CreateNetworkSettings(ctx, &input)
@@ -176,24 +182,12 @@ func (r *networkSettingsResource) Update(ctx context.Context, request resource.U
 		}
 
 		// Additional fields.
-		input.NetworkSettingsArn = fwflex.StringFromFramework(ctx, new.NetworkSettingsARN)
+		input.ClientToken = aws.String(sdkid.UniqueId())
 
 		_, err := conn.UpdateNetworkSettings(ctx, &input)
 
 		if err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("updating WorkSpacesWeb Network Settings (%s)", new.NetworkSettingsARN.ValueString()), err.Error())
-			return
-		}
-
-		// Get the updated network settings details
-		networkSettings, err := findNetworkSettingsByARN(ctx, conn, new.NetworkSettingsARN.ValueString())
-		if err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("reading WorkSpacesWeb Network Settings (%s) after update", new.NetworkSettingsARN.ValueString()), err.Error())
-			return
-		}
-
-		response.Diagnostics.Append(fwflex.Flatten(ctx, networkSettings, &new)...)
-		if response.Diagnostics.HasError() {
 			return
 		}
 	}
@@ -255,11 +249,11 @@ func findNetworkSettingsByARN(ctx context.Context, conn *workspacesweb.Client, a
 }
 
 type networkSettingsResourceModel struct {
-	AssociatedPortalArns types.List   `tfsdk:"associated_portal_arns"`
-	NetworkSettingsARN   types.String `tfsdk:"network_settings_arn"`
-	SecurityGroupIDs     types.List   `tfsdk:"security_group_ids"`
-	SubnetIDs            types.List   `tfsdk:"subnet_ids"`
-	VpcID                types.String `tfsdk:"vpc_id"`
-	Tags                 tftags.Map   `tfsdk:"tags"`
-	TagsAll              tftags.Map   `tfsdk:"tags_all"`
+	AssociatedPortalARNs fwtypes.ListOfString `tfsdk:"associated_portal_arns"`
+	NetworkSettingsARN   types.String         `tfsdk:"network_settings_arn"`
+	SecurityGroupIDs     fwtypes.SetOfString  `tfsdk:"security_group_ids"`
+	SubnetIDs            fwtypes.SetOfString  `tfsdk:"subnet_ids"`
+	Tags                 tftags.Map           `tfsdk:"tags"`
+	TagsAll              tftags.Map           `tfsdk:"tags_all"`
+	VpcID                types.String         `tfsdk:"vpc_id"`
 }
