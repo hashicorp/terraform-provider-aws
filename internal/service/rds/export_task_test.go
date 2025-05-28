@@ -5,22 +5,20 @@ package rds_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"slices"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -55,6 +53,33 @@ func TestAccRDSExportTask_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccRDSExportTask_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var exportTask types.ExportTask
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_export_task.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		CheckDestroy: testAccCheckExportTaskDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccExportTaskConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExportTaskExists(ctx, resourceName, &exportTask),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfrds.ResourceExportTask, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -109,62 +134,52 @@ func testAccCheckExportTaskDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			out, err := tfrds.FindExportTaskByID(ctx, conn, rs.Primary.ID)
+			output, err := tfrds.FindExportTaskByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
 			if err != nil {
-				var nfe *retry.NotFoundError
-				if errors.As(err, &nfe) {
-					return nil
-				}
 				return err
 			}
-			if !isInDestroyedStatus(aws.ToString(out.Status)) {
-				return create.Error(names.RDS, create.ErrActionCheckingDestroyed, tfrds.ResNameExportTask, rs.Primary.ID, errors.New("not destroyed"))
+
+			// COMPLETE and FAILED statuses are valid because the resource is simply removed from
+			// state in these scenarios. In-progress tasks should be cancelled upon destroy, so CANCELED
+			// is also valid.
+			if status := aws.ToString(output.Status); slices.Contains([]string{"COMPLETE", "FAILED", "CANCELED"}, status) {
+				continue
 			}
+
+			return fmt.Errorf("RDS ExportTask %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckExportTaskExists(ctx context.Context, name string, exportTask *types.ExportTask) resource.TestCheckFunc {
+func testAccCheckExportTaskExists(ctx context.Context, n string, v *types.ExportTask) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.RDS, create.ErrActionCheckingExistence, tfrds.ResNameExportTask, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.RDS, create.ErrActionCheckingExistence, tfrds.ResNameExportTask, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
-		resp, err := tfrds.FindExportTaskByID(ctx, conn, rs.Primary.ID)
+
+		output, err := tfrds.FindExportTaskByID(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
-			return create.Error(names.RDS, create.ErrActionCheckingExistence, tfrds.ResNameExportTask, rs.Primary.ID, err)
+			return err
 		}
 
-		*exportTask = *resp
+		*v = *output
 
 		return nil
 	}
 }
 
-// isInDestroyedStatus determines whether the export task status is a value that could
-// be returned if the resource was properly destroyed.
-//
-// COMPLETE and FAILED statuses are valid because the resource is simply removed from
-// state in these scenarios. In-progress tasks should be cancelled upon destroy, so CANCELED
-// is also valid.
-func isInDestroyedStatus(s string) bool {
-	deletedStatuses := []string{
-		tfrds.StatusComplete,
-		tfrds.StatusFailed,
-		tfrds.StatusCanceled,
-	}
-	return slices.Contains(deletedStatuses, s)
-}
-
-func testAccExportTaskConfigBase(rName string) string {
+func testAccExportTaskConfig_base(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigRandomPassword(),
 		fmt.Sprintf(`
@@ -257,7 +272,7 @@ resource "aws_db_snapshot" "test" {
 
 func testAccExportTaskConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
-		testAccExportTaskConfigBase(rName),
+		testAccExportTaskConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_rds_export_task" "test" {
   export_task_identifier = %[1]q
@@ -271,7 +286,7 @@ resource "aws_rds_export_task" "test" {
 
 func testAccExportTaskConfig_optional(rName, s3Prefix string) string {
 	return acctest.ConfigCompose(
-		testAccExportTaskConfigBase(rName),
+		testAccExportTaskConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_rds_export_task" "test" {
   export_task_identifier = %[1]q
