@@ -53,7 +53,7 @@ The following arguments are required:
 * `parent_image` - (Required) The image recipe uses this image as a base from which to build your customized image. The value can be the base image ARN or an AMI ID.
 * `version` - (Required) The semantic version of the image recipe, which specifies the version in the following format, with numeric values in each position to indicate a specific version: major.minor.patch. For example: 1.0.0.
 
-The following attributes are optional:
+The following arguments are optional:
 
 * `block_device_mapping` - (Optional) Configuration block(s) with block device mappings for the image recipe. Detailed below.
 * `description` - (Optional) Description of the image recipe.

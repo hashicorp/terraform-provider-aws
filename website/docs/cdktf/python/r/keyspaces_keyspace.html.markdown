@@ -35,12 +35,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
 * `name` - (Required, Forces new resource) The name of the keyspace to be created.
-
-The following arguments are optional:
-
 * `replication_specification` - (Optional) The replication specification of the keyspace.
     * `region_list` - (Optional) Replication regions. If `replication_strategy` is `MULTI_REGION`, `region_list` requires the current Region and at least one additional AWS Region where the keyspace is going to be replicated in.
     * `replication_strategy` - (Required) Replication strategy. Valid values: `SINGLE_REGION` and `MULTI_REGION`.
@@ -86,4 +83,4 @@ Using `terraform import`, import a keyspace using the `name`. For example:
 % terraform import aws_keyspaces_keyspace.example my_keyspace
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-942a0ad45b13d481c598f1c37b3a8d0a11a9970cd14134de8a9095e677ec6acf -->
+<!-- cache-key: cdktf-0.20.8 input-844352969380329131561246ee81e55956d9a04b4a4ada89d8e72e906d873bdd -->

@@ -30,13 +30,12 @@ data "aws_connect_instance" "foo" {
 
 ## Argument Reference
 
-~> **NOTE:** One of either `instance_id` or `instance_alias` is required.
-
 This data source supports the following arguments:
 
 * `instance_id` - (Optional) Returns information on a specific connect instance by id
-
 * `instance_alias` - (Optional) Returns information on a specific connect instance by alias
+
+~> **NOTE:** One of either `instance_id` or `instance_alias` is required.
 
 ## Attribute Reference
 

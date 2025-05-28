@@ -110,6 +110,8 @@ const (
 	Macie2EndpointID                       = "macie2"
 	MediaConvertEndpointID                 = "mediaconvert"
 	MediaLiveEndpointID                    = "medialive"
+	NotificationsEndpointID                = "notifications"
+	NotificationsContactsEndpointID        = "notifications-contacts"
 	ObservabilityAccessManagerEndpointID   = "oam"
 	OpenSearchIngestionEndpointID          = "osis"
 	OpenSearchServerlessEndpointID         = "aoss"
@@ -145,6 +147,7 @@ const (
 	VerifiedPermissionsEndpointID          = "verifiedpermissions"
 	WAFEndpointID                          = "waf"
 	WAFRegionalEndpointID                  = "waf-regional"
+	WorkSpacesWebEndpointID                = "workspaces-web"
 )
 
 // PartitionForRegion returns the partition for the given Region.
