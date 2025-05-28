@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -24,6 +25,9 @@ func TestAccACMPCACertificateAuthority_Identity_Basic(t *testing.T) {
 	rName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_12_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		CheckDestroy:             testAccCheckCertificateAuthorityDestroy(ctx),
@@ -40,6 +44,7 @@ func TestAccACMPCACertificateAuthority_Identity_Basic(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrARN)),
 				},
 			},
 			{
@@ -47,6 +52,7 @@ func TestAccACMPCACertificateAuthority_Identity_Basic(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
+				ImportStateKind:   resource.ImportCommandWithID,
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -54,6 +60,8 @@ func TestAccACMPCACertificateAuthority_Identity_Basic(t *testing.T) {
 					"permanent_deletion_time_in_days",
 				},
 			},
+
+			// TODO: Plannable import cannot be tested due to import diffs
 		},
 	})
 }
@@ -65,6 +73,9 @@ func TestAccACMPCACertificateAuthority_Identity_RegionOverride(t *testing.T) {
 	rName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_12_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		CheckDestroy:             acctest.CheckDestroyNoop,
@@ -79,16 +90,18 @@ func TestAccACMPCACertificateAuthority_Identity_RegionOverride(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrARN)),
 				},
 			},
 
-			// Import with appended "@<region>"
+			// Import command with appended "@<region>"
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
 				},
+				ImportStateKind:   resource.ImportCommandWithID,
 				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -98,13 +111,14 @@ func TestAccACMPCACertificateAuthority_Identity_RegionOverride(t *testing.T) {
 				},
 			},
 
-			// Import without appended "@<region>"
+			// Import command without appended "@<region>"
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
 				},
+				ImportStateKind:   resource.ImportCommandWithID,
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -112,6 +126,8 @@ func TestAccACMPCACertificateAuthority_Identity_RegionOverride(t *testing.T) {
 					"permanent_deletion_time_in_days",
 				},
 			},
+
+			// TODO: Plannable import cannot be tested due to import diffs
 		},
 	})
 }
