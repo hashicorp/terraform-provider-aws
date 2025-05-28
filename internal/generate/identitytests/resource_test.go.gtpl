@@ -8,9 +8,9 @@
 	resourceName := "{{ .TypeName}}.test"{{ if .Generator }}
 	rName := {{ .Generator }}
 {{- end }}
-{{ range .InitCodeBlocks -}}
+{{- range .InitCodeBlocks }}
 {{ .Code }}
-{{- end }}
+{{- end -}}
 {{ end }}
 
 {{/* This can be removed when the Exists check supports enhanced region support */}}
@@ -20,9 +20,9 @@
 	resourceName := "{{ .TypeName}}.test"{{ if .Generator }}
 	rName := {{ .Generator }}
 {{- end }}
-{{ range .InitCodeBlocks -}}
+{{- range .InitCodeBlocks }}
 {{ .Code }}
-{{- end }}
+{{- end -}}
 {{ end }}
 
 {{ define "Test" -}}

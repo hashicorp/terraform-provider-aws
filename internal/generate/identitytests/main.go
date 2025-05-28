@@ -586,6 +586,32 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					})
 					d.additionalTfVars[varName] = varName
 				}
+				if attr, ok := args.Keyword["subdomainTfVar"]; ok {
+					parentName := "domain"
+					varName := "subdomain"
+					parts := strings.Split(attr, ";")
+					if len(parts) > 1 {
+						if len(parts[0]) > 0 {
+							parentName = parts[0]
+						}
+						if len(parts[1]) > 0 {
+							varName = parts[1]
+						}
+					}
+					d.GoImports = append(d.GoImports,
+						goImport{
+							Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
+						},
+					)
+					d.InitCodeBlocks = append(d.InitCodeBlocks, codeBlock{
+						Code: fmt.Sprintf(`%s := acctest.RandomDomain()`, parentName),
+					})
+					d.InitCodeBlocks = append(d.InitCodeBlocks, codeBlock{
+						Code: fmt.Sprintf(`%s := %s.RandomSubdomain()`, varName, parentName),
+					})
+					d.additionalTfVars[parentName] = fmt.Sprintf("%s.String()", parentName)
+					d.additionalTfVars[varName] = fmt.Sprintf("%s.String()", varName)
+				}
 				if attr, ok := args.Keyword["hasExistsFunction"]; ok {
 					if b, err := strconv.ParseBool(attr); err != nil {
 						v.errs = append(v.errs, fmt.Errorf("invalid existsFunction value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
