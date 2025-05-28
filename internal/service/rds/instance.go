@@ -18,6 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
+	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -427,6 +428,7 @@ func resourceInstance() *schema.Resource {
 			"disable_master_user_password_rotation": {
 				Type:         schema.TypeBool,
 				Optional:     true,
+				Default:      false,
 				RequiredWith: []string{"manage_master_user_password"},
 			},
 			"master_user_secret": {
@@ -1951,6 +1953,26 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 
 		if _, err := waitDBInstanceAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for RDS DB Instance (%s) update: %s", identifier, err)
+		}
+	}
+
+	if v, ok := d.GetOk("disable_master_user_password_rotation"); ok {
+		disableMasterUserPasswordRotation := v.(bool)
+		if disableMasterUserPasswordRotation && instance.MasterUserSecret != nil {
+			if v := instance.MasterUserSecret.SecretArn; v != nil {
+				secretsManagerClient := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
+				_, err := secretsManagerClient.CancelRotateSecret(ctx, &secretsmanager.CancelRotateSecretInput{
+					SecretId: v,
+				})
+
+				if err != nil && !tfresource.NotFound(err) {
+					diags = sdkdiag.AppendWarningf(diags, "failed to cancel rotation for secret (%s): %s.", aws.ToString(v), err)
+				} else {
+					tflog.Debug(ctx, "Successfully cancelled master user password rotation", map[string]interface{}{
+						"secret_id": aws.ToString(v),
+					})
+				}
+			}
 		}
 	}
 
