@@ -555,6 +555,18 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 				interceptors = append(interceptors, resourceTransparentTagging(res.Tags))
 			}
 
+			if res.Identity.ARN {
+				type arnIdentity interface {
+					SetARNAttributeName(attr string)
+				}
+				identity, ok := inner.(arnIdentity)
+				if !ok {
+					errs = append(errs, fmt.Errorf("resource type %s: defines ARN Identity, but cannot set ARN attribute", typeName))
+					continue
+				}
+				identity.SetARNAttributeName(res.Identity.ARNAttribute)
+			}
+
 			opts := wrappedResourceOptions{
 				// bootstrapContext is run on all wrapped methods before any interceptors.
 				bootstrapContext: func(ctx context.Context, getAttribute getAttributeFunc, c *conns.AWSClient) (context.Context, diag.Diagnostics) {

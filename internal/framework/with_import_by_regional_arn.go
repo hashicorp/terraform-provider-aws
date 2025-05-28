@@ -16,7 +16,13 @@ import (
 
 // WithImportByRegionalARN is intended to be embedded in resources which import state via the "arn" attribute.
 // See https://developer.hashicorp.com/terraform/plugin/framework/resources/import.
-type WithImportByRegionalARN struct{}
+type WithImportByRegionalARN struct {
+	arnAttributeName string
+}
+
+func (w *WithImportByRegionalARN) SetARNAttributeName(attr string) {
+	w.arnAttributeName = attr
+}
 
 func (w *WithImportByRegionalARN) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	if request.ID != "" {
@@ -51,14 +57,14 @@ func (w *WithImportByRegionalARN) ImportState(ctx context.Context, request resou
 			}
 		}
 
-		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrARN), request.ID)...) // nosemgrep:ci.semgrep.framework.import-state-passthrough-id
-		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), request.ID)...)  // nosemgrep:ci.semgrep.framework.import-state-passthrough-id
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(w.arnAttributeName), request.ID)...) // nosemgrep:ci.semgrep.framework.import-state-passthrough-id
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), request.ID)...)       // nosemgrep:ci.semgrep.framework.import-state-passthrough-id
 
 		return
 	}
 
 	if identity := request.Identity; identity != nil {
-		arnPath := path.Root(names.AttrARN)
+		arnPath := path.Root(w.arnAttributeName)
 		var arnVal string
 		identity.GetAttribute(ctx, arnPath, &arnVal)
 
@@ -76,7 +82,7 @@ func (w *WithImportByRegionalARN) ImportState(ctx context.Context, request resou
 			return
 		}
 
-		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrARN), arnVal)...)
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(w.arnAttributeName), arnVal)...)
 		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), arnVal)...)
 	}
 }

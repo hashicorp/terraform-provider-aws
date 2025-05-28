@@ -15,7 +15,13 @@ import (
 
 // WithImportByGlobalARN is intended to be embedded in global resources which import state via the "arn" attribute.
 // See https://developer.hashicorp.com/terraform/plugin/framework/resources/import.
-type WithImportByGlobalARN struct{}
+type WithImportByGlobalARN struct {
+	arnAttributeName string
+}
+
+func (w *WithImportByGlobalARN) SetARNAttributeName(attr string) {
+	w.arnAttributeName = attr
+}
 
 func (w *WithImportByGlobalARN) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	if request.ID != "" {
@@ -29,14 +35,14 @@ func (w *WithImportByGlobalARN) ImportState(ctx context.Context, request resourc
 			return
 		}
 
-		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrARN), request.ID)...) // nosemgrep:ci.semgrep.framework.import-state-passthrough-id
-		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), request.ID)...)  // nosemgrep:ci.semgrep.framework.import-state-passthrough-id
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(w.arnAttributeName), request.ID)...) // nosemgrep:ci.semgrep.framework.import-state-passthrough-id
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), request.ID)...)       // nosemgrep:ci.semgrep.framework.import-state-passthrough-id
 
 		return
 	}
 
 	if identity := request.Identity; identity != nil {
-		arnPath := path.Root(names.AttrARN)
+		arnPath := path.Root(w.arnAttributeName)
 		var arnVal string
 		identity.GetAttribute(ctx, arnPath, &arnVal)
 
@@ -50,7 +56,7 @@ func (w *WithImportByGlobalARN) ImportState(ctx context.Context, request resourc
 			return
 		}
 
-		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrARN), arnVal)...)
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(w.arnAttributeName), arnVal)...)
 		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), arnVal)...)
 	}
 }
