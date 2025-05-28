@@ -162,6 +162,7 @@ func (r *exportTaskResource) Create(ctx context.Context, request resource.Create
 	if response.Diagnostics.HasError() {
 		return
 	}
+	input.S3BucketName = fwflex.StringFromFramework(ctx, data.S3Bucket)
 
 	_, err := conn.StartExportTask(ctx, &input)
 
@@ -361,7 +362,7 @@ type exportTaskResourceModel struct {
 	ID                   types.String         `tfsdk:"id"`
 	KMSKeyID             types.String         `tfsdk:"kms_key_id"`
 	PercentProgress      types.Int64          `tfsdk:"percent_progress"`
-	S3BucketName         types.String         `tfsdk:"s3_bucket_name"`
+	S3Bucket             types.String         `tfsdk:"s3_bucket_name"`
 	S3Prefix             types.String         `tfsdk:"s3_prefix"`
 	SnapshotTime         timetypes.RFC3339    `tfsdk:"snapshot_time"`
 	SourceARN            fwtypes.ARN          `tfsdk:"source_arn"`
