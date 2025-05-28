@@ -496,7 +496,7 @@ resource "aws_cloudfront_key_value_store" "test" {
 
 resource "aws_cloudfrontkeyvaluestore_keys_exclusive" "test" {
   key_value_store_arn = aws_cloudfront_key_value_store.test.arn
-  max_batch_size = %[4]d
+  max_batch_size      = %[4]d
   dynamic "resource_key_value_pair" {
     for_each = local.key_value_set
     content {
