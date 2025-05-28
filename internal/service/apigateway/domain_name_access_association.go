@@ -43,7 +43,7 @@ func newDomainNameAccessAssociationResource(context.Context) (resource.ResourceW
 type domainNameAccessAssociationResource struct {
 	framework.ResourceWithModel[domainNameAccessAssociationResourceModel]
 	framework.WithNoOpUpdate[domainNameAccessAssociationResourceModel]
-	framework.WithImportByARN
+	framework.WithImportByRegionalARN
 }
 
 func (r *domainNameAccessAssociationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {

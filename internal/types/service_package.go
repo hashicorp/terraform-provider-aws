@@ -149,9 +149,8 @@ func RegionalARNIdentityNamed(name string) Identity {
 
 func arnIdentity(isGlobal bool, name string) Identity {
 	return Identity{
-		Global: isGlobal,
-		ARN:    true,
-		// TODO: This is redundant, simplify
+		Global:       isGlobal,
+		ARN:          true,
 		ARNAttribute: name,
 		Attributes: []IdentityAttribute{
 			{

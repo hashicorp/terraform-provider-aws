@@ -53,7 +53,7 @@ func newClusterResource(context.Context) (resource.ResourceWithConfigure, error)
 type clusterResource struct {
 	framework.ResourceWithModel[clusterResourceModel]
 	framework.WithTimeouts
-	framework.WithImportByARN
+	framework.WithImportByRegionalARN
 }
 
 const (

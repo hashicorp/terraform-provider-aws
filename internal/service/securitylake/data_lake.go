@@ -55,7 +55,7 @@ func newDataLakeResource(context.Context) (resource.ResourceWithConfigure, error
 
 type dataLakeResource struct {
 	framework.ResourceWithModel[dataLakeResourceModel]
-	framework.WithImportByARN
+	framework.WithImportByRegionalARN
 	framework.WithTimeouts
 }
 

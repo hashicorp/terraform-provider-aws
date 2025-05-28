@@ -53,7 +53,7 @@ const (
 type hostResource struct {
 	framework.ResourceWithModel[hostResourceModel]
 	framework.WithTimeouts
-	framework.WithImportByARN
+	framework.WithImportByRegionalARN
 }
 
 func (r *hostResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {

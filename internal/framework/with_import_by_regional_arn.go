@@ -14,11 +14,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// WithImportByARN is intended to be embedded in resources which import state via the "arn" attribute.
+// WithImportByRegionalARN is intended to be embedded in resources which import state via the "arn" attribute.
 // See https://developer.hashicorp.com/terraform/plugin/framework/resources/import.
-type WithImportByARN struct{}
+type WithImportByRegionalARN struct{}
 
-func (w *WithImportByARN) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+func (w *WithImportByRegionalARN) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	if request.ID != "" {
 		arnARN, err := arn.Parse(request.ID)
 		if err != nil {
