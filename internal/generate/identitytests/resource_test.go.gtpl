@@ -41,7 +41,7 @@ ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 	PreCheck:     func() { acctest.PreCheck(ctx, t)
 		{{- range .PreChecks }}
 		{{ .Code }}
-		{{ end -}}
+		{{- end -}}
 	},
 	ErrorCheck:   acctest.ErrorCheck(t, names.{{ .PackageProviderNameUpper }}ServiceID),
 	CheckDestroy: {{ if .CheckDestroyNoop }}acctest.CheckDestroyNoop{{ else }}testAccCheck{{ .Name }}Destroy(ctx{{ if .DestroyTakesT }}, t{{ end }}){{ end }},
