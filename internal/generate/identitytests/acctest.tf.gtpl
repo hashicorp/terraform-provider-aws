@@ -71,3 +71,29 @@ data "aws_ami" "amzn2-ami-minimal-hvm-ebs-{{ . }}" {
   }
 }
 {{- end }}
+
+{{ define "acctest.ConfigAlternateAccountProvider" -}}
+provider "awsalternate" {
+  access_key = var.AWS_ALTERNATE_ACCESS_KEY_ID
+  profile    = var.AWS_ALTERNATE_PROFILE
+  secret_key = var.AWS_ALTERNATE_SECRET_ACCESS_KEY
+}
+
+variable "AWS_ALTERNATE_ACCESS_KEY_ID" {
+  type     = string
+  nullable = true
+  default  = null
+}
+
+variable "AWS_ALTERNATE_PROFILE" {
+  type     = string
+  nullable = true
+  default  = null
+}
+
+variable "AWS_ALTERNATE_SECRET_ACCESS_KEY" {
+  type     = string
+  nullable = true
+  default  = null
+}
+{{- end }}

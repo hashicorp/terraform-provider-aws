@@ -704,6 +704,16 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						}
 					}
 				}
+				if attr, ok := args.Keyword["preCheckAltAccount"]; ok {
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid preCheckAltAccount value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					} else if b {
+						d.PreChecks = append(d.PreChecks, codeBlock{
+							Code: "acctest.PreCheckAlternateAccount(t)",
+						})
+					}
+				}
 				if attr, ok := args.Keyword["preCheckRegion"]; ok {
 					regions := strings.Split(attr, ";")
 					d.PreChecks = append(d.PreChecks, codeBlock{
