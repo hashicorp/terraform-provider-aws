@@ -374,14 +374,14 @@ func flattenAMIBlockDeviceMappings(apiObjects []awstypes.BlockDeviceMapping) []a
 
 		if apiObject := apiObject.Ebs; apiObject != nil {
 			ebs := map[string]any{
-				names.AttrDeleteOnTermination:      flex.BoolToStringValue(apiObject.DeleteOnTermination),
-				names.AttrEncrypted:                flex.BoolToStringValue(apiObject.Encrypted),
-				names.AttrIOPS:                     flex.Int32ToStringValue(apiObject.Iops),
-				names.AttrSnapshotID:               aws.ToString(apiObject.SnapshotId),
-				names.AttrThroughput:               flex.Int32ToStringValue(apiObject.Throughput),
-				names.AttrVolumeSize:               flex.Int32ToStringValue(apiObject.VolumeSize),
-				names.AttrVolumeInitializationRate: flex.Int32ToStringValue(apiObject.VolumeInitializationRate),
-				names.AttrVolumeType:               apiObject.VolumeType,
+				names.AttrDeleteOnTermination: flex.BoolToStringValue(apiObject.DeleteOnTermination),
+				names.AttrEncrypted:           flex.BoolToStringValue(apiObject.Encrypted),
+				names.AttrIOPS:                flex.Int32ToStringValue(apiObject.Iops),
+				names.AttrSnapshotID:          aws.ToString(apiObject.SnapshotId),
+				names.AttrThroughput:          flex.Int32ToStringValue(apiObject.Throughput),
+				"volume_initialization_rate":  flex.Int32ToStringValue(apiObject.VolumeInitializationRate),
+				names.AttrVolumeSize:          flex.Int32ToStringValue(apiObject.VolumeSize),
+				names.AttrVolumeType:          apiObject.VolumeType,
 			}
 
 			tfMap["ebs"] = ebs

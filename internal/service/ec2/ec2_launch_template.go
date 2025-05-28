@@ -98,16 +98,16 @@ func resourceLaunchTemplate() *schema.Resource {
 										Optional:     true,
 										ValidateFunc: validation.IntBetween(125, 1000),
 									},
-									names.AttrVolumeSize: {
-										Type:     schema.TypeInt,
-										Optional: true,
-										Computed: true,
-									},
-									names.AttrVolumeInitializationRate: {
+									"volume_initialization_rate": {
 										Type:         schema.TypeInt,
 										Optional:     true,
 										Computed:     true,
 										ValidateFunc: validation.IntBetween(100, 300),
+									},
+									names.AttrVolumeSize: {
+										Type:     schema.TypeInt,
+										Optional: true,
+										Computed: true,
 									},
 									names.AttrVolumeType: {
 										Type:             schema.TypeString,
@@ -1506,12 +1506,12 @@ func expandLaunchTemplateEBSBlockDeviceRequest(tfMap map[string]any) *awstypes.L
 		apiObject.Throughput = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap[names.AttrVolumeSize].(int); ok && v != 0 {
-		apiObject.VolumeSize = aws.Int32(int32(v))
+	if v, ok := tfMap["volume_initialization_rate"].(int); ok && v != 0 {
+		apiObject.VolumeInitializationRate = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap[names.AttrVolumeInitializationRate].(int); ok && v != 0 {
-		apiObject.VolumeInitializationRate = aws.Int32(int32(v))
+	if v, ok := tfMap[names.AttrVolumeSize].(int); ok && v != 0 {
+		apiObject.VolumeSize = aws.Int32(int32(v))
 	}
 
 	if v, ok := tfMap[names.AttrVolumeType].(string); ok && v != "" {
@@ -2488,12 +2488,12 @@ func flattenLaunchTemplateEBSBlockDevice(apiObject *awstypes.LaunchTemplateEbsBl
 		tfMap[names.AttrThroughput] = aws.ToInt32(v)
 	}
 
-	if v := apiObject.VolumeSize; v != nil {
-		tfMap[names.AttrVolumeSize] = aws.ToInt32(v)
+	if v := apiObject.VolumeInitializationRate; v != nil {
+		tfMap["volume_initialization_rate"] = aws.ToInt32(v)
 	}
 
-	if v := apiObject.VolumeInitializationRate; v != nil {
-		tfMap[names.AttrVolumeInitializationRate] = aws.ToInt32(v)
+	if v := apiObject.VolumeSize; v != nil {
+		tfMap[names.AttrVolumeSize] = aws.ToInt32(v)
 	}
 
 	if v := apiObject.VolumeType; v != "" {
