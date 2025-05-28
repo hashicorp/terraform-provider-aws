@@ -213,8 +213,8 @@ func TestAccWorkSpacesWebBrowserSettings_customerManagedKey(t *testing.T) {
 	var browserSettings awstypes.BrowserSettings
 	resourceName := "aws_workspacesweb_browser_settings.test"
 
-	CustomerManagedKeyArn1 := "aws_kms_key.test1.arn"
-	CustomerManagedKeyArn2 := "aws_kms_key.test2.arn"
+	customerManagedKey1 := "aws_kms_key.test1"
+	customerManagedKey2 := "aws_kms_key.test2"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -227,11 +227,11 @@ func TestAccWorkSpacesWebBrowserSettings_customerManagedKey(t *testing.T) {
 		CheckDestroy:             testAccCheckBrowserSettingsDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBrowserSettingsConfig_customerManagedKey(browserPolicy1, CustomerManagedKeyArn1),
+				Config: testAccBrowserSettingsConfig_customerManagedKey(browserPolicy1, customerManagedKey1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBrowserSettingsExists(ctx, resourceName, &browserSettings),
 					resource.TestCheckResourceAttr(resourceName, "browser_policy", browserPolicy1),
-					resource.TestCheckResourceAttrPair(resourceName, "customer_managed_key", CustomerManagedKeyArn2, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "customer_managed_key", customerManagedKey1, names.AttrARN),
 				),
 			},
 			{
@@ -242,11 +242,11 @@ func TestAccWorkSpacesWebBrowserSettings_customerManagedKey(t *testing.T) {
 				ImportStateVerifyIdentifierAttribute: "browser_settings_arn",
 			},
 			{
-				Config: testAccBrowserSettingsConfig_customerManagedKey(browserPolicy2, CustomerManagedKeyArn2),
+				Config: testAccBrowserSettingsConfig_customerManagedKey(browserPolicy2, customerManagedKey2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBrowserSettingsExists(ctx, resourceName, &browserSettings),
 					resource.TestCheckResourceAttr(resourceName, "browser_policy", browserPolicy2),
-					resource.TestCheckResourceAttrPair(resourceName, "customer_managed_key", CustomerManagedKeyArn2, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "customer_managed_key", customerManagedKey2, names.AttrARN),
 				),
 			},
 			{
@@ -432,7 +432,7 @@ func testAccBrowserSettingsAdditionalEncryptionContextString(m map[string]string
 	return strings.Join(items, "\n")
 }
 
-func testAccBrowserSettingsConfig_customerManagedKey(browserPolicy, CustomerManagedKeyArn string) string {
+func testAccBrowserSettingsConfig_customerManagedKey(browserPolicy, customerManagedKey string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test1" {
   deletion_window_in_days = 7
@@ -504,9 +504,9 @@ resource "aws_kms_key" "test2" {
 
 resource "aws_workspacesweb_browser_settings" "test" {
   browser_policy       = %[1]q
-  customer_managed_key = %[2]q
+  customer_managed_key = %[2]s.arn
 }
-`, browserPolicy, CustomerManagedKeyArn)
+`, browserPolicy, customerManagedKey)
 }
 
 func testAccBrowserSettingsConfig_complete(browserPolicy string, encryptionContext map[string]string) string {
