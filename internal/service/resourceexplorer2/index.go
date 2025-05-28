@@ -33,6 +33,7 @@ import (
 // @FrameworkResource("aws_resourceexplorer2_index", name="Index")
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
+// @Testing(serialize=true)
 func newIndexResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &indexResource{}
 

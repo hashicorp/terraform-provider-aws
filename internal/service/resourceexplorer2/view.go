@@ -39,6 +39,8 @@ import (
 // @FrameworkResource("aws_resourceexplorer2_view", name="View")
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/resourceexplorer2;resourceexplorer2.GetViewOutput")
+// @Testing(serialize=true)
 func newViewResource(context.Context) (resource.ResourceWithConfigure, error) {
 	return &viewResource{}, nil
 }
