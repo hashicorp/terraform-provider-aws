@@ -101,12 +101,6 @@ func resourceLaunchConfiguration() *schema.Resource {
 							Computed: true,
 							ForceNew: true,
 						},
-						names.AttrVolumeInitializationRate: {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
-						},
 						names.AttrVolumeSize: {
 							Type:     schema.TypeInt,
 							Optional: true,
@@ -261,12 +255,6 @@ func resourceLaunchConfiguration() *schema.Resource {
 							ForceNew: true,
 						},
 						names.AttrThroughput: {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
-						},
-						names.AttrVolumeInitializationRate: {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,

@@ -60,10 +60,6 @@ func dataSourceLaunchConfiguration() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						names.AttrVolumeInitializationRate: {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
 						names.AttrVolumeSize: {
 							Type:     schema.TypeInt,
 							Computed: true,
