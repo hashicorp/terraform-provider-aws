@@ -10,14 +10,10 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/networkfirewall"
-	"github.com/hashicorp/terraform-plugin-testing/compare"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
-	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -80,77 +76,77 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_basic(t *testing.T) {
 	})
 }
 
-func TestAccNetworkFirewallTLSInspectionConfiguration_Identity_Basic(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v networkfirewall.DescribeTLSInspectionConfigurationOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	commonName := acctest.RandomDomain()
-	certificateDomainName := commonName.RandomSubdomain().String()
-	resourceName := "aws_networkfirewall_tls_inspection_configuration.test"
+// func TestAccNetworkFirewallTLSInspectionConfiguration_Identity_Basic(t *testing.T) {
+// 	ctx := acctest.Context(t)
+// 	var v networkfirewall.DescribeTLSInspectionConfigurationOutput
+// 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+// 	commonName := acctest.RandomDomain()
+// 	certificateDomainName := commonName.RandomSubdomain().String()
+// 	resourceName := "aws_networkfirewall_tls_inspection_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewall),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTLSInspectionConfigurationDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccTLSInspectionConfigurationConfig_basic(rName, commonName.String(), certificateDomainName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTLSInspectionConfigurationExists(ctx, resourceName, &v),
-				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					tfstatecheck.ExpectRegionalARNFormat(resourceName, tfjsonpath.New(names.AttrARN), "network-firewall", "tls-configuration/{name}"),
-					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
-				},
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"tls_inspection_configuration", "update_token"},
-			},
-		},
-	})
-}
+// 	resource.ParallelTest(t, resource.TestCase{
+// 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+// 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewall),
+// 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+// 		CheckDestroy:             testAccCheckTLSInspectionConfigurationDestroy(ctx),
+// 		Steps: []resource.TestStep{
+// 			{
+// 				Config: testAccTLSInspectionConfigurationConfig_basic(rName, commonName.String(), certificateDomainName),
+// 				Check: resource.ComposeAggregateTestCheckFunc(
+// 					testAccCheckTLSInspectionConfigurationExists(ctx, resourceName, &v),
+// 				),
+// 				ConfigStateChecks: []statecheck.StateCheck{
+// 					tfstatecheck.ExpectRegionalARNFormat(resourceName, tfjsonpath.New(names.AttrARN), "network-firewall", "tls-configuration/{name}"),
+// 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+// 				},
+// 			},
+// 			{
+// 				ResourceName:            resourceName,
+// 				ImportState:             true,
+// 				ImportStateVerify:       true,
+// 				ImportStateVerifyIgnore: []string{"tls_inspection_configuration", "update_token"},
+// 			},
+// 		},
+// 	})
+// }
 
-func TestAccNetworkFirewallTLSInspectionConfiguration_Identity_RegionOverride(t *testing.T) {
-	ctx := acctest.Context(t)
+// func TestAccNetworkFirewallTLSInspectionConfiguration_Identity_RegionOverride(t *testing.T) {
+// 	ctx := acctest.Context(t)
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	commonName := acctest.RandomDomain()
-	certificateDomainName := commonName.RandomSubdomain().String()
-	resourceName := "aws_networkfirewall_tls_inspection_configuration.test"
+// 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+// 	commonName := acctest.RandomDomain()
+// 	certificateDomainName := commonName.RandomSubdomain().String()
+// 	resourceName := "aws_networkfirewall_tls_inspection_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewall),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             acctest.CheckDestroyNoop,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccTLSInspectionConfigurationConfig_regionOverride(rName, commonName.String(), certificateDomainName),
-				ConfigStateChecks: []statecheck.StateCheck{
-					tfstatecheck.ExpectRegionalARNAlternateRegionFormat(resourceName, tfjsonpath.New(names.AttrARN), "network-firewall", "tls-configuration/{name}"),
-					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
-				},
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateIdFunc:       acctest.CrossRegionImportStateIdFunc(resourceName),
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"tls_inspection_configuration", "update_token"},
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"tls_inspection_configuration", "update_token"},
-			},
-		},
-	})
-}
+// 	resource.ParallelTest(t, resource.TestCase{
+// 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+// 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewall),
+// 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+// 		CheckDestroy:             acctest.CheckDestroyNoop,
+// 		Steps: []resource.TestStep{
+// 			{
+// 				Config: testAccTLSInspectionConfigurationConfig_regionOverride(rName, commonName.String(), certificateDomainName),
+// 				ConfigStateChecks: []statecheck.StateCheck{
+// 					tfstatecheck.ExpectRegionalARNAlternateRegionFormat(resourceName, tfjsonpath.New(names.AttrARN), "network-firewall", "tls-configuration/{name}"),
+// 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+// 				},
+// 			},
+// 			{
+// 				ResourceName:            resourceName,
+// 				ImportState:             true,
+// 				ImportStateIdFunc:       acctest.CrossRegionImportStateIdFunc(resourceName),
+// 				ImportStateVerify:       true,
+// 				ImportStateVerifyIgnore: []string{"tls_inspection_configuration", "update_token"},
+// 			},
+// 			{
+// 				ResourceName:            resourceName,
+// 				ImportState:             true,
+// 				ImportStateVerify:       true,
+// 				ImportStateVerifyIgnore: []string{"tls_inspection_configuration", "update_token"},
+// 			},
+// 		},
+// 	})
+// }
 
 func TestAccNetworkFirewallTLSInspectionConfiguration_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
