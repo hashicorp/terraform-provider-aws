@@ -16,6 +16,7 @@ var (
 	ResourceClusterSnapshotCopy                 = newClusterSnapshotCopyResource
 	ResourceCustomDBEngineVersion               = resourceCustomDBEngineVersion
 	ResourceEventSubscription                   = resourceEventSubscription
+	ResourceExportTask                          = newExportTaskResource
 	ResourceGlobalCluster                       = resourceGlobalCluster
 	ResourceInstance                            = resourceInstance
 	ResourceInstanceState                       = newInstanceStateResource
@@ -55,6 +56,7 @@ var (
 	FindDefaultCertificate                     = findDefaultCertificate
 	FindDefaultDBProxyTargetGroupByDBProxyName = findDefaultDBProxyTargetGroupByDBProxyName
 	FindEventSubscriptionByID                  = findEventSubscriptionByID
+	FindExportTaskByID                         = findExportTaskByID
 	FindGlobalClusterByID                      = findGlobalClusterByID
 	FindIntegrationByARN                       = findIntegrationByARN
 	FindOptionGroupByName                      = findOptionGroupByName
