@@ -129,6 +129,11 @@ plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), know
 	ResourceName:    resourceName,
 	ImportState:     true,
 	ImportStateKind: resource.ImportBlockWithID,
+{{ if gt (len .ImportStateIDFunc) 0 -}}
+	ImportStateIdFunc: {{ .ImportStateIDFunc }}(resourceName),
+{{ else if .HasImportStateIDAttribute -}}
+	ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, {{ .ImportStateIDAttribute }}),
+{{ end -}}
 {{ end }}
 
 {{ define "ImportBlockWithIDBodyCrossRegion" }}
