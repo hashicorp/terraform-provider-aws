@@ -230,9 +230,9 @@ func {{ template "testname" . }}_Identity_Basic(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					{{ if ne .ARNFormat "" -}}
 						{{ if .IsGlobal -}}
-							tfstatecheck.ExpectGlobalARNFormat(resourceName, tfjsonpath.New(names.AttrARN), "{{ .ARNService }}", "{{ .ARNFormat }}"),
+							tfstatecheck.ExpectGlobalARNFormat(resourceName, tfjsonpath.New({{ .ARNAttribute }}), "{{ .ARNService }}", "{{ .ARNFormat }}"),
 						{{ else -}}
-							tfstatecheck.ExpectRegionalARNFormat(resourceName, tfjsonpath.New(names.AttrARN), "{{ .ARNService }}", "{{ .ARNFormat }}"),
+							tfstatecheck.ExpectRegionalARNFormat(resourceName, tfjsonpath.New({{ .ARNAttribute }}), "{{ .ARNService }}", "{{ .ARNFormat }}"),
 						{{ end -}}
 					{{ end -}}
 					{{ if .HasIDAttrDuplicates -}}
@@ -272,7 +272,7 @@ func {{ template "testname" . }}_Identity_Basic(t *testing.T) {
 						ImportPlanChecks: resource.ImportPlanChecks{
 							PreApply: []plancheck.PlanCheck{
 								{{ if .ArnIdentity -}}
-									plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
+									plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ .ARNAttribute }}), knownvalue.NotNull()),
 									plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
 								{{ end -}}
 								plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
@@ -289,7 +289,7 @@ func {{ template "testname" . }}_Identity_Basic(t *testing.T) {
 						ImportPlanChecks: resource.ImportPlanChecks{
 							PreApply: []plancheck.PlanCheck{
 								{{ if .ArnIdentity -}}
-									plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
+									plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ .ARNAttribute }}), knownvalue.NotNull()),
 									plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
 								{{ end -}}
 								plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
@@ -319,9 +319,9 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					{{ if ne .ARNFormat "" -}}
 						{{ if .IsGlobal -}}
-							tfstatecheck.ExpectGlobalARNFormat(resourceName, tfjsonpath.New(names.AttrARN), "{{ .ARNService }}", "{{ .ARNFormat }}"),
+							tfstatecheck.ExpectGlobalARNFormat(resourceName, tfjsonpath.New({{ .ARNAttribute }}), "{{ .ARNService }}", "{{ .ARNFormat }}"),
 						{{ else -}}
-							tfstatecheck.ExpectRegionalARNAlternateRegionFormat(resourceName, tfjsonpath.New(names.AttrARN), "{{ .ARNService }}", "{{ .ARNFormat }}"),
+							tfstatecheck.ExpectRegionalARNAlternateRegionFormat(resourceName, tfjsonpath.New({{ .ARNAttribute }}), "{{ .ARNService }}", "{{ .ARNFormat }}"),
 						{{ end -}}
 					{{ end -}}
 					{{ if .HasIDAttrDuplicates -}}
@@ -373,7 +373,7 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 						ImportPlanChecks: resource.ImportPlanChecks{
 							PreApply: []plancheck.PlanCheck{
 								{{ if .ArnIdentity -}}
-									plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
+									plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ .ARNAttribute }}), knownvalue.NotNull()),
 									plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
 								{{ end -}}
 								plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
@@ -393,7 +393,7 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 						ImportPlanChecks: resource.ImportPlanChecks{
 							PreApply: []plancheck.PlanCheck{
 								{{ if .ArnIdentity -}}
-									plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
+									plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ .ARNAttribute }}), knownvalue.NotNull()),
 									plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
 								{{ end -}}
 								plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
@@ -413,7 +413,7 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 						ImportPlanChecks: resource.ImportPlanChecks{
 							PreApply: []plancheck.PlanCheck{
 								{{ if .ArnIdentity -}}
-									plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
+									plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ .ARNAttribute }}), knownvalue.NotNull()),
 									plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
 								{{ end -}}
 								plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),

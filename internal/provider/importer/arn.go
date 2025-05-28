@@ -36,24 +36,24 @@ func RegionalARN(_ context.Context, rd *schema.ResourceData, attrName string) er
 		return err
 	}
 
-	arnRaw, ok := identity.GetOk(names.AttrARN)
+	arnRaw, ok := identity.GetOk(attrName)
 	if !ok {
-		return fmt.Errorf("identity attribute %q is required", names.AttrARN)
+		return fmt.Errorf("identity attribute %q is required", attrName)
 	}
 
 	arnVal, ok := arnRaw.(string)
 	if !ok {
-		return fmt.Errorf("identity attribute %q: expected string, got %T", names.AttrARN, arnRaw)
+		return fmt.Errorf("identity attribute %q: expected string, got %T", attrName, arnRaw)
 	}
 
 	arnARN, err := arn.Parse(arnVal)
 	if err != nil {
-		return fmt.Errorf("identity attribute %q: could not parse %q as ARN: %s", names.AttrARN, arnVal, err)
+		return fmt.Errorf("identity attribute %q: could not parse %q as ARN: %s", attrName, arnVal, err)
 	}
 
 	rd.Set(names.AttrRegion, arnARN.Region)
 
-	rd.Set(names.AttrARN, arnVal)
+	rd.Set(attrName, arnVal)
 	rd.SetId(arnVal)
 
 	return nil
