@@ -11,7 +11,10 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_ami: Add `block_device_mappings.ebs["volume_initialization_rate"]` attribute ([#42684](https://github.com/hashicorp/terraform-provider-aws/issues/42684))
+* data-source/aws_launch_template: Add `block_device_mappings.ebs.volume_initialization_rate` attribute ([#42684](https://github.com/hashicorp/terraform-provider-aws/issues/42684))
 * data-source/aws_verifiedpermissions_policy_store: Add `tags` attribute. This functionality requires the `verifiedpermissions:ListTagsForResource` IAM permission ([#42663](https://github.com/hashicorp/terraform-provider-aws/issues/42663))
+* resource/aws_launch_template: Add `block_device_mappings.ebs.volume_initialization_rate` argument ([#42684](https://github.com/hashicorp/terraform-provider-aws/issues/42684))
 * resource/aws_lb: Add `minimum_load_balancer_capacity` configuration block. This functionality requires the `elasticloadbalancing:DescribeCapacityReservations` and `elasticloadbalancing:ModifyCapacityReservation` IAM permissions ([#42685](https://github.com/hashicorp/terraform-provider-aws/issues/42685))
 * resource/aws_securityhub_standards_subscription: Add configurable Create and Delete timeouts ([#42759](https://github.com/hashicorp/terraform-provider-aws/issues/42759))
 * resource/aws_verifiedpermissions_policy_store: Add `tags` argument and `tags_all` attribute. This functionality requires the `verifiedpermissions:ListTagsForResource`, `verifiedpermissions:TagResource`, and `verifiedpermissions:UntagResource` IAM permissions ([#42663](https://github.com/hashicorp/terraform-provider-aws/issues/42663))
