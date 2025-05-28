@@ -127,7 +127,7 @@ func (r *resourceKeysExclusive) syncKeyValuePairs(ctx context.Context, plan *res
 
 	// We need to perform a batched operation in the event of many Key Value Pairs to stay within AWS service limits
 	// https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-limits.html#limits-keyvaluestores
-	batchSize := int(plan.MaximumUpdateSize.ValueInt64())
+	batchSize := int(plan.MaximumBatchSize.ValueInt64())
 
 	allPuts := expandPutKeyRequestListItem(put)
 	allDeletes := expandDeleteKeyRequestListItem(del)
@@ -238,8 +238,8 @@ func (r *resourceKeysExclusive) Read(ctx context.Context, request resource.ReadR
 	data.KvsARN = fwtypes.ARNValue(aws.ToString(kvs.KvsARN))
 	data.TotalSizeInBytes = types.Int64Value(aws.ToInt64(kvs.TotalSizeInBytes))
 
-	if data.MaximumUpdateSize.IsNull() || data.MaximumUpdateSize.ValueInt64() == 0 {
-		data.MaximumUpdateSize = types.Int64Value(maxBatchSizeDefault)
+	if data.MaximumBatchSize.IsNull() || data.MaximumBatchSize.ValueInt64() == 0 {
+		data.MaximumBatchSize = types.Int64Value(maxBatchSizeDefault)
 	}
 
 	response.Diagnostics.Append(flex.Flatten(ctx, keyPairs, &data.ResourceKeyValuePair)...)
@@ -357,6 +357,6 @@ type resourceKeyValuePairModel struct {
 type resourceKeysExclusiveModel struct {
 	ResourceKeyValuePair fwtypes.SetNestedObjectValueOf[resourceKeyValuePairModel] `tfsdk:"resource_key_value_pair"`
 	KvsARN               fwtypes.ARN                                               `tfsdk:"key_value_store_arn"`
-	MaximumUpdateSize    types.Int64                                               `tfsdk:"max_batch_size"`
+	MaximumBatchSize     types.Int64                                               `tfsdk:"max_batch_size"`
 	TotalSizeInBytes     types.Int64                                               `tfsdk:"total_size_in_bytes"`
 }
