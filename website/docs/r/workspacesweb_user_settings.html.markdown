@@ -33,10 +33,10 @@ resource "aws_workspacesweb_user_settings" "example" {
   paste_allowed    = "Enabled"
   print_allowed    = "Enabled"
   upload_allowed   = "Enabled"
-  
+
   toolbar_configuration {
-    toolbar_type = "Docked"
-    visual_mode = "Dark"
+    toolbar_type         = "Docked"
+    visual_mode          = "Dark"
     hidden_toolbar_items = ["Webcam", "Microphone"]
   }
 }
@@ -51,37 +51,37 @@ resource "aws_kms_key" "example" {
 }
 
 resource "aws_workspacesweb_user_settings" "example" {
-  copy_allowed     = "Enabled"
-  download_allowed = "Enabled"
-  paste_allowed    = "Enabled"
-  print_allowed    = "Enabled"
-  upload_allowed   = "Enabled"
-  deep_link_allowed = "Enabled"
-  disconnect_timeout_in_minutes = 30
+  copy_allowed                       = "Enabled"
+  download_allowed                   = "Enabled"
+  paste_allowed                      = "Enabled"
+  print_allowed                      = "Enabled"
+  upload_allowed                     = "Enabled"
+  deep_link_allowed                  = "Enabled"
+  disconnect_timeout_in_minutes      = 30
   idle_disconnect_timeout_in_minutes = 15
-  customer_managed_key = aws_kms_key.example.arn
-  
+  customer_managed_key               = aws_kms_key.example.arn
+
   additional_encryption_context = {
     Environment = "Production"
   }
-  
+
   toolbar_configuration {
-    toolbar_type = "Docked"
-    visual_mode = "Dark"
-    hidden_toolbar_items = ["Webcam", "Microphone"]
+    toolbar_type           = "Docked"
+    visual_mode            = "Dark"
+    hidden_toolbar_items   = ["Webcam", "Microphone"]
     max_display_resolution = "size1920X1080"
   }
-  
+
   cookie_synchronization_configuration {
     allowlist {
       domain = "example.com"
-      path = "/path"
+      path   = "/path"
     }
     blocklist {
       domain = "blocked.com"
     }
   }
-  
+
   tags = {
     Name = "example-user-settings"
   }
@@ -113,13 +113,13 @@ The following arguments are optional:
 ### cookie_synchronization_configuration
 
 * `allowlist` - (Required) List of cookie specifications that are allowed to be synchronized to the remote browser.
-  * `domain` - (Required) Domain of the cookie.
-  * `name` - (Optional) Name of the cookie.
-  * `path` - (Optional) Path of the cookie.
+    * `domain` - (Required) Domain of the cookie.
+    * `name` - (Optional) Name of the cookie.
+    * `path` - (Optional) Path of the cookie.
 * `blocklist` - (Optional) List of cookie specifications that are blocked from being synchronized to the remote browser.
-  * `domain` - (Required) Domain of the cookie.
-  * `name` - (Optional) Name of the cookie.
-  * `path` - (Optional) Path of the cookie.
+    * `domain` - (Required) Domain of the cookie.
+    * `name` - (Optional) Name of the cookie.
+    * `path` - (Optional) Path of the cookie.
 
 ### toolbar_configuration
 

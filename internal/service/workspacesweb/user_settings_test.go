@@ -576,46 +576,46 @@ resource "aws_kms_key" "test" {
 }
 
 resource "aws_workspacesweb_user_settings" "test" {
-  copy_allowed     = "Enabled"
-  download_allowed = "Enabled"
-  paste_allowed    = "Enabled"
-  print_allowed    = "Enabled"
-  upload_allowed   = "Enabled"
-  deep_link_allowed = "Enabled"
-  disconnect_timeout_in_minutes = 30
+  copy_allowed                       = "Enabled"
+  download_allowed                   = "Enabled"
+  paste_allowed                      = "Enabled"
+  print_allowed                      = "Enabled"
+  upload_allowed                     = "Enabled"
+  deep_link_allowed                  = "Enabled"
+  disconnect_timeout_in_minutes      = 30
   idle_disconnect_timeout_in_minutes = 15
-  customer_managed_key = aws_kms_key.test.arn
-  
+  customer_managed_key               = aws_kms_key.test.arn
+
   additional_encryption_context = {
     Environment = "Production"
   }
-  
+
   toolbar_configuration {
-    toolbar_type = "Docked"
-    visual_mode = "Dark"
+    toolbar_type         = "Docked"
+    visual_mode          = "Dark"
     hidden_toolbar_items = ["Webcam", "Microphone"]
   }
 
   cookie_synchronization_configuration {
     allowlist {
       domain = "example1.com"
-      path = "/path1"
-	  name = "ExampleAllow1"
+      path   = "/path1"
+      name   = "ExampleAllow1"
     }
     allowlist {
       domain = "example2.com"
-      path = "/path2"
-	  name = "ExampleAllow2"
+      path   = "/path2"
+      name   = "ExampleAllow2"
     }
     blocklist {
       domain = "blocked1.com"
-      path = "/path3"
-	  name = "ExampleBlock1"
+      path   = "/path3"
+      name   = "ExampleBlock1"
     }
     blocklist {
       domain = "blocked2.com"
-      path = "/path4"
-	  name = "ExampleBlock2"
+      path   = "/path4"
+      name   = "ExampleBlock2"
     }
   }
 }
@@ -625,36 +625,36 @@ resource "aws_workspacesweb_user_settings" "test" {
 func testAccUserSettingsConfig_updateBefore() string {
 	return `
 resource "aws_workspacesweb_user_settings" "test" {
-  copy_allowed     = "Enabled"
-  download_allowed = "Enabled"
-  paste_allowed    = "Enabled"
-  print_allowed    = "Enabled"
-  upload_allowed   = "Enabled"
-  deep_link_allowed = "Enabled"
-  disconnect_timeout_in_minutes = 30
+  copy_allowed                       = "Enabled"
+  download_allowed                   = "Enabled"
+  paste_allowed                      = "Enabled"
+  print_allowed                      = "Enabled"
+  upload_allowed                     = "Enabled"
+  deep_link_allowed                  = "Enabled"
+  disconnect_timeout_in_minutes      = 30
   idle_disconnect_timeout_in_minutes = 15
-  
+
   additional_encryption_context = {
     Environment = "Development"
   }
-  
+
   toolbar_configuration {
-    toolbar_type = "Docked"
-    visual_mode = "Dark"
+    toolbar_type         = "Docked"
+    visual_mode          = "Dark"
     hidden_toolbar_items = ["Webcam"]
   }
-  
+
 
   cookie_synchronization_configuration {
     allowlist {
       domain = "example.com"
-      path = "/path1"
-	  name = "ExampleAllow"
+      path   = "/path1"
+      name   = "ExampleAllow"
     }
     blocklist {
       domain = "blocked.com"
-      path = "/path2"
-	  name = "ExampleBlock"
+      path   = "/path2"
+      name   = "ExampleBlock"
     }
   }
 
@@ -665,45 +665,45 @@ resource "aws_workspacesweb_user_settings" "test" {
 func testAccUserSettingsConfig_updateAfter() string {
 	return `
 resource "aws_workspacesweb_user_settings" "test" {
-  copy_allowed     = "Disabled"
-  download_allowed = "Disabled"
-  paste_allowed    = "Disabled"
-  print_allowed    = "Disabled"
-  upload_allowed   = "Disabled"
-  deep_link_allowed = "Disabled"
-  disconnect_timeout_in_minutes = 60
+  copy_allowed                       = "Disabled"
+  download_allowed                   = "Disabled"
+  paste_allowed                      = "Disabled"
+  print_allowed                      = "Disabled"
+  upload_allowed                     = "Disabled"
+  deep_link_allowed                  = "Disabled"
+  disconnect_timeout_in_minutes      = 60
   idle_disconnect_timeout_in_minutes = 30
-  
+
   additional_encryption_context = {
     Environment = "Production"
   }
-  
+
   toolbar_configuration {
-    toolbar_type = "Floating"
-    visual_mode = "Light"
+    toolbar_type         = "Floating"
+    visual_mode          = "Light"
     hidden_toolbar_items = ["Webcam", "Microphone"]
   }
 
   cookie_synchronization_configuration {
     allowlist {
       domain = "example1.com"
-      path = "/path1"
-	  name = "ExampleAllow1"
+      path   = "/path1"
+      name   = "ExampleAllow1"
     }
     allowlist {
       domain = "example2.com"
-      path = "/path2"
-	  name = "ExampleAllow2"
+      path   = "/path2"
+      name   = "ExampleAllow2"
     }
     blocklist {
       domain = "blocked1.com"
-      path = "/path3"
-	  name = "ExampleBlock1"
+      path   = "/path3"
+      name   = "ExampleBlock1"
     }
     blocklist {
       domain = "blocked2.com"
-      path = "/path4"
-	  name = "ExampleBlock2"
+      path   = "/path4"
+      name   = "ExampleBlock2"
     }
   }
 }
@@ -747,11 +747,11 @@ resource "aws_kms_key" "test" {
 }
 
 resource "aws_workspacesweb_user_settings" "test" {
-  copy_allowed        = "Enabled"
-  download_allowed    = "Enabled"
-  paste_allowed       = "Enabled"
-  print_allowed       = "Enabled"
-  upload_allowed      = "Enabled"
+  copy_allowed         = "Enabled"
+  download_allowed     = "Enabled"
+  paste_allowed        = "Enabled"
+  print_allowed        = "Enabled"
+  upload_allowed       = "Enabled"
   customer_managed_key = aws_kms_key.test.arn
 }
 `
@@ -765,10 +765,10 @@ resource "aws_workspacesweb_user_settings" "test" {
   paste_allowed    = "Enabled"
   print_allowed    = "Enabled"
   upload_allowed   = "Enabled"
-  
+
   toolbar_configuration {
-    toolbar_type = "Docked"
-    visual_mode = "Dark"
+    toolbar_type         = "Docked"
+    visual_mode          = "Dark"
     hidden_toolbar_items = ["Webcam"]
   }
 }
@@ -783,10 +783,10 @@ resource "aws_workspacesweb_user_settings" "test" {
   paste_allowed    = "Enabled"
   print_allowed    = "Enabled"
   upload_allowed   = "Enabled"
-  
+
   toolbar_configuration {
-    toolbar_type = "Floating"
-    visual_mode = "Light"
+    toolbar_type         = "Floating"
+    visual_mode          = "Light"
     hidden_toolbar_items = ["Webcam", "Microphone"]
   }
 }
@@ -801,12 +801,12 @@ resource "aws_workspacesweb_user_settings" "test" {
   paste_allowed    = "Enabled"
   print_allowed    = "Enabled"
   upload_allowed   = "Enabled"
-  
+
   cookie_synchronization_configuration {
     allowlist {
       domain = "example.com"
-      path = "/path1"
-	  name = "ExampleAllow"
+      path   = "/path1"
+      name   = "ExampleAllow"
     }
   }
 }
@@ -821,17 +821,17 @@ resource "aws_workspacesweb_user_settings" "test" {
   paste_allowed    = "Enabled"
   print_allowed    = "Enabled"
   upload_allowed   = "Enabled"
-  
+
   cookie_synchronization_configuration {
     allowlist {
       domain = "example.com"
-      path = "/path1"
-	  name = "ExampleAllow"
+      path   = "/path1"
+      name   = "ExampleAllow"
     }
     blocklist {
       domain = "blocked.com"
-	  path = "/path2"
-	  name = "ExampleBlock"
+      path   = "/path2"
+      name   = "ExampleBlock"
     }
   }
 }
@@ -875,11 +875,11 @@ resource "aws_kms_key" "test1" {
 }
 
 resource "aws_workspacesweb_user_settings" "test" {
-  copy_allowed        = "Enabled"
-  download_allowed    = "Enabled"
-  paste_allowed       = "Enabled"
-  print_allowed       = "Enabled"
-  upload_allowed      = "Enabled"
+  copy_allowed         = "Enabled"
+  download_allowed     = "Enabled"
+  paste_allowed        = "Enabled"
+  print_allowed        = "Enabled"
+  upload_allowed       = "Enabled"
   customer_managed_key = aws_kms_key.test1.arn
 }
 `
@@ -956,11 +956,11 @@ resource "aws_kms_key" "test2" {
 }
 
 resource "aws_workspacesweb_user_settings" "test" {
-  copy_allowed        = "Enabled"
-  download_allowed    = "Enabled"
-  paste_allowed       = "Enabled"
-  print_allowed       = "Enabled"
-  upload_allowed      = "Enabled"
+  copy_allowed         = "Enabled"
+  download_allowed     = "Enabled"
+  paste_allowed        = "Enabled"
+  print_allowed        = "Enabled"
+  upload_allowed       = "Enabled"
   customer_managed_key = aws_kms_key.test2.arn
 }
 `
@@ -1003,11 +1003,11 @@ resource "aws_kms_key" "test" {
 }
 
 resource "aws_workspacesweb_user_settings" "test" {
-  copy_allowed        = "Enabled"
-  download_allowed    = "Enabled"
-  paste_allowed       = "Enabled"
-  print_allowed       = "Enabled"
-  upload_allowed      = "Enabled"
+  copy_allowed         = "Enabled"
+  download_allowed     = "Enabled"
+  paste_allowed        = "Enabled"
+  print_allowed        = "Enabled"
+  upload_allowed       = "Enabled"
   customer_managed_key = aws_kms_key.test.arn
   additional_encryption_context = {
     Environment = "Development"
@@ -1054,11 +1054,11 @@ resource "aws_kms_key" "test" {
 }
 
 resource "aws_workspacesweb_user_settings" "test" {
-  copy_allowed        = "Enabled"
-  download_allowed    = "Enabled"
-  paste_allowed       = "Enabled"
-  print_allowed       = "Enabled"
-  upload_allowed      = "Enabled"
+  copy_allowed         = "Enabled"
+  download_allowed     = "Enabled"
+  paste_allowed        = "Enabled"
+  print_allowed        = "Enabled"
+  upload_allowed       = "Enabled"
   customer_managed_key = aws_kms_key.test.arn
   additional_encryption_context = {
     Environment = "Production"

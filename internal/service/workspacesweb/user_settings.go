@@ -36,6 +36,7 @@ import (
 // @FrameworkResource("aws_workspacesweb_user_settings", name="User Settings")
 // @Tags(identifierAttribute="user_settings_arn")
 // @Testing(tagsTest=true)
+// @Testing(generator=false)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/workspacesweb/types;types.UserSettings")
 // @Testing(importStateIdAttribute="user_settings_arn")
 func newUserSettingsResource(_ context.Context) (resource.ResourceWithConfigure, error) {
@@ -136,13 +137,13 @@ func (r *userSettingsResource) Schema(ctx context.Context, request resource.Sche
 							CustomType: fwtypes.NewListNestedObjectTypeOf[cookieSpecificationModel](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"domain": schema.StringAttribute{
+									names.AttrDomain: schema.StringAttribute{
 										Required: true,
 									},
-									"name": schema.StringAttribute{
+									names.AttrName: schema.StringAttribute{
 										Optional: true,
 									},
-									"path": schema.StringAttribute{
+									names.AttrPath: schema.StringAttribute{
 										Optional: true,
 									},
 								},
@@ -152,13 +153,13 @@ func (r *userSettingsResource) Schema(ctx context.Context, request resource.Sche
 							CustomType: fwtypes.NewListNestedObjectTypeOf[cookieSpecificationModel](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"domain": schema.StringAttribute{
+									names.AttrDomain: schema.StringAttribute{
 										Required: true,
 									},
-									"name": schema.StringAttribute{
+									names.AttrName: schema.StringAttribute{
 										Optional: true,
 									},
-									"path": schema.StringAttribute{
+									names.AttrPath: schema.StringAttribute{
 										Optional: true,
 									},
 								},
@@ -218,7 +219,7 @@ func (r *userSettingsResource) Create(ctx context.Context, request resource.Crea
 	output, err := conn.CreateUserSettings(ctx, &input)
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("creating WorkSpacesWeb User Settings"), err.Error())
+		response.Diagnostics.AddError("creating WorkSpacesWeb User Settings", err.Error())
 		return
 	}
 
