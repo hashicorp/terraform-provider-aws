@@ -167,7 +167,6 @@ The following arguments are required:
 * `data_set_id` - (Required, Forces new resource) Identifier for the data set.
 * `import_mode` - (Required) Indicates whether you want to import the data into SPICE. Valid values are `SPICE` and `DIRECT_QUERY`.
 * `name` - (Required) Display name for the dataset.
-* `physical_table_map` - (Optional) Declares the physical tables that are available in the underlying data sources. See [physical_table_map](#physical_table_map).
 
 The following arguments are optional:
 
@@ -178,6 +177,7 @@ The following arguments are optional:
 * `field_folders` - (Optional) The folder that contains fields and nested subfolders for your dataset. See [field_folders](#field_folders).
 * `logical_table_map` - (Optional) Configures the combination and transformation of the data from the physical tables. Maximum of 1 entry. See [logical_table_map](#logical_table_map).
 * `permissions` - (Optional) A set of resource permissions on the data source. Maximum of 64 items. See [permissions](#permissions).
+* `physical_table_map` - (Optional) Declares the physical tables that are available in the underlying data sources. See [physical_table_map](#physical_table_map).
 * `row_level_permission_data_set` - (Optional) The row-level security configuration for the data that you want to create. See [row_level_permission_data_set](#row_level_permission_data_set).
 * `row_level_permission_tag_configuration` - (Optional) The configuration of tags on a dataset to set row-level security. Row-level security tags are currently supported for anonymous embedding only. See [row_level_permission_tag_configuration](#row_level_permission_tag_configuration).
 * `refresh_properties` - (Optional) The refresh properties for the data set. **NOTE**: Only valid when `import_mode` is set to `SPICE`. See [refresh_properties](#refresh_properties).

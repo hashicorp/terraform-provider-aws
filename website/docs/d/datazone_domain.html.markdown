@@ -22,7 +22,7 @@ data "aws_datazone_domain" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
 * `name` - (Optional) Name of the Domain. One of `name` or `id` is required.
 * `id` - (Optional) ID of the Domain. One of `name` or `id` is required

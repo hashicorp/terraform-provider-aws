@@ -17,6 +17,9 @@ and manage containers. For more information, see
 ~> **Note:** For more information about the AWS Regions in which you can create Amazon Lightsail container services,
 see ["Regions and Availability Zones in Amazon Lightsail"](https://lightsail.aws.amazon.com/ls/docs/overview/article/understanding-regions-and-availability-zones-in-amazon-lightsail).
 
+~> **NOTE:** You must create and validate an SSL/TLS certificate before you can use `public_domain_names` with your container service. For more information, see
+[Enabling and managing custom domains for your Amazon Lightsail container services](https://lightsail.aws.amazon.com/ls/docs/en_us/articles/amazon-lightsail-creating-container-services-certificates).
+
 ## Example Usage
 
 ### Basic Usage
@@ -127,10 +130,6 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-~> **NOTE:** You must create and validate an SSL/TLS certificate before you can use `public_domain_names` with your
-container service. For more information, see
-[Enabling and managing custom domains for your Amazon Lightsail container services](https://lightsail.aws.amazon.com/ls/docs/en_us/articles/amazon-lightsail-creating-container-services-certificates).
-
 This resource supports the following arguments:
 
 * `name` - (Required) The name for the container service. Names must be of length 1 to 63, and be
@@ -218,4 +217,4 @@ Using `terraform import`, import Lightsail Container Service using the `name`. F
 % terraform import aws_lightsail_container_service.my_container_service container-service-1
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-92e24fd20983c20060c9484d150c907c0945c149f4871db95aec5158fbc7239f -->
+<!-- cache-key: cdktf-0.20.8 input-90e66b805c0c5c54ba438fac7f6f5d44f40925e3bfe5dab6c9e21c151ef5e189 -->

@@ -27,7 +27,7 @@ resource "aws_vpclattice_target_group_attachment" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
 - `target_group_identifier` - (Required) The ID or Amazon Resource Name (ARN) of the target group.
 - `target` - (Required) The target.

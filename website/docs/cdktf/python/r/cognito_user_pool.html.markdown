@@ -93,12 +93,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following argument is required:
+This resource supports the following arguments:
 
 * `name` - (Required) Name of the user pool.
-
-The following arguments are optional:
-
 * `account_recovery_setting` - (Optional) Configuration block to define which verified available method a user can use to recover their forgotten password. [Detailed below](#account_recovery_setting).
 * `admin_create_user_config` - (Optional) Configuration block for creating a new user profile. [Detailed below](#admin_create_user_config).
 * `alias_attributes` - (Optional) Attributes supported as an alias for this user pool. Valid values: `phone_number`, `email`, or `preferred_username`. Conflicts with `username_attributes`.
@@ -347,4 +344,4 @@ Using `terraform import`, import Cognito User Pools using the `id`. For example:
 % terraform import aws_cognito_user_pool.pool us-west-2_abc123
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-65516b082518b79af3f585f164931e6ed17b5b5d4f086966c6f5daef6291ea82 -->
+<!-- cache-key: cdktf-0.20.8 input-bf613de4b3913f417616b1617d2c7cc8079f2f7426813c90fec07e3b902ae516 -->
