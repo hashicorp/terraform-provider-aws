@@ -2066,6 +2066,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta any)
 	// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/#virtual-attributes
 	//
 	// manage_master_user_password
+	// disable_master_user_password_rotation
 	// master_password
 	//
 	// Expose the MasterUserSecret structure as a computed attribute
