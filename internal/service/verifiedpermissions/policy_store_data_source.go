@@ -15,10 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkDataSource("aws_verifiedpermissions_policy_store", name="Policy Store")
+// @Tags(identifierAttribute="arn")
 func newDataSourcePolicyStore(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourcePolicyStore{}, nil
 }
@@ -31,8 +33,8 @@ type dataSourcePolicyStore struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *dataSourcePolicyStore) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (d *dataSourcePolicyStore) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			names.AttrCreatedDate: schema.StringAttribute{
@@ -49,6 +51,7 @@ func (d *dataSourcePolicyStore) Schema(ctx context.Context, req datasource.Schem
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
 			},
+			names.AttrTags: tftags.TagsAttributeComputedOnly(),
 			"validation_settings": schema.ListAttribute{
 				CustomType:  fwtypes.NewListNestedObjectTypeOf[validationSettingsDataSource](ctx),
 				ElementType: fwtypes.NewObjectTypeOf[validationSettingsDataSource](ctx),
@@ -57,32 +60,31 @@ func (d *dataSourcePolicyStore) Schema(ctx context.Context, req datasource.Schem
 		},
 	}
 }
-func (d *dataSourcePolicyStore) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	conn := d.Meta().VerifiedPermissionsClient(ctx)
-
+func (d *dataSourcePolicyStore) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
 	var data dataSourcePolicyStoreData
-	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := findPolicyStoreByID(ctx, conn, data.ID.ValueString())
+	conn := d.Meta().VerifiedPermissionsClient(ctx)
+
+	output, err := findPolicyStoreByID(ctx, conn, data.ID.ValueString())
 
 	if err != nil {
-		resp.Diagnostics.AddError(
+		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.VerifiedPermissions, create.ErrActionReading, DSNamePolicyStore, data.ID.ValueString(), err),
 			err.Error(),
 		)
 		return
 	}
 
-	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &data)...)
-
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
 type dataSourcePolicyStoreData struct {
@@ -91,6 +93,7 @@ type dataSourcePolicyStoreData struct {
 	Description        types.String                                                  `tfsdk:"description"`
 	ID                 types.String                                                  `tfsdk:"id"`
 	LastUpdatedDate    timetypes.RFC3339                                             `tfsdk:"last_updated_date"`
+	Tags               tftags.Map                                                    `tfsdk:"tags"`
 	ValidationSettings fwtypes.ListNestedObjectValueOf[validationSettingsDataSource] `tfsdk:"validation_settings"`
 }
 

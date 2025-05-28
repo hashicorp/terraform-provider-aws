@@ -32,13 +32,13 @@ data "aws_connect_routing_profile" "example" {
 
 ## Argument Reference
 
-~> **NOTE:** `instance_id` and one of either `name` or `routing_profile_id` is required.
-
 This data source supports the following arguments:
 
 * `instance_id` - Reference to the hosting Amazon Connect Instance
 * `name` - (Optional) Returns information on a specific Routing Profile by name
 * `routing_profile_id` - (Optional) Returns information on a specific Routing Profile by Routing Profile id
+
+~> **NOTE:** `instance_id` and one of either `name` or `routing_profile_id` is required.
 
 ## Attribute Reference
 

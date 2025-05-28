@@ -218,13 +218,13 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-Required arguments:
+The following arguments are required:
 
 * `attribute` - (Required) Set of nested attribute definitions. Only required for `hashKey` and `rangeKey` attributes. See below.
 * `hashKey` - (Required, Forces new resource) Attribute to use as the hash (partition) key. Must also be defined as an `attribute`. See below.
 * `name` - (Required) Unique within a region name of the table.
 
-Optional arguments:
+The following arguments are optional:
 
 * `billingMode` - (Optional) Controls how you are charged for read and write throughput and how you manage capacity. The valid values are `PROVISIONED` and `PAY_PER_REQUEST`. Defaults to `PROVISIONED`.
 * `deletionProtectionEnabled` - (Optional) Enables deletion protection for table. Defaults to `false`.
@@ -305,7 +305,7 @@ Optional arguments:
 ### `pointInTimeRecovery`
 
 * `enabled` - (Required) Whether to enable point-in-time recovery. It can take 10 minutes to enable for new tables. If the `pointInTimeRecovery` block is not provided, this defaults to `false`.
-* `recovery_period_in_days` - (Optional) Number of preceding days for which continuous backups are taken and maintained. Default is 35.
+* `recoveryPeriodInDays` - (Optional) Number of preceding days for which continuous backups are taken and maintained. Default is 35.
 
 ### `replica`
 
@@ -389,4 +389,4 @@ Using `terraform import`, import DynamoDB tables using the `name`. For example:
 % terraform import aws_dynamodb_table.basic-dynamodb-table GameScores
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-73627ad1e3188d101bba0d50e29d3d515377e27a148d0ab8ef617b03d1de7a6c -->
+<!-- cache-key: cdktf-0.20.8 input-248f995e37e5568cd6216af19d4f23364063841f7f3aab0f83f8f0ea9a1afd9f -->

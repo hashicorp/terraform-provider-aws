@@ -64,7 +64,7 @@ func TestAccWorkSpacesWebBrowserSettings_basic(t *testing.T) {
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    testAccBrowserSettingsImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "browser_settings_arn"),
 				ImportStateVerifyIdentifierAttribute: "browser_settings_arn",
 			},
 			{
@@ -79,7 +79,7 @@ func TestAccWorkSpacesWebBrowserSettings_basic(t *testing.T) {
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    testAccBrowserSettingsImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "browser_settings_arn"),
 				ImportStateVerifyIdentifierAttribute: "browser_settings_arn",
 			},
 		},
@@ -171,7 +171,7 @@ func TestAccWorkSpacesWebBrowserSettings_additionalEncryptionContext(t *testing.
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    testAccBrowserSettingsImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "browser_settings_arn"),
 				ImportStateVerifyIdentifierAttribute: "browser_settings_arn",
 			},
 			{
@@ -187,7 +187,7 @@ func TestAccWorkSpacesWebBrowserSettings_additionalEncryptionContext(t *testing.
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    testAccBrowserSettingsImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "browser_settings_arn"),
 				ImportStateVerifyIdentifierAttribute: "browser_settings_arn",
 			},
 		},
@@ -238,7 +238,7 @@ func TestAccWorkSpacesWebBrowserSettings_customerManagedKey(t *testing.T) {
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    testAccBrowserSettingsImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "browser_settings_arn"),
 				ImportStateVerifyIdentifierAttribute: "browser_settings_arn",
 			},
 			{
@@ -253,7 +253,7 @@ func TestAccWorkSpacesWebBrowserSettings_customerManagedKey(t *testing.T) {
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    testAccBrowserSettingsImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "browser_settings_arn"),
 				ImportStateVerifyIdentifierAttribute: "browser_settings_arn",
 			},
 		},
@@ -308,7 +308,7 @@ func TestAccWorkSpacesWebBrowserSettings_complete(t *testing.T) {
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    testAccBrowserSettingsImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "browser_settings_arn"),
 				ImportStateVerifyIdentifierAttribute: "browser_settings_arn",
 			},
 			{
@@ -325,7 +325,7 @@ func TestAccWorkSpacesWebBrowserSettings_complete(t *testing.T) {
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    testAccBrowserSettingsImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "browser_settings_arn"),
 				ImportStateVerifyIdentifierAttribute: "browser_settings_arn",
 			},
 		},
@@ -391,17 +391,6 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 	if err != nil {
 		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
-}
-
-func testAccBrowserSettingsImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		return rs.Primary.Attributes["browser_settings_arn"], nil
 	}
 }
 

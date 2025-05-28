@@ -33,7 +33,7 @@ resource "aws_emrcontainers_virtual_cluster" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
 * `container_provider` - (Required) Configuration block for the container provider associated with your cluster.
 * `name` – (Required) Name of the virtual cluster.

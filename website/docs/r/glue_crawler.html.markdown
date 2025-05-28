@@ -128,8 +128,6 @@ resource "aws_glue_crawler" "events_crawler" {
 
 ## Argument Reference
 
-~> **NOTE:** Must specify at least one of `dynamodb_target`, `jdbc_target`, `s3_target`, `mongodb_target` or `catalog_target`.
-
 This resource supports the following arguments:
 
 * `database_name` (Required) Glue database where results are written.
@@ -154,6 +152,8 @@ This resource supports the following arguments:
 * `security_configuration` (Optional) The name of Security Configuration to be used by the crawler
 * `table_prefix` (Optional) The table prefix used for catalog tables that are created.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+~> **NOTE:** Must specify at least one of `dynamodb_target`, `jdbc_target`, `s3_target`, `mongodb_target` or `catalog_target`.
 
 ### Dynamodb Target
 

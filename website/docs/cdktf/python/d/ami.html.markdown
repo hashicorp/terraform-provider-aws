@@ -87,6 +87,7 @@ This data source exports the following attributes in addition to the arguments a
         * `snapshot_id` - The ID of the snapshot.
         * `volume_size` - The size of the volume, in GiB.
         * `throughput` - The throughput that the EBS volume supports, in MiB/s.
+        * `volume_initialization_rate` - The volume initialization rate, in MiB/s.
         * `volume_type` - The volume type.
     * `no_device` - Suppresses the specified device included in the block device mapping of the AMI.
     * `virtual_name` - Virtual device name (for instance stores).
