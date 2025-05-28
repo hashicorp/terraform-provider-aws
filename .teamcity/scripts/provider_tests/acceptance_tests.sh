@@ -65,6 +65,7 @@ TF_ACC=1 go test \
     ./internal/types/... \
     ./internal/unique/... \
     ./internal/vault/... \
+    ./internal/vcr/... \
     ./internal/verify/... \
     ./internal/yaml/... \
     -json -count=1 -parallel "%ACCTEST_PARALLELISM%" -timeout=0 -run=TestAcc

@@ -4,9 +4,13 @@ package datazone
 
 import (
 	"context"
+	"errors"
+	"net/url"
+	"strings"
 	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/retry"
 	"github.com/aws/aws-sdk-go-v2/service/datazone"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -127,6 +131,18 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 					"override_region": region,
 				})
 				o.Region = region
+			}
+		},
+		func(o *datazone.Options) {
+			if inContext, ok := conns.FromContext(ctx); ok && inContext.VCREnabled() {
+				tflog.Info(ctx, "overriding retry behavior to immediately return VCR errors")
+				o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws.RetryerV2), retry.IsErrorRetryableFunc(func(err error) aws.Ternary {
+					var urlError *url.Error
+					if errors.As(err, &urlError) && strings.Contains(err.Error(), "requested interaction not found") {
+						return aws.FalseTernary
+					}
+					return aws.UnknownTernary // Delegate to configured Retryer.
+				}))
 			}
 		},
 		withExtraOptions(ctx, p, config),
