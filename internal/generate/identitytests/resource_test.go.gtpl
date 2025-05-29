@@ -271,7 +271,9 @@ func {{ template "testname" . }}_Identity_Basic(t *testing.T) {
 					{{ else -}}
 						statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
 							names.AttrAccountID: tfknownvalue.AccountID(),
-							names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+							{{ if not .IsGlobal -}}
+								names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+							{{ end -}}
 							{{ range .IdentityAttributes -}}
 								{{ . }}: knownvalue.NotNull(),
 							{{- end }}
