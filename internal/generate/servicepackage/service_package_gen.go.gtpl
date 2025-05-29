@@ -154,6 +154,11 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 					Identity: inttypes.RegionalSingletonIdentity(),
 				{{- end }}
 			{{- end }}
+			{{- if $value.WrappedImport }}
+				Import: inttypes.Import{
+					WrappedImport: true,
+				},
+			{{- end }}
 		},
 {{- end }}
 	}

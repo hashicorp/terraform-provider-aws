@@ -69,6 +69,7 @@ type ServicePackageFrameworkResource struct {
 	Tags     unique.Handle[ServicePackageResourceTags]
 	Region   unique.Handle[ServicePackageResourceRegion]
 	Identity Identity
+	Import   Import
 }
 
 // ServicePackageSDKDataSource represents a Terraform Plugin SDK data source

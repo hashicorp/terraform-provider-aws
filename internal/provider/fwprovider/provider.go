@@ -27,6 +27,7 @@ import (
 	tffunction "github.com/hashicorp/terraform-provider-aws/internal/function"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	tfunique "github.com/hashicorp/terraform-provider-aws/internal/unique"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -555,16 +556,28 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 				interceptors = append(interceptors, resourceTransparentTagging(res.Tags))
 			}
 
-			if res.Identity.ARN {
-				type arnIdentity interface {
-					SetARNAttributeName(attr string)
+			if res.Import.WrappedImport {
+				if res.Identity.ARN {
+					type arnIdentity interface {
+						SetARNAttributeName(attr string)
+					}
+					identity, ok := inner.(arnIdentity)
+					if !ok {
+						errs = append(errs, fmt.Errorf("resource type %s: defines ARN Identity, but cannot set ARN attribute", typeName))
+						continue
+					}
+					identity.SetARNAttributeName(res.Identity.ARNAttribute)
+				} else if !res.Identity.Singleton {
+					type parameterizedIdentity interface {
+						SetIdentitySpec(identity inttypes.Identity)
+					}
+					identity, ok := inner.(parameterizedIdentity)
+					if !ok {
+						errs = append(errs, fmt.Errorf("resource type %s: defines Parameterized Identity, but cannot set Identity attributes", typeName))
+						continue
+					}
+					identity.SetIdentitySpec(res.Identity)
 				}
-				identity, ok := inner.(arnIdentity)
-				if !ok {
-					errs = append(errs, fmt.Errorf("resource type %s: defines ARN Identity, but cannot set ARN attribute", typeName))
-					continue
-				}
-				identity.SetARNAttributeName(res.Identity.ARNAttribute)
 			}
 
 			opts := wrappedResourceOptions{
