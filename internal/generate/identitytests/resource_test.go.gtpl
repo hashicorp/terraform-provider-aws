@@ -5,24 +5,26 @@
 	{{ if .ExistsTypeName }}
 	var v {{ .ExistsTypeName }}
 	{{ end -}}
-	resourceName := "{{ .TypeName}}.test"{{ if .Generator }}
-	rName := {{ .Generator }}
-{{- end }}
-{{- range .InitCodeBlocks }}
-{{ .Code }}
-{{- end -}}
+	{{ template "commonInit" . }}
 {{ end }}
 
 {{/* This can be removed when the Exists check supports enhanced region support */}}
 {{ define "InitRegionOverride" }}
 	ctx := acctest.Context(t)
 
+	{{ template "commonInit" . }}
+{{ end }}
+
+{{ define "commonInit" -}}
 	resourceName := "{{ .TypeName}}.test"{{ if .Generator }}
 	rName := {{ .Generator }}
 {{- end }}
 {{- range .InitCodeBlocks }}
 {{ .Code }}
 {{- end -}}
+{{ if .UseAlternateAccount }}
+	providers := make(map[string]*schema.Provider)
+{{ end }}
 {{ end }}
 
 {{ define "Test" -}}
@@ -31,7 +33,9 @@ resource.{{ if and .Serialize (not .SerializeParallelTests) }}Test{{ else }}Para
 
 {{ define "TestCaseSetup" -}}
 {{ template "TestCaseSetupNoProviders" . }}
-ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+{{- if not .UseAlternateAccount }}
+	ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+{{- end -}}
 {{- end }}
 
 {{ define "TestCaseSetupNoProviders" -}}
@@ -58,7 +62,9 @@ PreCheck:     func() { acctest.PreCheck(ctx, t)
 },
 ErrorCheck:   acctest.ErrorCheck(t, names.{{ .PackageProviderNameUpper }}ServiceID),
 CheckDestroy: acctest.CheckDestroyNoop,
-ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+{{- if not .UseAlternateAccount }}
+	ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+{{- end -}}
 {{- end }}
 
 {{ define "TagsKnownValueForNull" -}}
@@ -222,6 +228,9 @@ func {{ template "testname" . }}_Identity_Basic(t *testing.T) {
 		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
+				{{ if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
+				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/basic/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
@@ -257,6 +266,9 @@ func {{ template "testname" . }}_Identity_Basic(t *testing.T) {
 			},
 			{{ if not .NoImport -}}
 				{
+					{{ if .UseAlternateAccount -}}
+						ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
+					{{ end -}}
 					ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/basic/"),
 					ConfigVariables: config.Variables{ {{ if .Generator }}
 						acctest.CtRName: config.StringVariable(rName),{{ end }}
@@ -319,6 +331,9 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 		{{ template "TestCaseSetupRegionOverride" . }}
 		Steps: []resource.TestStep{
 			{
+				{{ if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
+				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/region_override/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
@@ -347,6 +362,9 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 			{{ if not .NoImport }}
 				// Import command with appended "@<region>"
 				{
+					{{ if .UseAlternateAccount -}}
+						ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
+					{{ end -}}
 					ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/region_override/"),
 					ConfigVariables: config.Variables{ {{ if .Generator }}
 						acctest.CtRName: config.StringVariable(rName),{{ end }}
@@ -358,6 +376,9 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 				{{ if .HasInherentRegion }}
 					// Import command without appended "@<region>"
 					{
+						{{ if .UseAlternateAccount -}}
+							ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
+						{{ end -}}
 						ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/region_override/"),
 						ConfigVariables: config.Variables{ {{ if .Generator }}
 							acctest.CtRName: config.StringVariable(rName),{{ end }}

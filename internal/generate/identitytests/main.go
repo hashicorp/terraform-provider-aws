@@ -321,6 +321,7 @@ type ResourceDatum struct {
 	IsGlobal                    bool
 	isSingleton                 bool
 	HasRegionOverrideTest       bool
+	UseAlternateAccount         bool
 }
 
 func (d ResourceDatum) AdditionalTfVars() map[string]string {
@@ -704,11 +705,12 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						}
 					}
 				}
-				if attr, ok := args.Keyword["preCheckAltAccount"]; ok {
+				if attr, ok := args.Keyword["useAlternateAccount"]; ok {
 					if b, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid preCheckAltAccount value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						v.errs = append(v.errs, fmt.Errorf("invalid useAlternateAccount value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 						continue
 					} else if b {
+						d.UseAlternateAccount = true
 						d.PreChecks = append(d.PreChecks, codeBlock{
 							Code: "acctest.PreCheckAlternateAccount(t)",
 						})
