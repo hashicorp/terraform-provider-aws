@@ -395,7 +395,6 @@ func resourceUserPool() *schema.Resource {
 			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 				ValidateFunc: validation.Any(
 					validation.StringLenBetween(1, 128),
 					validation.StringMatch(regexache.MustCompile(`[\w\s+=,.@-]+`),
@@ -1069,6 +1068,7 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta an
 		"email_verification_message",
 		"email_verification_subject",
 		"lambda_config",
+		names.AttrName,
 		"password_policy",
 		"sign_in_policy",
 		"sms_authentication_message",
@@ -1146,6 +1146,10 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta an
 
 				input.LambdaConfig = expandLambdaConfigType(v)
 			}
+		}
+
+		if v, ok := d.GetOk(names.AttrName); ok {
+			input.PoolName = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("mfa_configuration"); ok {
