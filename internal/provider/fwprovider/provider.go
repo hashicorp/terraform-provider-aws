@@ -36,12 +36,12 @@ var (
 )
 
 var (
-	_ provider.Provider                       = &fwprovider{}
-	_ provider.ProviderWithFunctions          = &fwprovider{}
-	_ provider.ProviderWithEphemeralResources = &fwprovider{}
+	_ provider.Provider                       = &frameworkProvider{}
+	_ provider.ProviderWithFunctions          = &frameworkProvider{}
+	_ provider.ProviderWithEphemeralResources = &frameworkProvider{}
 )
 
-type fwprovider struct {
+type frameworkProvider struct {
 	dataSources        []func() datasource.DataSource
 	ephemeralResources []func() ephemeral.EphemeralResource
 	primary            interface{ Meta() any }
@@ -53,7 +53,7 @@ type fwprovider struct {
 func New(ctx context.Context, primary interface{ Meta() any }) (provider.Provider, error) {
 	log.Printf("Creating Terraform AWS Provider (Framework-style)...")
 
-	provider := &fwprovider{
+	provider := &frameworkProvider{
 		dataSources:        make([]func() datasource.DataSource, 0),
 		ephemeralResources: make([]func() ephemeral.EphemeralResource, 0),
 		primary:            primary,
@@ -85,12 +85,12 @@ func New(ctx context.Context, primary interface{ Meta() any }) (provider.Provide
 	return provider, nil
 }
 
-func (*fwprovider) Metadata(ctx context.Context, request provider.MetadataRequest, response *provider.MetadataResponse) {
+func (*frameworkProvider) Metadata(ctx context.Context, request provider.MetadataRequest, response *provider.MetadataResponse) {
 	response.TypeName = "aws"
 }
 
 // Schema returns the schema for this provider's configuration.
-func (*fwprovider) Schema(ctx context.Context, request provider.SchemaRequest, response *provider.SchemaResponse) {
+func (*frameworkProvider) Schema(ctx context.Context, request provider.SchemaRequest, response *provider.SchemaResponse) {
 	// This schema must match exactly the Terraform Protocol v5 (Terraform Plugin SDK v2) provider's schema.
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -341,7 +341,7 @@ func (*fwprovider) Schema(ctx context.Context, request provider.SchemaRequest, r
 // Configure is called at the beginning of the provider lifecycle, when
 // Terraform sends to the provider the values the user specified in the
 // provider configuration block.
-func (p *fwprovider) Configure(ctx context.Context, request provider.ConfigureRequest, response *provider.ConfigureResponse) {
+func (p *frameworkProvider) Configure(ctx context.Context, request provider.ConfigureRequest, response *provider.ConfigureResponse) {
 	// Provider's parsed configuration (its instance state) is available through the primary provider's Meta() method.
 	v := p.primary.Meta()
 	response.DataSourceData = v
@@ -353,7 +353,7 @@ func (p *fwprovider) Configure(ctx context.Context, request provider.ConfigureRe
 // implementation.
 //
 // All data sources must have unique type names.
-func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSource {
+func (p *frameworkProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
 	return slices.Clone(p.dataSources)
 }
 
@@ -361,7 +361,7 @@ func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSo
 // implementation.
 //
 // All resources must have unique type names.
-func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
+func (p *frameworkProvider) Resources(ctx context.Context) []func() resource.Resource {
 	return slices.Clone(p.resources)
 }
 
@@ -369,7 +369,7 @@ func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 // implementation.
 //
 // All ephemeral resources must have unique type names.
-func (p *fwprovider) EphemeralResources(ctx context.Context) []func() ephemeral.EphemeralResource {
+func (p *frameworkProvider) EphemeralResources(ctx context.Context) []func() ephemeral.EphemeralResource {
 	return slices.Clone(p.ephemeralResources)
 }
 
@@ -378,7 +378,7 @@ func (p *fwprovider) EphemeralResources(ctx context.Context) []func() ephemeral.
 //
 // The function type name is determined by the Function implementing
 // the Metadata method. All functions must have unique names.
-func (p *fwprovider) Functions(_ context.Context) []func() function.Function {
+func (p *frameworkProvider) Functions(_ context.Context) []func() function.Function {
 	return []func() function.Function{
 		tffunction.NewARNBuildFunction,
 		tffunction.NewARNParseFunction,
@@ -386,8 +386,8 @@ func (p *fwprovider) Functions(_ context.Context) []func() function.Function {
 	}
 }
 
-// initialize is called from `fwprovider.New` to perform any Terraform Framework-style initialization.
-func (p *fwprovider) initialize(ctx context.Context) error {
+// initialize is called from `New` to perform any Terraform Framework-style initialization.
+func (p *frameworkProvider) initialize(ctx context.Context) error {
 	log.Printf("Initializing Terraform AWS Provider (Framework-style)...")
 
 	var errs []error
@@ -592,8 +592,8 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 	return errors.Join(errs...)
 }
 
-// validateResourceSchemas is called from `fwprovider.New` to validate Terraform Plugin Framework-style resource schemas.
-func (p *fwprovider) validateResourceSchemas(ctx context.Context) error {
+// validateResourceSchemas is called from `New` to validate Terraform Plugin Framework-style resource schemas.
+func (p *frameworkProvider) validateResourceSchemas(ctx context.Context) error {
 	var errs []error
 
 	for _, sp := range servicePackages(ctx) {
