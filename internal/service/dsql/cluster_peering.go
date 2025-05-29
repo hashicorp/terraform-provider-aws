@@ -144,15 +144,15 @@ func (r *clusterPeeringResource) Read(ctx context.Context, request resource.Read
 
 	output, err := findClusterByID(ctx, conn, data.Identifier.ValueString())
 
+	if err == nil && output.MultiRegionProperties == nil {
+		err = tfresource.NewEmptyResultError(nil)
+	}
+
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
 		return
-	}
-
-	if err == nil && output.MultiRegionProperties == nil {
-		err = tfresource.NewEmptyResultError(nil)
 	}
 
 	if err != nil {
