@@ -34,6 +34,8 @@ import (
 
 // @FrameworkResource("aws_cloudfront_key_value_store", name="Key Value Store")
 // @IdentityAttribute("name")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudfront/types;awstypes;awstypes.KeyValueStore")
+// @Testing(importStateIdAttribute="name")
 func newKeyValueStoreResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &keyValueStoreResource{}
 
@@ -45,6 +47,7 @@ func newKeyValueStoreResource(context.Context) (resource.ResourceWithConfigure, 
 type keyValueStoreResource struct {
 	framework.ResourceWithModel[keyValueStoreResourceModel]
 	framework.WithTimeouts
+	// framework.WithImportByParameterizedIdentity
 }
 
 func (r *keyValueStoreResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -313,7 +316,6 @@ func (r *keyValueStoreResource) ImportState(ctx context.Context, request resourc
 	// Import-by-id case
 	if request.ID != "" {
 		resource.ImportStatePassthroughID(ctx, path.Root(names.AttrName), request, response)
-		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), request.ID)...)
 		return
 	}
 
@@ -325,6 +327,5 @@ func (r *keyValueStoreResource) ImportState(ctx context.Context, request resourc
 		}
 
 		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrName), name)...)
-		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), name)...)
 	}
 }
