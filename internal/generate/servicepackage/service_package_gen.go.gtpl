@@ -135,7 +135,11 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				{{- end }}
 			{{- else if $value.ARNIdentity }}
 				{{- if $.IsGlobal }}
-					Identity: inttypes.GlobalARNIdentity(),		
+					{{- if $value.HasARNAttribute }}
+						Identity: inttypes.GlobalARNIdentityNamed({{ $value.ARNAttribute }}),
+					{{- else }}
+						Identity: inttypes.GlobalARNIdentity(),		
+					{{- end }}
 				{{- else }}
 					{{- if $value.HasARNAttribute }}
 						Identity: inttypes.RegionalARNIdentityNamed({{ $value.ARNAttribute }}),
@@ -232,7 +236,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				{{- end }}
 			{{- else if $value.ARNIdentity }}
 				{{- if $.IsGlobal }}
-					Identity: inttypes.GlobalARNIdentity(),		
+					{{- if $value.HasARNAttribute }}
+						Identity: inttypes.GlobalARNIdentityNamed({{ $value.ARNAttribute }}),
+					{{- else }}
+						Identity: inttypes.GlobalARNIdentity(),		
+					{{- end }}
 				{{- else }}
 					{{- if $value.HasARNAttribute }}
 						Identity: inttypes.RegionalARNIdentityNamed({{ $value.ARNAttribute }}),
