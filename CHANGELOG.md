@@ -10,6 +10,7 @@ FEATURES:
 * **New Resource:** `aws_quicksight_account_settings` ([#42185](https://github.com/hashicorp/terraform-provider-aws/issues/42185))
 * **New Resource:** `aws_workspacesweb_browser_settings` ([#42681](https://github.com/hashicorp/terraform-provider-aws/issues/42681))
 * **New Resource:** `aws_workspacesweb_network_settings` ([#42722](https://github.com/hashicorp/terraform-provider-aws/issues/42722))
+* **New Resource:** `aws_workspacesweb_user_settings` ([#42783](https://github.com/hashicorp/terraform-provider-aws/issues/42783))
 
 ENHANCEMENTS:
 
