@@ -10,9 +10,15 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/dsql"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/dsql/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfdsql "github.com/hashicorp/terraform-provider-aws/internal/service/dsql"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -43,12 +49,25 @@ func TestAccDSQLCluster_basic(t *testing.T) {
 				Config: testAccClusterConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection_enabled", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "0"),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "dsql", regexache.MustCompile(`cluster/.+$`)),
-					resource.TestCheckResourceAttrSet(resourceName, "vpc_endpoint_service_name"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("dsql", regexache.MustCompile(`cluster/.+$`))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("deletion_protection_enabled"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("encryption_details"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"encryption_status": tfknownvalue.StringExact(awstypes.EncryptionStatusEnabled),
+							"encryption_type":   tfknownvalue.StringExact(awstypes.EncryptionTypeAwsOwnedKmsKey),
+							"kms_key_arn":       knownvalue.Null(), // KMS Key ARN is not set for AWS-owned KMS key
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("vpc_endpoint_service_name"), knownvalue.NotNull()),
+				},
 			},
 			{
 				ResourceName:                         resourceName,

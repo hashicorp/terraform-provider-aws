@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -62,6 +63,7 @@ func (r *clusterResource) Schema(ctx context.Context, request resource.SchemaReq
 			"deletion_protection_enabled": schema.BoolAttribute{
 				Optional: true,
 			},
+			"encryption_details": framework.ResourceOptionalComputedListOfObjectsAttribute[encryptionDetailsModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
 			names.AttrIdentifier: framework.IDAttribute(),
 			names.AttrTags:       tftags.TagsAttribute(),
 			names.AttrTagsAll:    tftags.TagsAttributeComputedOnly(),
@@ -125,6 +127,16 @@ func (r *clusterResource) Create(ctx context.Context, request resource.CreateReq
 	// Additional fields.
 	input.ClientToken = aws.String(sdkid.UniqueId())
 	input.Tags = getTagsIn(ctx)
+
+	encryptionDetails, diags := data.EncryptionDetails.ToPtr(ctx)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	if encryptionDetails != nil {
+		input.KmsEncryptionKey = fwflex.StringFromFramework(ctx, encryptionDetails.KMSKeyARN)
+	}
 
 	output, err := conn.CreateCluster(ctx, &input)
 
@@ -429,12 +441,19 @@ func normalizeMultiRegionProperties(output *dsql.GetClusterOutput) *awstypes.Mul
 type clusterResourceModel struct {
 	ARN                       types.String                                                `tfsdk:"arn"`
 	DeletionProtectionEnabled types.Bool                                                  `tfsdk:"deletion_protection_enabled"`
+	EncryptionDetails         fwtypes.ListNestedObjectValueOf[encryptionDetailsModel]     `tfsdk:"encryption_details"`
 	Identifier                types.String                                                `tfsdk:"identifier"`
 	MultiRegionProperties     fwtypes.ListNestedObjectValueOf[multiRegionPropertiesModel] `tfsdk:"multi_region_properties"`
 	Tags                      tftags.Map                                                  `tfsdk:"tags"`
 	TagsAll                   tftags.Map                                                  `tfsdk:"tags_all"`
 	Timeouts                  timeouts.Value                                              `tfsdk:"timeouts"`
 	VPCEndpointServiceName    types.String                                                `tfsdk:"vpc_endpoint_service_name"`
+}
+
+type encryptionDetailsModel struct {
+	EncryptionStatus fwtypes.StringEnum[awstypes.EncryptionStatus] `tfsdk:"encryption_status"`
+	EncryptionType   fwtypes.StringEnum[awstypes.EncryptionType]   `tfsdk:"encryption_type"`
+	KMSKeyARN        fwtypes.ARN                                   `tfsdk:"kms_key_arn"`
 }
 
 type multiRegionPropertiesModel struct {

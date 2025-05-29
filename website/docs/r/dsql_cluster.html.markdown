@@ -32,6 +32,8 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `encryption_details` - (Optional) Encryption configuration details for the DSQL Cluster.
+    * `kms_encryption_key` - (Optional) The ARN of the AWS KMS key that encrypts data in the DSQL Cluster.
 * `multi_region_properties` - (Optional) Multi-region properties of the DSQL Cluster.
     * `witness_region` - (Required) Witness region for the multi-region clusters. Setting this makes this cluster a multi-region cluster. Changing it recreates the resource.
 * `tags` - (Optional) Set of tags to be associated with the AWS DSQL Cluster resource.
@@ -41,6 +43,9 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Cluster.
+* `encryption_details` - Encryption configuration details for the DSQL Cluster.
+    * `encryption_status` - The status of encryption for the DSQL Cluster.
+    * `encryption_type` - The type of encryption that protects the data on the DSQL Cluster.
 * `identifier` - Cluster Identifier.
 * `multi_region_properties` - Multi-region properties of the DSQL Cluster.
     * `clusters` - List of DSQL Cluster ARNs peered to this cluster.
