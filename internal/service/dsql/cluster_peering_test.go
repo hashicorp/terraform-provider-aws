@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/service/dsql"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -20,11 +19,8 @@ func TestAccDSQLClusterPeering_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var cluster dsql.GetClusterOutput
 	resourceName := "aws_dsql_cluster_peering.test"
 	resourceName2 := "aws_dsql_cluster_peering.test1"
-
-	resourceNameCluster := "aws_dsql_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -40,12 +36,11 @@ func TestAccDSQLClusterPeering_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DSQLServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 2),
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterPeeringConfig_basic(acctest.ThirdRegion()),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceNameCluster, &cluster),
 					acctest.MatchResourceAttrRegionalARNRegion(ctx, resourceName, "clusters.0", "dsql", acctest.AlternateRegion(), regexache.MustCompile(`cluster/.+$`)),
 					acctest.MatchResourceAttrRegionalARNRegion(ctx, resourceName2, "clusters.0", "dsql", acctest.Region(), regexache.MustCompile(`cluster/.+$`)),
 				),
@@ -66,14 +61,14 @@ func testAccClusterPeeringConfig_basic(witnessRegion string) string {
 resource "aws_dsql_cluster" "test" {
   deletion_protection_enabled = false
   multi_region_properties {
-    witness_region = "%[1]s"
+    witness_region = %[1]q
   }
 }
 
 resource "aws_dsql_cluster_peering" "test" {
   identifier     = aws_dsql_cluster.test.identifier
   clusters       = [aws_dsql_cluster.test1.arn]
-  witness_region = "%[1]s"
+  witness_region = %[1]q
 }
 
 resource "aws_dsql_cluster" "test1" {
@@ -81,7 +76,7 @@ resource "aws_dsql_cluster" "test1" {
 
   deletion_protection_enabled = false
   multi_region_properties {
-    witness_region = "%[1]s"
+    witness_region = %[1]q
   }
 }
 
@@ -90,7 +85,7 @@ resource "aws_dsql_cluster_peering" "test1" {
 
   identifier     = aws_dsql_cluster.test1.identifier
   clusters       = [aws_dsql_cluster.test.arn]
-  witness_region = "%[1]s"
+  witness_region = %[1]q
 }
 `, witnessRegion))
 }

@@ -5,6 +5,7 @@ package dsql
 
 // Exports for use in tests only.
 var (
-	FindClusterByID = findClusterByID
 	ResourceCluster = newClusterResource
+
+	FindClusterByID = findClusterByID
 )

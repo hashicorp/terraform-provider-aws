@@ -166,15 +166,7 @@ func (r *clusterResource) Read(ctx context.Context, request resource.ReadRequest
 		return
 	}
 
-	if sourceClusterARN := output.Arn; sourceClusterARN != nil && output.MultiRegionProperties != nil {
-		// Remove the current cluster from the list of clusters in the multi-region properties
-		// This is needed because one of the ARNs of the clusters in the multi-region properties is
-		// the same as the ARN of this specific cluster, and we need to remove it from the
-		// list of clusters to avoid a conflict when updating the resource.
-		output.MultiRegionProperties.Clusters = slices.DeleteFunc(output.MultiRegionProperties.Clusters, func(s string) bool {
-			return strings.EqualFold(s, aws.ToString(sourceClusterARN))
-		})
-	}
+	output.MultiRegionProperties = normalizeMultiRegionProperties(output)
 
 	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
 	if response.Diagnostics.HasError() {
@@ -250,7 +242,7 @@ func (r *clusterResource) Delete(ctx context.Context, request resource.DeleteReq
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading Aurora DSQL Cluster (%s)", id), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("deleting Aurora DSQL Cluster (%s)", id), err.Error())
 
 		return
 	}
@@ -356,6 +348,30 @@ func waitClusterDeleted(ctx context.Context, conn *dsql.Client, id string, timeo
 	}
 
 	return nil, err
+}
+
+func normalizeMultiRegionProperties(output *dsql.GetClusterOutput) *awstypes.MultiRegionProperties {
+	if output == nil || output.MultiRegionProperties == nil {
+		return nil
+	}
+
+	// Take a deep copy.
+	apiObject := awstypes.MultiRegionProperties{
+		Clusters:      slices.Clone(output.MultiRegionProperties.Clusters),
+		WitnessRegion: aws.String(strings.Clone(aws.ToString(output.MultiRegionProperties.WitnessRegion))),
+	}
+
+	if sourceClusterARN := output.Arn; sourceClusterARN != nil {
+		// Remove the current cluster from the list of clusters in the multi-region properties
+		// This is needed because one of the ARNs of the clusters in the multi-region properties is
+		// the same as the ARN of this specific cluster, and we need to remove it from the
+		// list of clusters to avoid a conflict when updating the resource.
+		apiObject.Clusters = slices.DeleteFunc(apiObject.Clusters, func(s string) bool {
+			return strings.EqualFold(s, aws.ToString(sourceClusterARN))
+		})
+	}
+
+	return &apiObject
 }
 
 type clusterResourceModel struct {

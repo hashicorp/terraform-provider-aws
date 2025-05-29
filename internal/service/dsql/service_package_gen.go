@@ -29,7 +29,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			},
 		},
 		{
-			Factory:  newResourceClusterPeering,
+			Factory:  newClusterPeeringResource,
 			TypeName: "aws_dsql_cluster_peering",
 			Name:     "Cluster Peering",
 		},

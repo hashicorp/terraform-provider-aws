@@ -5,79 +5,65 @@ package dsql
 
 import (
 	"context"
-	"errors"
-	"slices"
-	"strings"
+	"fmt"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dsql"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dsql/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_dsql_cluster_peering", name="Cluster Peering")
-func newResourceClusterPeering(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceClusterPeering{}
+func newClusterPeeringResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &clusterPeeringResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 
 	return r, nil
 }
 
-const (
-	ResNameClusterPeering = "Cluster Peering"
-)
-
-type resourceClusterPeering struct {
+type clusterPeeringResource struct {
 	framework.ResourceWithConfigure
 	framework.WithTimeouts
-	framework.WithNoOpDelete
 	framework.WithNoUpdate
+	framework.WithNoOpDelete
 }
 
-func (r *resourceClusterPeering) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *clusterPeeringResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrIdentifier: schema.StringAttribute{
 				Required: true,
 			},
 			"clusters": schema.SetAttribute{
-				CustomType:  fwtypes.SetOfStringType,
+				CustomType:  fwtypes.SetOfARNType,
 				ElementType: types.StringType,
 				Required:    true,
 				Validators: []validator.Set{
 					setvalidator.SizeAtLeast(1),
-					setvalidator.ValueStringsAre(
-						validators.ARN(),
-					),
 				},
 			},
 			"witness_region": schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(
-						regexache.MustCompile(
-							`^[a-z]{2}(-[a-z]+)+-\d{1,2}$`), "must be a valid AWS Region Code",
-					),
+					fwvalidators.AWSRegion(),
 				},
 			},
 		},
@@ -89,134 +75,103 @@ func (r *resourceClusterPeering) Schema(ctx context.Context, req resource.Schema
 	}
 }
 
-func (r *resourceClusterPeering) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *clusterPeeringResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data clusterPeeringResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().DSQLClient(ctx)
 
-	var plan resourceClusterPeeringModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	// Check if the cluster exists and is in a valid state to create a peering connection.
+	id := fwflex.StringValueFromFramework(ctx, data.Identifier)
+	output, err := findClusterByID(ctx, conn, id)
 
-	// Check if the cluster exists and is in a valid state to create a peering connection
-	status, err := findClusterByID(ctx, conn, plan.Identifier.ValueString())
-	if tfresource.NotFound(err) {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DSQL, create.ErrActionCreating, ResNameClusterPeering, plan.Identifier.String(), nil),
-			errors.New("cluster resource doesn't seem to exist").Error(),
-		)
-		return
-	}
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DSQL, create.ErrActionCreating, ResNameClusterPeering, plan.Identifier.String(), err),
-			err.Error(),
-		)
-		return
-	}
-	if status != nil && status.Status != awstypes.ClusterStatusPendingSetup {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DSQL, create.ErrActionCreating, ResNameClusterPeering, plan.Identifier.String(), nil),
-			errors.New("cluster is not in a valid state to create a peering connection").Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("reading Aurora DSQL Cluster (%s)", id), err.Error())
+
 		return
 	}
 
-	var multiRegionProperties awstypes.MultiRegionProperties
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, &multiRegionProperties, flex.WithFieldNamePrefix("Cluster"))...)
-	if resp.Diagnostics.HasError() {
+	if status := output.Status; status != awstypes.ClusterStatusPendingSetup {
+		response.Diagnostics.AddError(fmt.Sprintf("Aurora DSQL Cluster (%s) is not in a valid state to create a peering (%s)", id, status), err.Error())
+
 		return
 	}
+
 	input := dsql.UpdateClusterInput{
-		Identifier:            plan.Identifier.ValueStringPointer(),
-		MultiRegionProperties: &multiRegionProperties,
+		ClientToken:           aws.String(sdkid.UniqueId()),
+		Identifier:            aws.String(id),
+		MultiRegionProperties: new(awstypes.MultiRegionProperties),
+	}
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, input.MultiRegionProperties)...)
+	if response.Diagnostics.HasError() {
+		return
 	}
 
-	out, err := conn.UpdateCluster(ctx, &input)
+	_, err = conn.UpdateCluster(ctx, &input)
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DSQL, create.ErrActionCreating, ResNameClusterPeering, plan.Identifier.String(), err),
-			err.Error(),
-		)
-		return
-	}
-	if out == nil || out.Identifier == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DSQL, create.ErrActionCreating, ResNameClusterPeering, plan.Identifier.String(), nil),
-			errors.New("empty output").Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("creating Aurora DSQL Cluster (%s) peering", id), err.Error())
+
 		return
 	}
 
-	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	result, err := waitClusterPeeringCreated(ctx, conn, plan.Identifier.ValueString(), createTimeout)
+	output, err = waitClusterPeeringCreated(ctx, conn, data.Identifier.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
+
+	if err == nil && output.MultiRegionProperties == nil {
+		err = tfresource.NewEmptyResultError(nil)
+	}
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DSQL, create.ErrActionWaitingForCreation, ResNameClusterPeering, plan.Identifier.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for Aurora DSQL Cluster (%s) peering create", id), err.Error())
+
 		return
 	}
 
-	if result == nil || result.MultiRegionProperties == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DSQL, create.ErrActionCreating, ResNameClusterPeering, plan.Identifier.String(), nil),
-			errors.New("empty output").Error(),
-		)
-		return
-	}
-
-	properties := prepareMultiRegionProperties(result)
-	resp.Diagnostics.Append(flex.Flatten(ctx, &properties, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-func (r *resourceClusterPeering) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *clusterPeeringResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data clusterPeeringResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().DSQLClient(ctx)
 
-	var state resourceClusterPeeringModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	output, err := findClusterByID(ctx, conn, data.Identifier.ValueString())
 
-	out, err := findClusterByID(ctx, conn, state.Identifier.ValueString())
 	if tfresource.NotFound(err) {
-		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
-		resp.State.RemoveResource(ctx)
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+
 		return
 	}
+
+	if err == nil && output.MultiRegionProperties == nil {
+		err = tfresource.NewEmptyResultError(nil)
+	}
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DSQL, create.ErrActionReading, ResNameClusterPeering, state.Identifier.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("updating Aurora DSQL Cluster (%s)", data.Identifier.ValueString()), err.Error())
+
 		return
 	}
 
-	if out.MultiRegionProperties == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DSQL, create.ErrActionReading, ResNameClusterPeering, state.Identifier.String(), nil),
-			errors.New("empty output").Error(),
-		)
+	properties := normalizeMultiRegionProperties(output)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, properties, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	properties := prepareMultiRegionProperties(out)
-	resp.Diagnostics.Append(flex.Flatten(ctx, &properties, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceClusterPeering) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrIdentifier), req, resp)
+func (r *clusterPeeringResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrIdentifier), request, response)
 }
 
 func waitClusterPeeringCreated(ctx context.Context, conn *dsql.Client, id string, timeout time.Duration) (*dsql.GetClusterOutput, error) {
@@ -225,38 +180,21 @@ func waitClusterPeeringCreated(ctx context.Context, conn *dsql.Client, id string
 		Target:                    enum.Slice(awstypes.ClusterStatusActive),
 		Refresh:                   statusCluster(ctx, conn, id),
 		Timeout:                   timeout,
-		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*dsql.GetClusterOutput); ok {
-		return out, err
+
+	if output, ok := outputRaw.(*dsql.GetClusterOutput); ok {
+		return output, err
 	}
 
 	return nil, err
 }
 
-type resourceClusterPeeringModel struct {
-	Identifier    types.String        `tfsdk:"identifier"`
-	Clusters      fwtypes.SetOfString `tfsdk:"clusters"`
-	WitnessRegion types.String        `tfsdk:"witness_region"`
-	Timeouts      timeouts.Value      `tfsdk:"timeouts"`
-}
-
-func prepareMultiRegionProperties(out *dsql.GetClusterOutput) (properties awstypes.MultiRegionProperties) {
-	if out == nil || out.MultiRegionProperties == nil {
-		return properties
-	}
-	properties = *out.MultiRegionProperties // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-assignment
-	if len(properties.Clusters) > 0 {
-		clusters := properties.Clusters
-		if sourceClusterARN := out.Arn; sourceClusterARN != nil {
-			clusters = slices.DeleteFunc(clusters, func(s string) bool {
-				return strings.EqualFold(s, aws.ToString(sourceClusterARN))
-			})
-		}
-		properties.Clusters = clusters
-	}
-	return properties
+type clusterPeeringResourceModel struct {
+	Clusters      fwtypes.SetOfARN `tfsdk:"clusters"`
+	Identifier    types.String     `tfsdk:"identifier"`
+	Timeouts      timeouts.Value   `tfsdk:"timeouts"`
+	WitnessRegion types.String     `tfsdk:"witness_region"`
 }
