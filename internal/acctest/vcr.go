@@ -31,8 +31,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	"github.com/hashicorp/terraform-provider-aws/internal/vcr"
-	"gopkg.in/dnaeon/go-vcr.v3/cassette"
-	"gopkg.in/dnaeon/go-vcr.v3/recorder"
+	"gopkg.in/dnaeon/go-vcr.v4/pkg/cassette"
+	"gopkg.in/dnaeon/go-vcr.v4/pkg/recorder"
 )
 
 type randomnessSource struct {
@@ -131,12 +131,11 @@ func vcrProviderConfigureContextFunc(provider *schema.Provider, configureContext
 		}
 
 		vcrMode, err := vcr.Mode()
-
 		if err != nil {
 			return nil, sdkdiag.AppendFromErr(diags, err)
 		}
 
-		// Cribbed from aws-sdk-go-base.
+		// Real transport config, cribbed from aws-sdk-go-base.
 		httpClient := cleanhttp.DefaultPooledClient()
 		transport := httpClient.Transport.(*http.Transport)
 		transport.MaxIdleConnsPerHost = 10
@@ -147,29 +146,15 @@ func vcrProviderConfigureContextFunc(provider *schema.Provider, configureContext
 			transport.TLSClientConfig = tlsConfig
 		}
 
-		path := filepath.Join(vcr.Path(), vcrFileName(testName))
-
-		// Create a VCR recorder around a default HTTP client.
-		r, err := recorder.NewWithOptions(&recorder.Options{
-			CassetteName:       path,
-			Mode:               vcrMode,
-			RealTransport:      httpClient.Transport,
-			SkipRequestLatency: true,
-		})
-
-		if err != nil {
-			return nil, sdkdiag.AppendFromErr(diags, err)
-		}
-
-		// Remove sensitive HTTP headers.
-		r.AddHook(func(i *cassette.Interaction) error {
+		// After capture hook to remove sensitive HTTP headers.
+		sensitiveHeaderHook := func(i *cassette.Interaction) error {
 			delete(i.Request.Headers, "Authorization")
 			delete(i.Request.Headers, "X-Amz-Security-Token")
 			return nil
-		}, recorder.AfterCaptureHook)
+		}
 
-		// Defines how VCR will match requests to responses.
-		r.SetMatcher(func(r *http.Request, i cassette.Request) bool {
+		// Define how VCR will match requests to stored interactions.
+		matchFunc := func(r *http.Request, i cassette.Request) bool {
 			if r.Method != i.Method {
 				return false
 			}
@@ -241,7 +226,22 @@ func vcrProviderConfigureContextFunc(provider *schema.Provider, configureContext
 			}
 
 			return false
-		})
+		}
+
+		cassetteName := filepath.Join(vcr.Path(), vcrFileName(testName))
+
+		// Create a VCR recorder around a default HTTP client.
+		r, err := recorder.New(cassetteName,
+			recorder.WithHook(sensitiveHeaderHook, recorder.AfterCaptureHook),
+			recorder.WithMatcher(matchFunc),
+			recorder.WithMode(vcrMode),
+			recorder.WithRealTransport(httpClient.Transport),
+			recorder.WithSkipRequestLatency(true),
+		)
+
+		if err != nil {
+			return nil, sdkdiag.AppendFromErr(diags, err)
+		}
 
 		// Use the wrapped HTTP Client for AWS APIs.
 		// As the HTTP client is used in the provider's ConfigureContextFunc

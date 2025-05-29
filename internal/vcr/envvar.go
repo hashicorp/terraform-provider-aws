@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"os"
 
-	"gopkg.in/dnaeon/go-vcr.v3/recorder"
+	"gopkg.in/dnaeon/go-vcr.v4/pkg/recorder"
 )
 
 const (

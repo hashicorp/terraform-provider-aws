@@ -304,7 +304,7 @@ require (
 	golang.org/x/crypto v0.37.0
 	golang.org/x/text v0.24.0
 	golang.org/x/tools v0.32.0
-	gopkg.in/dnaeon/go-vcr.v3 v3.2.1
+	gopkg.in/dnaeon/go-vcr.v4 v4.0.2
 	gopkg.in/yaml.v3 v3.0.1
 	syreclabs.com/go/faker v1.2.3
 )
