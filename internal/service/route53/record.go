@@ -36,6 +36,11 @@ import (
 // @IdentityAttribute("type")
 // @IdentityAttribute("set_identifier", optional="true")
 // @MutableIdentity
+// @WrappedImport(false)
+// @Testing(identityTest=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/route53/types;awstypes;awstypes.ResourceRecordSet")
+// @Testing(subdomainTfVar="zoneName;recordName")
+// @Testing(generator=false)
 func resourceRecord() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
