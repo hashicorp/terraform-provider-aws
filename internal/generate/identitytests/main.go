@@ -323,6 +323,7 @@ type ResourceDatum struct {
 	isSingleton                 bool
 	HasRegionOverrideTest       bool
 	UseAlternateAccount         bool
+	IdentityAttributes          []string
 }
 
 func (d ResourceDatum) AdditionalTfVars() map[string]string {
@@ -356,7 +357,7 @@ func (d ResourceDatum) OverrideIdentifierAttribute() string {
 }
 
 func (d ResourceDatum) IsARNIdentity() bool {
-	return d.arnAttribute != ""
+	return d.ArnIdentity
 }
 
 func (d ResourceDatum) ARNAttribute() string {
@@ -529,9 +530,19 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				}
 				d.idAttrDuplicates = d.arnAttribute
 
+			case "IdentityAttribute":
+				hasIdentity = true
+				args := common.ParseArgs(m[3])
+				if len(args.Positional) == 0 {
+					v.errs = append(v.errs, fmt.Errorf("no Identity attribute name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					continue
+				}
+				d.IdentityAttributes = append(d.IdentityAttributes, namesgen.ConstOrQuote(args.Positional[0]))
+
 			case "ArnFormat":
 				args := common.ParseArgs(m[3])
 				d.ARNFormat = args.Positional[0]
+				d.arnAttribute = "arn"
 
 			case "MutableIdentity":
 				d.MutableIdentity = true

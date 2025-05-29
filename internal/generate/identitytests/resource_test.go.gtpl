@@ -197,6 +197,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/names"
 	{{- if .OverrideIdentifier }}
@@ -267,6 +268,17 @@ func {{ template "testname" . }}_Identity_Basic(t *testing.T) {
 						statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .ARNAttribute }})),
 					{{ else if .IsRegionalSingleton }}
 						statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrRegion)),
+					{{ else -}}
+						statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+							names.AttrAccountID: tfknownvalue.AccountID(),
+							names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+							{{ range .IdentityAttributes -}}
+								{{ . }}: knownvalue.NotNull(),
+							{{- end }}
+						}),
+						{{ range .IdentityAttributes -}}
+							statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ . }})),
+						{{- end }}
 					{{ end -}}
 				},
 			},
@@ -362,11 +374,26 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 						statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .ARNAttribute }})),
 					{{ else if .IsRegionalSingleton }}
 						statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrRegion)),
+					{{ else -}}
+						statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+							names.AttrAccountID: tfknownvalue.AccountID(),
+							names.AttrRegion:    knownvalue.StringExact(acctest.AlternateRegion()),
+							{{ range .IdentityAttributes -}}
+								{{ . }}: knownvalue.NotNull(),
+							{{- end }}
+						}),
+						{{ range .IdentityAttributes -}}
+							statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ . }})),
+						{{- end }}
 					{{ end -}}
 				},
 			},
 			{{ if not .NoImport }}
-				// Import command with appended "@<region>"
+				{{ if .HasInherentRegion }}
+					// Import command with appended "@<region>"
+				{{- else }}
+					// Import command
+				{{- end }}
 				{
 					{{ if .UseAlternateAccount -}}
 						ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
@@ -397,7 +424,11 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 				{{ if gt (len .ImportIgnore) 0 }}
 				// TODO: Plannable import cannot be tested due to import diffs
 				{{- else }}
-					// Import block with Import ID and appended "@<region>"
+					{{ if .HasInherentRegion }}
+						// Import block with Import ID and appended "@<region>"
+					{{- else }}
+						// Import block with Import ID
+					{{- end }}
 					{
 						ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/region_override/"),
 						ConfigVariables: config.Variables{ {{ if .Generator }}
