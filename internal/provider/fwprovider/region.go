@@ -42,7 +42,7 @@ func (r dataSourceInjectRegionAttributeInterceptor) schema(ctx context.Context, 
 			response.Schema.Attributes[names.AttrRegion] = dsschema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
-				Description: `The AWS Region to use for API operations. Overrides the Region set in the provider configuration.`,
+				Description: names.TopLevelRegionAttributeDescription,
 			}
 		}
 	}
@@ -121,7 +121,7 @@ func (r ephemeralResourceInjectRegionAttributeInterceptor) schema(ctx context.Co
 			response.Schema.Attributes[names.AttrRegion] = erschema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
-				Description: `The AWS Region to use for API operations. Overrides the Region set in the provider configuration.`,
+				Description: names.TopLevelRegionAttributeDescription,
 			}
 		}
 	}
@@ -196,7 +196,7 @@ func (r resourceInjectRegionAttributeInterceptor) schema(ctx context.Context, op
 			response.Schema.Attributes[names.AttrRegion] = rschema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
-				Description: `The AWS Region to use for API operations. Overrides the Region set in the provider configuration.`,
+				Description: names.TopLevelRegionAttributeDescription,
 			}
 		}
 	}
