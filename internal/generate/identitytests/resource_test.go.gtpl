@@ -46,6 +46,9 @@ resource.{{ if and .Serialize (not .SerializeParallelTests) }}Test{{ else }}Para
 		{{- range .PreChecks }}
 		{{ .Code }}
 		{{- end -}}
+		{{- range .PreChecksWithRegion }}
+		{{ .Code }}(ctx, t, acctest.Region())
+		{{- end -}}
 	},
 	ErrorCheck:   acctest.ErrorCheck(t, names.{{ .PackageProviderNameUpper }}ServiceID),
 	CheckDestroy: {{ if .CheckDestroyNoop }}acctest.CheckDestroyNoop{{ else }}testAccCheck{{ .Name }}Destroy(ctx{{ if .DestroyTakesT }}, t{{ end }}){{ end }},
@@ -59,6 +62,9 @@ PreCheck:     func() { acctest.PreCheck(ctx, t)
 	{{- range .PreChecks }}
 	{{ .Code }}
 	{{ end -}}
+	{{- range .PreChecksWithRegion }}
+	{{ .Code }}(ctx, t, acctest.AlternateRegion())
+	{{- end -}}
 },
 ErrorCheck:   acctest.ErrorCheck(t, names.{{ .PackageProviderNameUpper }}ServiceID),
 CheckDestroy: acctest.CheckDestroyNoop,

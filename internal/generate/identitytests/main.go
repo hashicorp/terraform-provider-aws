@@ -306,6 +306,7 @@ type ResourceDatum struct {
 	SerializeDelay              bool
 	SerializeParallelTests      bool
 	PreChecks                   []codeBlock
+	PreChecksWithRegion         []codeBlock
 	GoImports                   []goImport
 	GenerateConfig              bool
 	InitCodeBlocks              []codeBlock
@@ -705,17 +706,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						}
 					}
 				}
-				if attr, ok := args.Keyword["useAlternateAccount"]; ok {
-					if b, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid useAlternateAccount value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-						continue
-					} else if b {
-						d.UseAlternateAccount = true
-						d.PreChecks = append(d.PreChecks, codeBlock{
-							Code: "acctest.PreCheckAlternateAccount(t)",
-						})
-					}
-				}
 				if attr, ok := args.Keyword["preCheckRegion"]; ok {
 					regions := strings.Split(attr, ";")
 					d.PreChecks = append(d.PreChecks, codeBlock{
@@ -728,6 +718,30 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 							Path: "github.com/hashicorp/aws-sdk-go-base/v2/endpoints",
 						},
 					)
+				}
+				if attr, ok := args.Keyword["preCheckWithRegion"]; ok {
+					if code, importSpec, err := parseIdentifierSpec(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("%s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
+						continue
+					} else {
+						d.PreChecksWithRegion = append(d.PreChecks, codeBlock{
+							Code: code,
+						})
+						if importSpec != nil {
+							d.GoImports = append(d.GoImports, *importSpec)
+						}
+					}
+				}
+				if attr, ok := args.Keyword["useAlternateAccount"]; ok {
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid useAlternateAccount value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					} else if b {
+						d.UseAlternateAccount = true
+						d.PreChecks = append(d.PreChecks, codeBlock{
+							Code: "acctest.PreCheckAlternateAccount(t)",
+						})
+					}
 				}
 				if attr, ok := args.Keyword["serialize"]; ok {
 					if b, err := strconv.ParseBool(attr); err != nil {
