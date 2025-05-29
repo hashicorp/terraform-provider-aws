@@ -50,7 +50,7 @@ func TestAccWorkSpacesWebUserSettings_basic(t *testing.T) {
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    testAccUserSettingsImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "user_settings_arn"),
 				ImportStateVerifyIdentifierAttribute: "user_settings_arn",
 			},
 		},
@@ -140,7 +140,7 @@ func TestAccWorkSpacesWebUserSettings_complete(t *testing.T) {
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    testAccUserSettingsImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "user_settings_arn"),
 				ImportStateVerifyIdentifierAttribute: "user_settings_arn",
 			},
 		},
@@ -193,7 +193,7 @@ func TestAccWorkSpacesWebUserSettings_update(t *testing.T) {
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    testAccUserSettingsImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "user_settings_arn"),
 				ImportStateVerifyIdentifierAttribute: "user_settings_arn",
 			},
 			{
@@ -234,7 +234,7 @@ func TestAccWorkSpacesWebUserSettings_update(t *testing.T) {
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    testAccUserSettingsImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "user_settings_arn"),
 				ImportStateVerifyIdentifierAttribute: "user_settings_arn",
 			},
 		},
@@ -267,7 +267,7 @@ func TestAccWorkSpacesWebUserSettings_customerManagedKey(t *testing.T) {
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    testAccUserSettingsImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "user_settings_arn"),
 				ImportStateVerifyIdentifierAttribute: "user_settings_arn",
 			},
 		},
@@ -302,7 +302,7 @@ func TestAccWorkSpacesWebUserSettings_customerManagedKeyUpdate(t *testing.T) {
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    testAccUserSettingsImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "user_settings_arn"),
 				ImportStateVerifyIdentifierAttribute: "user_settings_arn",
 			},
 			{
@@ -343,7 +343,7 @@ func TestAccWorkSpacesWebUserSettings_additionalEncryptionContextUpdate(t *testi
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    testAccUserSettingsImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "user_settings_arn"),
 				ImportStateVerifyIdentifierAttribute: "user_settings_arn",
 			},
 			{
@@ -387,7 +387,7 @@ func TestAccWorkSpacesWebUserSettings_toolbarConfiguration(t *testing.T) {
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    testAccUserSettingsImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "user_settings_arn"),
 				ImportStateVerifyIdentifierAttribute: "user_settings_arn",
 			},
 			{
@@ -405,7 +405,7 @@ func TestAccWorkSpacesWebUserSettings_toolbarConfiguration(t *testing.T) {
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    testAccUserSettingsImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "user_settings_arn"),
 				ImportStateVerifyIdentifierAttribute: "user_settings_arn",
 			},
 		},
@@ -441,7 +441,7 @@ func TestAccWorkSpacesWebUserSettings_cookieSynchronizationConfiguration(t *test
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    testAccUserSettingsImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "user_settings_arn"),
 				ImportStateVerifyIdentifierAttribute: "user_settings_arn",
 			},
 			{
@@ -462,7 +462,7 @@ func TestAccWorkSpacesWebUserSettings_cookieSynchronizationConfiguration(t *test
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    testAccUserSettingsImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "user_settings_arn"),
 				ImportStateVerifyIdentifierAttribute: "user_settings_arn",
 			},
 		},
@@ -513,17 +513,6 @@ func testAccCheckUserSettingsExists(ctx context.Context, n string, v *awstypes.U
 		*v = *output
 
 		return nil
-	}
-}
-
-func testAccUserSettingsImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		return rs.Primary.Attributes["user_settings_arn"], nil
 	}
 }
 
