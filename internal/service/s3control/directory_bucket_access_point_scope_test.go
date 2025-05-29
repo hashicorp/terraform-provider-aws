@@ -40,7 +40,6 @@ func TestAccS3ControlDirectoryBucketAccessPointScope_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "scope.0.permissions.*", "GetObject"),
 					resource.TestCheckResourceAttrSet(resourceName, "scope.0.permissions.1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "scope.0.permissions.*", "PutObject"),
-
 					resource.TestCheckResourceAttr(resourceName, "scope.0.prefixes.#", "2"),
 					resource.TestCheckResourceAttrSet(resourceName, "scope.0.prefixes.0"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "scope.0.prefixes.*", "prefix1/"),
@@ -103,7 +102,6 @@ func TestAccS3ControlDirectoryBucketAccessPointScope_update(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "scope.0.permissions.*", "GetObject"),
 					resource.TestCheckResourceAttrSet(resourceName, "scope.0.permissions.1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "scope.0.permissions.*", "PutObject"),
-
 					resource.TestCheckResourceAttr(resourceName, "scope.0.prefixes.#", "2"),
 					resource.TestCheckResourceAttrSet(resourceName, "scope.0.prefixes.0"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "scope.0.prefixes.*", "prefix1/"),
@@ -125,7 +123,6 @@ func TestAccS3ControlDirectoryBucketAccessPointScope_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "scope.0.permissions.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "scope.0.permissions.0"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "scope.0.permissions.*", "GetObject"),
-
 					resource.TestCheckResourceAttr(resourceName, "scope.0.prefixes.#", "2"),
 					resource.TestCheckResourceAttrSet(resourceName, "scope.0.prefixes.0"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "scope.0.prefixes.*", "prefix3/"),

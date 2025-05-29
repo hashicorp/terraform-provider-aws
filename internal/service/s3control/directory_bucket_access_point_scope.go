@@ -64,7 +64,7 @@ func (r *directoryBucketAccessPointScopeResource) Schema(ctx context.Context, _ 
 				},
 				Validators: []validator.String{
 					stringvalidator.RegexMatches(AccessPointForDirectoryBucketNameRegex,
-						"must be in the format [access_point_name]--[azid]--xa-s3. Use the aws_s3_access_point resource to manage general purpose access points"),
+						"must be in the format [access_point_name]--[azid]--xa-s3"),
 				},
 			},
 		},
@@ -211,6 +211,7 @@ func (r *directoryBucketAccessPointScopeResource) Delete(ctx context.Context, re
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchAccessPoint) {
 		return
 	}
+
 	id, _ := data.setID()
 	if err != nil {
 		response.Diagnostics.AddError(
