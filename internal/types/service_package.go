@@ -136,7 +136,11 @@ func StringIdentityAttribute(name string, required bool) IdentityAttribute {
 }
 
 func GlobalARNIdentity() Identity {
-	return arnIdentity(true, names.AttrARN)
+	return GlobalARNIdentityNamed(names.AttrARN)
+}
+
+func GlobalARNIdentityNamed(name string) Identity {
+	return arnIdentity(true, name)
 }
 
 func RegionalARNIdentity() Identity {
