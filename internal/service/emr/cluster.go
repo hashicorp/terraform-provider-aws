@@ -54,6 +54,40 @@ func resourceCluster() *schema.Resource {
 		},
 
 		SchemaFunc: func() map[string]*schema.Schema {
+			ebsConfigurationSchema := func() *schema.Resource {
+				return &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrIOPS: {
+							Type:     schema.TypeInt,
+							Optional: true,
+							ForceNew: true,
+						},
+						names.AttrSize: {
+							Type:     schema.TypeInt,
+							Required: true,
+							ForceNew: true,
+						},
+						names.AttrThroughput: {
+							Type:     schema.TypeInt,
+							Optional: true,
+							ForceNew: true,
+						},
+						names.AttrType: {
+							Type:         schema.TypeString,
+							Required:     true,
+							ForceNew:     true,
+							ValidateFunc: validEBSVolumeType(),
+						},
+						"volumes_per_instance": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							ForceNew: true,
+							Default:  1,
+						},
+					},
+				}
+			}
+
 			instanceFleetConfigSchema := func() *schema.Resource {
 				return &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -103,33 +137,8 @@ func resourceCluster() *schema.Resource {
 										Optional: true,
 										Computed: true,
 										ForceNew: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrIOPS: {
-													Type:     schema.TypeInt,
-													Optional: true,
-													ForceNew: true,
-												},
-												names.AttrSize: {
-													Type:     schema.TypeInt,
-													Required: true,
-													ForceNew: true,
-												},
-												names.AttrType: {
-													Type:         schema.TypeString,
-													Required:     true,
-													ForceNew:     true,
-													ValidateFunc: validEBSVolumeType(),
-												},
-												"volumes_per_instance": {
-													Type:     schema.TypeInt,
-													Optional: true,
-													ForceNew: true,
-													Default:  1,
-												},
-											},
-										},
-										Set: resourceClusterEBSHashConfig,
+										Elem:     ebsConfigurationSchema(),
+										Set:      resourceClusterEBSHashConfig,
 									},
 									names.AttrInstanceType: {
 										Type:     schema.TypeString,
@@ -356,38 +365,8 @@ func resourceCluster() *schema.Resource {
 								Optional: true,
 								Computed: true,
 								ForceNew: true,
-								Elem: &schema.Resource{
-									Schema: map[string]*schema.Schema{
-										names.AttrIOPS: {
-											Type:     schema.TypeInt,
-											Optional: true,
-											ForceNew: true,
-										},
-										names.AttrSize: {
-											Type:     schema.TypeInt,
-											Required: true,
-											ForceNew: true,
-										},
-										names.AttrThroughput: {
-											Type:     schema.TypeInt,
-											Optional: true,
-											ForceNew: true,
-										},
-										names.AttrType: {
-											Type:         schema.TypeString,
-											Required:     true,
-											ForceNew:     true,
-											ValidateFunc: validEBSVolumeType(),
-										},
-										"volumes_per_instance": {
-											Type:     schema.TypeInt,
-											Optional: true,
-											ForceNew: true,
-											Default:  1,
-										},
-									},
-								},
-								Set: resourceClusterEBSHashConfig,
+								Elem:     ebsConfigurationSchema(),
+								Set:      resourceClusterEBSHashConfig,
 							},
 							names.AttrID: {
 								Type:     schema.TypeString,
@@ -582,38 +561,8 @@ func resourceCluster() *schema.Resource {
 								Optional: true,
 								Computed: true,
 								ForceNew: true,
-								Elem: &schema.Resource{
-									Schema: map[string]*schema.Schema{
-										names.AttrIOPS: {
-											Type:     schema.TypeInt,
-											Optional: true,
-											ForceNew: true,
-										},
-										names.AttrSize: {
-											Type:     schema.TypeInt,
-											Required: true,
-											ForceNew: true,
-										},
-										names.AttrThroughput: {
-											Type:     schema.TypeInt,
-											Optional: true,
-											ForceNew: true,
-										},
-										names.AttrType: {
-											Type:         schema.TypeString,
-											Required:     true,
-											ForceNew:     true,
-											ValidateFunc: validEBSVolumeType(),
-										},
-										"volumes_per_instance": {
-											Type:     schema.TypeInt,
-											Optional: true,
-											ForceNew: true,
-											Default:  1,
-										},
-									},
-								},
-								Set: resourceClusterEBSHashConfig,
+								Elem:     ebsConfigurationSchema(),
+								Set:      resourceClusterEBSHashConfig,
 							},
 							names.AttrID: {
 								Type:     schema.TypeString,
@@ -766,11 +715,6 @@ func resourceCluster() *schema.Resource {
 					Optional: true,
 					Default:  false,
 				},
-				"visible_to_all_users": {
-					Type:     schema.TypeBool,
-					Optional: true,
-					Default:  true,
-				},
 			}
 		},
 	}
@@ -823,7 +767,9 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 			instanceGroup.Market = awstypes.MarketTypeSpot
 		}
 
-		expandEBSConfig(m, &instanceGroup)
+		if v, ok := m["ebs_config"].(*schema.Set); ok && v.Len() > 0 {
+			instanceGroup.EbsConfiguration = expandEBSConfiguration(v.List())
+		}
 
 		instanceConfig.InstanceGroups = append(instanceConfig.InstanceGroups, instanceGroup)
 	}
@@ -854,7 +800,9 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 			instanceGroup.Market = awstypes.MarketTypeSpot
 		}
 
-		expandEBSConfig(m, &instanceGroup)
+		if v, ok := m["ebs_config"].(*schema.Set); ok && v.Len() > 0 {
+			instanceGroup.EbsConfiguration = expandEBSConfiguration(v.List())
+		}
 
 		instanceConfig.InstanceGroups = append(instanceConfig.InstanceGroups, instanceGroup)
 	}
@@ -922,10 +870,9 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 		Name:         aws.String(name),
 		Applications: expandApplications(applications),
 
-		ReleaseLabel:      aws.String(d.Get("release_label").(string)),
-		ServiceRole:       aws.String(d.Get(names.AttrServiceRole).(string)),
-		VisibleToAllUsers: aws.Bool(d.Get("visible_to_all_users").(bool)),
-		Tags:              getTagsIn(ctx),
+		ReleaseLabel: aws.String(d.Get("release_label").(string)),
+		ServiceRole:  aws.String(d.Get(names.AttrServiceRole).(string)),
+		Tags:         getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("additional_info"); ok {
@@ -1122,7 +1069,6 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	d.Set("log_encryption_kms_key_id", cluster.LogEncryptionKmsKeyId)
 	d.Set("log_uri", cluster.LogUri)
 	d.Set("master_public_dns", cluster.MasterPublicDnsName)
-	d.Set("visible_to_all_users", cluster.VisibleToAllUsers)
 	d.Set("ebs_root_volume_size", cluster.EbsRootVolumeSize)
 	d.Set("scale_down_behavior", cluster.ScaleDownBehavior)
 	d.Set("termination_protection", cluster.TerminationProtected)
@@ -1211,19 +1157,6 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRClient(ctx)
-
-	if d.HasChange("visible_to_all_users") {
-		input := &emr.SetVisibleToAllUsersInput{
-			JobFlowIds:        []string{d.Id()},
-			VisibleToAllUsers: aws.Bool(d.Get("visible_to_all_users").(bool)),
-		}
-
-		_, err := conn.SetVisibleToAllUsers(ctx, input)
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating EMR Cluster (%s): setting visibility: %s", d.Id(), err)
-		}
-	}
 
 	if d.HasChange("auto_termination_policy") {
 		_, n := d.GetChange("auto_termination_policy")
@@ -1866,7 +1799,7 @@ func flattenEBSConfig(apiObjects []awstypes.EbsBlockDevice) *schema.Set {
 			tfMap[names.AttrSize] = int(aws.ToInt32(apiObject.VolumeSpecification.SizeInGB))
 		}
 		if apiObject.VolumeSpecification.Throughput != nil {
-			tfMap[names.AttrThroughput] = aws.ToInt32(apiObject.VolumeSpecification.Throughput)
+			tfMap[names.AttrThroughput] = int(aws.ToInt32(apiObject.VolumeSpecification.Throughput))
 		}
 		if apiObject.VolumeSpecification.VolumeType != nil {
 			tfMap[names.AttrType] = aws.ToString(apiObject.VolumeSpecification.VolumeType)
@@ -2000,37 +1933,6 @@ func expandStepConfigs(tfList []any) []awstypes.StepConfig {
 	}
 
 	return apiObjects
-}
-
-func expandEBSConfig(tfMap map[string]any, apiObject *awstypes.InstanceGroupConfig) {
-	if v, ok := tfMap["ebs_config"]; ok {
-		ebsConfig := &awstypes.EbsConfiguration{}
-		ebsBlockDeviceConfigs := make([]awstypes.EbsBlockDeviceConfig, 0)
-
-		for _, v := range v.(*schema.Set).List() {
-			tfMap := v.(map[string]any)
-			ebsBlockDeviceConfig := awstypes.EbsBlockDeviceConfig{
-				VolumesPerInstance: aws.Int32(int32(tfMap["volumes_per_instance"].(int))),
-				VolumeSpecification: &awstypes.VolumeSpecification{
-					SizeInGB:   aws.Int32(int32(tfMap[names.AttrSize].(int))),
-					VolumeType: aws.String(tfMap[names.AttrType].(string)),
-				},
-			}
-
-			if v, ok := tfMap[names.AttrThroughput].(int); ok && v != 0 {
-				ebsBlockDeviceConfig.VolumeSpecification.Throughput = aws.Int32(int32(v))
-			}
-			if v, ok := tfMap[names.AttrIOPS].(int); ok && v != 0 {
-				ebsBlockDeviceConfig.VolumeSpecification.Iops = aws.Int32(int32(v))
-			}
-
-			ebsBlockDeviceConfigs = append(ebsBlockDeviceConfigs, ebsBlockDeviceConfig)
-		}
-
-		ebsConfig.EbsBlockDeviceConfigs = ebsBlockDeviceConfigs
-
-		apiObject.EbsConfiguration = ebsConfig
-	}
 }
 
 func expandConfigurationJSON(tfString string) ([]awstypes.Configuration, error) {
@@ -2270,7 +2172,6 @@ func flattenSpotProvisioningSpecification(apiObject *awstypes.SpotProvisioningSp
 	return []any{tfMap}
 }
 
-// TODO
 func expandEBSConfiguration(ebsConfigurations []any) *awstypes.EbsConfiguration {
 	ebsConfig := &awstypes.EbsConfiguration{}
 	ebsConfigs := make([]awstypes.EbsBlockDeviceConfig, 0)
@@ -2320,7 +2221,7 @@ func expandInstanceTypeConfigs(tfList []any) []awstypes.InstanceTypeConfig {
 			apiObject.Configurations = expandConfigurations(v.List())
 		}
 
-		if v, ok := tfMap["ebs_config"].(*schema.Set); ok && v.Len() == 1 {
+		if v, ok := tfMap["ebs_config"].(*schema.Set); ok && v.Len() > 0 {
 			apiObject.EbsConfiguration = expandEBSConfiguration(v.List())
 		}
 
