@@ -69,6 +69,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `acceptRoleSessionName` - (Optional) Specifies whether a custom role session name will be accepted.
 * `durationSeconds` - (Optional) The number of seconds the vended session credentials are valid for. Defaults to 3600.
 * `enabled` - (Optional) Whether or not the Profile is enabled.
 * `managedPolicyArns` - (Optional) A list of managed policy ARNs that apply to the vended session credentials.
