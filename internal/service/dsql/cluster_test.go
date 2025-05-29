@@ -47,6 +47,7 @@ func TestAccDSQLCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "0"),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "dsql", regexache.MustCompile(`cluster/.+$`)),
+					resource.TestCheckResourceAttrSet(resourceName, "vpc_endpoint_service_name"),
 				),
 			},
 			{

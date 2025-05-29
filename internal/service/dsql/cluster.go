@@ -65,6 +65,12 @@ func (r *clusterResource) Schema(ctx context.Context, request resource.SchemaReq
 			names.AttrIdentifier: framework.IDAttribute(),
 			names.AttrTags:       tftags.TagsAttribute(),
 			names.AttrTagsAll:    tftags.TagsAttributeComputedOnly(),
+			"vpc_endpoint_service_name": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 		},
 		Blocks: map[string]schema.Block{
 			"multi_region_properties": schema.ListNestedBlock{
@@ -133,11 +139,22 @@ func (r *clusterResource) Create(ctx context.Context, request resource.CreateReq
 		return
 	}
 
-	if _, err := waitClusterCreated(ctx, conn, data.Identifier.ValueString(), r.CreateTimeout(ctx, data.Timeouts)); err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("waiting for Aurora DSQL Cluster (%s) create", data.Identifier.ValueString()), err.Error())
+	id := fwflex.StringValueFromFramework(ctx, data.Identifier)
+	if _, err := waitClusterCreated(ctx, conn, id, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for Aurora DSQL Cluster (%s) create", id), err.Error())
 
 		return
 	}
+
+	vpcEndpointServiceName, err := findVPCEndpointServiceNameByID(ctx, conn, id)
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("reading Aurora DSQL Cluster (%s) VPC endpoint service name", id), err.Error())
+
+		return
+	}
+
+	data.VPCEndpointServiceName = fwflex.StringToFramework(ctx, vpcEndpointServiceName)
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
@@ -151,7 +168,8 @@ func (r *clusterResource) Read(ctx context.Context, request resource.ReadRequest
 
 	conn := r.Meta().DSQLClient(ctx)
 
-	output, err := findClusterByID(ctx, conn, data.Identifier.ValueString())
+	id := fwflex.StringValueFromFramework(ctx, data.Identifier)
+	output, err := findClusterByID(ctx, conn, id)
 
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -161,7 +179,7 @@ func (r *clusterResource) Read(ctx context.Context, request resource.ReadRequest
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading Aurora DSQL Cluster (%s)", data.Identifier.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading Aurora DSQL Cluster (%s)", id), err.Error())
 
 		return
 	}
@@ -172,6 +190,16 @@ func (r *clusterResource) Read(ctx context.Context, request resource.ReadRequest
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	vpcEndpointServiceName, err := findVPCEndpointServiceNameByID(ctx, conn, id)
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("reading Aurora DSQL Cluster (%s) VPC endpoint service name", id), err.Error())
+
+		return
+	}
+
+	data.VPCEndpointServiceName = fwflex.StringToFramework(ctx, vpcEndpointServiceName)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -282,6 +310,30 @@ func findClusterByID(ctx context.Context, conn *dsql.Client, id string) (*dsql.G
 	return output, nil
 }
 
+func findVPCEndpointServiceNameByID(ctx context.Context, conn *dsql.Client, id string) (*string, error) {
+	input := dsql.GetVpcEndpointServiceNameInput{
+		Identifier: aws.String(id),
+	}
+	output, err := conn.GetVpcEndpointServiceName(ctx, &input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: &input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.ServiceName == nil {
+		return nil, tfresource.NewEmptyResultError(&input)
+	}
+
+	return output.ServiceName, nil
+}
+
 func statusCluster(ctx context.Context, conn *dsql.Client, id string) retry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findClusterByID(ctx, conn, id)
@@ -382,6 +434,7 @@ type clusterResourceModel struct {
 	Tags                      tftags.Map                                                  `tfsdk:"tags"`
 	TagsAll                   tftags.Map                                                  `tfsdk:"tags_all"`
 	Timeouts                  timeouts.Value                                              `tfsdk:"timeouts"`
+	VPCEndpointServiceName    types.String                                                `tfsdk:"vpc_endpoint_service_name"`
 }
 
 type multiRegionPropertiesModel struct {
