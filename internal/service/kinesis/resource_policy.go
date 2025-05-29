@@ -8,10 +8,8 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/kinesis"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/kinesis/types"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -28,7 +26,10 @@ import (
 )
 
 // @FrameworkResource("aws_kinesis_resource_policy", name="Resource Policy")
-// @ArnIdentity
+// @ArnIdentity("resource_arn")
+// @Testing(useAlternateAccount=true)
+// We need to ignore `policy` because the JSON body is not normalized
+// @Testing(importIgnore="policy")
 func newResourcePolicyResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourcePolicyResource{}
 
@@ -37,6 +38,7 @@ func newResourcePolicyResource(context.Context) (resource.ResourceWithConfigure,
 
 type resourcePolicyResource struct {
 	framework.ResourceWithModel[resourcePolicyResourceModel]
+	framework.WithImportByRegionalARN
 }
 
 func (r *resourcePolicyResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -212,40 +214,4 @@ type resourcePolicyResourceModel struct {
 
 func (data *resourcePolicyResourceModel) setID() {
 	data.ID = data.ResourceARN.StringValue
-}
-
-func (r *resourcePolicyResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	arnARN, err := arn.Parse(request.ID)
-	if err != nil {
-		response.Diagnostics.AddError(
-			"Invalid Resource Import ID Value",
-			"The import ID could not be parsed as an ARN.\n\n"+
-				fmt.Sprintf("Value: %q\nError: %s", request.ID, err),
-		)
-		return
-	}
-
-	var region types.String
-	response.Diagnostics.Append(response.State.GetAttribute(ctx, path.Root(names.AttrRegion), &region)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	if !region.IsNull() {
-		if region.ValueString() != arnARN.Region {
-			response.Diagnostics.AddError(
-				"Invalid Resource Import ID Value",
-				fmt.Sprintf("The region passed for import, %q, does not match the region %q in the ARN %q", region.ValueString(), arnARN.Region, request.ID),
-			)
-			return
-		}
-	} else {
-		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrRegion), arnARN.Region)...)
-		if response.Diagnostics.HasError() {
-			return
-		}
-	}
-
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrResourceARN), request.ID)...) // nosemgrep:ci.semgrep.framework.import-state-passthrough-id
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), request.ID)...)          // nosemgrep:ci.semgrep.framework.import-state-passthrough-id
 }
