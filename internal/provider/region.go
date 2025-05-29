@@ -5,36 +5,13 @@ package provider
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
-
-func validateRegionInPartition(ctx context.Context, c *conns.AWSClient, region string) error {
-	if got, want := names.PartitionForRegion(region).ID(), c.Partition(ctx); got != want {
-		return fmt.Errorf("partition (%s) for per-resource Region (%s) is not the provider's configured partition (%s)", got, region, want)
-	}
-
-	return nil
-}
-
-func validateInContextRegionInPartition(ctx context.Context, c *conns.AWSClient) error {
-	// Verify that the value of the top-level `region` attribute is in the configured AWS partition.
-	if inContext, ok := conns.FromContext(ctx); ok {
-		if v := inContext.OverrideRegion(); v != "" {
-			if err := validateRegionInPartition(ctx, c, v); err != nil {
-				return err
-			}
-		}
-	}
-
-	return nil
-}
 
 func resourceValidateRegion() customizeDiffInterceptor {
 	return interceptorFunc1[*schema.ResourceDiff, error](func(ctx context.Context, opts customizeDiffInterceptorOptions) error {
@@ -44,7 +21,7 @@ func resourceValidateRegion() customizeDiffInterceptor {
 		case Before:
 			switch why {
 			case CustomizeDiff:
-				return validateInContextRegionInPartition(ctx, c)
+				return c.ValidateInContextRegionInPartition(ctx)
 			}
 		}
 
@@ -62,7 +39,7 @@ func dataSourceValidateRegion() crudInterceptor {
 			switch why {
 			case Read:
 				// As data sources have no CustomizeDiff functionality, we validate the per-resource Region override value here.
-				if err := validateInContextRegionInPartition(ctx, c); err != nil {
+				if err := c.ValidateInContextRegionInPartition(ctx); err != nil {
 					return sdkdiag.AppendFromErr(diags, err)
 				}
 			}
