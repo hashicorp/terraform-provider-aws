@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/mapplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -88,12 +87,8 @@ func (r *userSettingsResource) Schema(ctx context.Context, request resource.Sche
 			},
 			"disconnect_timeout_in_minutes": schema.Int64Attribute{
 				Optional: true,
-				Computed: true,
 				Validators: []validator.Int64{
 					int64validator.Between(1, 600),
-				},
-				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.UseStateForUnknown(),
 				},
 			},
 			"download_allowed": schema.StringAttribute{
@@ -102,12 +97,8 @@ func (r *userSettingsResource) Schema(ctx context.Context, request resource.Sche
 			},
 			"idle_disconnect_timeout_in_minutes": schema.Int64Attribute{
 				Optional: true,
-				Computed: true,
 				Validators: []validator.Int64{
 					int64validator.Between(0, 60),
-				},
-				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.UseStateForUnknown(),
 				},
 			},
 			"paste_allowed": schema.StringAttribute{
