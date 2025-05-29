@@ -81,6 +81,17 @@ func testAccModelInvocationLoggingConfiguration_basic(t *testing.T) {
 	})
 }
 
+func testAccModelInvocationLoggingConfiguration_IdentitySerial(t *testing.T) {
+	t.Helper()
+
+	testCases := map[string]func(t *testing.T){
+		acctest.CtBasic:  testAccModelInvocationLoggingConfiguration_Identity_Basic,
+		"RegionOverride": testAccModelInvocationLoggingConfiguration_Identity_RegionOverride,
+	}
+
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
+
 func testAccModelInvocationLoggingConfiguration_Identity_Basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
