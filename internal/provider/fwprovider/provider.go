@@ -48,9 +48,9 @@ type fwprovider struct {
 	resources          []func() resource.Resource
 }
 
-// New returns a new, initialized Terraform Plugin Framework-style provider instance.
+// NewFrameworkProvider returns a new, initialized Terraform Plugin Framework-style provider instance.
 // The provider instance is fully configured once the `Configure` method has been called.
-func New(ctx context.Context, primary interface{ Meta() any }) (provider.Provider, error) {
+func NewFrameworkProvider(ctx context.Context, primary interface{ Meta() any }) (provider.Provider, error) {
 	log.Printf("Creating Terraform AWS Provider (Framework-style)...")
 
 	provider := &fwprovider{
