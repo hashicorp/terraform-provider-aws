@@ -35,7 +35,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "aws_shield_application_layer_automatic_response",
 			Name:     "Application Layer Automatic Response",
 			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
-			Identity: inttypes.GlobalARNIdentity(),
+			Identity: inttypes.GlobalARNIdentityNamed(names.AttrResourceARN),
 		},
 		{
 			Factory:  newDRTAccessLogBucketAssociationResource,
