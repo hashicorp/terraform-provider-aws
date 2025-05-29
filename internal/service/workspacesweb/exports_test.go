@@ -7,7 +7,9 @@ package workspacesweb
 var (
 	ResourceBrowserSettings = newBrowserSettingsResource
 	ResourceNetworkSettings = newNetworkSettingsResource
+	ResourceUserSettings    = newUserSettingsResource
 
 	FindBrowserSettingsByARN = findBrowserSettingsByARN
 	FindNetworkSettingsByARN = findNetworkSettingsByARN
+	FindUserSettingsByARN    = findUserSettingsByARN
 )

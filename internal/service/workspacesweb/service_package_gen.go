@@ -36,6 +36,14 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 				IdentifierAttribute: "network_settings_arn",
 			},
 		},
+		{
+			Factory:  newUserSettingsResource,
+			TypeName: "aws_workspacesweb_user_settings",
+			Name:     "User Settings",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "user_settings_arn",
+			},
+		},
 	}
 }
 
