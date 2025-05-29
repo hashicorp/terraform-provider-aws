@@ -10,6 +10,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/workspacesweb/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -28,6 +29,7 @@ func TestAccWorkSpacesWebNetworkSettings_basic(t *testing.T) {
 	subnetResourceName2 := "aws_subnet.test.1"
 	securityGroupResourceName1 := "aws_security_group.test.0"
 	securityGroupResourceName2 := "aws_security_group.test.1"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -40,16 +42,16 @@ func TestAccWorkSpacesWebNetworkSettings_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckNetworkSettingsDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNetworkSettingsConfig_basic(),
+				Config: testAccNetworkSettingsConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkSettingsExists(ctx, resourceName, &networkSettings),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, vpcResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
-					resource.TestCheckResourceAttrPair(resourceName, "subnet_ids.0", subnetResourceName1, names.AttrID),
-					resource.TestCheckResourceAttrPair(resourceName, "subnet_ids.1", subnetResourceName2, names.AttrID),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", subnetResourceName1, names.AttrID),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", subnetResourceName2, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "2"),
-					resource.TestCheckResourceAttrPair(resourceName, "security_group_ids.0", securityGroupResourceName1, names.AttrID),
-					resource.TestCheckResourceAttrPair(resourceName, "security_group_ids.1", securityGroupResourceName2, names.AttrID),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", securityGroupResourceName1, names.AttrID),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", securityGroupResourceName2, names.AttrID),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "network_settings_arn", "workspaces-web", regexache.MustCompile(`networkSettings/.+$`)),
 				),
 			},
@@ -57,7 +59,7 @@ func TestAccWorkSpacesWebNetworkSettings_basic(t *testing.T) {
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    testAccNetworkSettingsImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "network_settings_arn"),
 				ImportStateVerifyIdentifierAttribute: "network_settings_arn",
 			},
 		},
@@ -68,6 +70,7 @@ func TestAccWorkSpacesWebNetworkSettings_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var networkSettings awstypes.NetworkSettings
 	resourceName := "aws_workspacesweb_network_settings.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -80,7 +83,7 @@ func TestAccWorkSpacesWebNetworkSettings_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckNetworkSettingsDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNetworkSettingsConfig_basic(),
+				Config: testAccNetworkSettingsConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkSettingsExists(ctx, resourceName, &networkSettings),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfworkspacesweb.ResourceNetworkSettings, resourceName),
@@ -105,6 +108,7 @@ func TestAccWorkSpacesWebNetworkSettings_update(t *testing.T) {
 	securityGroupResourceName2 := "aws_security_group.test.1"
 	securityGroupResourceName3 := "aws_security_group.test2.0"
 	securityGroupResourceName4 := "aws_security_group.test2.1"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -117,43 +121,43 @@ func TestAccWorkSpacesWebNetworkSettings_update(t *testing.T) {
 		CheckDestroy:             testAccCheckNetworkSettingsDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNetworkSettingsConfig_basic(),
+				Config: testAccNetworkSettingsConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkSettingsExists(ctx, resourceName, &networkSettings),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, vpcResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
-					resource.TestCheckResourceAttrPair(resourceName, "subnet_ids.0", subnetResourceName1, names.AttrID),
-					resource.TestCheckResourceAttrPair(resourceName, "subnet_ids.1", subnetResourceName2, names.AttrID),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", subnetResourceName1, names.AttrID),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", subnetResourceName2, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "2"),
-					resource.TestCheckResourceAttrPair(resourceName, "security_group_ids.0", securityGroupResourceName1, names.AttrID),
-					resource.TestCheckResourceAttrPair(resourceName, "security_group_ids.1", securityGroupResourceName2, names.AttrID),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", securityGroupResourceName1, names.AttrID),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", securityGroupResourceName2, names.AttrID),
 				),
 			},
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    testAccNetworkSettingsImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "network_settings_arn"),
 				ImportStateVerifyIdentifierAttribute: "network_settings_arn",
 			},
 			{
-				Config: testAccNetworkSettingsConfig_updated(),
+				Config: testAccNetworkSettingsConfig_updated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkSettingsExists(ctx, resourceName, &networkSettings),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, vpcResourceName2, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
-					resource.TestCheckResourceAttrPair(resourceName, "subnet_ids.0", subnetResourceName3, names.AttrID),
-					resource.TestCheckResourceAttrPair(resourceName, "subnet_ids.1", subnetResourceName4, names.AttrID),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", subnetResourceName3, names.AttrID),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", subnetResourceName4, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "2"),
-					resource.TestCheckResourceAttrPair(resourceName, "security_group_ids.0", securityGroupResourceName3, names.AttrID),
-					resource.TestCheckResourceAttrPair(resourceName, "security_group_ids.1", securityGroupResourceName4, names.AttrID),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", securityGroupResourceName3, names.AttrID),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", securityGroupResourceName4, names.AttrID),
 				),
 			},
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    testAccNetworkSettingsImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "network_settings_arn"),
 				ImportStateVerifyIdentifierAttribute: "network_settings_arn",
 			},
 		},
@@ -207,25 +211,22 @@ func testAccCheckNetworkSettingsExists(ctx context.Context, n string, v *awstype
 	}
 }
 
-func testAccNetworkSettingsImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		return rs.Primary.Attributes["network_settings_arn"], nil
-	}
-}
-
-func testAccNetworkSettingsConfig_base() string {
-	return `
+func testAccNetworkSettingsConfig_base(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_vpc" "test2" {
   cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_subnet" "test" {
@@ -234,6 +235,10 @@ resource "aws_subnet" "test" {
   vpc_id            = aws_vpc.test.id
   cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
   availability_zone = data.aws_availability_zones.available.names[count.index]
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_subnet" "test2" {
@@ -242,34 +247,34 @@ resource "aws_subnet" "test2" {
   vpc_id            = aws_vpc.test2.id
   cidr_block        = cidrsubnet(aws_vpc.test2.cidr_block, 8, count.index)
   availability_zone = data.aws_availability_zones.available.names[count.index]
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_security_group" "test" {
   count = 2
 
   vpc_id = aws_vpc.test.id
-  name   = "test-sg-${count.index}"
+  name   = "%[1]s-1-${count.index}"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_security_group" "test2" {
   count = 2
 
   vpc_id = aws_vpc.test2.id
-  name   = "test-sg-${count.index}"
+  name   = "%[1]s-2-${count.index}"
+}
+`, rName))
 }
 
-data "aws_availability_zones" "available" {
-  state = "available"
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-`
-}
-
-func testAccNetworkSettingsConfig_basic() string {
-	return acctest.ConfigCompose(testAccNetworkSettingsConfig_base(), `
+func testAccNetworkSettingsConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccNetworkSettingsConfig_base(rName), `
 resource "aws_workspacesweb_network_settings" "test" {
   vpc_id             = aws_vpc.test.id
   subnet_ids         = [aws_subnet.test[0].id, aws_subnet.test[1].id]
@@ -278,8 +283,8 @@ resource "aws_workspacesweb_network_settings" "test" {
 `)
 }
 
-func testAccNetworkSettingsConfig_updated() string {
-	return acctest.ConfigCompose(testAccNetworkSettingsConfig_base(), `
+func testAccNetworkSettingsConfig_updated(rName string) string {
+	return acctest.ConfigCompose(testAccNetworkSettingsConfig_base(rName), `
 resource "aws_workspacesweb_network_settings" "test" {
   vpc_id             = aws_vpc.test2.id
   subnet_ids         = [aws_subnet.test2[0].id, aws_subnet.test2[1].id]

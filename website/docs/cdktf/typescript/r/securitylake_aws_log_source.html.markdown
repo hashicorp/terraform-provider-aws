@@ -49,7 +49,7 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
 * `source` - (Required) Specify the natively-supported AWS service to add as a source in Security Lake.
 
@@ -99,4 +99,4 @@ Using `terraform import`, import AWS log sources using the source name. For exam
 % terraform import aws_securitylake_aws_log_source.example ROUTE53
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-d0671d56ec0f1b461ed1d3587b88021e2af192929efe7344d891d30f21b64d4d -->
+<!-- cache-key: cdktf-0.20.8 input-8f9089a7179012818f709cf89d18e4fe8beae25cc39b1b4e61b4d497881e2b29 -->

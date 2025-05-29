@@ -47,7 +47,7 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
 - `destination` - (Required) The destination IP address. This must be either IPV4 or IPV6.
 - `destination_port` - (Optional) The port associated with the destination. This is required only if the protocol is TCP and must be a number between 1 and 65536.
@@ -55,9 +55,6 @@ The following arguments are required:
 - `protocol` - (Required) The protocol used for the network traffic between the source and destination. This must be either TCP or ICMP.
 - `source_arn` - (Required) The ARN of the subnet.
 - `packet_size` - (Optional) The size of the packets sent between the source and destination. This must be a number between 56 and 8500.
-
-The following arguments are optional:
-
 - `tags` - (Optional) Key-value tags for the monitor. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
@@ -93,4 +90,4 @@ Using `terraform import`, import `aws_networkmonitor_probe` using the monitor na
 % terraform import aws_networkmonitor_probe.example monitor-7786087912324693644,probe-3qm8p693i4fi1h8lqylzkbp42e
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-f1987f8bcc0a9f89d283ec20e4f26b9478e6776ec3b4d64018f27777a5ef1ac8 -->
+<!-- cache-key: cdktf-0.20.8 input-d0845b5e6fcfefc38bed533fc09622a5a23cc4e9544d7d976dc219c2ee6e7ca7 -->

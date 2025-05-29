@@ -7,8 +7,10 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/workspacesweb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/workspacesweb/types"
+	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -17,11 +19,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -45,6 +49,7 @@ func (r *browserSettingsResource) Schema(ctx context.Context, request resource.S
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"additional_encryption_context": schema.MapAttribute{
+				CustomType:  fwtypes.MapOfStringType,
 				ElementType: types.StringType,
 				Optional:    true,
 				PlanModifiers: []planmodifier.Map{
@@ -52,15 +57,16 @@ func (r *browserSettingsResource) Schema(ctx context.Context, request resource.S
 				},
 			},
 			"associated_portal_arns": schema.ListAttribute{
+				CustomType:  fwtypes.ListOfStringType,
 				ElementType: types.StringType,
 				Computed:    true,
-				Optional:    true,
 				PlanModifiers: []planmodifier.List{
 					listplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"browser_policy": schema.StringAttribute{
-				Required: true,
+				CustomType: jsontypes.NormalizedType{},
+				Required:   true,
 			},
 			"browser_settings_arn": schema.StringAttribute{
 				Computed: true,
@@ -96,6 +102,7 @@ func (r *browserSettingsResource) Create(ctx context.Context, request resource.C
 	}
 
 	// Additional fields.
+	input.ClientToken = aws.String(sdkid.UniqueId())
 	input.Tags = getTagsIn(ctx)
 
 	output, err := conn.CreateBrowserSettings(ctx, &input)
@@ -164,9 +171,7 @@ func (r *browserSettingsResource) Update(ctx context.Context, request resource.U
 
 	conn := r.Meta().WorkSpacesWebClient(ctx)
 
-	if !new.BrowserPolicy.Equal(old.BrowserPolicy) ||
-		!new.CustomerManagedKey.Equal(old.CustomerManagedKey) ||
-		!new.AdditionalEncryptionContext.Equal(old.AdditionalEncryptionContext) {
+	if !new.BrowserPolicy.Equal(old.BrowserPolicy) {
 		var input workspacesweb.UpdateBrowserSettingsInput
 		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
 		if response.Diagnostics.HasError() {
@@ -174,24 +179,12 @@ func (r *browserSettingsResource) Update(ctx context.Context, request resource.U
 		}
 
 		// Additional fields.
-		input.BrowserSettingsArn = fwflex.StringFromFramework(ctx, new.BrowserSettingsARN)
+		input.ClientToken = aws.String(sdkid.UniqueId())
 
 		_, err := conn.UpdateBrowserSettings(ctx, &input)
 
 		if err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("updating WorkSpacesWeb Browser Settings (%s)", new.BrowserSettingsARN.ValueString()), err.Error())
-			return
-		}
-
-		// Get the updated browser settings details
-		browserSettings, err := findBrowserSettingsByARN(ctx, conn, new.BrowserSettingsARN.ValueString())
-		if err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("reading WorkSpacesWeb Browser Settings (%s) after update", new.BrowserSettingsARN.ValueString()), err.Error())
-			return
-		}
-
-		response.Diagnostics.Append(fwflex.Flatten(ctx, browserSettings, &new)...)
-		if response.Diagnostics.HasError() {
 			return
 		}
 	}
@@ -253,11 +246,11 @@ func findBrowserSettingsByARN(ctx context.Context, conn *workspacesweb.Client, a
 }
 
 type browserSettingsResourceModel struct {
-	AdditionalEncryptionContext types.Map    `tfsdk:"additional_encryption_context"`
-	AssociatedPortalArns        types.List   `tfsdk:"associated_portal_arns"`
-	BrowserPolicy               types.String `tfsdk:"browser_policy"`
-	BrowserSettingsARN          types.String `tfsdk:"browser_settings_arn"`
-	CustomerManagedKey          types.String `tfsdk:"customer_managed_key"`
-	Tags                        tftags.Map   `tfsdk:"tags"`
-	TagsAll                     tftags.Map   `tfsdk:"tags_all"`
+	AdditionalEncryptionContext fwtypes.MapOfString  `tfsdk:"additional_encryption_context"`
+	AssociatedPortalARNs        fwtypes.ListOfString `tfsdk:"associated_portal_arns"`
+	BrowserPolicy               jsontypes.Normalized `tfsdk:"browser_policy"`
+	BrowserSettingsARN          types.String         `tfsdk:"browser_settings_arn"`
+	CustomerManagedKey          types.String         `tfsdk:"customer_managed_key"`
+	Tags                        tftags.Map           `tfsdk:"tags"`
+	TagsAll                     tftags.Map           `tfsdk:"tags_all"`
 }

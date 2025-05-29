@@ -27,9 +27,6 @@ resource "aws_docdbelastic_cluster" "example" {
 
 ## Argument Reference
 
-For more detailed documentation about each argument, refer to
-the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/reference/docdb-elastic/create-cluster.html).
-
 The following arguments are required:
 
 * `admin_user_name` - (Required) Name of the Elastic DocumentDB cluster administrator
@@ -48,6 +45,9 @@ The following arguments are optional:
 * `subnet_ids` - (Optional) IDs of subnets in which the Elastic DocumentDB Cluster operates.
 * `tags` - (Optional) A map of tags to assign to the collection. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpc_security_group_ids` - (Optional) List of VPC security groups to associate with the Elastic DocumentDB Cluster
+
+For more detailed documentation about each argument, refer to
+the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/reference/docdb-elastic/create-cluster.html).
 
 ## Attribute Reference
 

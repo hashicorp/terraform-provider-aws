@@ -85,7 +85,11 @@ This data source exports the following attributes in addition to the arguments a
         * `roleName` - The name of the IAM role to use for exporting.
         * `s3Bucket` - The name of the S3 bucket to store the exported image in.
         * `s3Prefix` - The prefix for the exported image.
+    * `ssmParameterConfiguration` - Nested list of SSM parameter configuration.
+        * `parameterName` - Name of the SSM parameter used to store the AMI ID after distribution.
+        * `amiAccountId` - The AWS account ID that own the parameter in the given region.
+        * `dataType` - The data type of the SSM parameter.
 * `name` - Name of the distribution configuration.
 * `tags` - Key-value map of resource tags for the distribution configuration.
 
-<!-- cache-key: cdktf-0.20.8 input-83f0acbb707f41c32025046dfe676b1233def3cdae09264d113c3926125191a8 -->
+<!-- cache-key: cdktf-0.20.8 input-1186cf748fcce165a86a86223e347a0d3d787713011b15bb0071a04e483dd470 -->
