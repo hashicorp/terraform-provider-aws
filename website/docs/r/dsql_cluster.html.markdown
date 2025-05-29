@@ -3,14 +3,12 @@ subcategory: "DSQL"
 layout: "aws"
 page_title: "AWS: aws_dsql_cluster"
 description: |-
-  Terraform resource for managing an AWS DSQL Cluster.
+  Terraform resource for managing an Amazon Aurora DSQL Cluster.
 ---
 
 # Resource: aws_dsql_cluster
 
-Terraform resource for managing an AWS DSQL Cluster.
-
-~> **NOTE:** This service is still in Preview, specific Preview [Service Terms](https://aws.amazon.com/service-terms/) and conditions apply.
+Terraform resource for managing an Amazon Aurora DSQL Cluster.
 
 ## Example Usage
 

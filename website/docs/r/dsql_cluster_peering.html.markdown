@@ -3,12 +3,12 @@ subcategory: "DSQL"
 layout: "aws"
 page_title: "AWS: aws_dsql_cluster_peering"
 description: |-
-  Terraform resource for managing an AWS DSQL Cluster Peering.
+  Terraform resource for managing an Amazon Aurora DSQL Cluster Peering.
 ---
 
 # Resource: aws_dsql_cluster_peering
 
-Terraform resource for managing an AWS DSQL Cluster Peering.
+Terraform resource for managing an Amazon Aurora DSQL Cluster Peering.
 
 ## Example Usage
 
