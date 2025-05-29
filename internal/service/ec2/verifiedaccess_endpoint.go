@@ -823,16 +823,21 @@ func expandCreateVerifiedAccessEndpointLoadBalancerOptions(tfMap map[string]any)
 		apiObject.LoadBalancerArn = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrPort].(int); ok {
-		apiObject.Port = aws.Int32(int32(v))
+	protocol := ""
+	if v, ok := tfMap[names.AttrProtocol].(string); ok && v != "" {
+		protocol = v
+		apiObject.Protocol = types.VerifiedAccessEndpointProtocol(v)
+	}
+
+	// Fix for issue #42654 - For protocol=TCP, only portRange can be set
+	if protocol != string(types.VerifiedAccessEndpointProtocolTcp) {
+		if v, ok := tfMap[names.AttrPort].(int); ok {
+			apiObject.Port = aws.Int32(int32(v))
+		}
 	}
 
 	if v, ok := tfMap["port_range"].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.PortRanges = expandCreateVerifiedAccessEndpointPortRanges(v.List())
-	}
-
-	if v, ok := tfMap[names.AttrProtocol].(string); ok && v != "" {
-		apiObject.Protocol = types.VerifiedAccessEndpointProtocol(v)
 	}
 
 	if v, ok := tfMap[names.AttrSubnetIDs].(*schema.Set); ok && v.Len() > 0 {
@@ -910,16 +915,21 @@ func expandModifyVerifiedAccessEndpointLoadBalancerOptions(tfMap map[string]any)
 
 	apiObject := &types.ModifyVerifiedAccessEndpointLoadBalancerOptions{}
 
-	if v, ok := tfMap[names.AttrPort].(int); ok {
-		apiObject.Port = aws.Int32(int32(v))
+	protocol := ""
+	if v, ok := tfMap[names.AttrProtocol].(string); ok && v != "" {
+		protocol = v
+		apiObject.Protocol = types.VerifiedAccessEndpointProtocol(v)
+	}
+
+	// Fix for issue #42654 - For protocol=TCP, only portRange can be set
+	if protocol != string(types.VerifiedAccessEndpointProtocolTcp) {
+		if v, ok := tfMap[names.AttrPort].(int); ok {
+			apiObject.Port = aws.Int32(int32(v))
+		}
 	}
 
 	if v, ok := tfMap["port_range"].(*schema.Set); ok {
 		apiObject.PortRanges = expandModifyVerifiedAccessEndpointPortRanges(v.List())
-	}
-
-	if v, ok := tfMap[names.AttrProtocol].(string); ok && v != "" {
-		apiObject.Protocol = types.VerifiedAccessEndpointProtocol(v)
 	}
 
 	if v, ok := tfMap[names.AttrSubnetIDs].(*schema.Set); ok && v.Len() > 0 {
