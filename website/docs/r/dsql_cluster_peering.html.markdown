@@ -46,10 +46,10 @@ resource "aws_dsql_cluster_peering" "example_2" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
-* `identifier` - (Required) DSQL Cluster Identifier.
 * `clusters` - (Required) List of DSQL Cluster ARNs to be peered to this cluster.
+* `identifier` - (Required) DSQL Cluster Identifier.
 * `witness_region` - (Required) Witness region for a multi-region cluster.
 
 ## Attribute Reference

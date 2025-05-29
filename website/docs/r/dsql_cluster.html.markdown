@@ -26,12 +26,9 @@ resource "aws_dsql_cluster" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
 * `deletion_protection_enabled` - (Required) Whether deletion protection is enabled in this cluster.
-
-The following arguments are optional:
-
 * `encryption_details` - (Optional) Encryption configuration details for the DSQL Cluster.
     * `kms_encryption_key` - (Optional) The ARN of the AWS KMS key that encrypts data in the DSQL Cluster.
 * `multi_region_properties` - (Optional) Multi-region properties of the DSQL Cluster.
