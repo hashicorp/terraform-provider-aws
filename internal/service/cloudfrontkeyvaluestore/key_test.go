@@ -88,9 +88,11 @@ func TestAccCloudFrontKeyValueStoreKey_Identity_Basic(t *testing.T) {
 					tfstatecheck.ExpectAttributeFormat(resourceName, tfjsonpath.New(names.AttrID), "{key_value_store_arn},{key}"),
 					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
 						names.AttrAccountID:   tfknownvalue.AccountID(),
-						"key_value_store_arn": knownvalue.NotNull(), // TODO: needs pair
-						names.AttrKey:         knownvalue.StringExact(rName),
+						"key_value_store_arn": knownvalue.NotNull(),
+						names.AttrKey:         knownvalue.NotNull(),
 					}),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("key_value_store_arn")),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrKey)),
 				},
 			},
 			{
@@ -103,6 +105,13 @@ func TestAccCloudFrontKeyValueStoreKey_Identity_Basic(t *testing.T) {
 				ResourceName:    resourceName,
 				ImportState:     true,
 				ImportStateKind: resource.ImportBlockWithID,
+				ImportPlanChecks: resource.ImportPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("key_value_store_arn"), knownvalue.NotNull()), // TODO: needs pair
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrKey), knownvalue.StringExact(rName)),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()), // TODO: needs tfplancheck.ExpectAttributeFormat
+					},
+				},
 			},
 			{
 				ResourceName:    resourceName,
@@ -271,14 +280,14 @@ func testAccCheckKeyExists(ctx context.Context, n string) resource.TestCheckFunc
 
 func testAccKeyConfig_basic(rName, value string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudfront_key_value_store" "test" {
-  name = %[1]q
-}
-
 resource "aws_cloudfrontkeyvaluestore_key" "test" {
   key                 = %[1]q
   key_value_store_arn = aws_cloudfront_key_value_store.test.arn
   value               = %[2]q
+}
+
+resource "aws_cloudfront_key_value_store" "test" {
+  name = %[1]q
 }
 `, rName, value)
 }
@@ -287,19 +296,19 @@ func testAccKeyConfig_mutex(rNames []string, rName, value string) string {
 	rNameJson, _ := json.Marshal(rNames)
 	rNameString := string(rNameJson)
 	return fmt.Sprintf(`
-locals {
-  key_list = %[1]s
+resource "aws_cloudfrontkeyvaluestore_key" "test" {
+  count               = length(local.key_list)
+  key                 = local.key_list[count.index]
+  key_value_store_arn = aws_cloudfront_key_value_store.test.arn
+  value               = %[3]q
 }
 
 resource "aws_cloudfront_key_value_store" "test" {
   name = %[2]q
 }
 
-resource "aws_cloudfrontkeyvaluestore_key" "test" {
-  count               = length(local.key_list)
-  key                 = local.key_list[count.index]
-  key_value_store_arn = aws_cloudfront_key_value_store.test.arn
-  value               = %[3]q
+locals {
+  key_list = %[1]s
 }
 `, rNameString, rName, value)
 }
