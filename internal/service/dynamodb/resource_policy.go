@@ -40,6 +40,7 @@ func newResourcePolicyResource(_ context.Context) (resource.ResourceWithConfigur
 
 type resourcePolicyResource struct {
 	framework.ResourceWithModel[resourcePolicyResourceModel]
+	framework.WithImportByRegionalARN
 }
 
 func (r *resourcePolicyResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
