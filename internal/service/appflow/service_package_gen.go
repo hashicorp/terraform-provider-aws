@@ -38,6 +38,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Identity: inttypes.ParameterizedIdentity(
 				inttypes.StringIdentityAttribute(names.AttrName, true),
 			),
+			Import: inttypes.Import{
+				WrappedImport: true,
+			},
 		},
 		{
 			Factory:  resourceFlow,
@@ -50,6 +53,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Identity: inttypes.ParameterizedIdentity(
 				inttypes.StringIdentityAttribute(names.AttrName, true),
 			),
+			Import: inttypes.Import{
+				WrappedImport: true,
+			},
 		},
 	}
 }
