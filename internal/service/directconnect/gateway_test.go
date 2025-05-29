@@ -78,20 +78,21 @@ func TestAccDirectConnectGateway_Identity_Basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
 					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
-						names.AttrID:        knownvalue.StringFunc(gateway_CheckID(&v)),
+						names.AttrID:        knownvalue.NotNull(),
 					}),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrID)),
 				},
 			},
 			{
+				ImportStateKind:   resource.ImportCommandWithID,
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateKind:   resource.ImportCommandWithID,
 				ImportStateVerify: true,
 			},
 			{
+				ImportStateKind: resource.ImportBlockWithID,
 				ResourceName:    resourceName,
 				ImportState:     true,
-				ImportStateKind: resource.ImportBlockWithID,
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
@@ -99,9 +100,9 @@ func TestAccDirectConnectGateway_Identity_Basic(t *testing.T) {
 				},
 			},
 			{
+				ImportStateKind: resource.ImportBlockWithResourceIdentity,
 				ResourceName:    resourceName,
 				ImportState:     true,
-				ImportStateKind: resource.ImportBlockWithResourceIdentity,
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),

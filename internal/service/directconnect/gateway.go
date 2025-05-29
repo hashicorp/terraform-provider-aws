@@ -30,6 +30,7 @@ import (
 // @Region(global=true)
 // @IdentityAttribute("id")
 // @WrappedImport
+// @Testing(identityTest=false)
 func resourceGateway() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGatewayCreate,
