@@ -43,11 +43,14 @@ resource.{{ if and .Serialize (not .SerializeParallelTests) }}Test{{ else }}Para
 		tfversion.SkipBelow(tfversion.Version1_12_0),
 	},
 	PreCheck:     func() { acctest.PreCheck(ctx, t)
+		{{- if gt (len .PreCheckRegions) 0 }}
+			acctest.PreCheckRegion(t, {{ range .PreCheckRegions}}{{ . }}, {{ end }})
+		{{- end -}}
 		{{- range .PreChecks }}
-		{{ .Code }}
+			{{ .Code }}
 		{{- end -}}
 		{{- range .PreChecksWithRegion }}
-		{{ .Code }}(ctx, t, acctest.Region())
+			{{ .Code }}(ctx, t, acctest.Region())
 		{{- end -}}
 	},
 	ErrorCheck:   acctest.ErrorCheck(t, names.{{ .PackageProviderNameUpper }}ServiceID),
@@ -59,11 +62,14 @@ TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 	tfversion.SkipBelow(tfversion.Version1_12_0),
 },
 PreCheck:     func() { acctest.PreCheck(ctx, t)
+	{{- if gt (len .PreCheckRegions) 0 }}
+		acctest.PreCheckAlternateRegion(t, {{ range .PreCheckRegions}}{{ . }}, {{ end }})
+	{{- end -}}
 	{{- range .PreChecks }}
-	{{ .Code }}
+		{{ .Code }}
 	{{ end -}}
 	{{- range .PreChecksWithRegion }}
-	{{ .Code }}(ctx, t, acctest.AlternateRegion())
+		{{ .Code }}(ctx, t, acctest.AlternateRegion())
 	{{- end -}}
 },
 ErrorCheck:   acctest.ErrorCheck(t, names.{{ .PackageProviderNameUpper }}ServiceID),

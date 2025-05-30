@@ -307,6 +307,7 @@ type ResourceDatum struct {
 	SerializeParallelTests      bool
 	PreChecks                   []codeBlock
 	PreChecksWithRegion         []codeBlock
+	PreCheckRegions             []string
 	GoImports                   []goImport
 	GenerateConfig              bool
 	InitCodeBlocks              []codeBlock
@@ -724,10 +725,8 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				}
 				if attr, ok := args.Keyword["preCheckRegion"]; ok {
 					regions := strings.Split(attr, ";")
-					d.PreChecks = append(d.PreChecks, codeBlock{
-						Code: fmt.Sprintf("acctest.PreCheckRegion(t, %s)", strings.Join(tfslices.ApplyToAll(regions, func(s string) string {
-							return endpointsConstOrQuote(s)
-						}), ", ")),
+					d.PreCheckRegions = tfslices.ApplyToAll(regions, func(s string) string {
+						return endpointsConstOrQuote(s)
 					})
 					d.GoImports = append(d.GoImports,
 						goImport{
