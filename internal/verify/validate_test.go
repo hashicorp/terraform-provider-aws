@@ -174,6 +174,33 @@ func TestValidAccountID(t *testing.T) {
 	}
 }
 
+func TestValidRegionName(t *testing.T) {
+	t.Parallel()
+
+	validNames := []string{
+		"mx-central-1",
+		"us-isof-south-1",
+	}
+	for _, v := range validNames {
+		_, errors := ValidRegionName(v, "region")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid AWS Region: %q", v, errors)
+		}
+	}
+
+	invalidNames := []string{
+		"invalid",
+		"k@rea-central-1",
+		"ca-west-123",
+	}
+	for _, v := range invalidNames {
+		_, errors := ValidRegionName(v, "region")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be an invalid AWS Region", v)
+		}
+	}
+}
+
 func TestValidARN(t *testing.T) {
 	t.Parallel()
 
