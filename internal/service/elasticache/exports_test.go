@@ -41,7 +41,7 @@ var (
 	EngineVersionIsDowngrade                  = engineVersionIsDowngrade
 	GlobalReplicationGroupRegionPrefixFormat  = globalReplicationGroupRegionPrefixFormat
 	NormalizeEngineVersion                    = normalizeEngineVersion
-	ParamGroupNameRequiresMajorVersionUpgrade = paramGroupNameRequiresMajorVersionUpgrade
+	ParamGroupNameRequiresMajorVersionUpgrade = paramGroupNameRequiresEngineOrMajorVersionUpgrade
 	ValidateClusterEngineVersion              = validateClusterEngineVersion
 	ValidMemcachedVersionString               = validMemcachedVersionString
 	ValidRedisVersionString                   = validRedisVersionString
