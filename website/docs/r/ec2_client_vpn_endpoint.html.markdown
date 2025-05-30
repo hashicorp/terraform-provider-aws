@@ -36,7 +36,7 @@ resource "aws_ec2_client_vpn_endpoint" "example" {
 
 This resource supports the following arguments:
 
-* `authentication_options` - (Required) Information about the authentication method to be used to authenticate clients.
+* `authentication_options` - (Required) Information about the authentication method(s) to be used to authenticate clients.  If using a combination of mutual authentication and federated or Active Directory authentication, create an `authentication_options` block for each authentication type.
 * `client_cidr_block` - (Required) The IPv4 address range, in CIDR notation, from which to assign client IP addresses. The address range cannot overlap with the local CIDR of the VPC in which the associated subnet is located, or the routes that you add manually. The address range cannot be changed after the Client VPN endpoint has been created. The CIDR block should be /22 or greater.
 * `client_connect_options` - (Optional) The options for managing connection authorization for new client connections.
 * `client_login_banner_options` - (Optional) Options for enabling a customizable text banner that will be displayed on AWS provided clients when a VPN session is established.
@@ -57,13 +57,17 @@ This resource supports the following arguments:
 
 ### `authentication_options` Argument Reference
 
-One of the following arguments must be supplied:
+The following arguments are required:
+
+* `type` - (Required) The type of client authentication to be used. Only one `type` can be defined per `authentication_options` block, up to 2 `authentication_options` blocks can be used, one _must_ be of `type` `certificate-authentication`.  Specify `certificate-authentication` to use certificate-based authentication, `directory-service-authentication` to use Active Directory authentication, or `federated-authentication` to use Federated Authentication via SAML 2.0.
+
+The following arguments are optional, unless required by the `type` defined:
 
 * `active_directory_id` - (Optional) The ID of the Active Directory to be used for authentication if type is `directory-service-authentication`.
 * `root_certificate_chain_arn` - (Optional) The ARN of the client certificate. The certificate must be signed by a certificate authority (CA) and it must be provisioned in AWS Certificate Manager (ACM). Only necessary when type is set to `certificate-authentication`.
 * `saml_provider_arn` - (Optional) The ARN of the IAM SAML identity provider if type is `federated-authentication`.
 * `self_service_saml_provider_arn` - (Optional) The ARN of the IAM SAML identity provider for the self service portal if type is `federated-authentication`.
-* `type` - (Required) The type of client authentication to be used. Specify `certificate-authentication` to use certificate-based authentication, `directory-service-authentication` to use Active Directory authentication, or `federated-authentication` to use Federated Authentication via SAML 2.0.
+
 
 ### `client_connect_options` Argument reference
 
