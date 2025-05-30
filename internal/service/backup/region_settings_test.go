@@ -224,31 +224,3 @@ resource "aws_backup_region_settings" "test" {
 }
 `
 }
-
-// func testAccRegionSettingsConfig_regionOverride() string {
-// 	return fmt.Sprintf(`
-// resource "aws_backup_region_settings" "test" {
-//   region = %[1]q
-
-//   resource_type_opt_in_preference = {
-//     "Aurora"                 = true
-//     "CloudFormation"         = true
-//     "DocumentDB"             = true
-//     "DynamoDB"               = true
-//     "EBS"                    = true
-//     "EC2"                    = true
-//     "EFS"                    = true
-//     "FSx"                    = true
-//     "Neptune"                = true
-//     "RDS"                    = true
-//     "Redshift"               = true
-//     "Redshift Serverless"    = true
-//     "S3"                     = true
-//     "SAP HANA on Amazon EC2" = true
-//     "Storage Gateway"        = true
-//     "Timestream"             = true
-//     "VirtualMachine"         = true
-//   }
-// }
-// `, acctest.AlternateRegion())
-// }
