@@ -539,6 +539,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				}
 				d.IdentityAttributes = append(d.IdentityAttributes, namesgen.ConstOrQuote(args.Positional[0]))
 
+			case "SingletonIdentity":
+				hasIdentity = true
+				d.isSingleton = true
+
 			case "ArnFormat":
 				args := common.ParseArgs(m[3])
 				d.ARNFormat = args.Positional[0]
