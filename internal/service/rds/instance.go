@@ -1961,17 +1961,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 		if disableMasterUserPasswordRotation && instance.MasterUserSecret != nil {
 			if v := instance.MasterUserSecret.SecretArn; v != nil {
 				secretsManagerClient := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
-				_, err := secretsManagerClient.CancelRotateSecret(ctx, &secretsmanager.CancelRotateSecretInput{
-					SecretId: v,
-				})
-
-				if err != nil && !tfresource.NotFound(err) {
-					diags = sdkdiag.AppendWarningf(diags, "failed to cancel rotation for secret (%s): %s.", aws.ToString(v), err)
-				} else {
-					tflog.Debug(ctx, "Successfully cancelled master user password rotation", map[string]interface{}{
-						"secret_id": aws.ToString(v),
-					})
-				}
+				diags = cancelSecretRotation(ctx, secretsManagerClient, v, diags)
 			}
 		}
 	}
@@ -2388,8 +2378,33 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 					// Attempted change, but update error as it's a stopped instance, so revert to original value
 					old, _ := d.GetChange("manage_master_user_password")
 					d.Set("manage_master_user_password", old.(bool))
+					old, _ = d.GetChange("disable_master_user_password_rotation")
+					d.Set("disable_master_user_password_rotation", old.(bool))
 				}
 				return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): %s", d.Get(names.AttrIdentifier).(string), err)
+			}
+		}
+	}
+
+	// Separate request to delete managed secret password rotation
+	if d.HasChange("disable_master_user_password_rotation") {
+		if manageMasterUserPassword, ok := d.GetOk("manage_master_user_password"); ok {
+			old, new := d.GetChange("disable_master_user_password_rotation")
+
+			if manageMasterUserPassword.(bool) && !old.(bool) && new.(bool) {
+
+				if v, ok := d.GetOk("master_user_secret"); ok {
+					musList := v.([]any)
+
+					if len(musList) > 0 && musList[0] != nil {
+						mus := musList[0].(map[string]any)
+
+						if secretArn, ok := mus["secret_arn"]; ok {
+							secretsManagerClient := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
+							diags = cancelSecretRotation(ctx, secretsManagerClient, aws.String(secretArn.(string)), diags)
+						}
+					}
+				}
 			}
 		}
 	}
@@ -3303,4 +3318,20 @@ func instanceReplicateSourceDBSuppressDiff(_, old, new string, _ *schema.Resourc
 		}
 	}
 	return false
+}
+
+func cancelSecretRotation(ctx context.Context, conn *secretsmanager.Client, secretId *string, diags diag.Diagnostics) diag.Diagnostics {
+	_, err := conn.CancelRotateSecret(ctx, &secretsmanager.CancelRotateSecretInput{
+		SecretId: secretId,
+	})
+
+	if err != nil && !tfresource.NotFound(err) {
+		diags = sdkdiag.AppendWarningf(diags, "failed to cancel rotation for secret (%s): %s.", aws.ToString(secretId), err)
+	} else {
+		tflog.Debug(ctx, "Successfully cancelled master user password rotation", map[string]any{
+			"secret_id": aws.ToString(secretId),
+		})
+	}
+
+	return diags
 }
