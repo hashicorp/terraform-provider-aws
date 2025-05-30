@@ -4,18 +4,17 @@
 package vcr
 
 import (
-	"errors"
 	"net/url"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 )
 
 // InteractionNotFoundRetryableFunc is a retryable function to augment retry behavior for AWS service clients
 // when VCR testing is enabled
 var InteractionNotFoundRetryableFunc = func(err error) aws.Ternary {
-	var urlError *url.Error
-	if errors.As(err, &urlError) && strings.Contains(err.Error(), "requested interaction not found") {
+	if errs.IsA[*url.Error](err) && strings.Contains(err.Error(), "requested interaction not found") {
 		return aws.FalseTernary
 	}
 	return aws.UnknownTernary // Delegate to configured Retryer.
