@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"iter"
 	"log"
 	"slices"
 
@@ -46,6 +47,7 @@ type frameworkProvider struct {
 	ephemeralResources []func() ephemeral.EphemeralResource
 	primary            interface{ Meta() any }
 	resources          []func() resource.Resource
+	servicePackages    iter.Seq[conns.ServicePackage]
 }
 
 // New returns a new, initialized Terraform Plugin Framework-style provider instance.
@@ -58,6 +60,7 @@ func New(ctx context.Context, primary interface{ Meta() any }) (provider.Provide
 		ephemeralResources: make([]func() ephemeral.EphemeralResource, 0),
 		primary:            primary,
 		resources:          make([]func() resource.Resource, 0),
+		servicePackages:    primary.Meta().(*conns.AWSClient).ServicePackages(ctx),
 	}
 
 	// Acceptance tests call this function multiple times, potentially in parallel.
@@ -392,7 +395,7 @@ func (p *frameworkProvider) initialize(ctx context.Context) error {
 
 	var errs []error
 
-	for _, sp := range servicePackages(ctx) {
+	for sp := range p.servicePackages {
 		servicePackageName := sp.ServicePackageName()
 
 		for _, v := range sp.FrameworkDataSources(ctx) {
@@ -596,7 +599,7 @@ func (p *frameworkProvider) initialize(ctx context.Context) error {
 func (p *frameworkProvider) validateResourceSchemas(ctx context.Context) error {
 	var errs []error
 
-	for _, sp := range servicePackages(ctx) {
+	for sp := range p.servicePackages {
 		for _, v := range sp.FrameworkDataSources(ctx) {
 			typeName := v.TypeName
 			ds, err := v.Factory(ctx)

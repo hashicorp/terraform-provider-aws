@@ -7,9 +7,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"iter"
 	"log"
 	"maps"
 	"os"
+	"slices"
 	"strings"
 	"time"
 
@@ -38,7 +40,8 @@ var (
 )
 
 type sdkProvider struct {
-	provider *schema.Provider
+	provider        *schema.Provider
+	servicePackages iter.Seq2[int, conns.ServicePackage]
 }
 
 // New returns a new, initialized Terraform Plugin SDK v2-style provider instance.
@@ -274,6 +277,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			DataSourcesMap: make(map[string]*schema.Resource),
 			ResourcesMap:   make(map[string]*schema.Resource),
 		},
+		servicePackages: slices.All(servicePackages(ctx)),
 	}
 
 	sdkProvider.provider.ConfigureContextFunc = sdkProvider.configure
@@ -513,7 +517,7 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 	var errs []error
 	servicePackageMap := make(map[string]conns.ServicePackage)
 
-	for _, sp := range servicePackages(ctx) {
+	for _, sp := range p.servicePackages {
 		servicePackageName := sp.ServicePackageName()
 		servicePackageMap[servicePackageName] = sp
 
@@ -764,7 +768,7 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 func (p *sdkProvider) validateResourceSchemas(ctx context.Context) error {
 	var errs []error
 
-	for _, sp := range servicePackages(ctx) {
+	for _, sp := range p.servicePackages {
 		for _, v := range sp.SDKDataSources(ctx) {
 			typeName := v.TypeName
 			r := v.Factory()

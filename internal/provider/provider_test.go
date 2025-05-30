@@ -4,7 +4,6 @@
 package provider
 
 import (
-	"context"
 	"os"
 	"strings"
 	"testing"
@@ -20,8 +19,9 @@ import (
 
 // go test -bench=BenchmarkSDKProviderInitialization -benchmem -run=Bench -v ./internal/provider
 func BenchmarkSDKProviderInitialization(b *testing.B) {
+	ctx := b.Context()
 	for b.Loop() {
-		_, err := New(context.Background())
+		_, err := New(ctx)
 		if err != nil {
 			b.Fatal(err)
 		}
@@ -31,7 +31,8 @@ func BenchmarkSDKProviderInitialization(b *testing.B) {
 func TestProvider(t *testing.T) {
 	t.Parallel()
 
-	p, err := New(context.Background())
+	ctx := t.Context()
+	p, err := New(ctx)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -50,7 +51,7 @@ func TestExpandEndpoints(t *testing.T) { //nolint:paralleltest
 
 	var expectedDiags diag.Diagnostics
 
-	ctx := context.Background()
+	ctx := t.Context()
 	endpoints := make(map[string]any)
 	for _, serviceKey := range names.Aliases() {
 		endpoints[serviceKey] = ""
@@ -72,7 +73,7 @@ func TestExpandEndpoints(t *testing.T) { //nolint:paralleltest
 }
 
 func TestEndpointMultipleKeys(t *testing.T) { //nolint:paralleltest
-	ctx := context.Background()
+	ctx := t.Context()
 	testcases := []struct {
 		endpoints        map[string]string
 		expectedService  string
@@ -136,7 +137,7 @@ func TestEndpointMultipleKeys(t *testing.T) { //nolint:paralleltest
 }
 
 func TestEndpointEnvVarPrecedence(t *testing.T) { //nolint:paralleltest
-	ctx := context.Background()
+	ctx := t.Context()
 	testcases := map[string]struct {
 		endpoints        map[string]string
 		envvars          map[string]string
@@ -232,7 +233,7 @@ func TestEndpointEnvVarPrecedence(t *testing.T) { //nolint:paralleltest
 }
 
 func TestExpandDefaultTags(t *testing.T) { //nolint:paralleltest
-	ctx := context.Background()
+	ctx := t.Context()
 	testcases := map[string]struct {
 		tags                  map[string]any
 		envvars               map[string]string
@@ -309,7 +310,7 @@ func TestExpandDefaultTags(t *testing.T) { //nolint:paralleltest
 }
 
 func TestExpandIgnoreTags(t *testing.T) { //nolint:paralleltest
-	ctx := context.Background()
+	ctx := t.Context()
 	testcases := map[string]struct {
 		keys                 []any
 		keyPrefixes          []any

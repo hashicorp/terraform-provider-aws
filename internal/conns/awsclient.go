@@ -6,6 +6,7 @@ package conns
 import (
 	"context"
 	"fmt"
+	"iter"
 	"maps"
 	"net/http"
 	"os"
@@ -48,16 +49,20 @@ func (c *AWSClient) SetServicePackages(_ context.Context, servicePackages map[st
 	c.servicePackages = maps.Clone(servicePackages)
 }
 
-func (c *AWSClient) TerraformVersion(_ context.Context) string {
-	return c.terraformVersion
-}
-
 func (c *AWSClient) ServicePackage(_ context.Context, name string) ServicePackage {
 	sp, ok := c.servicePackages[name]
 	if !ok {
 		return nil
 	}
 	return sp
+}
+
+func (c *AWSClient) ServicePackages(_ context.Context) iter.Seq[ServicePackage] {
+	return maps.Values(c.servicePackages)
+}
+
+func (c *AWSClient) TerraformVersion(_ context.Context) string {
+	return c.terraformVersion
 }
 
 // CredentialsProvider returns the AWS SDK for Go v2 credentials provider.
