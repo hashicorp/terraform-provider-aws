@@ -63,7 +63,7 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
 * `name` - (Required) Name of the virtual gateway.
 * `meshName` - (Required) Name of the service mesh in which the virtual gateway exists.
@@ -80,4 +80,4 @@ This data source exports the following attributes in addition to the arguments a
 * `spec` - Virtual gateway specification. See the [`aws_appmesh_virtual_gateway`](/docs/providers/aws/r/appmesh_virtual_gateway.html#spec) resource for details.
 * `tags` - Map of tags.
 
-<!-- cache-key: cdktf-0.20.8 input-0718ca0daccbac34456cd844e6da67d862a2fb170384a17adc5ef579da918516 -->
+<!-- cache-key: cdktf-0.20.8 input-aad51ff5a56bdb271724bccbfa270ea44671041e69a32391eb8513b8aea5ceec -->

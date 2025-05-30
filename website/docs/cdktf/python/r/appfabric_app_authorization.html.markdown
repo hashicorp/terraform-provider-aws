@@ -49,7 +49,7 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
 * `app` - (Required) The name of the application for valid values see https://docs.aws.amazon.com/appfabric/latest/api/API_CreateAppAuthorization.html.
 * `app_bundle_arn` - (Required) The Amazon Resource Name (ARN) of the app bundle to use for the request.
@@ -93,4 +93,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `update` - (Default `30m`)
 * `delete` - (Default `30m`)
 
-<!-- cache-key: cdktf-0.20.8 input-185fc3ed6507e30f12379248e7a91da12deca85dbf5a5fad8e63b1e4e16d1667 -->
+<!-- cache-key: cdktf-0.20.8 input-5e769b1223e88e96abfebe317ec0b00300b370da3c2f524bfc9c2220b75c40d7 -->

@@ -31,6 +31,7 @@ func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,
 		"Unsupported field 'inferenceAccelerators'",
 		"Encountered 'VolumeTypeNotAvailableInZone' error from AmazonEC2",
+		`Encountered 'InvalidRequest' error from AmazonEC2: "The specified zone does not support creating volumes with volume initialization rate."`,
 	)
 }
 

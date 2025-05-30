@@ -48,7 +48,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `awsAccountId` - (Optional) AWS account ID. Defaults to the account of the caller identity if not configured.
-* `namespace` - (Required) Name of the namespace. Defaults to `default`.
+* `namespace` - (Optional) Name of the namespace. Defaults to `default`.
 
 ## Attribute Reference
 
@@ -86,4 +86,4 @@ Using `terraform import`, import QuickSight Role Membership using a comma-delimi
 % terraform import aws_quicksight_role_membership.example 012345678901,default,READER,example-group
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-89a5ea8811426208a6bfc05cab5683ee8e804533f659fb3519dc22b237d52ec5 -->
+<!-- cache-key: cdktf-0.20.8 input-8bd81a76aab1da2a0e073212460d63d2f9cf19ba49cc7d74149b4032cf742100 -->

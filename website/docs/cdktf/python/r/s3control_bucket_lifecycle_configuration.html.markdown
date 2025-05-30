@@ -55,7 +55,7 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
 * `bucket` - (Required) Amazon Resource Name (ARN) of the bucket.
 * `rule` - (Required) Configuration block(s) containing lifecycle rules for the bucket.
@@ -102,4 +102,4 @@ Using `terraform import`, import S3 Control Bucket Lifecycle Configurations usin
 % terraform import aws_s3control_bucket_lifecycle_configuration.example arn:aws:s3-outposts:us-east-1:123456789012:outpost/op-12345678/bucket/example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-edd708f39cae61085d23015d0a484630286f25fd5088717d8cc3d17bdb735870 -->
+<!-- cache-key: cdktf-0.20.8 input-cff097a985740d959ada59c57dcd5daa70244019ab4e881ed525e73b6b61ffab -->

@@ -217,9 +217,6 @@ You must choose one or the other
 
 ## Argument Reference
 
-See [related part of AWS Docs](https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_PutMetricAlarm.html)
-for details about valid values.
-
 This resource supports the following arguments:
 
 * `alarm_name` - (Required) The descriptive name for the alarm. This name must be unique within the user's AWS account
@@ -251,6 +248,9 @@ This resource supports the following arguments:
 The following values are supported: `ignore`, and `evaluate`.
 * `metric_query` (Optional) Enables you to create an alarm based on a metric math expression. You may specify at most 20.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+See [related part of AWS Docs](https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_PutMetricAlarm.html)
+for details about valid values.
 
 ~> **NOTE:**  If you specify at least one `metric_query`, you may not specify a `metric_name`, `namespace`, `period` or `statistic`. If you do not specify a `metric_query`, you must specify each of these (although you may use `extended_statistic` instead of `statistic`).
 
@@ -317,4 +317,4 @@ Using `terraform import`, import CloudWatch Metric Alarm using the `alarm_name`.
 % terraform import aws_cloudwatch_metric_alarm.test alarm-12345
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-475fa44a8de1c676d1dbd3a9b5c288149792b63a6235f447bf2a199f2be6dbfd -->
+<!-- cache-key: cdktf-0.20.8 input-0f6f1aba0c78d5f249b1be2fded305156195f80e46633b47c58ef85a24215499 -->
