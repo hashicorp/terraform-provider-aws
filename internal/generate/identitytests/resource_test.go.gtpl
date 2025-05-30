@@ -266,7 +266,7 @@ func {{ template "testname" . }}_Identity_Basic(t *testing.T) {
 					{{ end -}}
 					{{ if .ArnIdentity -}}
 						statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .ARNAttribute }})),
-					{{ else if .IsRegionalSingleton }}
+					{{ else if .IsRegionalSingleton -}}
 						statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrRegion)),
 					{{ else -}}
 						statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
@@ -380,7 +380,7 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
 					{{ if .ArnIdentity -}}
 						statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .ARNAttribute }})),
-					{{ else if .IsRegionalSingleton }}
+					{{ else if .IsRegionalSingleton -}}
 						statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrRegion)),
 					{{ else -}}
 						statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
