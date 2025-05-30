@@ -62,7 +62,7 @@ func TestAccDSQLCluster_basic(t *testing.T) {
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"encryption_status": tfknownvalue.StringExact(awstypes.EncryptionStatusEnabled),
 							"encryption_type":   tfknownvalue.StringExact(awstypes.EncryptionTypeAwsOwnedKmsKey),
-							names.AttrKMSKeyARN:       knownvalue.Null(), // KMS Key ARN is not set for AWS-owned KMS key
+							names.AttrKMSKeyARN: knownvalue.Null(), // KMS Key ARN is not set for AWS-owned KMS key
 						}),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
