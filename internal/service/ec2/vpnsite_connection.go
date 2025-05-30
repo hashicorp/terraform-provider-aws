@@ -92,6 +92,16 @@ func resourceVPNConnection() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.StringInSlice(outsideIPAddressType_Values(), false),
 			},
+			"preshared_key_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"preshared_key_storage": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice([]string{"Standard", "SecretsManager"}, false),
+			},
 			"remote_ipv4_network_cidr": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -692,6 +702,10 @@ func resourceVPNConnectionCreate(ctx context.Context, d *schema.ResourceData, me
 		input.VpnGatewayId = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("preshared_key_storage"); ok {
+		input.PreSharedKeyStorage = aws.String(v.(string))
+	}
+
 	output, err := conn.CreateVpnConnection(ctx, &input)
 
 	if err != nil {
@@ -735,6 +749,7 @@ func resourceVPNConnectionRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("core_network_arn", vpnConnection.CoreNetworkArn)
 	d.Set("core_network_attachment_arn", vpnConnection.CoreNetworkAttachmentArn)
 	d.Set("customer_gateway_id", vpnConnection.CustomerGatewayId)
+	d.Set("preshared_key_arn", vpnConnection.PreSharedKeyArn)
 	d.Set(names.AttrType, vpnConnection.Type)
 	d.Set("vpn_gateway_id", vpnConnection.VpnGatewayId)
 
@@ -842,6 +857,11 @@ func resourceVPNConnectionRead(ctx context.Context, d *schema.ResourceData, meta
 		d.Set("tunnel2_vgw_inside_address", nil)
 	}
 
+	if tunnelInfo != nil && regexache.MustCompile("REDACTED").MatchString(tunnelInfo.Tunnel1PreSharedKey) {
+		d.Set("preshared_key_storage", "SecretsManager")
+	} else {
+		d.Set("preshared_key_storage", "Standard")
+	}
 	return diags
 }
 
@@ -910,13 +930,21 @@ func resourceVPNConnectionUpdate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	for i, prefix := range []string{"tunnel1_", "tunnel2_"} {
-		if options, address := expandModifyVPNTunnelOptionsSpecification(d, prefix), d.Get(prefix+names.AttrAddress).(string); options != nil && address != "" {
+		if options, address := expandModifyVPNTunnelOptionsSpecification(d, prefix), d.Get(prefix+names.AttrAddress).(string); (options != nil || d.HasChange("preshared_key_storage")) && address != "" {
 			input := ec2.ModifyVpnTunnelOptionsInput{
-				TunnelOptions:             options,
 				VpnConnectionId:           aws.String(d.Id()),
 				VpnTunnelOutsideIpAddress: aws.String(address),
 			}
 
+			if options != nil {
+				input.TunnelOptions = options
+			} else {
+				input.TunnelOptions = &awstypes.ModifyVpnTunnelOptionsSpecification{}
+			}
+
+			if d.HasChange("preshared_key_storage") {
+				input.PreSharedKeyStorage = aws.String(d.Get("preshared_key_storage").(string))
+			}
 			_, err := conn.ModifyVpnTunnelOptions(ctx, &input)
 
 			if err != nil {
