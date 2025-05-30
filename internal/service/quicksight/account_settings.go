@@ -47,7 +47,7 @@ const (
 )
 
 type accountSettingsResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[accountSettingsResourceModel]
 	framework.WithNoOpDelete
 	framework.WithTimeouts
 }
