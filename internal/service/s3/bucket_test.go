@@ -270,6 +270,7 @@ func TestAccS3Bucket_Basic_emptyString(t *testing.T) {
 					testAccCheckBucketExists(ctx, resourceName),
 					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrBucket),
 					resource.TestCheckResourceAttr(resourceName, names.AttrBucketPrefix, id.UniqueIdPrefix),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrBucket),
 				),
 			},
 			{
@@ -298,6 +299,7 @@ func TestAccS3Bucket_Basic_nameGenerated(t *testing.T) {
 					testAccCheckBucketExists(ctx, resourceName),
 					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrBucket),
 					resource.TestCheckResourceAttr(resourceName, names.AttrBucketPrefix, id.UniqueIdPrefix),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrBucket),
 				),
 			},
 			{
@@ -326,6 +328,7 @@ func TestAccS3Bucket_Basic_namePrefix(t *testing.T) {
 					testAccCheckBucketExists(ctx, resourceName),
 					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrBucket, "tf-test-"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrBucketPrefix, "tf-test-"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrBucket),
 				),
 			},
 			{
