@@ -28,6 +28,7 @@ import (
 // @Region(global=true)
 // @SingletonIdentity
 // @WrappedImport
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/s3control/types;awstypes;awstypes.PublicAccessBlockConfiguration")
 func resourceAccountPublicAccessBlock() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAccountPublicAccessBlockCreate,
