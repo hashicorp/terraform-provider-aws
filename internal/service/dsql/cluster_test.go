@@ -46,7 +46,7 @@ func TestAccDSQLCluster_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_basic(),
+				Config: testAccClusterConfig_basic(false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 				),
@@ -101,12 +101,71 @@ func TestAccDSQLCluster_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_basic(),
+				Config: testAccClusterConfig_basic(false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfdsql.ResourceCluster, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccDSQLCluster_deletionProtection(t *testing.T) {
+	ctx := acctest.Context(t)
+	var cluster dsql.GetClusterOutput
+	resourceName := "aws_dsql_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			// Because dsql is in preview, we need to skip the PreCheckPartitionHasService
+			// acctest.PreCheckPartitionHasService(t, names.DSQLEndpointID)
+			// PreCheck for the region configuration as long as DSQL is in preview
+			acctest.PreCheckRegion(t, "us-east-1", "us-east-2")          //lintignore:AWSAT003
+			acctest.PreCheckAlternateRegion(t, "us-east-2", "us-east-1") //lintignore:AWSAT003
+			acctest.PreCheckThirdRegion(t, "us-west-2")                  //lintignore:AWSAT003
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.DSQLServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_basic(true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("deletion_protection_enabled"), knownvalue.Bool(true)),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrIdentifier),
+				ImportStateVerifyIdentifierAttribute: names.AttrIdentifier,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+			},
+			{
+				Config: testAccClusterConfig_basic(false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("deletion_protection_enabled"), knownvalue.Bool(false)),
+				},
 			},
 		},
 	})
@@ -173,10 +232,10 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccClusterConfig_basic() string {
-	return `
+func testAccClusterConfig_basic(deletionProtection bool) string {
+	return fmt.Sprintf(`
 resource "aws_dsql_cluster" "test" {
-  deletion_protection_enabled = false
+  deletion_protection_enabled = %[1]t
 }
-`
+`, deletionProtection)
 }

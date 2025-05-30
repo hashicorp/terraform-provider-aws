@@ -230,6 +230,7 @@ func (r *clusterResource) Update(ctx context.Context, request resource.UpdateReq
 	conn := r.Meta().DSQLClient(ctx)
 
 	if !new.DeletionProtectionEnabled.Equal(old.DeletionProtectionEnabled) ||
+		!new.EncryptionDetails.Equal(old.EncryptionDetails) ||
 		!new.MultiRegionProperties.Equal(old.MultiRegionProperties) {
 		var input dsql.UpdateClusterInput
 		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
@@ -239,6 +240,18 @@ func (r *clusterResource) Update(ctx context.Context, request resource.UpdateReq
 
 		// Additional fields.
 		input.ClientToken = aws.String(sdkid.UniqueId())
+
+		if !new.EncryptionDetails.Equal(old.EncryptionDetails) {
+			encryptionDetails, diags := new.EncryptionDetails.ToPtr(ctx)
+			response.Diagnostics.Append(diags...)
+			if response.Diagnostics.HasError() {
+				return
+			}
+
+			if encryptionDetails != nil {
+				input.KmsEncryptionKey = fwflex.StringFromFramework(ctx, encryptionDetails.KMSKeyARN)
+			}
+		}
 
 		_, err := conn.UpdateCluster(ctx, &input)
 
