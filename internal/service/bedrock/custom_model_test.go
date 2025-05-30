@@ -519,34 +519,6 @@ resource "aws_bedrock_custom_model" "test" {
 `, rName))
 }
 
-// func testAccCustomModelConfig_regionOverride(rName string) string {
-// 	return acctest.ConfigCompose(testAccCustomModelConfig_base_regionOverride(rName), fmt.Sprintf(`
-// resource "aws_bedrock_custom_model" "test" {
-//   region = %[2]q
-
-//   custom_model_name     = %[1]q
-//   job_name              = %[1]q
-//   base_model_identifier = data.aws_bedrock_foundation_model.test.model_arn
-//   role_arn              = aws_iam_role.test.arn
-
-//   hyperparameters = {
-//     "epochCount"              = "1"
-//     "batchSize"               = "1"
-//     "learningRate"            = "0.005"
-//     "learningRateWarmupSteps" = "0"
-//   }
-
-//   output_data_config {
-//     s3_uri = "s3://${aws_s3_bucket.output.bucket}/data/"
-//   }
-
-//   training_data_config {
-//     s3_uri = "s3://${aws_s3_bucket.training.bucket}/data/train.jsonl"
-//   }
-// }
-// `, rName, acctest.AlternateRegion()))
-// }
-
 func testAccCustomModelConfig_kmsKey(rName string) string {
 	return acctest.ConfigCompose(testAccCustomModelConfig_base(rName), fmt.Sprintf(`
 resource "aws_kms_key" "test" {

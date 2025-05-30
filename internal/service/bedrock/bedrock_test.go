@@ -30,7 +30,7 @@ func TestAccBedrock_serial(t *testing.T) {
 			acctest.CtBasic:      testAccModelInvocationLoggingConfiguration_basic,
 			acctest.CtDisappears: testAccModelInvocationLoggingConfiguration_disappears,
 			"upgradeV6.0.0":      testAccModelInvocationLoggingConfiguration_upgrade_V6_0_0,
-			"Identity":           testAccModelInvocationLoggingConfiguration_IdentitySerial,
+			"Identity":           testAccBedrockModelInvocationLoggingConfiguration_IdentitySerial,
 		},
 	}
 
