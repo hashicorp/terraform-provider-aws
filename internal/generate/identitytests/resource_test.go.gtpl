@@ -315,6 +315,8 @@ func {{ template "testname" . }}_Identity_Basic(t *testing.T) {
 								{{ end -}}
 								{{ if .IsRegionalSingleton -}}
 									plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringExact(acctest.Region())),
+								{{ else if .IsGlobalSingleton -}}
+									plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringExact(acctest.AccountID(ctx))),
 								{{ end -}}
 								{{ if not .IsGlobal -}}
 									plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
@@ -337,6 +339,8 @@ func {{ template "testname" . }}_Identity_Basic(t *testing.T) {
 								{{ end -}}
 								{{ if .IsRegionalSingleton -}}
 									plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringExact(acctest.Region())),
+								{{ else if .IsGlobalSingleton -}}
+									plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringExact(acctest.AccountID(ctx))),
 								{{ end -}}
 								{{ if not .IsGlobal -}}
 									plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
