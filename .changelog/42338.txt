@@ -1,0 +1,3 @@
+```release-note:new-resource
+s3_access_point_for_directory_bucket
+```
