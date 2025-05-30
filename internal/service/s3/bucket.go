@@ -52,6 +52,7 @@ const (
 // @IdentityAttribute("bucket")
 // @WrappedImport
 // @Testing(importIgnore="force_destroy")
+// @Testing(identityTest=false)
 func resourceBucket() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketCreate,
