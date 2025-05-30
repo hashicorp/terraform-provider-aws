@@ -363,7 +363,7 @@ resource "aws_dsql_cluster" "test" {
 `)
 }
 
-func testAccClusterConfig_awsOwnedKey(rName string) string {
+func testAccClusterConfig_awsOwnedKey(rName string) string { // nosemgrep:ci.aws-in-func-name
 	return acctest.ConfigCompose(testAccClusterConfig_baseEncryptionDetails(rName), `
 resource "aws_dsql_cluster" "test" {
   deletion_protection_enabled = false
