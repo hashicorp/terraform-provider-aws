@@ -19,7 +19,6 @@ import (
 // @SDKResource("aws_backup_region_settings", name="Region Settings")
 // @SingletonIdentity
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/backup;backup.DescribeRegionSettingsOutput")
-// @Testing(serialize=true)
 // @Testing(checkDestroyNoop=true)
 // @Testing(preCheck="testAccPreCheck")
 func resourceRegionSettings() *schema.Resource {
