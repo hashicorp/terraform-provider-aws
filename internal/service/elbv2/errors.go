@@ -5,6 +5,7 @@ package elbv2
 
 const (
 	errCodeAccessDenied    = "AccessDenied"
+	errCodeInvalidAction   = "InvalidAction"
 	errCodeValidationError = "ValidationError"
 )
 
