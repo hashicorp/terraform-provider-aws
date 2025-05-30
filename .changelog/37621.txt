@@ -1,0 +1,3 @@
+```release-note:bug
+provider: Remove explicit requirement for web_identity_token or web_identity_token_file to be set when assuming role with web identity, allowing the AWS_WEB_IDENTITY_TOKEN_FILE environment variable to be used.
+```
