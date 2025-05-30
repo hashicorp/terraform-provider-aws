@@ -56,13 +56,13 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-~> **NOTE:** `instance_id` and one of either `name` or `user_id` is required.
-
 This data source supports the following arguments:
 
 * `instance_id` - (Required) Reference to the hosting Amazon Connect Instance
 * `name` - (Optional) Returns information on a specific User by name
 * `user_id` - (Optional) Returns information on a specific User by User id
+
+~> **NOTE:** `instance_id` and one of either `name` or `user_id` is required.
 
 ## Attribute Reference
 
@@ -97,4 +97,4 @@ A `phone_config` block supports the following attributes:
 * `desk_phone_number` - The phone number for the user's desk phone.
 * `phone_type` - The phone type. Valid values are `DESK_PHONE` and `SOFT_PHONE`.
 
-<!-- cache-key: cdktf-0.20.8 input-6418677498d3243fc3fad545047e17a0d6914a6f2c25c35af2a886541c4e8bb5 -->
+<!-- cache-key: cdktf-0.20.8 input-896cedc13de71a0aa44da15310257ce493218c76e42d9828bd8dd10d0dadbd22 -->

@@ -264,7 +264,6 @@ func dataSourceAMIRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	diags = checkMostRecentAndMissingFilters(diags, &describeImagesInput, d.Get(names.AttrMostRecent).(bool), d.Get("allow_unsafe_filter").(bool))
 
 	images, err := findImages(ctx, conn, &describeImagesInput)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 AMIs: %s", err)
 	}
@@ -384,6 +383,7 @@ func flattenAMIBlockDeviceMappings(apiObjects []awstypes.BlockDeviceMapping) []a
 				names.AttrIOPS:                flex.Int32ToStringValue(apiObject.Iops),
 				names.AttrSnapshotID:          aws.ToString(apiObject.SnapshotId),
 				names.AttrThroughput:          flex.Int32ToStringValue(apiObject.Throughput),
+				"volume_initialization_rate":  flex.Int32ToStringValue(apiObject.VolumeInitializationRate),
 				names.AttrVolumeSize:          flex.Int32ToStringValue(apiObject.VolumeSize),
 				names.AttrVolumeType:          apiObject.VolumeType,
 			}

@@ -35,7 +35,7 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following argument is required:
+The following arguments are required:
 
 * `name` - (Required, Forces new resource) Name of the table bucket.
   Must be between 3 and 63 characters in length.
@@ -114,4 +114,4 @@ Using `terraform import`, import S3 Tables Table Bucket using the `arn`. For exa
 % terraform import aws_s3tables_table_bucket.example arn:aws:s3tables:us-west-2:123456789012:bucket/example-bucket
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-811aac71ab479c72198565de1145bea940489a12a8fe90ff218d5ef7ac331bdd -->
+<!-- cache-key: cdktf-0.20.8 input-8d0657839c87ebec22da7f06db455d16615964442b20d77c5effdf431e3d4a03 -->

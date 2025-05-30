@@ -41,12 +41,12 @@ class MyConvertedCode extends TerraformStack {
 The following arguments are required:
 
 * `source` - (Required) ID or ARN of the resource which is the source of the path. Can be an Instance, Internet Gateway, Network Interface, Transit Gateway, VPC Endpoint, VPC Peering Connection or VPN Gateway. If the resource is in another account, you must specify an ARN.
-* `destination` - (Optional) ID or ARN of the resource which is the destination of the path. Can be an Instance, Internet Gateway, Network Interface, Transit Gateway, VPC Endpoint, VPC Peering Connection or VPN Gateway. If the resource is in another account, you must specify an ARN. Either the `destination` argument or the `destinationAddress` argument in the `filterAtSource` block must be specified.
 * `protocol` - (Required) Protocol to use for analysis. Valid options are `tcp` or `udp`.
 
 The following arguments are optional:
 
 * `sourceIp` - (Optional) IP address of the source resource.
+* `destination` - (Optional) ID or ARN of the resource which is the destination of the path. Can be an Instance, Internet Gateway, Network Interface, Transit Gateway, VPC Endpoint, VPC Peering Connection or VPN Gateway. If the resource is in another account, you must specify an ARN. Either the `destination` argument or the `destinationAddress` argument in the `filterAtSource` block must be specified.
 * `destinationIp` - (Optional) IP address of the destination resource.
 * `destinationPort` - (Optional) Destination port to analyze access to.
 * `filterAtDestination` - (Optional) Scopes the analysis to network paths that match specific filters at the destination. If you specify this parameter, you can't specify `destinationIp`. See below for details. Note that Terraform performs drift detection on this argument only when the value is provided.
@@ -107,4 +107,4 @@ Using `terraform import`, import Network Insights Paths using the `id`. For exam
 % terraform import aws_ec2_network_insights_path.test nip-00edfba169923aefd
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-450750dfbb986194793d0f9913cf2f7d0845171d392345f307355e7830c3e579 -->
+<!-- cache-key: cdktf-0.20.8 input-c7ec5b4a6e1040e38b2f1d4a36adc77bf92adc66d1599c8b5e2ff7ad0d2feede -->
