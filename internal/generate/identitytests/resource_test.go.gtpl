@@ -312,6 +312,9 @@ func {{ template "testname" . }}_Identity_Basic(t *testing.T) {
 									plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ .ARNAttribute }}), knownvalue.NotNull()),
 									plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
 								{{ end -}}
+								{{ if .IsRegionalSingleton -}}
+									plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringExact(acctest.Region())),
+								{{ end -}}
 								{{ if not .IsGlobal -}}
 									plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 								{{ end -}}
@@ -330,6 +333,9 @@ func {{ template "testname" . }}_Identity_Basic(t *testing.T) {
 								{{ if .ArnIdentity -}}
 									plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ .ARNAttribute }}), knownvalue.NotNull()),
 									plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+								{{ end -}}
+								{{ if .IsRegionalSingleton -}}
+									plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringExact(acctest.Region())),
 								{{ end -}}
 								{{ if not .IsGlobal -}}
 									plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
@@ -445,6 +451,9 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 									plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ .ARNAttribute }}), knownvalue.NotNull()),
 									plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
 								{{ end -}}
+								{{ if .IsRegionalSingleton -}}
+									plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringExact(acctest.AlternateRegion())),
+								{{ end -}}
 								plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
 							},
 						},
@@ -465,6 +474,9 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 									plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ .ARNAttribute }}), knownvalue.NotNull()),
 									plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
 								{{ end -}}
+								{{ if .IsRegionalSingleton -}}
+									plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringExact(acctest.AlternateRegion())),
+								{{ end -}}
 								plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
 							},
 						},
@@ -484,6 +496,9 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 								{{ if .ArnIdentity -}}
 									plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ .ARNAttribute }}), knownvalue.NotNull()),
 									plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+								{{ end -}}
+								{{ if .IsRegionalSingleton -}}
+									plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringExact(acctest.AlternateRegion())),
 								{{ end -}}
 								plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
 							},
