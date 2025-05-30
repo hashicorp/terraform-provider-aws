@@ -1,0 +1,1342 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Contributor documentation and reference for the Terraform AWS Provider">
+      
+      
+      
+      
+      
+      <link rel="icon" href="../../images/hashicorp-black.png">
+      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.0.6">
+    
+    
+      
+        <title>Relationship Resource Design Standards - Terraform AWS Provider - Contributor Guide</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.558e4712.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.2505c338.min.css">
+      
+      
+
+    
+    
+    
+      
+    
+    
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="hashicorp" data-md-color-primary="black" data-md-color-accent="blue">
+  
+    
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#relationship-resource-design-standards" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Terraform AWS Provider - Contributor Guide" class="md-header__button md-logo" aria-label="Terraform AWS Provider - Contributor Guide" data-md-component="logo">
+      
+  <img src="../../images/hashicorp.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Terraform AWS Provider - Contributor Guide
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Relationship Resource Design Standards
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/hashicorp/terraform-provider-aws" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    hashicorp/terraform-provider-aws
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Terraform AWS Provider - Contributor Guide" class="md-nav__button md-logo" aria-label="Terraform AWS Provider - Contributor Guide" data-md-component="logo">
+      
+  <img src="../../images/hashicorp.png" alt="logo">
+
+    </a>
+    Terraform AWS Provider - Contributor Guide
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/hashicorp/terraform-provider-aws" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    hashicorp/terraform-provider-aws
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        Welcome
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_2" type="checkbox" id="__nav_2" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_2" tabindex="0" aria-expanded="false">
+          Contribute
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Contribute" data-md-level="1">
+        <label class="md-nav__title" for="__nav_2">
+          <span class="md-nav__icon md-icon"></span>
+          Contribute
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development-environment/" class="md-nav__link">
+        Development Environment
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_2_2" type="checkbox" id="__nav_2_2" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_2_2" tabindex="0" aria-expanded="false">
+          Contribution Guides
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Contribution Guides" data-md-level="2">
+        <label class="md-nav__title" for="__nav_2_2">
+          <span class="md-nav__icon md-icon"></span>
+          Contribution Guides
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../add-a-new-resource/" class="md-nav__link">
+        Resource
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../add-a-new-service/" class="md-nav__link">
+        Service
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../add-a-new-datasource/" class="md-nav__link">
+        Data source
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../add-a-new-ephemeral-resource/" class="md-nav__link">
+        Ephemeral Resource
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../add-a-new-function/" class="md-nav__link">
+        Function
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../add-a-new-region/" class="md-nav__link">
+        AWS Region
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../add-import-support/" class="md-nav__link">
+        Import Support
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../resource-filtering/" class="md-nav__link">
+        Resource Filtering
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../resource-name-generation/" class="md-nav__link">
+        Resource Name Generation
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../resource-tagging/" class="md-nav__link">
+        Resource Tagging
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adding-a-tag-resource/" class="md-nav__link">
+        Tag Resource
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../bugs-and-enhancements/" class="md-nav__link">
+        Bugs and Enhancements
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../documentation-changes/" class="md-nav__link">
+        Documentation Changes
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../running-and-writing-acceptance-tests/" class="md-nav__link">
+        Acceptance Tests
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../unit-tests/" class="md-nav__link">
+        Unit Tests
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../continuous-integration/" class="md-nav__link">
+        Continuous Integration
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../changelog-process/" class="md-nav__link">
+        Changelog Process
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../raising-a-pull-request/" class="md-nav__link">
+        Raising a Pull Request
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../prioritization/" class="md-nav__link">
+        How We Prioritize
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_3" type="checkbox" id="__nav_3" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3" tabindex="0" aria-expanded="false">
+          Developer Reference
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Developer Reference" data-md-level="1">
+        <label class="md-nav__title" for="__nav_3">
+          <span class="md-nav__icon md-icon"></span>
+          Developer Reference
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../acc-test-environment-variables/" class="md-nav__link">
+        Acceptance Test Environment Variables
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../aws-sdk-go-base/" class="md-nav__link">
+        AWS SDK Go Base
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../core-services/" class="md-nav__link">
+        Core Services
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../data-handling-and-conversion/" class="md-nav__link">
+        Data Handling and Conversion
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../debugging/" class="md-nav__link">
+        Debugging
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dependency-updates/" class="md-nav__link">
+        Dependency Updates
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../design-decision-log/" class="md-nav__link">
+        Design Decision Log
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../error-handling/" class="md-nav__link">
+        Error Handling
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../id-attributes/" class="md-nav__link">
+        ID Attributes
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../makefile-cheat-sheet/" class="md-nav__link">
+        Makefile Cheat Sheet
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../naming/" class="md-nav__link">
+        Naming Standards
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../provider-design/" class="md-nav__link">
+        Provider Design
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skaff/" class="md-nav__link">
+        Provider Scaffolding (skaff)
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../regular-expressions/" class="md-nav__link">
+        Regular Expressions
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../retries-and-waiters/" class="md-nav__link">
+        Retries and Waiters
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../terraform-plugin-development-packages/" class="md-nav__link">
+        Terraform Plugin Development Packages
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../terraform-plugin-migrations/" class="md-nav__link">
+        Terraform Plugin Migrations
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../issue-reporting-and-lifecycle/" class="md-nav__link">
+        Submit an Issue
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../faq/" class="md-nav__link">
+        FAQ
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#background" class="md-nav__link">
+    Background
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#proposal" class="md-nav__link">
+    Proposal
+  </a>
+  
+    <nav class="md-nav" aria-label="Proposal">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#one-to-many-design-example" class="md-nav__link">
+    "One-to-many" Design Example
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#references" class="md-nav__link">
+    References
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+
+<h1 id="relationship-resource-design-standards">Relationship Resource Design Standards<a class="headerlink" href="#relationship-resource-design-standards" title="Permanent link">#</a></h1>
+<p><strong>Summary:</strong> Align on design standards for relationship management resources in the Terraform AWS Provider.<br />
+<strong>Created</strong>: 2022-07-11  </p>
+<hr />
+<p>The goal of this document is to assess the design of existing "relationship" resources in the Terraform AWS Provider and determine if a consistent set of rules can be defined for implementing them. For the purpose of this document, a "relationship" resource is defined as a resource which manages either a direct relationship between two standalone resources ("one-to-one", ie. <a href="https://registry.terraform.io/providers/-/aws/latest/docs/resources/ssoadmin_permissions_boundary_attachment"><code>aws_ssoadmin_permission_boundary_attachment</code></a>), or a variable number of child relationships to a parent resource ("one-to-many", ie. <a href="https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment"><code>aws_iam_role_policy_attachment</code></a>). Resources and AWS APIs with this function will often contain suffixes like "attachment", "assignment", "registration", or "rule".</p>
+<p>A documented standard for implementing relationship-styled resources will inform how new resources are written, and provide guidelines to refer back to when the community requests features which may not align with internal best practices.</p>
+<h2 id="background">Background<a class="headerlink" href="#background" title="Permanent link">#</a></h2>
+<p>The first form of relationship resources ("one-to-one") typically have a straightforward, singular API design and provider implementation given only a single relationship exists. The second form of resources ("one-to-many") often has to balance two provider design principles:</p>
+<ul>
+<li><a href="https://developer.hashicorp.com/terraform/plugin/best-practices/hashicorp-provider-design-principles#resources-should-represent-a-single-api-object">Resources should represent a single API object</a></li>
+<li><a href="https://developer.hashicorp.com/terraform/plugin/best-practices/hashicorp-provider-design-principles#resource-and-attribute-schema-should-closely-match-the-underlying-api">Resource and attribute schema should closely match the underlying API</a></li>
+</ul>
+<p>In these cases, the smallest possible piece of infrastructure may be a single parent-child relationship, while the AWS APIs may accept and return lists of parent-child relationships. The first principle would favor a resource representing a single relationship, while the second principle suggests a resource should manage a variable number of relationships. Additionally, practitioners coming from the AWS CLI or SDK might also have expectations about how resource schemas should be shaped compared to CLI flags or SDK inputs.</p>
+<p>An analysis of existing resources can inform which of these principles maintainers have given precedence to up to this point. The table below documents existing relationship resources in the AWS provider. This table should not be considered exhaustive<sup id="fnref:1"><a class="footnote-ref" href="#fn:1">1</a></sup>, but covers a large majority of the resources implementing the patterns discussed above.</p>
+<table>
+<thead>
+<tr>
+<th><strong>Resource Name</strong></th>
+<th><strong>Form</strong></th>
+<th><strong>AWS API</strong></th>
+<th><strong>Terraform</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_target_group_attachment">aws_alb_target_group_attachment</a></td>
+<td>One-to-many</td>
+<td><a href="https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_RegisterTargets.html">Plural</a></td>
+<td><a href="https://github.com/hashicorp/terraform-provider-aws/blob/v5.7.0/internal/service/elbv2/target_group_attachment.go#L76-L79">Singular</a></td>
+</tr>
+<tr>
+<td><a href="https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/autoscaling_attachment">aws_autoscaling_attachment</a> (ELB)</td>
+<td>One-to-many</td>
+<td><a href="https://docs.aws.amazon.com/autoscaling/ec2/APIReference/API_AttachLoadBalancers.html">Plural</a></td>
+<td><a href="https://github.com/hashicorp/terraform-provider-aws/blob/v5.7.0/internal/service/autoscaling/attachment.go#L58-L61">Singular</a></td>
+</tr>
+<tr>
+<td><a href="https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/autoscaling_attachment">aws_autoscaling_attachment</a> (Target Group ARN)</td>
+<td>One-to-many</td>
+<td><a href="https://docs.aws.amazon.com/autoscaling/ec2/APIReference/API_AttachLoadBalancerTargetGroups.html">Plural</a></td>
+<td><a href="https://github.com/hashicorp/terraform-provider-aws/blob/v5.7.0/internal/service/autoscaling/attachment.go#L74-L77">Singular</a></td>
+</tr>
+<tr>
+<td><a href="https://registry.terraform.io/providers/-/aws/latest/docs/resources/autoscaling_traffic_source_attachment">aws_autoscaling_traffic_source_attachment</a></td>
+<td>One-to-many</td>
+<td><a href="https://docs.aws.amazon.com/autoscaling/ec2/APIReference/API_AttachTrafficSources.html">Plural</a></td>
+<td><a href="https://github.com/hashicorp/terraform-provider-aws/blob/v5.7.0/internal/service/autoscaling/traffic_source_attachment.go#L78-L81">Singular</a></td>
+</tr>
+<tr>
+<td><a href="https://registry.terraform.io/providers/-/aws/latest/docs/resources/cognito_identity_pool_roles_attachment">aws_cognito_identity_pool_roles_attachment</a><sup id="fnref:2"><a class="footnote-ref" href="#fn:2">2</a></sup></td>
+<td>One-to-many</td>
+<td><a href="https://docs.aws.amazon.com/cognitoidentity/latest/APIReference/API_SetIdentityPoolRoles.html">Plural</a></td>
+<td><a href="https://github.com/hashicorp/terraform-provider-aws/blob/v5.7.0/internal/service/cognitoidentity/pool_roles_attachment.go#L123-L126">Plural</a></td>
+</tr>
+<tr>
+<td><a href="https://registry.terraform.io/providers/-/aws/latest/docs/resources/ec2_transit_gateway_peering_attachment">aws_ec2_transit_gateway_peering_attachment</a></td>
+<td>One-to-one</td>
+<td><a href="https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_CreateTransitGatewayPeeringAttachment.html">Singular</a></td>
+<td><a href="https://github.com/hashicorp/terraform-provider-aws/blob/v5.7.0/internal/service/ec2/transitgateway_peering_attachment.go#L75-L81">Singular</a></td>
+</tr>
+<tr>
+<td><a href="https://registry.terraform.io/providers/-/aws/latest/docs/resources/ec2_transit_gateway_vpc_attachment">aws_ec2_transit_gateway_vpc_attachment</a></td>
+<td>One-to-one</td>
+<td><a href="https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_CreateTransitGatewayVpcAttachment.html">Singular</a></td>
+<td><a href="https://github.com/hashicorp/terraform-provider-aws/blob/v5.7.0/internal/service/ec2/transitgateway_vpc_attachment.go#L102-L112">Singular</a></td>
+</tr>
+<tr>
+<td><a href="https://registry.terraform.io/providers/-/aws/latest/docs/resources/elb_attachment">aws_elb_attachment</a></td>
+<td>One-to-many</td>
+<td><a href="https://docs.aws.amazon.com/elasticloadbalancing/2012-06-01/APIReference/API_RegisterInstancesWithLoadBalancer.html">Plural</a></td>
+<td><a href="https://github.com/hashicorp/terraform-provider-aws/blob/v5.7.0/internal/service/elb/attachment.go#L54-L57">Singular</a></td>
+</tr>
+<tr>
+<td><a href="https://registry.terraform.io/providers/-/aws/latest/docs/resources/iam_group_policy_attachment">aws_iam_group_policy_attachment</a></td>
+<td>One-to-many</td>
+<td><a href="https://docs.aws.amazon.com/IAM/latest/APIReference/API_AttachGroupPolicy.html">Singular</a></td>
+<td><a href="https://github.com/hashicorp/terraform-provider-aws/blob/v5.7.0/internal/service/iam/group_policy_attachment.go#L153-L156">Singular</a></td>
+</tr>
+<tr>
+<td><a href="https://registry.terraform.io/providers/-/aws/latest/docs/resources/iam_policy_attachment">aws_iam_policy_attachment</a><sup id="fnref:3"><a class="footnote-ref" href="#fn:3">3</a></sup></td>
+<td>One-to-many</td>
+<td><a href="https://docs.aws.amazon.com/IAM/latest/APIReference/API_AttachRolePolicy.html">Singular</a></td>
+<td><a href="https://github.com/hashicorp/terraform-provider-aws/blob/v5.7.0/internal/service/iam/policy_attachment.go#L219-L230">Plural</a></td>
+</tr>
+<tr>
+<td><a href="https://registry.terraform.io/providers/-/aws/latest/docs/resources/iam_role_policy_attachment">aws_iam_role_policy_attachment</a></td>
+<td>One-to-many</td>
+<td><a href="https://docs.aws.amazon.com/IAM/latest/APIReference/API_AttachRolePolicy.html">Singular</a></td>
+<td><a href="https://github.com/hashicorp/terraform-provider-aws/blob/v5.7.0/internal/service/iam/role_policy_attachment.go#L160-L163">Singular</a></td>
+</tr>
+<tr>
+<td><a href="https://registry.terraform.io/providers/-/aws/latest/docs/resources/iam_user_policy_attachment">aws_iam_user_policy_attachment</a></td>
+<td>One-to-many</td>
+<td><a href="https://docs.aws.amazon.com/IAM/latest/APIReference/API_AttachUserPolicy.html">Singular</a></td>
+<td><a href="https://github.com/hashicorp/terraform-provider-aws/blob/v5.7.0/internal/service/iam/user_policy_attachment.go#L156-L159">Singular</a></td>
+</tr>
+<tr>
+<td><a href="https://registry.terraform.io/providers/-/aws/latest/docs/resources/internet_gateway_attachment">aws_internet_gateway_attachment</a></td>
+<td>One-to-one</td>
+<td><a href="https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_AttachInternetGateway.html">Singular</a></td>
+<td><a href="https://github.com/hashicorp/terraform-provider-aws/blob/v5.7.0/internal/service/ec2/vpc_internet_gateway.go#L190-L193">Singular</a></td>
+</tr>
+<tr>
+<td><a href="https://registry.terraform.io/providers/-/aws/latest/docs/resources/iot_policy_attachment">aws_iot_policy_attachment</a></td>
+<td>One-to-many</td>
+<td><a href="https://docs.aws.amazon.com/iot/latest/apireference/API_AttachPolicy.html">Singular</a></td>
+<td><a href="https://github.com/hashicorp/terraform-provider-aws/blob/v5.7.0/internal/service/iot/policy_attachment.go#L48-L51">Singular</a></td>
+</tr>
+<tr>
+<td><a href="https://registry.terraform.io/providers/-/aws/latest/docs/resources/iot_thing_principal_attachment">aws_iot_thing_principal_attachment</a></td>
+<td>One-to-many</td>
+<td><a href="https://docs.aws.amazon.com/iot/latest/apireference/API_AttachThingPrincipal.html">Singular</a></td>
+<td><a href="https://github.com/hashicorp/terraform-provider-aws/blob/v5.7.0/internal/service/iot/thing_principal_attachment.go#L49-L52">Singular</a></td>
+</tr>
+<tr>
+<td><a href="https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_target_group_attachment">aws_lb_target_group_attachment</a></td>
+<td>One-to-many</td>
+<td><a href="https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_RegisterTargets.html">Plural</a></td>
+<td><a href="https://github.com/hashicorp/terraform-provider-aws/blob/v5.7.0/internal/service/elbv2/target_group_attachment.go#L76-L79">Singular</a></td>
+</tr>
+<tr>
+<td><a href="https://registry.terraform.io/providers/-/aws/latest/docs/resources/lightsail_disk_attachment">aws_lightsail_disk_attachment</a></td>
+<td>One-to-many</td>
+<td><a href="https://docs.aws.amazon.com/lightsail/2016-11-28/api-reference/API_AttachDisk.html">Singular</a></td>
+<td><a href="https://github.com/hashicorp/terraform-provider-aws/blob/v5.7.0/internal/service/lightsail/disk_attachment.go#L57-L61">Singular</a></td>
+</tr>
+<tr>
+<td><a href="https://registry.terraform.io/providers/-/aws/latest/docs/resources/lightsail_lb_attachment">aws_lightsail_lb_attachment</a></td>
+<td>One-to-many</td>
+<td><a href="https://docs.aws.amazon.com/lightsail/2016-11-28/api-reference/API_AttachInstancesToLoadBalancer.html">Plural</a></td>
+<td><a href="https://github.com/hashicorp/terraform-provider-aws/blob/v5.7.0/internal/service/lightsail/lb_attachment.go#L59-L62">Singular</a></td>
+</tr>
+<tr>
+<td><a href="https://registry.terraform.io/providers/-/aws/latest/docs/resources/lightsail_lb_certificate_attachment">aws_lightsail_lb_certificate_attachment</a></td>
+<td>One-to-one</td>
+<td><a href="https://docs.aws.amazon.com/lightsail/2016-11-28/api-reference/API_AttachLoadBalancerTlsCertificate.html">Singular</a></td>
+<td><a href="https://github.com/hashicorp/terraform-provider-aws/blob/v5.7.0/internal/service/lightsail/lb_certificate_attachment.go#L60-L63">Singular</a></td>
+</tr>
+<tr>
+<td><a href="https://registry.terraform.io/providers/-/aws/latest/docs/resources/lightsail_static_ip_attachment">aws_lightsail_static_ip_attachment</a></td>
+<td>One-to-one</td>
+<td><a href="https://docs.aws.amazon.com/lightsail/2016-11-28/api-reference/API_AttachStaticIp.html">Singular</a></td>
+<td><a href="https://github.com/hashicorp/terraform-provider-aws/blob/v5.7.0/internal/service/lightsail/static_ip_attachment.go#L50-L53">Singular</a></td>
+</tr>
+<tr>
+<td><a href="https://registry.terraform.io/providers/-/aws/latest/docs/resources/network_interface_attachment">aws_network_interface_attachment</a></td>
+<td>One-to-many</td>
+<td><a href="https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_AttachNetworkInterface.html">Singular</a></td>
+<td><a href="https://github.com/hashicorp/terraform-provider-aws/blob/v5.7.0/internal/service/ec2/vpc_network_interface.go#L1058-L1062">Singular</a></td>
+</tr>
+<tr>
+<td><a href="https://registry.terraform.io/providers/-/aws/latest/docs/resources/network_interface_sg_attachment">aws_network_interface_sg_attachment</a></td>
+<td>One-to-many</td>
+<td><a href="https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_ModifyNetworkInterfaceAttribute.html">Plural</a></td>
+<td><a href="https://github.com/hashicorp/terraform-provider-aws/blob/v5.7.0/internal/service/ec2/vpc_network_interface_sg_attachment.go#L63-L82">Singular</a></td>
+</tr>
+<tr>
+<td><a href="https://registry.terraform.io/providers/-/aws/latest/docs/resources/networkmanager_connect_attachment">aws_networkmanager_connect_attachment</a></td>
+<td>One-to-one</td>
+<td><a href="https://docs.aws.amazon.com/networkmanager/latest/APIReference/API_CreateConnectAttachment.html">Singular</a></td>
+<td><a href="https://github.com/hashicorp/terraform-provider-aws/blob/v5.7.0/internal/service/networkmanager/connect_attachment.go#L143-L149">Singular</a></td>
+</tr>
+<tr>
+<td><a href="https://registry.terraform.io/providers/-/aws/latest/docs/resources/networkmanager_core_network_policy_attachment">aws_networkmanager_core_network_policy_attachment</a></td>
+<td>One-to-one</td>
+<td><a href="https://docs.aws.amazon.com/networkmanager/latest/APIReference/API_PutCoreNetworkPolicy.html">Singular</a></td>
+<td><a href="https://github.com/hashicorp/terraform-provider-aws/blob/v5.7.0/internal/service/networkmanager/core_network.go#L513-L545">Singular</a></td>
+</tr>
+<tr>
+<td><a href="https://registry.terraform.io/providers/-/aws/latest/docs/resources/networkmanager_site_to_site_vpn_attachment">aws_networkmanager_site_to_site_vpn_attachment</a></td>
+<td>One-to-one</td>
+<td><a href="https://docs.aws.amazon.com/networkmanager/latest/APIReference/API_CreateSiteToSiteVpnAttachment.html">Singular</a></td>
+<td><a href="https://github.com/hashicorp/terraform-provider-aws/blob/v5.7.0/internal/service/networkmanager/site_to_site_vpn_attachment.go#L108-L112">Singular</a></td>
+</tr>
+<tr>
+<td><a href="https://registry.terraform.io/providers/-/aws/latest/docs/resources/networkmanager_transit_gateway_registration">aws_networkmanager_transit_gateway_registration</a></td>
+<td>One-to-one</td>
+<td><a href="https://docs.aws.amazon.com/networkmanager/latest/APIReference/API_RegisterTransitGateway.html">Singular</a></td>
+<td><a href="https://github.com/hashicorp/terraform-provider-aws/blob/v5.7.0/internal/service/networkmanager/transit_gateway_registration.go#L63-L66">Singular</a></td>
+</tr>
+<tr>
+<td><a href="https://registry.terraform.io/providers/-/aws/latest/docs/resources/networkmanager_transit_gateway_route_table_attachment">aws_networkmanager_transit_gateway_route_table_attachment</a></td>
+<td>One-to-one</td>
+<td><a href="https://docs.aws.amazon.com/networkmanager/latest/APIReference/API_CreateTransitGatewayRouteTableAttachment.html">Singular</a></td>
+<td><a href="https://github.com/hashicorp/terraform-provider-aws/blob/v5.7.0/internal/service/networkmanager/transit_gateway_route_table_attachment.go#L109-L113">Singular</a></td>
+</tr>
+<tr>
+<td><a href="https://registry.terraform.io/providers/-/aws/latest/docs/resources/networkmanager_vpc_attachment">aws_networkmanager_vpc_attachment</a></td>
+<td>One-to-one</td>
+<td><a href="https://docs.aws.amazon.com/networkmanager/latest/APIReference/API_CreateVpcAttachment.html">Singular</a></td>
+<td><a href="https://github.com/hashicorp/terraform-provider-aws/blob/v5.7.0/internal/service/networkmanager/vpc_attachment.go#L133-L138">Singular</a></td>
+</tr>
+<tr>
+<td><a href="https://registry.terraform.io/providers/-/aws/latest/docs/resources/organizations_policy_attachment">aws_organizations_policy_attachment</a></td>
+<td>One-to-many</td>
+<td><a href="https://docs.aws.amazon.com/organizations/latest/APIReference/API_AttachPolicy.html">Singular</a></td>
+<td><a href="https://github.com/hashicorp/terraform-provider-aws/blob/v5.7.0/internal/service/organizations/policy_attachment.go#L61-L64">Singular</a></td>
+</tr>
+<tr>
+<td><a href="https://registry.terraform.io/providers/-/aws/latest/docs/resources/quicksight_iam_policy_assignment">aws_quicksight_iam_policy_assignment</a></td>
+<td>One-to-many</td>
+<td><a href="https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CreateIAMPolicyAssignment.html">Plural</a></td>
+<td><a href="https://github.com/hashicorp/terraform-provider-aws/blob/v5.7.0/internal/service/quicksight/iam_policy_assignment.go#L131-L145">Plural</a></td>
+</tr>
+<tr>
+<td><a href="https://registry.terraform.io/providers/-/aws/latest/docs/resources/security_group">aws_security_group</a> (Egress)<sup id="fnref2:4"><a class="footnote-ref" href="#fn:4">4</a></sup></td>
+<td>One-to-many</td>
+<td><a href="https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_AuthorizeSecurityGroupEgress.html">Plural</a></td>
+<td><a href="https://github.com/hashicorp/terraform-provider-aws/blob/v5.7.0/internal/service/ec2/vpc_security_group.go#L781-L784">Plural</a></td>
+</tr>
+<tr>
+<td><a href="https://registry.terraform.io/providers/-/aws/latest/docs/resources/security_group">aws_security_group</a> (Ingress)<sup id="fnref:4"><a class="footnote-ref" href="#fn:4">4</a></sup></td>
+<td>One-to-many</td>
+<td><a href="https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_AuthorizeSecurityGroupIngress.html">Plural</a></td>
+<td><a href="https://github.com/hashicorp/terraform-provider-aws/blob/v5.7.0/internal/service/ec2/vpc_security_group.go#L788-L791k">Plural</a></td>
+</tr>
+<tr>
+<td><a href="https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group_rule">aws_security_group_rule</a> (Egress)</td>
+<td>One-to-many</td>
+<td><a href="https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_AuthorizeSecurityGroupEgress.html">Plural</a></td>
+<td><a href="https://github.com/hashicorp/terraform-provider-aws/blob/v5.7.0/internal/service/ec2/vpc_security_group_rule.go#L189-L205">Singular</a></td>
+</tr>
+<tr>
+<td><a href="https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group_rule">aws_security_group_rule</a> (Ingress)</td>
+<td>One-to-many</td>
+<td><a href="https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_AuthorizeSecurityGroupIngress.html">Plural</a></td>
+<td><a href="https://github.com/hashicorp/terraform-provider-aws/blob/v5.7.0/internal/service/ec2/vpc_security_group_rule.go#L172-L187">Singular</a></td>
+</tr>
+<tr>
+<td><a href="https://registry.terraform.io/providers/-/aws/latest/docs/resources/sesv2_dedicated_ip_assignment">aws_sesv2_dedicated_ip_assignment</a></td>
+<td>One-to-one</td>
+<td><a href="https://docs.aws.amazon.com/ses/latest/APIReference-V2/API_PutDedicatedIpInPool.html">Singular</a></td>
+<td><a href="https://github.com/hashicorp/terraform-provider-aws/blob/v5.7.0/internal/service/sesv2/dedicated_ip_assignment.go#L66-L69">Singular</a></td>
+</tr>
+<tr>
+<td><a href="https://registry.terraform.io/providers/-/aws/latest/docs/resources/ssoadmin_account_assignment">aws_ssoadmin_account_assignment</a></td>
+<td>One-to-one</td>
+<td><a href="https://docs.aws.amazon.com/singlesignon/latest/APIReference/API_CreateAccountAssignment.html">Singular</a></td>
+<td><a href="https://github.com/hashicorp/terraform-provider-aws/blob/v5.7.0/internal/service/ssoadmin/account_assignment.go#L106-L113">Singular</a></td>
+</tr>
+<tr>
+<td><a href="https://registry.terraform.io/providers/-/aws/latest/docs/resources/ssoadmin_customer_managed_policy_attachment">aws_ssoadmin_customer_managed_policy_attachment</a></td>
+<td>One-to-many</td>
+<td><a href="https://docs.aws.amazon.com/singlesignon/latest/APIReference/API_AttachCustomerManagedPolicyReferenceToPermissionSet.html">Singular</a></td>
+<td><a href="https://github.com/hashicorp/terraform-provider-aws/blob/v5.7.0/internal/service/ssoadmin/customer_managed_policy_attachment.go#L90-L94">Singular</a></td>
+</tr>
+<tr>
+<td><a href="https://registry.terraform.io/providers/-/aws/latest/docs/resources/ssoadmin_managed_policy_attachment">aws_ssoadmin_managed_policy_attachment</a></td>
+<td>One-to-many</td>
+<td><a href="https://docs.aws.amazon.com/singlesignon/latest/APIReference/API_AttachManagedPolicyToPermissionSet.html">Singular</a></td>
+<td><a href="https://github.com/hashicorp/terraform-provider-aws/blob/v5.7.0/internal/service/ssoadmin/managed_policy_attachment.go#L69-L73">Singular</a></td>
+</tr>
+<tr>
+<td><a href="https://registry.terraform.io/providers/-/aws/latest/docs/resources/ssoadmin_permissions_boundary_attachment">aws_ssoadmin_permissions_boundary_attachment</a></td>
+<td>One-to-one</td>
+<td><a href="https://docs.aws.amazon.com/singlesignon/latest/APIReference/API_PutPermissionsBoundaryToPermissionSet.html">Singular</a></td>
+<td><a href="https://github.com/hashicorp/terraform-provider-aws/blob/v5.7.0/internal/service/ssoadmin/permissions_boundary_attachment.go#L105-L109">Singular</a></td>
+</tr>
+<tr>
+<td><a href="https://registry.terraform.io/providers/-/aws/latest/docs/resources/volume_attachment">aws_volume_attachment</a></td>
+<td>One-to-many</td>
+<td><a href="https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_AttachVolume.html">Singular</a></td>
+<td><a href="https://github.com/hashicorp/terraform-provider-aws/blob/v5.7.0/internal/service/ec2/ebs_volume_attachment.go#L106-L110">Singular</a></td>
+</tr>
+<tr>
+<td><a href="https://registry.terraform.io/providers/-/aws/latest/docs/resources/vpc_security_group_egress_rule">aws_vpc_security_group_egress_rule</a></td>
+<td>One-to-many</td>
+<td><a href="https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_AuthorizeSecurityGroupEgress.html">Plural</a></td>
+<td><a href="https://github.com/hashicorp/terraform-provider-aws/blob/v5.7.0/internal/service/ec2/vpc_security_group_egress_rule.go#L37-L40">Singular</a></td>
+</tr>
+<tr>
+<td><a href="https://registry.terraform.io/providers/-/aws/latest/docs/resources/vpc_security_group_ingress_rule">aws_vpc_security_group_ingress_rule</a></td>
+<td>One-to-many</td>
+<td><a href="https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_AuthorizeSecurityGroupIngress.html">Plural</a></td>
+<td><a href="https://github.com/hashicorp/terraform-provider-aws/blob/v5.7.0/internal/service/ec2/vpc_security_group_ingress_rule.go#L55-L58">Singular</a></td>
+</tr>
+<tr>
+<td><a href="https://registry.terraform.io/providers/-/aws/latest/docs/resources/vpclattice_target_group_attachment">aws_vpclattice_target_group_attachment</a></td>
+<td>One-to-many</td>
+<td><a href="https://docs.aws.amazon.com/vpc-lattice/latest/APIReference/API_RegisterTargets.html">Plural</a></td>
+<td><a href="https://github.com/hashicorp/terraform-provider-aws/blob/v5.7.0/internal/service/vpclattice/target_group_attachment.go#L81-L84">Singular</a></td>
+</tr>
+<tr>
+<td><a href="https://registry.terraform.io/providers/-/aws/latest/docs/resources/vpn_gateway_attachment">aws_vpn_gateway_attachment</a></td>
+<td>One-to-one</td>
+<td><a href="https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_AttachVpnGateway.html">Singular</a></td>
+<td><a href="https://github.com/hashicorp/terraform-provider-aws/blob/v5.7.0/internal/service/ec2/vpnsite_gateway_attachment.go#L48-L51">Singular</a></td>
+</tr>
+</tbody>
+</table>
+<p>Of the 44 resources documented above, 29 are of the "one-to-many" form and 17 have "plural" AWS APIs (ie. accept a list of child resources to be attached to a single parent). Of these 17, 13 resources (76%) use a "singular" Terraform implementation, where a list with one item is sent to the Create/Read/Update API, rather than allowing a single resource to manage multiple relationships. Of the remaining 4 with "plural" Terraform implementations, 2 do so to exclusively manage child relationships (<code>aws_security_group</code> Ingress/Egress variants), and one requires a "plural" implementation simply because of API limitations.</p>
+<p>These metrics indicate a strong historical preference for representing a single API object over aligning the schema to the underlying AWS API. The primary exceptions to this are when exclusive management of all child resources is desired, such as <a href="https://registry.terraform.io/providers/-/aws/latest/docs/resources/security_group">security group ingress/egress rules</a>, or <a href="https://registry.terraform.io/providers/-/aws/latest/docs/resources/iam_policy_attachment">IAM policy attachments</a>.</p>
+<h2 id="proposal">Proposal<a class="headerlink" href="#proposal" title="Permanent link">#</a></h2>
+<p>The best practice for net-new "one-to-many" relationship resources should be to implement singular versions. Feature requests related to changing the singular nature of an existing relationship resource should be avoided unless necessary for the underlying API to function properly.</p>
+<p>Variation from this pattern should only be done when:</p>
+<ol>
+<li>There is a valid use case for a single resource to retain exclusive management of all parent/child relationships.</li>
+<li>Manipulating the underlying AWS APIs to work with singular relationships is not possible or introduces unnecessary complexity.</li>
+</ol>
+<h3 id="one-to-many-design-example">"One-to-many" Design Example<a class="headerlink" href="#one-to-many-design-example" title="Permanent link">#</a></h3>
+<p>Given a fictional "plural" API <code>AttachChildren</code> with a request body like:</p>
+<div class="highlight"><pre><span></span><code>{
+  &quot;ParentId&quot;: &quot;string&quot;,
+  &quot;Children&quot;: [
+    {
+      &quot;ChildId: &quot;string&quot;
+    }
+  ]
+}
+</code></pre></div>
+<p>The corresponding Terraform resource would only represent a single parent/child relationship with a configuration like:</p>
+<div class="highlight"><pre><span></span><code><span class="kr">resource</span><span class="w"> </span><span class="nc">&quot;aws_parent&quot;</span><span class="w"> </span><span class="nv">&quot;example&quot;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="na">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;foo&quot;</span>
+<span class="p">}</span>
+
+<span class="kr">resource</span><span class="w"> </span><span class="nc">&quot;aws_child&quot;</span><span class="w"> </span><span class="nv">&quot;example&quot;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="na">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;bar&quot;</span>
+<span class="p">}</span>
+
+<span class="kr">resource</span><span class="w"> </span><span class="nc">&quot;aws_child_attachment&quot;</span><span class="w"> </span><span class="nv">&quot;example&quot;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="na">parent_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">aws_parent.example.id</span>
+<span class="w">  </span><span class="na">child_id</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="nv">aws_child.example.id</span>
+<span class="p">}</span>
+</code></pre></div>
+<h2 id="references">References<a class="headerlink" href="#references" title="Permanent link">#</a></h2>
+<ul>
+<li>The following feature request and PR initiated the discussion for this analysis:<ul>
+<li><a href="https://github.com/hashicorp/terraform-provider-aws/issues/9901">https://github.com/hashicorp/terraform-provider-aws/issues/9901</a></li>
+<li><a href="https://github.com/hashicorp/terraform-provider-aws/pull/32380">https://github.com/hashicorp/terraform-provider-aws/pull/32380</a></li>
+</ul>
+</li>
+</ul>
+<div class="footnote">
+<hr />
+<ol>
+<li id="fn:1">
+<p>Due to the volume of resources with "rule" in the name (~70), only the prominent security group rule resources were included in the analysis above. While "rule" resources often follow the same relationship-style design, the ~40 examples above provided enough initial data to inform design standards.&#160;<a class="footnote-backref" href="#fnref:1" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+</li>
+<li id="fn:2">
+<p>The structure of this API precludes it from being implemented in a singular fashion.&#160;<a class="footnote-backref" href="#fnref:2" title="Jump back to footnote 2 in the text">&#8617;</a></p>
+</li>
+<li id="fn:3">
+<p>Creates exclusive attachments.&#160;<a class="footnote-backref" href="#fnref:3" title="Jump back to footnote 3 in the text">&#8617;</a></p>
+</li>
+<li id="fn:4">
+<p>Creates exclusive rules.&#160;<a class="footnote-backref" href="#fnref:4" title="Jump back to footnote 4 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:4" title="Jump back to footnote 4 in the text">&#8617;</a></p>
+</li>
+</ol>
+</div>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var tab,labels=set.querySelector(".tabbed-labels");for(tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      HashiCorp
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.instant", "content.tabs.link", "content.code.copy"], "search": "../../assets/javascripts/workers/search.e5c33ebb.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.51d95adb.min.js"></script>
+      
+    
+  </body>
+</html>
