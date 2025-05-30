@@ -32,6 +32,7 @@ import (
 )
 
 // @FrameworkResource("aws_quicksight_account_settings", name="Account Settings")
+// @Region(global=true)
 func newAccountSettingsResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &accountSettingsResource{}
 
