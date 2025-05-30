@@ -2773,10 +2773,10 @@ resource "aws_customer_gateway" "test" {
 }
 
 resource "aws_vpn_connection" "test" {
-  vpn_gateway_id         = aws_vpn_gateway.test.id
-  customer_gateway_id    = aws_customer_gateway.test.id
-  type                   = "ipsec.1"
-  preshared_key_storage  = %[3]q
+  vpn_gateway_id        = aws_vpn_gateway.test.id
+  customer_gateway_id   = aws_customer_gateway.test.id
+  type                  = "ipsec.1"
+  preshared_key_storage = %[3]q
 }
 `, rName, rBgpAsn, preSharedKeyStorage)
 }
