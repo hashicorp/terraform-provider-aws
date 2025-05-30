@@ -1,4 +1,9 @@
 ## 5.99.1 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_s3_bucket_lifecycle_configuration: Correctly handles switching child attributes of `rule.filter`. ([#42655](https://github.com/hashicorp/terraform-provider-aws/issues/42655))
+
 ## 5.99.0 (May 29, 2025)
 
 FEATURES:
