@@ -1,0 +1,44 @@
+# A patch file to assist with enabling VCR support across service clients.
+#
+# This file should be passed into the [`gopatch`](https://github.com/uber-go/gopatch)
+# command like:
+#
+# % gopatch -p internal/vcr/vcr.patch ./$(PKG_NAME)/...
+#
+#####
+# Replace acceptance test structures with VCR compatible versions.
+@@
+@@
+-resource.Test(...)
++acctest.Test(ctx, ...)
+@@
+@@
+-resource.ParallelTest(...)
++acctest.ParallelTest(ctx, ...)
+
+# Replace test resource random name generation functions with VCR compatible versions.
+@@
+@@
+-import sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+
+-sdkacctest.RandomWithPrefix(...)
++acctest.RandomWithPrefix(t, ...)
+@@
+@@
+-import sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+
+-sdkacctest.RandInt()
++acctest.RandInt(t)
+
+# Replace test helper function (check exists/destroyed) client initialization with a
+# VCR compatible version.
+#
+# Note that the parent exists/destroy test function may need a t.Testing argument added,
+# and that applying this patch could result in code which does not compile.
+@@
+var x identifier
+@@
+-import "github.com/hashicorp/terraform-provider-aws/internal/conns"
+
+-acctest.Provider.Meta().(*conns.AWSClient).x(ctx)
++acctest.ProviderMeta(ctx, t).x(ctx)
