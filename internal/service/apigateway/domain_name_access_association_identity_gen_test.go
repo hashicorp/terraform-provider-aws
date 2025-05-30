@@ -5,7 +5,7 @@ package apigateway_test
 import (
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -21,7 +21,7 @@ import (
 func TestAccAPIGatewayDomainNameAccessAssociation_Identity_Basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v types.DomainNameAccessAssociation
+	var v awstypes.DomainNameAccessAssociation
 	resourceName := "aws_api_gateway_domain_name_access_association.test"
 	rName := acctest.RandomSubdomain()
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
