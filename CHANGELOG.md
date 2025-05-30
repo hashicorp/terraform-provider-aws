@@ -1,4 +1,5 @@
-## 5.99.1 (Unreleased)
+## 5.100.0 (Unreleased)
+## 5.99.1 (May 30, 2025)
 
 BUG FIXES:
 
