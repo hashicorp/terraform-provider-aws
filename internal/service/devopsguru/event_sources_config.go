@@ -28,6 +28,7 @@ import (
 // @SingletonIdentity
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/devopsguru;devopsguru.DescribeEventSourcesConfigOutput")
 // @Testing(preCheck="testAccPreCheck")
+// @Testing(generator=false)
 func newEventSourcesConfigResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &eventSourcesConfigResource{}, nil
 }

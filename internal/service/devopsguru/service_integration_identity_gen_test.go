@@ -7,7 +7,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -32,7 +31,6 @@ func testAccDevOpsGuruServiceIntegration_IdentitySerial(t *testing.T) {
 func testAccDevOpsGuruServiceIntegration_Identity_Basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_devopsguru_service_integration.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -48,9 +46,7 @@ func testAccDevOpsGuruServiceIntegration_Identity_Basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ServiceIntegration/basic/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-				},
+				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServiceIntegrationExists(ctx, resourceName),
 				),
@@ -61,10 +57,8 @@ func testAccDevOpsGuruServiceIntegration_Identity_Basic(t *testing.T) {
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ServiceIntegration/basic/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-				},
+				ConfigDirectory:   config.StaticDirectory("testdata/ServiceIntegration/basic/"),
+				ConfigVariables:   config.Variables{},
 				ImportStateKind:   resource.ImportCommandWithID,
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -73,9 +67,7 @@ func testAccDevOpsGuruServiceIntegration_Identity_Basic(t *testing.T) {
 
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ServiceIntegration/basic/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-				},
+				ConfigVariables: config.Variables{},
 				ResourceName:    resourceName,
 				ImportState:     true,
 				ImportStateKind: resource.ImportBlockWithID,
@@ -88,9 +80,7 @@ func testAccDevOpsGuruServiceIntegration_Identity_Basic(t *testing.T) {
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ServiceIntegration/basic/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-				},
+				ConfigVariables: config.Variables{},
 				ResourceName:    resourceName,
 				ImportState:     true,
 				ImportStateKind: resource.ImportBlockWithResourceIdentity,
@@ -109,7 +99,6 @@ func testAccDevOpsGuruServiceIntegration_Identity_RegionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_devopsguru_service_integration.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -126,8 +115,7 @@ func testAccDevOpsGuruServiceIntegration_Identity_RegionOverride(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ServiceIntegration/region_override/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"region":        config.StringVariable(acctest.AlternateRegion()),
+					"region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrRegion), compare.ValuesSame()),
@@ -140,8 +128,7 @@ func testAccDevOpsGuruServiceIntegration_Identity_RegionOverride(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ServiceIntegration/region_override/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"region":        config.StringVariable(acctest.AlternateRegion()),
+					"region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				ImportStateKind:   resource.ImportCommandWithID,
 				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
@@ -154,8 +141,7 @@ func testAccDevOpsGuruServiceIntegration_Identity_RegionOverride(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ServiceIntegration/region_override/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"region":        config.StringVariable(acctest.AlternateRegion()),
+					"region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				ImportStateKind:   resource.ImportCommandWithID,
 				ResourceName:      resourceName,
@@ -167,8 +153,7 @@ func testAccDevOpsGuruServiceIntegration_Identity_RegionOverride(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ServiceIntegration/region_override/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"region":        config.StringVariable(acctest.AlternateRegion()),
+					"region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -186,8 +171,7 @@ func testAccDevOpsGuruServiceIntegration_Identity_RegionOverride(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ServiceIntegration/region_override/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"region":        config.StringVariable(acctest.AlternateRegion()),
+					"region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				ResourceName:    resourceName,
 				ImportState:     true,
@@ -204,8 +188,7 @@ func testAccDevOpsGuruServiceIntegration_Identity_RegionOverride(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ServiceIntegration/region_override/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"region":        config.StringVariable(acctest.AlternateRegion()),
+					"region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				ResourceName:    resourceName,
 				ImportState:     true,

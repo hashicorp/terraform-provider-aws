@@ -28,6 +28,7 @@ import (
 // @FrameworkResource("aws_devopsguru_service_integration", name="Service Integration")
 // @SingletonIdentity
 // @Testing(preCheck="testAccPreCheck")
+// @Testing(generator=false)
 func newServiceIntegrationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &serviceIntegrationResource{}, nil
 }

@@ -5,8 +5,3 @@ resource "aws_ebs_snapshot_block_public_access" "test" {
   state = "block-all-sharing"
 }
 
-variable "rName" {
-  description = "Name for resource"
-  type        = string
-  nullable    = false
-}

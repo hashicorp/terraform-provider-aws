@@ -7,7 +7,6 @@ import (
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/s3control/types"
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -34,7 +33,6 @@ func testAccS3ControlAccountPublicAccessBlock_Identity_Basic(t *testing.T) {
 
 	var v awstypes.PublicAccessBlockConfiguration
 	resourceName := "aws_s3_account_public_access_block.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -47,9 +45,7 @@ func testAccS3ControlAccountPublicAccessBlock_Identity_Basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/AccountPublicAccessBlock/basic/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-				},
+				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAccountPublicAccessBlockExists(ctx, resourceName, &v),
 				),
@@ -61,10 +57,8 @@ func testAccS3ControlAccountPublicAccessBlock_Identity_Basic(t *testing.T) {
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/AccountPublicAccessBlock/basic/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-				},
+				ConfigDirectory:   config.StaticDirectory("testdata/AccountPublicAccessBlock/basic/"),
+				ConfigVariables:   config.Variables{},
 				ImportStateKind:   resource.ImportCommandWithID,
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -73,9 +67,7 @@ func testAccS3ControlAccountPublicAccessBlock_Identity_Basic(t *testing.T) {
 
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/AccountPublicAccessBlock/basic/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-				},
+				ConfigVariables: config.Variables{},
 				ResourceName:    resourceName,
 				ImportState:     true,
 				ImportStateKind: resource.ImportBlockWithID,
@@ -87,9 +79,7 @@ func testAccS3ControlAccountPublicAccessBlock_Identity_Basic(t *testing.T) {
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/AccountPublicAccessBlock/basic/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-				},
+				ConfigVariables: config.Variables{},
 				ResourceName:    resourceName,
 				ImportState:     true,
 				ImportStateKind: resource.ImportBlockWithResourceIdentity,

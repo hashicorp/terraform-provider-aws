@@ -5,11 +5,6 @@ resource "aws_auditmanager_account_registration" "test" {
   region = var.region
 }
 
-variable "rName" {
-  description = "Name for resource"
-  type        = string
-  nullable    = false
-}
 
 variable "region" {
   description = "Region to deploy resource in"

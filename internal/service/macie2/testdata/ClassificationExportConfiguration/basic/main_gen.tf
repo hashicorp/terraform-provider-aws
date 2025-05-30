@@ -109,8 +109,3 @@ data "aws_partition" "current" {}
 
 data "aws_region" "current" {}
 
-variable "rName" {
-  description = "Name for resource"
-  type        = string
-  nullable    = false
-}

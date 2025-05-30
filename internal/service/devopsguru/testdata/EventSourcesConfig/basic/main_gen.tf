@@ -9,8 +9,3 @@ resource "aws_devopsguru_event_sources_config" "test" {
   }
 }
 
-variable "rName" {
-  description = "Name for resource"
-  type        = string
-  nullable    = false
-}

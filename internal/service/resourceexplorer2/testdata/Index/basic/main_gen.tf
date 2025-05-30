@@ -5,8 +5,3 @@ resource "aws_resourceexplorer2_index" "test" {
   type = "LOCAL"
 }
 
-variable "rName" {
-  description = "Name for resource"
-  type        = string
-  nullable    = false
-}

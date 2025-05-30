@@ -13,8 +13,3 @@ resource "aws_devopsguru_service_integration" "test" {
   }
 }
 
-variable "rName" {
-  description = "Name for resource"
-  type        = string
-  nullable    = false
-}

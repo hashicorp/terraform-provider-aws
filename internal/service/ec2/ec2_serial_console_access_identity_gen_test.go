@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -31,7 +30,6 @@ func testAccEC2SerialConsoleAccess_IdentitySerial(t *testing.T) {
 func testAccEC2SerialConsoleAccess_Identity_Basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ec2_serial_console_access.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -44,9 +42,7 @@ func testAccEC2SerialConsoleAccess_Identity_Basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/SerialConsoleAccess/basic/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-				},
+				ConfigVariables: config.Variables{},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringExact(acctest.AccountID(ctx))),
 					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
@@ -55,10 +51,8 @@ func testAccEC2SerialConsoleAccess_Identity_Basic(t *testing.T) {
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/SerialConsoleAccess/basic/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-				},
+				ConfigDirectory:   config.StaticDirectory("testdata/SerialConsoleAccess/basic/"),
+				ConfigVariables:   config.Variables{},
 				ImportStateKind:   resource.ImportCommandWithID,
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -67,9 +61,7 @@ func testAccEC2SerialConsoleAccess_Identity_Basic(t *testing.T) {
 
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/SerialConsoleAccess/basic/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-				},
+				ConfigVariables: config.Variables{},
 				ResourceName:    resourceName,
 				ImportState:     true,
 				ImportStateKind: resource.ImportBlockWithID,
@@ -81,9 +73,7 @@ func testAccEC2SerialConsoleAccess_Identity_Basic(t *testing.T) {
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/SerialConsoleAccess/basic/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-				},
+				ConfigVariables: config.Variables{},
 				ResourceName:    resourceName,
 				ImportState:     true,
 				ImportStateKind: resource.ImportBlockWithResourceIdentity,

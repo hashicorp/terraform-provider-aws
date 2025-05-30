@@ -24,6 +24,7 @@ import (
 // @SingletonIdentity
 // @Testing(hasExistsFunction=false)
 // @Testing(checkDestroyNoop=true)
+// @Testing(generator=false)
 func resourceIndexingConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceIndexingConfigurationPut,

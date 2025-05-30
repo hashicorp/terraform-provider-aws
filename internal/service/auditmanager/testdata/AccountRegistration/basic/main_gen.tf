@@ -3,8 +3,3 @@
 
 resource "aws_auditmanager_account_registration" "test" {}
 
-variable "rName" {
-  description = "Name for resource"
-  type        = string
-  nullable    = false
-}

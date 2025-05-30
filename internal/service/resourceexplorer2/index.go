@@ -34,6 +34,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
 // @Testing(serialize=true)
+// @Testing(generator=false)
 func newIndexResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &indexResource{}
 

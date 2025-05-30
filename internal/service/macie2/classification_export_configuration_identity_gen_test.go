@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/macie2"
 	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -35,7 +34,6 @@ func testAccMacie2ClassificationExportConfiguration_Identity_Basic(t *testing.T)
 
 	var v macie2.GetClassificationExportConfigurationOutput
 	resourceName := "aws_macie2_classification_export_configuration.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -48,9 +46,7 @@ func testAccMacie2ClassificationExportConfiguration_Identity_Basic(t *testing.T)
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ClassificationExportConfiguration/basic/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-				},
+				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClassificationExportConfigurationExists(ctx, resourceName, &v),
 				),
@@ -61,10 +57,8 @@ func testAccMacie2ClassificationExportConfiguration_Identity_Basic(t *testing.T)
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ClassificationExportConfiguration/basic/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-				},
+				ConfigDirectory:   config.StaticDirectory("testdata/ClassificationExportConfiguration/basic/"),
+				ConfigVariables:   config.Variables{},
 				ImportStateKind:   resource.ImportCommandWithID,
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -73,9 +67,7 @@ func testAccMacie2ClassificationExportConfiguration_Identity_Basic(t *testing.T)
 
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ClassificationExportConfiguration/basic/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-				},
+				ConfigVariables: config.Variables{},
 				ResourceName:    resourceName,
 				ImportState:     true,
 				ImportStateKind: resource.ImportBlockWithID,
@@ -88,9 +80,7 @@ func testAccMacie2ClassificationExportConfiguration_Identity_Basic(t *testing.T)
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ClassificationExportConfiguration/basic/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-				},
+				ConfigVariables: config.Variables{},
 				ResourceName:    resourceName,
 				ImportState:     true,
 				ImportStateKind: resource.ImportBlockWithResourceIdentity,
@@ -109,7 +99,6 @@ func testAccMacie2ClassificationExportConfiguration_Identity_RegionOverride(t *t
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_macie2_classification_export_configuration.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -123,8 +112,7 @@ func testAccMacie2ClassificationExportConfiguration_Identity_RegionOverride(t *t
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ClassificationExportConfiguration/region_override/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"region":        config.StringVariable(acctest.AlternateRegion()),
+					"region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrRegion), compare.ValuesSame()),
@@ -137,8 +125,7 @@ func testAccMacie2ClassificationExportConfiguration_Identity_RegionOverride(t *t
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ClassificationExportConfiguration/region_override/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"region":        config.StringVariable(acctest.AlternateRegion()),
+					"region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				ImportStateKind:   resource.ImportCommandWithID,
 				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
@@ -151,8 +138,7 @@ func testAccMacie2ClassificationExportConfiguration_Identity_RegionOverride(t *t
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ClassificationExportConfiguration/region_override/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"region":        config.StringVariable(acctest.AlternateRegion()),
+					"region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				ImportStateKind:   resource.ImportCommandWithID,
 				ResourceName:      resourceName,
@@ -164,8 +150,7 @@ func testAccMacie2ClassificationExportConfiguration_Identity_RegionOverride(t *t
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ClassificationExportConfiguration/region_override/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"region":        config.StringVariable(acctest.AlternateRegion()),
+					"region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -183,8 +168,7 @@ func testAccMacie2ClassificationExportConfiguration_Identity_RegionOverride(t *t
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ClassificationExportConfiguration/region_override/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"region":        config.StringVariable(acctest.AlternateRegion()),
+					"region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				ResourceName:    resourceName,
 				ImportState:     true,
@@ -201,8 +185,7 @@ func testAccMacie2ClassificationExportConfiguration_Identity_RegionOverride(t *t
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ClassificationExportConfiguration/region_override/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"region":        config.StringVariable(acctest.AlternateRegion()),
+					"region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				ResourceName:    resourceName,
 				ImportState:     true,

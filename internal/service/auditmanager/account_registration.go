@@ -20,6 +20,7 @@ import (
 
 // @FrameworkResource("aws_auditmanager_account_registration", name="Account Registration")
 // @SingletonIdentity
+// @Testing(generator=false)
 // @Testing(hasExistsFunction=false)
 func newAccountRegistrationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &accountRegistrationResource{}, nil

@@ -22,8 +22,3 @@ data "aws_partition" "current" {}
 
 data "aws_caller_identity" "current" {}
 
-variable "rName" {
-  description = "Name for resource"
-  type        = string
-  nullable    = false
-}

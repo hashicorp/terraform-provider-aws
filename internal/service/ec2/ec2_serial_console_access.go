@@ -18,6 +18,7 @@ import (
 // @Region(global=true)
 // @SingletonIdentity
 // @Testing(hasExistsFunction=false)
+// @Testing(generator=false)
 func resourceSerialConsoleAccess() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSerialConsoleAccessCreate,
