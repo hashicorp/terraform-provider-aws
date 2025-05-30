@@ -14,6 +14,12 @@ Provides an EventBridge Target resource.
 
 ~> **Note:** EventBridge was formerly known as CloudWatch Events. The functionality is identical.
 
+-> **Note:** In order to be able to have your AWS Lambda function or
+   SNS topic invoked by an EventBridge rule, you must set up the right permissions
+   using [`aws_lambda_permission`](/docs/providers/aws/r/lambda_permission.html)
+   or [`aws_sns_topic_policy`](/docs/providers/aws/r/sns_topic_policy.html).
+   More info [here](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-use-resource-based.html).
+
 ## Example Usage
 
 ### Kinesis Usage
@@ -781,12 +787,6 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
--> **Note:** In order to be able to have your AWS Lambda function or
-   SNS topic invoked by an EventBridge rule, you must set up the right permissions
-   using [`aws_lambda_permission`](/docs/providers/aws/r/lambda_permission.html)
-   or [`aws_sns_topic_policy`](/docs/providers/aws/r/sns_topic_policy.html).
-   More info [here](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-use-resource-based.html).
-
 The following arguments are required:
 
 * `arn` - (Required) The Amazon Resource Name (ARN) of the target.
@@ -955,4 +955,4 @@ Using `terraform import`, import EventBridge Targets using `event_bus_name/rule-
 % terraform import aws_cloudwatch_event_target.test-event-target rule-name/target-id
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-d47d898aa34d7974cef10a825a43943ac9b009a37a2cb01e8736afdd751dd905 -->
+<!-- cache-key: cdktf-0.20.8 input-fdc2f713a76965d636fc8d89157bf97c323ab9142eb0af278d9b82a78994c024 -->

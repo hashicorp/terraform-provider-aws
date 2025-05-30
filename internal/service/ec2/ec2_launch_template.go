@@ -98,6 +98,12 @@ func resourceLaunchTemplate() *schema.Resource {
 										Optional:     true,
 										ValidateFunc: validation.IntBetween(125, 1000),
 									},
+									"volume_initialization_rate": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										Computed:     true,
+										ValidateFunc: validation.IntBetween(100, 300),
+									},
 									names.AttrVolumeSize: {
 										Type:     schema.TypeInt,
 										Optional: true,
@@ -1038,7 +1044,6 @@ func resourceLaunchTemplateCreate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	output, err := conn.CreateLaunchTemplate(ctx, &input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Launch Template (%s): %s", name, err)
 	}
@@ -1070,7 +1075,6 @@ func resourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, met
 
 	version := flex.Int64ToStringValue(lt.LatestVersionNumber)
 	ltv, err := findLaunchTemplateVersionByTwoPartKey(ctx, conn, d.Id(), version)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Launch Template (%s) Version (%s): %s", d.Id(), version, err)
 	}
@@ -1152,7 +1156,6 @@ func resourceLaunchTemplateUpdate(ctx context.Context, d *schema.ResourceData, m
 		}
 
 		output, err := conn.CreateLaunchTemplateVersion(ctx, &input)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating EC2 Launch Template (%s) Version: %s", d.Id(), err)
 		}
@@ -1172,7 +1175,6 @@ func resourceLaunchTemplateUpdate(ctx context.Context, d *schema.ResourceData, m
 		}
 
 		_, err := conn.ModifyLaunchTemplate(ctx, &input)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EC2 Launch Template (%s): %s", d.Id(), err)
 		}
@@ -1277,7 +1279,6 @@ func expandRequestLaunchTemplateData(ctx context.Context, conn *ec2.Client, d *s
 	if v, ok := d.GetOk("credit_specification"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		if instanceType != "" {
 			instanceTypeInfo, err := findInstanceTypeByName(ctx, conn, instanceType)
-
 			if err != nil {
 				return nil, fmt.Errorf("reading EC2 Instance Type (%s): %w", instanceType, err)
 			}
@@ -1466,6 +1467,10 @@ func expandLaunchTemplateEBSBlockDeviceRequest(tfMap map[string]any) *awstypes.L
 
 	if v, ok := tfMap[names.AttrThroughput].(int); ok && v != 0 {
 		apiObject.Throughput = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["volume_initialization_rate"].(int); ok && v != 0 {
+		apiObject.VolumeInitializationRate = aws.Int32(int32(v))
 	}
 
 	if v, ok := tfMap[names.AttrVolumeSize].(int); ok && v != 0 {
@@ -2192,7 +2197,6 @@ func flattenResponseLaunchTemplateData(ctx context.Context, conn *ec2.Client, d 
 	}
 	if apiObject.CreditSpecification != nil && instanceType != "" {
 		instanceTypeInfo, err := findInstanceTypeByName(ctx, conn, instanceType)
-
 		if err != nil {
 			return fmt.Errorf("reading EC2 Instance Type (%s): %w", instanceType, err)
 		}
@@ -2379,6 +2383,10 @@ func flattenLaunchTemplateEBSBlockDevice(apiObject *awstypes.LaunchTemplateEbsBl
 
 	if v := apiObject.Throughput; v != nil {
 		tfMap[names.AttrThroughput] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.VolumeInitializationRate; v != nil {
+		tfMap["volume_initialization_rate"] = aws.ToInt32(v)
 	}
 
 	if v := apiObject.VolumeSize; v != nil {

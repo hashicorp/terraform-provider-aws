@@ -75,7 +75,7 @@ The following arguments are required:
 * `parentImage` - (Required) The image recipe uses this image as a base from which to build your customized image. The value can be the base image ARN or an AMI ID.
 * `version` - (Required) The semantic version of the image recipe, which specifies the version in the following format, with numeric values in each position to indicate a specific version: major.minor.patch. For example: 1.0.0.
 
-The following attributes are optional:
+The following arguments are optional:
 
 * `blockDeviceMapping` - (Optional) Configuration block(s) with block device mappings for the image recipe. Detailed below.
 * `description` - (Optional) Description of the image recipe.
@@ -158,4 +158,4 @@ Using `terraform import`, import `aws_imagebuilder_image_recipe` resources using
 % terraform import aws_imagebuilder_image_recipe.example arn:aws:imagebuilder:us-east-1:123456789012:image-recipe/example/1.0.0
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-5c68a92766e8729ebe8138c639c093f6b2479c7c3af7d16e31729c541c482134 -->
+<!-- cache-key: cdktf-0.20.8 input-fbeeb0e54dce3c6a72427e4393015073ca6d4559006b80d5cd93653c88401301 -->

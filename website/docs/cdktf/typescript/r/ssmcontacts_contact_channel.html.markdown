@@ -12,6 +12,8 @@ description: |-
 
 Terraform resource for managing an AWS SSM Contacts Contact Channel.
 
+~> **NOTE:** The contact channel needs to be activated in the AWS Systems Manager console, otherwise it can't be used to engage the contact. See the [Contacts section of the Incident Manager User Guide](https://docs.aws.amazon.com/incident-manager/latest/userguide/contacts.html) for more information.
+
 ## Example Usage
 
 ### Basic Usage
@@ -76,16 +78,11 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-~> **NOTE:** The contact channel needs to be activated in the AWS Systems Manager console, otherwise it can't be used to engage the contact. See the [Contacts section of the Incident Manager User Guide](https://docs.aws.amazon.com/incident-manager/latest/userguide/contacts.html) for more information.
-
 The following arguments are required:
 
 - `contactId` - (Required) Amazon Resource Name (ARN) of the AWS SSM Contact that the contact channel belongs to.
-
 - `deliveryAddress` - (Required) Block that contains contact engagement details. See details below.
-
 - `name` - (Required) Name of the contact channel. Must be between 1 and 255 characters, and may contain alphanumerics, underscores (`_`), hyphens (`-`), periods (`.`), and spaces.
-
 - `type` - (Required) Type of the contact channel. One of `SMS`, `VOICE` or `EMAIL`.
 
 ### delivery_address
@@ -97,7 +94,6 @@ The following arguments are required:
 This resource exports the following attributes in addition to the arguments above:
 
 - `activationStatus` - Whether the contact channel is activated. The contact channel must be activated to use it to engage the contact. One of `ACTIVATED` or `NOT_ACTIVATED`.
-
 - `arn` - Amazon Resource Name (ARN) of the contact channel.
 
 ## Import
@@ -132,4 +128,4 @@ Using `terraform import`, import SSM Contact Channel using the `ARN`. For exampl
 % terraform import aws_ssmcontacts_contact_channel.example arn:aws:ssm-contacts:us-west-2:123456789012:contact-channel/example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-875a737831eeadb1d936d18c2cf26aad7a60fef9a50f2c0c60f64676b0763b4f -->
+<!-- cache-key: cdktf-0.20.8 input-67d6f47b5cc058990a7ddf5e07adee25f5f66839fdfcdbac4003a8e367cbd01b -->

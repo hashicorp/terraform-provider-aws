@@ -100,6 +100,9 @@ This resource exports the following attributes in addition to the arguments abov
 For more detailed documentation about each argument, refer to
 the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/reference/docdb/create-db-instance.html).
 
+For more detailed documentation about each argument, refer to
+the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/reference/docdb/create-db-instance.html).
+
 [1]: /docs/providers/aws/r/docdb_cluster.html
 [2]: https://docs.aws.amazon.com/documentdb/latest/developerguide/db-cluster-manage-performance.html#db-cluster-manage-scaling-instance
 [3]: https://www.terraform.io/docs/configuration/meta-arguments/count.html

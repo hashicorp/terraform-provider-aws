@@ -49,8 +49,6 @@ class MyConvertedCode extends TerraformStack {
 The following arguments are required:
 
 * `aclName` - (Required) The name of the Access Control List to associate with the cluster.
-* `engine` - (Optional) The engine that will run on your nodes. Supported values are `redis` and `valkey`.
-* `engineVersion` - (Optional) Version number of the engine to be used for the cluster. Downgrades are not supported.
 * `nodeType` - (Required) The compute and memory capacity of the nodes in the cluster. See AWS documentation on [supported node types](https://docs.aws.amazon.com/memorydb/latest/devguide/nodes.supportedtypes.html) as well as [vertical scaling](https://docs.aws.amazon.com/memorydb/latest/devguide/cluster-vertical-scaling.html).
 
 The following arguments are optional:
@@ -58,6 +56,8 @@ The following arguments are optional:
 * `autoMinorVersionUpgrade` - (Optional, Forces new resource) When set to `true`, the cluster will automatically receive minor engine version upgrades after launch. Defaults to `true`.
 * `dataTiering` - (Optional, Forces new resource) Enables data tiering. This option is not supported by all instance types. For more information, see [Data tiering](https://docs.aws.amazon.com/memorydb/latest/devguide/data-tiering.html).
 * `description` - (Optional) Description for the cluster. Defaults to `"Managed by Terraform"`.
+* `engine` - (Optional) The engine that will run on your nodes. Supported values are `redis` and `valkey`.
+* `engineVersion` - (Optional) Version number of the engine to be used for the cluster. Downgrades are not supported.
 * `finalSnapshotName` - (Optional) Name of the final cluster snapshot to be created when this resource is deleted. If omitted, no final snapshot will be made.
 * `kmsKeyArn` - (Optional, Forces new resource) ARN of the KMS key used to encrypt the cluster at rest.
 * `maintenanceWindow` - (Optional) Specifies the weekly time range during which maintenance on the cluster is performed. Specify as a range in the format `ddd:hh24:mi-ddd:hh24:mi` (24H Clock UTC). The minimum maintenance window is a 60 minute period. Example: `sun:23:00-mon:01:30`.
@@ -137,4 +137,4 @@ Using `terraform import`, import a cluster using the `name`. For example:
 % terraform import aws_memorydb_cluster.example my-cluster
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-b7d6ace67b9086c72709ff30bb3c3394db50bf541655a54b8bff0392b1a725ba -->
+<!-- cache-key: cdktf-0.20.8 input-b44a21cccf3add675f814802b60dcd874ebe35bcc19459769df7aff4f8539d96 -->
