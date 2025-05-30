@@ -1051,6 +1051,7 @@ func TestAccRDSInstance_ManageMasterPassword_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDBInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "manage_master_user_password", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "disable_master_user_password_rotation", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "master_user_secret.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.kms_key_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.secret_arn"),
@@ -1065,6 +1066,104 @@ func TestAccRDSInstance_ManageMasterPassword_basic(t *testing.T) {
 					names.AttrApplyImmediately,
 					names.AttrFinalSnapshotIdentifier,
 					"manage_master_user_password",
+					"disable_master_user_password_rotation",
+					"skip_final_snapshot",
+				},
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_ManageMasterPassword_disableRotation(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.DBInstance
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_db_instance.test"
+	secretsManagerResourceName := "data.aws_secretsmanager_secret_rotation.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_manageMasterPasswordDisableRotation(rName, acctest.CtTrue),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "manage_master_user_password", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "disable_master_user_password_rotation", acctest.CtTrue),
+					resource.TestCheckResourceAttr(secretsManagerResourceName, "rotation_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "master_user_secret.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.kms_key_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.secret_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.secret_status"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrApplyImmediately,
+					names.AttrFinalSnapshotIdentifier,
+					"manage_master_user_password",
+					"disable_master_user_password_rotation",
+					"skip_final_snapshot",
+				},
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_ManageMasterPassword_changeDisableRotationFlag(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.DBInstance
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_db_instance.test"
+	secretsManagerResourceName := "data.aws_secretsmanager_secret_rotation.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_manageMasterPasswordDisableRotation(rName, acctest.CtFalse),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "manage_master_user_password", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "disable_master_user_password_rotation", acctest.CtFalse),
+					resource.TestCheckResourceAttr(secretsManagerResourceName, "rotation_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "master_user_secret.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.kms_key_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.secret_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.secret_status"),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_manageMasterPasswordDisableRotation(rName, acctest.CtTrue),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "manage_master_user_password", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "disable_master_user_password_rotation", acctest.CtTrue),
+					resource.TestCheckResourceAttr(secretsManagerResourceName, "rotation_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "master_user_secret.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.kms_key_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.secret_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.secret_status"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrApplyImmediately,
+					names.AttrFinalSnapshotIdentifier,
+					"manage_master_user_password",
+					"disable_master_user_password_rotation",
 					"skip_final_snapshot",
 				},
 			},
@@ -1145,6 +1244,7 @@ func TestAccRDSInstance_ManageMasterPassword_kmsKey(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDBInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "manage_master_user_password", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "disable_master_user_password_rotation", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "master_user_secret.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.kms_key_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.secret_arn"),
@@ -1159,6 +1259,7 @@ func TestAccRDSInstance_ManageMasterPassword_kmsKey(t *testing.T) {
 					names.AttrApplyImmediately,
 					names.AttrFinalSnapshotIdentifier,
 					"manage_master_user_password",
+					"disable_master_user_password_rotation",
 					"master_user_secret_kms_key_id",
 					"skip_final_snapshot",
 				},
@@ -1212,6 +1313,7 @@ func TestAccRDSInstance_ManageMasterPassword_convertToManaged(t *testing.T) {
 					testAccCheckDBInstanceExists(ctx, resourceName, &dbCluster2),
 					resource.TestCheckResourceAttrSet(resourceName, "manage_master_user_password"),
 					resource.TestCheckResourceAttr(resourceName, "manage_master_user_password", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "disable_master_user_password_rotation", acctest.CtFalse),
 				),
 			},
 		},
@@ -2760,6 +2862,7 @@ func TestAccRDSInstance_ReplicateSourceDB_characterSet_Source(t *testing.T) {
 					names.AttrFinalSnapshotIdentifier,
 					names.AttrPassword,
 					"manage_master_user_password",
+					"disable_master_user_password_rotation",
 					"skip_final_snapshot",
 					"delete_automated_backups",
 				},
@@ -2846,6 +2949,7 @@ func TestAccRDSInstance_ReplicateSourceDB_replicaMode(t *testing.T) {
 					names.AttrFinalSnapshotIdentifier,
 					names.AttrPassword,
 					"manage_master_user_password",
+					"disable_master_user_password_rotation",
 					"skip_final_snapshot",
 					"delete_automated_backups",
 				},
@@ -3240,6 +3344,7 @@ func TestAccRDSInstance_SnapshotIdentifier_ManageMasterPasswordKMSKey(t *testing
 					testAccCheckDBSnapshotExists(ctx, snapshotResourceName, &dbSnapshot),
 					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "manage_master_user_password", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "disable_master_user_password_rotation", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "master_user_secret.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.kms_key_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.secret_arn"),
@@ -3254,6 +3359,7 @@ func TestAccRDSInstance_SnapshotIdentifier_ManageMasterPasswordKMSKey(t *testing
 					names.AttrApplyImmediately,
 					names.AttrFinalSnapshotIdentifier,
 					"manage_master_user_password",
+					"disable_master_user_password_rotation",
 					"master_user_secret_kms_key_id",
 					"snapshot_identifier",
 					"skip_final_snapshot",
@@ -6049,6 +6155,7 @@ func TestAccRDSInstance_RestoreToPointInTime_manageMasterPassword(t *testing.T) 
 					testAccCheckDBInstanceExists(ctx, sourceName, &sourceDbInstance),
 					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "manage_master_user_password", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "disable_master_user_password_rotation", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "master_user_secret.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.kms_key_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.secret_arn"),
@@ -6065,6 +6172,7 @@ func TestAccRDSInstance_RestoreToPointInTime_manageMasterPassword(t *testing.T) 
 					names.AttrFinalSnapshotIdentifier,
 					"latest_restorable_time", // dynamic value of a DBInstance
 					"manage_master_user_password",
+					"disable_master_user_password_rotation",
 					names.AttrPassword,
 					"restore_to_point_in_time",
 					"skip_final_snapshot",
@@ -10246,6 +10354,29 @@ resource "aws_db_instance" "test" {
   username                    = "tfacctest"
 }
 `, rName))
+}
+
+func testAccInstanceConfig_manageMasterPasswordDisableRotation(rName, disableSecretRotation string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_orderableClassMySQL(),
+		fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  allocated_storage           			= 5
+  backup_retention_period     			= 0
+  engine                      			= data.aws_rds_orderable_db_instance.test.engine
+  engine_version              			= data.aws_rds_orderable_db_instance.test.engine_version
+  identifier                  			= %[1]q
+  instance_class              			= data.aws_rds_orderable_db_instance.test.instance_class
+  manage_master_user_password 			= true
+  disable_master_user_password_rotation = %[2]q
+  skip_final_snapshot         			= true
+  username                    			= "tfacctest"
+}
+
+data "aws_secretsmanager_secret_rotation" "test" {
+  secret_id = aws_db_instance.test.master_user_secret[0].secret_arn
+}
+`, rName, disableSecretRotation))
 }
 
 func testAccInstanceConfig_passwordWithStoppedInstance(rName, password string) string {
