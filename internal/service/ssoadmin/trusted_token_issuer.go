@@ -35,6 +35,9 @@ import (
 // @FrameworkResource("aws_ssoadmin_trusted_token_issuer", name="Trusted Token Issuer")
 // @Tags
 // @ArnIdentity
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ssoadmin;ssoadmin.DescribeTrustedTokenIssuerOutput")
+// @Testing(preCheckWithRegion="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckSSOAdminInstancesWithRegion")
+// @Testing(serialize=true)
 func newTrustedTokenIssuerResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &trustedTokenIssuerResource{}, nil
 }
@@ -411,18 +414,3 @@ type oidcJWTConfigurationModel struct {
 	IssuerURL                  types.String                                     `tfsdk:"issuer_url"`
 	JWKSRetrievalOption        fwtypes.StringEnum[awstypes.JwksRetrievalOption] `tfsdk:"jwks_retrieval_option"`
 }
-
-// func (w *trustedTokenIssuerResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-// 	_, err := arn.Parse(request.ID)
-// 	if err != nil {
-// 		response.Diagnostics.AddError(
-// 			"Invalid Resource Import ID Value",
-// 			"The import ID could not be parsed as an ARN.\n\n"+
-// 				fmt.Sprintf("Value: %q\nError: %s", request.ID, err),
-// 		)
-// 		return
-// 	}
-
-// 	resource.ImportStatePassthroughID(ctx, path.Root("application_arn"), request, response)
-// 	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), request.ID)...)
-// }

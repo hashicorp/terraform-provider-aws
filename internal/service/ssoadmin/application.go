@@ -34,12 +34,15 @@ import (
 // @FrameworkResource("aws_ssoadmin_application", name="Application")
 // @Tags
 // @ArnIdentity
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ssoadmin;ssoadmin.DescribeApplicationOutput")
+// @Testing(preCheckWithRegion="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckSSOAdminInstancesWithRegion")
 func newApplicationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &applicationResource{}, nil
 }
 
 type applicationResource struct {
 	framework.ResourceWithModel[applicationResourceModel]
+	framework.WithImportByGlobalARN
 }
 
 func (r *applicationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -52,23 +55,24 @@ func (r *applicationResource) Schema(ctx context.Context, request resource.Schem
 				},
 			},
 			"application_arn": schema.StringAttribute{
-				CustomType: fwtypes.ARNType,
-				Computed:   true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
+				DeprecationMessage: "Use 'arn' instead. This attribute will be removed in a future version of the provider.",
 			},
 			"application_provider_arn": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
 			},
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"client_token": schema.StringAttribute{
 				Optional: true,
 			},
 			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 			},
-			names.AttrID: framework.IDAttribute(),
+			names.AttrID: framework.IDAttributeDeprecatedWithAlternate(path.Root(names.AttrARN)),
 			"instance_arn": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
@@ -164,7 +168,8 @@ func (r *applicationResource) Create(ctx context.Context, request resource.Creat
 	}
 
 	// Set values for unknowns.
-	data.ApplicationARN = fwflex.StringToFrameworkARN(ctx, output.ApplicationArn)
+	data.ARN = fwflex.StringToFramework(ctx, output.ApplicationArn)
+	data.ApplicationARN = fwflex.StringToFramework(ctx, output.ApplicationArn)
 	data.ID = fwflex.StringToFramework(ctx, output.ApplicationArn)
 
 	// Read after create to get computed attributes omitted from the create response.
@@ -337,8 +342,9 @@ func findApplicationByID(ctx context.Context, conn *ssoadmin.Client, id string) 
 type applicationResourceModel struct {
 	framework.WithRegionModel
 	ApplicationAccount     types.String                                        `tfsdk:"application_account"`
-	ApplicationARN         fwtypes.ARN                                         `tfsdk:"application_arn"`
+	ApplicationARN         types.String                                        `tfsdk:"application_arn"`
 	ApplicationProviderARN fwtypes.ARN                                         `tfsdk:"application_provider_arn"`
+	ARN                    types.String                                        `tfsdk:"arn"`
 	ClientToken            types.String                                        `tfsdk:"client_token"`
 	Description            types.String                                        `tfsdk:"description"`
 	ID                     types.String                                        `tfsdk:"id"`
@@ -360,17 +366,43 @@ type signInOptionsModel struct {
 	Origin         fwtypes.StringEnum[awstypes.SignInOrigin] `tfsdk:"origin"`
 }
 
+// TODO: Equivalent to `WithImportByGlobalARN` with additional attribute to set
 func (r *applicationResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	_, err := arn.Parse(request.ID)
-	if err != nil {
-		response.Diagnostics.AddError(
-			"Invalid Resource Import ID Value",
-			"The import ID could not be parsed as an ARN.\n\n"+
-				fmt.Sprintf("Value: %q\nError: %s", request.ID, err),
-		)
+	if request.ID != "" {
+		_, err := arn.Parse(request.ID)
+		if err != nil {
+			response.Diagnostics.AddError(
+				"Invalid Resource Import ID Value",
+				"The import ID could not be parsed as an ARN.\n\n"+
+					fmt.Sprintf("Value: %q\nError: %s", request.ID, err),
+			)
+			return
+		}
+
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrARN), request.ID)...)     // nosemgrep:ci.semgrep.framework.import-state-passthrough-id
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("application_arn"), request.ID)...) // nosemgrep:ci.semgrep.framework.import-state-passthrough-id
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), request.ID)...)      // nosemgrep:ci.semgrep.framework.import-state-passthrough-id
+
 		return
 	}
 
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("application_arn"), request.ID)...) // nosemgrep:ci.semgrep.framework.import-state-passthrough-id
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), request.ID)...)      // nosemgrep:ci.semgrep.framework.import-state-passthrough-id
+	if identity := request.Identity; identity != nil {
+		arnPath := path.Root(names.AttrARN)
+		var arnVal string
+		identity.GetAttribute(ctx, arnPath, &arnVal)
+
+		_, err := arn.Parse(arnVal)
+		if err != nil {
+			response.Diagnostics.AddAttributeError(
+				arnPath,
+				"Invalid Import Attribute Value",
+				fmt.Sprintf("Import attribute %q is not a valid ARN, got: %s", arnPath, arnVal),
+			)
+			return
+		}
+
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrARN), arnVal)...)
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("application_arn"), request.ID)...)
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), arnVal)...)
+	}
 }

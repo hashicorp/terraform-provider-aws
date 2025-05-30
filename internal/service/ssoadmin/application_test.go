@@ -51,80 +51,16 @@ func TestAccSSOAdminApplication_basic(t *testing.T) {
 					testAccCheckApplicationExists(ctx, resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "application_provider_arn", testAccApplicationProviderARN),
-					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, "application_arn", "sso", regexache.MustCompile(`application/.+$`)),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccSSOAdminApplication_Identity_Basic(t *testing.T) {
-	ctx := acctest.Context(t)
-	var application ssoadmin.DescribeApplicationOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_ssoadmin_application.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.SSOAdminEndpointID)
-			acctest.PreCheckSSOAdminInstances(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccApplicationConfig_basic(rName, testAccApplicationProviderARN),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationExists(ctx, resourceName, &application),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("application_arn"), tfknownvalue.GlobalARNRegexp("sso", regexache.MustCompile(`application/ssoins-[0-9a-z]{16}/apl-[0-9a-z]{16}`))),
-					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New("application_arn"), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.GlobalARNRegexp("sso", regexache.MustCompile(`application/ssoins-[0-9a-z]{16}/apl-[0-9a-z]{16}`))),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("application_arn"), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
 				},
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccSSOAdminApplication_Identity_RegionOverride(t *testing.T) {
-	ctx := acctest.Context(t)
-
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_ssoadmin_application.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.SSOAdminEndpointID)
-			acctest.PreCheckSSOAdminInstancesWithRegion(ctx, t, acctest.AlternateRegion())
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccApplicationConfig_regionOverride(rName, testAccApplicationProviderARN),
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("application_arn"), tfknownvalue.GlobalARNRegexp("sso", regexache.MustCompile(`application/ssoins-[0-9a-z]{16}/apl-[0-9a-z]{16}`))),
-					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New("application_arn"), compare.ValuesSame()),
-				},
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
