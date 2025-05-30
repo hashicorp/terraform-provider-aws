@@ -1,0 +1,35 @@
+# A patch file to assist with enabling VCR support across service clients.
+#
+# This file should be passed into the [`gopatch`](https://github.com/uber-go/gopatch)
+# command like:
+#
+# % gopatch -p internal/vcr/vcr.patch ./$(PKG_NAME)/...
+#
+#####
+# Replace acceptance test structures with VCR compatible versions.
+@@
+@@
+-resource.Test
++acctest.Test
+@@
+@@
+-resource.ParallelTest
++acctest.ParallelTest
+
+# Replace test resource random name generation functions with VCR compatible versions.
+@@
+@@
+-sdkacctest.RandomWithPrefix
++acctest.RandomWithPrefix
+@@
+@@
+-sdkacctest.RandInt
++acctest.RandInt
+
+# Replace test helper function (check exists/destroyed) client initialization with a
+# VCR compatible version.
+@@
+var x identifier
+@@
+-acctest.Provider.Meta().(*conns.AWSClient).x(ctx)
++acctest.ProviderMeta(ctx, t).x(ctx)
