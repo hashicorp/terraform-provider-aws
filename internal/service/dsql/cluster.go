@@ -15,10 +15,10 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dsql/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -33,6 +33,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -63,10 +64,23 @@ func (r *clusterResource) Schema(ctx context.Context, request resource.SchemaReq
 			"deletion_protection_enabled": schema.BoolAttribute{
 				Optional: true,
 			},
-			"encryption_details": framework.ResourceOptionalComputedListOfObjectsAttribute[encryptionDetailsModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
+			"encryption_details": framework.ResourceComputedListOfObjectsAttribute[encryptionDetailsModel](ctx),
 			names.AttrIdentifier: framework.IDAttribute(),
-			names.AttrTags:       tftags.TagsAttribute(),
-			names.AttrTagsAll:    tftags.TagsAttributeComputedOnly(),
+			"kms_encryption_key": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+				Validators: []validator.String{
+					stringvalidator.Any(
+						fwvalidators.ARN(),
+						stringvalidator.OneOf("AWS_OWNED_KMS_KEY"),
+					),
+				},
+			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			"vpc_endpoint_service_name": schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
@@ -128,16 +142,6 @@ func (r *clusterResource) Create(ctx context.Context, request resource.CreateReq
 	input.ClientToken = aws.String(sdkid.UniqueId())
 	input.Tags = getTagsIn(ctx)
 
-	encryptionDetails, diags := data.EncryptionDetails.ToPtr(ctx)
-	response.Diagnostics.Append(diags...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	if encryptionDetails != nil {
-		input.KmsEncryptionKey = fwflex.StringFromFramework(ctx, encryptionDetails.KMSKeyARN)
-	}
-
 	output, err := conn.CreateCluster(ctx, &input)
 
 	if err != nil {
@@ -149,6 +153,13 @@ func (r *clusterResource) Create(ctx context.Context, request resource.CreateReq
 	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
 	if response.Diagnostics.HasError() {
 		return
+	}
+
+	if v := output.EncryptionDetails; v != nil {
+		switch typ := v.EncryptionType; typ {
+		case awstypes.EncryptionTypeAwsOwnedKmsKey:
+			data.KMSEncryptionKey = fwflex.StringValueToFramework(ctx, typ)
+		}
 	}
 
 	id := fwflex.StringValueFromFramework(ctx, data.Identifier)
@@ -203,6 +214,15 @@ func (r *clusterResource) Read(ctx context.Context, request resource.ReadRequest
 		return
 	}
 
+	if v := output.EncryptionDetails; v != nil {
+		switch typ := v.EncryptionType; typ {
+		case awstypes.EncryptionTypeAwsOwnedKmsKey:
+			data.KMSEncryptionKey = fwflex.StringValueToFramework(ctx, typ)
+		case awstypes.EncryptionTypeCustomerManagedKmsKey:
+			data.KMSEncryptionKey = fwflex.StringToFramework(ctx, v.KmsKeyArn)
+		}
+	}
+
 	vpcEndpointServiceName, err := findVPCEndpointServiceNameByID(ctx, conn, id)
 
 	if err != nil {
@@ -230,8 +250,9 @@ func (r *clusterResource) Update(ctx context.Context, request resource.UpdateReq
 	conn := r.Meta().DSQLClient(ctx)
 
 	if !new.DeletionProtectionEnabled.Equal(old.DeletionProtectionEnabled) ||
-		!new.EncryptionDetails.Equal(old.EncryptionDetails) ||
+		!new.KMSEncryptionKey.Equal(old.KMSEncryptionKey) ||
 		!new.MultiRegionProperties.Equal(old.MultiRegionProperties) {
+		id := fwflex.StringValueFromFramework(ctx, new.Identifier)
 		var input dsql.UpdateClusterInput
 		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
 		if response.Diagnostics.HasError() {
@@ -241,31 +262,38 @@ func (r *clusterResource) Update(ctx context.Context, request resource.UpdateReq
 		// Additional fields.
 		input.ClientToken = aws.String(sdkid.UniqueId())
 
-		if !new.EncryptionDetails.Equal(old.EncryptionDetails) {
-			encryptionDetails, diags := new.EncryptionDetails.ToPtr(ctx)
-			response.Diagnostics.Append(diags...)
-			if response.Diagnostics.HasError() {
-				return
-			}
-
-			if encryptionDetails != nil {
-				input.KmsEncryptionKey = fwflex.StringFromFramework(ctx, encryptionDetails.KMSKeyARN)
-			}
-		}
-
 		_, err := conn.UpdateCluster(ctx, &input)
 
 		if err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("updating Aurora DSQL Cluster (%s)", new.Identifier.ValueString()), err.Error())
+			response.Diagnostics.AddError(fmt.Sprintf("updating Aurora DSQL Cluster (%s)", id), err.Error())
 
 			return
 		}
 
-		if _, err := waitClusterUpdated(ctx, conn, new.Identifier.ValueString(), r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("waiting for Aurora DSQL Cluster (%s) update", new.Identifier.ValueString()), err.Error())
+		if _, err := waitClusterUpdated(ctx, conn, id, r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("waiting for Aurora DSQL Cluster (%s) update", id), err.Error())
 
 			return
 		}
+
+		if new.KMSEncryptionKey.Equal(old.KMSEncryptionKey) {
+			new.EncryptionDetails = old.EncryptionDetails
+		} else {
+			output, err := waitClusterEncryptionEnabled(ctx, conn, id, r.UpdateTimeout(ctx, new.Timeouts))
+
+			if err != nil {
+				response.Diagnostics.AddError(fmt.Sprintf("waiting for Aurora DSQL Cluster (%s) encryption enable", id), err.Error())
+
+				return
+			}
+
+			response.Diagnostics.Append(fwflex.Flatten(ctx, output, &new.EncryptionDetails)...)
+			if response.Diagnostics.HasError() {
+				return
+			}
+		}
+	} else {
+		new.EncryptionDetails = old.EncryptionDetails
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
@@ -427,6 +455,43 @@ func waitClusterDeleted(ctx context.Context, conn *dsql.Client, id string, timeo
 	return nil, err
 }
 
+func statusClusterEncryption(ctx context.Context, conn *dsql.Client, id string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findClusterByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if output.EncryptionDetails == nil {
+			return nil, "", nil
+		}
+
+		return output.EncryptionDetails, string(output.EncryptionDetails.EncryptionStatus), nil
+	}
+}
+
+func waitClusterEncryptionEnabled(ctx context.Context, conn *dsql.Client, id string, timeout time.Duration) (*awstypes.EncryptionDetails, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.EncryptionStatusEnabling, awstypes.EncryptionStatusUpdating),
+		Target:  enum.Slice(awstypes.EncryptionStatusEnabled),
+		Refresh: statusClusterEncryption(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.EncryptionDetails); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 func normalizeMultiRegionProperties(output *dsql.GetClusterOutput) *awstypes.MultiRegionProperties {
 	if output == nil || output.MultiRegionProperties == nil {
 		return nil
@@ -456,6 +521,7 @@ type clusterResourceModel struct {
 	DeletionProtectionEnabled types.Bool                                                  `tfsdk:"deletion_protection_enabled"`
 	EncryptionDetails         fwtypes.ListNestedObjectValueOf[encryptionDetailsModel]     `tfsdk:"encryption_details"`
 	Identifier                types.String                                                `tfsdk:"identifier"`
+	KMSEncryptionKey          types.String                                                `tfsdk:"kms_encryption_key"`
 	MultiRegionProperties     fwtypes.ListNestedObjectValueOf[multiRegionPropertiesModel] `tfsdk:"multi_region_properties"`
 	Tags                      tftags.Map                                                  `tfsdk:"tags"`
 	TagsAll                   tftags.Map                                                  `tfsdk:"tags_all"`
@@ -466,7 +532,6 @@ type clusterResourceModel struct {
 type encryptionDetailsModel struct {
 	EncryptionStatus fwtypes.StringEnum[awstypes.EncryptionStatus] `tfsdk:"encryption_status"`
 	EncryptionType   fwtypes.StringEnum[awstypes.EncryptionType]   `tfsdk:"encryption_type"`
-	KMSKeyARN        fwtypes.ARN                                   `tfsdk:"kms_key_arn"`
 }
 
 type multiRegionPropertiesModel struct {

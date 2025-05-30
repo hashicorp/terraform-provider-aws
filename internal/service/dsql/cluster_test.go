@@ -11,6 +11,7 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/dsql"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dsql/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -62,9 +63,9 @@ func TestAccDSQLCluster_basic(t *testing.T) {
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"encryption_status": tfknownvalue.StringExact(awstypes.EncryptionStatusEnabled),
 							"encryption_type":   tfknownvalue.StringExact(awstypes.EncryptionTypeAwsOwnedKmsKey),
-							names.AttrKMSKeyARN: knownvalue.Null(), // KMS Key ARN is not set for AWS-owned KMS key
 						}),
 					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("kms_encryption_key"), knownvalue.StringExact("AWS_OWNED_KMS_KEY")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("vpc_endpoint_service_name"), knownvalue.NotNull()),
 				},
@@ -171,6 +172,78 @@ func TestAccDSQLCluster_deletionProtection(t *testing.T) {
 	})
 }
 
+func TestAccDSQLCluster_encryption(t *testing.T) {
+	ctx := acctest.Context(t)
+	var cluster dsql.GetClusterOutput
+	resourceName := "aws_dsql_cluster.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			// Because dsql is in preview, we need to skip the PreCheckPartitionHasService
+			// acctest.PreCheckPartitionHasService(t, names.DSQLEndpointID)
+			// PreCheck for the region configuration as long as DSQL is in preview
+			acctest.PreCheckRegion(t, "us-east-1", "us-east-2")          //lintignore:AWSAT003
+			acctest.PreCheckAlternateRegion(t, "us-east-2", "us-east-1") //lintignore:AWSAT003
+			acctest.PreCheckThirdRegion(t, "us-west-2")                  //lintignore:AWSAT003
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.DSQLServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_cmk(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("encryption_details"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"encryption_status": tfknownvalue.StringExact(awstypes.EncryptionStatusEnabled),
+							"encryption_type":   tfknownvalue.StringExact(awstypes.EncryptionTypeCustomerManagedKmsKey),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("kms_encryption_key"), tfknownvalue.RegionalARNRegexp("kms", regexache.MustCompile(`key/.+$`))),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrIdentifier),
+				ImportStateVerifyIdentifierAttribute: names.AttrIdentifier,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+			},
+			{
+				Config: testAccClusterConfig_awsOwnedKey(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("encryption_details"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"encryption_status": tfknownvalue.StringExact(awstypes.EncryptionStatusEnabled),
+							"encryption_type":   tfknownvalue.StringExact(awstypes.EncryptionTypeAwsOwnedKmsKey),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("kms_encryption_key"), knownvalue.StringExact("AWS_OWNED_KMS_KEY")),
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DSQLClient(ctx)
@@ -238,4 +311,63 @@ resource "aws_dsql_cluster" "test" {
   deletion_protection_enabled = %[1]t
 }
 `, deletionProtection)
+}
+
+func testAccClusterConfig_baseEncryptionDetails(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+}
+
+resource "aws_kms_key_policy" "test" {
+  key_id = aws_kms_key.test.id
+  policy = jsonencode({
+    Id = %[1]q
+    Statement = [
+      {
+        Sid    = "Enable dsql IAM User Permissions"
+        Effect = "Allow"
+        Principal = {
+          Service = "dsql.amazonaws.com"
+        }
+        Action   = "kms:*"
+        Resource = "*"
+      },
+      {
+        Sid    = "Enable IAM User Permissions"
+        Effect = "Allow"
+        Principal = {
+          "AWS" : "*"
+        }
+        Action   = "kms:*"
+        Resource = "*"
+      }
+    ]
+    Version = "2012-10-17"
+  })
+}
+`, rName)
+}
+
+func testAccClusterConfig_cmk(rName string) string {
+	return acctest.ConfigCompose(testAccClusterConfig_baseEncryptionDetails(rName), `
+resource "aws_dsql_cluster" "test" {
+  deletion_protection_enabled = false
+  kms_encryption_key          = aws_kms_key.test.arn
+
+  depends_on = [
+    aws_kms_key_policy.test
+  ]
+}
+`)
+}
+
+func testAccClusterConfig_awsOwnedKey(rName string) string {
+	return acctest.ConfigCompose(testAccClusterConfig_baseEncryptionDetails(rName), `
+resource "aws_dsql_cluster" "test" {
+  deletion_protection_enabled = false
+  kms_encryption_key          = "AWS_OWNED_KMS_KEY"
+}
+`)
 }

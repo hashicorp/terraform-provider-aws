@@ -29,8 +29,7 @@ resource "aws_dsql_cluster" "example" {
 This resource supports the following arguments:
 
 * `deletion_protection_enabled` - (Required) Whether deletion protection is enabled in this cluster.
-* `encryption_details` - (Optional) Encryption configuration details for the DSQL Cluster.
-    * `kms_encryption_key` - (Optional) The ARN of the AWS KMS key that encrypts data in the DSQL Cluster.
+* `kms_encryption_key` - (Optional) The ARN of the AWS KMS key that encrypts data in the DSQL Cluster, or `"AWS_OWNED_KMS_KEY"`.
 * `multi_region_properties` - (Optional) Multi-region properties of the DSQL Cluster.
     * `witness_region` - (Required) Witness region for the multi-region clusters. Setting this makes this cluster a multi-region cluster. Changing it recreates the resource.
 * `tags` - (Optional) Set of tags to be associated with the AWS DSQL Cluster resource.
