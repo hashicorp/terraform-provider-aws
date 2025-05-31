@@ -38,7 +38,7 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
 * `agentId` - (Required) Unique identifier of the agent.
 
@@ -63,4 +63,4 @@ This data source exports the following attributes in addition to the arguments a
 * `guardrailIdentifier` - Unique identifier of the guardrail.
 * `guardrailVersion` - Version of the guardrail.
 
-<!-- cache-key: cdktf-0.20.8 input-e8636da2e6a3484a7889e96812691570a2397695de11688fd63667f1878a7793 -->
+<!-- cache-key: cdktf-0.20.8 input-52bfd41e02aad9ddf32b0c7ad3990928ec41756c1e0868742e9da57d7039957b -->

@@ -23,6 +23,8 @@ data "aws_imagebuilder_distribution_configurations" "example" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
 
 ## filter Configuration Block

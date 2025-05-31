@@ -31,6 +31,8 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `arn` - (Required) The Amazon Resource Name (ARN) of the parameter that you want to query
 * `with_decryption` - (Optional) Return decrypted values for a secure string parameter (Defaults to `true`).
 
@@ -44,4 +46,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `version` - The parameter version.
 * `with_decryption` - Indicates whether the secure string parameters were decrypted.
 
-<!-- cache-key: cdktf-0.20.8 input-9e9f701d87e16390e8afdb70e5b9b9ce007750ef06e2d6017e6d62126ffa45e0 -->
+<!-- cache-key: cdktf-0.20.8 input-3a2cb76eefd85427ab2a79875cbde9d976d94fbbf481aabea1468ff17a55a7f3 -->

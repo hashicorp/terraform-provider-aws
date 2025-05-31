@@ -6,7 +6,7 @@ description: |-
   Provides a Lambda Function data source.
 ---
 
-# aws_lambda_function
+# Data Source: aws_lambda_function
 
 Provides information about a Lambda Function.
 

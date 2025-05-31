@@ -36,6 +36,8 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `indexName` - (Required) Name of the place index resource.
 
 ## Attribute Reference
@@ -50,4 +52,4 @@ This data source exports the following attributes in addition to the arguments a
 * `tags` - Key-value map of resource tags for the place index.
 * `updateTime` - Timestamp for when the place index resource was last updated in ISO 8601 format.
 
-<!-- cache-key: cdktf-0.20.8 input-6bb9def3cfd4a1197d25303ba5cc4f3cedb296a92274d37e9697b77dc7cadbf8 -->
+<!-- cache-key: cdktf-0.20.8 input-7e45fdf1480a0aea386cac41e44f5af4bdaf011845a8f66b0f2686830a33ecce -->

@@ -36,6 +36,8 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `name` - (Required) Name of the gateway to retrieve.
 
 ## Attribute Reference
@@ -47,4 +49,4 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - ID of the gateway.
 * `ownerAccountId` - AWS Account ID of the gateway.
 
-<!-- cache-key: cdktf-0.20.8 input-067fc66c34cea26a303450ddc8be5a8b1a38f06721e0abe009d9fc2188a6b0aa -->
+<!-- cache-key: cdktf-0.20.8 input-98b1519c4711967d2a988b4aa75d84612e012c6500b7bc9aeaa0137e28e6d057 -->

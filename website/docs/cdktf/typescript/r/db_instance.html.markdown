@@ -393,9 +393,6 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-For more detailed documentation about each argument, refer to the [AWS official
-documentation](http://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html).
-
 This resource supports the following arguments:
 
 * `allocatedStorage` - (Required unless a `snapshotIdentifier` or `replicateSourceDb` is provided) The allocated storage in gibibytes. If `maxAllocatedStorage` is configured, this argument represents the initial storage allocation and differences from the configuration will be ignored automatically when Storage Autoscaling occurs. If `replicateSourceDb` is set, the value is ignored during the creation of the instance.
@@ -543,6 +540,9 @@ is provided) Username for the master DB user. Cannot be specified for a replica.
 * `vpcSecurityGroupIds` - (Optional) List of VPC security groups to
 associate.
 * `customerOwnedIpEnabled` - (Optional) Indicates whether to enable a customer-owned IP address (CoIP) for an RDS on Outposts DB instance. See [CoIP for RDS on Outposts](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/rds-on-outposts.html#rds-on-outposts.coip) for more information.
+
+For more detailed documentation about each argument, refer to the [AWS official
+documentation](http://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html).
 
 ~> **NOTE:** Removing the `replicateSourceDb` attribute from an existing RDS
 Replicate database managed by Terraform will promote the database to a fully
@@ -709,4 +709,4 @@ Using `terraform import`, import DB Instances using the `identifier`. For exampl
 % terraform import aws_db_instance.default mydb-rds-instance
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-170bb3fe17db99a19e0decb8cf130ef3d8124cee3b70926c6903689609912c96 -->
+<!-- cache-key: cdktf-0.20.8 input-14af4d3162e7bdae5e522247a9609f75b82090fb79015a86e28f7ae7a17b96a3 -->

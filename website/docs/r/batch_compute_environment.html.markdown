@@ -131,7 +131,7 @@ resource "aws_batch_compute_environment" "sample" {
 
 ### Fargate Type
 
-```hcl
+```terraform
 resource "aws_batch_compute_environment" "sample" {
   compute_environment_name = "sample"
 
@@ -157,7 +157,7 @@ resource "aws_batch_compute_environment" "sample" {
 
 ### Setting Update Policy
 
-```hcl
+```terraform
 resource "aws_batch_compute_environment" "sample" {
   compute_environment_name = "sample"
 
@@ -186,6 +186,8 @@ resource "aws_batch_compute_environment" "sample" {
 ```
 
 ## Argument Reference
+
+This resource supports the following arguments:
 
 * `compute_environment_name` - (Optional, Forces new resource) The name for your compute environment. Up to 128 letters (uppercase and lowercase), numbers, and underscores are allowed. If omitted, Terraform will assign a random, unique name.
 * `compute_environment_name_prefix` - (Optional, Forces new resource) Creates a unique compute environment name beginning with the specified prefix. Conflicts with `compute_environment_name`.

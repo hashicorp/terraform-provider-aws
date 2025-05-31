@@ -43,6 +43,8 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `filter` - (Optional) Custom filter block as described below.
 * `tags` - (Optional) Map of tags, each pair of which must exactly match a pair on the desired Elastic IPs.
 
@@ -66,4 +68,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.8 input-ed0c009504a829c5af380a752739119e64fcc7c1f90f4ad49fc2af34458d3af3 -->
+<!-- cache-key: cdktf-0.20.8 input-bf0c66450ab772479a7dcf13226c0f5cf896e72802d3a3d8b9ea171b70aa6d74 -->

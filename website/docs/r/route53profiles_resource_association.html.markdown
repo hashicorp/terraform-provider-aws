@@ -40,7 +40,7 @@ resource "aws_route53profiles_resource_association" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
 * `name` - (Required) Name of the Profile Resource Association.
 * `profile_id` - (Required) ID of the profile associated with the VPC.

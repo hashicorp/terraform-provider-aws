@@ -1,12 +1,12 @@
 ---
 subcategory: "API Gateway"
 layout: "aws"
-page_title: "AWS: aws_apigateway_api_keys"
+page_title: "AWS: aws_api_gateway_api_keys"
 description: |-
   Terraform data source for managing AWS API Gateway API Keys.
 ---
 
-# Data Source: aws_apigateway_api_keys
+# Data Source: aws_api_gateway_api_keys
 
 Terraform data source for managing AWS API Gateway API Keys.
 
@@ -18,7 +18,7 @@ data "aws_api_gateway_api_keys" "example" {}
 
 ## Argument Reference
 
-This resource supports the following arguments:
+This data source supports the following arguments:
 
 * `customer_id` - (Optional) Amazon Web Services Marketplace customer identifier, when integrating with the Amazon Web Services SaaS Marketplace.
 * `include_values` - (Optional) Set this value to `true` if you wish the result contains the key value. Defaults to `false`.

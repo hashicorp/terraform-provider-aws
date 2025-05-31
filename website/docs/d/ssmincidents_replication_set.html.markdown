@@ -6,7 +6,6 @@ description: |-
   Terraform data source for managing an incident replication set in AWS Systems Manager Incident Manager.
 ---
 
-
 # Data Source: aws_ssmincidents_replication_set
 
 ~> **NOTE:** The AWS Region specified by a Terraform provider must always be one of the Regions specified for the replication set.
@@ -23,7 +22,7 @@ data "aws_ssmincidents_replication_set" "example" {}
 
 ## Argument Reference
 
-No arguments are required.
+This data source does not support any arguments.
 
 ## Attribute Reference
 

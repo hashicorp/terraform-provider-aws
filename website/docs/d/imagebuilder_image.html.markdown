@@ -22,6 +22,8 @@ data "aws_imagebuilder_image" "example" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `arn` - (Required) ARN of the image. The suffix can either be specified with wildcards (`x.x.x`) to fetch the latest build version or a full build version (e.g., `2020.11.26/1`) to fetch an exact version.
 
 ## Attribute Reference

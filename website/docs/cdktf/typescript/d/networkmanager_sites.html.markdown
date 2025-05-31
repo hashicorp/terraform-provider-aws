@@ -39,6 +39,8 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `globalNetworkId` - (Required) ID of the Global Network of the sites to retrieve.
 * `tags` - (Optional) Restricts the list to the sites with these tags.
 
@@ -48,4 +50,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `ids` - IDs of the sites.
 
-<!-- cache-key: cdktf-0.20.8 input-08e4f00d2370cfd3791e0040e3d3ac4c38eb5a633f54bd737b6c7bfb36230318 -->
+<!-- cache-key: cdktf-0.20.8 input-b8b01828d110d8dfa616c416fcaca982bab52a3f4594bc3f923ea406cccb27f5 -->

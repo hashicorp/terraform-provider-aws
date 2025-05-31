@@ -20,6 +20,8 @@ data "aws_cognito_user_pool_signing_certificate" "sc" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `user_pool_id` - (Required) Cognito user pool ID.
 
 ## Attribute Reference

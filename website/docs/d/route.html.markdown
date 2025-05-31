@@ -35,14 +35,9 @@ data "aws_network_interface" "interface" {
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available Route in the current region. The given filters must match exactly oneRoute whose data will be exported as attributes.
-
-The following arguments are required:
+This data source supports the following arguments:
 
 * `route_table_id` - (Required) ID of the specific Route Table containing the Route entry.
-
-The following arguments are optional:
-
 * `carrier_gateway_id` - (Optional) EC2 Carrier Gateway ID of the Route belonging to the Route Table.
 * `core_network_arn` - (Optional) Core network ARN of the Route belonging to the Route Table.
 * `destination_cidr_block` - (Optional) CIDR block of the Route belonging to the Route Table.
@@ -57,9 +52,11 @@ The following arguments are optional:
 * `transit_gateway_id` - (Optional) EC2 Transit Gateway ID of the Route belonging to the Route Table.
 * `vpc_peering_connection_id` - (Optional) VPC Peering Connection ID of the Route belonging to the Route Table.
 
+The arguments of this data source act as filters for querying the available Route in the current region. The given filters must match exactly oneRoute whose data will be exported as attributes.
+
 ## Attribute Reference
 
-All of the argument attributes are also exported as result attributes when there is data available. For example, the `vpc_peering_connection_id` field will be empty when the route is attached to a Network Interface.
+This data source exports no additional attributes.
 
 ## Timeouts
 

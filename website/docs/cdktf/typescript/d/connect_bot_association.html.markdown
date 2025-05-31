@@ -53,4 +53,8 @@ The `lexBot` configuration block supports the following:
 * `name` - (Required) Name of the Amazon Lex (V1) bot.
 * `lexRegion` - (Optional) Region that the Amazon Lex (V1) bot was created in.
 
-<!-- cache-key: cdktf-0.20.8 input-404504bb11b568903bd8a32e96212172ac650fcf502c3c69fa40dbe6b2b93e17 -->
+## Attribute Reference
+
+This data source exports no additional attributes.
+
+<!-- cache-key: cdktf-0.20.8 input-1c4341df999e06db79b6b5f2bfb191e9e979c62c1ec2c37feef119f965962106 -->

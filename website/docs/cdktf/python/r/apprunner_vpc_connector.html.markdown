@@ -35,7 +35,7 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments supported:
+This resource supports the following arguments:
 
 * `vpc_connector_name` - (Required) Name for the VPC connector.
 * `subnets` (Required) List of IDs of subnets that App Runner should use when it associates your service with a custom Amazon VPC. Specify IDs of subnets of a single Amazon VPC. App Runner determines the Amazon VPC from the subnets you specify.
@@ -76,4 +76,4 @@ Using `terraform import`, import App Runner vpc connector using the `arn`. For e
 % terraform import aws_apprunner_vpc_connector.example arn:aws:apprunner:us-east-1:1234567890:vpcconnector/example/1/0a03292a89764e5882c41d8f991c82fe
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-a25bb324f61ef65387154b76f7156f8f2fb7eb7f11a4d07c072913a4bb2014c1 -->
+<!-- cache-key: cdktf-0.20.8 input-cae0e9b4c3ca516fb33e9a99c7573ec92fe394f95695d03142a5575dd7a8da09 -->

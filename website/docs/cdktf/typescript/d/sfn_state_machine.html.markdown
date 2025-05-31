@@ -38,6 +38,8 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `name` - (Required) Friendly name of the state machine to match.
 
 ## Attribute Reference
@@ -52,4 +54,4 @@ This data source exports the following attributes in addition to the arguments a
 * `revisionId` - The revision identifier for the state machine.
 * `status` - Set to the current status of the state machine.
 
-<!-- cache-key: cdktf-0.20.8 input-0f22f10a18b56fd2ce60408fbc367e0d625ee8c7fc8072d7009918250afe27d7 -->
+<!-- cache-key: cdktf-0.20.8 input-82697f5522892e72dd2ebd921ecc58d90fcaf4711fd1c27d831daaad28c5ad44 -->

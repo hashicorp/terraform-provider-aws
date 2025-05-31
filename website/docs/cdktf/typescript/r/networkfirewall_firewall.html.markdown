@@ -27,6 +27,7 @@ class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
     new NetworkfirewallFirewall(this, "example", {
+      enabledAnalysisTypes: ["TLS_SNI", "HTTP_HOST"],
       firewallPolicyArn: Token.asString(
         awsNetworkfirewallFirewallPolicyExample.arn
       ),
@@ -59,23 +60,15 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `deleteProtection` - (Optional) A flag indicating whether the firewall is protected against deletion. Use this setting to protect against accidentally deleting a firewall that is in use. Defaults to `false`.
-
 * `description` - (Optional) A friendly description of the firewall.
-
+* `enabledAnalysisTypes` - (Optional) Set of types for which to collect analysis metrics. See [Reporting on network traffic in Network Firewall](https://docs.aws.amazon.com/network-firewall/latest/developerguide/reporting.html) for details on how to use the data. Valid values: `TLS_SNI`, `HTTP_HOST`. Defaults to `[]`.
 * `encryptionConfiguration` - (Optional) KMS encryption configuration settings. See [Encryption Configuration](#encryption-configuration) below for details.
-
 * `firewallPolicyArn` - (Required) The Amazon Resource Name (ARN) of the VPC Firewall policy.
-
 * `firewallPolicyChangeProtection` - (Optional) A flag indicating whether the firewall is protected against a change to the firewall policy association. Use this setting to protect against accidentally modifying the firewall policy for a firewall that is in use. Defaults to `false`.
-
 * `name` - (Required, Forces new resource) A friendly name of the firewall.
-
 * `subnetChangeProtection` - (Optional) A flag indicating whether the firewall is protected against changes to the subnet associations. Use this setting to protect against accidentally modifying the subnet associations for a firewall that is in use. Defaults to `false`.
-
 * `subnetMapping` - (Required) Set of configuration blocks describing the public subnets. Each subnet must belong to a different Availability Zone in the VPC. AWS Network Firewall creates a firewall endpoint in each subnet. See [Subnet Mapping](#subnet-mapping) below for details.
-
 * `tags` - (Optional) Map of resource tags to associate with the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-
 * `vpcId` - (Required, Forces new resource) The unique identifier of the VPC where AWS Network Firewall should create the firewall.
 
 ### Encryption Configuration
@@ -97,18 +90,14 @@ The `subnetMapping` block supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The Amazon Resource Name (ARN) that identifies the firewall.
-
 * `arn` - The Amazon Resource Name (ARN) that identifies the firewall.
-
 * `firewallStatus` - Nested list of information about the current status of the firewall.
     * `sync_states` - Set of subnets configured for use by the firewall.
         * `attachment` - Nested list describing the attachment status of the firewall's association with a single VPC subnet.
             * `endpointId` - The identifier of the firewall endpoint that AWS Network Firewall has instantiated in the subnet. You use this to identify the firewall endpoint in the VPC route tables, when you redirect the VPC traffic through the endpoint.
             * `subnetId` - The unique identifier of the subnet that you've specified to be used for a firewall endpoint.
         * `availabilityZone` - The Availability Zone where the subnet is configured.
-
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-
 * `updateToken` - A string token used when updating a firewall.
 
 ## Timeouts
@@ -151,4 +140,4 @@ Using `terraform import`, import Network Firewall Firewalls using their `arn`. F
 % terraform import aws_networkfirewall_firewall.example arn:aws:network-firewall:us-west-1:123456789012:firewall/example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-5609d580391c0f01c8b952a6f2ce60d129bd4679fcb375d05ec2f59b6b90c5ee -->
+<!-- cache-key: cdktf-0.20.8 input-905c62ff27a184c8442df9bdf136d3644a726d36906f900e33d1b3ffddca7244 -->

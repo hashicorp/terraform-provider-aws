@@ -17,6 +17,10 @@ Returns the default scraper configuration used when Amazon EKS creates a scraper
 data "aws_prometheus_default_scraper_configuration" "example" {}
 ```
 
+## Argument Reference
+
+This data source does not support any arguments.
+
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:

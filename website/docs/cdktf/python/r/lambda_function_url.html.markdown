@@ -49,6 +49,8 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `authorization_type` - (Required) The type of authentication that the function URL uses. Set to `"AWS_IAM"` to restrict access to authenticated IAM users only. Set to `"NONE"` to bypass IAM authentication and create a public endpoint. See the [AWS documentation](https://docs.aws.amazon.com/lambda/latest/dg/urls-auth.html) for more details.
 * `cors` - (Optional) The [cross-origin resource sharing (CORS)](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) settings for the function URL. Documented below.
 * `function_name` - (Required) The name (or ARN) of the Lambda function.
@@ -99,4 +101,4 @@ Using `terraform import`, import Lambda function URLs using the `function_name` 
 % terraform import aws_lambda_function_url.test_lambda_url my_test_lambda_function
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-df0357afbe60810a2222218979789b21c7e2e3036e06fc57dde6705b7ff10e3f -->
+<!-- cache-key: cdktf-0.20.8 input-9a49401f3ec14a7e567e93e0d5db0270734ba72c74fb4fa9f853e96fe10bdab7 -->

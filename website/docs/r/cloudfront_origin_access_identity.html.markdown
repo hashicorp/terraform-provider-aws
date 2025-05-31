@@ -27,6 +27,8 @@ resource "aws_cloudfront_origin_access_identity" "example" {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `comment` (Optional) - An optional comment for the origin access identity.
 
 ## Attribute Reference

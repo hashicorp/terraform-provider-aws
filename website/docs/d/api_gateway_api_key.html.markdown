@@ -21,6 +21,8 @@ data "aws_api_gateway_api_key" "my_api_key" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `id` - (Required) ID of the API Key to look up.
 
 ## Attribute Reference

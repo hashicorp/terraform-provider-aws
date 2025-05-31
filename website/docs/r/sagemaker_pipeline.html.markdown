@@ -35,7 +35,7 @@ resource "aws_sagemaker_pipeline" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `pipeline_name` - (Required) The name of the pipeline.
 * `pipeline_description` - (Optional) A description of the pipeline.

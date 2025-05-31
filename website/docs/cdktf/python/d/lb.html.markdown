@@ -60,6 +60,8 @@ This data source supports the following arguments:
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 See the [LB Resource](/docs/providers/aws/r/lb.html) for details on the
 returned attributes - they are identical.
 
@@ -69,4 +71,4 @@ returned attributes - they are identical.
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.8 input-d467ed08bca93285eac24021220c51e2af88e8f7994426dedafb4e67c7ce3e5a -->
+<!-- cache-key: cdktf-0.20.8 input-09dc4226620eab4cb7e2e1b907432bfad719f8f60618430c4da1c62b33861bf8 -->

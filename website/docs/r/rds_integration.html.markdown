@@ -90,8 +90,6 @@ resource "aws_rds_integration" "example" {
 
 ## Argument Reference
 
-For more detailed documentation about each argument, refer to the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/reference/rds/create-integration.html).
-
 The following arguments are required:
 
 * `integration_name` - (Required, Forces new resources) Name of the integration.
@@ -112,6 +110,8 @@ See the [Amazon RDS data filtering guide](https://docs.aws.amazon.com/AmazonRDS/
 If you don't specify an encryption key, RDS uses a default AWS owned key.
 If you use the default AWS owned key, you should ignore `kms_key_id` parameter by using [`lifecycle` parameter](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#ignore_changes) to avoid unintended change after the first creation.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+For more detailed documentation about each argument, refer to the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/reference/rds/create-integration.html).
 
 ## Attribute Reference
 

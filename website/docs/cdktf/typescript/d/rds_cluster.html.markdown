@@ -42,9 +42,11 @@ This data source supports the following arguments:
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 See the [RDS Cluster Resource](/docs/providers/aws/r/rds_cluster.html) for details on the
 returned attributes - they are identical for all attributes, except the `tagsAll`. If you need to get the tags for this resource, use the attribute `tags` as described below.
 
 * `tags` - A map of tags assigned to the resource.
 
-<!-- cache-key: cdktf-0.20.8 input-c73b6ed9b7618d5c8808fa4b51f8b555a3290543f06a5030843096caf98e0ba8 -->
+<!-- cache-key: cdktf-0.20.8 input-6397fceb8621ecfb4607bfc69b2b0c2578c794f40ce62e2e22305ce20e6bd436 -->

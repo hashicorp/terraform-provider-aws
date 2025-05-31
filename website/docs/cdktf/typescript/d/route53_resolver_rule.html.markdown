@@ -39,8 +39,7 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available resolver rules in the current region.
-The given filters must match exactly one resolver rule whose data will be exported as attributes.
+This data source supports the following arguments:
 
 * `domainName` - (Optional) Domain name the desired resolver rule forwards DNS queries for. Conflicts with `resolverRuleId`.
 * `name` - (Optional) Friendly name of the desired resolver rule. Conflicts with `resolverRuleId`.
@@ -59,4 +58,4 @@ This data source exports the following attributes in addition to the arguments a
 Values are `NOT_SHARED`, `SHARED_BY_ME` or `SHARED_WITH_ME`
 * `tags` - Map of tags assigned to the resolver rule.
 
-<!-- cache-key: cdktf-0.20.8 input-18fb35f097987b8d14e261d381f5a10359f2716b6cb0f20fc2d80f0c0da22650 -->
+<!-- cache-key: cdktf-0.20.8 input-631ebccec822a7c33d14ddd2cb13a58e05c08ba4c5117b2d071091d389479769 -->

@@ -61,7 +61,7 @@ resource "aws_emrserverless_application" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
 * `architecture` – (Optional) The CPU architecture of an application. Valid values are `ARM64` or `X86_64`. Default value is `X86_64`.
 * `auto_start_configuration` – (Optional) The configuration for an application to automatically start on job submission.

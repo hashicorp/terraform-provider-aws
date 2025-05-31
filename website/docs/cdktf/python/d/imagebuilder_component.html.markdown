@@ -33,6 +33,8 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `arn` - (Required) ARN of the component.
 
 ## Attribute Reference
@@ -53,4 +55,4 @@ This data source exports the following attributes in addition to the arguments a
 * `type` - Type of the component.
 * `version` - Version of the component.
 
-<!-- cache-key: cdktf-0.20.8 input-a1dc867971bb73f35e057b5eef73912cb2d3c40d9fe01c02820500754033afa8 -->
+<!-- cache-key: cdktf-0.20.8 input-8446b281be25a50462ca80be2131836ca95edb32e33b0fc4874eb723f9df98cf -->

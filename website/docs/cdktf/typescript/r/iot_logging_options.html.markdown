@@ -37,6 +37,8 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `defaultLogLevel` - (Optional) The default logging level. Valid Values: `"DEBUG"`, `"INFO"`, `"ERROR"`, `"WARN"`, `"DISABLED"`.
 * `disableAllLogs` - (Optional) If `true` all logs are disabled. The default is `false`.
 * `roleArn` - (Required) The ARN of the role that allows IoT to write to Cloudwatch logs.
@@ -45,4 +47,4 @@ class MyConvertedCode extends TerraformStack {
 
 This resource exports no additional attributes.
 
-<!-- cache-key: cdktf-0.20.8 input-8b571a8dda736dcc0ea1559b030643ae474e857abed2e70ef420990d6b076aa1 -->
+<!-- cache-key: cdktf-0.20.8 input-70412ee3e2b3aaaf952eca789303d0c43bf9f77b67ddb454743cb82e3b89c557 -->

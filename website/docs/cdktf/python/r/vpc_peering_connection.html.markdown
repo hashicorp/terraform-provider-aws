@@ -12,6 +12,11 @@ description: |-
 
 Provides a resource to manage a VPC peering connection.
 
+-> **Note:** Modifying the VPC Peering Connection options requires peering to be active. An automatic activation
+can be done using the [`auto_accept`](vpc_peering_connection.html#auto_accept) attribute. Alternatively, the VPC Peering
+Connection has to be made active manually using other means. See [notes](vpc_peering_connection.html#notes) below for
+more information.
+
 ~> **NOTE on VPC Peering Connections and VPC Peering Connection Options:** Terraform provides
 both a standalone [VPC Peering Connection Options](vpc_peering_connection_options.html) and a VPC Peering Connection
 resource with `accepter` and `requester` attributes. Do not manage options for the same VPC peering
@@ -143,11 +148,6 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
--> **Note:** Modifying the VPC Peering Connection options requires peering to be active. An automatic activation
-can be done using the [`auto_accept`](vpc_peering_connection.html#auto_accept) attribute. Alternatively, the VPC Peering
-Connection has to be made active manually using other means. See [notes](vpc_peering_connection.html#notes) below for
-more information.
-
 This resource supports the following arguments:
 
 * `peer_owner_id` - (Optional) The AWS account ID of the target peer VPC.
@@ -220,4 +220,4 @@ Using `terraform import`, import VPC Peering resources using the VPC peering `id
 
 [1]: /docs/providers/aws/index.html
 
-<!-- cache-key: cdktf-0.20.8 input-81146d4d65b74a0127fbac7a0b412052b1f13331dcc243c687067a6fe2c7a258 -->
+<!-- cache-key: cdktf-0.20.8 input-ab8f7b8e37ccfda7241ff877547af40f5ef169d9421bfb7cc0906d7f5e5d1e29 -->

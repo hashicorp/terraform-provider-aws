@@ -26,6 +26,8 @@ ephemeral "aws_ssm_parameter" "example" {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `arn` - (Required) The Amazon Resource Name (ARN) of the parameter that you want to query
 * `with_decryption` - (Optional) Return decrypted values for a secure string parameter (Defaults to `true`).
 

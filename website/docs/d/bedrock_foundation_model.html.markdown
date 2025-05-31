@@ -24,7 +24,7 @@ data "aws_bedrock_foundation_model" "test" {
 
 ## Argument Reference
 
-The following argument are required:
+This data source supports the following arguments:
 
 * `model_id` – (Required) Model identifier.
 
