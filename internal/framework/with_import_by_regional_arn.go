@@ -57,8 +57,8 @@ func (w *WithImportByRegionalARN) ImportState(ctx context.Context, request resou
 			}
 		}
 
-		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(w.arnAttributeName), request.ID)...) // nosemgrep:ci.semgrep.framework.import-state-passthrough-id
-		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), request.ID)...)       // nosemgrep:ci.semgrep.framework.import-state-passthrough-id
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(w.arnAttributeName), request.ID)...)
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), request.ID)...)
 
 		return
 	}

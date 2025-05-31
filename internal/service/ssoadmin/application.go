@@ -402,7 +402,7 @@ func (r *applicationResource) ImportState(ctx context.Context, request resource.
 		}
 
 		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrARN), arnVal)...)
-		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("application_arn"), request.ID)...)
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("application_arn"), arnVal)...)
 		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), arnVal)...)
 	}
 }
