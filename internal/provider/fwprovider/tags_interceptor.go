@@ -22,14 +22,14 @@ import (
 
 // tagsDataSourceInterceptor implements transparent tagging for data sources.
 type tagsDataSourceInterceptor struct {
-	tagsInterceptor
+	interceptors.HTags
 }
 
 func (r tagsDataSourceInterceptor) read(ctx context.Context, opts interceptorOptions[datasource.ReadRequest, datasource.ReadResponse]) diag.Diagnostics {
 	c := opts.c
 	var diags diag.Diagnostics
 
-	if !r.HasServicePackageResourceTags() {
+	if !r.Enabled() {
 		return diags
 	}
 
@@ -51,7 +51,7 @@ func (r tagsDataSourceInterceptor) read(ctx context.Context, opts interceptorOpt
 	case After:
 		// If the R handler didn't set tags, try and read them from the service API.
 		if tagsInContext.TagsOut.IsNone() {
-			if identifier := r.getIdentifier(ctx, response.State); identifier != "" {
+			if identifier := r.GetIdentifierFramework(ctx, response.State); identifier != "" {
 				if err := r.ListTags(ctx, sp, c, identifier); err != nil {
 					diags.AddError(fmt.Sprintf("listing tags for %s %s (%s)", serviceName, resourceName, identifier), err.Error())
 					return diags
@@ -73,25 +73,21 @@ func (r tagsDataSourceInterceptor) read(ctx context.Context, opts interceptorOpt
 
 func dataSourceTransparentTagging(servicePackageResourceTags unique.Handle[inttypes.ServicePackageResourceTags]) dataSourceCRUDInterceptor {
 	return &tagsDataSourceInterceptor{
-		tagsInterceptor: tagsInterceptor{
-			WithTaggingMethods: interceptors.WithTaggingMethods{
-				ServicePackageResourceTags: servicePackageResourceTags,
-			},
-		},
+		HTags: interceptors.HTags(servicePackageResourceTags),
 	}
 }
 
 // tagsResourceInterceptor implements transparent tagging for resources.
 type tagsResourceInterceptor struct {
 	resourceNoOpCRUDInterceptor
-	tagsInterceptor
+	interceptors.HTags
 }
 
 func (r tagsResourceInterceptor) create(ctx context.Context, opts interceptorOptions[resource.CreateRequest, resource.CreateResponse]) diag.Diagnostics {
 	c := opts.c
 	var diags diag.Diagnostics
 
-	if !r.HasServicePackageResourceTags() {
+	if !r.Enabled() {
 		return diags
 	}
 
@@ -131,7 +127,7 @@ func (r tagsResourceInterceptor) read(ctx context.Context, opts interceptorOptio
 	c := opts.c
 	var diags diag.Diagnostics
 
-	if !r.HasServicePackageResourceTags() {
+	if !r.Enabled() {
 		return diags
 	}
 
@@ -151,7 +147,7 @@ func (r tagsResourceInterceptor) read(ctx context.Context, opts interceptorOptio
 		if tagsInContext.TagsOut.IsNone() {
 			// Some old resources may not have the required attribute set after Read:
 			// https://github.com/hashicorp/terraform-provider-aws/issues/31180
-			if identifier := r.getIdentifier(ctx, response.State); identifier != "" {
+			if identifier := r.GetIdentifierFramework(ctx, response.State); identifier != "" {
 				if err := r.ListTags(ctx, sp, c, identifier); err != nil {
 					diags.AddError(fmt.Sprintf("listing tags for %s %s (%s)", serviceName, resourceName, identifier), err.Error())
 
@@ -190,7 +186,7 @@ func (r tagsResourceInterceptor) update(ctx context.Context, opts interceptorOpt
 	c := opts.c
 	var diags diag.Diagnostics
 
-	if !r.HasServicePackageResourceTags() {
+	if !r.Enabled() {
 		return diags
 	}
 
@@ -226,7 +222,7 @@ func (r tagsResourceInterceptor) update(ctx context.Context, opts interceptorOpt
 		if !newTagsAll.Equal(oldTagsAll) {
 			// Some old resources may not have the required attribute set after Read:
 			// https://github.com/hashicorp/terraform-provider-aws/issues/31180
-			if identifier := r.getIdentifier(ctx, request.Plan); identifier != "" {
+			if identifier := r.GetIdentifierFramework(ctx, request.Plan); identifier != "" {
 				if err := r.UpdateTags(ctx, sp, c, identifier, oldTagsAll, newTagsAll); err != nil {
 					diags.AddError(fmt.Sprintf("updating tags for %s %s (%s)", serviceName, resourceName, identifier), err.Error())
 
@@ -278,27 +274,6 @@ func resourceTransparentTagging(servicePackageResourceTags unique.Handle[inttype
 	resourceModifyPlanInterceptor
 } {
 	return &tagsResourceInterceptor{
-		tagsInterceptor: tagsInterceptor{
-			WithTaggingMethods: interceptors.WithTaggingMethods{
-				ServicePackageResourceTags: servicePackageResourceTags,
-			},
-		},
+		HTags: interceptors.HTags(servicePackageResourceTags),
 	}
-}
-
-type tagsInterceptor struct {
-	interceptors.WithTaggingMethods
-}
-
-// getIdentifier returns the value of the identifier attribute used in AWS APIs.
-func (r tagsInterceptor) getIdentifier(ctx context.Context, d interface {
-	GetAttribute(context.Context, path.Path, any) diag.Diagnostics
-}) string {
-	var identifier string
-
-	if identifierAttribute := r.ServicePackageResourceTags.Value().IdentifierAttribute; identifierAttribute != "" {
-		d.GetAttribute(ctx, path.Root(identifierAttribute), &identifier)
-	}
-
-	return identifier
 }

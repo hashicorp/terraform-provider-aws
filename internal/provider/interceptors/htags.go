@@ -8,9 +8,12 @@ import (
 	"unique"
 
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -18,21 +21,53 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// WithTaggingMethods should be embedded in tagging interceptors.
-// It provides common methods for calling a service package's generic tagging methods.
-type WithTaggingMethods struct {
-	ServicePackageResourceTags unique.Handle[inttypes.ServicePackageResourceTags]
+type HTags unique.Handle[inttypes.ServicePackageResourceTags]
+
+func (h HTags) unwrap() unique.Handle[inttypes.ServicePackageResourceTags] {
+	return unique.Handle[inttypes.ServicePackageResourceTags](h)
 }
 
-func (w WithTaggingMethods) HasServicePackageResourceTags() bool {
-	return !tfunique.IsHandleNil(w.ServicePackageResourceTags)
+func (h HTags) value() inttypes.ServicePackageResourceTags {
+	return h.unwrap().Value()
+}
+
+// GetIdentifierFramework returns the value of the identifier attribute used in AWS tagging APIs.
+func (h HTags) GetIdentifierFramework(ctx context.Context, d interface {
+	GetAttribute(context.Context, path.Path, any) diag.Diagnostics
+}) string {
+	var identifier string
+
+	if identifierAttribute := h.value().IdentifierAttribute; identifierAttribute != "" {
+		d.GetAttribute(ctx, path.Root(identifierAttribute), &identifier)
+	}
+
+	return identifier
+}
+
+// GetIdentifierSDKv2 returns the value of the identifier attribute used in AWS tagging APIs.
+func (h HTags) GetIdentifierSDKv2(_ context.Context, d sdkv2.ResourceDiffer) string {
+	var identifier string
+
+	if identifierAttribute := h.value().IdentifierAttribute; identifierAttribute != "" {
+		if identifierAttribute == names.AttrID {
+			identifier = d.Id()
+		} else {
+			identifier = d.Get(identifierAttribute).(string)
+		}
+	}
+
+	return identifier
+}
+
+func (h HTags) Enabled() bool {
+	return !tfunique.IsHandleNil(h.unwrap())
 }
 
 // If the service package has a generic resource list tags methods, call it.
-func (w WithTaggingMethods) ListTags(ctx context.Context, sp conns.ServicePackage, c *conns.AWSClient, identifier string) error {
+func (h HTags) ListTags(ctx context.Context, sp conns.ServicePackage, c *conns.AWSClient, identifier string) error {
 	var err error
 
-	resourceType := w.ServicePackageResourceTags.Value().ResourceType
+	resourceType := h.value().ResourceType
 	if v, ok := sp.(tftags.ServiceTagLister); ok {
 		err = v.ListTags(ctx, c, identifier) // Sets tags in Context
 	} else if v, ok := sp.(tftags.ResourceTypeTagLister); ok {
@@ -65,10 +100,10 @@ func (w WithTaggingMethods) ListTags(ctx context.Context, sp conns.ServicePackag
 }
 
 // If the service package has a generic resource update tags methods, call it.
-func (w WithTaggingMethods) UpdateTags(ctx context.Context, sp conns.ServicePackage, c *conns.AWSClient, identifier string, oldTags, newTags any) error {
+func (h HTags) UpdateTags(ctx context.Context, sp conns.ServicePackage, c *conns.AWSClient, identifier string, oldTags, newTags any) error {
 	var err error
 
-	resourceType := w.ServicePackageResourceTags.Value().ResourceType
+	resourceType := h.value().ResourceType
 	if v, ok := sp.(tftags.ServiceTagUpdater); ok {
 		err = v.UpdateTags(ctx, c, identifier, oldTags, newTags)
 	} else if v, ok := sp.(tftags.ResourceTypeTagUpdater); ok {
