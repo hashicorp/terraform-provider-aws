@@ -5,6 +5,7 @@ package amp
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -12,10 +13,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/amp"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/amp/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -39,45 +43,34 @@ func newWorkspaceConfigurationResource(_ context.Context) (resource.ResourceWith
 
 	r.SetDefaultCreateTimeout(5 * time.Minute)
 	r.SetDefaultUpdateTimeout(5 * time.Minute)
+
 	return r, nil
-}
-
-type workspaceConfigurationResourceModel struct {
-	ID                    types.String                                            `tfsdk:"id"`
-	WorkspaceID           types.String                                            `tfsdk:"workspace_id"`
-	RetentionPeriodInDays types.Int32                                             `tfsdk:"retention_period_in_days"`
-	LimitsPerLabelSet     fwtypes.ListNestedObjectValueOf[limitsPerLabelSetModel] `tfsdk:"limits_per_label_set"`
-	Timeouts              timeouts.Value                                          `tfsdk:"timeouts"`
-}
-
-type limitsPerLabelSetModel struct {
-	LabelSet fwtypes.MapValueOf[types.String]                             `tfsdk:"label_set"`
-	Limits   fwtypes.ListNestedObjectValueOf[limitsPerLabelSetEntryModel] `tfsdk:"limits"`
-}
-
-type limitsPerLabelSetEntryModel struct {
-	MaxSeries types.Int64 `tfsdk:"max_series"`
 }
 
 type workspaceConfigurationResource struct {
 	framework.ResourceWithConfigure
 	framework.WithTimeouts
 	framework.WithNoOpDelete
-	framework.WithImportByID
 }
 
-func (r *workspaceConfigurationResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *workspaceConfigurationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrID: framework.IDAttribute(),
+			"retention_period_in_days": schema.Int32Attribute{
+				Optional: true,
+				Computed: true,
+				Validators: []validator.Int32{
+					int32validator.AtLeast(1),
+				},
+				PlanModifiers: []planmodifier.Int32{
+					int32planmodifier.UseStateForUnknown(),
+				},
+			},
 			"workspace_id": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
-			},
-			"retention_period_in_days": schema.Int32Attribute{
-				Optional: true,
 			},
 		},
 		Blocks: map[string]schema.Block{
@@ -100,11 +93,15 @@ func (r *workspaceConfigurationResource) Schema(ctx context.Context, req resourc
 							Validators: []validator.List{
 								listvalidator.SizeAtLeast(1),
 								listvalidator.SizeAtMost(1),
+								listvalidator.IsRequired(),
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"max_series": schema.Int64Attribute{
 										Required: true,
+										Validators: []validator.Int64{
+											int64validator.AtLeast(0),
+										},
 									},
 								},
 							},
@@ -120,118 +117,123 @@ func (r *workspaceConfigurationResource) Schema(ctx context.Context, req resourc
 	}
 }
 
-func (r *workspaceConfigurationResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *workspaceConfigurationResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	var data workspaceConfigurationResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
 	conn := r.Meta().AMPClient(ctx)
 
+	workspaceID := fwflex.StringValueFromFramework(ctx, data.WorkspaceID)
 	var input amp.UpdateWorkspaceConfigurationInput
-	resp.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
-	workspaceID := data.WorkspaceID.ValueString()
-	data.ID = types.StringValue(workspaceID)
 
+	// Additional fields.
 	input.ClientToken = aws.String(sdkid.UniqueId())
-	input.WorkspaceId = &workspaceID
 
 	_, err := conn.UpdateWorkspaceConfiguration(ctx, &input)
+
 	if err != nil {
-		resp.Diagnostics.AddError("updating Workspace configuration", err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("creating AMP Workspace (%s) Configuration", workspaceID), err.Error())
+
 		return
 	}
 
-	if err := waitWorkspaceConfigurationUpdated(ctx, conn, workspaceID, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("waiting for workspace configuration (%s) update", data.ID.ValueString()), err.Error())
+	output, err := waitWorkspaceConfigurationUpdated(ctx, conn, workspaceID, r.CreateTimeout(ctx, data.Timeouts))
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for AMP Workspace (%s) Configuration create", workspaceID), err.Error())
+
 		return
 	}
 
-	// Save the plan to state
-	resp.Diagnostics.Append(resp.State.Set(ctx, data)...)
+	// Set values for unknowns after creation is complete.
+	data.RetentionPeriodInDays = fwflex.Int32ToFramework(ctx, output.RetentionPeriodInDays)
+
+	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-func (r *workspaceConfigurationResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *workspaceConfigurationResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	var data workspaceConfigurationResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
 	conn := r.Meta().AMPClient(ctx)
 
-	out, err := findWorkspaceConfigurationByID(ctx, conn, data.ID.ValueString())
+	out, err := findWorkspaceConfigurationByID(ctx, conn, data.WorkspaceID.ValueString())
 
 	if tfresource.NotFound(err) {
-		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
-		resp.State.RemoveResource(ctx)
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+
 		return
 	}
 
 	if err != nil {
-		resp.Diagnostics.AddError("reading Workspace configuration", err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading AMP Workspace (%s) Configuration", data.WorkspaceID.ValueString()), err.Error())
+
 		return
 	}
 
-	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &data)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(fwflex.Flatten(ctx, out, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *workspaceConfigurationResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	workspaceID := req.ID
-
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), workspaceID)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("workspace_id"), workspaceID)...)
-}
-
-func (r *workspaceConfigurationResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data workspaceConfigurationResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
+func (r *workspaceConfigurationResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var new workspaceConfigurationResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
 	conn := r.Meta().AMPClient(ctx)
 
+	workspaceID := fwflex.StringValueFromFramework(ctx, new.WorkspaceID)
 	var input amp.UpdateWorkspaceConfigurationInput
-	resp.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
-	workspaceID := data.WorkspaceID.ValueString()
-	data.ID = types.StringValue(workspaceID)
 
+	// Additional fields.
 	input.ClientToken = aws.String(sdkid.UniqueId())
-	input.WorkspaceId = &workspaceID
 
 	_, err := conn.UpdateWorkspaceConfiguration(ctx, &input)
+
 	if err != nil {
-		resp.Diagnostics.AddError("updating Workspace configuration", err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("updating AMP Workspace (%s) Configuration", workspaceID), err.Error())
+
 		return
 	}
 
-	if err := waitWorkspaceConfigurationUpdated(ctx, conn, workspaceID, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("waiting for workspace configuration (%s) update", data.ID.ValueString()), err.Error())
+	if _, err := waitWorkspaceConfigurationUpdated(ctx, conn, workspaceID, r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for AMP Workspace (%s) Configuration update", workspaceID), err.Error())
+
 		return
 	}
 
-	// Save the plan to state
-	resp.Diagnostics.Append(resp.State.Set(ctx, data)...)
+	response.Diagnostics.Append(response.State.Set(ctx, new)...)
 }
 
-func findWorkspaceConfigurationByID(ctx context.Context, conn *amp.Client, id string) (*amp.DescribeWorkspaceConfigurationOutput, error) {
+func (r *workspaceConfigurationResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("workspace_id"), request.ID)...)
+}
+
+func findWorkspaceConfigurationByID(ctx context.Context, conn *amp.Client, id string) (*awstypes.WorkspaceConfigurationDescription, error) {
 	input := amp.DescribeWorkspaceConfigurationInput{
 		WorkspaceId: aws.String(id),
 	}
-
 	output, err := conn.DescribeWorkspaceConfiguration(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
@@ -245,27 +247,11 @@ func findWorkspaceConfigurationByID(ctx context.Context, conn *amp.Client, id st
 		return nil, err
 	}
 
-	if output == nil {
+	if output == nil || output.WorkspaceConfiguration == nil || output.WorkspaceConfiguration.Status == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return output, nil
-}
-
-func waitWorkspaceConfigurationUpdated(ctx context.Context, conn *amp.Client, id string, timeout time.Duration) error {
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.WorkspaceConfigurationStatusCodeUpdating),
-		Target:  enum.Slice(awstypes.WorkspaceConfigurationStatusCodeActive),
-		Refresh: statusWorkspaceConfiguration(ctx, conn, id),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if _, ok := outputRaw.(*amp.DescribeWorkspaceConfigurationOutput); ok {
-		return err
-	}
-
-	return nil
+	return output.WorkspaceConfiguration, nil
 }
 
 func statusWorkspaceConfiguration(ctx context.Context, conn *amp.Client, id string) retry.StateRefreshFunc {
@@ -280,6 +266,41 @@ func statusWorkspaceConfiguration(ctx context.Context, conn *amp.Client, id stri
 			return nil, "", err
 		}
 
-		return output, string(output.WorkspaceConfiguration.Status.StatusCode), nil
+		return output, string(output.Status.StatusCode), nil
 	}
+}
+
+func waitWorkspaceConfigurationUpdated(ctx context.Context, conn *amp.Client, id string, timeout time.Duration) (*awstypes.WorkspaceConfigurationDescription, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.WorkspaceConfigurationStatusCodeUpdating),
+		Target:  enum.Slice(awstypes.WorkspaceConfigurationStatusCodeActive),
+		Refresh: statusWorkspaceConfiguration(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.WorkspaceConfigurationDescription); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.Status.StatusReason)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+type workspaceConfigurationResourceModel struct {
+	LimitsPerLabelSet     fwtypes.ListNestedObjectValueOf[limitsPerLabelSetModel] `tfsdk:"limits_per_label_set"`
+	RetentionPeriodInDays types.Int32                                             `tfsdk:"retention_period_in_days"`
+	Timeouts              timeouts.Value                                          `tfsdk:"timeouts"`
+	WorkspaceID           types.String                                            `tfsdk:"workspace_id"`
+}
+
+type limitsPerLabelSetModel struct {
+	LabelSet fwtypes.MapOfString                                          `tfsdk:"label_set"`
+	Limits   fwtypes.ListNestedObjectValueOf[limitsPerLabelSetEntryModel] `tfsdk:"limits"`
+}
+
+type limitsPerLabelSetEntryModel struct {
+	MaxSeries types.Int64 `tfsdk:"max_series"`
 }

@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/amp"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/amp/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -20,7 +20,7 @@ import (
 
 func TestAccAMPWorkspaceConfiguration_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v amp.DescribeWorkspaceConfigurationOutput
+	var v awstypes.WorkspaceConfigurationDescription
 	resourceName := "aws_prometheus_workspace_configuration.test"
 	workspaceResourceName := "aws_prometheus_workspace.test"
 	retentionPeriod := 30
@@ -30,7 +30,7 @@ func TestAccAMPWorkspaceConfiguration_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkspaceConfigurationDestroy(ctx),
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkspaceConfigurationConfig_basic(retentionPeriod),
@@ -41,10 +41,11 @@ func TestAccAMPWorkspaceConfiguration_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"limits_per_label_set", "retention_period_in_days"},
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "workspace_id"),
+				ImportStateVerifyIdentifierAttribute: "workspace_id",
 			},
 			{
 				Config: testAccWorkspaceConfigurationConfig_basic(retentionPeriodUpdated),
@@ -60,7 +61,7 @@ func TestAccAMPWorkspaceConfiguration_basic(t *testing.T) {
 
 func TestAccAMPWorkspaceConfiguration_defaultBucket(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v amp.DescribeWorkspaceConfigurationOutput
+	var v awstypes.WorkspaceConfigurationDescription
 	resourceName := "aws_prometheus_workspace_configuration.test"
 	workspaceResourceName := "aws_prometheus_workspace.test"
 
@@ -68,7 +69,7 @@ func TestAccAMPWorkspaceConfiguration_defaultBucket(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkspaceConfigurationDestroy(ctx),
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkspaceConfigurationConfig_defaultBucket(),
@@ -79,17 +80,18 @@ func TestAccAMPWorkspaceConfiguration_defaultBucket(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"limits_per_label_set", "retention_period_in_days"},
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "workspace_id"),
+				ImportStateVerifyIdentifierAttribute: "workspace_id",
 			},
 		},
 	})
 }
 func TestAccAMPWorkspaceConfiguration_limitPerLabelSet(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v amp.DescribeWorkspaceConfigurationOutput
+	var v awstypes.WorkspaceConfigurationDescription
 	resourceName := "aws_prometheus_workspace_configuration.test"
 	workspaceResourceName := "aws_prometheus_workspace.test"
 
@@ -97,7 +99,7 @@ func TestAccAMPWorkspaceConfiguration_limitPerLabelSet(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkspaceConfigurationDestroy(ctx),
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkspaceConfigurationConfig_limitPerLabelSet(),
@@ -115,36 +117,17 @@ func TestAccAMPWorkspaceConfiguration_limitPerLabelSet(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"limits_per_label_set", "retention_period_in_days"},
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "workspace_id"),
+				ImportStateVerifyIdentifierAttribute: "workspace_id",
 			},
 		},
 	})
 }
 
-func testAccCheckWorkspaceConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AMPClient(ctx)
-
-		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_prometheus_workspace_configuration" {
-				continue
-			}
-
-			_, err := tfamp.FindWorkspaceConfigurationByID(ctx, conn, rs.Primary.ID)
-
-			if err == nil {
-				return fmt.Errorf("AMP Workspace Configuration %s still exists", rs.Primary.ID)
-			}
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckWorkspaceConfigurationExists(ctx context.Context, n string, v *amp.DescribeWorkspaceConfigurationOutput) resource.TestCheckFunc {
+func testAccCheckWorkspaceConfigurationExists(ctx context.Context, n string, v *awstypes.WorkspaceConfigurationDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -153,7 +136,7 @@ func testAccCheckWorkspaceConfigurationExists(ctx context.Context, n string, v *
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AMPClient(ctx)
 
-		output, err := tfamp.FindWorkspaceConfigurationByID(ctx, conn, rs.Primary.ID)
+		output, err := tfamp.FindWorkspaceConfigurationByID(ctx, conn, rs.Primary.Attributes["workspace_id"])
 
 		if err != nil {
 			return err

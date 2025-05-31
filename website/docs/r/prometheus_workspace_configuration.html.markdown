@@ -88,9 +88,7 @@ The `limits` configuration block supports the following arguments:
 
 ## Attribute Reference
 
-This resource exports the following attributes in addition to the arguments above:
-
-* `id` - ID of the workspace configuration (same as workspace_id).
+This resource exports no additional attributes.
 
 ## Timeouts
 
@@ -101,7 +99,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AMP (Managed Prometheus) Workspace Configuration using the `example_id_arg`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AMP (Managed Prometheus) Workspace Configuration using the `workspace_id`. For example:
 
 ```terraform
 import {
