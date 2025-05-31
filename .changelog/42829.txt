@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_lambda_function: Reset `source_code_hash` to the previous value when update operation fails
+```
