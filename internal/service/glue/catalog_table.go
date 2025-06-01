@@ -357,6 +357,53 @@ func resourceCatalogTable() *schema.Resource {
 					},
 				},
 			},
+			"view_definition": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"is_protected": {
+							Type:     schema.TypeBool,
+							Required: true,
+						},
+						"definer": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"representations": {
+							Type:     schema.TypeList,
+							Required: true,
+							MinItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"dialect": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"DialectVersion": {
+										Type:     schema.TypeString,
+										Required: false,
+									},
+									"ViewOriginalText": {
+										Type:     schema.TypeString,
+										Required: false,
+									},
+									"ValidationConnection": {
+										Type:     schema.TypeString,
+										Required: false,
+									},
+									"ViewExpandedText": {
+										Type:     schema.TypeString,
+										Required: false,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"view_original_text": {
 				Type:         schema.TypeString,
 				Optional:     true,

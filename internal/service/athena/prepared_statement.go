@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/athena"
 	"github.com/aws/aws-sdk-go-v2/service/athena/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -67,6 +68,20 @@ func resourcePreparedStatement() *schema.Resource {
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9._-]{1,128}$`), ""),
 			},
 		},
+		CustomizeDiff: customdiff.All(
+			customdiff.IfValue("query_statement", func(ctx context.Context, value, meta any) bool {
+				if strings.ContainsAny(value.(string), "\n") {
+					fmt.Printf("%s", value.(string))
+					return true
+				}
+				return false
+			},
+				func(ctx context.Context, rd *schema.ResourceDiff, i interface{}) error {
+					rd.SetNew("query_statement", strings.Trim(rd.GetRawConfig().AsString(), "\n"))
+					return nil
+				},
+			),
+		),
 	}
 }
 
