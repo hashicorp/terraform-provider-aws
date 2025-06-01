@@ -292,12 +292,38 @@ resource "aws_cloudwatch_log_delivery" "example" {
 }
 ```
 
+### CloudFront multi-tenant distribution
+
+The example below creates a [CloudFront multi-tenant distribution](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/template-preconfigured-origin-settings.html)
+
+```tf
+resource "aws_cloudfront_distribution" "example" {
+  connection_mode = "tenant-only"
+
+  tenant_config {
+    parameter_definition {
+      name = "test"
+      definition {
+        string_schema_config {
+          required      = true
+          comment       = "test"
+          default_value = "test"
+        }
+      }
+    }
+  }
+
+  # other config...
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
 
 * `aliases` (Optional) - Extra CNAMEs (alternate domain names), if any, for this distribution.
 * `comment` (Optional) - Any comments you want to include about the distribution.
+* `connection_mode` (Optional) - The connection mode to filter distributions by. Allowed values are `direct` and `tenant-only`. The default is `direct`.
 * `continuous_deployment_policy_id` (Optional) - Identifier of a continuous deployment policy. This argument should only be set on a production distribution. See the [`aws_cloudfront_continuous_deployment_policy` resource](./cloudfront_continuous_deployment_policy.html.markdown) for additional details.
 * `custom_error_response` (Optional) - One or more [custom error response](#custom-error-response-arguments) elements (multiples allowed).
 * `default_cache_behavior` (Required) - [Default cache behavior](#default-cache-behavior-arguments) for this distribution (maximum one). Requires either `cache_policy_id` (preferred) or `forwarded_values` (deprecated) be set.
@@ -313,6 +339,7 @@ This resource supports the following arguments:
 * `restrictions` (Required) - The [restriction configuration](#restrictions-arguments) for this distribution (maximum one).
 * `staging` (Optional) - A Boolean that indicates whether this is a staging distribution. Defaults to `false`.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tenant_config` - (Optional) The [tenant configuration](#tenant-config-arguments) for this distribution.
 * `viewer_certificate` (Required) - The [SSL configuration](#viewer-certificate-arguments) for this distribution (maximum one).
 * `web_acl_id` (Optional) - Unique identifier that specifies the AWS WAF web ACL, if any, to associate with this distribution. To specify a web ACL created using the latest version of AWS WAF (WAFv2), use the ACL ARN, for example `aws_wafv2_web_acl.example.arn`. To specify a web ACL created using AWS WAF Classic, use the ACL ID, for example `aws_waf_web_acl.example.id`. The WAF Web ACL must exist in the WAF Global (CloudFront) region and the credentials configuring this argument must have `waf:GetWebACL` permissions assigned.
 * `retain_on_delete` (Optional) - Disables the distribution instead of deleting it when destroying the resource through Terraform. If this is set, the distribution needs to be deleted manually afterwards. Default: `false`.
@@ -495,6 +522,23 @@ The arguments of `geo_restriction` are:
 
 * `locations` (Required) - [ISO 3166-1-alpha-2 codes][4] for which you want CloudFront either to distribute your content (`whitelist`) or not distribute your content (`blacklist`). If the type is specified as `none` an empty array can be used.
 * `restriction_type` (Required) - Method that you want to use to restrict distribution of your content by country: `none`, `whitelist`, or `blacklist`.
+
+#### Tenant Config Arguments
+
+The `tenant_config` block configures multi-tenant settings for the CloudFront distribution.
+
+* `parameter_definition` (Optional) - One or more parameter definition blocks for tenant configuration. Each block supports:
+    * `name` (Required) - Name of the parameter.
+    * `definition` (Required) - Definition block specifying the parameter schema.
+
+##### Definition Arguments
+
+Each `definition` block supports the following arguments:
+
+* `string_schema_config` (Optional) - Configuration block for string schema. Supports:
+    * `required` (Required) - Whether the defined parameter is required.
+    * `comment` (Optional) - A comment to describe the parameter.
+    * `default_value` (Optional) - The default value of the parameter.
 
 #### Viewer Certificate Arguments
 

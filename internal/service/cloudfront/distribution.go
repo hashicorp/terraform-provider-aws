@@ -9,6 +9,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
@@ -68,6 +69,12 @@ func resourceDistribution() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 128),
+			},
+			"connection_mode": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.ConnectionMode](),
 			},
 			"continuous_deployment_policy_id": {
 				Type:     schema.TypeString,
@@ -786,6 +793,62 @@ func resourceDistribution() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"tenant_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"parameter_definition": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"definition": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"string_schema_config": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"required": {
+																Type:     schema.TypeBool,
+																Required: true,
+															},
+															names.AttrComment: {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+															names.AttrDefaultValue: {
+																Type:         schema.TypeString,
+																Optional:     true,
+																ValidateFunc: validation.StringLenBetween(1, 256),
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									names.AttrName: {
+										Type:     schema.TypeString,
+										Required: true,
+										ValidateFunc: validation.All(
+											validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9-_]+$`), "must contain alphanumeric, underscores or dashes only"),
+											validation.StringLenBetween(1, 128),
+										),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"trusted_key_groups": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -893,13 +956,25 @@ func resourceDistribution() *schema.Resource {
 	}
 }
 
+type configuration struct {
+	isMultiTenant bool
+}
+
 func resourceDistributionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
+	var config = configuration{
+		isMultiTenant: false,
+	}
+
+	if v, ok := d.GetOk("connection_mode"); ok && v.(string) == string(awstypes.ConnectionModeTenantOnly) {
+		config.isMultiTenant = true
+	}
+
 	input := &cloudfront.CreateDistributionWithTagsInput{
 		DistributionConfigWithTags: &awstypes.DistributionConfigWithTags{
-			DistributionConfig: expandDistributionConfig(d),
+			DistributionConfig: config.expandDistributionConfig(d),
 			Tags:               &awstypes.Tags{Items: []awstypes.Tag{}},
 		},
 	}
@@ -962,6 +1037,7 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 	// Not having this set for staging distributions causes IllegalUpdate errors when making updates of any kind.
 	// If this absolutely must not be optional/computed, the policy ID will need to be retrieved and set for each
 	// API call for staging distributions.
+	d.Set("connection_mode", distributionConfig.ConnectionMode)
 	d.Set("continuous_deployment_policy_id", distributionConfig.ContinuousDeploymentPolicyId)
 	if distributionConfig.CustomErrorResponses != nil {
 		if err := d.Set("custom_error_response", flattenCustomErrorResponses(distributionConfig.CustomErrorResponses)); err != nil {
@@ -1002,7 +1078,9 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 			return sdkdiag.AppendErrorf(diags, "setting origin_group: %s", err)
 		}
 	}
-	d.Set("price_class", distributionConfig.PriceClass)
+	if distributionConfig.ConnectionMode != awstypes.ConnectionModeTenantOnly {
+		d.Set("price_class", distributionConfig.PriceClass)
+	}
 	if distributionConfig.Restrictions != nil {
 		if err := d.Set("restrictions", flattenRestrictions(distributionConfig.Restrictions)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting restrictions: %s", err)
@@ -1010,6 +1088,9 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 	d.Set("staging", distributionConfig.Staging)
 	d.Set(names.AttrStatus, output.Distribution.Status)
+	if err := d.Set("tenant_config", flattenTenantConfig(distributionConfig.TenantConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tenant_config: %s", err)
+	}
 	if err := d.Set("trusted_key_groups", flattenActiveTrustedKeyGroups(output.Distribution.ActiveTrustedKeyGroups)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting trusted_key_groups: %s", err)
 	}
@@ -1028,9 +1109,17 @@ func resourceDistributionUpdate(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
+	var config = configuration{
+		isMultiTenant: false,
+	}
+
+	if v, ok := d.GetOk("connection_mode"); ok && v.(string) == string(awstypes.ConnectionModeTenantOnly) {
+		config.isMultiTenant = true
+	}
+
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &cloudfront.UpdateDistributionInput{
-			DistributionConfig: expandDistributionConfig(d),
+			DistributionConfig: config.expandDistributionConfig(d),
 			Id:                 aws.String(d.Id()),
 			IfMatch:            aws.String(d.Get("etag").(string)),
 		}
@@ -1322,38 +1411,44 @@ func waitDistributionDeleted(ctx context.Context, conn *cloudfront.Client, id st
 	return nil, err
 }
 
-func expandDistributionConfig(d *schema.ResourceData) *awstypes.DistributionConfig {
+func (c *configuration) expandDistributionConfig(d *schema.ResourceData) *awstypes.DistributionConfig {
 	apiObject := &awstypes.DistributionConfig{
-		CacheBehaviors:               expandCacheBehaviors(d.Get("ordered_cache_behavior").([]any)),
-		CallerReference:              aws.String(id.UniqueId()),
-		Comment:                      aws.String(d.Get(names.AttrComment).(string)),
-		ContinuousDeploymentPolicyId: aws.String(d.Get("continuous_deployment_policy_id").(string)),
-		CustomErrorResponses:         expandCustomErrorResponses(d.Get("custom_error_response").(*schema.Set).List()),
-		DefaultCacheBehavior:         expandDefaultCacheBehavior(d.Get("default_cache_behavior").([]any)[0].(map[string]any)),
-		DefaultRootObject:            aws.String(d.Get("default_root_object").(string)),
-		Enabled:                      aws.Bool(d.Get(names.AttrEnabled).(bool)),
-		IsIPV6Enabled:                aws.Bool(d.Get("is_ipv6_enabled").(bool)),
-		HttpVersion:                  awstypes.HttpVersion(d.Get("http_version").(string)),
-		Origins:                      expandOrigins(d.Get("origin").(*schema.Set).List()),
-		PriceClass:                   awstypes.PriceClass(d.Get("price_class").(string)),
-		Staging:                      aws.Bool(d.Get("staging").(bool)),
-		WebACLId:                     aws.String(d.Get("web_acl_id").(string)),
+		CacheBehaviors:       c.expandCacheBehaviors(d.Get("ordered_cache_behavior").([]any)),
+		CallerReference:      aws.String(id.UniqueId()),
+		Comment:              aws.String(d.Get(names.AttrComment).(string)),
+		ConnectionMode:       awstypes.ConnectionMode(d.Get("connection_mode").(string)),
+		CustomErrorResponses: expandCustomErrorResponses(d.Get("custom_error_response").(*schema.Set).List()),
+		DefaultCacheBehavior: c.expandDefaultCacheBehavior(d.Get("default_cache_behavior").([]any)[0].(map[string]any)),
+		DefaultRootObject:    aws.String(d.Get("default_root_object").(string)),
+		Enabled:              aws.Bool(d.Get(names.AttrEnabled).(bool)),
+		HttpVersion:          awstypes.HttpVersion(d.Get("http_version").(string)),
+		Origins:              c.expandOrigins(d.Get("origin").(*schema.Set).List()),
+		WebACLId:             aws.String(d.Get("web_acl_id").(string)),
 	}
 
-	if v, ok := d.GetOk("aliases"); ok {
-		apiObject.Aliases = expandAliases(v.(*schema.Set).List())
+	if !c.isMultiTenant {
+		apiObject.IsIPV6Enabled = aws.Bool(d.Get("is_ipv6_enabled").(bool))
+		apiObject.PriceClass = awstypes.PriceClass(d.Get("price_class").(string))
+		apiObject.Staging = aws.Bool(d.Get("staging").(bool))
+		apiObject.ContinuousDeploymentPolicyId = aws.String(d.Get("continuous_deployment_policy_id").(string))
+		if v, ok := d.GetOk("aliases"); ok {
+			apiObject.Aliases = expandAliases(v.(*schema.Set).List())
+		} else {
+			apiObject.Aliases = expandAliases([]any{})
+		}
+		if v, ok := d.GetOk("logging_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			apiObject.Logging = expandLoggingConfig(v.([]any)[0].(map[string]any))
+		} else {
+			apiObject.Logging = expandLoggingConfig(nil)
+		}
 	} else {
-		apiObject.Aliases = expandAliases([]any{})
+		if v, ok := d.GetOk("tenant_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			apiObject.TenantConfig = expandTenantConfig(v.([]any)[0].(map[string]any))
+		}
 	}
 
 	if v, ok := d.GetOk("caller_reference"); ok {
 		apiObject.CallerReference = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("logging_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-		apiObject.Logging = expandLoggingConfig(v.([]any)[0].(map[string]any))
-	} else {
-		apiObject.Logging = expandLoggingConfig(nil)
 	}
 
 	if v, ok := d.GetOk("origin_group"); ok {
@@ -1371,7 +1466,7 @@ func expandDistributionConfig(d *schema.ResourceData) *awstypes.DistributionConf
 	return apiObject
 }
 
-func expandCacheBehavior(tfMap map[string]any) *awstypes.CacheBehavior {
+func (c *configuration) expandCacheBehavior(tfMap map[string]any) *awstypes.CacheBehavior {
 	if tfMap == nil {
 		return nil
 	}
@@ -1390,18 +1485,30 @@ func expandCacheBehavior(tfMap map[string]any) *awstypes.CacheBehavior {
 		apiObject.AllowedMethods = expandAllowedMethods(v.(*schema.Set).List())
 	}
 
-	if tfMap["cache_policy_id"].(string) == "" {
-		apiObject.DefaultTTL = aws.Int64(int64(tfMap["default_ttl"].(int)))
-		apiObject.MaxTTL = aws.Int64(int64(tfMap["max_ttl"].(int)))
-		apiObject.MinTTL = aws.Int64(int64(tfMap["min_ttl"].(int)))
+	if !c.isMultiTenant {
+		if tfMap["cache_policy_id"].(string) == "" {
+			apiObject.DefaultTTL = aws.Int64(int64(tfMap["default_ttl"].(int)))
+			apiObject.MaxTTL = aws.Int64(int64(tfMap["max_ttl"].(int)))
+			apiObject.MinTTL = aws.Int64(int64(tfMap["min_ttl"].(int)))
+		}
+
+		if v, ok := tfMap["forwarded_values"].([]any); ok && len(v) > 0 && v[0] != nil {
+			apiObject.ForwardedValues = expandForwardedValues(v[0].(map[string]any))
+		}
+
+		if v, ok := tfMap["smooth_streaming"]; ok {
+			apiObject.SmoothStreaming = aws.Bool(v.(bool))
+		}
+
+		if v, ok := tfMap["trusted_signers"]; ok {
+			apiObject.TrustedSigners = expandTrustedSigners(v.([]any))
+		} else {
+			apiObject.TrustedSigners = expandTrustedSigners([]any{})
+		}
 	}
 
 	if v, ok := tfMap["cached_methods"]; ok {
 		apiObject.AllowedMethods.CachedMethods = expandCachedMethods(v.(*schema.Set).List())
-	}
-
-	if v, ok := tfMap["forwarded_values"].([]any); ok && len(v) > 0 && v[0] != nil {
-		apiObject.ForwardedValues = expandForwardedValues(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["function_association"]; ok {
@@ -1424,26 +1531,16 @@ func expandCacheBehavior(tfMap map[string]any) *awstypes.CacheBehavior {
 		apiObject.RealtimeLogConfigArn = aws.String(v.(string))
 	}
 
-	if v, ok := tfMap["smooth_streaming"]; ok {
-		apiObject.SmoothStreaming = aws.Bool(v.(bool))
-	}
-
 	if v, ok := tfMap["trusted_key_groups"]; ok {
 		apiObject.TrustedKeyGroups = expandTrustedKeyGroups(v.([]any))
 	} else {
 		apiObject.TrustedKeyGroups = expandTrustedKeyGroups([]any{})
 	}
 
-	if v, ok := tfMap["trusted_signers"]; ok {
-		apiObject.TrustedSigners = expandTrustedSigners(v.([]any))
-	} else {
-		apiObject.TrustedSigners = expandTrustedSigners([]any{})
-	}
-
 	return apiObject
 }
 
-func expandCacheBehaviors(tfList []any) *awstypes.CacheBehaviors {
+func (c *configuration) expandCacheBehaviors(tfList []any) *awstypes.CacheBehaviors {
 	var items []awstypes.CacheBehavior
 
 	for _, tfMapRaw := range tfList {
@@ -1452,7 +1549,7 @@ func expandCacheBehaviors(tfList []any) *awstypes.CacheBehaviors {
 			continue
 		}
 
-		apiObject := expandCacheBehavior(tfMap)
+		apiObject := c.expandCacheBehavior(tfMap)
 
 		if apiObject == nil {
 			continue
@@ -1465,6 +1562,70 @@ func expandCacheBehaviors(tfList []any) *awstypes.CacheBehaviors {
 		Items:    items,
 		Quantity: aws.Int32(int32(len(items))),
 	}
+}
+
+func expandTenantConfig(tfMap map[string]any) *awstypes.TenantConfig {
+	tenantConfig := &awstypes.TenantConfig{}
+	if tfMap == nil {
+		return tenantConfig
+	}
+	if v, ok := tfMap["parameter_definition"]; ok && v != nil {
+		var defs []awstypes.ParameterDefinition
+		for _, defRaw := range v.([]any) {
+			defMap, ok := defRaw.(map[string]any)
+			if !ok {
+				continue
+			}
+			paramDef := awstypes.ParameterDefinition{}
+			if name, ok := defMap[names.AttrName].(string); ok {
+				paramDef.Name = aws.String(name)
+			}
+			if defList, ok := defMap["definition"].([]any); ok && len(defList) > 0 {
+				defSchemaMap, ok := defList[0].(map[string]any)
+				if ok {
+					if strSchemaList, ok := defSchemaMap["string_schema_config"].([]any); ok && len(strSchemaList) > 0 {
+						strSchemaMap, ok := strSchemaList[0].(map[string]any)
+						if ok {
+							paramDef.Definition = &awstypes.ParameterDefinitionSchema{
+								StringSchema: &awstypes.StringSchemaConfig{
+									Required:     aws.Bool(strSchemaMap["required"].(bool)),
+									Comment:      aws.String(strSchemaMap[names.AttrComment].(string)),
+									DefaultValue: aws.String(strSchemaMap[names.AttrDefaultValue].(string)),
+								},
+							}
+						}
+					}
+				}
+			}
+			defs = append(defs, paramDef)
+		}
+		tenantConfig.ParameterDefinitions = defs
+	}
+
+	return tenantConfig
+}
+
+func flattenTenantConfig(apiObject *awstypes.TenantConfig) []map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+	tfMap := make(map[string]any)
+	if apiObject.ParameterDefinitions != nil {
+		tfMap["parameter_definition"] = []any{}
+		for _, v := range apiObject.ParameterDefinitions {
+			tfMap["parameter_definition"] = append(tfMap["parameter_definition"].([]any), map[string]any{
+				names.AttrName: aws.ToString(v.Name),
+				"definition": []any{map[string]any{
+					"string_schema_config": []any{map[string]any{
+						"required":             aws.ToBool(v.Definition.StringSchema.Required),
+						names.AttrComment:      aws.ToString(v.Definition.StringSchema.Comment),
+						names.AttrDefaultValue: aws.ToString(v.Definition.StringSchema.DefaultValue),
+					}},
+				}},
+			})
+		}
+	}
+	return []map[string]any{tfMap}
 }
 
 func flattenCacheBehavior(apiObject *awstypes.CacheBehavior) map[string]any {
@@ -1545,7 +1706,7 @@ func flattenCacheBehaviors(apiObject *awstypes.CacheBehaviors) []any {
 	return tfList
 }
 
-func expandDefaultCacheBehavior(tfMap map[string]any) *awstypes.DefaultCacheBehavior {
+func (c *configuration) expandDefaultCacheBehavior(tfMap map[string]any) *awstypes.DefaultCacheBehavior {
 	if tfMap == nil {
 		return nil
 	}
@@ -1564,18 +1725,31 @@ func expandDefaultCacheBehavior(tfMap map[string]any) *awstypes.DefaultCacheBeha
 		apiObject.AllowedMethods = expandAllowedMethods(v.(*schema.Set).List())
 	}
 
-	if tfMap["cache_policy_id"].(string) == "" {
-		apiObject.MinTTL = aws.Int64(int64(tfMap["min_ttl"].(int)))
-		apiObject.MaxTTL = aws.Int64(int64(tfMap["max_ttl"].(int)))
-		apiObject.DefaultTTL = aws.Int64(int64(tfMap["default_ttl"].(int)))
+	if !c.isMultiTenant {
+
+		if tfMap["cache_policy_id"].(string) == "" {
+			apiObject.MinTTL = aws.Int64(int64(tfMap["min_ttl"].(int)))
+			apiObject.MaxTTL = aws.Int64(int64(tfMap["max_ttl"].(int)))
+			apiObject.DefaultTTL = aws.Int64(int64(tfMap["default_ttl"].(int)))
+		}
+
+		if v, ok := tfMap["forwarded_values"].([]any); ok && len(v) > 0 && v[0] != nil {
+			apiObject.ForwardedValues = expandForwardedValues(v[0].(map[string]any))
+		}
+
+		if v, ok := tfMap["smooth_streaming"]; ok {
+			apiObject.SmoothStreaming = aws.Bool(v.(bool))
+		}
+
+		if v, ok := tfMap["trusted_signers"]; ok {
+			apiObject.TrustedSigners = expandTrustedSigners(v.([]any))
+		} else {
+			apiObject.TrustedSigners = expandTrustedSigners([]any{})
+		}
 	}
 
 	if v, ok := tfMap["cached_methods"]; ok {
 		apiObject.AllowedMethods.CachedMethods = expandCachedMethods(v.(*schema.Set).List())
-	}
-
-	if v, ok := tfMap["forwarded_values"].([]any); ok && len(v) > 0 && v[0] != nil {
-		apiObject.ForwardedValues = expandForwardedValues(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["function_association"]; ok {
@@ -1594,20 +1768,10 @@ func expandDefaultCacheBehavior(tfMap map[string]any) *awstypes.DefaultCacheBeha
 		apiObject.RealtimeLogConfigArn = aws.String(v.(string))
 	}
 
-	if v, ok := tfMap["smooth_streaming"]; ok {
-		apiObject.SmoothStreaming = aws.Bool(v.(bool))
-	}
-
 	if v, ok := tfMap["trusted_key_groups"]; ok {
 		apiObject.TrustedKeyGroups = expandTrustedKeyGroups(v.([]any))
 	} else {
 		apiObject.TrustedKeyGroups = expandTrustedKeyGroups([]any{})
-	}
-
-	if v, ok := tfMap["trusted_signers"]; ok {
-		apiObject.TrustedSigners = expandTrustedSigners(v.([]any))
-	} else {
-		apiObject.TrustedSigners = expandTrustedSigners([]any{})
 	}
 
 	return apiObject
@@ -1670,7 +1834,7 @@ func flattenDefaultCacheBehavior(apiObject *awstypes.DefaultCacheBehavior) map[s
 		tfMap["trusted_key_groups"] = flattenTrustedKeyGroups(apiObject.TrustedKeyGroups)
 	}
 
-	if len(apiObject.TrustedSigners.Items) > 0 {
+	if apiObject.TrustedSigners != nil && len(apiObject.TrustedSigners.Items) > 0 {
 		tfMap["trusted_signers"] = flattenTrustedSigners(apiObject.TrustedSigners)
 	}
 
@@ -2053,7 +2217,7 @@ func flattenCachedMethods(apiObject *awstypes.CachedMethods) []any {
 	return nil
 }
 
-func expandOrigins(tfList []any) *awstypes.Origins {
+func (c *configuration) expandOrigins(tfList []any) *awstypes.Origins {
 	var items []awstypes.Origin
 
 	for _, tfMapRaw := range tfList {
@@ -2062,7 +2226,7 @@ func expandOrigins(tfList []any) *awstypes.Origins {
 			continue
 		}
 
-		item := expandOrigin(tfMap)
+		item := c.expandOrigin(tfMap)
 
 		if item == nil {
 			continue
@@ -2091,7 +2255,7 @@ func flattenOrigins(apiObject *awstypes.Origins) []any {
 	return tfList
 }
 
-func expandOrigin(tfMap map[string]any) *awstypes.Origin {
+func (c *configuration) expandOrigin(tfMap map[string]any) *awstypes.Origin {
 	apiObject := &awstypes.Origin{
 		DomainName: aws.String(tfMap[names.AttrDomainName].(string)),
 		Id:         aws.String(tfMap["origin_id"].(string)),
@@ -2129,23 +2293,24 @@ func expandOrigin(tfMap map[string]any) *awstypes.Origin {
 		}
 	}
 
-	if v, ok := tfMap["s3_origin_config"]; ok {
-		if v := v.([]any); len(v) > 0 {
-			apiObject.S3OriginConfig = expandS3OriginConfig(v[0].(map[string]any))
-		}
-	}
-
 	if v, ok := tfMap["vpc_origin_config"]; ok {
 		if v := v.([]any); len(v) > 0 {
 			apiObject.VpcOriginConfig = expandVPCOriginConfig(v[0].(map[string]any))
 		}
 	}
 
-	// if custom, s3 and VPC origin are all missing, add an empty s3 origin
-	// One or the other must be specified, but the S3 origin can be "empty"
-	if apiObject.CustomOriginConfig == nil && apiObject.S3OriginConfig == nil && apiObject.VpcOriginConfig == nil {
-		apiObject.S3OriginConfig = &awstypes.S3OriginConfig{
-			OriginAccessIdentity: aws.String(""),
+	if !c.isMultiTenant {
+		if v, ok := tfMap["s3_origin_config"]; ok {
+			if v := v.([]any); len(v) > 0 {
+				apiObject.S3OriginConfig = expandS3OriginConfig(v[0].(map[string]any))
+			}
+		}
+		// if custom, s3 and VPC origin are all missing, add an empty s3 origin
+		// One or the other must be specified, but the S3 origin can be "empty"
+		if apiObject.CustomOriginConfig == nil && apiObject.S3OriginConfig == nil && apiObject.VpcOriginConfig == nil {
+			apiObject.S3OriginConfig = &awstypes.S3OriginConfig{
+				OriginAccessIdentity: aws.String(""),
+			}
 		}
 	}
 
