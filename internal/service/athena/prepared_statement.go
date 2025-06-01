@@ -71,7 +71,6 @@ func resourcePreparedStatement() *schema.Resource {
 		CustomizeDiff: customdiff.All(
 			customdiff.IfValue("query_statement", func(ctx context.Context, value, meta any) bool {
 				if strings.ContainsAny(value.(string), "\n") {
-					fmt.Printf("%s", value.(string))
 					return true
 				}
 				return false
