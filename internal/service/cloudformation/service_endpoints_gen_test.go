@@ -27,7 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/provider"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -442,7 +442,7 @@ func testEndpointCase(ctx context.Context, t *testing.T, region string, testcase
 		t.Setenv(k, v)
 	}
 
-	p, err := provider.New(ctx)
+	p, err := sdkv2.NewProvider(ctx)
 	if err != nil {
 		t.Fatal(err)
 	}
